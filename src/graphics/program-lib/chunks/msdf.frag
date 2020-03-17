@@ -20,6 +20,7 @@ float map (float min, float max, float v) {
 uniform float font_sdfIntensity; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
 uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
 uniform float font_textureWidth; // the width of the texture atlas
+uniform float font_textureHeight; // the height of the texture atlas
 
 uniform vec4 outline_color;
 uniform float outline_thickness;
@@ -34,6 +35,20 @@ vec4 applyMsdf(vec4 color) {
     // get the signed distance value
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
+
+    float tsamplea = texture2D(texture_msdfMap, vUv0).a;
+
+ /*   vec2 pUv0 = (floor(vUv0 * vec2(font_textureWidth, font_textureHeight))+vec2(0.0))*vec2(1.0/font_textureWidth, 1.0/font_textureHeight);
+    vec3 psample = vec3(0);//texture2D(texture_msdfMap, pUv0).rgb;
+    
+    for (int xx=-1;xx<=1;xx++)
+    {
+        for (int yy=-1;yy<=1;yy++)
+        {
+            vec2 oUv0 = pUv0+vec2(float(xx), float(yy))*vec2(1.0/font_textureWidth, 1.0/font_textureHeight);
+            psample = max(psample, texture2D(texture_msdfMap, oUv0).rgb);
+        }
+    }*/
 
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
@@ -52,7 +67,35 @@ vec4 applyMsdf(vec4 color) {
 
     // remap to a smaller range (used on smaller font sizes)
     float sigDistInner = map(mapMin, mapMax, sigDist);
-    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
+    //float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
+    float sigDistOutline = 0.0;//float(max(max(mix(tsample.r, -1.0, float(tsample.r>=0.5)), mix(tsample.g, -1.0, float(tsample.g>=0.5))), mix(tsample.b, -1.0, float(tsample.b>=0.5)))>(0.5-outline_thickness));
+    
+  /*  float rnum = float(psample.r<0.5);// && tsample.r>(0.5-outline_thickness));
+    float gnum = float(psample.g<0.5);// && tsample.g>(0.5-outline_thickness));
+    float bnum = float(psample.b<0.5);// && tsample.b>(0.5-outline_thickness));
+    
+    if ((rnum>0.0 && gnum>0.0))
+    {
+        sigDistOutline += float(min(tsample.r,tsample.g)>(0.5-outline_thickness));
+    }
+    if ((gnum>0.0 && bnum>0.0))
+    {
+        sigDistOutline += float(min(tsample.g,tsample.b)>(0.5-outline_thickness));
+    }
+    if ((bnum>0.0 && rnum>0.0))
+    {
+        sigDistOutline += float(min(tsample.b,tsample.r)>(0.5-outline_thickness));
+    }
+    if (sigDistOutline>1.0) sigDistOutline=1.0;*/
+
+    float num=0.5-tsamplea;// min(min(mix(0.5-tsample.r, 1.0, float(psample.r>=0.5)),mix(0.5-tsample.g, 1.0, float(psample.g>=0.5))),mix(0.5-tsample.b, 1.0, float(psample.b>=0.5))); 
+    sigDistOutline = float(num<=outline_thickness*2.0);
+
+//    if ( rnum>0.0 && gnum<=0.0 && bnum<=0.0 )
+ //   {
+  //      sigDistOutline = 1.0;
+   // }
+
     sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
 
     float center = 0.5;
@@ -62,10 +105,19 @@ vec4 applyMsdf(vec4 color) {
     float shadow = smoothstep(center-smoothing, center+smoothing, sigDistShdw);
 
     vec4 tcolor = (outline > inside) ? outline * vec4(outline_color.a * outline_color.rgb, outline_color.a) : vec4(0.0);
+//    vec4 tcolor = (outline > inside) ? outline * vec4(outline_color.a * vec3(rnum, gnum, bnum), outline_color.a) : vec4(0.0);
+//    vec4 tcolor = (outline > inside) ? outline * vec4((vec3(1.0)-vec3(2.0)*max(vec3(0.5)-tsample.rgb,0.0)) * outline_color.rgb, outline_color.a) : vec4(0.0);
+//    vec4 tcolor = (outline > inside) ? outline * vec4((vec3(1.0)-vec3(2.0)*max(vec3(0.5)-vec3(tsamplea),0.0)) * mix(outline_color.rgb, vec3(0,1,0), float(outline_thickness>0.0)*0.0)*outline_color.a, outline_color.a) : vec4(0.0);
+//    float num=float(fract((sigDist+font_sdfIntensity)*16.0)<0.1);
+//    vec4 tcolor = (outline >= outline) ? outline * vec4(vec3(num) * outline_color.rgb, outline_color.a) : vec4(0.0);
     tcolor = mix(tcolor, color, inside);
 
-    vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
-    tcolor = mix(scolor, tcolor, outline);
+    //vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
+    //tcolor = mix(scolor, tcolor, outline);
     
+    if (outline_thickness==0.0 && inside==0.0)
+    {
+        discard;
+    }
     return tcolor;
 }

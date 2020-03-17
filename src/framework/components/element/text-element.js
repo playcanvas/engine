@@ -77,6 +77,7 @@ Object.assign(pc, function () {
 
         this._meshInfo = [];
         this._material = null;
+        this._materialTwoPass = null;
 
         this._aabbDirty = true;
         this._aabb = new pc.BoundingBox();
@@ -94,6 +95,8 @@ Object.assign(pc, function () {
         this._outlineColorUniform = new Float32Array(4);
         this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
+
+        this._twoPassEnabled = false;
 
         this._shadowColor = new pc.Color(0, 0, 0, 1);
         this._shadowColorUniform = new Float32Array(4);
@@ -230,11 +233,72 @@ Object.assign(pc, function () {
             }
         },
 
+        _updateOutline: function () {
+            var twoPassNeeded=(this._outlineThickness>0.1);
+            var mesh_num_needed = (twoPassNeeded)? this._font.textures.length+1: this._font.textures.length;
+
+            for (i = 0, len = mesh_num_needed; i < len; i++) {
+                var ti=i;
+                if (twoPassNeeded && i>=this._font.textures.length){
+                    ti=this._font.textures.length-1;
+                }
+
+                if (!this._meshInfo[i]) {
+                    this._meshInfo[i] = new MeshInfo();
+                } else {
+                    // keep existing entry but set correct parameters to mesh instance
+                    var mi = this._meshInfo[i].meshInstance;
+                    if (mi) {
+                        mi.setParameter("font_sdfIntensity", this._font.intensity);
+                        mi.setParameter("font_pxrange", this._getPxRange(this._font));
+                        mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
+                        this._setTextureParams(mi, this._font.textures[ti]);
+                    }
+                }
+            }
+
+            // destroy any excess mesh instances
+            var removedModel = false;
+            for (i = mesh_num_needed; i < this._meshInfo.length; i++) {
+                if (this._meshInfo[i].meshInstance) {
+                    if (!removedModel) {
+                        // remove model from scene so that excess mesh instances are removed
+                        // from the scene as well
+                        this._element.removeModelFromLayers(this._model);
+                        removedModel = true;
+                    }
+                    this._removeMeshInstance(this._meshInfo[i].meshInstance); //removes from model array
+                }
+            }
+
+ //           if (this._meshInfo.length > mesh_num_needed)
+ //               this._meshInfo.length = mesh_num_needed;
+
+            if (mesh_num_needed<this._meshInfo.length)
+            {
+ //               this._element.removeModelFromLayers(this._model);
+ //               for (i = mesh_num_needed; i < this._meshInfo.length; i++) {
+ //                   this._destroyMeshInstanceBuffers(this._meshInfo[i].meshInstance);
+ //               }
+                this._meshInfo.splice(mesh_num_needed,this._meshInfo.length-mesh_num_needed);
+                this._element.addModelToLayers(this._model);
+            }
+
+            this._twoPassEnabled = twoPassNeeded;    
+        },
+
         _updateText: function (text) {
             var i;
             var len;
             var results;
             var tags;
+
+            if (this._twoPassEnabled!=(this._outlineThickness>0.1))
+            {
+                this._updateOutline();
+                var screenSpace = this._element._isScreenSpace();
+                this._updateMaterial(screenSpace);
+            }
 
             if (text === undefined) text = this._text;
 
@@ -345,8 +409,15 @@ Object.assign(pc, function () {
                 return element.isVisibleForCamera(camera);
             };
 
+            //var twoPass=(this._meshInfo.length>this._font.textures.length);
+
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
-                var l = charactersPerTexture[i] || 0;
+                var ti=i;
+                if (this._twoPassEnabled && i>=this._font.textures.length){
+                    ti=this._font.textures.length-1;
+                }
+
+                var l = charactersPerTexture[ti] || 0;
                 var meshInfo = this._meshInfo[i];
 
                 if (meshInfo.count !== l) {
@@ -401,7 +472,8 @@ Object.assign(pc, function () {
                         meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice,
+                    var mesh = (0 && this._twoPassEnabled && i>=this._font.textures.length) ? this._model.meshInstances[ti].mesh : 
+                                pc.createMesh(this._system.app.graphicsDevice,
                                              meshInfo.positions,
                                              {
                                                  uvs: meshInfo.uvs,
@@ -410,7 +482,9 @@ Object.assign(pc, function () {
                                                  indices: meshInfo.indices
                                              });
 
-                    var mi = new pc.MeshInstance(this._node, mesh, this._material);
+                    var t_mat = (this._twoPassEnabled && i>=this._font.textures.length)? this._materialTwoPass : this._material;
+
+                    var mi = new pc.MeshInstance(this._node, mesh, t_mat);
                     mi.name = "Text Element: " + this._entity.name;
                     mi.castShadow = false;
                     mi.receiveShadow = false;
@@ -423,7 +497,7 @@ Object.assign(pc, function () {
                         mi.isVisibleFunc = visibleFn;
                     }
 
-                    this._setTextureParams(mi, this._font.textures[i]);
+                    this._setTextureParams(mi, this._font.textures[ti]);
                     if (this._symbolColors) {
                         // when per-vertex coloring is present, disable material emissive color
                         this._colorUniform[0] = 1;
@@ -438,21 +512,38 @@ Object.assign(pc, function () {
                     mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                    mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+                    mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
+                    mi.setParameter("font_textureHeight", this._font.data.info.maps[ti].height);
 
                     this._outlineColorUniform[0] = this._outlineColor.r;
                     this._outlineColorUniform[1] = this._outlineColor.g;
                     this._outlineColorUniform[2] = this._outlineColor.b;
                     this._outlineColorUniform[3] = this._outlineColor.a;
                     mi.setParameter("outline_color", this._outlineColorUniform);
-                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+
+                    if (this._twoPassEnabled)
+                    {
+                        if (ti!=i) //second pass (just border, use stencil then clear stencil)
+                        {
+                            mi.setParameter("material_opacity", 0.0);
+                            mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                        }
+                        else //first pass (no border, set stencil)
+                        {
+                            mi.setParameter("outline_thickness", 0.0 );
+                        }
+                    }
+                    else
+                    {
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                    }
 
                     this._shadowColorUniform[0] = this._shadowColor.r;
                     this._shadowColorUniform[1] = this._shadowColor.g;
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
                     mi.setParameter("shadow_color", this._shadowColorUniform);
-                    var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
+                    var ratio = this._font.data.info.maps[ti].width / this._font.data.info.maps[ti].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                     this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
@@ -466,8 +557,61 @@ Object.assign(pc, function () {
 
             // after creating new meshes
             // re-apply masking stencil params
-            if (this._element.maskedBy) {
+            if (this._element.maskedBy) 
+            {
                 this._element._setMaskedBy(this._element.maskedBy);
+
+                if (this._twoPassEnabled)
+                {
+                    var ref = this._element.maskedBy.element._image._maskRef;
+                    
+                    //if (1) console.log("masking: " + this.entity.name + " with " + ref);
+    
+                    var stencilParamsFirst = new pc.StencilParameters({
+                        ref: ref,
+                        func: pc.FUNC_EQUAL,
+                        zpass: pc.STENCILOP_INCREMENT
+                    });
+                    this._model.meshInstances[0].stencilFront = stencilParamsFirst;
+                    this._model.meshInstances[0].stencilBack = stencilParamsFirst;
+
+                    var stencilParamsSecond = new pc.StencilParameters({
+                        ref: ref,
+                        func: pc.FUNC_EQUAL,
+                        fail: pc.STENCILOP_KEEP,// pc.STENCILOP_REPLACE,
+                        zpass: pc.STENCILOP_REPLACE
+                    });
+
+                    this._model.meshInstances[1].stencilFront = stencilParamsSecond;
+                    this._model.meshInstances[1].stencilBack = stencilParamsSecond;
+                }
+            }
+            else
+            {
+                if (this._twoPassEnabled)
+                {
+                    var ref = 42;
+                    
+                    //if (1) console.log("masking: " + this.entity.name + " with " + ref);
+    
+                    var stencilParamsFirst = new pc.StencilParameters({
+                        ref: ref,
+                        func: pc.FUNC_ALWAYS,
+                        zpass: pc.STENCILOP_REPLACE
+                    });
+                    this._model.meshInstances[0].stencilFront = stencilParamsFirst;
+                    this._model.meshInstances[0].stencilBack = stencilParamsFirst;
+
+                    var stencilParamsSecond = new pc.StencilParameters({
+                        ref: ref,
+                        func: pc.FUNC_NOTEQUAL,
+                        fail: pc.STENCILOP_KEEP,//pc.STENCILOP_ZERO,
+                        zpass: pc.STENCILOP_ZERO
+                    });
+
+                    this._model.meshInstances[1].stencilFront = stencilParamsSecond;
+                    this._model.meshInstances[1].stencilBack = stencilParamsSecond;
+                }
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
@@ -507,9 +651,11 @@ Object.assign(pc, function () {
             var i;
             var len;
 
+            //var twoPass=(this._meshInfo.length>this._font.textures.length);
+
             this._material = material;
             if (this._model) {
-                for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                for (i = 0, len = ((this._twoPassEnabled)?this._font.textures.length:this._model.meshInstances.length); i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.material = material;
                 }
@@ -523,14 +669,20 @@ Object.assign(pc, function () {
                 return element.isVisibleForCamera(camera);
             };
 
+            //var twoPass=(this._font && this._meshInfo.length>this._font.textures.length);
+
             var msdf = this._font && this._font.type === pc.FONT_MSDF;
             this._material = this._system.getTextElementMaterial(screenSpace, msdf);
+            if (this._twoPassEnabled) 
+            {
+                this._materialTwoPass = this._system.getTextElementMaterial(screenSpace, msdf);
+            }
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.cull = !screenSpace;
-                    mi.material = this._material;
+                    mi.material = ((this._twoPassEnabled && this._font && i>=this._font.textures.length)?this._materialTwoPass:this._material);
                     mi.screenSpace = screenSpace;
 
                     if (screenCulled) {
@@ -655,10 +807,20 @@ Object.assign(pc, function () {
                 fontMinY = this._fontMinY * scale;
                 fontMaxY = this._fontMaxY * scale;
 
-                for (i = 0; i < this._meshInfo.length; i++) {
-                    this._meshInfo[i].quad = 0;
-                    this._meshInfo[i].lines = {};
-                }
+                if (this._twoPassEnabled)
+                {
+                    for (i = 0; i < this._meshInfo.length-1; i++) {
+                        this._meshInfo[i].quad = 0;
+                        this._meshInfo[i].lines = {};
+                    }
+                 }
+                 else
+                 {
+                    for (i = 0; i < this._meshInfo.length; i++) {
+                        this._meshInfo[i].quad = 0;
+                        this._meshInfo[i].lines = {};
+                    } 
+                 }
 
                 // per-vertex color
                 var color_r = 255;
@@ -729,6 +891,8 @@ Object.assign(pc, function () {
 
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
 
+                    var meshInfoTwoPass = (this._twoPassEnabled) ? this._meshInfo[this._meshInfo.length-1] : meshInfo;
+
                     var candidateLineWidth = _x + this._spacing * advance;
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
@@ -743,7 +907,7 @@ Object.assign(pc, function () {
                             } else {
                                 // Move back to the beginning of the current word.
                                 var backtrack = Math.max(i - wordStartIndex, 0);
-                                if (this._meshInfo.length <= 1) {
+                                if (/*this._meshInfo.length*/this._font.textures.length <= 1) {
                                     meshInfo.lines[lines - 1] -= backtrack;
                                     meshInfo.quad -= backtrack;
                                 } else {
@@ -800,6 +964,14 @@ Object.assign(pc, function () {
                     meshInfo.positions[quad * 4 * 3 + 9]  = left;
                     meshInfo.positions[quad * 4 * 3 + 10] = top;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
+
+                    if (this._twoPassEnabled)
+                    {
+                        for (var n=(quad * 4 * 3 + 0);n<=(quad * 4 * 3 + 11); n++)
+                        {
+                            meshInfoTwoPass.positions[n]=meshInfo.positions[n];
+                        }
+                    }
 
                     this.width = Math.max(this.width, candidateLineWidth);
 
@@ -862,6 +1034,14 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
+                    if (this._twoPassEnabled)
+                    {
+                        for (var n=(quad * 4 * 2 + 0);n<=(quad * 4 * 2 + 7); n++)
+                        {
+                            meshInfoTwoPass.uvs[n]=meshInfo.uvs[n];
+                        }
+                    }
+
                     // set per-vertex color
                     if (this._symbolColors) {
                         var colorIdx = this._symbolColors[i] * 3;
@@ -890,6 +1070,14 @@ Object.assign(pc, function () {
                     meshInfo.colors[quad * 4 * 4 + 14] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 15] = 255;
 
+                    if (this._twoPassEnabled)
+                    {
+                        for (var n=(quad * 4 * 4 + 0);n<=(quad * 4 * 4 + 15); n++)
+                        {
+                            meshInfoTwoPass.colors[n]=meshInfo.colors[n];
+                        }     
+                    }
+
                     meshInfo.quad++;
                 }
 
@@ -917,12 +1105,18 @@ Object.assign(pc, function () {
             var ha = this._alignment.x;
             var va = this._alignment.y;
 
-            for (i = 0; i < this._meshInfo.length; i++) {
-                if (this._meshInfo[i].count === 0) continue;
+            //var twoPass=(this._meshInfo.length>this._font.textures.length);
+            for (i = 0, len = this._meshInfo.length; i < len; i++) {
+                var ti=i;
+                if (this._twoPassEnabled && i>=this._font.textures.length){
+                    ti=this._font.textures.length-1;
+                }
+
+                if (this._meshInfo[ti].count === 0) continue;
 
                 var prevQuad = 0;
-                for (var line in this._meshInfo[i].lines) {
-                    var index = this._meshInfo[i].lines[line];
+                for (var line in this._meshInfo[ti].lines) {
+                    var index = this._meshInfo[ti].lines[line];
                     var lw = this._lineWidths[parseInt(line, 10)];
                     var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
@@ -964,8 +1158,8 @@ Object.assign(pc, function () {
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
-                var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
+                var numVertices = this._meshInfo[ti].count * 4; // number of verts we allocated
+                var vertMax = this._meshInfo[ti].quad * 4;  // number of verts we need (usually count minus line break characters)
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
                     if (v >= vertMax) {
@@ -1168,9 +1362,15 @@ Object.assign(pc, function () {
             var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
             var i, len;
+
+            //var twoPass=(this._meshInfo.length>this._font.textures.length);
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
-                var start = startChars[i] || 0;
-                var end = endChars[i] || 0;
+                var ti=i;
+                if (this._twoPassEnabled && i>=this._font.textures.length){
+                    ti=this._font.textures.length-1;
+                }
+                var start = startChars[ti] || 0;
+                var end = endChars[ti] || 0;
                 var instance = this._meshInfo[i].meshInstance;
                 if (instance) {
                     var mesh = instance.mesh;
@@ -1269,7 +1469,7 @@ Object.assign(pc, function () {
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter('material_opacity', value);
+                    mi.setParameter('material_opacity', (this._twoPassEnabled && i>=(this._model.meshInstances.length-1)) ? 0.0 : value);
                 }
             }
         }
@@ -1406,38 +1606,9 @@ Object.assign(pc, function () {
             }
 
             // make sure we have as many meshInfo entries
-            // as the number of font textures
-            for (i = 0, len = this._font.textures.length; i < len; i++) {
-                if (!this._meshInfo[i]) {
-                    this._meshInfo[i] = new MeshInfo();
-                } else {
-                    // keep existing entry but set correct parameters to mesh instance
-                    var mi = this._meshInfo[i].meshInstance;
-                    if (mi) {
-                        mi.setParameter("font_sdfIntensity", this._font.intensity);
-                        mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                        mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
-                        this._setTextureParams(mi, this._font.textures[i]);
-                    }
-                }
-            }
+            // as the number of font textures and outline passes
 
-            // destroy any excess mesh instances
-            var removedModel = false;
-            for (i = this._font.textures.length; i < this._meshInfo.length; i++) {
-                if (this._meshInfo[i].meshInstance) {
-                    if (!removedModel) {
-                        // remove model from scene so that excess mesh instances are removed
-                        // from the scene as well
-                        this._element.removeModelFromLayers(this._model);
-                        removedModel = true;
-                    }
-                    this._removeMeshInstance(this._meshInfo[i].meshInstance);
-                }
-            }
-
-            if (this._meshInfo.length > this._font.textures.length)
-                this._meshInfo.length = this._font.textures.length;
+            this._twoPassEnabled=!(this._outlineThickness>0.1) //this line forces a call to _updateOutline 
 
             this._updateText();
         }
@@ -1622,9 +1793,15 @@ Object.assign(pc, function () {
             this._outlineThickness = value;
             if (_prev !== value && this._font) {
                 if (this._model) {
+                    
+                    if (this._font) {
+                        //this._updateOutline();
+                        this._updateText();
+                    }                    
+
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                        mi.setParameter("outline_thickness", (this._twoPassEnabled && i<(this._model.meshInstances.length-1)) ? 0.0 : this._outlineThicknessScale * this._outlineThickness);
                     }
                 }
             }
