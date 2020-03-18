@@ -115,7 +115,7 @@ vec4 applyMsdf(vec4 color) {
     //vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
     //tcolor = mix(scolor, tcolor, outline);
     
-    if (outline_thickness==0.0 && inside==0.0)
+    if (tcolor.a==0.0)// outline_thickness==0.0 && inside==0.0)
     {
         discard;
     }
