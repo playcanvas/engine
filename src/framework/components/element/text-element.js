@@ -311,14 +311,7 @@ Object.assign(pc, function () {
                 }
             }
 
- //           if (this._meshInfo.length > mesh_num_needed)
- //               this._meshInfo.length = mesh_num_needed;
-
             if (mesh_num_needed < this._meshInfo.length) {
- //               this._element.removeModelFromLayers(this._model);
- //               for (i = mesh_num_needed; i < this._meshInfo.length; i++) {
- //                   this._destroyMeshInstanceBuffers(this._meshInfo[i].meshInstance);
- //               }
                 this._meshInfo.splice(mesh_num_needed, this._meshInfo.length - mesh_num_needed);
                 this._element.addModelToLayers(this._model);
             }
