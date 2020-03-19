@@ -430,7 +430,7 @@ Object.assign(pc, function () {
                     for (var i = 0; i < layers.length; i++) {
                         layer = layers[i];
                         if (layer === this) break;
-                        if (/*layer.renderTarget !== rt ||*/ !layer.enabled || !subLayerEnabled[i]) continue;
+                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
                         layerCamId = layer.cameras.indexOf(cam);
                         if (layerCamId < 0) continue;
                         transparent = isTransparent[i];
