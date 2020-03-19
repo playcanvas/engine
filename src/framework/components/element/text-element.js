@@ -587,41 +587,29 @@ Object.assign(pc, function () {
 
                     switch (this._meshInfo[i].renderPass) {
                         case RenderPass.ALL_IN_ONE:
-
                             mi.setParameter("material_opacity", this._color.a);
                             mi.setParameter("outline_color", this._outlineColorUniform);
                             mi.setParameter("shadow_color", this._shadowColorUniform);
-
                             break;
                         case RenderPass.TEXT: // first pass (just text, set stencil)
-
                             mi.setParameter("material_opacity", this._color.a);
                             mi.setParameter("outline_color", this._zeroColorUniform);
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-
                             mi.setParameter("material_opacity", 0.0);
                             mi.setParameter("outline_color", this._outlineColorUniform);
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-
                             mi.setParameter("material_opacity", 0.0);
                             mi.setParameter("outline_color", this._zeroColorUniform);
                             mi.setParameter("shadow_color", this._shadowColorUniform);
-
                             break;
                         case RenderPass.STENCIL_CLEAR: // forth pass (include everything clear stencil)
-
                             mi.setParameter("material_opacity", 0.0);
-//                                mi.setParameter("outline_color", this._outlineColorUniform);
-//                                mi.setParameter("shadow_color", this._shadowColorUniform);
                             mi.setParameter("outline_color", this._zeroColorUniform);
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                     }
 
@@ -1288,8 +1276,6 @@ Object.assign(pc, function () {
 
                     if (this._multiPassEnabled) {
                         if (stencilParams) {
-                            // var tref = stencilParams.ref;
-
                             switch (this._meshInfo[i].renderPass) {
                                 case RenderPass.TEXT: // first pass (just text, set stencil)
                                     instances[i].stencilFront = new pc.StencilParameters({
@@ -1325,8 +1311,6 @@ Object.assign(pc, function () {
                                     break;
                             }
                         } else { // no mask
-                            // var tref = 42;
-
                             switch (this._meshInfo[i].renderPass) {
                                 case RenderPass.TEXT: // first pass (just text, set stencil)
                                     instances[i].stencilFront = new pc.StencilParameters({
@@ -1527,29 +1511,19 @@ Object.assign(pc, function () {
 
                     switch (this._meshInfo[i].renderPass) {
                         case RenderPass.ALL_IN_ONE:
-
                             mi.setParameter("material_opacity", this._color.a);
-
                             break;
                         case RenderPass.TEXT: // first pass (just text, set stencil)
-
                             mi.setParameter("material_opacity", this._color.a);
-
                             break;
                         case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-
                             mi.setParameter("material_opacity", 0.0);
-
                             break;
                         case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-
                             mi.setParameter("material_opacity", 0.0);
-
                             break;
                         case RenderPass.STENCIL_CLEAR: // forth pass (include everything clear stencil)
-
                             mi.setParameter("material_opacity", 0.0);
-
                             break;
                     }
                 }
@@ -1860,30 +1834,19 @@ Object.assign(pc, function () {
 
                     switch (this._meshInfo[i].renderPass) {
                         case RenderPass.ALL_IN_ONE:
-
                             mi.setParameter("outline_color", this._outlineColorUniform);
-
                             break;
                         case RenderPass.TEXT: // first pass (just text, set stencil)
-
                             mi.setParameter("outline_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-
                             mi.setParameter("outline_color", this._outlineColorUniform);
-
                             break;
                         case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-
                             mi.setParameter("outline_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.STENCIL_CLEAR: // forth pass (include everything clear stencil)
-
-//                                mi.setParameter("outline_color", this._outlineColorUniform);
                             mi.setParameter("outline_color", this._zeroColorUniform);
-
                             break;
                     }
                 }
@@ -1952,30 +1915,19 @@ Object.assign(pc, function () {
                     var mi = this._model.meshInstances[i];
                     switch (this._meshInfo[i].renderPass) {
                         case RenderPass.ALL_IN_ONE:
-
                             mi.setParameter("shadow_color", this._shadowColorUniform);
-
                             break;
                         case RenderPass.TEXT: // first pass (just text, set stencil)
-
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                         case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-
                             mi.setParameter("shadow_color", this._shadowColorUniform);
-
                             break;
                         case RenderPass.STENCIL_CLEAR: // forth pass (include everything clear stencil)
-
-//                                mi.setParameter("shadow_color", this._shadowColorUniform);
                             mi.setParameter("shadow_color", this._zeroColorUniform);
-
                             break;
                     }
                 }
