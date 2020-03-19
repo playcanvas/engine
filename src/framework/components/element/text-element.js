@@ -562,7 +562,6 @@ Object.assign(pc, function () {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
-                    mi.setParameter("font_textureHeight", this._font.data.info.maps[ti].height);
 
                     this._outlineColorUniform[0] = this._outlineColor.r;
                     this._outlineColorUniform[1] = this._outlineColor.g;
@@ -916,7 +915,7 @@ Object.assign(pc, function () {
                             } else {
                                 // Move back to the beginning of the current word.
                                 var backtrack = Math.max(i - wordStartIndex, 0);
-                                if (/* this._meshInfo.length*/this._font.textures.length <= 1) {
+                                if (this._font.textures.length <= 1) {
                                     meshInfo.lines[lines - 1] -= backtrack;
                                     meshInfo.quad -= backtrack;
                                 } else {
