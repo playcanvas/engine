@@ -37,6 +37,12 @@ vec4 applyMsdf(vec4 color) {
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
     float tsamplea = texture2D(texture_msdfMap, vUv0).a;
+    float ssamplea = texture2D(texture_msdfMap, uvShdw).a;
+//    sigDist=mix(sigDist,tsamplea, clamp((outline_thickness-(0.15*0.2))*50.0,0.0,1.0));
+//    sigDistShdw=mix(sigDistShdw,ssamplea, clamp((outline_thickness-(0.15*0.2))*50.0,0.0,1.0));
+
+    sigDist=mix(sigDist,tsamplea, clamp((0.475-tsamplea)*10.0,0.0,1.0));
+    sigDistShdw=mix(sigDistShdw,ssamplea, clamp((0.475-ssamplea)*10.0,0.0,1.0));
 
  /*   vec2 pUv0 = (floor(vUv0 * vec2(font_textureWidth, font_textureHeight))+vec2(0.0))*vec2(1.0/font_textureWidth, 1.0/font_textureHeight);
     vec3 psample = vec3(0);//texture2D(texture_msdfMap, pUv0).rgb;
@@ -53,22 +59,22 @@ vec4 applyMsdf(vec4 color) {
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
         vec2 w = fwidth(vUv0);
-        float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
+        float smoothing = 0.0;//clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
     #else
         float font_size = 16.0; // TODO fix this
         // smoothing gets smaller as the font size gets bigger
         // don't have fwidth we can approximate from font size, this doesn't account for scaling
         // so a big font scaled down will be wrong...
 
-        float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5);
+        float smoothing = 0.0;//clamp(font_pxrange / font_size, 0.0, 0.5);
     #endif
     float mapMin = 0.05;
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
 
     // remap to a smaller range (used on smaller font sizes)
     float sigDistInner = map(mapMin, mapMax, sigDist);
-    //float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
-    float sigDistOutline = 0.0;//float(max(max(mix(tsample.r, -1.0, float(tsample.r>=0.5)), mix(tsample.g, -1.0, float(tsample.g>=0.5))), mix(tsample.b, -1.0, float(tsample.b>=0.5)))>(0.5-outline_thickness));
+    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness*3.0);
+    //float sigDistOutline = 0.0;//float(max(max(mix(tsample.r, -1.0, float(tsample.r>=0.5)), mix(tsample.g, -1.0, float(tsample.g>=0.5))), mix(tsample.b, -1.0, float(tsample.b>=0.5)))>(0.5-outline_thickness));
     
   /*  float rnum = float(psample.r<0.5);// && tsample.r>(0.5-outline_thickness));
     float gnum = float(psample.g<0.5);// && tsample.g>(0.5-outline_thickness));
@@ -88,15 +94,15 @@ vec4 applyMsdf(vec4 color) {
     }
     if (sigDistOutline>1.0) sigDistOutline=1.0;*/
 
-    float num=0.5-tsamplea;// min(min(mix(0.5-tsample.r, 1.0, float(psample.r>=0.5)),mix(0.5-tsample.g, 1.0, float(psample.g>=0.5))),mix(0.5-tsample.b, 1.0, float(psample.b>=0.5))); 
-    sigDistOutline = float(num<=outline_thickness*2.0);
+  //  float num=0.5-tsamplea;// min(min(mix(0.5-tsample.r, 1.0, float(psample.r>=0.5)),mix(0.5-tsample.g, 1.0, float(psample.g>=0.5))),mix(0.5-tsample.b, 1.0, float(psample.b>=0.5))); 
+  //  sigDistOutline = float(num<=outline_thickness*2.0);
 
 //    if ( rnum>0.0 && gnum<=0.0 && bnum<=0.0 )
  //   {
   //      sigDistOutline = 1.0;
    // }
 
-    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
+    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness*3.0);
 
     float center = 0.5;
     // calculate smoothing and use to generate opacity
@@ -112,8 +118,8 @@ vec4 applyMsdf(vec4 color) {
 //    vec4 tcolor = (outline >= outline) ? outline * vec4(vec3(num) * outline_color.rgb, outline_color.a) : vec4(0.0);
     tcolor = mix(tcolor, color, inside);
 
-    //vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
-    //tcolor = mix(scolor, tcolor, outline);
+    vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
+    tcolor = mix(scolor, tcolor, outline);
     
     if (tcolor.a==0.0)// outline_thickness==0.0 && inside==0.0)
     {

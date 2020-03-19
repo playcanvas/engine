@@ -1,5 +1,13 @@
 Object.assign(pc, function () {
 
+    RenderPass = {
+        ALL_IN_ONE: 0,
+        TEXT: 1,
+        OUTLINE: 2,
+        DROP_SHADOW: 3,
+        STENCIL_CLEAR: 4
+    }
+
     var MeshInfo = function () {
         // number of symbols
         this.count = 0;
@@ -19,6 +27,8 @@ Object.assign(pc, function () {
         this.indices = [];
         // pc.MeshInstance created from this MeshInfo
         this.meshInstance = null;
+        // renderPass Enum for setting pass render state and params 
+        this.renderPass = RenderPass.ALL_IN_ONE;
     };
 
     var TextElement = function TextElement(element) {
@@ -77,7 +87,6 @@ Object.assign(pc, function () {
 
         this._meshInfo = [];
         this._material = null;
-//        this._materialTwoPass = null;
 
         this._aabbDirty = true;
         this._aabb = new pc.BoundingBox();
@@ -103,6 +112,8 @@ Object.assign(pc, function () {
         this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
         this._shadowOffset = new pc.Vec2(0, 0);
         this._shadowOffsetUniform = new Float32Array(2);
+
+        this._zeroColorUniform = new Float32Array(4);
 
         this._enableMarkup = false;
 
@@ -233,27 +244,52 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateOutline: function () {
-            var twoPassNeeded=(this._outlineThickness>0.1);
-            var mesh_num_needed = (twoPassNeeded)? this._font.textures.length+2: this._font.textures.length;
+        _updateMeshInfos: function () {
+            var twoPassNeeded=(this._outlineThickness>0.1 && this._font.textures.length==1);
+            var mesh_num_needed = (twoPassNeeded)? 4 : this._font.textures.length;
 
-            for (i = 0, len = mesh_num_needed; i < len; i++) {
-                var ti=i;
-                if (twoPassNeeded && i>=this._font.textures.length){
-                    ti=this._font.textures.length-1;
-                }
+            for (i = 0, len = mesh_num_needed; i < len; i++) 
+            {
+                var ti = (twoPassNeeded) ? 0 : i;
 
-                if (!this._meshInfo[i]) {
+                if (!this._meshInfo[i]) 
+                {
                     this._meshInfo[i] = new MeshInfo();
-                } else {
+                } 
+                else 
+                {
                     // keep existing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;
-                    if (mi) {
+                    if (mi) 
+                    {
                         mi.setParameter("font_sdfIntensity", this._font.intensity);
                         mi.setParameter("font_pxrange", this._getPxRange(this._font));
                         mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
                         this._setTextureParams(mi, this._font.textures[ti]);
                     }
+                }
+
+                if (twoPassNeeded)
+                {
+                    switch (i)
+                    {
+                        case 0:
+                            this._meshInfo[i].renderPass=RenderPass.TEXT;
+                            break;
+                        case 1:
+                            this._meshInfo[i].renderPass=RenderPass.OUTLINE;
+                            break;
+                        case 2:
+                            this._meshInfo[i].renderPass=RenderPass.DROP_SHADOW;
+                            break;
+                        case 3:  
+                            this._meshInfo[i].renderPass=RenderPass.STENCIL_CLEAR;
+                            break;                                                                                 
+                    }
+                }
+                else
+                {
+                    this._meshInfo[i].renderPass=RenderPass.ALL_IN_ONE;
                 }
             }
 
@@ -268,7 +304,7 @@ Object.assign(pc, function () {
                         this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
-                    this._removeMeshInstance(this._meshInfo[i].meshInstance, (this._twoPassEnabled && i>=this._font.textures.length) ); //removes from model array
+                    this._removeMeshInstance(this._meshInfo[i].meshInstance, (this._twoPassEnabled && i>0) ); //removes from model array
                 }
             }
 
@@ -294,11 +330,10 @@ Object.assign(pc, function () {
             var results;
             var tags;
 
-            if (this._twoPassEnabled!=(this._outlineThickness>0.1))
+            if (this._twoPassEnabled!=(this._outlineThickness>0.1 && this._font.textures.length==1))
             {
-                this._updateOutline();
-                var screenSpace = this._element._isScreenSpace();
-                this._updateMaterial(screenSpace);
+                this._updateMeshInfos();
+                this._updateMaterial(this._element._isScreenSpace());
             }
 
             if (text === undefined) text = this._text;
@@ -411,10 +446,7 @@ Object.assign(pc, function () {
             };
 
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
-                var ti=i;
-                if (this._twoPassEnabled && i>=this._font.textures.length){
-                    ti=this._font.textures.length-1;
-                }
+                var ti = (this._twoPassEnabled) ? 0 : i;
 
                 var l = charactersPerTexture[ti] || 0;
                 var meshInfo = this._meshInfo[i];
@@ -427,24 +459,26 @@ Object.assign(pc, function () {
 
                     meshInfo.count = l;
 
-                    if (this._twoPassEnabled && i>=this._font.textures.length)
+                    switch (this._meshInfo[i].renderPass)
                     {
-                        meshInfo.positions.length = meshInfo.normals.length = 0;
-                        meshInfo.indices.length = 0;
-                        meshInfo.uvs.length = 0;
-                        meshInfo.colors.length = 0;
-                    }
-                    else
-                    {
-                        meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
-                        meshInfo.indices.length = l * 3 * 2;
-                        meshInfo.uvs.length = l * 2 * 4;
-                        meshInfo.colors.length = l * 4 * 4;
+                        case RenderPass.TEXT:
+                        case RenderPass.ALL_IN_ONE:
+                            meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
+                            meshInfo.indices.length = l * 3 * 2;
+                            meshInfo.uvs.length = l * 2 * 4;
+                            meshInfo.colors.length = l * 4 * 4;
+                            break;
+                        default:    
+                            meshInfo.positions.length = meshInfo.normals.length = 0;
+                            meshInfo.indices.length = 0;
+                            meshInfo.uvs.length = 0;
+                            meshInfo.colors.length = 0;
+                            break;                                                                                 
                     }
 
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
-                        this._removeMeshInstance(meshInfo.meshInstance, (this._twoPassEnabled && i>=this._font.textures.length) );
+                        this._removeMeshInstance(meshInfo.meshInstance, (this._twoPassEnabled && i>0) );
                         meshInfo.meshInstance.material = null;
                     }
 
@@ -454,53 +488,56 @@ Object.assign(pc, function () {
                         continue;
                     }
 
-                    if (this._twoPassEnabled && i>=this._font.textures.length)
+                    var mesh = null;
+
+                    switch (this._meshInfo[i].renderPass)
                     {
-                        //skip this for outline mesh infos
+                        case RenderPass.TEXT:
+                        case RenderPass.ALL_IN_ONE:
+                            {
+                                // set up indices and normals whose values don't change when we call _updateMeshes
+                                for (var v = 0; v < l; v++) {
+                                    // create index and normal arrays since they don't change
+                                    // if the length doesn't change
+                                    meshInfo.indices[v * 3 * 2 + 0] = v * 4;
+                                    meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
+                                    meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
+                                    meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
+                                    meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
+                                    meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
+        
+                                    meshInfo.normals[v * 4 * 3 + 0] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 1] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 2] = -1;
+        
+                                    meshInfo.normals[v * 4 * 3 + 3] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 4] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 5] = -1;
+        
+                                    meshInfo.normals[v * 4 * 3 + 6] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 7] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 8] = -1;
+        
+                                    meshInfo.normals[v * 4 * 3 + 9] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 10] = 0;
+                                    meshInfo.normals[v * 4 * 3 + 11] = -1;
+                                }
+                            }
+                            mesh = pc.createMesh(this._system.app.graphicsDevice,
+                                meshInfo.positions,
+                                {
+                                    uvs: meshInfo.uvs,
+                                    normals: meshInfo.normals,
+                                    colors: meshInfo.colors,
+                                    indices: meshInfo.indices
+                                });
+                            break;
+                        default:    
+                            mesh = this._model.meshInstances[ti].mesh 
+                            break;                                                                                 
                     }
-                    else
-                    {
-                        // set up indices and normals whose values don't change when we call _updateMeshes
-                        for (var v = 0; v < l; v++) {
-                            // create index and normal arrays since they don't change
-                            // if the length doesn't change
-                            meshInfo.indices[v * 3 * 2 + 0] = v * 4;
-                            meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
-                            meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
-                            meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
-                            meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
-                            meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
 
-                            meshInfo.normals[v * 4 * 3 + 0] = 0;
-                            meshInfo.normals[v * 4 * 3 + 1] = 0;
-                            meshInfo.normals[v * 4 * 3 + 2] = -1;
-
-                            meshInfo.normals[v * 4 * 3 + 3] = 0;
-                            meshInfo.normals[v * 4 * 3 + 4] = 0;
-                            meshInfo.normals[v * 4 * 3 + 5] = -1;
-
-                            meshInfo.normals[v * 4 * 3 + 6] = 0;
-                            meshInfo.normals[v * 4 * 3 + 7] = 0;
-                            meshInfo.normals[v * 4 * 3 + 8] = -1;
-
-                            meshInfo.normals[v * 4 * 3 + 9] = 0;
-                            meshInfo.normals[v * 4 * 3 + 10] = 0;
-                            meshInfo.normals[v * 4 * 3 + 11] = -1;
-                        }
-                    }
-                    var mesh = (this._twoPassEnabled && i>=this._font.textures.length) ? this._model.meshInstances[ti].mesh : 
-                                pc.createMesh(this._system.app.graphicsDevice,
-                                             meshInfo.positions,
-                                             {
-                                                 uvs: meshInfo.uvs,
-                                                 normals: meshInfo.normals,
-                                                 colors: meshInfo.colors,
-                                                 indices: meshInfo.indices
-                                             });
-
-                    var t_mat = /*(this._twoPassEnabled && i>=this._font.textures.length)? this._materialTwoPass : */ this._material;
-
-                    var mi = new pc.MeshInstance(this._node, mesh, t_mat);
+                    var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.name = "Text Element: " + this._entity.name;
                     mi.castShadow = false;
                     mi.receiveShadow = false;
@@ -525,7 +562,6 @@ Object.assign(pc, function () {
                         this._colorUniform[2] = this._color.b;
                     }
                     mi.setParameter("material_emissive", this._colorUniform);
-                    mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
@@ -535,39 +571,62 @@ Object.assign(pc, function () {
                     this._outlineColorUniform[1] = this._outlineColor.g;
                     this._outlineColorUniform[2] = this._outlineColor.b;
                     this._outlineColorUniform[3] = this._outlineColor.a;
-                    mi.setParameter("outline_color", this._outlineColorUniform);
 
-                    if (this._twoPassEnabled)
-                    {
-                        if (i-ti==2) //third pass (clear stencil)
-                        {
-                            mi.setParameter("material_opacity", 1.0);
-                            mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
-                        }                        
-                        else if (i-ti==1) //second pass (just border, use stencil and set stencil)
-                        {
-                            mi.setParameter("material_opacity", 0.0);
-                            mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
-                        }
-                        else //first pass (no border, set stencil)
-                        {
-                            mi.setParameter("outline_thickness", 0.0 );
-                        }
-                    }
-                    else
-                    {
-                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
-                    }
+                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
 
                     this._shadowColorUniform[0] = this._shadowColor.r;
                     this._shadowColorUniform[1] = this._shadowColor.g;
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
-                    mi.setParameter("shadow_color", this._shadowColorUniform);
+
                     var ratio = this._font.data.info.maps[ti].width / this._font.data.info.maps[ti].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
+                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;  
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
+
+                    this._zeroColorUniform[0] = 0.0;
+                    this._zeroColorUniform[1] = 0.0;
+                    this._zeroColorUniform[2] = 0.0;
+                    this._zeroColorUniform[3] = 0.0;
+
+                    switch (this._meshInfo[i].renderPass)
+                    {
+                        case RenderPass.ALL_IN_ONE:
+                            {
+                                mi.setParameter("material_opacity", this._color.a);
+                                mi.setParameter("outline_color", this._outlineColorUniform);
+                                mi.setParameter("shadow_color", this._shadowColorUniform);
+                            }
+                            break;
+                        case RenderPass.TEXT: //first pass (just text, set stencil)
+                            {
+                                mi.setParameter("material_opacity", this._color.a);
+                                mi.setParameter("outline_color", this._zeroColorUniform);
+                                mi.setParameter("shadow_color", this._zeroColorUniform);
+                            }
+                            break;
+                        case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                            {
+                                mi.setParameter("material_opacity", 0.0);
+                                mi.setParameter("outline_color", this._outlineColorUniform);
+                                mi.setParameter("shadow_color", this._zeroColorUniform);                              
+                            }
+                            break;
+                        case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                            {
+                                mi.setParameter("material_opacity", 0.0);
+                                mi.setParameter("outline_color", this._zeroColorUniform);
+                                mi.setParameter("shadow_color", this._shadowColorUniform);                               
+                            }                         
+                            break;
+                        case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                            {
+                                mi.setParameter("material_opacity", 1.0);
+                                mi.setParameter("outline_color", this._outlineColorUniform);
+                                mi.setParameter("shadow_color", this._shadowColorUniform);   
+                            }                 
+                            break;                                                        
+                    }
 
                     meshInfo.meshInstance = mi;
 
@@ -581,70 +640,96 @@ Object.assign(pc, function () {
             if (this._element.maskedBy) 
             {
                 this._element._setMaskedBy(this._element.maskedBy);
-
+                
                 if (this._twoPassEnabled)
                 {
-                    var ref = this._element.maskedBy.element._image._maskRef;
-    
-                    var stencilParamsFirst = new pc.StencilParameters({
-                        ref: ref,
-                        func: pc.FUNC_EQUAL,
-                        zpass: pc.STENCILOP_INCREMENT
-                    });
-                    this._model.meshInstances[0].stencilFront = stencilParamsFirst;
-                    this._model.meshInstances[0].stencilBack = stencilParamsFirst;
+                    for (i = 0, len = this._meshInfo.length; i < len; i++) 
+                    {               
+                        var ref = this._element.maskedBy.element._image._maskRef;
+                        var stencilParams;
 
-                    var stencilParamsSecond = new pc.StencilParameters({
-                        ref: ref,
-                        func: pc.FUNC_EQUAL,
-                        zpass: pc.STENCILOP_INCREMENT
-                    });
+                        switch (this._meshInfo[i].renderPass)
+                        {
+                            case RenderPass.TEXT: //first pass (just text, set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                        ref: ref,
+                                        func: pc.FUNC_EQUAL,
+                                        zpass: pc.STENCILOP_INCREMENT
+                                    });
+                                break;
+                            case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                    ref: ref,
+                                    func: pc.FUNC_EQUAL,
+                                    zpass: pc.STENCILOP_INCREMENT
+                                });
+                                break;
+                            case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                    ref: ref,
+                                    func: pc.FUNC_EQUAL,
+                                    zpass: pc.STENCILOP_INCREMENT
+                                });
+                                break;
+                            case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                                stencilParams= new pc.StencilParameters({
+                                    ref: ref+1,
+                                    func: pc.FUNC_EQUAL,
+                                    zpass: pc.STENCILOP_DECREMENT
+                                });                                
+                                break;                                                        
+                        }
 
-                    this._model.meshInstances[1].stencilFront = stencilParamsSecond;
-                    this._model.meshInstances[1].stencilBack = stencilParamsSecond;
-
-                    var stencilParamsThird= new pc.StencilParameters({
-                        ref: ref+1,
-                        func: pc.FUNC_EQUAL,
-                        zpass: pc.STENCILOP_DECREMENT
-                    });
-
-                    this._model.meshInstances[2].stencilFront = stencilParamsThird;
-                    this._model.meshInstances[2].stencilBack = stencilParamsThird;                    
+                        this._model.meshInstances[i].stencilFront = stencilParams;
+                        this._model.meshInstances[i].stencilBack = stencilParams;    
+                    }
                 }
             }
             else
             {
                 if (this._twoPassEnabled)
                 {
-                    var ref = 42;
-    
-                    var stencilParamsFirst = new pc.StencilParameters({
-                        ref: ref,
-                        func: pc.FUNC_ALWAYS,
-                        zpass: pc.STENCILOP_REPLACE
-                    });
-                    this._model.meshInstances[0].stencilFront = stencilParamsFirst;
-                    this._model.meshInstances[0].stencilBack = stencilParamsFirst;
+                    for (i = 0, len = this._meshInfo.length; i < len; i++) 
+                    {               
+                        var ref = 42;
+                        var stencilParams;
 
-                    var stencilParamsSecond = new pc.StencilParameters({
-                        ref: ref,
-                        func: pc.FUNC_NOTEQUAL,
-                        zpass: pc.STENCILOP_REPLACE
-                    });
+                        switch (this._meshInfo[i].renderPass)
+                        {
+                            case RenderPass.TEXT: //first pass (just text, set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                    ref: ref,
+                                    func: pc.FUNC_ALWAYS,
+                                    zpass: pc.STENCILOP_REPLACE
+                                    });
+                                break;
+                            case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                    ref: ref,
+                                    func: pc.FUNC_NOTEQUAL,
+                                    zpass: pc.STENCILOP_REPLACE
+                                });
+                                break;
+                            case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                                stencilParams = new pc.StencilParameters({
+                                    ref: ref,
+                                    func: pc.FUNC_NOTEQUAL,
+                                    zpass: pc.STENCILOP_REPLACE
+                                });
+                                break;
+                            case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                                stencilParams= new pc.StencilParameters({
+                                    ref: 0,
+                                    func: pc.FUNC_NEVER,
+                                    fail: pc.STENCILOP_REPLACE,
+                                    zpass: pc.STENCILOP_REPLACE
+                                });                                
+                                break;                                                        
+                        }
 
-                    this._model.meshInstances[1].stencilFront = stencilParamsSecond;
-                    this._model.meshInstances[1].stencilBack = stencilParamsSecond;
-
-                    var stencilParamsThird= new pc.StencilParameters({
-                        ref: 0,
-                        func: pc.FUNC_NEVER,
-                        fail: pc.STENCILOP_REPLACE,
-                        zpass: pc.STENCILOP_REPLACE
-                    });
-
-                    this._model.meshInstances[2].stencilFront = stencilParamsThird;
-                    this._model.meshInstances[2].stencilBack = stencilParamsThird;                        
+                        this._model.meshInstances[i].stencilFront = stencilParams;
+                        this._model.meshInstances[i].stencilBack = stencilParams;    
+                    }
                 }
             }
 
@@ -688,11 +773,9 @@ Object.assign(pc, function () {
             var i;
             var len;
 
-            //var twoPass=(this._meshInfo.length>this._font.textures.length);
-
             this._material = material;
             if (this._model) {
-                for (i = 0, len = ((0 && this._twoPassEnabled)?this._font.textures.length:this._model.meshInstances.length); i < len; i++) {
+                for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.material = material;
                 }
@@ -706,20 +789,14 @@ Object.assign(pc, function () {
                 return element.isVisibleForCamera(camera);
             };
 
-            //var twoPass=(this._font && this._meshInfo.length>this._font.textures.length);
-
             var msdf = this._font && this._font.type === pc.FONT_MSDF;
             this._material = this._system.getTextElementMaterial(screenSpace, msdf);
-//            if (this._twoPassEnabled) 
-//            {
-//                this._materialTwoPass = this._system.getTextElementMaterial(screenSpace, msdf);
-//            }
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.cull = !screenSpace;
-                    mi.material = ((0 && this._twoPassEnabled && this._font && i>=this._font.textures.length)?this._materialTwoPass:this._material);
+                    mi.material = this._material;
                     mi.screenSpace = screenSpace;
 
                     if (screenCulled) {
@@ -844,20 +921,10 @@ Object.assign(pc, function () {
                 fontMinY = this._fontMinY * scale;
                 fontMaxY = this._fontMaxY * scale;
 
-                if (this._twoPassEnabled)
-                {
-                    for (i = 0; i < this._font.textures.length; i++) {
-                        this._meshInfo[i].quad = 0;
-                        this._meshInfo[i].lines = {};
-                    }
-                 }
-                 else
-                 {
-                    for (i = 0; i < this._meshInfo.length; i++) {
-                        this._meshInfo[i].quad = 0;
-                        this._meshInfo[i].lines = {};
-                    } 
-                 }
+                for (i = 0; i < this._meshInfo.length; i++) {
+                    this._meshInfo[i].quad = 0;
+                    this._meshInfo[i].lines = {};
+                } 
 
                 // per-vertex color
                 var color_r = 255;
@@ -1000,14 +1067,6 @@ Object.assign(pc, function () {
                     meshInfo.positions[quad * 4 * 3 + 10] = top;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
-//                    if (this._twoPassEnabled)
-//                    {
-//                        for (var n=(quad * 4 * 3 + 0);n<=(quad * 4 * 3 + 11); n++)
-//                        {
-//                            meshInfoTwoPass.positions[n]=meshInfo.positions[n];
-//                        }
- //                   }
-
                     this.width = Math.max(this.width, candidateLineWidth);
 
                     // scale font size if autoFitWidth is true and the width is larger than the calculated width
@@ -1069,14 +1128,6 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
-//                    if (this._twoPassEnabled)
-//                    {
- //                       for (var n=(quad * 4 * 2 + 0);n<=(quad * 4 * 2 + 7); n++)
-//                        {
-//                            meshInfoTwoPass.uvs[n]=meshInfo.uvs[n];
-//                        }
-//                    }
-
                     // set per-vertex color
                     if (this._symbolColors) {
                         var colorIdx = this._symbolColors[i] * 3;
@@ -1105,14 +1156,6 @@ Object.assign(pc, function () {
                     meshInfo.colors[quad * 4 * 4 + 14] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 15] = 255;
 
-//                    if (this._twoPassEnabled)
-//                    {
-//                        for (var n=(quad * 4 * 4 + 0);n<=(quad * 4 * 4 + 15); n++)
-//                        {
-//                            meshInfoTwoPass.colors[n]=meshInfo.colors[n];
-//                        }     
-//                    }
-
                     meshInfo.quad++;
                 }
 
@@ -1140,17 +1183,12 @@ Object.assign(pc, function () {
             var ha = this._alignment.x;
             var va = this._alignment.y;
 
-            for (i = 0, len = (this._twoPassEnabled)? this._font.textures.length : this._meshInfo.length; i < len; i++) {
-                var ti=i;
-                if (this._twoPassEnabled && i>=this._font.textures.length){
-                    ti=this._font.textures.length-1;
-                }
-
-                if (this._meshInfo[ti].count === 0) continue;
+            for (i = 0, len = (this._twoPassEnabled)? 1 : this._meshInfo.length; i < len; i++) {
+                if (this._meshInfo[i].count === 0) continue;
 
                 var prevQuad = 0;
-                for (var line in this._meshInfo[ti].lines) {
-                    var index = this._meshInfo[ti].lines[line];
+                for (var line in this._meshInfo[i].lines) {
+                    var index = this._meshInfo[i].lines[line];
                     var lw = this._lineWidths[parseInt(line, 10)];
                     var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
@@ -1192,8 +1230,8 @@ Object.assign(pc, function () {
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[ti].count * 4; // number of verts we allocated
-                var vertMax = this._meshInfo[ti].quad * 4;  // number of verts we need (usually count minus line break characters)
+                var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
+                var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
                     if (v >= vertMax) {
@@ -1397,13 +1435,9 @@ Object.assign(pc, function () {
 
             var i, len;
 
-            for (i = 0, len = (this._twoPassEnabled)? this._font.textures.length : this._meshInfo.length; i < len; i++) {    
-                var ti=i;
-                if (this._twoPassEnabled && i>=this._font.textures.length){
-                    ti=this._font.textures.length-1;
-                }
-                var start = startChars[ti] || 0;
-                var end = endChars[ti] || 0;
+            for (i = 0, len = (this._twoPassEnabled)? 1 : this._meshInfo.length; i < len; i++) {    
+                var start = startChars[i] || 0;
+                var end = endChars[i] || 0;
                 var instance = this._meshInfo[i].meshInstance;
                 if (instance) {
                     var mesh = instance.mesh;
@@ -1502,7 +1536,35 @@ Object.assign(pc, function () {
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter('material_opacity', (this._twoPassEnabled && i>=this._font.textures.length) ? ((i==this._font.textures.length+2) ? 1.0 : 0.0) : value);
+
+                    switch (this._meshInfo[i].renderPass)
+                    {
+                        case RenderPass.ALL_IN_ONE:
+                            {
+                                mi.setParameter("material_opacity", this._color.a);
+                            }
+                            break;
+                        case RenderPass.TEXT: //first pass (just text, set stencil)
+                            {
+                                mi.setParameter("material_opacity", this._color.a);
+                            }
+                            break;
+                        case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                            {
+                                mi.setParameter("material_opacity", 0.0);                            
+                            }
+                            break;
+                        case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                            {
+                                mi.setParameter("material_opacity", 0.0);                             
+                            }                         
+                            break;
+                        case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                            {
+                                mi.setParameter("material_opacity", 1.0);
+                            }                 
+                            break;                                                        
+                    }
                 }
             }
         }
@@ -1641,7 +1703,7 @@ Object.assign(pc, function () {
             // make sure we have as many meshInfo entries
             // as the number of font textures and outline passes
 
-            this._twoPassEnabled=!(this._outlineThickness>0.1) //this line forces a call to _updateOutline 
+            this._twoPassEnabled=!(this._outlineThickness>0.1 && this._font.textures.length==1); //this line forces a call to _updateMeshInfos 
 
             this._updateText();
         }
@@ -1810,7 +1872,35 @@ Object.assign(pc, function () {
 
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter("outline_color", this._outlineColorUniform);
+
+                    switch (this._meshInfo[i].renderPass)
+                    {
+                        case RenderPass.ALL_IN_ONE:
+                            {
+                                mi.setParameter("outline_color", this._outlineColorUniform);
+                            }
+                            break;
+                        case RenderPass.TEXT: //first pass (just text, set stencil)
+                            {
+                                mi.setParameter("outline_color", this._zeroColorUniform);
+                            }
+                            break;
+                        case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                            {
+                                mi.setParameter("outline_color", this._outlineColorUniform);                             
+                            }
+                            break;
+                        case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                            {
+                                mi.setParameter("outline_color", this._zeroColorUniform);                            
+                            }                         
+                            break;
+                        case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                            {
+                                mi.setParameter("outline_color", this._outlineColorUniform); 
+                            }                 
+                            break;                                                        
+                    }
                 }
             }
         }
@@ -1831,7 +1921,7 @@ Object.assign(pc, function () {
 
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_thickness", (this._twoPassEnabled && i>=this._font.textures.length) ? this._outlineThicknessScale * this._outlineThickness : 0.0);
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
                     }
                 }
             }
@@ -1875,7 +1965,34 @@ Object.assign(pc, function () {
 
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter("shadow_color", this._shadowColorUniform);
+                    switch (this._meshInfo[i].renderPass)
+                    {
+                        case RenderPass.ALL_IN_ONE:
+                            {
+                                mi.setParameter("shadow_color", this._shadowColorUniform);
+                            }
+                            break;
+                        case RenderPass.TEXT: //first pass (just text, set stencil)
+                            {
+                                mi.setParameter("shadow_color", this._zeroColorUniform);
+                            }
+                            break;
+                        case RenderPass.OUTLINE: //second pass (just border, use stencil and set stencil)
+                            {
+                                mi.setParameter("shadow_color", this._zeroColorUniform);                              
+                            }
+                            break;
+                        case RenderPass.DROP_SHADOW: //third pass (just drop shadow, use stencil and set stencil)
+                            {
+                                mi.setParameter("shadow_color", this._shadowColorUniform);                               
+                            }                         
+                            break;
+                        case RenderPass.STENCIL_CLEAR: //forth pass (include everything clear stencil)
+                            {
+                                mi.setParameter("shadow_color", this._shadowColorUniform);   
+                            }                 
+                            break;                                                        
+                    }
                 }
             }
         }
