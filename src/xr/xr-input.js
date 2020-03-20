@@ -166,6 +166,12 @@ Object.assign(pc, function () {
 
             var inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
+
+            var h = inputSource.hitTestSources.length;
+            while(h--) {
+                inputSource.hitTestSources[h].remove();
+            }
+
             inputSource.fire('remove');
             this.fire('remove', inputSource);
             return;

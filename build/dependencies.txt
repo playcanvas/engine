@@ -115,6 +115,8 @@
 ../src/xr/xr-manager.js
 ../src/xr/xr-input.js
 ../src/xr/xr-input-source.js
+../src/xr/xr-hit-test.js
+../src/xr/xr-hit-test-source.js
 ../src/net/http.js
 ../src/script/script.js
 ../src/script/script-type.js
