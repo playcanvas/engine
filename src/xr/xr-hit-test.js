@@ -34,7 +34,7 @@ Object.assign(pc, function () {
      * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
      * @param {pc.XrManager} manager - WebXR Manager.
      * @property {boolean} supported True if AR Hit Test is supported.
-     * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource}.
+     * @property {pc.XrHitTestSource[]} sources list of active {@link pc.XrHitTestSource}.
      */
     var XrHitTest = function (manager) {
         pc.EventHandler.call(this);
@@ -44,7 +44,7 @@ Object.assign(pc, function () {
 
         this._session = null;
 
-        this.hitTestSources = [];
+        this.sources = [];
 
         if (this._supported) {
             this.manager.on('start', this._onSessionStart, this);
@@ -111,10 +111,10 @@ Object.assign(pc, function () {
 
         this._session = null;
 
-        for (var i = 0; i < this.hitTestSources.length; i++) {
-            this.hitTestSources[i].onStop();
+        for (var i = 0; i < this.sources.length; i++) {
+            this.sources[i].onStop();
         }
-        this.hitTestSources = [];
+        this.sources = [];
     };
 
     XrHitTest.prototype.isAvailable = function (callback, fireError) {
@@ -257,15 +257,15 @@ Object.assign(pc, function () {
         }
 
         var hitTestSource = new pc.XrHitTestSource(this.manager, xrHitTestSource, transient);
-        this.hitTestSources.push(hitTestSource);
+        this.sources.push(hitTestSource);
 
         if (callback) callback(null, hitTestSource);
         this.fire('add', hitTestSource);
     };
 
     XrHitTest.prototype.update = function (frame) {
-        for (var i = 0; i < this.hitTestSources.length; i++) {
-            this.hitTestSources[i].update(frame);
+        for (var i = 0; i < this.sources.length; i++) {
+            this.sources[i].update(frame);
         }
     };
 

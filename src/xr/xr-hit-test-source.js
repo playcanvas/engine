@@ -60,9 +60,9 @@ Object.assign(pc, function () {
         if (! this._xrHitTestSource)
             return;
 
-        var hitTestSources = this.manager.hitTest.hitTestSources;
-        var ind = hitTestSources.indexOf(this);
-        if (ind !== -1) hitTestSources.splice(ind, 1);
+        var sources = this.manager.hitTest.sources;
+        var ind = sources.indexOf(this);
+        if (ind !== -1) sources.splice(ind, 1);
 
         this.onStop();
     };
