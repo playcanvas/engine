@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @classdesc Provides access to input sources for WebXR.
      * @description Provides access to input sources for WebXR.
      * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {pc.XrInputSource[]} inputSources List of active {pc.XrInputSource}.
+     * @property {pc.XrInputSource[]} inputSources List of active {@link pc.XrInputSource}.
      */
     var XrInput = function (manager) {
         pc.EventHandler.call(this);
@@ -30,7 +30,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInput#add
-     * @description Fired when new {pc.XrInputSource} is added to the list.
+     * @description Fired when new {@link pc.XrInputSource} is added to the list.
      * @param {pc.XrInputSource} inputSource - Input source that has been added
      * @example
      * app.xr.input.on('add', function (inputSource) {
@@ -41,7 +41,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInput#remove
-     * @description Fired when {pc.XrInputSource} is removed to the list.
+     * @description Fired when {@link pc.XrInputSource} is removed to the list.
      * @param {pc.XrInputSource} inputSource - Input source that has been removed
      * @example
      * app.xr.input.on('remove', function (inputSource) {
@@ -52,7 +52,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInput#select
-     * @description Fired when {pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
+     * @description Fired when {@link pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
      * @param {pc.XrInputSource} inputSource - Input source that triggered select event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
