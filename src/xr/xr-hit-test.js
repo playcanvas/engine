@@ -91,6 +91,13 @@ Object.assign(pc, function () {
      * });
      */
 
+    /**
+     * @event
+     * @name pc.XrHitTest#error
+     * @param {Error} error - Error object related to failure of creating hit test source.
+     * @description Fired when failed create hit test source.
+     */
+
     XrHitTest.prototype._onSessionStart = function () {
         if (this.manager.type !== pc.XRTYPE_AR)
             return;
