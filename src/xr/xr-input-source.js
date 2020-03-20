@@ -204,32 +204,41 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrInputSource#hitTestStart
      * @description Attempts to start hit test source based on this input source.
-     * @param {string[]} [entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
      * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
      * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
      * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called once hit test source is created or failed.
+     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
-     *     inputSource.hitTestStart(function (err, hitTestSource) {
-     *         if (err) return;
-     *         hitTestSource.on('result', function (position, rotation) {
-     *             // position and rotation of hit test result
-     *             // that will be created from touch on mobile devices
-     *         });
+     *     inputSource.hitTestStart({
+     *         callback: function (err, hitTestSource) {
+     *             if (err) return;
+     *             hitTestSource.on('result', function (position, rotation) {
+     *                 // position and rotation of hit test result
+     *                 // that will be created from touch on mobile devices
+     *             });
+     *         }
      *     });
      * });
      */
-    XrInputSource.prototype.hitTestStart = function (entityTypes, offsetRay, callback) {
+    XrInputSource.prototype.hitTestStart = function (options) {
         var self = this;
 
-        this._manager.hitTest.startForInputSource(this._xrInputSource.profiles[0], entityTypes, offsetRay, function (err, hitTestSource) {
+        options = options || { };
+        options.profile = this._xrInputSource.profiles[0];
+
+        var callback = options.callback;
+        options.callback = function (err, hitTestSource) {
             if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
             if (callback) callback(err, hitTestSource);
-        });
+        };
+
+        this._manager.hitTest.start(options);
     };
 
     XrInputSource.prototype.onHitTestSourceAdd = function (hitTestSource) {

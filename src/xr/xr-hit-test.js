@@ -142,7 +142,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrHitTest#start
      * @description Attempts to start hit test with provided reference space.
-     * @param {string} [spaceType] - Optional reference space type. Defaults to {pc.XRSPACE_VIEWER}. Can be one of the following:
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {string} [options.spaceType] - Reference space type. Defaults to {pc.XRSPACE_VIEWER}. Can be one of the following:
      *
      * * {@link pc.XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
      * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
@@ -150,155 +151,117 @@ Object.assign(pc, function () {
      * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
      * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
-     * @param {string[]} [entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {pc.XrInputSource} should be provided.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
      * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
      * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
      * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called once hit test source is created or failed.
+     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
-     * app.xr.hitTest.start(function (err, hitTestSource) {
-     *     if (err) return;
-     *     hitTestSource.on('result', function (position, rotation) {
-     *         // position and rotation of hit test result
-     *         // based on default Ray facing forward from the Viewer (default space)
-     *     });
+     * app.xr.hitTest.start({
+     *     spaceType: pc.XRSPACE_VIEWER,
+     *     callback: function (err, hitTestSource) {
+     *         if (err) return;
+     *         hitTestSource.on('result', function (position, rotation) {
+     *             // position and rotation of hit test result
+     *             // based on Ray facing forward from the Viewer reference space
+     *         });
+     *     }
      * });
      * @example
      * var ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
-     * app.xr.hitTest.start(pc.XRSPACE_LOCAL, [pc.XRTRACKABLE_PLANE], ray, function (err, hitTestSource) {
-     *     // hit test source that will sample real world geometry straight down
-     *     // from the position where AR session started
+     * app.xr.hitTest.start({
+     *     spaceType: pc.XRSPACE_LOCAL,
+     *     offsetRay: ray,
+     *     callback: function (err, hitTestSource) {
+     *         // hit test source that will sample real world geometry straight down
+     *         // from the position where AR session started
+     *     }
+     * });
+     * @example
+     * app.xr.hitTest.start({
+     *     profile: 'generic-touchscreen',
+     *     callback: function (err, hitTestSource) {
+     *         if (err) return;
+     *         hitTestSource.on('result', function (position, rotation, inputSource) {
+     *             // position and rotation of hit test result
+     *             // that will be created from touch on mobile devices
+     *         });
+     *     }
      * });
      */
-    XrHitTest.prototype.start = function (spaceType, entityTypes, offsetRay, callback) {
+    XrHitTest.prototype.start = function (options) {
         var self = this;
-
-        if (! spaceType) {
-            spaceType = pc.XRSPACE_VIEWER;
-        } else if (typeof(spaceType) === 'function') {
-            callback = spaceType;
-            spaceType = pc.XRSPACE_VIEWER;
-        } else if (typeof(entityTypes) === 'function') {
-            callback = entityTypes;
-            entityTypes = undefined;
-        } else if (typeof(offsetRay) === 'function') {
-            callback = offsetRay;
-            offsetRay = undefined;
-        }
+        var xrRay;
 
         if (! this.isAvailable(callback, this))
             return;
 
-        this._session.requestReferenceSpace(spaceType).then(function (referenceSpace) {
-            if (! self._session) {
-                var err = new Error('XR Session is not started (2)');
-                if (callback) callback(err);
-                self.fire('error', err);
-                return;
-            }
+        options = options || { };
 
-            var xrRay;
-            if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
+        if (! options.profile && ! options.spaceType)
+            options.spaceType = pc.XRSPACE_VIEWER;
 
-            self._session.requestHitTestSource({
-                space: referenceSpace,
-                entityTypes: entityTypes || undefined,
-                offsetRay: xrRay
-            }).then(function (xrHitTestSource) {
+        var offsetRay = options.offsetRay;
+        if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
+
+        var callback = options.callback;
+
+        if (options.spaceType) {
+            this._session.requestReferenceSpace(options.spaceType).then(function (referenceSpace) {
                 if (! self._session) {
-                    xrHitTestSource.cancel();
-                    var err = new Error('XR Session is not started (3)');
+                    var err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
                     self.fire('error', err);
                     return;
                 }
 
-                var hitTestSource = new pc.XrHitTestSource(self.manager, xrHitTestSource);
-                self.hitTestSources.push(hitTestSource);
-
-                if (callback) callback(null, hitTestSource);
-                self.fire('add', hitTestSource);
+                self._session.requestHitTestSource({
+                    space: referenceSpace,
+                    entityTypes: options.entityTypes || undefined,
+                    offsetRay: xrRay
+                }).then(function (xrHitTestSource) {
+                    self._onHitTestSource(xrHitTestSource, false, callback);
+                }).catch(function (ex) {
+                    if (callback) callback(ex);
+                    self.fire('error', ex);
+                });
             }).catch(function (ex) {
                 if (callback) callback(ex);
                 self.fire('error', ex);
             });
-        }).catch(function (ex) {
-            if (callback) callback(ex);
-            self.fire('error', ex);
-        });
+        } else {
+            this._session.requestHitTestSourceForTransientInput({
+                profile: options.profile,
+                entityTypes: options.entityTypes || undefined,
+                offsetRay: xrRay
+            }).then(function (xrHitTestSource) {
+                self._onHitTestSource(xrHitTestSource, true, callback);
+            }).catch(function (ex) {
+                if (callback) callback(ex);
+                self.fire('error', ex);
+            });
+        }
     };
 
-    /**
-     * @function
-     * @name pc.XrHitTest#startForInputSource
-     * @description Attempts to start hit test with provided input source profile.
-     * @param {string} profile - name of profile of the {pc.XrInputSource}.
-     * @param {string[]} [entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
-     *
-     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
-     *
-     * @param {pc.Ray} [offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called once hit test source is created or failed.
-     * @example
-     * app.xr.hitTest.start('generic-touchscreen', function (err, hitTestSource) {
-     *     if (err) return;
-     *     hitTestSource.on('result', function (position, rotation, inputSource) {
-     *         // position and rotation of hit test result
-     *         // that will be created from touch on mobile devices
-     *     });
-     * });
-     */
-    XrHitTest.prototype.startForInputSource = function (profile, entityTypes, offsetRay, callback) {
-        var self = this;
-
-        if (! profile) {
-            var err = new Error('missing profile');
+    XrHitTest.prototype._onHitTestSource = function (xrHitTestSource, transient, callback) {
+        if (! this._session) {
+            xrHitTestSource.cancel();
+            var err = new Error('XR Session is not started (3)');
             if (callback) callback(err);
             this.fire('error', err);
             return;
-        } else if (typeof(entityTypes) === 'function') {
-            callback = entityTypes;
-            entityTypes = undefined;
-        } else if (typeof(offsetRay) === 'function') {
-            callback = offsetRay;
-            offsetRay = undefined;
         }
 
-        if (! this.isAvailable(callback, this))
-            return;
+        var hitTestSource = new pc.XrHitTestSource(this.manager, xrHitTestSource, transient);
+        this.hitTestSources.push(hitTestSource);
 
-        var xrRay;
-        if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
-
-        self._session.requestHitTestSourceForTransientInput({
-            profile: profile,
-            entityTypes: entityTypes || undefined,
-            offsetRay: xrRay
-        }).then(function (xrHitTestSource) {
-            if (! self._session) {
-                xrHitTestSource.cancel();
-                var err = new Error('XR Session is not started (3)');
-                if (callback) callback(err);
-                self.fire('error', err);
-                return;
-            }
-
-            var hitTestSource = new pc.XrHitTestSource(self.manager, xrHitTestSource, true);
-            self.hitTestSources.push(hitTestSource);
-
-            if (callback) callback(null, hitTestSource);
-            self.fire('add', hitTestSource);
-        }).catch(function (ex) {
-            if (callback) callback(ex);
-            self.fire('error', ex);
-        });
+        if (callback) callback(null, hitTestSource);
+        this.fire('add', hitTestSource);
     };
-
 
     XrHitTest.prototype.update = function (frame) {
         for (var i = 0; i < this.hitTestSources.length; i++) {
