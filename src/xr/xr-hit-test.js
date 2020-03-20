@@ -195,16 +195,16 @@ Object.assign(pc, function () {
      */
     XrHitTest.prototype.start = function (options) {
         var self = this;
-        var xrRay;
-
-        if (! this.isAvailable(callback, this))
-            return;
 
         options = options || { };
+
+        if (! this.isAvailable(options.callback, this))
+            return;
 
         if (! options.profile && ! options.spaceType)
             options.spaceType = pc.XRSPACE_VIEWER;
 
+        var xrRay;
         var offsetRay = options.offsetRay;
         if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
 
