@@ -34,7 +34,7 @@ Object.assign(pc, function () {
      * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
      * @param {pc.XrManager} manager - WebXR Manager.
      * @property {boolean} supported True if AR Hit Test is supported.
-     * @property {pc.XrHitTestSource[]} hitTestSources list of active {pc.XrHitTestSource}.
+     * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource}.
      */
     var XrHitTest = function (manager) {
         pc.EventHandler.call(this);
@@ -57,7 +57,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrHitTest#add
-     * @description Fired when new {pc.XrHitTestSource} is added to the list.
+     * @description Fired when new {@link pc.XrHitTestSource} is added to the list.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
@@ -68,7 +68,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrHitTest#remove
-     * @description Fired when {pc.XrHitTestSource} is removed to the list.
+     * @description Fired when {@link pc.XrHitTestSource} is removed to the list.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
@@ -142,7 +142,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrHitTest#start
      * @description Attempts to start hit test with provided reference space.
-     * @param {string} [spaceType] - Optional reference space type. Defaults to {pc.XRSPACE_VIEWER}. Can be one of the following:
+     * @param {string} [spaceType] - Optional reference space type. Defaults to {@link pc.XRSPACE_VIEWER}. Can be one of the following:
      *
      * * {@link pc.XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
      * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
@@ -235,7 +235,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrHitTest#startForInputSource
      * @description Attempts to start hit test with provided input source profile.
-     * @param {string} profile - name of profile of the {pc.XrInputSource}.
+     * @param {string} profile - name of profile of the {@link pc.XrInputSource}.
      * @param {string[]} [entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
      *
      * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
