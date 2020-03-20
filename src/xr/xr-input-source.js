@@ -76,13 +76,13 @@ Object.assign(pc, function () {
      * * {@link pc.XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
      *
      * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
-     * @property {pc.Ray} ray Ray that is calculated based on {pc.XrInputSource#targetRayMode} that can be used for interacting with virtual objects. Its origin and direction are in local space of XR session.
+     * @property {pc.Ray} ray Ray that is calculated based on {@link pc.XrInputSource#targetRayMode} that can be used for interacting with virtual objects. Its origin and direction are in local space of XR session.
      * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
-     * @property {pc.Vec3|null} position If {pc.XrInputSource#grip} is true, then position will represent position of handheld input source in local space of XR session.
-     * @property {pc.Quat|null} rotation If {pc.XrInputSource#grip} is true, then rotation will represent rotation of handheld input source in local space of XR session.
+     * @property {pc.Vec3|null} position If {@link pc.XrInputSource#grip} is true, then position will represent position of handheld input source in local space of XR session.
+     * @property {pc.Quat|null} rotation If {@link pc.XrInputSource#grip} is true, then rotation will represent rotation of handheld input source in local space of XR session.
      * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
      * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
-     * @property {pc.XrHitTestSource[]} hitTestSources list of active {pc.XrHitTestSource} created by this input source.
+     * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
      */
     var XrInputSource = function (manager, xrInputSource) {
         pc.EventHandler.call(this);
@@ -104,7 +104,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInputSource#remove
-     * @description Fired when {pc.XrInputSource} is removed.
+     * @description Fired when {@link pc.XrInputSource} is removed.
      * @example
      * inputSource.once('remove', function () {
      *     // input source is not available anymore
@@ -141,7 +141,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInputSource#hittest:add
-     * @description Fired when new {pc.XrHitTestSource} is added to the input source.
+     * @description Fired when new {@link pc.XrHitTestSource} is added to the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * inputSource.on('hittest:add', function (hitTestSource) {
@@ -152,7 +152,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.XrInputSource#hittest:remove
-     * @description Fired when {pc.XrHitTestSource} is removed to the the input source.
+     * @description Fired when {@link pc.XrHitTestSource} is removed to the the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * inputSource.on('remove', function (hitTestSource) {
@@ -204,14 +204,20 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrInputSource#hitTestStart
      * @description Attempts to start hit test source based on this input source.
-     * @param {string[]} [entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {string[]} [entityTypes] - Optional list of underlying entity types against
+     * which hit tests will be performed. Defaults to [ {@link pc.XRTRACKABLE_PLANE} ]. Can
+     * be any combination of the following:
      *
-     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
+     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
+     * computed based on the feature points detected by the underlying Augmented Reality system.
+     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
+     * computed based on the planes detected by the underlying Augmented Reality system.
+     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
+     * computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {pc.Ray} [offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called once hit test source is created or failed.
+     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called
+     * once hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     inputSource.hitTestStart(function (err, hitTestSource) {
