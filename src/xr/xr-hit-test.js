@@ -44,7 +44,7 @@ Object.assign(pc, function () {
 
         this._session = null;
 
-        this.hitTestSources = [ ];
+        this.hitTestSources = [];
 
         if (this._supported) {
             this.manager.on('start', this._onSessionStart, this);
@@ -104,10 +104,10 @@ Object.assign(pc, function () {
 
         this._session = null;
 
-        for(var i = 0; i < this.hitTestSources.length; i++) {
+        for (var i = 0; i < this.hitTestSources.length; i++) {
             this.hitTestSources[i].onStop();
         }
-        this.hitTestSources = [ ];
+        this.hitTestSources = [];
     };
 
     XrHitTest.prototype.isAvailable = function (callback, fireError) {
@@ -161,8 +161,7 @@ Object.assign(pc, function () {
      * });
      * @example
      * var ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
-     * app.xr.hitTest.start(pc.XRSPACE_LOCAL, [ pc.XRTRACKABLE_PLANE ], ray, function (err, hitTestSource) {
-     *     if (err) return;
+     * app.xr.hitTest.start(pc.XRSPACE_LOCAL, [pc.XRTRACKABLE_PLANE], ray, function (err, hitTestSource) {
      *     // hit test source that will sample real world geometry straight down
      *     // from the position where AR session started
      * });
@@ -194,7 +193,7 @@ Object.assign(pc, function () {
                 return;
             }
 
-            var xrRay = undefined;
+            var xrRay;
             if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
 
             self._session.requestHitTestSource({
@@ -247,7 +246,7 @@ Object.assign(pc, function () {
      *     });
      * });
      */
-    XrHitTest.prototype.startForInputSource = function(profile, entityTypes, offsetRay, callback) {
+    XrHitTest.prototype.startForInputSource = function (profile, entityTypes, offsetRay, callback) {
         var self = this;
 
         if (! profile) {
@@ -266,7 +265,7 @@ Object.assign(pc, function () {
         if (! this.isAvailable(callback, this))
             return;
 
-        var xrRay = undefined;
+        var xrRay;
         if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
 
         self._session.requestHitTestSourceForTransientInput({

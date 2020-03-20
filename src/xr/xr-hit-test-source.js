@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
-    var poolVec3 = [ ];
-    var poolQuat = [ ];
+    var poolVec3 = [];
+    var poolQuat = [];
 
 
     /**
@@ -67,7 +67,7 @@ Object.assign(pc, function () {
         this.onStop();
     };
 
-    XrHitTestSource.prototype.onStop = function() {
+    XrHitTestSource.prototype.onStop = function () {
         this._xrHitTestSource.cancel();
         this._xrHitTestSource = null;
 
@@ -78,7 +78,7 @@ Object.assign(pc, function () {
     XrHitTestSource.prototype.update = function (frame) {
         if (this._transient) {
             var transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
-            for(var i = 0; i < transientResults.length; i++) {
+            for (var i = 0; i < transientResults.length; i++) {
                 var transientResult = transientResults[i];
                 var inputSource;
 
@@ -92,8 +92,8 @@ Object.assign(pc, function () {
         }
     };
 
-    XrHitTestSource.prototype.updateHitResults = function(results, inputSource) {
-        for(var i = 0; i < results.length; i++) {
+    XrHitTestSource.prototype.updateHitResults = function (results, inputSource) {
+        for (var i = 0; i < results.length; i++) {
             var pose = results[i].getPose(this.manager._referenceSpace);
 
             var position = poolVec3.pop();

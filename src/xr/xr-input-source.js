@@ -96,7 +96,7 @@ Object.assign(pc, function () {
         this._rotation = null;
         this._selecting = false;
 
-        this._hitTestSources = [ ];
+        this._hitTestSources = [];
     };
     XrInputSource.prototype = Object.create(pc.EventHandler.prototype);
     XrInputSource.prototype.constructor = XrInputSource;
@@ -233,19 +233,17 @@ Object.assign(pc, function () {
     };
 
     XrInputSource.prototype.onHitTestSourceAdd = function (hitTestSource) {
-        var self = this;
-
         this._hitTestSources.push(hitTestSource);
 
         this.fire('hittest:add', hitTestSource);
 
-        hitTestSource.on('result', function(position, rotation, inputSource) {
+        hitTestSource.on('result', function (position, rotation, inputSource) {
             if (inputSource !== this)
                 return;
 
             this.fire('hittest:result', hitTestSource, position, rotation);
         }, this);
-        hitTestSource.once('remove', function() {
+        hitTestSource.once('remove', function () {
             this.onHitTestSourceRemove(hitTestSource);
             this.fire('hittest:remove', hitTestSource);
         }, this);

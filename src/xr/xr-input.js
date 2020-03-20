@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @classdesc Provides access to input sources for WebXR.
      * @description Provides access to input sources for WebXR.
      * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {pc.XrInputSource[]} inputSources List of active {pc.XrInputSource}
+     * @property {pc.XrInputSource[]} inputSources List of active {pc.XrInputSource}.
      */
     var XrInput = function (manager) {
         pc.EventHandler.call(this);
@@ -168,7 +168,7 @@ Object.assign(pc, function () {
             this._inputSources.splice(i, 1);
 
             var h = inputSource.hitTestSources.length;
-            while(h--) {
+            while (h--) {
                 inputSource.hitTestSources[h].remove();
             }
 
