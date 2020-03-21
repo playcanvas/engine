@@ -204,14 +204,10 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrInputSource#hitTestStart
      * @description Attempts to start hit test source based on this input source.
-<<<<<<< HEAD
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity tipes against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ]. Can be any combination of the following:
-=======
-     * @param {string[]} [entityTypes] - Optional list of underlying entity types against
-     * which hit tests will be performed. Defaults to [ {@link pc.XRTRACKABLE_PLANE} ]. Can
-     * be any combination of the following:
->>>>>>> 85248b63142be72e959251164b37cff9345074cf
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
+     * against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ].
+     * Can be any combination of the following:
      *
      * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
      * computed based on the feature points detected by the underlying Augmented Reality system.
@@ -220,14 +216,9 @@ Object.assign(pc, function () {
      * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
      * computed based on the meshes detected by the underlying Augmented Reality system.
      *
-<<<<<<< HEAD
      * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
-=======
-     * @param {pc.Ray} [offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [callback] - Optional callback function called
-     * once hit test source is created or failed.
->>>>>>> 85248b63142be72e959251164b37cff9345074cf
+     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function
+     * called once hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     inputSource.hitTestStart({
