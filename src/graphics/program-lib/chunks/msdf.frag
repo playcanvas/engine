@@ -26,6 +26,8 @@ uniform float outline_thickness;
 uniform vec4 shadow_color;
 uniform vec2 shadow_offset;
 
+uniform float render_pass;
+
 vec4 applyMsdf(vec4 color) {
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
@@ -44,15 +46,15 @@ vec4 applyMsdf(vec4 color) {
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
         vec2 w = fwidth(vUv0);
-        float smoothing = 0.0; // smoothing doesn't work with multi-pass stencil rendering
-        //float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
+        //float smoothing = 0.0; // smoothing doesn't work with multi-pass stencil rendering
+        float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
     #else
         float font_size = 16.0; // TODO fix this
         // smoothing gets smaller as the font size gets bigger
         // don't have fwidth we can approximate from font size, this doesn't account for scaling
         // so a big font scaled down will be wrong...
-        float smoothing = 0.0; // smoothing doesn't work with multi-pass stencil rendering
-        //float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5); 
+        //float smoothing = 0.0; // smoothing doesn't work with multi-pass stencil rendering
+        float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5); 
     #endif
     float mapMin = 0.05;
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
@@ -74,11 +76,42 @@ vec4 applyMsdf(vec4 color) {
     vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
     tcolor = mix(scolor, tcolor, outline);
     
-    float max_a=max(max(shadow_color.a, outline_color.a), color.a);
+ //   float max_a=max(max(shadow_color.a, outline_color.a), color.a);
 
-    if (tcolor.a==0.0 && max_a>0.0)
+    //if (tcolor.a==0.0 && max_a>0.0)
+    if (render_pass==1.0 && inside==0.0)
     {
         discard;
     }
-    return tcolor;
+
+    if (render_pass==2.0 && outline<1.0)
+    {
+        discard;
+    }
+
+    if (render_pass==3.0 && shadow<1.0)
+    {
+        discard;
+    }
+
+    if (render_pass==4.0 && tcolor.a==0.0) //edge aa
+    {
+        discard;
+    }
+
+    if (render_pass==5.0) //stencil clear
+    {
+        return vec4(0.0);
+    }
+
+    return vec4(tcolor.rgb,tcolor.a);
+
+ /*   if (max_a==0.0)
+    {
+        return vec4(vec3(1,1,0), 1.0);
+    }
+    else
+    {
+        return vec4(tcolor.rgb, 1.0-max(shadow,outline));//tcolor.a);
+    }*/
 }
