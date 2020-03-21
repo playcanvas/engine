@@ -1,6 +1,7 @@
 Object.assign(pc, function () {
 
     /**
+     * @private
      * @constant
      * @type {number}
      * @name pc.INTERPOLATION_STEP
@@ -9,6 +10,7 @@ Object.assign(pc, function () {
     var INTERPOLATION_STEP = 0;
 
     /**
+     * @private
      * @constant
      * @type {number}
      * @name pc.INTERPOLATION_LINEAR
@@ -17,6 +19,7 @@ Object.assign(pc, function () {
     var INTERPOLATION_LINEAR = 1;
 
     /**
+     * @private
      * @constant
      * @type {number}
      * @name pc.INTERPOLATION_CUBIC
@@ -25,6 +28,7 @@ Object.assign(pc, function () {
     var INTERPOLATION_CUBIC = 2;
 
     /**
+     * @private
      * @class
      * @name pc.AnimData
      * @classdesc Wraps a set of data used in animation.
@@ -53,6 +57,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimCache
      * @classdesc Internal cache data for the evaluation of a single curve timeline.
@@ -190,6 +195,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimCurve
      * @classdesc Animation curve links an input data set to an output data set
@@ -211,6 +217,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @class
      * @name pc.AnimTarget
      * @classdesc AnimTarget names a target graph node and specifies the curves which drive translation, rotation and scale.
@@ -251,6 +258,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimTrack
      * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
@@ -319,6 +327,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimSnapshot
      * @classdesc AnimSnapshot stores the state of an animation track at a particular time.
@@ -357,6 +366,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @class
      * @name pc.AnimClip
      * @classdesc AnimClip wraps the running state of an animation track. It contains and update
@@ -499,6 +509,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimController
      * @classdesc AnimContoller stores a set of animation clips and performs blending
