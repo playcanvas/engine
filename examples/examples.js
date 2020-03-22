@@ -79,7 +79,6 @@ var categories = [
         name: "xr",
         examples: [
             'ar-basic',
-            'ar-hit-test',
             'vr-basic',
             'vr-controllers',
             'vr-movement',
