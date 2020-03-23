@@ -26,7 +26,7 @@ uniform float outline_thickness;
 uniform vec4 shadow_color;
 uniform vec2 shadow_offset;
 
-uniform float render_pass;
+uniform float render_pass; // multi-pass render pass
 
 vec4 applyMsdf(vec4 color) {
     // sample the field
