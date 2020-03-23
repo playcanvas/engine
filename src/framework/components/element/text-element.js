@@ -268,14 +268,8 @@ Object.assign(pc, function () {
 
                         if (multiPassNeeded) {
                             mi.setParameter("render_pass", RenderPass.TEXT);
-                            // mi.setParameter("material_opacity", this._color.a);
-                            // mi.setParameter("outline_color", this._zeroColorUniform);
-                            // mi.setParameter("shadow_color", this._zeroColorUniform);
                         } else {
                             mi.setParameter("render_pass", RenderPass.ALL_IN_ONE);
-                            // mi.setParameter("material_opacity", this._color.a);
-                            // mi.setParameter("outline_color", this._outlineColorUniform);
-                            // mi.setParameter("shadow_color", this._shadowColorUniform);
                         }
                     }
                 }
