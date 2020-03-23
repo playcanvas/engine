@@ -1378,7 +1378,7 @@ Object.assign(pc, function () {
                                     instances[i].stencilFront = new pc.StencilParameters({
                                         ref: stencilParams.ref,
                                         func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_INCREMENT
+                                        zpass: pc.STENCILOP_KEEP //INCREMENT
                                     });
                                     instances[i].stencilBack = instances[i].stencilFront;
                                     break;                                                           
@@ -1606,7 +1606,7 @@ Object.assign(pc, function () {
             this._color.a = value;
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                for (var i = 0; i<this._model.meshInstances.length; i++) {
                     var mi = this._model.meshInstances[i];
 
 /*                    switch (this._meshInfo[i].renderPass) {
@@ -1929,7 +1929,7 @@ Object.assign(pc, function () {
                 this._outlineColorUniform[2] = this._outlineColor.b;
                 this._outlineColorUniform[3] = this._outlineColor.a;
 
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                for (var i = 0; i < this._model.meshInstances.length; i++) {
                     var mi = this._model.meshInstances[i];
 
 /*                   switch (this._meshInfo[i].renderPass) {

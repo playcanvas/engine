@@ -70,15 +70,9 @@ vec4 applyMsdf(vec4 color) {
     float outline = smoothstep(center-smoothing, center+smoothing, sigDistOutline);
     float shadow = smoothstep(center-smoothing, center+smoothing, sigDistShdw);
 
-    vec4 tcolor = (outline > inside) ? outline * vec4(outline_color.a * outline_color.rgb, outline_color.a) : vec4(0.0);
-    tcolor = mix(tcolor, color, inside);
-
-    vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
-    tcolor = mix(scolor, tcolor, outline);
+    vec4 scolor = max(shadow,outline)*mix(vec4(shadow_color.a * shadow_color.rgb, shadow_color.a), vec4(outline_color.a * outline_color.rgb, outline_color.a), outline);
+    vec4 tcolor = mix(scolor, color, inside);
     
- //   float max_a=max(max(shadow_color.a, outline_color.a), color.a);
-
-    //if (tcolor.a==0.0 && max_a>0.0)
     if (render_pass==1.0 && inside==0.0)
     {
         discard;
@@ -105,13 +99,4 @@ vec4 applyMsdf(vec4 color) {
     }
 
     return vec4(tcolor.rgb,tcolor.a);
-
- /*   if (max_a==0.0)
-    {
-        return vec4(vec3(1,1,0), 1.0);
-    }
-    else
-    {
-        return vec4(tcolor.rgb, 1.0-max(shadow,outline));//tcolor.a);
-    }*/
 }
