@@ -40,7 +40,7 @@ Object.assign(pc, function () {
         pc.EventHandler.call(this);
 
         this.manager = manager;
-        this._supported = !! window.XRSession.prototype.requestHitTestSource;
+        this._supported = !! (window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
         this._session = null;
 
