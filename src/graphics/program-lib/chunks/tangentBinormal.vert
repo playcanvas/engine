@@ -8,6 +8,5 @@ vec3 getBinormal() {
 }
 
 vec3 getObjectSpaceUp() {
-    return normalize(dNormalMatrix * vec3(0,1,0));
-    //return dNormalMatrix[1];
+    return normalize(dNormalMatrix * vec3(0, 1, 0));
 }
