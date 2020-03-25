@@ -43,6 +43,9 @@ Object.assign(pc, function () {
         this.animTilesY = 1;
         this.animStartFrame = 0;
         this.animNumFrames = 1;
+        this.animNumAnimations = 1;
+        this.animIndex = 0;
+        this.randomizeAnimIndex = false;
         this.animSpeed = 1;
         this.animLoop = true;
 

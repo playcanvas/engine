@@ -93,6 +93,7 @@
 ../src/scene/sync-queue.js
 ../src/scene/texture-atlas.js
 ../src/scene/stencil-parameters.js
+../src/anim/anim.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
@@ -114,9 +115,13 @@
 ../src/xr/xr-manager.js
 ../src/xr/xr-input.js
 ../src/xr/xr-input-source.js
+../src/xr/xr-hit-test.js
+../src/xr/xr-hit-test-source.js
 ../src/net/http.js
-../src/script/script-registry.js
 ../src/script/script.js
+../src/script/script-type.js
+../src/script/script-attributes.js
+../src/script/script-registry.js
 ../src/bundles/bundle.js
 ../src/bundles/bundle-registry.js
 ../src/i18n/i18n-parser.js
@@ -242,9 +247,12 @@
 ../src/resources/texture-atlas.js
 ../src/resources/sprite.js
 ../src/resources/parser/json-model.js
+../src/resources/parser/glb-parser.js
+../src/resources/parser/glb-model.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
 ../src/resources/basis.js
+../src/resources/container.js
 ../src/asset/asset.js
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js

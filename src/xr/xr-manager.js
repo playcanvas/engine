@@ -98,6 +98,8 @@ Object.assign(pc, function () {
      * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
      * is running. Can be any of pc.XRSPACE_*.
      * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
+     * @property {pc.XrInput} input provides access to Input Sources.
+     * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
      */
     var XrManager = function (app) {
         pc.EventHandler.call(this);
@@ -118,7 +120,9 @@ Object.assign(pc, function () {
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
+
         this.input = new pc.XrInput(this);
+        this.hitTest = new pc.XrHitTest(this);
 
         this._camera = null;
         this._pose = null;
@@ -410,9 +414,6 @@ Object.assign(pc, function () {
     };
 
     XrManager.prototype._setClipPlanes = function (near, far) {
-        near = Math.min(0.0001, Math.max(0.1, near));
-        far = Math.max(1000, far);
-
         if (this._depthNear === near && this._depthFar === far)
             return;
 
@@ -462,8 +463,7 @@ Object.assign(pc, function () {
                         viewInvOffMat: new pc.Mat4(),
                         projViewOffMat: new pc.Mat4(),
                         viewMat3: new pc.Mat3(),
-                        position: new pc.Vec3(),
-                        positionOff: new pc.Vec3(),
+                        position: new Float32Array(3),
                         rotation: new pc.Quat()
                     };
                 }
@@ -508,6 +508,9 @@ Object.assign(pc, function () {
         this._camera.camera._node.setLocalRotation(this.rotation);
 
         this.input.update(frame);
+
+        if (this._type === pc.XRTYPE_AR && this.hitTest.supported)
+            this.hitTest.update(frame);
     };
 
     Object.defineProperty(XrManager.prototype, 'supported', {

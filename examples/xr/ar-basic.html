@@ -99,7 +99,7 @@
             var createCube = function(x,y,z) {
                 var cube = new pc.Entity();
                 cube.addComponent("model", {
-                    type: "box",
+                    type: "box"
                 });
                 cube.setLocalScale(.5, .5, .5);
                 cube.translate(x * .5, y, z * .5);

@@ -173,7 +173,7 @@ Object.assign(pc, function () {
         emitterPos = (emitter.meshInstance.node === null || emitter.localSpace) ? pc.Vec3.ZERO : emitter.meshInstance.node.getPosition();
         var posCam = emitter.camera ? emitter.camera._node.getPosition() : pc.Vec3.ZERO;
 
-        var vertSize = !emitter.useMesh ? 14 : 16;
+        var vertSize = !emitter.useMesh ? 15 : 17;
         var cf, cc;
         var rotSpeed, rotSpeed2, scale2, alpha, alpha2, radialSpeed, radialSpeed2;
         var precision1 = emitter.precision - 1;
@@ -423,11 +423,12 @@ Object.assign(pc, function () {
                 data[w + 9] = quadY;
                 data[w + 10] = quadZ;
                 data[w + 11] = moveDirVec.y;
-                data[w + 12] = moveDirVec.z;
-                data[w + 13] = emitter.vbCPU[vbOffset + 3];
+                data[w + 12] = id;
+                data[w + 13] = moveDirVec.z;
+                data[w + 14] = emitter.vbCPU[vbOffset + 3];
                 if (emitter.useMesh) {
-                    data[w + 14] = emitter.vbCPU[vbOffset + 4];
-                    data[w + 15] = emitter.vbCPU[vbOffset + 5];
+                    data[w + 15] = emitter.vbCPU[vbOffset + 4];
+                    data[w + 16] = emitter.vbCPU[vbOffset + 5];
                 }
             }
         }

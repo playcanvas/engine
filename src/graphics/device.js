@@ -599,6 +599,11 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
+        // #ifdef DEBUG
+        this._spectorMarkers = [];
+        this._spectorCurrentMarker = "";
+        // #endif
+
         this.createGrabPass(options.alpha);
 
         pc.VertexFormat.init(this);
@@ -607,6 +612,35 @@ Object.assign(pc, function () {
     GraphicsDevice.prototype.constructor = GraphicsDevice;
 
     Object.assign(GraphicsDevice.prototype, {
+
+        // #ifdef DEBUG
+        updateMarker: function () {
+            this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
+        },
+
+        pushMarker: function (name) {
+            if (window.spector) {
+                this._spectorMarkers.push(name);
+                this.updateMarker();
+                window.spector.setMarker(this._spectorCurrentMarker);
+            }
+        },
+
+        popMarker: function () {
+            if (window.spector) {
+                if (this._spectorMarkers.length) {
+                    this._spectorMarkers.pop();
+                    this.updateMarker();
+
+                    if (this._spectorMarkers.length)
+                        window.spector.setMarker(this._spectorCurrentMarker);
+                    else
+                        window.spector.clearMarker();
+                }
+            }
+        },
+        // #endif
+
         getPrecision: function () {
             var gl = this.gl;
             var precision = "highp";
@@ -922,6 +956,13 @@ Object.assign(pc, function () {
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
             grabPassTextureId.setValue(grabPassTexture);
 
+            var grabPassRenderTarget = new pc.RenderTarget({
+                colorBuffer: grabPassTexture,
+                depth: false
+            });
+            this.initRenderTarget(grabPassRenderTarget);
+
+            this.grabPassRenderTarget = grabPassRenderTarget;
             this.grabPassTextureId = grabPassTextureId;
             this.grabPassTexture = grabPassTexture;
         },
@@ -929,17 +970,47 @@ Object.assign(pc, function () {
         updateGrabPass: function () {
             var gl = this.gl;
 
-            var format = this.grabPassTexture._glFormat;
-            var source = (this.renderTarget && this.renderTarget.colorBuffer) || this.canvas;
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
-            this.grabPassTexture._width = source.width;
-            this.grabPassTexture._height = source.height;
+            var renderTarget = this.renderTarget;
+            var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+            var grabPassTexture = this.grabPassTexture;
+            var width = this.width;
+            var height = this.height;
+
+            if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
+                if (resolveRenderTarget) renderTarget.resolve(true);
+
+                var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
+                var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+                var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
+                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
+                gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
+
+            } else {
+                if (resolveRenderTarget) {
+                    renderTarget.resolve(true);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
+                }
+
+                var format = grabPassTexture._glFormat;
+                gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
+                grabPassTexture._width = width;
+                grabPassTexture._height = height;
+
+                if (resolveRenderTarget) {
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
+                }
+            }
         },
 
         destroyGrabPass: function () {
+            this.grabPassRenderTarget.destroy();
+            this.grabPassRenderTarget = null;
+
+            this.grabPassTextureId = null;
             this.grabPassTexture.destroy();
             this.grabPassTexture = null;
-            this.grabPassTextureId = null;
         },
 
         updateClientRect: function () {
@@ -1040,6 +1111,16 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.GraphicsDevice#copyRenderTarget
+         * @description Copies source render target into destination render target. Mostly used by post-effects.
+         * @param {pc.RenderTarget} source - The source render target.
+         * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
+         * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
+         * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+         * @returns {boolean} True if the copy was successful, false otherwise.
+         */
         copyRenderTarget: function (source, dest, color, depth) {
             var gl = this.gl;
 
@@ -1104,15 +1185,162 @@ Object.assign(pc, function () {
                 this.renderTarget = prevRt;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
             } else {
-                if (!this._copyShader) {
-                    var chunks = pc.shaderChunks;
-                    this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
-                }
+                var shader = this.getCopyShader();
                 this.constantTexSource.setValue(source._colorBuffer);
-                pc.drawQuadWithShader(this, dest, this._copyShader);
+                pc.drawQuadWithShader(this, dest, shader);
             }
 
             return true;
+        },
+
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#initRenderTarget
+         * @description Initialize render target before it can be used.
+         * @param {pc.RenderTarget} target - The render target to be initialized.
+         */
+        initRenderTarget: function (target) {
+            if (target._glFrameBuffer) return;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.fire('fbo:create', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            // Set RT's device
+            target._device = this;
+            var gl = this.gl;
+
+            // ##### Create main FBO #####
+            target._glFrameBuffer = gl.createFramebuffer();
+            this.setFramebuffer(target._glFrameBuffer);
+
+            // --- Init the provided color buffer (optional) ---
+            var colorBuffer = target._colorBuffer;
+            if (colorBuffer) {
+                if (!colorBuffer._glTexture) {
+                    // Clamp the render buffer size to the maximum supported by the device
+                    colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
+                    colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
+                    this.setTexture(colorBuffer, 0);
+                }
+                // Attach the color buffer
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER,
+                    gl.COLOR_ATTACHMENT0,
+                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                    colorBuffer._glTexture,
+                    0
+                );
+            }
+
+            var depthBuffer = target._depthBuffer;
+            if (depthBuffer && this.webgl2) {
+                // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
+                if (!depthBuffer._glTexture) {
+                    // Clamp the render buffer size to the maximum supported by the device
+                    depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
+                    depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
+                    this.setTexture(depthBuffer, 0);
+                }
+                // Attach
+                if (target._stencil) {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
+                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            target._depthBuffer._glTexture, 0);
+                } else {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            target._depthBuffer._glTexture, 0);
+                }
+            } else if (target._depth) {
+                // --- Init a new depth/stencil buffer (optional) ---
+                // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                var willRenderMsaa = target._samples > 1 && this.webgl2;
+                if (!willRenderMsaa) {
+                    if (!target._glDepthBuffer) {
+                        target._glDepthBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                    if (target._stencil) {
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    } else {
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                }
+            }
+
+            // #ifdef DEBUG
+            this._checkFbo();
+            // #endif
+
+            // ##### Create MSAA FBO (WebGL2 only) #####
+            if (this.webgl2 && target._samples > 1) {
+
+                // Use previous FBO for resolves
+                target._glResolveFrameBuffer = target._glFrameBuffer;
+
+                // Actual FBO will be MSAA
+                target._glFrameBuffer = gl.createFramebuffer();
+                this.setFramebuffer(target._glFrameBuffer);
+
+                // Create an optional MSAA color buffer
+                if (colorBuffer) {
+                    if (!target._glMsaaColorBuffer) {
+                        target._glMsaaColorBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
+                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
+                }
+
+                // Optionally add a MSAA depth/stencil buffer
+                if (target._depth) {
+                    if (!target._glMsaaDepthBuffer) {
+                        target._glMsaaDepthBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    if (target._stencil) {
+                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    } else {
+                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    }
+                }
+                // #ifdef DEBUG
+                this._checkFbo();
+                // #endif
+            }
+
+            this.targets.push(target);
+
+            // #ifdef PROFILER
+            this._renderTargetCreationTime += pc.now() - startTime;
+            // #endif
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#getCopyShader
+         * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
+         * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+         */
+        getCopyShader: function () {
+            if (!this._copyShader) {
+                var chunks = pc.shaderChunks;
+                this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            }
+            return this._copyShader;
         },
 
         /**
@@ -1124,8 +1352,6 @@ Object.assign(pc, function () {
          * and pc.GraphicsDevice#updateEnd must not be nested.
          */
         updateBegin: function () {
-            var gl = this.gl;
-
             this.boundBuffer = null;
             this.boundElementBuffer = null;
 
@@ -1143,128 +1369,7 @@ Object.assign(pc, function () {
             if (target) {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
-
-                    // #ifdef PROFILER
-                    var startTime = pc.now();
-                    this.fire('fbo:create', {
-                        timestamp: startTime,
-                        target: this
-                    });
-                    // #endif
-
-                    // Set RT's device
-                    target._device = this;
-
-                    // ##### Create main FBO #####
-                    target._glFrameBuffer = gl.createFramebuffer();
-                    this.setFramebuffer(target._glFrameBuffer);
-
-                    // --- Init the provided color buffer (optional) ---
-                    var colorBuffer = target._colorBuffer;
-                    if (colorBuffer) {
-                        if (!colorBuffer._glTexture) {
-                            // Clamp the render buffer size to the maximum supported by the device
-                            colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
-                            colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
-                            this.setTexture(colorBuffer, 0);
-                        }
-                        // Attach the color buffer
-                        gl.framebufferTexture2D(
-                            gl.FRAMEBUFFER,
-                            gl.COLOR_ATTACHMENT0,
-                            colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                            colorBuffer._glTexture,
-                            0
-                        );
-                    }
-
-                    var depthBuffer = target._depthBuffer;
-                    if (depthBuffer && this.webgl2) {
-                        // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                        if (!depthBuffer._glTexture) {
-                            // Clamp the render buffer size to the maximum supported by the device
-                            depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
-                            depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
-                            this.setTexture(depthBuffer, 0);
-                        }
-                        // Attach
-                        if (target._stencil) {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTexture, 0);
-                        } else {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTexture, 0);
-                        }
-                    } else if (target._depth) {
-                        // --- Init a new depth/stencil buffer (optional) ---
-                        // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-                        var willRenderMsaa = target._samples > 1 && this.webgl2;
-                        if (!willRenderMsaa) {
-                            if (!target._glDepthBuffer) {
-                                target._glDepthBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                            if (target._stencil) {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            } else {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-                        }
-                    }
-
-                    // #ifdef DEBUG
-                    this._checkFbo();
-                    // #endif
-
-                    // ##### Create MSAA FBO (WebGL2 only) #####
-                    if (this.webgl2 && target._samples > 1) {
-
-                        // Use previous FBO for resolves
-                        target._glResolveFrameBuffer = target._glFrameBuffer;
-
-                        // Actual FBO will be MSAA
-                        target._glFrameBuffer = gl.createFramebuffer();
-                        this.setFramebuffer(target._glFrameBuffer);
-
-                        // Create an optional MSAA color buffer
-                        if (colorBuffer) {
-                            if (!target._glMsaaColorBuffer) {
-                                target._glMsaaColorBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
-                            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
-                        }
-
-                        // Optionally add a MSAA depth/stencil buffer
-                        if (target._depth) {
-                            if (!target._glMsaaDepthBuffer) {
-                                target._glMsaaDepthBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            if (target._stencil) {
-                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            } else {
-                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            }
-                        }
-                        // #ifdef DEBUG
-                        this._checkFbo();
-                        // #endif
-                    }
-
-                    this.targets.push(target);
-
-                    // #ifdef PROFILER
-                    this._renderTargetCreationTime += pc.now() - startTime;
-                    // #endif
+                    this.initRenderTarget(target);
 
                 } else {
                     this.setFramebuffer(target._glFrameBuffer);
