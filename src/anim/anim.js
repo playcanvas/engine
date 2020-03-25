@@ -789,28 +789,32 @@ Object.assign(pc, function () {
                 var paths = curve.paths;
                 for (var j = 0; j < paths.length; ++j) {
                     var path = paths[j];
-
-                    // get the target
                     var target = targets[path];
 
+                    // create new target if it doesn't exist yet
                     if (!target) {
-                        // create new target
-                        target = {
-                            target: this._binder.resolve(path), // resolved target instance
-                            value: [],                          // storage for calculated value
-                            curves: 0                           // number of curves driving this target
-                        };
+                        var resolved = this._binder.resolve(path);
+                        if (resolved) {
+                            target = {
+                                target: resolved,           // resolved target instance
+                                value: [],                  // storage for calculated value
+                                curves: 0                   // number of curves driving this target
+                            };
 
-                        for (var k = 0; k < target.target.components; ++k) {
-                            target.value.push(0);
+                            for (var k = 0; k < target.target.components; ++k) {
+                                target.value.push(0);
+                            }
+
+                            targets[path] = target;
                         }
-
-                        targets[path] = target;
                     }
 
-                    target.curves++;
-                    inputs.push(snapshot._results[i]);
-                    outputs.push(target);
+                    // binding may have failed
+                    if (target) {
+                        target.curves++;
+                        inputs.push(snapshot._results[i]);
+                        outputs.push(target);
+                    }
                 }
             }
 
@@ -836,10 +840,12 @@ Object.assign(pc, function () {
 
                     var target = targets[path];
 
-                    target.curves--;
-                    if (target.curves === 0) {
-                        this._binder.unresolve(path);
-                        delete targets[path];
+                    if (target) {
+                        target.curves--;
+                        if (target.curves === 0) {
+                            this._binder.unresolve(path);
+                            delete targets[path];
+                        }
                     }
                 }
             }
