@@ -16,11 +16,7 @@ document.getElementById('speed').oninput = function (e) {
 };
 
 document.getElementById('graphs').onclick = function (e) {
-    viewer.setShowGraphs(this.checked);
-};
-
-document.getElementById('clear').onclick = function (e) {
-    viewer.setClearOnLoad(this.checked);
+    viewer.setGraphs(this.checked);
 };
 
 var animList = document.getElementById('anim-list');
