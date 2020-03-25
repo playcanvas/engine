@@ -768,12 +768,6 @@ Object.assign(pc, function () {
             "CUBICSPLINE": pc.INTERPOLATION_CUBIC
         };
 
-        var pathMap = {
-            "translation": "_translation",
-            "rotation": "_rotation",
-            "scale": "_scale"
-        };
-
         var inputMap = { };
         var inputs = [];
 

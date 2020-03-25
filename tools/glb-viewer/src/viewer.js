@@ -170,22 +170,28 @@ Object.assign(Viewer.prototype, {
 
     // play the animation
     play: function (animationName) {
-        if (animationName) {
-            this.entity.animation.play(this.animationMap[animationName], 1);
-        } else {
-            this.entity.animation.playing = true;
+        if (this.entity && this.entity.animation) {
+            if (animationName) {
+                this.entity.animation.play(this.animationMap[animationName], 1);
+            } else {
+                this.entity.animation.playing = true;
+            }
         }
     },
 
     // stop playing animations
     stop: function () {
-        this.entity.animation.playing = false;
+        if (this.entity && this.entity.animation) {
+            this.entity.animation.playing = false;
+        }
     },
 
     setSpeed: function (speed) {
-        var entity = this.entity;
-        if (entity) {
-            entity.animation.speed = speed;
+        if (this.entity && this.entity.animation) {
+            var entity = this.entity;
+            if (entity) {
+                entity.animation.speed = speed;
+            }
         }
     },
 
