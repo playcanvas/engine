@@ -366,9 +366,10 @@ Object.assign(pc, function () {
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
         this._time = time;              // play cursor
-        this._speed = speed;
-        this._loop = loop;
-        this._blendWeight = 1.0;         // blend weight 0..1
+        this._speed = speed;            // playback speed, may be negative
+        this._loop = loop;              // whether to loop
+        this._blendWeight = 1.0;        // blend weight 0..1
+        this._blendOrder = 0.0;         // blend order relative to other clips
     };
 
     Object.defineProperties(AnimClip.prototype, {
@@ -420,6 +421,14 @@ Object.assign(pc, function () {
             },
             set: function (blendWeight) {
                 this._blendWeight = blendWeight;
+            }
+        },
+        blendOrder: {
+            get: function () {
+                return this._blendOrder;
+            },
+            set: function (blendOrder) {
+                this._blendOrder = blendOrder;
             }
         }
     });
@@ -544,7 +553,7 @@ Object.assign(pc, function () {
          * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
          * will handle setting the value, or return null if no such target exists.
          * @param {string} path - the animation curve path to resolve.
-         * @returns {pc.AnimTarget|null}
+         * @returns {pc.AnimTarget|null} - returns the target instance on success and null otherwise.
          */
         resolve: function (path) {
             return null;
@@ -579,26 +588,22 @@ Object.assign(pc, function () {
      * hierarchy.
      */
     var DefaultAnimInterface = function (graph) {
-        var nodeMap = { };
-        var nodes = [];
-        var counts = [];
+        var nodes = { };
 
         // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {
-            nodeMap[node.name] = nodes.length;
-            nodes.push(node);
-            counts.push(0);
+            nodes[node.name] = {
+                node: node,
+                count: 0
+            };
             for (var i = 0; i < node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
         flatten(graph);
 
-        this.nodeMap = nodeMap;             // map of node.name -> node index
-        this.nodes = nodes;                 // the list of nodes
-        this.counts = counts;               // number of animations per node
+        this.nodes = nodes;                 // map of node name -> { node, count }
         this.activeNodes = [];              // list of active nodes
-
         this.schema = {
             'translation': {
                 components: 3,
@@ -625,14 +630,13 @@ Object.assign(pc, function () {
                 return null;
             }
 
-            var index = this.nodeMap[parts[0]];
-            var node = this.nodes[index];
+            var node = this.nodes[parts[0]];
             var prop = this.schema[parts[1]];
 
-            if (this.counts[index] === 0) {
-                this.activeNodes.push(node);
+            if (node.count === 0) {
+                this.activeNodes.push(node.node);
             }
-            this.counts[index]++;
+            node.count++;
 
             return new pc.AnimTarget(this._createSetter(node.node[prop.target]), prop.type, prop.components);
         },
@@ -641,16 +645,15 @@ Object.assign(pc, function () {
             // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
             var parts = this._getParts(path);
             if (parts) {
-                var index = this.nodeMap[parts[0]];
-                var node = this.nodes[index];
+                var node = this.nodes[parts[0]];
 
-                this.counts[index]--;
-                if (this.counts[index] === 0) {
+                node.count--;
+                if (node.count === 0) {
                     var activeNodes = this.activeNodes;
-                    var index = activeNodes.indexOf(node);  // :(
+                    var i = activeNodes.indexOf(node);  // :(
                     var len = activeNodes.length;
-                    if (index < len - 1) {
-                        activeNodes[index] = activeNodes[len - 1];
+                    if (i < len - 1) {
+                        activeNodes[i] = activeNodes[len - 1];
                     }
                     activeNodes.pop();
                 }
@@ -669,7 +672,7 @@ Object.assign(pc, function () {
         _getParts: function (path) {
             var parts = path.split('.');
             if (parts.length !== 2 ||
-                !this.nodeMap.hasOwnProperty(parts[0]) ||
+                !this.nodes.hasOwnProperty(parts[0]) ||
                 !this.schema.hasOwnProperty(parts[1])) {
                 return null;
             }
@@ -708,8 +711,16 @@ Object.assign(pc, function () {
         }
     });
 
-    AnimController._blend = function (a, b, t, components) {
-        for (var i = 0; i < components; ++i) {
+    AnimController._set = function (a, b) {
+        var len  = a.length;
+        for (var i = 0; i < len; ++i) {
+            a[i] = b[i];
+        }
+    };
+
+    AnimController._blend = function (a, b, t) {
+        var len = a.length;
+        for (var i = 0; i < len; ++i) {
             a[i] += b[i] * t;
         }
     };
@@ -731,71 +742,84 @@ Object.assign(pc, function () {
         }
     };
 
-    AnimController._filter = function (a, cond) {
-        var target = 0;
-        for (var i = 0; i < a.length; ++i) {
-            if (cond(a[i], i, a)) {
-                if (target !== i) {
-                    a[target] = a[i];
+    AnimController._stableSort = function (a, lessFunc) {
+        var len = a.length;
+        for (var i = 0; i < len - 1; ++i) {
+            for (var j = i + 1; j < len; ++j) {
+                if (!lessFunc(a[i], a[j])) {
+                    var tmp = a[i];
+                    a[i] = a[j];
+                    a[j] = tmp;
                 }
-                target++;
             }
         }
-        a.length = target;
     };
 
     Object.assign(AnimController.prototype, {
+
         addClip: function (clip) {
-            // update targets
-            var curves = clip.track.curves;
-            var snapshot = clip.snapshot;
-            var interf = this._interf;
             var targets = this._targets;
 
+            // store list of input/output arrays
+            var curves = clip.track.curves;
+            var snapshot = clip.snapshot;
+            var inputs = [];
+            var outputs = [];
             for (var i = 0; i < curves.length; ++i) {
                 var curve = curves[i];
                 var paths = curve.paths;
                 for (var j = 0; j < paths.length; ++j) {
                     var path = paths[j];
-                    if (!targets.hasOwnProperty(path)) {
-                        // new target property
-                        targets[path] = {
-                            setter: interf.resolve(path),
-                            curves: [[clip, snapshot._results[i]]]
+
+                    // get the target
+                    var target = targets[path];
+
+                    if (!target) {
+                        // create new target
+                        target = {
+                            target: this._interf.resolve(path), // resolved target instance
+                            value: [],                          // storage for calculated value
+                            curves: 0                           // number of curves driving this target
                         };
-                    } else {
-                        // add curve to existing target
-                        var target = targets[path];
-                        target.curves.push([clip, snapshot._results[i]]);
+
+                        for (var k = 0; k < target.target.components; ++k) {
+                            target.value.push(0);
+                        }
+
+                        targets[path] = target;
                     }
+
+                    target.curves++;
+                    inputs.push(snapshot._results[i]);
+                    outputs.push(target);
                 }
             }
 
-            this._clips.push(clip);
+            this._clips.push({
+                clip: clip,
+                inputs: inputs,
+                outputs: outputs
+            });
         },
 
         removeClip: function (index) {
+            var targets = this._targets;
+
             var clips = this._clips;
             var clip = clips[index];
-
-            var curves = clip.track.curves;
-            var interf = this._interf;
-            var targets = this._targets;
+            var curves = clip.clip.track.curves;
 
             for (var i = 0; i < curves.length; ++i) {
                 var curve = curves[i];
                 var paths = curve.paths;
                 for (var j = 0; j < paths.length; ++j) {
                     var path = paths[j];
-                    var target = targets[path];
-                    AnimController._filter(target.curves, function (curve) {
-                        return curve[0] !== clip;
-                    });
 
-                    // target has no more curves, unresolve
-                    if (target.curves.length === 0) {
-                        interf.unresolve(path);
-                        delete target[path];
+                    var target = targets[path];
+
+                    target.curves--;
+                    if (target.curves === 0) {
+                        delete targets[path];
                     }
                 }
             }
@@ -810,13 +834,13 @@ Object.assign(pc, function () {
         },
 
         getClip: function (index) {
-            return this._clips[index];
+            return this._clips[index].clip;
         },
 
         findClip: function (name) {
             var clips = this._clips;
             for (var i = 0; i < clips.length; ++i) {
-                var clip = clips[i];
+                var clip = clips[i].clip;
                 if (clip.name === name) {
                     return clip;
                 }
@@ -825,59 +849,69 @@ Object.assign(pc, function () {
         },
 
         update: function (deltaTime) {
-            var clips = this._clips;
-            var targets = this._targets;
+            // copy clips
+            var clips = this._clips.slice();
+
+            // stable sort em
+            AnimController._stableSort(clips, function (a, b) {
+                return a.clip.blendOrder < b.clip.blendOrder;
+            });
 
             var i, j;
 
-            // update clips
             for (i = 0; i < clips.length; ++i) {
-                clips[i]._update(deltaTime);
-            }
+                var clip_ = clips[i];
+                var clip = clip_.clip;
+                var inputs = clip_.inputs;
+                var outputs = clip_.outputs;
+                var blendWeight = clip.blendWeight;
 
-            // TODO precalculate weights in a table once and then reuse them
-
-            // apply results to targets
-            var storage = [];
-            //for (i = 0; i < targets.length; ++i) {
-            for (var path in targets) {
-                if (!targets.hasOwnProperty(path)) {
-                    continue;
+                // update clip
+                if (blendWeight > 0.0) {
+                    clip._update(deltaTime);
                 }
-                var target = targets[path];
-                var setter = target.setter;
-                var curves = target.curves;
 
-                // sum total blend weight for all clips so we can normalize
-                var blendWeight = curves.reduce(function (sum, curve) {
-                    return sum + curve[0].blendWeight;
-                }, 0);
+                var input;
+                var output;
+                var value;
 
-                // clear storage
-                for (j = 0; j < setter.components; ++j) {
-                    storage[j] = 0;
-                }
-                storage.length = setter.components;
+                if (blendWeight >= 1.0) {
+                    for (j = 0; j < inputs.length; ++j) {
+                        input = inputs[j];
+                        output = outputs[j];
+                        value = output.value;
 
-                for (j = 0; j < curves.length; ++j) {
-                    var curve = curves[j][0];
-                    var weight = curve.blendWeight / blendWeight;
+                        AnimController._set(value, input);
 
-                    // TODO: handle quaternion
-                    if (weight > 0) {
-                        var data = curves[j][1];
-
-                        if (setter.type === 'quaternion') {
-                            AnimController._normalize(data);
+                        if (output.type === 'quaternion') {
+                            AnimController._normalize(value);
                         }
+                    }
+                } else if (blendWeight > 0.0) {
+                    for (j = 0; j < inputs.length; ++j) {
+                        input = inputs[j];
+                        output = outputs[j];
+                        value = output.value;
 
-                        AnimController._blend(storage, data, weight, setter.components);
+                        AnimController._blend(value, input, blendWeight);
+
+                        if (output.type === 'quaternion') {
+                            AnimController._normalize(value);
+                        }
                     }
                 }
-
-                setter.func(storage);
             }
 
+            // apply result to anim targets
+            var targets = this._targets;
+            for (var path in targets) {
+                if (targets.hasOwnProperty(path)) {
+                    var target = targets[path];
+                    target.target.func(target.value);
+                }
+            }
+
+            // give the interface a chance to update
             this._interf.update(deltaTime);
         }
     });
