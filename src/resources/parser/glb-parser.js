@@ -811,7 +811,7 @@ Object.assign(pc, function () {
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            curves[channel.sampler]._paths.push(nodes[target.node].name + '.' + target.path);
+            curves[channel.sampler]._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
         }
 
         // calculate duration of the animation as maximum time value

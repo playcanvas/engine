@@ -546,6 +546,42 @@ Object.assign(pc, function () {
      */
     var AnimBinder = function () { };
 
+    // join a list of part segments into a path string
+    AnimBinder.joinPath = function (pathParts) {
+        var escape = function (string) {
+            return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+        };
+        return pathParts.map(escape).join('.');
+    };
+
+    // split an escaped path into its parts
+    AnimBinder.splitPath = function (path) {
+        var result = [];
+        var curr = "";
+        var i = 0;
+        while (i < path.length) {
+            var c = path[i++];
+
+            if (c === '\\' && i < path.length) {
+                c = path[i++];
+                if (c === '\\' || c === '.') {
+                    curr += c;
+                } else {
+                    curr += '\\' + c;
+                }
+            } else if (c === '.') {
+                result.push(curr);
+                curr = '';
+            } else {
+                curr += c;
+            }
+        }
+        if (curr.length > 0) {
+            result.push(curr);
+        }
+        return result;
+    };
+
     Object.assign(AnimBinder.prototype, {
         /**
          * @function
@@ -650,7 +686,7 @@ Object.assign(pc, function () {
                 node.count--;
                 if (node.count === 0) {
                     var activeNodes = this.activeNodes;
-                    var i = activeNodes.indexOf(node);  // :(
+                    var i = activeNodes.indexOf(node.node);  // :(
                     var len = activeNodes.length;
                     if (i < len - 1) {
                         activeNodes[i] = activeNodes[len - 1];
@@ -670,7 +706,7 @@ Object.assign(pc, function () {
 
         // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
         _getParts: function (path) {
-            var parts = path.split('.');
+            var parts = AnimBinder.splitPath(path);
             if (parts.length !== 2 ||
                 !this.nodes.hasOwnProperty(parts[0]) ||
                 !this.schema.hasOwnProperty(parts[1])) {
@@ -952,6 +988,7 @@ Object.assign(pc, function () {
         AnimTrack: AnimTrack,
         AnimSnapshot: AnimSnapshot,
         AnimClip: AnimClip,
+        AnimBinder: AnimBinder,
         DefaultAnimBinder: DefaultAnimBinder,
         AnimController: AnimController
     };
