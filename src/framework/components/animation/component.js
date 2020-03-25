@@ -142,7 +142,6 @@ Object.assign(pc, function () {
             data.skeleton = null;
             data.fromSkel = null;
             data.toSkel = null;
-            data.animBinder = null;
             data.animController = null;
         },
 
@@ -173,8 +172,7 @@ Object.assign(pc, function () {
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
             } else if (hasGlb) {
-                data.animBinder = new pc.DefaultAnimBinder(graph);
-                data.animController = new pc.AnimController(data.animBinder);
+                data.animController = new pc.AnimController(new pc.DefaultAnimBinder(graph));
             }
         },
 
