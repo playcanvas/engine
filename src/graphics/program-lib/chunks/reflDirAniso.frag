@@ -1,5 +1,5 @@
 void getReflDir() {
-    float roughness = sqrt(1.0-dGlossiness);
+    float roughness = sqrt(1.0 - dGlossiness);
     float anisotropy = material_anisotropy * roughness;
     vec3 anisotropicDirection = anisotropy >= 0.0 ? dTBN[1] : dTBN[0];
     vec3 anisotropicTangent = cross(anisotropicDirection, dViewDirW);
