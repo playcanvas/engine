@@ -142,6 +142,7 @@ Object.assign(pc, function () {
             data.skeleton = null;
             data.fromSkel = null;
             data.toSkel = null;
+            data.animInterface = null;
             data.animController = null;
         },
 
@@ -172,7 +173,8 @@ Object.assign(pc, function () {
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
             } else if (hasGlb) {
-                data.animController = new pc.AnimController(graph);
+                data.animInterface = new pc.DefaultAnimInterface(graph);
+                data.animController = new pc.AnimController(data.animInterface);
             }
         },
 

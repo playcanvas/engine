@@ -201,6 +201,7 @@ Object.assign(pc, function () {
      * @classdesc Animation curve links an input data set to an output data set
      * and defines the interpolation method to use.
      * @description Create a new animation curve
+     * @param {[string]} paths - array of path strings identifying the targets of this curve, for example "rootNode.translation".
      * @param {number} input - index of the curve which specifies the key data.
      * @param {number} output - index of the curve which specifies the value data.
      * @param {number} interpolation - the interpolation method to use. One of the following:
@@ -208,51 +209,33 @@ Object.assign(pc, function () {
      * * {@link pc.INTERPOLATION_STEP}
      * * {@link pc.INTERPOLATION_LINEAR}
      * * {@link pc.INTERPOLATION_CUBIC}
-     *
      */
-    var AnimCurve = function (input, output, interpolation) {
+    var AnimCurve = function (paths, input, output, interpolation) {
+        this._paths = paths;
         this._input = input;
         this._output = output;
         this._interpolation = interpolation;
     };
 
-    /**
-     * @private
-     * @class
-     * @name pc.AnimTarget
-     * @classdesc AnimTarget names a target graph node and specifies the curves which drive translation, rotation and scale.
-     * @description Create a new animation target.
-     * @param {string} name - the target node to control.
-     * @param {number} translation - the curve index controlling the translation of the target node or -1 for none.
-     * @param {number} rotation - the curve index controlling the rotation of the target node or -1 for none.
-     * @param {number} scale - the curve index controlling the scale of the target node or -1 for none.
-     */
-    var AnimTarget = function (name, translation, rotation, scale) {
-        this._name = name;
-        this._translation = translation;
-        this._rotation = rotation;
-        this._scale = scale;
-    };
-
-    Object.defineProperties(AnimTarget.prototype, {
-        name: {
+    Object.defineProperties(AnimCurve.prototype, {
+        paths: {
             get: function () {
-                return this._name;
+                return this._paths;
             }
         },
-        translation: {
+        input: {
             get: function () {
-                return this._translation;
+                return this._input;
             }
         },
-        rotation: {
+        output: {
             get: function () {
-                return this._rotation;
+                return this._output;
             }
         },
-        scale: {
+        interpolation: {
             get: function () {
-                return this._scale;
+                return this._interpolation;
             }
         }
     });
@@ -268,15 +251,13 @@ Object.assign(pc, function () {
      * @param {pc.AnimData[]} inputs - list of curve key data.
      * @param {pc.AnimData[]} outputs - list of curve value data.
      * @param {pc.AnimCurve[]} curves - the list of curves.
-     * @param {pc.AnimTarget[]} targets - the list of targets.
      */
-    var AnimTrack = function (name, duration, inputs, outputs, curves, targets) {
+    var AnimTrack = function (name, duration, inputs, outputs, curves) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
-        this._targets = targets;
     };
 
     Object.defineProperties(AnimTrack.prototype, {
@@ -290,9 +271,9 @@ Object.assign(pc, function () {
                 return this._duration;
             }
         },
-        targets: {
+        curves: {
             get: function () {
-                return this._targets;
+                return this._curves;
             }
         }
     });
@@ -509,43 +490,212 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @private
-     * @class
-     * @name pc.AnimController
-     * @classdesc AnimContoller stores a set of animation clips and performs blending
-     * between them. It then applies the resulting transforms to the target nodes.
-     * @description Create a new animation controller.
-     * @param {pc.GraphNode} graph - root of the scene graph to control.
+     * @callback pc.AnimSetter
+     * @description Callback function for applying an updated animation value to some target.
+     * @param {[number]} value - updated animation value.
      */
-    var AnimController = function (graph) {
 
-        var nodesMap = { };
+    /**
+     * @class
+     * @name pc.AnimTarget
+     * @classdesc Stores the information required by {@link pc.AnimController} for updating a target value.
+     * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
+     * the {@link pc.AnimController}.
+     * @param {'vector'|'quaternion'} type - the type of animation data this target expects.
+     * @param {number} components - the number of components on this target (this should ideally match the number
+     * of components found on all attached animation curves).
+     */
+    var AnimTarget = function (func, type, components) {
+        this._func = func;
+        this._type = type;
+        this._components = components;
+    };
+
+    Object.defineProperties(AnimTarget.prototype, {
+        func: {
+            get: function () {
+                return this._func;
+            }
+        },
+        type: {
+            get: function () {
+                return this._type;
+            }
+        },
+        components: {
+            get: function () {
+                return this._components;
+            }
+        }
+    });
+
+    /**
+     * @class
+     * @name pc.AnimInterface
+     * @classdesc This interface is used by {@link pc.AnimController} to resolve unique animation target path strings
+     * into instances of {@link pc.AnimTarget}.
+     */
+    var AnimInterface = function () { };
+
+    Object.assign(AnimInterface.prototype, {
+        /**
+         * @function
+         * @name pc.AnimInterface#resolve
+         * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
+         * will handle setting the value, or return null if no such target exists.
+         * @param {string} path - the animation curve path to resolve.
+         * @returns {pc.AnimTarget|null}
+         */
+        resolve: function (path) {
+            return null;
+        },
+
+        /**
+         * @function
+         * @name pc.AnimInterface#unresolve
+         * @description Called when the {@link AnimInterface} no longer has a curve driving the given key.
+         * @param {string} path - the animation curve path which is no longer driven.
+         */
+        unresolve: function (path) {
+
+        },
+
+        /**
+         * @function
+         * @name pc.AnimInterface#update
+         * @description Called by {@link pc.AnimInterface} once a frame after animation updates are done.
+         * @param {number} deltaTime - amount of time that passed in the current update.
+         */
+        update: function (deltaTime) {
+
+        }
+    });
+
+    /**
+     * @class
+     * @name pc.DefaultAnimInterface
+     * @implements {pc.AnimInterface}
+     * @classdesc Implementation of {@link pc.AnimInterface} for animating a skeleton in the graph-node
+     * hierarchy.
+     */
+    var DefaultAnimInterface = function (graph) {
+        var nodeMap = { };
         var nodes = [];
-        var basePose = [];
-        var activeNodes = [];
+        var counts = [];
 
+        // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {
-            var p = node.localPosition;
-            var r = node.localRotation;
-            var s = node.localScale;
-            nodesMap[node.name] = nodes.length;
+            nodeMap[node.name] = nodes.length;
             nodes.push(node);
-            basePose.splice(basePose.length, 0, p.x, p.y, p.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
-            activeNodes.push(0);
-
+            counts.push(0);
             for (var i = 0; i < node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
         flatten(graph);
 
-        this._nodesMap = nodesMap;              // node name -> index
-        this._nodes = nodes;                    // list of nodes
-        this._basePose = basePose;              // list of bind pose data
-        this._activePose = basePose.slice();
-        this._activeNodes = activeNodes;        // store per-node active curves (those with 0 can be skipped)
-        this._clips = [];
+        this.nodeMap = nodeMap;             // map of node.name -> node index
+        this.nodes = nodes;                 // the list of nodes
+        this.counts = counts;               // number of animations per node
+        this.activeNodes = [];              // list of active nodes
 
+        this.schema = {
+            'translation': {
+                components: 3,
+                target: 'localPosition',
+                type: 'vector'
+            },
+            'rotation': {
+                components: 4,
+                target: 'localRotation',
+                type: 'quaternion'
+            },
+            'scale': {
+                components: 3,
+                target: 'localScale',
+                type: 'vector'
+            }
+        };
+    };
+
+    Object.assign(DefaultAnimInterface.prototype, {
+        resolve: function (path) {
+            var parts = this._getParts(path);
+            if (!parts) {
+                return null;
+            }
+
+            var index = this.nodeMap[parts[0]];
+            var node = this.nodes[index];
+            var prop = this.schema[parts[1]];
+
+            if (this.counts[index] === 0) {
+                this.activeNodes.push(node);
+            }
+            this.counts[index]++;
+
+            return new pc.AnimTarget(this._createSetter(node.node[prop.target]), prop.type, prop.components);
+        },
+
+        unresolve: function (path) {
+            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+            var parts = this._getParts(path);
+            if (parts) {
+                var index = this.nodeMap[parts[0]];
+                var node = this.nodes[index];
+
+                this.counts[index]--;
+                if (this.counts[index] === 0) {
+                    var activeNodes = this.activeNodes;
+                    var index = activeNodes.indexOf(node);  // :(
+                    var len = activeNodes.length;
+                    if (index < len - 1) {
+                        activeNodes[index] = activeNodes[len - 1];
+                    }
+                    activeNodes.pop();
+                }
+            }
+        },
+
+        update: function (deltaTime) {
+            // flag active nodes as dirty
+            var activeNodes = this.activeNodes;
+            for (var i = 0; i < activeNodes.length; ++i) {
+                activeNodes[i]._dirtifyLocal();
+            }
+        },
+
+        // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+        _getParts: function (path) {
+            var parts = path.split('.');
+            if (parts.length !== 2 ||
+                !this.nodeMap.hasOwnProperty(parts[0]) ||
+                !this.schema.hasOwnProperty(parts[1])) {
+                return null;
+            }
+            return parts;
+        },
+
+        // create a setter function (works for pc.Vec* and pc.Quaternion) which have a 'set' function.
+        _createSetter: function (target) {
+            return function (value) {
+                target.set.apply(target, value);
+            };
+        }
+    });
+
+    /**
+     * @private
+     * @class
+     * @name pc.AnimController
+     * @classdesc AnimContoller blends multiple sets of animation clips together.
+     * @description Create a new animation controller.
+     * @param {pc.AnimInterface} interf - interface resolves curve paths to instances of {@link pc.AnimTarget}.
+     */
+    var AnimController = function (interf) {
+        this._interf = interf;
+        this._clips = [];
+        this._targets = {};
         this._q0 = new pc.Quat();
         this._q1 = new pc.Quat();
     };
@@ -558,68 +708,99 @@ Object.assign(pc, function () {
         }
     });
 
+    AnimController._blend = function (a, b, t, components) {
+        for (var i = 0; i < components; ++i) {
+            a[i] += b[i] * t;
+        }
+    };
+
+    AnimController._normalize = function (a) {
+        var len = a.length;
+        var l = 0;
+        var i;
+
+        for (i = 0; i < len; ++i) {
+            l += a[i] * a[i];
+        }
+
+        if (l > 0) {
+            l = 1.0 / Math.sqrt(l);
+            for (i = 0; i < len; ++i) {
+                a[i] *= l;
+            }
+        }
+    };
+
+    AnimController._filter = function (a, cond) {
+        var target = 0;
+        for (var i = 0; i < a.length; ++i) {
+            if (cond(a[i], i, a)) {
+                if (target !== i) {
+                    a[target] = a[i];
+                }
+                target++;
+            }
+        }
+        a.length = target;
+    };
+
     Object.assign(AnimController.prototype, {
         addClip: function (clip) {
-            var targets = clip.track.targets;
+            // update targets
+            var curves = clip.track.curves;
             var snapshot = clip.snapshot;
-            var nodesMap = this._nodesMap;
+            var interf = this._interf;
+            var targets = this._targets;
 
-            var i;
-
-            // create links between the target nodes and their corresponding animation curves for t, r, s
-            var links = [];
-            for (i = 0; i < targets.length; ++i) {
-                var target = targets[i];
-                var name = target.name;
-                if (nodesMap.hasOwnProperty(name)) {
-                    var link = {
-                        node: nodesMap[name],
-                        translation: target.translation !== -1 ? snapshot._results[target.translation] : null,
-                        rotation: target.rotation !== -1 ? snapshot._results[target.rotation] : null,
-                        scale: target.scale !== -1 ? snapshot._results[target.scale] : null
-                    };
-                    if (link.translation || link.rotation || link.scale) {
-                        links.push(link);
+            for (var i = 0; i < curves.length; ++i) {
+                var curve = curves[i];
+                var paths = curve.paths;
+                for (var j = 0; j < paths.length; ++j) {
+                    var path = paths[j];
+                    if (!targets.hasOwnProperty(path)) {
+                        // new target property
+                        targets[path] = {
+                            setter: interf.resolve(path),
+                            curves: [[clip, snapshot._results[i]]]
+                        };
+                    } else {
+                        // add curve to existing target
+                        var target = targets[path];
+                        target.curves.push([clip, snapshot._results[i]]);
                     }
                 }
             }
 
-            // add clip
-            this._clips.push({
-                clip: clip,
-                links: links
-            });
-
-            // count per-node active curves
-            var activeNodes = this._activeNodes;
-            for (i = 0; i < links.length; ++i) {
-                activeNodes[links[i].node]++;
-            }
+            this._clips.push(clip);
         },
 
         removeClip: function (index) {
-            // decrement node drivers
-            var links = this._clips[index].links;
-            var activeNodes = this._activeNodes;
-            var basePose = this._basePose;
-            var activePose = this._activePose;
-            for (var i = 0; i < links.length; ++i) {
-                var node = links[i].node;
-                activeNodes[node]--;
+            var clips = this._clips;
+            var clip = clips[index];
 
-                // if the node is no longer driven by a clip as a result
-                // of this removal, then we must reset the tree to the
-                // base pose
-                if (activeNodes[node] === 0) {
-                    for (var j = 0; j < 10; ++j) {
-                        activePose[i * 10 + j] = basePose[i * 10 + j];
+            var curves = clip.track.curves;
+            var interf = this._interf;
+            var targets = this._targets;
+
+            for (var i = 0; i < curves.length; ++i) {
+                var curve = curves[i];
+                var paths = curve.paths;
+                for (var j = 0; j < paths.length; ++j) {
+                    var path = paths[j];
+                    var target = targets[path];
+                    AnimController._filter(target.curves, function (curve) {
+                        return curve[0] !== clip;
+                    });
+
+                    // target has no more curves, unresolve
+                    if (target.curves.length === 0) {
+                        interf.unresolve(path);
+                        delete target[path];
                     }
-                    this._applyActive(node);
                 }
             }
 
-            // remove clip
-            this._clips.splice(index, 1);
+            clips.splice(index, 1);
         },
 
         removeClips: function () {
@@ -629,13 +810,15 @@ Object.assign(pc, function () {
         },
 
         getClip: function (index) {
-            return this._clips[index].clip;
+            return this._clips[index];
         },
 
         findClip: function (name) {
-            for (var i = 0; i < this._clips.length; ++i) {
-                if (this._clips[i].name === name) {
-                    return this._clips[i].clip;
+            var clips = this._clips;
+            for (var i = 0; i < clips.length; ++i) {
+                var clip = clips[i];
+                if (clip.name === name) {
+                    return clip;
                 }
             }
             return null;
@@ -643,135 +826,59 @@ Object.assign(pc, function () {
 
         update: function (deltaTime) {
             var clips = this._clips;
-            var nodes = this._nodes;
-            var activeNodes = this._activeNodes;
-            var basePose = this._basePose;
-            var activePose = this._activePose;
+            var targets = this._targets;
 
-            var i, j, c;
+            var i, j;
 
-            // reset base pose on active nodes
-            for (i = 0; i < nodes.length; ++i) {
-                if (activeNodes[i] > 0) {
-                    for (j = 0; j < 10; ++j) {
-                        activePose[i * 10 + j] = basePose[i * 10 + j];
+            // update clips
+            for (i = 0; i < clips.length; ++i) {
+                clips[i]._update(deltaTime);
+            }
+
+            // TODO precalculate weights in a table once and then reuse them
+
+            // apply results to targets
+            var storage = [];
+            //for (i = 0; i < targets.length; ++i) {
+            for (var path in targets) {
+                if (!targets.hasOwnProperty(path)) {
+                    continue;
+                }
+                var target = targets[path];
+                var setter = target.setter;
+                var curves = target.curves;
+
+                // sum total blend weight for all clips so we can normalize
+                var blendWeight = curves.reduce(function (sum, curve) {
+                    return sum + curve[0].blendWeight;
+                }, 0);
+
+                // clear storage
+                for (j = 0; j < setter.components; ++j) {
+                    storage[j] = 0;
+                }
+                storage.length = setter.components;
+
+                for (j = 0; j < curves.length; ++j) {
+                    var curve = curves[j][0];
+                    var weight = curve.blendWeight / blendWeight;
+
+                    // TODO: handle quaternion
+                    if (weight > 0) {
+                        var data = curves[j][1];
+
+                        if (setter.type === 'quaternion') {
+                            AnimController._normalize(data);
+                        }
+
+                        AnimController._blend(storage, data, weight, setter.components);
                     }
                 }
+
+                setter.func(storage);
             }
 
-            // blend animation clips onto the activePose
-            for (c = 0; c < clips.length; ++c) {
-                var clip = clips[c];
-                var links = clip.links;
-
-                // update animation clip
-                clip.clip._update(deltaTime);
-
-                var weight = clip.clip.blendWeight;
-                if (weight >= 1.0) {
-                    // overwrite active pose
-                    for (i = 0; i < links.length; ++i) {
-                        this._setActive(links[i]);
-                    }
-                } else if (weight > 0) {
-                    // blend onto active pose
-                    for (i = 0; i < links.length; ++i) {
-                        this._blendActive(links[i], weight);
-                    }
-                } // skip clips with weight <= 0
-            }
-
-            // apply the activePose to the node hierarchy
-            for (i = 0; i < nodes.length; ++i) {
-                if (activeNodes[i] > 0) {
-                    this._applyActive(i);
-                }
-            }
-        },
-
-        // set the link's t, r, s on the active pose node
-        _setActive: function (link) {
-            var activePose = this._activePose;
-            var idx = link.node * 10;
-            var t = link.translation;
-            var r = link.rotation;
-            var s = link.scale;
-            var i;
-
-            if (t) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + i] = t[i];
-                }
-            }
-            if (r) {
-                this._q0.set(r[0], r[1], r[2], r[3]);
-                this._q0.normalize();
-
-                activePose[idx + 3 + 0] = this._q0.x;
-                activePose[idx + 3 + 1] = this._q0.y;
-                activePose[idx + 3 + 2] = this._q0.z;
-                activePose[idx + 3 + 3] = this._q0.w;
-            }
-            if (s) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + 7 + i] = s[i];
-                }
-            }
-        },
-
-        // blend the link's t, r, s onto the active pose node
-        _blendActive: function (link, weight) {
-            var oneMinusWeight = 1.0 - weight;
-            var activePose = this._activePose;
-            var idx = link.node * 10;
-            var t = link.translation;
-            var r = link.rotation;
-            var s = link.scale;
-            var i;
-
-            if (t) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + i] = activePose[idx + i] * oneMinusWeight + t[i] * weight;
-                }
-            }
-
-            if (r) {
-                this._q0.set(activePose[idx + 3], activePose[idx + 4], activePose[idx + 5], activePose[idx + 6]);
-                this._q1.set(r[0], r[1], r[2], r[3]);
-                this._q1.normalize();
-                this._q0.slerp(this._q0, this._q1, weight);
-
-                activePose[idx + 3 + 0] = this._q0.x;
-                activePose[idx + 3 + 1] = this._q0.y;
-                activePose[idx + 3 + 2] = this._q0.z;
-                activePose[idx + 3 + 3] = this._q0.w;
-            }
-
-            if (s) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + 7 + i] = activePose[idx + 7 + i] * oneMinusWeight + s[i] * weight;
-                }
-            }
-        },
-
-        // apply the active node transform to the target
-        _applyActive: function (nodeIndex) {
-            var activePose = this._activePose;
-            var node = this._nodes[nodeIndex];
-            var idx = nodeIndex * 10;
-
-            node.localPosition.set(activePose[idx++], activePose[idx++], activePose[idx++]);
-            node.localRotation.set(activePose[idx++], activePose[idx++], activePose[idx++], activePose[idx++]);
-            node.localScale.set(activePose[idx++], activePose[idx++], activePose[idx++]);
-
-            // TODO: decide at what point to renormalize quaternions, options are:
-            // after curve evaluation
-            // after link blending
-            // right at the end
-            // all of the above
-
-            // TODO: is this the optimal way of dirtifying the hierarchy?
-            node._dirtifyLocal();
+            this._interf.update(deltaTime);
         }
     });
 
@@ -785,6 +892,7 @@ Object.assign(pc, function () {
         AnimTrack: AnimTrack,
         AnimSnapshot: AnimSnapshot,
         AnimClip: AnimClip,
+        DefaultAnimInterface: DefaultAnimInterface,
         AnimController: AnimController
     };
 }());

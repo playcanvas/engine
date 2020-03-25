@@ -116,28 +116,32 @@ var Viewer = function (canvas) {
     this.app = app;
     this.camera = camera;
     this.light = light;
-    this.entity = null;
+    this.entities = [];
+    this.assets = [];
     this.graph = graph;
     this.showGraphs = false;
+    this.clearOnLoad = true;
 };
 
 Object.assign(Viewer.prototype, {
     // reset the viewer, unloading resources
     resetScene: function () {
         var app = this.app;
+        var i;
 
-        var entity = this.entity;
-        if (entity) {
+        for (i = 0; i < this.entities.length; ++i) {
+            var entity = this.entities[i];
             app.root.removeChild(entity);
             entity.destroy();
-            this.entity = null;
         }
+        this.entities = [];
 
-        if (this.asset) {
-            app.assets.remove(this.asset);
-            this.asset.unload();
-            this.asset = null;
+        for (i = 0; i < this.assets.length; ++i) {
+            var asset = this.assets[i];
+            app.assets.remove(asset);
+            asset.unload();
         }
+        this.assets = [];
 
         this.graph.clear();
 
@@ -147,7 +151,7 @@ Object.assign(Viewer.prototype, {
 
     // move the camera to view the loaded object
     focusCamera: function () {
-        var entity = this.entity;
+        var entity = this.app.root;
         if (entity) {
             var camera = this.camera;
 
@@ -170,33 +174,45 @@ Object.assign(Viewer.prototype, {
 
     // play the animation
     play: function (animationName) {
-        if (animationName) {
-            this.entity.animation.play(this.animationMap[animationName], 1);
-        } else {
-            this.entity.animation.playing = true;
+        for (var i = 0; i < this.entities.length; ++i) {
+            var entity = this.entities.length;
+            if (animationName) {
+                entity.animation.play(this.animationMap[animationName], 1);
+            } else {
+                entity.animation.playing = true;
+            }
         }
     },
 
     // stop playing animations
     stop: function () {
-        this.entity.animation.playing = false;
+        for (var i = 0; i < this.entities.length; ++i) {
+            var entity = this.entities.length;
+            entity.animation.playing = false;
+        }
     },
 
     setSpeed: function (speed) {
-        var entity = this.entity;
-        if (entity) {
+        for (var i = 0; i < this.entities.length; ++i) {
+            var entity = this.entities.length;
             entity.animation.speed = speed;
         }
     },
 
-    setGraphs: function (show) {
+    setShowGraphs: function (show) {
         this.showGraphs = show;
+    },
+
+    setClearOnLoad: function (clearOnLoad) {
+        this.clearOnLoad = clearOnLoad;
     },
 
     _onLoaded: function (err, asset) {
         if (!err) {
 
-            this.resetScene();
+            if (this.clearOnLoad) {
+                this.resetScene();
+            }
 
             var resource = asset.resource;
 
@@ -279,8 +295,8 @@ Object.assign(Viewer.prototype, {
             }
 
             this.app.root.addChild(entity);
-            this.entity = entity;
-            this.asset = asset;
+            this.entities.push(entity);
+            this.assets.push(asset);
 
             this.focusCamera();
         }
