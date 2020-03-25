@@ -42,7 +42,7 @@
 
         useMetalness: 'boolean',
         metalness: 'number',
-        useAnisotropy: 'boolean',
+        enableGGXSpecular: 'boolean',
         anisotropy: 'number',
         metalnessTint: 'boolean',
         metalnessVertexColor: 'boolean',

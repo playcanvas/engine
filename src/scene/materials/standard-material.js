@@ -34,7 +34,7 @@ Object.assign(pc, function () {
      * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
      * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {boolean} useAnisotropy Use anisotropic specular.
+     * @property {boolean} enableGGXSpecular Enable GGX specular.
      * @property {number} anisotropy Defines amount of anisotrophy.
      * With anisotropy == 0, specular is isotropic
      * With anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
@@ -687,7 +687,7 @@ Object.assign(pc, function () {
                     this._setParameter('material_metalness', this.metalness);
                 }
 
-                if (this.useAnisotropy){
+                if (this.enableGGXSpecular){
                     this._setParameter('material_anisotropy', this.anisotropy);
                 }
             }
@@ -983,7 +983,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "fastTbn", false);
         _defineFlag(obj, "specularAntialias", false);
         _defineFlag(obj, "useMetalness", false);
-        _defineFlag(obj, "useAnisotropy", false);
+        _defineFlag(obj, "enableGGXSpecular", false);
         _defineFlag(obj, "occludeDirect", false);
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);

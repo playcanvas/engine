@@ -81,7 +81,7 @@
             material.shininess = (z) / (NUM_SPHERES_Z - 1) * 100;
             material.useMetalness = true;
             material.anisotropy = ((2*x / (NUM_SPHERES_X - 1))-1.0)*-1.0;
-            material.useAnisotropy = true;
+            material.enableGGXSpecular = true;
             material.update();
 
             var sphere = new pc.Entity();
@@ -130,19 +130,6 @@
         });
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
-
-        // Set an update function on the app's update event
-        var angle = 0;
-        app.on("update", function (dt) {
-            angle += dt;
-            if (angle > 360) {
-                angle = 0;
-            }
-
-            // Rotate the sphere
-            //mid_sphere.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
-            //mid_sphere.setEulerAngles(angle*40, angle*0, angle*15);
-        });
     </script>
 </body>
 </html>
