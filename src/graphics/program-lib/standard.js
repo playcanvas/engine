@@ -1252,7 +1252,7 @@ pc.programlib.standard = {
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
-            if (getGlossinessCalled == false) code += "   getGlossiness();\n";
+            if (!getGlossinessCalled) code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
