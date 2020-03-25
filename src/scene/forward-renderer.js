@@ -668,9 +668,9 @@ Object.assign(pc, function () {
                     mat3FromMat4(view.viewMat3, view.viewOffMat);
                     view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
 
-                    view.positionOff.x = view.viewInvOffMat.data[12];
-                    view.positionOff.y = view.viewInvOffMat.data[13];
-                    view.positionOff.z = view.viewInvOffMat.data[14];
+                    view.position[0] = view.viewInvOffMat.data[12];
+                    view.position[1] = view.viewInvOffMat.data[13];
+                    view.position[2] = view.viewInvOffMat.data[14];
 
                     camera.frustum.update(view.projMat, view.viewOffMat);
                 }
@@ -1321,6 +1321,10 @@ Object.assign(pc, function () {
 
                     }
 
+                    // #ifdef DEBUG
+                    this.device.pushMarker("SHADOW " + light._node.name);
+                    // #endif
+
                     if (type !== pc.LIGHTTYPE_POINT) {
                         shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
                         shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
@@ -1367,6 +1371,15 @@ Object.assign(pc, function () {
                     }
 
                     while (pass < passes) {
+
+                        // #ifdef DEBUG
+                        var doPopMarker = false;
+                        if (passes > 1) {
+                            this.device.pushMarker("PASS " + pass);
+                            doPopMarker = true;
+                        }
+                        // #endif
+
                         if (type === pc.LIGHTTYPE_POINT) {
                             shadowCamNode.setRotation(pointLightRotations[pass]);
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
@@ -1442,9 +1455,20 @@ Object.assign(pc, function () {
                         }
                         pass++;
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) light._visibleLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
+
+                        // #ifdef DEBUG
+                        if (doPopMarker)
+                            this.device.popMarker();
+                        // #endif
+
                     } // end pass
 
                     if (light._isVsm) {
+
+                        // #ifdef DEBUG
+                        this.device.pushMarker("VSM");
+                        // #endif
+
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;
@@ -1491,7 +1515,15 @@ Object.assign(pc, function () {
                             this.pixelOffsetId.setValue(pixelOffset);
                             pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                         }
+
+                        // #ifdef DEBUG
+                        this.device.popMarker();
+                        // #endif
                     }
+
+                    // #ifdef DEBUG
+                    this.device.popMarker();
+                    // #endif
                 }
             }
 
@@ -1774,7 +1806,7 @@ Object.assign(pc, function () {
                             this.viewInvId.setValue(view.viewInvOffMat.data);
                             this.viewId3.setValue(view.viewMat3.data);
                             this.viewProjId.setValue(view.projViewOffMat.data);
-                            this.viewPosId.setValue(view.positionOff.data);
+                            this.viewPosId.setValue(view.position);
 
                             if (v === 0) {
                                 i += this.drawInstance(device, drawCall, mesh, style, true);
@@ -2747,6 +2779,11 @@ Object.assign(pc, function () {
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
 
+                // #ifdef DEBUG
+                this.device.pushMarker(layer.name);
+                this.device.pushMarker(((camera && camera.node) ? camera.node.name : "noname"));
+                // #endif
+
                 // #ifdef PROFILER
                 drawTime = pc.now();
                 // #endif
@@ -2854,6 +2891,11 @@ Object.assign(pc, function () {
                         layer._postRenderCounter = layer._postRenderCounterMax;
                     }
                 }
+
+                // #ifdef DEBUG
+                this.device.popMarker();
+                this.device.popMarker();
+                // #endif
 
                // #ifdef PROFILER
                 layer._renderTime += pc.now() - drawTime;

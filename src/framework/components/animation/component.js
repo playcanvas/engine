@@ -40,34 +40,69 @@ Object.assign(pc, function () {
          * animation state to the start of the animation being set.
          */
         play: function (name, blendTime) {
-            if (!this.data.animations[name]) {
-                console.error(pc.string.format("Trying to play animation '{0}' which doesn't exist", name));
-                return;
-            }
 
             if (!this.enabled || !this.entity.enabled) {
                 return;
             }
 
-            blendTime = blendTime || 0;
-
             var data = this.data;
+
+            if (!data.animations[name]) {
+                // #ifdef DEBUG
+                console.error(pc.string.format("Trying to play animation '{0}' which doesn't exist", name));
+                // #endif
+                return;
+            }
+
+            blendTime = blendTime || 0;
 
             data.prevAnim = data.currAnim;
             data.currAnim = name;
 
             if (data.model) {
+
+                if (!data.skeleton && !data.animController) {
+                    this._createAnimationController();
+                }
+
+                var prevAnim = data.animations[data.prevAnim];
+                var currAnim = data.animations[data.currAnim];
+
                 data.blending = blendTime > 0 && data.prevAnim;
                 if (data.blending) {
-                    // Blend from the current time of the current animation to the start of
-                    // the newly specified animation over the specified blend time period.
-                    data.blendTime = blendTime;
-                    data.blendTimeRemaining = blendTime;
-                    data.fromSkel.animation = data.animations[data.prevAnim];
-                    data.fromSkel.addTime(data.skeleton._time);
-                    data.toSkel.animation = data.animations[data.currAnim];
-                } else {
-                    data.skeleton.animation = data.animations[data.currAnim];
+                    data.blend = 0;
+                    data.blendSpeed = 1.0 / blendTime;
+                }
+
+                if (data.skeleton) {
+                    if (data.blending) {
+                        // Blend from the current time of the current animation to the start of
+                        // the newly specified animation over the specified blend time period.
+                        data.fromSkel.animation = prevAnim;
+                        data.fromSkel.addTime(data.skeleton._time);
+                        data.toSkel.animation = currAnim;
+                    } else {
+                        data.skeleton.animation = currAnim;
+                    }
+                }
+
+                if (data.animController) {
+                    var animController = data.animController;
+
+                    if (data.blending) {
+                        // remove all but the last clip
+                        while (animController.numClips > 1) {
+                            animController.removeClip(0);
+                        }
+                    } else {
+                        data.animController.removeClips();
+                    }
+
+                    var clip = new pc.AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
+                    clip.name = data.currAnim;
+                    clip.blendWeight = data.blending ? 0 : 1;
+                    clip.reset();
+                    data.animController.addClip(clip);
                 }
             }
 
@@ -87,20 +122,57 @@ Object.assign(pc, function () {
 
         setModel: function (model) {
             var data = this.data;
-            if (model) {
-                // Create skeletons
-                var graph = model.getGraph();
+
+            if (model !== data.model) {
+                // reset animation controller
+                this._resetAnimationController();
+
+                // set the model
+                data.model = model;
+
+                // Reset the current animation on the new model
+                if (data.animations && data.currAnim && data.animations[data.currAnim]) {
+                    this.play(data.currAnim);
+                }
+            }
+        },
+
+        _resetAnimationController: function () {
+            var data = this.data;
+            data.skeleton = null;
+            data.fromSkel = null;
+            data.toSkel = null;
+            data.animController = null;
+        },
+
+        _createAnimationController: function () {
+            var data = this.data;
+            var model = data.model;
+            var animations = data.animations;
+
+            // check which type of animations are loaded
+            var hasJson = false;
+            var hasGlb = false;
+            for (var animation in animations) {
+                if (animations.hasOwnProperty(animation)) {
+                    var anim = animations[animation];
+                    if (anim.constructor === pc.AnimTrack) {
+                        hasGlb = true;
+                    } else {
+                        hasJson = true;
+                    }
+                }
+            }
+
+            var graph = model.getGraph();
+            if (hasJson) {
                 data.fromSkel = new pc.Skeleton(graph);
                 data.toSkel = new pc.Skeleton(graph);
                 data.skeleton = new pc.Skeleton(graph);
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
-            }
-            data.model = model;
-
-            // Reset the current animation on the new model
-            if (data.animations && data.currAnim && data.animations[data.currAnim]) {
-                this.play(data.currAnim);
+            } else if (hasGlb) {
+                data.animController = new pc.AnimController(graph);
             }
         },
 
@@ -113,8 +185,15 @@ Object.assign(pc, function () {
             var i, l = ids.length;
 
             var onAssetReady = function (asset) {
-                self.animations[asset.name] = asset.resource;
-                self.animationsIndex[asset.id] = asset.name;
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        self.animations[asset.resources[i].name] = asset.resources[i];
+                        self.animationsIndex[asset.id] = asset.resources[i].name;
+                    }
+                } else {
+                    self.animations[asset.name] = asset.resource;
+                    self.animationsIndex[asset.id] = asset.name;
+                }
                 /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
                 /* eslint-enable no-self-assign */
@@ -147,19 +226,64 @@ Object.assign(pc, function () {
         },
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute === 'resource') {
+            var i;
+            if (attribute === 'resource' || attribute === 'resources') {
                 // replace old animation with new one
                 if (newValue) {
-                    this.animations[asset.name] = newValue;
-                    this.animationsIndex[asset.id] = asset.name;
+                    var restarted = false;
+                    if (newValue.length > 1) {
+                        if (oldValue && oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        } else {
+                            delete this.animations[asset.name];
+                        }
+                        restarted = false;
+                        for (i = 0; i < newValue.length; i++) {
+                            this.animations[newValue[i].name] = newValue[i];
 
-                    if (this.data.currAnim === asset.name) {
-                        // restart animation
-                        if (this.data.playing && this.data.enabled && this.entity.enabled)
-                            this.play(asset.name, 0);
+                            if (!restarted && this.data.currAnim === newValue[i].name) {
+                                // restart animation
+                                if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                    restarted = true;
+                                    this.play(newValue[i].name, 0);
+                                }
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
+                        }
+                    } else {
+                        if (oldValue && oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        }
+                        this.animations[asset.name] = newValue[0] || newValue;
+                        restarted = false;
+                        if (this.data.currAnim === asset.name) {
+                            // restart animation
+                            if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                restarted = true;
+                                this.play(asset.name, 0);
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
+                        }
                     }
+                    this.animationsIndex[asset.id] = asset.name;
                 } else {
-                    delete this.animations[asset.name];
+                    if (oldValue.length > 1) {
+                        for (i = 0; i < oldValue.length; i++) {
+                            delete this.animations[oldValue[i].name];
+                        }
+                    } else {
+                        delete this.animations[asset.name];
+                    }
                     delete this.animationsIndex[asset.id];
                 }
             }
@@ -168,21 +292,34 @@ Object.assign(pc, function () {
         onAssetRemoved: function (asset) {
             asset.off('remove', this.onAssetRemoved, this);
 
-            if (this.animations && this.animations[asset.name]) {
-                delete this.animations[asset.name];
+            if (this.animations) {
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        delete this.animations[asset.resources[i].name];
+                        if (this.data.currAnim === asset.resources[i].name)
+                            this._stopCurrentAnimation();
+                    }
+                } else {
+                    delete this.animations[asset.name];
+                    if (this.data.currAnim === asset.name)
+                        this._stopCurrentAnimation();
+                }
                 delete this.animationsIndex[asset.id];
-
-                if (this.data.currAnim === asset.name)
-                    this._stopCurrentAnimation();
             }
         },
 
         _stopCurrentAnimation: function () {
-            this.data.currAnim = null;
-            this.data.playing = false;
-            if (this.data.skeleton) {
-                this.data.skeleton.currentTime = 0;
-                this.data.skeleton.animation = null;
+            var data = this.data;
+            data.currAnim = null;
+            data.playing = false;
+            if (data.skeleton) {
+                data.skeleton.currentTime = 0;
+                data.skeleton.animation = null;
+            }
+            if (data.animController) {
+                for (var i = 0; i < data.animController.numClips; ++i) {
+                    data.animController.removeClips();
+                }
             }
         },
 
@@ -194,7 +331,7 @@ Object.assign(pc, function () {
             if (modelComponent) {
                 var m = modelComponent.model;
                 if (m && m !== data.model) {
-                    this.entity.animation.setModel(m);
+                    this.setModel(m);
                 }
             }
 
@@ -237,22 +374,44 @@ Object.assign(pc, function () {
         },
 
         onSetLoop: function (name, oldValue, newValue) {
-            if (this.data.skeleton) {
-                this.data.skeleton.looping = this.data.loop;
+            var data = this.data;
+
+            if (data.skeleton) {
+                data.skeleton.looping = data.loop;
+            }
+
+            if (data.animController) {
+                for (var i = 0; i < data.animController.numClips; ++i) {
+                    data.animController.getClip(i).loop = data.loop;
+                }
             }
         },
 
         onSetCurrentTime: function (name, oldValue, newValue) {
-            this.data.skeleton.currentTime = newValue;
-            this.data.skeleton.addTime(0); // update
-            this.data.skeleton.updateGraph();
+            var data = this.data;
+
+            if (data.skeleton) {
+                var skeleton = data.skeleton;
+                skeleton.currentTime = newValue;
+                skeleton.addTime(0); // update
+                skeleton.updateGraph();
+            }
+
+            if (data.animController) {
+                var animController = data.animController;
+                for (var i = 0; i < animController.numClips; ++i) {
+                    animController.getClip(i).time = newValue;
+                }
+            }
         },
 
         onEnable: function () {
             pc.Component.prototype.onEnable.call(this);
 
+            var data = this.data;
+
             // load assets if they're not loaded
-            var assets = this.data.assets;
+            var assets = data.assets;
             var registry = this.system.app.assets;
             if (assets) {
                 for (var i = 0, len = assets.length; i < len; i++) {
@@ -265,8 +424,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (this.data.activate && !this.data.currAnim) {
-                for (var animName in this.data.animations) {
+            if (data.activate && !data.currAnim) {
+                for (var animName in data.animations) {
                     this.play(animName, 0);
                     break;
                 }
@@ -282,10 +441,14 @@ Object.assign(pc, function () {
                 asset.off('remove', this.onAssetRemoved, this);
             }
 
-            delete this.data.animation;
-            delete this.data.skeleton;
-            delete this.data.fromSkel;
-            delete this.data.toSkel;
+            var data = this.data;
+
+            delete data.animation;
+            delete data.skeleton;
+            delete data.fromSkel;
+            delete data.toSkel;
+
+            delete data.animController;
         }
     });
 
@@ -295,9 +458,20 @@ Object.assign(pc, function () {
                 return this.data.skeleton._time;
             },
             set: function (currentTime) {
-                this.data.skeleton.currentTime = currentTime;
-                this.data.skeleton.addTime(0);
-                this.data.skeleton.updateGraph();
+                var data = this.data;
+                if (data.skeleton) {
+                    var skeleton = data.skeleton;
+                    skeleton.currentTime = currentTime;
+                    skeleton.addTime(0);
+                    skeleton.updateGraph();
+                }
+
+                if (data.animController) {
+                    var animController = data.animController;
+                    for (var i = 0; i < animController.numClips; ++i) {
+                        animController.getClip(i).time = currentTime;
+                    }
+                }
             }
         },
 

@@ -177,3 +177,10 @@
  * @description Callback used by {@link pc.XrManager#endXr} and {@link pc.XrManager#startXr}.
  * @param {Error|null} err - The Error object or null if operation was successfull.
  */
+
+/**
+ * @callback pc.callbacks.XrHitTestStart
+ * @description Callback used by {@link pc.XrHitTest#start} and {@link pc.XrHitTest#startForInputSource}.
+ * @param {Error|null} err - The Error object if failed to create hit test source or null.
+ * @param {pc.XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
+ */

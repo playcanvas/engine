@@ -37,6 +37,9 @@ Object.assign(pc, function () {
         'animTilesY',
         'animStartFrame',
         'animNumFrames',
+        'animNumAnimations',
+        'animIndex',
+        'randomizeAnimIndex',
         'animLoop',
         'colorMap',
         'localSpace',
@@ -109,8 +112,11 @@ Object.assign(pc, function () {
      * @property {boolean} animLoop Controls whether the sprite sheet animation plays once or loops continuously.
      * @property {number} animTilesX Number of horizontal tiles in the sprite sheet.
      * @property {number} animTilesY Number of vertical tiles in the sprite sheet.
-     * @property {number} animStartFrame The zero based sprite sheet frame that the animation should be played from. The animation will play for animNumFrames frames beyond this. AnimStartFrame + AnimNumFrames should not exceed animTilesX * animTilesY.
-     * @property {number} animNumFrames Number of sprite sheet frames to play. It is valid to set the number of frames to a value less than animTilesX multiplied by animTilesY.
+     * @property {number} animNumAnimations Number of sprite sheet animations contained within the current sprite sheet. The number of animations multiplied by number of frames should be a value less than animTilesX multiplied by animTilesY.
+     * @property {number} animNumFrames Number of sprite sheet frames in the current sprite sheet animation. The number of animations multiplied by number of frames should be a value less than animTilesX multiplied by animTilesY.
+     * @property {number} animStartFrame The sprite sheet frame that the animation should begin playing from. Indexed from the start of the current animation.
+     * @property {number} animIndex When animNumAnimations is greater than 1, the sprite sheet animation index determines which animation the particle system should play.
+     * @property {number} randomizeAnimIndex Each particle emitted by the system will play a random animation from the sprite sheet, up to animNumAnimations.
      * @property {number} animSpeed Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
      * @property {number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
@@ -622,6 +628,9 @@ Object.assign(pc, function () {
                     animTilesY: data.animTilesY,
                     animStartFrame: data.animStartFrame,
                     animNumFrames: data.animNumFrames,
+                    animNumAnimations: data.animNumAnimations,
+                    animIndex: data.animIndex,
+                    randomizeAnimIndex: data.randomizeAnimIndex,
                     animSpeed: data.animSpeed,
                     animLoop: data.animLoop,
 

@@ -87,6 +87,11 @@ Object.assign(pc, function () {
 
     // This shouldn't change emitter state, only read from it
     ParticleGPUUpdater.prototype.update = function (device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
+
+        // #ifdef DEBUG
+        device.pushMarker("ParticleGPU");
+        // #endif
+
         var emitter = this._emitter;
 
         device.setBlending(false);
@@ -190,6 +195,10 @@ Object.assign(pc, function () {
         emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);
         if (emitter.pack8)
             this._setInputBounds();
+
+        // #ifdef DEBUG
+        device.popMarker("");
+        // #endif
     };
 
     return {

@@ -447,17 +447,19 @@ Object.assign(pc, function () {
          * @param {string} url - The url to load.
          * @param {string} type - The type of asset to load.
          * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+         * @param {string} [filename] - Optional asset filename.
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
          * });
          */
-        loadFromUrl: function (url, type, callback) {
+        loadFromUrl: function (url, type, callback, filename) {
             var self = this;
 
-            var name = pc.path.getBasename(url);
+            var name = pc.path.getBasename(filename || url);
 
             var file = {
+                filename: filename || name,
                 url: url
             };
             var data = {};
@@ -518,9 +520,9 @@ Object.assign(pc, function () {
                 self.load(assetToLoad);
             };
 
-            if (ext === '.json') {
+            if (ext === '.json' || ext === '.glb') {
                 // playcanvas model format supports material mapping file
-                var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+                var mappingUrl = pc.path.join(dir, basename.replace(ext, ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
                         asset.data = { mapping: [] };
@@ -537,7 +539,6 @@ Object.assign(pc, function () {
                 // other model format (e.g. obj)
                 _loadAsset(asset);
             }
-
         },
 
         // private method used for engine-only loading of model data

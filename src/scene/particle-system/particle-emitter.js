@@ -210,6 +210,9 @@ Object.assign(pc, function () {
         setProperty("animTilesY", 1);
         setProperty("animStartFrame", 0);
         setProperty("animNumFrames", 1);
+        setProperty("animNumAnimations", 1);
+        setProperty("animIndex", 0);
+        setProperty("randomizeAnimIndex", false);
         setProperty("animSpeed", 1);
         setProperty("animLoop", true);
 
@@ -253,7 +256,8 @@ Object.assign(pc, function () {
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
         this.animTilesParams = new Float32Array(2);
-        this.animParams = new Float32Array(3);
+        this.animParams = new Float32Array(4);
+        this.animIndexParams = new Float32Array(2);
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -280,6 +284,8 @@ Object.assign(pc, function () {
 
         this.prevWorldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsCenter = new pc.Vec3();
+        this.prevEmitterExtents = this.emitterExtents;
+        this.prevEmitterRadius = this.emitterRadius;
         this.worldBoundsMul = new pc.Vec3();
         this.worldBoundsAdd = new pc.Vec3();
         this.timeToSwitchBounds = 0;
@@ -295,7 +301,7 @@ Object.assign(pc, function () {
         this.material = null;
         this.meshInstance = null;
 
-        this.seed = 0;
+        this.seed = Math.random();
 
         this.fixedTimeStep = 1.0 / 60;
         this.maxSubSteps = 10;
@@ -377,6 +383,16 @@ Object.assign(pc, function () {
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+
+            var recalculateLocalBounds = false;
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                recalculateLocalBounds = !this.emitterExtents.equals(this.prevEmitterExtents);
+            } else {
+                recalculateLocalBounds = !(this.emitterRadius === this.prevEmitterRadius);
+            }
+            if (recalculateLocalBounds) {
+                this.calculateLocalBounds();
+            }
 
             var nodeWT = this.node.getWorldTransform();
             if (this.localSpace) {
@@ -819,6 +835,7 @@ Object.assign(pc, function () {
             if (this._isAnimated()) {
                 material.setParameter('animTexTilesParams', this.animTilesParams);
                 material.setParameter('animTexParams', this.animParams);
+                material.setParameter('animTexIndexParams', this.animIndexParams);
             }
             material.setParameter('colorMult', this.intensity);
             if (!this.useCpu) {
@@ -942,6 +959,10 @@ Object.assign(pc, function () {
                         type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR3,
+                        components: 1,
+                        type: pc.TYPE_FLOAT32
+                    }, {
+                        semantic: pc.SEMANTIC_ATTR4,
                         components: this.useMesh ? 4 : 2,
                         type: pc.TYPE_FLOAT32
                     }];
@@ -1067,16 +1088,24 @@ Object.assign(pc, function () {
 
             this.simTimeTotal += delta;
 
-            this.calculateWorldBounds();
+            if (!this.useCpu) {
+                this.calculateWorldBounds();
+            }
 
             if (this._isAnimated()) {
                 var tilesParams = this.animTilesParams;
                 tilesParams[0] = 1.0 / this.animTilesX; // animTexTilesParams.x
                 tilesParams[1] = 1.0 / this.animTilesY; // animTexTilesParams.y
+
                 var params = this.animParams;
                 params[0] = this.animStartFrame; // animTexParams.x
                 params[1] = this.animNumFrames * this.animSpeed; // animTexParams.y
                 params[2] = this.animNumFrames - 1; // animTexParams.z
+                params[3] = this.animNumAnimations - 1; // animTexParams.w
+
+                var animIndexParams = this.animIndexParams;
+                animIndexParams[0] = this.animIndex; // animTexIndexParams.x
+                animIndexParams[1] = this.randomizeAnimIndex; // animTexIndexParams.y
             }
 
             if (this.scene) {

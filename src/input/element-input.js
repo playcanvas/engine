@@ -323,7 +323,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(event);
+            this._onElementMouseEvent(pc.EVENT_MOUSEUP, event);
         },
 
         _handleDown: function (event) {
@@ -336,7 +336,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(event);
+            this._onElementMouseEvent(pc.EVENT_MOUSEDOWN, event);
         },
 
         _handleMove: function (event) {
@@ -346,7 +346,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(event);
+            this._onElementMouseEvent(pc.EVENT_MOUSEMOVE, event);
 
             this._lastX = targetX;
             this._lastY = targetY;
@@ -359,7 +359,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(event);
+            this._onElementMouseEvent(pc.EVENT_MOUSEWHEEL, event);
         },
 
         _determineTouchedElements: function (event) {
@@ -507,7 +507,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _onElementMouseEvent: function (event) {
+        _onElementMouseEvent: function (eventType, event) {
             var element;
 
             var hovered = this._hoveredElement;
@@ -529,11 +529,11 @@ Object.assign(pc, function () {
 
             // fire mouse event
             if (element) {
-                this._fireEvent(event.type, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
+                this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
 
                 this._hoveredElement = element;
 
-                if (event.type === pc.EVENT_MOUSEDOWN) {
+                if (eventType === pc.EVENT_MOUSEDOWN) {
                     this._pressedElement = element;
                 }
             }
@@ -551,7 +551,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (event.type === pc.EVENT_MOUSEUP && this._pressedElement) {
+            if (eventType === pc.EVENT_MOUSEUP && this._pressedElement) {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
                     this._pressedElement = null;
