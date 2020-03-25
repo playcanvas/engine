@@ -77,7 +77,7 @@
 
         var createSphere = function (x, y, z) {
             var material = new pc.StandardMaterial();
-            material.metalness = 1.0; //y / (NUM_SPHERES - 1);
+            material.metalness = 1.0;
             material.shininess = (z) / (NUM_SPHERES_Z - 1) * 100;
             material.useMetalness = true;
             material.anisotropy = ((2*x / (NUM_SPHERES_X - 1))-1.0)*-1.0;

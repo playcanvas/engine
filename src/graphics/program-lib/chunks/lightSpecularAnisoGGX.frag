@@ -2,17 +2,11 @@
 //uniform float material_anisotropy;
 float getLightSpecular() {
     float PI=3.141592653589793;
-    float roughness = pow(1.0-dGlossiness, 2.0);//*(1.0-dGlossiness);
+    float roughness = (1.0-dGlossiness)*(1.0-dGlossiness);
     float anisotropy=material_anisotropy*roughness;
  
     float at = max((roughness + anisotropy), roughness/4.0);
     float ab = max((roughness - anisotropy), roughness/4.0);
-
- //   float at = max(roughness * (1.0 + anisotropy), 0.001);
- //   float ab = max(roughness * (1.0 - anisotropy), 0.001);
-
-//    float at = clamp(roughness + anisotropy, roughness, pow(roughness,0.166666));
-//    float ab = clamp(roughness - anisotropy, roughness, pow(roughness,0.166666));
 
     vec3 h = normalize( normalize(-dLightDirNormW)+ normalize(dViewDirW) );
 

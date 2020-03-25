@@ -559,9 +559,7 @@ pc.programlib.standard = {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
-            }
-            else if (options.enableGGXSpecular)
-            {
+            } else if (options.enableGGXSpecular) {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vObjectSpaceUpW  = getObjectSpaceUp();\n";
             }
@@ -672,7 +670,7 @@ pc.programlib.standard = {
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
-        varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");        
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
         varyings += oldVars;
@@ -961,9 +959,8 @@ pc.programlib.standard = {
             } else {
                 code += chunks.normalVertexPS;
 
-                if (options.enableGGXSpecular)
-                {
-                    code += chunks.TBNObjectSpacePS;    
+                if (options.enableGGXSpecular) {
+                    code += chunks.TBNObjectSpacePS;
                 }
             }
         }
@@ -1109,7 +1106,7 @@ pc.programlib.standard = {
             }
         }
 
-        if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n"
+        if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
 
         if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
@@ -1221,7 +1218,7 @@ pc.programlib.standard = {
             }
         }
 
-        var gloss_called=false;
+        var gloss_called = false;
 
         if (needsNormal) {
             code += "   getViewDir();\n";
@@ -1240,16 +1237,12 @@ pc.programlib.standard = {
             }
 
             code += "   getNormal();\n";
-            if (options.useSpecular || options.enableGGXSpecular)
-            {
-                if (options.enableGGXSpecular)
-                {
+            if (options.useSpecular || options.enableGGXSpecular) {
+                if (options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     code += "   getReflDir();\n";
                     gloss_called = true;
-                }
-                else
-                {
+                } else {
                     code += "   getReflDir();\n";
                 }
             }
@@ -1259,7 +1252,7 @@ pc.programlib.standard = {
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
-            if (gloss_called==false) code += "   getGlossiness();\n";
+            if (gloss_called == false) code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
