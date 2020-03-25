@@ -540,16 +540,16 @@ Object.assign(pc, function () {
 
     /**
      * @class
-     * @name pc.AnimInterface
+     * @name pc.AnimBinder
      * @classdesc This interface is used by {@link pc.AnimController} to resolve unique animation target path strings
      * into instances of {@link pc.AnimTarget}.
      */
-    var AnimInterface = function () { };
+    var AnimBinder = function () { };
 
-    Object.assign(AnimInterface.prototype, {
+    Object.assign(AnimBinder.prototype, {
         /**
          * @function
-         * @name pc.AnimInterface#resolve
+         * @name pc.AnimBinder#resolve
          * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
          * will handle setting the value, or return null if no such target exists.
          * @param {string} path - the animation curve path to resolve.
@@ -561,8 +561,8 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.AnimInterface#unresolve
-         * @description Called when the {@link AnimInterface} no longer has a curve driving the given key.
+         * @name pc.AnimBinder#unresolve
+         * @description Called when the {@link AnimController} no longer has a curve driving the given key.
          * @param {string} path - the animation curve path which is no longer driven.
          */
         unresolve: function (path) {
@@ -571,8 +571,8 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.AnimInterface#update
-         * @description Called by {@link pc.AnimInterface} once a frame after animation updates are done.
+         * @name pc.AnimBinder#update
+         * @description Called by {@link pc.AnimController} once a frame after animation updates are done.
          * @param {number} deltaTime - amount of time that passed in the current update.
          */
         update: function (deltaTime) {
@@ -582,12 +582,12 @@ Object.assign(pc, function () {
 
     /**
      * @class
-     * @name pc.DefaultAnimInterface
-     * @implements {pc.AnimInterface}
-     * @classdesc Implementation of {@link pc.AnimInterface} for animating a skeleton in the graph-node
+     * @name pc.DefaultAnimBinder
+     * @implements {pc.AnimBinder}
+     * @classdesc Implementation of {@link pc.AnimBinder} for animating a skeleton in the graph-node
      * hierarchy.
      */
-    var DefaultAnimInterface = function (graph) {
+    var DefaultAnimBinder = function (graph) {
         var nodes = { };
 
         // cache node names so we can quickly resolve animation paths
@@ -623,7 +623,7 @@ Object.assign(pc, function () {
         };
     };
 
-    Object.assign(DefaultAnimInterface.prototype, {
+    Object.assign(DefaultAnimBinder.prototype, {
         resolve: function (path) {
             var parts = this._getParts(path);
             if (!parts) {
@@ -693,10 +693,10 @@ Object.assign(pc, function () {
      * @name pc.AnimController
      * @classdesc AnimContoller blends multiple sets of animation clips together.
      * @description Create a new animation controller.
-     * @param {pc.AnimInterface} interf - interface resolves curve paths to instances of {@link pc.AnimTarget}.
+     * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
      */
-    var AnimController = function (interf) {
-        this._interf = interf;
+    var AnimController = function (binder) {
+        this._binder = binder;
         this._clips = [];
         this._targets = {};
         this._q0 = new pc.Quat();
@@ -777,7 +777,7 @@ Object.assign(pc, function () {
                     if (!target) {
                         // create new target
                         target = {
-                            target: this._interf.resolve(path), // resolved target instance
+                            target: this._binder.resolve(path), // resolved target instance
                             value: [],                          // storage for calculated value
                             curves: 0                           // number of curves driving this target
                         };
@@ -819,6 +819,7 @@ Object.assign(pc, function () {
 
                     target.curves--;
                     if (target.curves === 0) {
+                        this._binder.unresolve(path);
                         delete targets[path];
                     }
                 }
@@ -911,8 +912,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            // give the interface a chance to update
-            this._interf.update(deltaTime);
+            // give the bindedr a chance to update
+            this._binder.update(deltaTime);
         }
     });
 
@@ -926,7 +927,7 @@ Object.assign(pc, function () {
         AnimTrack: AnimTrack,
         AnimSnapshot: AnimSnapshot,
         AnimClip: AnimClip,
-        DefaultAnimInterface: DefaultAnimInterface,
+        DefaultAnimBinder: DefaultAnimBinder,
         AnimController: AnimController
     };
 }());
