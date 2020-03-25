@@ -34,11 +34,11 @@ Object.assign(pc, function () {
      * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
      * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {boolean} enableGGXSpecular Enable GGX specular.
-     * @property {number} anisotropy Defines amount of anisotrophy.
-     * With anisotropy == 0, specular is isotropic
-     * With anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
-     * With anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+     * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables anisotropy parameter to set material anisotropy.
+     * @property {number} anisotropy Defines amount of anisotropy. Requires enableGGXSpecular is set to true.
+     ** With anisotropy == 0, specular is isotropic.
+     ** With anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
+     ** With anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
      *
      * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.

@@ -1218,7 +1218,7 @@ pc.programlib.standard = {
             }
         }
 
-        var gloss_called = false;
+        var getGlossinessCalled = false;
 
         if (needsNormal) {
             code += "   getViewDir();\n";
@@ -1241,7 +1241,7 @@ pc.programlib.standard = {
                 if (options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     code += "   getReflDir();\n";
-                    gloss_called = true;
+                    getGlossinessCalled = true;
                 } else {
                     code += "   getReflDir();\n";
                 }
@@ -1252,7 +1252,7 @@ pc.programlib.standard = {
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
-            if (gloss_called == false) code += "   getGlossiness();\n";
+            if (getGlossinessCalled == false) code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
