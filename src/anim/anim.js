@@ -711,6 +711,26 @@ Object.assign(pc, function () {
         }
     });
 
+    AnimController._dot = function (a, b) {
+        var len  = a.length;
+        var result = 0;
+        for (var i = 0; i < len; ++i) {
+            result += a[i] * b[i];
+        }
+        return result;
+    };
+
+    AnimController._normalize = function (a) {
+        var l = AnimController._dot(a, a);
+        if (l > 0) {
+            l = 1.0 / Math.sqrt(l);
+            var len = a.length;
+            for (var i = 0; i < len; ++i) {
+                a[i] *= l;
+            }
+        }
+    };
+
     AnimController._set = function (a, b) {
         var len  = a.length;
         for (var i = 0; i < len; ++i) {
@@ -719,34 +739,33 @@ Object.assign(pc, function () {
     };
 
     AnimController._blend = function (a, b, t) {
+        var it = 1.0 - t;
         var len = a.length;
         for (var i = 0; i < len; ++i) {
-            a[i] += b[i] * t;
+            a[i] = a[i] * it + b[i] * t;
         }
     };
 
-    AnimController._normalize = function (a) {
+    AnimController._blendQuat = function (a, b, t) {
         var len = a.length;
-        var l = 0;
-        var i;
+        var it = 1.0 - t;
 
-        for (i = 0; i < len; ++i) {
-            l += a[i] * a[i];
+        if (AnimController._dot(a, b) < 0) {
+            t = -t;
         }
 
-        if (l > 0) {
-            l = 1.0 / Math.sqrt(l);
-            for (i = 0; i < len; ++i) {
-                a[i] *= l;
-            }
+        for (var i = 0; i < len; ++i) {
+            a[i] = a[i] * it + b[i] * t;
         }
+
+        AnimController._normalize(a);
     };
 
     AnimController._stableSort = function (a, lessFunc) {
         var len = a.length;
         for (var i = 0; i < len - 1; ++i) {
             for (var j = i + 1; j < len; ++j) {
-                if (!lessFunc(a[i], a[j])) {
+                if (lessFunc(a[j], a[i])) {
                     var tmp = a[i];
                     a[i] = a[j];
                     a[j] = tmp;
@@ -884,7 +903,7 @@ Object.assign(pc, function () {
 
                         AnimController._set(value, input);
 
-                        if (output.type === 'quaternion') {
+                        if (output.target.type === 'quaternion') {
                             AnimController._normalize(value);
                         }
                     }
@@ -894,10 +913,10 @@ Object.assign(pc, function () {
                         output = outputs[j];
                         value = output.value;
 
-                        AnimController._blend(value, input, blendWeight);
-
-                        if (output.type === 'quaternion') {
-                            AnimController._normalize(value);
+                        if (output.target.type === 'quaternion') {
+                            AnimController._blendQuat(value, input, blendWeight);
+                        } else {
+                            AnimController._blend(value, input, blendWeight);
                         }
                     }
                 }
