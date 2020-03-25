@@ -2781,7 +2781,7 @@ Object.assign(pc, function () {
 
                 // #ifdef DEBUG
                 this.device.pushMarker(layer.name);
-                this.device.pushMarker((camera.node ? camera.node.name : "noname"));
+                this.device.pushMarker(((camera && camera.node) ? camera.node.name : "noname"));
                 // #endif
 
                 // #ifdef PROFILER
