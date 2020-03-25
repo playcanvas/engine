@@ -431,7 +431,7 @@ pc.programlib.standard = {
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap;
+        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.useAnisotropy;
         var shadowPass = options.pass >= pc.SHADER_SHADOW && options.pass <= 17;
 
         this.options = options;
@@ -554,11 +554,16 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap) && options.hasTangents) {
+            if ((options.heightMap || options.normalMap || options.useAnisotropy) && options.hasTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
+            }
+            else if (options.useAnisotropy)
+            {
+                code += chunks.tangentBinormalVS;
+                codeBody += "   vObjectSpaceUpW  = getObjectSpaceUp();\n";
             }
 
             if (mainShadowLight >= 0) {
@@ -667,6 +672,7 @@ pc.programlib.standard = {
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");        
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
         varyings += oldVars;
@@ -954,6 +960,11 @@ pc.programlib.standard = {
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
+
+                if (options.useAnisotropy)
+                {
+                    code += chunks.TBNObjectSpacePS;    
+                }
             }
         }
 
@@ -1098,6 +1109,8 @@ pc.programlib.standard = {
             }
         }
 
+        if (options.useAnisotropy) code += "uniform float material_anisotropy;\n"
+
         if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
         if (options.useSpecular) {
@@ -1208,9 +1221,11 @@ pc.programlib.standard = {
             }
         }
 
+        var gloss_called=false;
+
         if (needsNormal) {
             code += "   getViewDir();\n";
-            if (options.heightMap || options.normalMap) {
+            if (options.heightMap || options.normalMap || options.useAnisotropy) {
                 code += "   getTBN();\n";
             }
             if (options.heightMap) {
@@ -1225,14 +1240,26 @@ pc.programlib.standard = {
             }
 
             code += "   getNormal();\n";
-            if (options.useSpecular) code += "   getReflDir();\n";
+            if (options.useSpecular || options.useAnisotropy)
+            {
+                if (options.useAnisotropy)
+                {
+                    code += "   getGlossiness();\n";
+                    code += "   getReflDir();\n";
+                    gloss_called = true;
+                }
+                else
+                {
+                    code += "   getReflDir();\n";
+                }
+            }
         }
 
         code += "   getAlbedo();\n";
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
-            code += "   getGlossiness();\n";
+            if (gloss_called==false) code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
