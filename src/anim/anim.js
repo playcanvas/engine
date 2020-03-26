@@ -499,12 +499,14 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @callback pc.AnimSetter
      * @description Callback function for applying an updated animation value to some target.
      * @param {[number]} value - updated animation value.
      */
 
     /**
+     * @private
      * @class
      * @name pc.AnimTarget
      * @classdesc Stores the information required by {@link pc.AnimController} for updating a target value.
@@ -539,6 +541,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.AnimBinder
      * @classdesc This interface is used by {@link pc.AnimController} to resolve unique animation target path strings
@@ -584,6 +587,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimBinder.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AnimBinder#resolve
          * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
@@ -596,6 +600,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimBinder#unresolve
          * @description Called when the {@link AnimController} no longer has a curve driving the given key.
@@ -606,6 +611,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimBinder#update
          * @description Called by {@link pc.AnimController} once a frame after animation updates are done.
@@ -617,6 +623,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @class
      * @name pc.DefaultAnimBinder
      * @implements {pc.AnimBinder}
@@ -735,10 +742,14 @@ Object.assign(pc, function () {
         this._binder = binder;
         this._clips = [];
         this._targets = {};
-        this._q0 = new pc.Quat();
-        this._q1 = new pc.Quat();
     };
 
+    /**
+     * @private
+     * @name pc.AnimController
+     * @type {number}
+     * @description The number of clips.
+     */
     Object.defineProperties(AnimController.prototype, {
         'numClips': {
             get: function () {
@@ -834,7 +845,13 @@ Object.assign(pc, function () {
     };
 
     Object.assign(AnimController.prototype, {
-
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#addClip
+         * @description Add a clip to the controller.
+         * @param {pc.AnimClip} clip - the clip to add to the controller.
+         */
         addClip: function (clip) {
             var targets = this._targets;
 
@@ -870,6 +887,9 @@ Object.assign(pc, function () {
                     }
 
                     // binding may have failed
+                    // TODO: it may be worth storing quaternions and vector targets in seperate
+                    // lists. this way the update code won't be foreced to check target type before
+                    // setting/blending each target.
                     if (target) {
                         target.curves++;
                         inputs.push(snapshot._results[i]);
@@ -885,6 +905,13 @@ Object.assign(pc, function () {
             });
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#removeClip
+         * @description Remove a clip from the controller.
+         * @param {number} index - index of the clip to remove.
+         */
         removeClip: function (index) {
             var targets = this._targets;
 
@@ -913,16 +940,38 @@ Object.assign(pc, function () {
             clips.splice(index, 1);
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#removeClips
+         * @description Remove all clips from the controller.
+         */
         removeClips: function () {
             while (this.numClips > 0) {
                 this.removeClip(0);
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#getClip
+         * @description Get the clip at the specified index.
+         * @param {number} index - index of the clip to retrieve.
+         * @returns {pc.AnimClip} - the clip.
+         */
         getClip: function (index) {
             return this._clips[index].clip;
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#findClip
+         * @description Returns the first clip which matches the given name, or null if no such clip was found.
+         * @param {string} name - name of the clip to find.
+         * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
+         */
         findClip: function (name) {
             var clips = this._clips;
             for (var i = 0; i < clips.length; ++i) {
@@ -934,11 +983,19 @@ Object.assign(pc, function () {
             return null;
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#update
+         * @description Contoller frame update function. All the attached {@link pc.AnimClip}s are evaluated,
+         * blended and the results set on the {@link pc.AnimTarget}.
+         * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
+         */
         update: function (deltaTime) {
             // copy clips
             var clips = this._clips.slice();
 
-            // stable sort em
+            // stable sort the clips by their blendOrder
             AnimController._stableSort(clips, function (a, b) {
                 return a.clip.blendOrder < b.clip.blendOrder;
             });
@@ -998,7 +1055,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            // give the bindedr a chance to update
+            // give the binder an opportunity to update itself
+            // TODO: is this even necessary? binder could know when to update
+            // itself without our help.
             this._binder.update(deltaTime);
         }
     });
