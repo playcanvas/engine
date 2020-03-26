@@ -1237,14 +1237,12 @@ pc.programlib.standard = {
             }
 
             code += "   getNormal();\n";
-            if (options.useSpecular || options.enableGGXSpecular) {
+            if (options.useSpecular) {
                 if (options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
-                    code += "   getReflDir();\n";
                     getGlossinessCalled = true;
-                } else {
-                    code += "   getReflDir();\n";
                 }
+                code += "   getReflDir();\n";
             }
         }
 
