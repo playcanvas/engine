@@ -546,15 +546,15 @@ Object.assign(pc, function () {
      */
     var AnimBinder = function () { };
 
-    // join a list of part segments into a path string
-    AnimBinder.joinPath = function (pathParts) {
+    // join a list of path segments into a path string
+    AnimBinder.joinPath = function (pathSegments) {
         var escape = function (string) {
             return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
         };
-        return pathParts.map(escape).join('.');
+        return pathSegments.map(escape).join('.');
     };
 
-    // split an escaped path into its parts
+    // split a path string into its segments and resolve character escaping
     AnimBinder.splitPath = function (path) {
         var result = [];
         var curr = "";
@@ -767,14 +767,26 @@ Object.assign(pc, function () {
         }
     };
 
-    AnimController._set = function (a, b) {
+    AnimController._set = function (a, b, type) {
         var len  = a.length;
-        for (var i = 0; i < len; ++i) {
-            a[i] = b[i];
+        var i;
+
+        if (type === 'quaternion') {
+            var l = AnimController._dot(b, b);
+            if (l > 0) {
+                l = 1.0 / Math.sqrt(l);
+            }
+            for (i = 0; i < len; ++i) {
+                a[i] = b[i] * l;
+            }
+        } else {
+            for (i = 0; i < len; ++i) {
+                a[i] = b[i];
+            }
         }
     };
 
-    AnimController._blend = function (a, b, t) {
+    AnimController._blendVec = function (a, b, t) {
         var it = 1.0 - t;
         var len = a.length;
         for (var i = 0; i < len; ++i) {
@@ -786,6 +798,9 @@ Object.assign(pc, function () {
         var len = a.length;
         var it = 1.0 - t;
 
+        // negate b if a and b don't lie in the same winding (due to
+        // double cover). if we don't do this then often rotations from
+        // one orientation to another go the long way around.
         if (AnimController._dot(a, b) < 0) {
             t = -t;
         }
@@ -795,6 +810,14 @@ Object.assign(pc, function () {
         }
 
         AnimController._normalize(a);
+    };
+
+    AnimController._blend = function (a, b, t, type) {
+        if (type === 'quaternion') {
+            AnimController._blendQuat(a, b, t);
+        } else {
+            AnimController._blendVec(a, b, t);
+        }
     };
 
     AnimController._stableSort = function (a, lessFunc) {
@@ -834,7 +857,8 @@ Object.assign(pc, function () {
                             target = {
                                 target: resolved,           // resolved target instance
                                 value: [],                  // storage for calculated value
-                                curves: 0                   // number of curves driving this target
+                                curves: 0,                  // number of curves driving this target
+                                blendCounter: 0             // per-frame number of blends (used to identify first blend)
                             };
 
                             for (var k = 0; k < target.target.components; ++k) {
@@ -943,11 +967,9 @@ Object.assign(pc, function () {
                         output = outputs[j];
                         value = output.value;
 
-                        AnimController._set(value, input);
+                        AnimController._set(value, input, output.target.type);
 
-                        if (output.target.type === 'quaternion') {
-                            AnimController._normalize(value);
-                        }
+                        output.blendCounter++;
                     }
                 } else if (blendWeight > 0.0) {
                     for (j = 0; j < inputs.length; ++j) {
@@ -955,11 +977,13 @@ Object.assign(pc, function () {
                         output = outputs[j];
                         value = output.value;
 
-                        if (output.target.type === 'quaternion') {
-                            AnimController._blendQuat(value, input, blendWeight);
+                        if (output.blendCounter === 0) {
+                            AnimController._set(value, input, output.target.type);
                         } else {
-                            AnimController._blend(value, input, blendWeight);
+                            AnimController._blend(value, input, blendWeight, output.target.type);
                         }
+
+                        output.blendCounter++;
                     }
                 }
             }
@@ -970,6 +994,7 @@ Object.assign(pc, function () {
                 if (targets.hasOwnProperty(path)) {
                     var target = targets[path];
                     target.target.func(target.value);
+                    target.blendCounter = 0;
                 }
             }
 
