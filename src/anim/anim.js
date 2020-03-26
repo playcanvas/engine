@@ -513,7 +513,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @callback pc.AnimSetter
-     * @description Callback function that the {@link pc.AnimController} uses to set final animation values.
+     * @description Callback function that the {@link pc.AnimEvaluator} uses to set final animation values.
      * These callbacks are stored in {@link pc.AnimTarget} instances which are constructed by an
      * {@link pc.AnimBinder}.
      * @param {number[]} value - updated animation value.
@@ -523,9 +523,9 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.AnimTarget
-     * @classdesc Stores the information required by {@link pc.AnimController} for updating a target value.
+     * @classdesc Stores the information required by {@link pc.AnimEvaluator} for updating a target value.
      * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
-     * the {@link pc.AnimController}.
+     * the {@link pc.AnimEvaluator}.
      * @param {'vector'|'quaternion'} type - the type of animation data this target expects.
      * @param {number} components - the number of components on this target (this should ideally match the number
      * of components found on all attached animation curves).
@@ -558,7 +558,7 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.AnimBinder
-     * @classdesc This interface is used by {@link pc.AnimController} to resolve unique animation target path strings
+     * @classdesc This interface is used by {@link pc.AnimEvaluator} to resolve unique animation target path strings
      * into instances of {@link pc.AnimTarget}.
      */
     var AnimBinder = function () { };
@@ -617,7 +617,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimBinder#unresolve
-         * @description Called when the {@link AnimController} no longer has a curve driving the given key.
+         * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
          * @param {string} path - the animation curve path which is no longer driven.
          */
         unresolve: function (path) {
@@ -628,7 +628,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimBinder#update
-         * @description Called by {@link pc.AnimController} once a frame after animation updates are done.
+         * @description Called by {@link pc.AnimEvaluator} once a frame after animation updates are done.
          * @param {number} deltaTime - amount of time that passed in the current update.
          */
         update: function (deltaTime) {
@@ -747,13 +747,13 @@ Object.assign(pc, function () {
     /**
      * @private
      * @class
-     * @name pc.AnimController
+     * @name pc.AnimEvaluator
      * @classdesc AnimContoller blends multiple sets of animation clips together.
      * @description Create a new animation controller.
      * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
      * @property {pc.AnimClip[]} clips - the list of animation clips
      */
-    var AnimController = function (binder) {
+    var AnimEvaluator = function (binder) {
         this._binder = binder;
         this._clips = [];
         this._inputs = [];
@@ -763,11 +763,11 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @name pc.AnimController
+     * @name pc.AnimEvaluator
      * @type {number}
      * @description The number of clips.
      */
-    Object.defineProperties(AnimController.prototype, {
+    Object.defineProperties(AnimEvaluator.prototype, {
         'clips': {
             get: function () {
                 return this._clips;
@@ -775,7 +775,7 @@ Object.assign(pc, function () {
         }
     });
 
-    AnimController._dot = function (a, b) {
+    AnimEvaluator._dot = function (a, b) {
         var len  = a.length;
         var result = 0;
         for (var i = 0; i < len; ++i) {
@@ -784,8 +784,8 @@ Object.assign(pc, function () {
         return result;
     };
 
-    AnimController._normalize = function (a) {
-        var l = AnimController._dot(a, a);
+    AnimEvaluator._normalize = function (a) {
+        var l = AnimEvaluator._dot(a, a);
         if (l > 0) {
             l = 1.0 / Math.sqrt(l);
             var len = a.length;
@@ -795,12 +795,12 @@ Object.assign(pc, function () {
         }
     };
 
-    AnimController._set = function (a, b, type) {
+    AnimEvaluator._set = function (a, b, type) {
         var len  = a.length;
         var i;
 
         if (type === 'quaternion') {
-            var l = AnimController._dot(b, b);
+            var l = AnimEvaluator._dot(b, b);
             if (l > 0) {
                 l = 1.0 / Math.sqrt(l);
             }
@@ -814,7 +814,7 @@ Object.assign(pc, function () {
         }
     };
 
-    AnimController._blendVec = function (a, b, t) {
+    AnimEvaluator._blendVec = function (a, b, t) {
         var it = 1.0 - t;
         var len = a.length;
         for (var i = 0; i < len; ++i) {
@@ -822,14 +822,14 @@ Object.assign(pc, function () {
         }
     };
 
-    AnimController._blendQuat = function (a, b, t) {
+    AnimEvaluator._blendQuat = function (a, b, t) {
         var len = a.length;
         var it = 1.0 - t;
 
         // negate b if a and b don't lie in the same winding (due to
         // double cover). if we don't do this then often rotations from
         // one orientation to another go the long way around.
-        if (AnimController._dot(a, b) < 0) {
+        if (AnimEvaluator._dot(a, b) < 0) {
             t = -t;
         }
 
@@ -837,18 +837,18 @@ Object.assign(pc, function () {
             a[i] = a[i] * it + b[i] * t;
         }
 
-        AnimController._normalize(a);
+        AnimEvaluator._normalize(a);
     };
 
-    AnimController._blend = function (a, b, t, type) {
+    AnimEvaluator._blend = function (a, b, t, type) {
         if (type === 'quaternion') {
-            AnimController._blendQuat(a, b, t);
+            AnimEvaluator._blendQuat(a, b, t);
         } else {
-            AnimController._blendVec(a, b, t);
+            AnimEvaluator._blendVec(a, b, t);
         }
     };
 
-    AnimController._stableSort = function (a, lessFunc) {
+    AnimEvaluator._stableSort = function (a, lessFunc) {
         var len = a.length;
         for (var i = 0; i < len - 1; ++i) {
             for (var j = i + 1; j < len; ++j) {
@@ -861,11 +861,11 @@ Object.assign(pc, function () {
         }
     };
 
-    Object.assign(AnimController.prototype, {
+    Object.assign(AnimEvaluator.prototype, {
         /**
          * @private
          * @function
-         * @name pc.AnimController#addClip
+         * @name pc.AnimEvaluator#addClip
          * @description Add a clip to the controller.
          * @param {pc.AnimClip} clip - the clip to add to the controller.
          */
@@ -923,7 +923,7 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.AnimController#removeClip
+         * @name pc.AnimEvaluator#removeClip
          * @description Remove a clip from the controller.
          * @param {number} index - index of the clip to remove.
          */
@@ -960,7 +960,7 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.AnimController#removeClips
+         * @name pc.AnimEvaluator#removeClips
          * @description Remove all clips from the controller.
          */
         removeClips: function () {
@@ -972,7 +972,7 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.AnimController#findClip
+         * @name pc.AnimEvaluator#findClip
          * @description Returns the first clip which matches the given name, or null if no such clip was found.
          * @param {string} name - name of the clip to find.
          * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
@@ -991,7 +991,7 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.AnimController#update
+         * @name pc.AnimEvaluator#update
          * @description Contoller frame update function. All the attached {@link pc.AnimClip}s are evaluated,
          * blended and the results set on the {@link pc.AnimTarget}.
          * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
@@ -1004,7 +1004,7 @@ Object.assign(pc, function () {
             var order = clips.map(function (c, i) {
                 return i;
             });
-            AnimController._stableSort(order, function (a, b) {
+            AnimEvaluator._stableSort(order, function (a, b) {
                 return clips[a].blendOrder < clips[b].blendOrder;
             });
 
@@ -1032,7 +1032,7 @@ Object.assign(pc, function () {
                         output = outputs[j];
                         value = output.value;
 
-                        AnimController._set(value, input, output.target.type);
+                        AnimEvaluator._set(value, input, output.target.type);
 
                         output.blendCounter++;
                     }
@@ -1043,9 +1043,9 @@ Object.assign(pc, function () {
                         value = output.value;
 
                         if (output.blendCounter === 0) {
-                            AnimController._set(value, input, output.target.type);
+                            AnimEvaluator._set(value, input, output.target.type);
                         } else {
-                            AnimController._blend(value, input, blendWeight, output.target.type);
+                            AnimEvaluator._blend(value, input, blendWeight, output.target.type);
                         }
 
                         output.blendCounter++;
@@ -1082,6 +1082,6 @@ Object.assign(pc, function () {
         AnimClip: AnimClip,
         AnimBinder: AnimBinder,
         DefaultAnimBinder: DefaultAnimBinder,
-        AnimController: AnimController
+        AnimEvaluator: AnimEvaluator
     };
 }());

@@ -63,7 +63,7 @@ Object.assign(pc, function () {
 
             if (data.model) {
 
-                if (!data.skeleton && !data.animController) {
+                if (!data.skeleton && !data.animEvaluator) {
                     this._createAnimationController();
                 }
 
@@ -88,23 +88,23 @@ Object.assign(pc, function () {
                     }
                 }
 
-                if (data.animController) {
-                    var animController = data.animController;
+                if (data.animEvaluator) {
+                    var animEvaluator = data.animEvaluator;
 
                     if (data.blending) {
                         // remove all but the last clip
-                        while (animController.clips.length > 1) {
-                            animController.removeClip(0);
+                        while (animEvaluator.clips.length > 1) {
+                            animEvaluator.removeClip(0);
                         }
                     } else {
-                        data.animController.removeClips();
+                        data.animEvaluator.removeClips();
                     }
 
                     var clip = new pc.AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
                     clip.name = data.currAnim;
                     clip.blendWeight = data.blending ? 0 : 1;
                     clip.reset();
-                    data.animController.addClip(clip);
+                    data.animEvaluator.addClip(clip);
                 }
             }
 
@@ -144,7 +144,7 @@ Object.assign(pc, function () {
             data.skeleton = null;
             data.fromSkel = null;
             data.toSkel = null;
-            data.animController = null;
+            data.animEvaluator = null;
         },
 
         _createAnimationController: function () {
@@ -174,7 +174,7 @@ Object.assign(pc, function () {
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
             } else if (hasGlb) {
-                data.animController = new pc.AnimController(new pc.DefaultAnimBinder(graph));
+                data.animEvaluator = new pc.AnimEvaluator(new pc.DefaultAnimBinder(graph));
             }
         },
 
@@ -318,8 +318,8 @@ Object.assign(pc, function () {
                 data.skeleton.currentTime = 0;
                 data.skeleton.animation = null;
             }
-            if (data.animController) {
-                data.animController.removeClips();
+            if (data.animEvaluator) {
+                data.animEvaluator.removeClips();
             }
         },
 
@@ -380,9 +380,9 @@ Object.assign(pc, function () {
                 data.skeleton.looping = data.loop;
             }
 
-            if (data.animController) {
-                for (var i = 0; i < data.animController.clips.length; ++i) {
-                    data.animController.clips[i].loop = data.loop;
+            if (data.animEvaluator) {
+                for (var i = 0; i < data.animEvaluator.clips.length; ++i) {
+                    data.animEvaluator.clips[i].loop = data.loop;
                 }
             }
         },
@@ -397,10 +397,10 @@ Object.assign(pc, function () {
                 skeleton.updateGraph();
             }
 
-            if (data.animController) {
-                var animController = data.animController;
-                for (var i = 0; i < animController.clips.length; ++i) {
-                    animController.clips[i].time = newValue;
+            if (data.animEvaluator) {
+                var animEvaluator = data.animEvaluator;
+                for (var i = 0; i < animEvaluator.clips.length; ++i) {
+                    animEvaluator.clips[i].time = newValue;
                 }
             }
         },
@@ -448,7 +448,7 @@ Object.assign(pc, function () {
             delete data.fromSkel;
             delete data.toSkel;
 
-            delete data.animController;
+            delete data.animEvaluator;
         }
     });
 
@@ -466,10 +466,10 @@ Object.assign(pc, function () {
                     skeleton.updateGraph();
                 }
 
-                if (data.animController) {
-                    var animController = data.animController;
-                    for (var i = 0; i < animController.clips.length; ++i) {
-                        animController.clips[i].time = currentTime;
+                if (data.animEvaluator) {
+                    var animEvaluator = data.animEvaluator;
+                    for (var i = 0; i < animEvaluator.clips.length; ++i) {
+                        animEvaluator.clips[i].time = currentTime;
                     }
                 }
             }
