@@ -7,3 +7,4 @@ void getReflDir() {
     vec3 bentNormal = normalize(mix(normalize(dNormalW), normalize(anisotropicNormal), anisotropy));
     dReflDirW = reflect(-dViewDirW, bentNormal);
 }
+
