@@ -32,7 +32,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -165,6 +164,8 @@
                 type: "image",
                 textureAsset: asset 
             });
+
+            app.start();
         });
     </script>
 </body>

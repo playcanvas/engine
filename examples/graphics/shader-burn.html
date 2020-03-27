@@ -67,7 +67,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -105,6 +104,8 @@
         app.assets.loadFromUrl(url, "model", function (err, asset) {
             var model = asset;
             app.assets.loadFromUrl('../assets/textures/clouds.jpg', 'texture', function (err, asset) {
+                app.start();
+
                 heightMap = asset.resource;
 
                 entity = new pc.Entity();

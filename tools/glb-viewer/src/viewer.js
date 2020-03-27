@@ -165,7 +165,7 @@ Object.assign(Viewer.prototype, {
 
     // load model from the url
     load: function (filename, url) {
-        this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this), filename);
+        this.app.assets.loadFromUrlAndFilename(url, filename, "container", this._onLoaded.bind(this));
     },
 
     // play the animation

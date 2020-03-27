@@ -37,14 +37,17 @@
         });
 
         app.start();
-
+        
         ///////////////////////////////
         // Scipt to rotate the scene //
         ///////////////////////////////
         var Rotator = pc.createScript('rotator');
 
+        var t = 0;
+
         Rotator.prototype.update = function(dt) {
-            this.entity.setEulerAngles(0, Math.sin(new Date().getTime() / 500) * 20, 0);
+            t += dt;
+            this.entity.setEulerAngles(0, Math.sin(t) * 20, 0);
         };
 
         //////////////////////////////////////////////////////////////////

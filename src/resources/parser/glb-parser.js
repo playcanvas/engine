@@ -1090,7 +1090,15 @@ Object.assign(pc, function () {
             }
         };
 
-        var LintHack = Uint8Array;
+        var createCallback = function (index) {
+            return function (err, result) {
+                if (err) {
+                    callback(err);
+                } else {
+                    onLoad(new Uint8Array(result), index);
+                }
+            };
+        };
 
         for (var i = 0; i < gltf.buffers.length; ++i) {
             var buffer = gltf.buffers[i];
@@ -1113,15 +1121,10 @@ Object.assign(pc, function () {
 
                     onLoad(binaryArray, i);
                 } else {
-                    var xhr = new XMLHttpRequest();
-                    xhr.responseType = 'arraybuffer';
-                    xhr.open('GET', buffer.uri, true);
-                    xhr.onload = (function (index) {
-                        return function () {
-                            onLoad(new LintHack(this.response), index);
-                        };
-                    })(i);
-                    xhr.send();
+                    pc.http.get(
+                        buffer.uri,
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        createCallback(i));
                 }
             } else {
                 // glb buffer reference
@@ -1230,7 +1233,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, data, device, callback) {
+    GlbParser.parseAsync = function (url, filename, data, device, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1244,6 +1247,11 @@ Object.assign(pc, function () {
                     callback(err);
                     return;
                 }
+
+                var urlBase = url || "";
+
+                var lastSlash = url.lastIndexOf('/');
+                var urlBase = url.substring(0, lastSlash === -1 ? url.length : lastSlash);
 
                 // async load external buffers
                 loadBuffersAsync(gltf, chunks.binaryChunk, function (err, buffers) {

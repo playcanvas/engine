@@ -453,7 +453,11 @@ Object.assign(pc, function () {
          *     var texture = asset.resource;
          * });
          */
-        loadFromUrl: function (url, type, callback, filename) {
+        loadFromUrl: function (url, type, callback) {
+            return this.loadFromUrlAndFilename(url, null, type, callback);
+        },
+
+        loadFromUrlAndFilename: function (url, filename, type, callback) {
             var self = this;
 
             var name = pc.path.getBasename(filename || url);

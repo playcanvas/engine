@@ -24,7 +24,7 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
+        // app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -88,6 +88,7 @@
 
                     // Start alternating between run and stop
                     setTimeout(function () {
+                        app.start();
                         run();
                     }, 1000);
                 });
