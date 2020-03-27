@@ -21,10 +21,8 @@
     <!-- The script -->
     <script>
         var canvas = document.getElementById("application-canvas");
-
         // Create the app and start the update loop
         var app = new pc.Application(canvas);
-
     </script>
 
     <!-- Include some post effects -->
@@ -99,7 +97,7 @@
         camera.translate(0, 20, 25);
         camera.lookAt(pc.Vec3.ZERO);
 
-        // Create tv camera, which renders entities in tv layer
+        // Create outline camera, which renders entities in outline layer
         var outlineCamera = new pc.Entity();
         outlineCamera.addComponent("camera", {
             clearColor: new pc.Color(0.0, 0.0, 0.0, 0.0),
@@ -126,14 +124,7 @@
         light.translate(0, 2, 5);
         app.root.addChild(light);
 
-        // create a plane called tv which we use to display rendered texture
-        var tv = createPrimitive("plane", new pc.Vec3(4, 4, -5), new pc.Vec3(10, 5, 5), new pc.Color(1, 1, 1), [worldLayer.id]);
-        tv.setLocalEulerAngles(90, 0, 0);
-        tv.model.castShadows = false;
-        tv.model.receiveShadows = false;
-        tv.model.material.diffuseMap = texture;     // assign our rendered texture as a diffuse texture
-        tv.model.material.update();
-
+        //handle canvas resize
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
 
@@ -158,16 +149,13 @@
 
             outline.texture = texture;
             camera.camera.postEffects.addEffect(outline);
-
-            tv.model.material.diffuseMap = texture;
-            tv.model.material.update();
         });
 
         // update things each frame
         var time = 0;
         var switchTime = 0;
         app.on("update", function (dt) {
-            // rotate tv camera around the objects
+            // rotate cameras around the objects
             time += dt;
             camera.setLocalPosition(12 * Math.sin(time), 5, 12 * Math.cos(time));
             camera.lookAt(pc.Vec3.ZERO);
