@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
      * @property {pc.Texture} texture The outline texture to use.
-     * @property {rgba} color The outline color.
+     * @property {pc.Color} color The outline color.
      */
     var OutlineEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);
@@ -46,7 +46,7 @@ Object.assign(pc, function () {
                 "    float sample0 = texture2D(uOutlineTex, vUv0).a;",
                 "    float outline = 0.0;",
                 "    if (sample0==0.0)",
-                "    {",                 
+                "    {",
                 "        for (int x=-2;x<=2;x++)",
                 "        {",
                 "            for (int y=-2;y<=2;y++)",
@@ -58,7 +58,7 @@ Object.assign(pc, function () {
                 "                }",
                 "            }",
                 "        } ",
-                "    }",                
+                "    }",
                 "    gl_FragColor = mix(texel1, uOutlineCol, outline);",
                 "}"
             ].join("\n")
@@ -96,7 +96,7 @@ Object.assign(pc, function () {
 var Outline = pc.createScript('outline');
 
 Outline.attributes.add('color', {
-    type: 'rgba',
+    type: 'rgb',
     default: [0.5, 0.5, 0.5, 1],
     title: 'Color'
 });
