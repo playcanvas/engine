@@ -80,7 +80,7 @@ Object.assign(pc, function () {
      * @field
      * @static
      * @readonly
-     * @name pc.ScriptType#attributes
+     * @name pc.ScriptType.attributes
      * @type {pc.ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
      * @example
