@@ -64,7 +64,6 @@
  */
 
 /**
- * @private
  * @callback pc.callbacks.LoadScene
  * @description Callback used by {@link pc.Application#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.

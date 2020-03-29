@@ -687,6 +687,37 @@ Object.assign(pc, function () {
         };
     };
 
+    /**
+     * @readonly
+     * @name pc.Application#fillMode
+     * @type {string}
+     * @description The current fill mode of the canvas. Can be:
+     *
+     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     */
+    Object.defineProperty(Application.prototype, 'fillMode', {
+        get: function () {
+            return this._fillMode;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.Application#resolutionMode
+     * @type {string}
+     * @description The current resolution mode of the canvas, Can be:
+     *
+     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     */
+    Object.defineProperty(Application.prototype, 'resolutionMode', {
+        get: function () {
+            return this._resolutionMode;
+        }
+    });
+
     Object.assign(Application.prototype, {
         /**
          * @function
@@ -854,7 +885,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
