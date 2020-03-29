@@ -139,7 +139,7 @@ Object.assign(pc, function () {
         '_onSetEnabled', '_checkState', '_onBeforeRemove',
         '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
         '_onUpdate', '_onPostUpdate',
-        '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
+        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedScripts = { };
     var i;
