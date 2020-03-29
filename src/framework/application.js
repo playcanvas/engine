@@ -302,7 +302,7 @@ Object.assign(pc, function () {
 
         this.i18n = new pc.I18n(this);
 
-        this._sceneRegistry = new pc.SceneRegistry(this);
+        this.scenes = new pc.SceneRegistry(this);
 
         var self = this;
         this.defaultLayerWorld = new pc.Layer({
@@ -793,7 +793,7 @@ Object.assign(pc, function () {
          * @returns {string} The URL of the scene file.
          */
         getSceneUrl: function (name) {
-            var entry = this._sceneRegistry.find(name);
+            var entry = this.scenes.find(name);
             if (entry) {
                 return entry.url;
             }
@@ -819,7 +819,7 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneHierarchy: function (url, callback) {
-            this._sceneRegistry.loadSceneHierarchy(url, callback);
+            this.scenes.loadSceneHierarchy(url, callback);
         },
 
         /**
@@ -838,7 +838,7 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneSettings: function (url, callback) {
-            this._sceneRegistry.loadSceneSettings(url, callback);
+            this.scenes.loadSceneSettings(url, callback);
         },
 
         /**
@@ -859,7 +859,7 @@ Object.assign(pc, function () {
          * });
          */
         loadScene: function (url, callback) {
-            this._sceneRegistry.loadScene(url, callback);
+            this.scenes.loadScene(url, callback);
         },
 
         _preloadScripts: function (sceneData, callback) {
@@ -1012,7 +1012,7 @@ Object.assign(pc, function () {
             if (!scenes) return;
 
             for (var i = 0; i < scenes.length; i++) {
-                this._sceneRegistry.add(scenes[i].name, scenes[i].url);
+                this.scenes.add(scenes[i].name, scenes[i].url);
             }
         },
 
@@ -1746,8 +1746,8 @@ Object.assign(pc, function () {
             this.scripts.destroy();
             this.scripts = null;
 
-            this._sceneRegistry.destroy();
-            this._sceneRegistry = null;
+            this.scenes.destroy();
+            this.scenes = null;
 
             this.lightmapper.destroy();
             this.lightmapper = null;
