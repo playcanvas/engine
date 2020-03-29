@@ -78,6 +78,18 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @name pc.Application#scenes
+     * @type {pc.SceneRegistry}
+     * @description The scene registry managed by the application.
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * var sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+
+    /**
      * @name pc.Application#assets
      * @type {pc.AssetRegistry}
      * @description The asset registry managed by the application.
