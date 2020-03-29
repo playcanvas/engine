@@ -675,6 +675,22 @@ Object.assign(pc, function () {
         };
     };
 
+    /**
+     * @readonly
+     * @name pc.Application#fillMode
+     * @type {string}
+     * @description The current fill mode of the canvas. Can be:
+     *
+     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     */
+    Object.defineProperty(Application.prototype, 'fillMode', {
+        get: function () {
+            return this._fillMode;
+        }
+    });
+
     Object.assign(Application.prototype, {
         /**
          * @function
