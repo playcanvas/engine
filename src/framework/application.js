@@ -873,7 +873,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
