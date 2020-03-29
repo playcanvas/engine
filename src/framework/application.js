@@ -691,6 +691,21 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.Application#resolutionMode
+     * @type {string}
+     * @description The current resolution mode of the canvas, Can be:
+     *
+     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     */
+    Object.defineProperty(Application.prototype, 'resolutionMode', {
+        get: function () {
+            return this._resolutionMode;
+        }
+    });
+
     Object.assign(Application.prototype, {
         /**
          * @function
