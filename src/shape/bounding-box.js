@@ -76,12 +76,24 @@ Object.assign(pc, function () {
             th.z = (tmaxz - tminz) * 0.5;
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#copy
+         * @description Copies the contents of a source AABB.
+         * @param {pc.BoundingBox} src - The AABB to copy from.
+         */
         copy: function (src) {
             this.center.copy(src.center);
             this.halfExtents.copy(src.halfExtents);
             this.type = src.type;
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#clone
+         * @description Returns a clone of the AABB
+         * @returns {pc.BoundingBox} A duplicate AABB.
+         */
         clone: function () {
             return new pc.BoundingBox(this.center.clone(), this.halfExtents.clone());
         },
@@ -200,6 +212,14 @@ Object.assign(pc, function () {
             return this._fastIntersectsRay(ray);
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#setMinMax
+         * @description Sets the minimum and maximum corner of the AABB.
+         * Using this function is faster than assigning min and max separately.
+         * @param {pc.Vec3} min - The minimum corner of the AABB.
+         * @param {pc.Vec3} max - The maximum corner of the AABB.
+         */
         setMinMax: function (min, max) {
             this.center.add2(max, min).scale(0.5);
             this.halfExtents.sub2(max, min).scale(0.5);
@@ -293,6 +313,12 @@ Object.assign(pc, function () {
             );
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#compute
+         * @description Compute the size of the AABB to encapsulate all specified vertices.
+         * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
+         */
         compute: function (vertices) {
             var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
             var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
