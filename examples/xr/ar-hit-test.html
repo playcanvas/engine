@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>PlayCanvas Basic AR</title>
+        <title>PlayCanvas AR Hit Test</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -95,24 +95,12 @@
             l.translate(0,10,0);
             app.root.addChild(l);
 
-
-            var createCube = function(x,y,z) {
-                var cube = new pc.Entity();
-                cube.addComponent("model", {
-                    type: "box"
-                });
-                cube.setLocalScale(.5, .5, .5);
-                cube.translate(x * .5, y, z * .5);
-                app.root.addChild(cube);
-            };
-
-            // create a grid of cubes
-            var SIZE = 4;
-            for (var x = 0; x < SIZE; x++) {
-                for (var y = 0; y < SIZE; y++) {
-                    createCube(2*x - SIZE, 0.25, 2*y - SIZE);
-                }
-            }
+            var target = new pc.Entity();
+            target.addComponent("model", {
+                type: "cylinder",
+            });
+            target.setLocalScale(.5, .01, .5);
+            app.root.addChild(target);
 
             if (app.xr.supported) {
                 var activate = function () {
@@ -154,16 +142,46 @@
 
                 app.xr.on('start', function () {
                     message("Immersive AR session has started");
+
+                    if (! app.xr.hitTest.supported)
+                        return;
+
+                    app.xr.hitTest.start({
+                        entityTypes: [ pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE ],
+                        callback: function(err, hitTestSource) {
+                            if (err) {
+                                message("Failed to start AR hit test");
+                                return;
+                            }
+
+                            hitTestSource.on('result', function (position, rotation) {
+                                target.setPosition(position);
+                                target.setRotation(rotation);
+                            });
+                        }
+                    });
                 });
                 app.xr.on('end', function () {
                     message("Immersive AR session has ended");
                 });
                 app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-                    message("Immersive AR is " + (available ? 'available' : 'unavailable'));
+                    if (available) {
+                        if (app.xr.hitTest.supported) {
+                            message("Touch screen to start AR session and look at the floor or walls");
+                        } else {
+                            message("AR Hit Test is not supported");
+                        }
+                    } else {
+                        message("Immersive AR is unavailable");
+                    }
                 });
 
                 if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
                     message("Immersive AR is not available");
+                } else if (! app.xr.hitTest.supported) {
+                    message("AR Hit Test is not supported");
+                } else {
+                    message("Touch screen to start AR session and look at the floor or walls");
                 }
             } else {
                 message("WebXR is not supported");

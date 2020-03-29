@@ -26,7 +26,6 @@
 
         // Create the app and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -49,6 +48,8 @@
         var url = "../assets/models/monkey/monkey.obj";
 
         app.assets.loadFromUrl(url, "model", function (err, asset) {
+            app.start();
+
             entity = new pc.Entity();
             entity.addComponent("model");
             entity.model.model = asset.resource;

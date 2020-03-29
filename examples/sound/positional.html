@@ -24,7 +24,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -90,6 +89,8 @@
             app.assets.loadFromUrl(requests[i].url, requests[i].type, function (err, asset) {
                 count--;
                 if (count === 0) {
+                    app.start();
+
                     var gravel = app.assets.find("footsteps.mp3");
                     var model = app.assets.find("playbot.json");
                     var anim = app.assets.find("playbot-run.json");
