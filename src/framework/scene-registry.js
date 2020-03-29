@@ -6,6 +6,8 @@ Object.assign(pc, function () {
      * @description Item to be stored in the {@link pc.SceneRegistry}.
      * @param {string} name - The name of the scene.
      * @param {string} url - The url of the scene file.
+     * @property {string} name - The name of the scene.
+     * @property {string} url - The url of the scene file.
      */
     var SceneRegistryItem = function (name, url) {
         this.name = name;
