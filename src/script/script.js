@@ -152,7 +152,7 @@ Object.assign(pc, function () {
     createScript.reservedAttributes = [
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-        '_callbacks', 'has', `get`, 'on', 'off', 'fire', 'once', 'hasEvent'
+        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedAttributes = { };
     for (i = 0; i < createScript.reservedAttributes.length; i++)
