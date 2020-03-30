@@ -201,7 +201,7 @@ Object.assign(pc, function () {
      * @classdesc Animation curve links an input data set to an output data set
      * and defines the interpolation method to use.
      * @description Create a new animation curve
-     * @param {[string]} paths - array of path strings identifying the targets of this curve, for example "rootNode.translation".
+     * @param {string[]} paths - array of path strings identifying the targets of this curve, for example "rootNode.translation".
      * @param {number} input - index of the curve which specifies the key data.
      * @param {number} output - index of the curve which specifies the value data.
      * @param {number} interpolation - the interpolation method to use. One of the following:
@@ -269,6 +269,16 @@ Object.assign(pc, function () {
         duration: {
             get: function () {
                 return this._duration;
+            }
+        },
+        inputs: {
+            get: function () {
+                return this._inputs;
+            }
+        },
+        outputs: {
+            get: function () {
+                return this._outputs;
             }
         },
         curves: {
@@ -501,8 +511,10 @@ Object.assign(pc, function () {
     /**
      * @private
      * @callback pc.AnimSetter
-     * @description Callback function for applying an updated animation value to some target.
-     * @param {[number]} value - updated animation value.
+     * @description Callback function that the {@link pc.AnimController} uses to set final animation values.
+     * These callbacks are stored in {@link pc.AnimTarget} instances which are constructed by an
+     * {@link pc.AnimBinder}.
+     * @param {number[]} value - updated animation value.
      */
 
     /**
