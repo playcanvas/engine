@@ -466,7 +466,7 @@ Object.assign(pc, function () {
          * @param {string} type - The type of asset to load.
          * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
          * @example
-         * var file = magiallyAttainAFile();
+         * var file = magicallyAttainAFile();
          * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
          *     var texture = asset.resource;
          * });

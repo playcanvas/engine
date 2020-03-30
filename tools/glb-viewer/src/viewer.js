@@ -134,7 +134,7 @@ var Viewer = function (canvas) {
     // specify ?load= in URL to load a file
     var vars = getUrlVars();
     if (vars.hasOwnProperty('load')) {
-        this.load(vars.load, vars.load]);
+        this.load(vars.load, vars.load);
     }
 
     // start the application
