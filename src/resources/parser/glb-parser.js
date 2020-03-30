@@ -1053,7 +1053,7 @@ Object.assign(pc, function () {
                     img.src = imgData.uri;
                 } else {
                     img.crossOrigin = "anonymous";
-                    img.src = basePath + imgData.uri;
+                    img.src = pc.path.join(basePath, imgData.uri);
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1115,7 +1115,7 @@ Object.assign(pc, function () {
                 } else {
                     var xhr = new XMLHttpRequest();
                     xhr.responseType = 'arraybuffer';
-                    xhr.open('GET', basePath + buffer.uri, true);
+                    xhr.open('GET', pc.path.join(basePath, buffer.uri), true);
                     xhr.onload = (function (index) {
                         return function () {
                             onLoad(new LintHack(this.response), index);

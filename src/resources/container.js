@@ -80,7 +80,7 @@ Object.assign(pc, function () {
                 };
             }
 
-            var basePath = url.load.substring(0, url.load.lastIndexOf("/")) + "/";
+            var basePath = pc.path.extractPath(url.load);
 
             var options = {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER,
