@@ -447,13 +447,30 @@ Object.assign(pc, function () {
          * @param {string} url - The url to load.
          * @param {string} type - The type of asset to load.
          * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
-         * @param {string} [filename] - Optional asset filename.
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
          * });
          */
-        loadFromUrl: function (url, type, callback, filename) {
+        loadFromUrl: function (url, type, callback) {
+            this.loadFromUrlAndFilename(url, null, type, callback);
+        },
+
+        /**
+         * @function
+         * @name pc.AssetRegistry#loadFromUrlAndFilename
+         * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
+         * if you are not integrated with the PlayCanvas Editor.
+         * @param {string} url - The url to load.
+         * @param {string} filename - The filename of the asset to load.
+         * @param {string} type - The type of asset to load.
+         * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+         * @example
+         * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
+         *     var texture = asset.resource;
+         * });
+         */
+        loadFromUrlAndFilename: function (url, filename, type, callback) {
             var self = this;
 
             var name = pc.path.getBasename(filename || url);
