@@ -33,20 +33,22 @@ Object.assign(pc, function () {
      * @name pc.AnimData
      * @classdesc Wraps a set of data used in animation.
      * @description Create a new animation data container.
-     * @param {number} dimension - Specifies the number of components which make up an element
+     * @param {number} dimensions - Specifies the number of components which make up an element
      * of data. For example, specify 3 for a set of 3-dimensional vectors. The number of elements
-     * in data must be a multiple of dimension.
+     * in data must be a multiple of dimensions.
      * @param {Float32Array|number[]} data - The set of data
+     * @property {number} dimensions - The number of components that make up and element
+     * @property {Float32Array|number[]} data - The data
      */
-    var AnimData = function (dimension, data) {
-        this._dimension = dimension;
+    var AnimData = function (dimensions, data) {
+        this._dimensions = dimensions;
         this._data = data;
     };
 
     Object.defineProperties(AnimData.prototype, {
-        dimension: {
+        dimensions: {
             get: function () {
-                return this._dimension;
+                return this._dimensions;
             }
         },
         data: {
@@ -141,7 +143,7 @@ Object.assign(pc, function () {
         // evaluate the output anim data at the current time
         eval: function (result, interpolation, output) {
             var data = output._data;
-            var dim = output._dimension;
+            var dim = output._dimensions;
             var idx0 = this._p0 * dim;
             var i;
 
@@ -349,7 +351,7 @@ Object.assign(pc, function () {
             var curve = curves[i];
             var output = outputs[curve._output];
             var storage = [];
-            for (var j = 0; j < output._dimension; ++j) {
+            for (var j = 0; j < output._dimensions; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;
@@ -749,10 +751,13 @@ Object.assign(pc, function () {
      * @classdesc AnimContoller blends multiple sets of animation clips together.
      * @description Create a new animation controller.
      * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
+     * @property {pc.AnimClip[]} clips - the list of animation clips
      */
     var AnimController = function (binder) {
         this._binder = binder;
         this._clips = [];
+        this._inputs = [];
+        this._outputs = [];
         this._targets = {};
     };
 
@@ -763,9 +768,9 @@ Object.assign(pc, function () {
      * @description The number of clips.
      */
     Object.defineProperties(AnimController.prototype, {
-        'numClips': {
+        'clips': {
             get: function () {
-                return this._clips.length;
+                return this._clips;
             }
         }
     });
@@ -910,11 +915,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            this._clips.push({
-                clip: clip,
-                inputs: inputs,
-                outputs: outputs
-            });
+            this._clips.push(clip);
+            this._inputs.push(inputs);
+            this._outputs.push(outputs);
         },
 
         /**
@@ -929,7 +932,7 @@ Object.assign(pc, function () {
 
             var clips = this._clips;
             var clip = clips[index];
-            var curves = clip.clip.track.curves;
+            var curves = clip.track.curves;
 
             for (var i = 0; i < curves.length; ++i) {
                 var curve = curves[i];
@@ -950,6 +953,8 @@ Object.assign(pc, function () {
             }
 
             clips.splice(index, 1);
+            this._inputs.splice(index, 1);
+            this._outputs.splice(index, 1);
         },
 
         /**
@@ -959,21 +964,9 @@ Object.assign(pc, function () {
          * @description Remove all clips from the controller.
          */
         removeClips: function () {
-            while (this.numClips > 0) {
+            while (this._clips.length > 0) {
                 this.removeClip(0);
             }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.AnimController#getClip
-         * @description Get the clip at the specified index.
-         * @param {number} index - index of the clip to retrieve.
-         * @returns {pc.AnimClip} - the clip.
-         */
-        getClip: function (index) {
-            return this._clips[index].clip;
         },
 
         /**
@@ -987,7 +980,7 @@ Object.assign(pc, function () {
         findClip: function (name) {
             var clips = this._clips;
             for (var i = 0; i < clips.length; ++i) {
-                var clip = clips[i].clip;
+                var clip = clips[i];
                 if (clip.name === name) {
                     return clip;
                 }
@@ -1005,20 +998,23 @@ Object.assign(pc, function () {
          */
         update: function (deltaTime) {
             // copy clips
-            var clips = this._clips.slice();
+            var clips = this._clips;
 
-            // stable sort the clips by their blendOrder
-            AnimController._stableSort(clips, function (a, b) {
-                return a.clip.blendOrder < b.clip.blendOrder;
+            // stable sort order
+            var order = clips.map(function (c, i) {
+                return i;
+            });
+            AnimController._stableSort(order, function (a, b) {
+                return clips[a].blendOrder < clips[b].blendOrder;
             });
 
             var i, j;
 
             for (i = 0; i < clips.length; ++i) {
-                var clip_ = clips[i];
-                var clip = clip_.clip;
-                var inputs = clip_.inputs;
-                var outputs = clip_.outputs;
+                var index = order[i];
+                var clip = clips[index];
+                var inputs = this._inputs[index];
+                var outputs = this._outputs[index];
                 var blendWeight = clip.blendWeight;
 
                 // update clip
