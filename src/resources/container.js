@@ -80,6 +80,8 @@ Object.assign(pc, function () {
                 };
             }
 
+            var basePath = url.load.substring(0, url.load.lastIndexOf("/")) + "/";
+
             var options = {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER,
                 retry: false
@@ -93,7 +95,7 @@ Object.assign(pc, function () {
 
                 if (!err) {
                     var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
-                    pc.GlbParser.parseAsync(filename, response, self._device, function (err, result) {
+                    pc.GlbParser.parseAsync(filename, response, self._device, basePath, function (err, result) {
                         if (err) {
                             callback(err);
                         } else {
