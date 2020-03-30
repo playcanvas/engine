@@ -125,7 +125,7 @@ var Viewer = function (canvas) {
 
     function getUrlVars() {
         var vars = {};
-        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
             vars[key] = value;
         });
         return vars;
@@ -134,8 +134,8 @@ var Viewer = function (canvas) {
     // specify ?load= in URL to load a file
     var vars = getUrlVars();
     if (vars.hasOwnProperty('load')) {
-        this.load(vars['load'], vars['load']);
-    };
+        this.load(vars.load, vars.load]);
+    }
 
     // start the application
     app.start();
@@ -223,7 +223,7 @@ Object.assign(Viewer.prototype, {
         // if the camera has moved since the last render
         var cameraWorldTransform = this.camera.getWorldTransform();
         if (!this.prevCameraMat.equals(cameraWorldTransform)) {
-            this.prevCameraMat.copy(cameraWorldTransform)
+            this.prevCameraMat.copy(cameraWorldTransform);
             this.app.renderNextFrame = true;
         }
         // or an animation is loaded and we're animating

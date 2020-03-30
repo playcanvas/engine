@@ -459,8 +459,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#loadFromUrlAndFilename
-         * @description Use this to load and create an asset given the URL and filename. Usually you would only use this
-         * if you are not integrated with the PlayCanvas Editor.
+         * @description Use this to load and create an asset when both the URL and filename are required. For example, use this function when loading
+         * BLOB assets, where the URL does not adequately identify the file.
          * @param {string} url - The url to load.
          * @param {string} filename - The filename of the asset to load.
          * @param {string} type - The type of asset to load.
