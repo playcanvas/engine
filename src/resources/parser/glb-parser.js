@@ -768,12 +768,6 @@ Object.assign(pc, function () {
             "CUBICSPLINE": pc.INTERPOLATION_CUBIC
         };
 
-        var pathMap = {
-            "translation": "_translation",
-            "rotation": "_rotation",
-            "scale": "_scale"
-        };
-
         var inputMap = { };
         var inputs = [];
 
@@ -807,21 +801,17 @@ Object.assign(pc, function () {
 
             // create curve
             curves.push(new pc.AnimCurve(
+                [],
                 inputMap[sampler.input],
                 outputMap[sampler.output],
                 interpolation));
         }
 
-        // convert nodes -> anim targets
-        var targets = nodes.map(function (node) {
-            return new pc.AnimTarget(node.name, -1, -1, -1);
-        });
-
-        // convert anim target channels
+        // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            targets[target.node][pathMap[target.path]] = channel.sampler;
+            curves[channel.sampler]._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
         }
 
         // calculate duration of the animation as maximum time value
@@ -835,8 +825,7 @@ Object.assign(pc, function () {
             duration,
             inputs,
             outputs,
-            curves,
-            targets);
+            curves);
     };
 
     var createNode = function (nodeData, nodeIndex) {
