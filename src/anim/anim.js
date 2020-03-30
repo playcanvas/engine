@@ -33,22 +33,22 @@ Object.assign(pc, function () {
      * @name pc.AnimData
      * @classdesc Wraps a set of data used in animation.
      * @description Create a new animation data container.
-     * @param {number} dimensions - Specifies the number of components which make up an element
-     * of data. For example, specify 3 for a set of 3-dimensional vectors. The number of elements
-     * in data must be a multiple of dimensions.
+     * @param {number} components - Specifies how many components make up an element of data.
+     * For example, specify 3 for a set of 3-dimensional vectors. The number of elements in
+     * data array must be a multiple of components.
      * @param {Float32Array|number[]} data - The set of data
-     * @property {number} dimensions - The number of components that make up and element
+     * @property {number} components - The number of components that make up and element
      * @property {Float32Array|number[]} data - The data
      */
-    var AnimData = function (dimensions, data) {
-        this._dimensions = dimensions;
+    var AnimData = function (components, data) {
+        this._components = components;
         this._data = data;
     };
 
     Object.defineProperties(AnimData.prototype, {
-        dimensions: {
+        components: {
             get: function () {
-                return this._dimensions;
+                return this._components;
             }
         },
         data: {
@@ -143,21 +143,21 @@ Object.assign(pc, function () {
         // evaluate the output anim data at the current time
         eval: function (result, interpolation, output) {
             var data = output._data;
-            var dim = output._dimensions;
-            var idx0 = this._p0 * dim;
+            var comp = output._components;
+            var idx0 = this._p0 * comp;
             var i;
 
             if (interpolation === pc.INTERPOLATION_STEP) {
-                for (i = 0; i < dim; ++i) {
+                for (i = 0; i < comp; ++i) {
                     result[i] = data[idx0 + i];
                 }
             } else {
                 var t = this._t;
-                var idx1 = this._p1 * dim;
+                var idx1 = this._p1 * comp;
 
                 switch (interpolation) {
                     case pc.INTERPOLATION_LINEAR:
-                        for (i = 0; i < dim; ++i) {
+                        for (i = 0; i < comp; ++i) {
                             result[i] = pc.math.lerp(data[idx0 + i], data[idx1 + i], t);
                         }
                         break;
@@ -179,12 +179,12 @@ Object.assign(pc, function () {
                             hermite.m1 = t2 * (t - 1);
                         }
 
-                        var p0 = (this._p0 * 3 + 1) * dim;     // point at k
-                        var m0 = (this._p0 * 3 + 2) * dim;     // out-tangent at k
-                        var p1 = (this._p1 * 3 + 1) * dim;     // point at k + 1
-                        var m1 = (this._p1 * 3 + 0) * dim;     // in-tangent at k + 1
+                        var p0 = (this._p0 * 3 + 1) * comp;     // point at k
+                        var m0 = (this._p0 * 3 + 2) * comp;     // out-tangent at k
+                        var p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
+                        var m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
 
-                        for (i = 0; i < dim; ++i) {
+                        for (i = 0; i < comp; ++i) {
                             result[i] = hermite.p0 * data[p0 + i] +
                                         hermite.m0 * data[m0 + i] * this._len +
                                         hermite.p1 * data[p1 + i] +
@@ -351,7 +351,7 @@ Object.assign(pc, function () {
             var curve = curves[i];
             var output = outputs[curve._output];
             var storage = [];
-            for (var j = 0; j < output._dimensions; ++j) {
+            for (var j = 0; j < output._components; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;
