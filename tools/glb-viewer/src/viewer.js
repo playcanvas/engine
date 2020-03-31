@@ -82,7 +82,10 @@ var Viewer = function (canvas) {
     light.setLocalEulerAngles(45, 30, 0);
     app.root.addChild(light);
 
-    app.start();
+    // disable autorender
+    app.autoRender = false;
+    self.prevCameraMat = new pc.Mat4();
+    app.on('update', self.update.bind(self));
 
     // configure drag and drop
     var preventDefault = function (ev) {
@@ -96,7 +99,7 @@ var Viewer = function (canvas) {
             var items = ev.dataTransfer.items;
             if (items && items.length === 1 && items[0].kind === 'file') {
                 var file = items[0].getAsFile();
-                self.load(file.name, URL.createObjectURL(file));
+                self.load(URL.createObjectURL(file), file.name);
             }
         }
     };
@@ -119,6 +122,23 @@ var Viewer = function (canvas) {
     this.entity = null;
     this.graph = graph;
     this.showGraphs = false;
+
+    function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
+    // specify ?load= in URL to load a file
+    var vars = getUrlVars();
+    if (vars.hasOwnProperty('load')) {
+        this.load(vars.load, vars.load);
+    }
+
+    // start the application
+    app.start();
 };
 
 Object.assign(Viewer.prototype, {
@@ -163,34 +183,53 @@ Object.assign(Viewer.prototype, {
         }
     },
 
-    // load model from the url
-    load: function (filename, url) {
-        this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this), filename);
+    // load model at the url
+    load: function (url, filename) {
+        this.app.assets.loadFromUrlAndFilename(url, filename, "container", this._onLoaded.bind(this));
     },
 
     // play the animation
     play: function (animationName) {
-        if (animationName) {
-            this.entity.animation.play(this.animationMap[animationName], 1);
-        } else {
-            this.entity.animation.playing = true;
+        if (this.entity && this.entity.animation) {
+            if (animationName) {
+                this.entity.animation.play(this.animationMap[animationName], 1);
+            } else {
+                this.entity.animation.playing = true;
+            }
         }
     },
 
     // stop playing animations
     stop: function () {
-        this.entity.animation.playing = false;
+        if (this.entity && this.entity.animation) {
+            this.entity.animation.playing = false;
+        }
     },
 
     setSpeed: function (speed) {
-        var entity = this.entity;
-        if (entity) {
-            entity.animation.speed = speed;
+        if (this.entity && this.entity.animation) {
+            var entity = this.entity;
+            if (entity) {
+                entity.animation.speed = speed;
+            }
         }
     },
 
     setGraphs: function (show) {
         this.showGraphs = show;
+    },
+
+    update: function () {
+        // if the camera has moved since the last render
+        var cameraWorldTransform = this.camera.getWorldTransform();
+        if (!this.prevCameraMat.equals(cameraWorldTransform)) {
+            this.prevCameraMat.copy(cameraWorldTransform);
+            this.app.renderNextFrame = true;
+        }
+        // or an animation is loaded and we're animating
+        if (this.entity && this.entity.animation && this.entity.animation.playing) {
+            this.app.renderNextFrame = true;
+        }
     },
 
     _onLoaded: function (err, asset) {
@@ -227,51 +266,33 @@ Object.assign(Viewer.prototype, {
                 onAnimationsLoaded(Object.keys(this.animationMap));
 
                 var createAnimGraphs = function () {
-                    var extract = function (index) {
-                        return this[index];
+                    var extract = function (value, component) {
+                        return function () {
+                            return value[component];
+                        };
                     };
 
                     var graph = this.graph;
-                    var animController = entity.animation.data.animController;
-                    var nodes = animController._nodes;
-                    var activePose = animController._activePose;
 
-                    for (var i = 0; i < nodes.length; ++i) {
-                        var node = nodes[i];
+                    var recurse = function (node) {
+                        graph.addGraph(node, new pc.Color(1, 1, 0, 1), extract(node.localPosition, 'x'));
+                        graph.addGraph(node, new pc.Color(0, 1, 1, 1), extract(node.localPosition, 'y'));
+                        graph.addGraph(node, new pc.Color(1, 0, 1, 1), extract(node.localPosition, 'z'));
 
-                        graph.addGraph(node,
-                                       new pc.Color(1, 0, 0, 1),
-                                       extract.bind(activePose, i * 10 + 0));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 1, 0, 1),
-                                       extract.bind(activePose, i * 10 + 1));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 0, 1, 1),
-                                       extract.bind(activePose, i * 10 + 2));
+                        graph.addGraph(node, new pc.Color(1, 0, 0, 1), extract(node.localRotation, 'x'));
+                        graph.addGraph(node, new pc.Color(0, 1, 0, 1), extract(node.localRotation, 'y'));
+                        graph.addGraph(node, new pc.Color(0, 0, 1, 1), extract(node.localRotation, 'z'));
+                        graph.addGraph(node, new pc.Color(1, 1, 1, 1), extract(node.localRotation, 'w'));
 
-                        graph.addGraph(node,
-                                       new pc.Color(1, 0, 0, 1),
-                                       extract.bind(activePose, i * 10 + 3));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 1, 0, 1),
-                                       extract.bind(activePose, i * 10 + 4));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 0, 1, 1),
-                                       extract.bind(activePose, i * 10 + 5));
-                        graph.addGraph(node,
-                                       new pc.Color(1, 1, 0, 1),
-                                       extract.bind(activePose, i * 10 + 6));
+                        graph.addGraph(node, new pc.Color(1.0, 0.5, 0.5, 1), extract(node.localScale, 'x'));
+                        graph.addGraph(node, new pc.Color(0.5, 1.0, 0.5, 1), extract(node.localScale, 'y'));
+                        graph.addGraph(node, new pc.Color(0.5, 0.5, 1.0, 1), extract(node.localScale, 'z'));
 
-                        graph.addGraph(node,
-                                       new pc.Color(1, 0, 0, 1),
-                                       extract.bind(activePose, i * 10 + 7));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 1, 0, 1),
-                                       extract.bind(activePose, i * 10 + 8));
-                        graph.addGraph(node,
-                                       new pc.Color(0, 0, 1, 1),
-                                       extract.bind(activePose, i * 10 + 9));
-                    }
+                        for (var i = 0; i < node.children.length; ++i) {
+                            recurse(node.children[i]);
+                        }
+                    };
+                    recurse(entity);
                 };
 
                 // create animation graphs

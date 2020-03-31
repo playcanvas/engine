@@ -768,12 +768,6 @@ Object.assign(pc, function () {
             "CUBICSPLINE": pc.INTERPOLATION_CUBIC
         };
 
-        var pathMap = {
-            "translation": "_translation",
-            "rotation": "_rotation",
-            "scale": "_scale"
-        };
-
         var inputMap = { };
         var inputs = [];
 
@@ -807,21 +801,17 @@ Object.assign(pc, function () {
 
             // create curve
             curves.push(new pc.AnimCurve(
+                [],
                 inputMap[sampler.input],
                 outputMap[sampler.output],
                 interpolation));
         }
 
-        // convert nodes -> anim targets
-        var targets = nodes.map(function (node) {
-            return new pc.AnimTarget(node.name, -1, -1, -1);
-        });
-
-        // convert anim target channels
+        // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            targets[target.node][pathMap[target.path]] = channel.sampler;
+            curves[channel.sampler]._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
         }
 
         // calculate duration of the animation as maximum time value
@@ -835,8 +825,7 @@ Object.assign(pc, function () {
             duration,
             inputs,
             outputs,
-            curves,
-            targets);
+            curves);
     };
 
     var createNode = function (nodeData, nodeIndex) {
@@ -1019,7 +1008,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf images asynchronously, returning the images in callback
-    var loadImagesAsync = function (device, gltf, buffers, callback) {
+    var loadImagesAsync = function (device, gltf, buffers, urlBase, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1053,7 +1042,7 @@ Object.assign(pc, function () {
                     img.src = imgData.uri;
                 } else {
                     img.crossOrigin = "anonymous";
-                    img.src = imgData.uri;
+                    img.src = pc.path.join(urlBase, imgData.uri);
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1074,7 +1063,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf buffers asynchronously, returning them in the callback
-    var loadBuffersAsync = function (gltf, binaryChunk, callback) {
+    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
         var result = [];
 
         if (gltf.buffers === null || gltf.buffers.length === 0) {
@@ -1090,7 +1079,15 @@ Object.assign(pc, function () {
             }
         };
 
-        var LintHack = Uint8Array;
+        var createCallback = function (index) {
+            return function (err, result) {
+                if (err) {
+                    callback(err);
+                } else {
+                    onLoad(new Uint8Array(result), index);
+                }
+            };
+        };
 
         for (var i = 0; i < gltf.buffers.length; ++i) {
             var buffer = gltf.buffers[i];
@@ -1113,15 +1110,10 @@ Object.assign(pc, function () {
 
                     onLoad(binaryArray, i);
                 } else {
-                    var xhr = new XMLHttpRequest();
-                    xhr.responseType = 'arraybuffer';
-                    xhr.open('GET', buffer.uri, true);
-                    xhr.onload = (function (index) {
-                        return function () {
-                            onLoad(new LintHack(this.response), index);
-                        };
-                    })(i);
-                    xhr.send();
+                    pc.http.get(
+                        pc.path.join(urlBase, buffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        createCallback(i));
                 }
             } else {
                 // glb buffer reference
@@ -1230,7 +1222,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, data, device, callback) {
+    GlbParser.parseAsync = function (filename, urlBase, data, device, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1246,14 +1238,14 @@ Object.assign(pc, function () {
                 }
 
                 // async load external buffers
-                loadBuffersAsync(gltf, chunks.binaryChunk, function (err, buffers) {
+                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, function (err, buffers) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
                     // async load images
-                    loadImagesAsync(device, gltf, buffers, function (err, images) {
+                    loadImagesAsync(device, gltf, buffers, urlBase, function (err, images) {
                         if (err) {
                             callback(err);
                             return;

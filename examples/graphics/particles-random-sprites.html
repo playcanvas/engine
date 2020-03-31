@@ -32,7 +32,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -140,32 +139,34 @@
                 type: "image",
                 textureAsset: asset 
             });
-        });
-        
-        // load bonus items sprite texture
-        app.assets.loadFromUrl('../assets/textures/particles-bonus.png', 'texture', function (err, asset) {
+            
+            // load bonus items sprite texture
+            app.assets.loadFromUrl('../assets/textures/particles-bonus.png', 'texture', function (err, asset) {
 
-            // when the texture is loaded add particlesystem component to particle entity
+                // when the texture is loaded add particlesystem component to particle entity
 
-            particleEntity2.addComponent("particlesystem", 
-                Object.assign(particleSystemConfiguration(asset, 4, 2), {
-                    // set the number of animations in the sprite sheet to 7
-                    animNumAnimations: 7,
-                    // set the number of frames in each animation to 1
-                    animNumFrames: 1,
-                    // set the particle system to randomly select a different animation for each particle
-                    randomizeAnimIndex: true
-                })
-            );
+                particleEntity2.addComponent("particlesystem", 
+                    Object.assign(particleSystemConfiguration(asset, 4, 2), {
+                        // set the number of animations in the sprite sheet to 7
+                        animNumAnimations: 7,
+                        // set the number of frames in each animation to 1
+                        animNumFrames: 1,
+                        // set the particle system to randomly select a different animation for each particle
+                        randomizeAnimIndex: true
+                    })
+                );
 
-            // display the full bonus item texture to the left of the panel 
-            panel2.addComponent('element', {
-                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-                pivot: new pc.Vec2(-0.5, 1.0),
-                width: 200,
-                height: 100,
-                type: "image",
-                textureAsset: asset 
+                // display the full bonus item texture to the left of the panel 
+                panel2.addComponent('element', {
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(-0.5, 1.0),
+                    width: 200,
+                    height: 100,
+                    type: "image",
+                    textureAsset: asset 
+                });
+
+                app.start();
             });
         });
     </script>
