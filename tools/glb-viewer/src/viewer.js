@@ -312,7 +312,7 @@ Object.assign(Viewer.prototype, {
 /* eslint-disable no-unused-vars */
 
 var main = function () {
-    new Viewer(document.getElementById("application-canvas"));
+    var viewer = new Viewer(document.getElementById("application-canvas"));
 };
 
 /* eslint-enable no-unused-vars */
