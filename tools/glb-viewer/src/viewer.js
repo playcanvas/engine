@@ -39,6 +39,7 @@ var Viewer = function (canvas) {
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.setSkybox(cubemapAsset.resources);
+        app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
     });
     app.assets.add(cubemapAsset);
     app.assets.load(cubemapAsset);
@@ -125,7 +126,7 @@ var Viewer = function (canvas) {
 
     function getUrlVars() {
         var vars = {};
-        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+        window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
             vars[key] = value;
         });
         return vars;
@@ -308,8 +309,10 @@ Object.assign(Viewer.prototype, {
     }
 });
 
-var viewer;
+/* eslint-disable no-unused-vars */
 
 var main = function () {
-    viewer = new Viewer(document.getElementById("application-canvas"));
+    var viewer = new Viewer(document.getElementById("application-canvas"));
 };
+
+/* eslint-enable no-unused-vars */
