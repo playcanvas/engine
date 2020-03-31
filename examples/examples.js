@@ -23,6 +23,7 @@ var categories = [
             "material-physical",
             "model-asset",
             "model-box",
+            "model-outline",
             "model-shapes",
             "model-textured-box",
             "point-cloud",
