@@ -21,6 +21,7 @@ var categories = [
             "lights-baked",
             "loader-obj",
             "material-physical",
+            "material-anisotropic",
             "model-asset",
             "model-box",
             "model-outline",

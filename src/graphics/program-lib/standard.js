@@ -431,7 +431,7 @@ pc.programlib.standard = {
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap;
+        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
         var shadowPass = options.pass >= pc.SHADER_SHADOW && options.pass <= 17;
 
         this.options = options;
@@ -554,11 +554,14 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap) && options.hasTangents) {
+            if ((options.heightMap || options.normalMap || options.enableGGXSpecular) && options.hasTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
+            } else if (options.enableGGXSpecular) {
+                code += chunks.tangentBinormalVS;
+                codeBody += "   vObjectSpaceUpW  = getObjectSpaceUp();\n";
             }
 
             if (mainShadowLight >= 0) {
@@ -667,6 +670,7 @@ pc.programlib.standard = {
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
         varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
         varyings += oldVars;
@@ -954,6 +958,10 @@ pc.programlib.standard = {
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
+
+                if (options.enableGGXSpecular) {
+                    code += chunks.TBNObjectSpacePS;
+                }
             }
         }
 
@@ -1098,10 +1106,12 @@ pc.programlib.standard = {
             }
         }
 
+        if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
+
         if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
         if (options.useSpecular) {
-            if (lighting) code += options.shadingModel === pc.SPECULAR_PHONG ? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            if (lighting) code += options.shadingModel === pc.SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
@@ -1163,7 +1173,7 @@ pc.programlib.standard = {
         if (needsNormal) {
             code += chunks.viewDirPS;
             if (options.useSpecular) {
-                code += chunks.reflDirPS;
+                code += (options.enableGGXSpecular) ? chunks.reflDirAnisoPS : chunks.reflDirPS;
             }
         }
         var hasPointLights = false;
@@ -1208,9 +1218,11 @@ pc.programlib.standard = {
             }
         }
 
+        var getGlossinessCalled = false;
+
         if (needsNormal) {
             code += "   getViewDir();\n";
-            if (options.heightMap || options.normalMap) {
+            if (options.heightMap || options.normalMap || options.enableGGXSpecular) {
                 code += "   getTBN();\n";
             }
             if (options.heightMap) {
@@ -1225,14 +1237,20 @@ pc.programlib.standard = {
             }
 
             code += "   getNormal();\n";
-            if (options.useSpecular) code += "   getReflDir();\n";
+            if (options.useSpecular) {
+                if (options.enableGGXSpecular) {
+                    code += "   getGlossiness();\n";
+                    getGlossinessCalled = true;
+                }
+                code += "   getReflDir();\n";
+            }
         }
 
         code += "   getAlbedo();\n";
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
-            code += "   getGlossiness();\n";
+            if (!getGlossinessCalled) code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
