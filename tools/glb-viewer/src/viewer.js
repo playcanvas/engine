@@ -82,7 +82,10 @@ var Viewer = function (canvas) {
     light.setLocalEulerAngles(45, 30, 0);
     app.root.addChild(light);
 
-    app.start();
+    // disable autorender
+    app.autoRender = false;
+    self.prevCameraMat = new pc.Mat4();
+    app.on('update', self.update.bind(self));
 
     // configure drag and drop
     var preventDefault = function (ev) {
@@ -96,7 +99,7 @@ var Viewer = function (canvas) {
             var items = ev.dataTransfer.items;
             if (items && items.length === 1 && items[0].kind === 'file') {
                 var file = items[0].getAsFile();
-                self.load(file.name, URL.createObjectURL(file));
+                self.load(URL.createObjectURL(file), file.name);
             }
         }
     };
@@ -119,6 +122,23 @@ var Viewer = function (canvas) {
     this.entity = null;
     this.graph = graph;
     this.showGraphs = false;
+
+    function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
+    // specify ?load= in URL to load a file
+    var vars = getUrlVars();
+    if (vars.hasOwnProperty('load')) {
+        this.load(vars.load, vars.load);
+    }
+
+    // start the application
+    app.start();
 };
 
 Object.assign(Viewer.prototype, {
@@ -163,9 +183,9 @@ Object.assign(Viewer.prototype, {
         }
     },
 
-    // load model from the url
-    load: function (filename, url) {
-        this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this), filename);
+    // load model at the url
+    load: function (url, filename) {
+        this.app.assets.loadFromUrlAndFilename(url, filename, "container", this._onLoaded.bind(this));
     },
 
     // play the animation
@@ -197,6 +217,19 @@ Object.assign(Viewer.prototype, {
 
     setGraphs: function (show) {
         this.showGraphs = show;
+    },
+
+    update: function () {
+        // if the camera has moved since the last render
+        var cameraWorldTransform = this.camera.getWorldTransform();
+        if (!this.prevCameraMat.equals(cameraWorldTransform)) {
+            this.prevCameraMat.copy(cameraWorldTransform);
+            this.app.renderNextFrame = true;
+        }
+        // or an animation is loaded and we're animating
+        if (this.entity && this.entity.animation && this.entity.animation.playing) {
+            this.app.renderNextFrame = true;
+        }
     },
 
     _onLoaded: function (err, asset) {
