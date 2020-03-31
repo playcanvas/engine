@@ -24,6 +24,7 @@ var categories = [
             "material-anisotropic",
             "model-asset",
             "model-box",
+            "model-outline",
             "model-shapes",
             "model-textured-box",
             "point-cloud",

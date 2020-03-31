@@ -33,8 +33,6 @@
 
         // use device pixel ratio
         app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
-
-        app.start();
     </script>
 
     <script>
@@ -59,6 +57,9 @@
         });
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
+        app.assets.on('load:' + fontAsset.id, function () {
+            app.start();
+        });
 
         // create camera
         var c = new pc.Entity();

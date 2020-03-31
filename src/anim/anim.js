@@ -33,20 +33,22 @@ Object.assign(pc, function () {
      * @name pc.AnimData
      * @classdesc Wraps a set of data used in animation.
      * @description Create a new animation data container.
-     * @param {number} dimension - Specifies the number of components which make up an element
-     * of data. For example, specify 3 for a set of 3-dimensional vectors. The number of elements
-     * in data must be a multiple of dimension.
+     * @param {number} components - Specifies how many components make up an element of data.
+     * For example, specify 3 for a set of 3-dimensional vectors. The number of elements in
+     * data array must be a multiple of components.
      * @param {Float32Array|number[]} data - The set of data
+     * @property {number} components - The number of components that make up and element
+     * @property {Float32Array|number[]} data - The data
      */
-    var AnimData = function (dimension, data) {
-        this._dimension = dimension;
+    var AnimData = function (components, data) {
+        this._components = components;
         this._data = data;
     };
 
     Object.defineProperties(AnimData.prototype, {
-        dimension: {
+        components: {
             get: function () {
-                return this._dimension;
+                return this._components;
             }
         },
         data: {
@@ -141,21 +143,21 @@ Object.assign(pc, function () {
         // evaluate the output anim data at the current time
         eval: function (result, interpolation, output) {
             var data = output._data;
-            var dim = output._dimension;
-            var idx0 = this._p0 * dim;
+            var comp = output._components;
+            var idx0 = this._p0 * comp;
             var i;
 
             if (interpolation === pc.INTERPOLATION_STEP) {
-                for (i = 0; i < dim; ++i) {
+                for (i = 0; i < comp; ++i) {
                     result[i] = data[idx0 + i];
                 }
             } else {
                 var t = this._t;
-                var idx1 = this._p1 * dim;
+                var idx1 = this._p1 * comp;
 
                 switch (interpolation) {
                     case pc.INTERPOLATION_LINEAR:
-                        for (i = 0; i < dim; ++i) {
+                        for (i = 0; i < comp; ++i) {
                             result[i] = pc.math.lerp(data[idx0 + i], data[idx1 + i], t);
                         }
                         break;
@@ -177,12 +179,12 @@ Object.assign(pc, function () {
                             hermite.m1 = t2 * (t - 1);
                         }
 
-                        var p0 = (this._p0 * 3 + 1) * dim;     // point at k
-                        var m0 = (this._p0 * 3 + 2) * dim;     // out-tangent at k
-                        var p1 = (this._p1 * 3 + 1) * dim;     // point at k + 1
-                        var m1 = (this._p1 * 3 + 0) * dim;     // in-tangent at k + 1
+                        var p0 = (this._p0 * 3 + 1) * comp;     // point at k
+                        var m0 = (this._p0 * 3 + 2) * comp;     // out-tangent at k
+                        var p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
+                        var m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
 
-                        for (i = 0; i < dim; ++i) {
+                        for (i = 0; i < comp; ++i) {
                             result[i] = hermite.p0 * data[p0 + i] +
                                         hermite.m0 * data[m0 + i] * this._len +
                                         hermite.p1 * data[p1 + i] +
@@ -201,6 +203,7 @@ Object.assign(pc, function () {
      * @classdesc Animation curve links an input data set to an output data set
      * and defines the interpolation method to use.
      * @description Create a new animation curve
+     * @param {string[]} paths - array of path strings identifying the targets of this curve, for example "rootNode.translation".
      * @param {number} input - index of the curve which specifies the key data.
      * @param {number} output - index of the curve which specifies the value data.
      * @param {number} interpolation - the interpolation method to use. One of the following:
@@ -208,51 +211,33 @@ Object.assign(pc, function () {
      * * {@link pc.INTERPOLATION_STEP}
      * * {@link pc.INTERPOLATION_LINEAR}
      * * {@link pc.INTERPOLATION_CUBIC}
-     *
      */
-    var AnimCurve = function (input, output, interpolation) {
+    var AnimCurve = function (paths, input, output, interpolation) {
+        this._paths = paths;
         this._input = input;
         this._output = output;
         this._interpolation = interpolation;
     };
 
-    /**
-     * @private
-     * @class
-     * @name pc.AnimTarget
-     * @classdesc AnimTarget names a target graph node and specifies the curves which drive translation, rotation and scale.
-     * @description Create a new animation target.
-     * @param {string} name - the target node to control.
-     * @param {number} translation - the curve index controlling the translation of the target node or -1 for none.
-     * @param {number} rotation - the curve index controlling the rotation of the target node or -1 for none.
-     * @param {number} scale - the curve index controlling the scale of the target node or -1 for none.
-     */
-    var AnimTarget = function (name, translation, rotation, scale) {
-        this._name = name;
-        this._translation = translation;
-        this._rotation = rotation;
-        this._scale = scale;
-    };
-
-    Object.defineProperties(AnimTarget.prototype, {
-        name: {
+    Object.defineProperties(AnimCurve.prototype, {
+        paths: {
             get: function () {
-                return this._name;
+                return this._paths;
             }
         },
-        translation: {
+        input: {
             get: function () {
-                return this._translation;
+                return this._input;
             }
         },
-        rotation: {
+        output: {
             get: function () {
-                return this._rotation;
+                return this._output;
             }
         },
-        scale: {
+        interpolation: {
             get: function () {
-                return this._scale;
+                return this._interpolation;
             }
         }
     });
@@ -268,15 +253,13 @@ Object.assign(pc, function () {
      * @param {pc.AnimData[]} inputs - list of curve key data.
      * @param {pc.AnimData[]} outputs - list of curve value data.
      * @param {pc.AnimCurve[]} curves - the list of curves.
-     * @param {pc.AnimTarget[]} targets - the list of targets.
      */
-    var AnimTrack = function (name, duration, inputs, outputs, curves, targets) {
+    var AnimTrack = function (name, duration, inputs, outputs, curves) {
         this._name = name;
         this._duration = duration;
         this._inputs = inputs;
         this._outputs = outputs;
         this._curves = curves;
-        this._targets = targets;
     };
 
     Object.defineProperties(AnimTrack.prototype, {
@@ -290,9 +273,19 @@ Object.assign(pc, function () {
                 return this._duration;
             }
         },
-        targets: {
+        inputs: {
             get: function () {
-                return this._targets;
+                return this._inputs;
+            }
+        },
+        outputs: {
+            get: function () {
+                return this._outputs;
+            }
+        },
+        curves: {
+            get: function () {
+                return this._curves;
             }
         }
     });
@@ -358,7 +351,7 @@ Object.assign(pc, function () {
             var curve = curves[i];
             var output = outputs[curve._output];
             var storage = [];
-            for (var j = 0; j < output._dimension; ++j) {
+            for (var j = 0; j < output._components; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;
@@ -385,9 +378,10 @@ Object.assign(pc, function () {
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
         this._time = time;              // play cursor
-        this._speed = speed;
-        this._loop = loop;
-        this._blendWeight = 1.0;         // blend weight 0..1
+        this._speed = speed;            // playback speed, may be negative
+        this._loop = loop;              // whether to loop
+        this._blendWeight = 1.0;        // blend weight 0..1
+        this._blendOrder = 0.0;         // blend order relative to other clips
     };
 
     Object.defineProperties(AnimClip.prototype, {
@@ -439,6 +433,14 @@ Object.assign(pc, function () {
             },
             set: function (blendWeight) {
                 this._blendWeight = blendWeight;
+            }
+        },
+        blendOrder: {
+            get: function () {
+                return this._blendOrder;
+            },
+            set: function (blendOrder) {
+                this._blendOrder = blendOrder;
             }
         }
     });
@@ -510,268 +512,561 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @class
-     * @name pc.AnimController
-     * @classdesc AnimContoller stores a set of animation clips and performs blending
-     * between them. It then applies the resulting transforms to the target nodes.
-     * @description Create a new animation controller.
-     * @param {pc.GraphNode} graph - root of the scene graph to control.
+     * @callback pc.AnimSetter
+     * @description Callback function that the {@link pc.AnimController} uses to set final animation values.
+     * These callbacks are stored in {@link pc.AnimTarget} instances which are constructed by an
+     * {@link pc.AnimBinder}.
+     * @param {number[]} value - updated animation value.
      */
-    var AnimController = function (graph) {
 
-        var nodesMap = { };
-        var nodes = [];
-        var basePose = [];
-        var activeNodes = [];
+    /**
+     * @private
+     * @class
+     * @name pc.AnimTarget
+     * @classdesc Stores the information required by {@link pc.AnimController} for updating a target value.
+     * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
+     * the {@link pc.AnimController}.
+     * @param {'vector'|'quaternion'} type - the type of animation data this target expects.
+     * @param {number} components - the number of components on this target (this should ideally match the number
+     * of components found on all attached animation curves).
+     */
+    var AnimTarget = function (func, type, components) {
+        this._func = func;
+        this._type = type;
+        this._components = components;
+    };
 
+    Object.defineProperties(AnimTarget.prototype, {
+        func: {
+            get: function () {
+                return this._func;
+            }
+        },
+        type: {
+            get: function () {
+                return this._type;
+            }
+        },
+        components: {
+            get: function () {
+                return this._components;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @class
+     * @name pc.AnimBinder
+     * @classdesc This interface is used by {@link pc.AnimController} to resolve unique animation target path strings
+     * into instances of {@link pc.AnimTarget}.
+     */
+    var AnimBinder = function () { };
+
+    // join a list of path segments into a path string
+    AnimBinder.joinPath = function (pathSegments) {
+        var escape = function (string) {
+            return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+        };
+        return pathSegments.map(escape).join('.');
+    };
+
+    // split a path string into its segments and resolve character escaping
+    AnimBinder.splitPath = function (path) {
+        var result = [];
+        var curr = "";
+        var i = 0;
+        while (i < path.length) {
+            var c = path[i++];
+
+            if (c === '\\' && i < path.length) {
+                c = path[i++];
+                if (c === '\\' || c === '.') {
+                    curr += c;
+                } else {
+                    curr += '\\' + c;
+                }
+            } else if (c === '.') {
+                result.push(curr);
+                curr = '';
+            } else {
+                curr += c;
+            }
+        }
+        if (curr.length > 0) {
+            result.push(curr);
+        }
+        return result;
+    };
+
+    Object.assign(AnimBinder.prototype, {
+        /**
+         * @private
+         * @function
+         * @name pc.AnimBinder#resolve
+         * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
+         * will handle setting the value, or return null if no such target exists.
+         * @param {string} path - the animation curve path to resolve.
+         * @returns {pc.AnimTarget|null} - returns the target instance on success and null otherwise.
+         */
+        resolve: function (path) {
+            return null;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.AnimBinder#unresolve
+         * @description Called when the {@link AnimController} no longer has a curve driving the given key.
+         * @param {string} path - the animation curve path which is no longer driven.
+         */
+        unresolve: function (path) {
+
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.AnimBinder#update
+         * @description Called by {@link pc.AnimController} once a frame after animation updates are done.
+         * @param {number} deltaTime - amount of time that passed in the current update.
+         */
+        update: function (deltaTime) {
+
+        }
+    });
+
+    /**
+     * @private
+     * @class
+     * @name pc.DefaultAnimBinder
+     * @implements {pc.AnimBinder}
+     * @classdesc Implementation of {@link pc.AnimBinder} for animating a skeleton in the graph-node
+     * hierarchy.
+     */
+    var DefaultAnimBinder = function (graph) {
+        var nodes = { };
+
+        // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {
-            var p = node.localPosition;
-            var r = node.localRotation;
-            var s = node.localScale;
-            nodesMap[node.name] = nodes.length;
-            nodes.push(node);
-            basePose.splice(basePose.length, 0, p.x, p.y, p.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
-            activeNodes.push(0);
-
+            nodes[node.name] = {
+                node: node,
+                count: 0
+            };
             for (var i = 0; i < node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
         flatten(graph);
 
-        this._nodesMap = nodesMap;              // node name -> index
-        this._nodes = nodes;                    // list of nodes
-        this._basePose = basePose;              // list of bind pose data
-        this._activePose = basePose.slice();
-        this._activeNodes = activeNodes;        // store per-node active curves (those with 0 can be skipped)
-        this._clips = [];
-
-        this._q0 = new pc.Quat();
-        this._q1 = new pc.Quat();
+        this.nodes = nodes;                 // map of node name -> { node, count }
+        this.activeNodes = [];              // list of active nodes
+        this.schema = {
+            'translation': {
+                components: 3,
+                target: 'localPosition',
+                type: 'vector'
+            },
+            'rotation': {
+                components: 4,
+                target: 'localRotation',
+                type: 'quaternion'
+            },
+            'scale': {
+                components: 3,
+                target: 'localScale',
+                type: 'vector'
+            }
+        };
     };
 
+    Object.assign(DefaultAnimBinder.prototype, {
+        resolve: function (path) {
+            var parts = this._getParts(path);
+            if (!parts) {
+                return null;
+            }
+
+            var node = this.nodes[parts[0]];
+            var prop = this.schema[parts[1]];
+
+            if (node.count === 0) {
+                this.activeNodes.push(node.node);
+            }
+            node.count++;
+
+            return new pc.AnimTarget(this._createSetter(node.node[prop.target]), prop.type, prop.components);
+        },
+
+        unresolve: function (path) {
+            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+            var parts = this._getParts(path);
+            if (parts) {
+                var node = this.nodes[parts[0]];
+
+                node.count--;
+                if (node.count === 0) {
+                    var activeNodes = this.activeNodes;
+                    var i = activeNodes.indexOf(node.node);  // :(
+                    var len = activeNodes.length;
+                    if (i < len - 1) {
+                        activeNodes[i] = activeNodes[len - 1];
+                    }
+                    activeNodes.pop();
+                }
+            }
+        },
+
+        update: function (deltaTime) {
+            // flag active nodes as dirty
+            var activeNodes = this.activeNodes;
+            for (var i = 0; i < activeNodes.length; ++i) {
+                activeNodes[i]._dirtifyLocal();
+            }
+        },
+
+        // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+        _getParts: function (path) {
+            var parts = AnimBinder.splitPath(path);
+            if (parts.length !== 2 ||
+                !this.nodes.hasOwnProperty(parts[0]) ||
+                !this.schema.hasOwnProperty(parts[1])) {
+                return null;
+            }
+            return parts;
+        },
+
+        // create a setter function (works for pc.Vec* and pc.Quaternion) which have a 'set' function.
+        _createSetter: function (target) {
+            return function (value) {
+                target.set.apply(target, value);
+            };
+        }
+    });
+
+    /**
+     * @private
+     * @class
+     * @name pc.AnimController
+     * @classdesc AnimContoller blends multiple sets of animation clips together.
+     * @description Create a new animation controller.
+     * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
+     * @property {pc.AnimClip[]} clips - the list of animation clips
+     */
+    var AnimController = function (binder) {
+        this._binder = binder;
+        this._clips = [];
+        this._inputs = [];
+        this._outputs = [];
+        this._targets = {};
+    };
+
+    /**
+     * @private
+     * @name pc.AnimController
+     * @type {number}
+     * @description The number of clips.
+     */
     Object.defineProperties(AnimController.prototype, {
-        'numClips': {
+        'clips': {
             get: function () {
-                return this._clips.length;
+                return this._clips;
             }
         }
     });
 
+    AnimController._dot = function (a, b) {
+        var len  = a.length;
+        var result = 0;
+        for (var i = 0; i < len; ++i) {
+            result += a[i] * b[i];
+        }
+        return result;
+    };
+
+    AnimController._normalize = function (a) {
+        var l = AnimController._dot(a, a);
+        if (l > 0) {
+            l = 1.0 / Math.sqrt(l);
+            var len = a.length;
+            for (var i = 0; i < len; ++i) {
+                a[i] *= l;
+            }
+        }
+    };
+
+    AnimController._set = function (a, b, type) {
+        var len  = a.length;
+        var i;
+
+        if (type === 'quaternion') {
+            var l = AnimController._dot(b, b);
+            if (l > 0) {
+                l = 1.0 / Math.sqrt(l);
+            }
+            for (i = 0; i < len; ++i) {
+                a[i] = b[i] * l;
+            }
+        } else {
+            for (i = 0; i < len; ++i) {
+                a[i] = b[i];
+            }
+        }
+    };
+
+    AnimController._blendVec = function (a, b, t) {
+        var it = 1.0 - t;
+        var len = a.length;
+        for (var i = 0; i < len; ++i) {
+            a[i] = a[i] * it + b[i] * t;
+        }
+    };
+
+    AnimController._blendQuat = function (a, b, t) {
+        var len = a.length;
+        var it = 1.0 - t;
+
+        // negate b if a and b don't lie in the same winding (due to
+        // double cover). if we don't do this then often rotations from
+        // one orientation to another go the long way around.
+        if (AnimController._dot(a, b) < 0) {
+            t = -t;
+        }
+
+        for (var i = 0; i < len; ++i) {
+            a[i] = a[i] * it + b[i] * t;
+        }
+
+        AnimController._normalize(a);
+    };
+
+    AnimController._blend = function (a, b, t, type) {
+        if (type === 'quaternion') {
+            AnimController._blendQuat(a, b, t);
+        } else {
+            AnimController._blendVec(a, b, t);
+        }
+    };
+
+    AnimController._stableSort = function (a, lessFunc) {
+        var len = a.length;
+        for (var i = 0; i < len - 1; ++i) {
+            for (var j = i + 1; j < len; ++j) {
+                if (lessFunc(a[j], a[i])) {
+                    var tmp = a[i];
+                    a[i] = a[j];
+                    a[j] = tmp;
+                }
+            }
+        }
+    };
+
     Object.assign(AnimController.prototype, {
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#addClip
+         * @description Add a clip to the controller.
+         * @param {pc.AnimClip} clip - the clip to add to the controller.
+         */
         addClip: function (clip) {
-            var targets = clip.track.targets;
+            var targets = this._targets;
+
+            // store list of input/output arrays
+            var curves = clip.track.curves;
             var snapshot = clip.snapshot;
-            var nodesMap = this._nodesMap;
+            var inputs = [];
+            var outputs = [];
+            for (var i = 0; i < curves.length; ++i) {
+                var curve = curves[i];
+                var paths = curve.paths;
+                for (var j = 0; j < paths.length; ++j) {
+                    var path = paths[j];
+                    var target = targets[path];
 
-            var i;
+                    // create new target if it doesn't exist yet
+                    if (!target) {
+                        var resolved = this._binder.resolve(path);
+                        if (resolved) {
+                            target = {
+                                target: resolved,           // resolved target instance
+                                value: [],                  // storage for calculated value
+                                curves: 0,                  // number of curves driving this target
+                                blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                            };
 
-            // create links between the target nodes and their corresponding animation curves for t, r, s
-            var links = [];
-            for (i = 0; i < targets.length; ++i) {
-                var target = targets[i];
-                var name = target.name;
-                if (nodesMap.hasOwnProperty(name)) {
-                    var link = {
-                        node: nodesMap[name],
-                        translation: target.translation !== -1 ? snapshot._results[target.translation] : null,
-                        rotation: target.rotation !== -1 ? snapshot._results[target.rotation] : null,
-                        scale: target.scale !== -1 ? snapshot._results[target.scale] : null
-                    };
-                    if (link.translation || link.rotation || link.scale) {
-                        links.push(link);
+                            for (var k = 0; k < target.target.components; ++k) {
+                                target.value.push(0);
+                            }
+
+                            targets[path] = target;
+                        }
+                    }
+
+                    // binding may have failed
+                    // TODO: it may be worth storing quaternions and vector targets in seperate
+                    // lists. this way the update code won't be foreced to check target type before
+                    // setting/blending each target.
+                    if (target) {
+                        target.curves++;
+                        inputs.push(snapshot._results[i]);
+                        outputs.push(target);
                     }
                 }
             }
 
-            // add clip
-            this._clips.push({
-                clip: clip,
-                links: links
-            });
-
-            // count per-node active curves
-            var activeNodes = this._activeNodes;
-            for (i = 0; i < links.length; ++i) {
-                activeNodes[links[i].node]++;
-            }
+            this._clips.push(clip);
+            this._inputs.push(inputs);
+            this._outputs.push(outputs);
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#removeClip
+         * @description Remove a clip from the controller.
+         * @param {number} index - index of the clip to remove.
+         */
         removeClip: function (index) {
-            // decrement node drivers
-            var links = this._clips[index].links;
-            var activeNodes = this._activeNodes;
-            var basePose = this._basePose;
-            var activePose = this._activePose;
-            for (var i = 0; i < links.length; ++i) {
-                var node = links[i].node;
-                activeNodes[node]--;
+            var targets = this._targets;
 
-                // if the node is no longer driven by a clip as a result
-                // of this removal, then we must reset the tree to the
-                // base pose
-                if (activeNodes[node] === 0) {
-                    for (var j = 0; j < 10; ++j) {
-                        activePose[i * 10 + j] = basePose[i * 10 + j];
+            var clips = this._clips;
+            var clip = clips[index];
+            var curves = clip.track.curves;
+
+            for (var i = 0; i < curves.length; ++i) {
+                var curve = curves[i];
+                var paths = curve.paths;
+                for (var j = 0; j < paths.length; ++j) {
+                    var path = paths[j];
+
+                    var target = targets[path];
+
+                    if (target) {
+                        target.curves--;
+                        if (target.curves === 0) {
+                            this._binder.unresolve(path);
+                            delete targets[path];
+                        }
                     }
-                    this._applyActive(node);
                 }
             }
 
-            // remove clip
-            this._clips.splice(index, 1);
+            clips.splice(index, 1);
+            this._inputs.splice(index, 1);
+            this._outputs.splice(index, 1);
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#removeClips
+         * @description Remove all clips from the controller.
+         */
         removeClips: function () {
-            while (this.numClips > 0) {
+            while (this._clips.length > 0) {
                 this.removeClip(0);
             }
         },
 
-        getClip: function (index) {
-            return this._clips[index].clip;
-        },
-
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#findClip
+         * @description Returns the first clip which matches the given name, or null if no such clip was found.
+         * @param {string} name - name of the clip to find.
+         * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
+         */
         findClip: function (name) {
-            for (var i = 0; i < this._clips.length; ++i) {
-                if (this._clips[i].name === name) {
-                    return this._clips[i].clip;
+            var clips = this._clips;
+            for (var i = 0; i < clips.length; ++i) {
+                var clip = clips[i];
+                if (clip.name === name) {
+                    return clip;
                 }
             }
             return null;
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.AnimController#update
+         * @description Contoller frame update function. All the attached {@link pc.AnimClip}s are evaluated,
+         * blended and the results set on the {@link pc.AnimTarget}.
+         * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
+         */
         update: function (deltaTime) {
+            // copy clips
             var clips = this._clips;
-            var nodes = this._nodes;
-            var activeNodes = this._activeNodes;
-            var basePose = this._basePose;
-            var activePose = this._activePose;
 
-            var i, j, c;
+            // stable sort order
+            var order = clips.map(function (c, i) {
+                return i;
+            });
+            AnimController._stableSort(order, function (a, b) {
+                return clips[a].blendOrder < clips[b].blendOrder;
+            });
 
-            // reset base pose on active nodes
-            for (i = 0; i < nodes.length; ++i) {
-                if (activeNodes[i] > 0) {
-                    for (j = 0; j < 10; ++j) {
-                        activePose[i * 10 + j] = basePose[i * 10 + j];
+            var i, j;
+
+            for (i = 0; i < clips.length; ++i) {
+                var index = order[i];
+                var clip = clips[index];
+                var inputs = this._inputs[index];
+                var outputs = this._outputs[index];
+                var blendWeight = clip.blendWeight;
+
+                // update clip
+                if (blendWeight > 0.0) {
+                    clip._update(deltaTime);
+                }
+
+                var input;
+                var output;
+                var value;
+
+                if (blendWeight >= 1.0) {
+                    for (j = 0; j < inputs.length; ++j) {
+                        input = inputs[j];
+                        output = outputs[j];
+                        value = output.value;
+
+                        AnimController._set(value, input, output.target.type);
+
+                        output.blendCounter++;
+                    }
+                } else if (blendWeight > 0.0) {
+                    for (j = 0; j < inputs.length; ++j) {
+                        input = inputs[j];
+                        output = outputs[j];
+                        value = output.value;
+
+                        if (output.blendCounter === 0) {
+                            AnimController._set(value, input, output.target.type);
+                        } else {
+                            AnimController._blend(value, input, blendWeight, output.target.type);
+                        }
+
+                        output.blendCounter++;
                     }
                 }
             }
 
-            // blend animation clips onto the activePose
-            for (c = 0; c < clips.length; ++c) {
-                var clip = clips[c];
-                var links = clip.links;
-
-                // update animation clip
-                clip.clip._update(deltaTime);
-
-                var weight = clip.clip.blendWeight;
-                if (weight >= 1.0) {
-                    // overwrite active pose
-                    for (i = 0; i < links.length; ++i) {
-                        this._setActive(links[i]);
-                    }
-                } else if (weight > 0) {
-                    // blend onto active pose
-                    for (i = 0; i < links.length; ++i) {
-                        this._blendActive(links[i], weight);
-                    }
-                } // skip clips with weight <= 0
-            }
-
-            // apply the activePose to the node hierarchy
-            for (i = 0; i < nodes.length; ++i) {
-                if (activeNodes[i] > 0) {
-                    this._applyActive(i);
-                }
-            }
-        },
-
-        // set the link's t, r, s on the active pose node
-        _setActive: function (link) {
-            var activePose = this._activePose;
-            var idx = link.node * 10;
-            var t = link.translation;
-            var r = link.rotation;
-            var s = link.scale;
-            var i;
-
-            if (t) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + i] = t[i];
-                }
-            }
-            if (r) {
-                this._q0.set(r[0], r[1], r[2], r[3]);
-                this._q0.normalize();
-
-                activePose[idx + 3 + 0] = this._q0.x;
-                activePose[idx + 3 + 1] = this._q0.y;
-                activePose[idx + 3 + 2] = this._q0.z;
-                activePose[idx + 3 + 3] = this._q0.w;
-            }
-            if (s) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + 7 + i] = s[i];
-                }
-            }
-        },
-
-        // blend the link's t, r, s onto the active pose node
-        _blendActive: function (link, weight) {
-            var oneMinusWeight = 1.0 - weight;
-            var activePose = this._activePose;
-            var idx = link.node * 10;
-            var t = link.translation;
-            var r = link.rotation;
-            var s = link.scale;
-            var i;
-
-            if (t) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + i] = activePose[idx + i] * oneMinusWeight + t[i] * weight;
+            // apply result to anim targets
+            var targets = this._targets;
+            for (var path in targets) {
+                if (targets.hasOwnProperty(path)) {
+                    var target = targets[path];
+                    target.target.func(target.value);
+                    target.blendCounter = 0;
                 }
             }
 
-            if (r) {
-                this._q0.set(activePose[idx + 3], activePose[idx + 4], activePose[idx + 5], activePose[idx + 6]);
-                this._q1.set(r[0], r[1], r[2], r[3]);
-                this._q1.normalize();
-                this._q0.slerp(this._q0, this._q1, weight);
-
-                activePose[idx + 3 + 0] = this._q0.x;
-                activePose[idx + 3 + 1] = this._q0.y;
-                activePose[idx + 3 + 2] = this._q0.z;
-                activePose[idx + 3 + 3] = this._q0.w;
-            }
-
-            if (s) {
-                for (i = 0; i < 3; ++i) {
-                    activePose[idx + 7 + i] = activePose[idx + 7 + i] * oneMinusWeight + s[i] * weight;
-                }
-            }
-        },
-
-        // apply the active node transform to the target
-        _applyActive: function (nodeIndex) {
-            var activePose = this._activePose;
-            var node = this._nodes[nodeIndex];
-            var idx = nodeIndex * 10;
-
-            node.localPosition.set(activePose[idx++], activePose[idx++], activePose[idx++]);
-            node.localRotation.set(activePose[idx++], activePose[idx++], activePose[idx++], activePose[idx++]);
-            node.localScale.set(activePose[idx++], activePose[idx++], activePose[idx++]);
-
-            // TODO: decide at what point to renormalize quaternions, options are:
-            // after curve evaluation
-            // after link blending
-            // right at the end
-            // all of the above
-
-            // TODO: is this the optimal way of dirtifying the hierarchy?
-            node._dirtifyLocal();
+            // give the binder an opportunity to update itself
+            // TODO: is this even necessary? binder could know when to update
+            // itself without our help.
+            this._binder.update(deltaTime);
         }
     });
 
@@ -785,6 +1080,8 @@ Object.assign(pc, function () {
         AnimTrack: AnimTrack,
         AnimSnapshot: AnimSnapshot,
         AnimClip: AnimClip,
+        AnimBinder: AnimBinder,
+        DefaultAnimBinder: DefaultAnimBinder,
         AnimController: AnimController
     };
 }());

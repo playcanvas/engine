@@ -132,10 +132,24 @@ Object.assign(pc, function () {
                         // update anim controller
                         var animController = componentData.animController;
                         if (animController) {
-                            if (componentData.blending) {
-                                animController.getClip(1).blendWeight = componentData.blend;
+
+                            // force all clip's speed and playing state from the component
+                            for (var i = 0; i < animController.clips.length; ++i) {
+                                var clip = animController.clips[i];
+                                clip.speed = componentData.speed;
+                                if (!componentData.playing) {
+                                    clip.pause();
+                                } else {
+                                    clip.resume();
+                                }
                             }
-                            animController.update(dt * componentData.speed * (componentData.playing ? 1 : 0));
+
+                            // update blend weight
+                            if (componentData.blending) {
+                                animController.clips[1].blendWeight = componentData.blend;
+                            }
+
+                            animController.update(dt);
                         }
 
                         // clear blending flag
