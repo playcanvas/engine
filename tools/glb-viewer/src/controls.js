@@ -21,6 +21,8 @@ document.getElementById('graphs').onclick = function (e) {
 
 var animList = document.getElementById('anim-list');
 
+/* eslint-disable no-unused-vars */
+
 // called when animations are loaded
 var onAnimationsLoaded = function (animationList) {
     // clear previous list
@@ -40,3 +42,5 @@ var onAnimationsLoaded = function (animationList) {
         animList.appendChild(li);
     }
 };
+
+/* eslint-enable no-unused-vars */
