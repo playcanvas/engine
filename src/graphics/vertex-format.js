@@ -130,17 +130,17 @@ Object.assign(pc, function () {
         var offset = 0;
         for (i = 0, len = description.length; i < len; i++) {
             var elementDesc = description[i];
-            element = {
-                name: elementDesc.semantic,
-                offset: elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset,
-                stride: elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size,
-                stream: -1,
-                scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
-                dataType: elementDesc.type,
-                numComponents: elementDesc.components,
-                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
-                size: elementDesc.components * _typeSize[elementDesc.type]
-            };
+            element = new VertexAttributeElement();
+            element.name = elementDesc.semantic;
+            element.offset = elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset;
+            element.stride = elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size;
+            element.stream = -1;
+            element.scopeId = graphicsDevice.scope.resolve(elementDesc.semantic);
+            element.dataType = elementDesc.type;
+            element.numComponents = elementDesc.components;
+            element.normalize = (elementDesc.normalize === undefined) ? false : elementDesc.normalize;
+            element.size = elementDesc.components * _typeSize[elementDesc.type];
+
             this.elements.push(element);
             offset += Math.ceil(element.size / 4) * 4;
 
