@@ -311,8 +311,10 @@ Object.assign(Viewer.prototype, {
 
 /* eslint-disable no-unused-vars */
 
+var viewer;
+
 var main = function () {
-    var viewer = new Viewer(document.getElementById("application-canvas"));
+    viewer = new Viewer(document.getElementById("application-canvas"));
 };
 
 /* eslint-enable no-unused-vars */
