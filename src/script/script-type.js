@@ -1,4 +1,7 @@
 Object.assign(pc, function () {
+
+    var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+
     /**
      * @class
      * @name pc.ScriptType
@@ -75,6 +78,14 @@ Object.assign(pc, function () {
      * @description Name of a Script Type.
      */
     ScriptType.__name = null; // Will be assigned when calling createScript or registerScript.
+
+    ScriptType.__getScriptName = function (constructorFn) {
+        if (typeof constructorFn !== 'function') return undefined;
+        if ('name' in Function.prototype) return constructorFn.name;
+        if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
+        var match = ("" + constructorFn).match(funcNameRegex);
+        return match ? match[1] : undefined;
+    };
 
     /**
      * @field

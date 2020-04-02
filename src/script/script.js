@@ -1,14 +1,4 @@
 Object.assign(pc, function () {
-    var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
-
-    var _getFuncName = function (func) {
-        if (typeof func !== 'function') return undefined;
-        if ('name' in Function.prototype) return func.name;
-        if (func === Function || func === Function.prototype.constructor) return 'Function';
-        var match = ("" + func).match(funcNameRegex);
-        return match ? match[1] : undefined;
-    };
-
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @static
@@ -115,9 +105,9 @@ Object.assign(pc, function () {
             throw new Error('script class: \'' + script + '\' must be a constructor function (i.e. class).');
 
         if (!(script.prototype instanceof pc.ScriptType))
-            throw new Error('script class: \'' + _getFuncName(script) + '\' does not extend pc.ScriptType.');
+            throw new Error('script class: \'' + pc.ScriptType.__getScriptName(script) + '\' does not extend pc.ScriptType.');
 
-        name = name || script.__name || _getFuncName(script);
+        name = name || script.__name || pc.ScriptType.__getScriptName(script);
 
         if (createScript.reservedScripts[name])
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
