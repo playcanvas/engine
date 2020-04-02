@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var GpuTimer = function (gl, extDisjointTimer) {
-        this._gl = gl;
-        this._ext = extDisjointTimer;
+    var GpuTimer = function (app) {
+        this._gl = app.graphicsDevice.gl;
+        this._ext = app.graphicsDevice.extDisjointTimerQuery;
 
         this._freeQueries = [];                     // pool of free queries
         this._frameQueries = [];                    // current frame's queries
@@ -11,6 +11,10 @@ Object.assign(pc, function () {
 
         this._timings = [];
         this._prevTimings = [];
+
+        app.on('framestart', this.begin.bind(this, 'update'));
+        app.on('framerender', this.mark.bind(this, 'render'));
+        app.on('frameend', this.mark.bind(this, 'other'));
     };
 
     Object.assign(GpuTimer.prototype, {
@@ -99,7 +103,9 @@ Object.assign(pc, function () {
 
     Object.defineProperty(GpuTimer.prototype, 'timings', {
         get: function () {
-            return this._timings;
+            return this._timings.map(function (v) {
+                return v[1];
+            });
         }
     });
 

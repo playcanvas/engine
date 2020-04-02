@@ -283,39 +283,8 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
-        if (options.stats) {
-            this._frameGraph = new pc.StatGraph('Frame');
-            this._cpuTimer = new pc.CpuTimer();
-            this._gpuTimer = new pc.GpuTimer(this.graphicsDevice.gl, this.graphicsDevice.extDisjointTimerQuery);
-            this._cpuGraph = new pc.StatGraph('CPU');
-            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph('GPU') : null;
-
-            this.on('framestart', function (ms) {
-                this._cpuTimer.begin('update');
-                this._gpuTimer.begin('update');
-
-                var update = function (graph, timer) {
-                    var extractTiming = function (v) {
-                        return v[1];
-                    };
-                    graph.update(ms, timer.timings.map(extractTiming));
-                };
-
-                // update stat graphs
-                this._frameGraph.update(ms, [ms], [ms]);
-                update(this._cpuGraph, this._cpuTimer);
-                if (this._gpuGraph) {
-                    update(this._gpuGraph, this._gpuTimer);
-                }
-            });
-            this.on('framerender', function () {
-                this._cpuTimer.mark('render');
-                this._gpuTimer.mark('render');
-            });
-            this.on('frameend', function () {
-                this._cpuTimer.mark('other');
-                this._gpuTimer.mark('other');
-            });
+        if (true || options.stats) {
+            var miniStats = new pc.MiniStats(this);
         }
 
         // stores all entities that have been created

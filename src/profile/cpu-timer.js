@@ -1,11 +1,15 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var CpuTimer = function () {
+    var CpuTimer = function (app) {
         this._frameIndex = 0;
         this._frameTimings = [];
         this._timings = [];
         this._prevTimings = [];
+
+        app.on('framestart', this.begin.bind(this, 'update'));
+        app.on('framerender', this.mark.bind(this, 'render'));
+        app.on('frameend', this.mark.bind(this, 'other'));
     };
 
     Object.assign(CpuTimer.prototype, {
@@ -53,7 +57,9 @@ Object.assign(pc, function () {
         get: function () {
             // remove the last time point from the list (which is the time spent outside
             // of playcanvas)
-            return this._timings.slice(0, -1);
+            return this._timings.slice(0, -1).map(function (v) {
+                return v[1];
+            });
         }
     });
 

@@ -197,22 +197,147 @@ Object.assign(pc, function () {
         }
     });
 
-    return {
-        StatGraph: StatGraph,
-        toggleMiniStats: function () {
-            if (statContainer) {
-                statContainer.toggle();
-            }
-        },
-        showMiniStats: function () {
-            if (statContainer) {
-                statContainer.show();
-            }
-        },
-        hideMiniStats: function () {
-            if (statContainer) {
-                statContainer.hide();
-            }
+    var Graph = function (app, name, timer) {
+        this.device = app.graphicsDevice;
+        this.name = name;
+        this.timer = timer;
+        this.texture = new pc.Texture(this.device, {
+            name: 'mini-stats',
+            width: 256,
+            height: 128,
+            mipmaps: false
+        });
+        var source = this.texture.lock();
+        for (var i = 0; i < source.length/4; ++i) {
+            source[i * 4] = 0;
+            source[i * 4 + 1] = 0;
+            source[i * 4 + 2] = 0;
+            source[i * 4 + 3] = 255;
         }
+        this.texture.unlock();
+        this.device.setTexture(this.texture, 0);
+
+        this.slivver = new Uint8Array(128 * 4);
+        this.cursor = 0;                        // texture write cursor
+        this.shader = this.device.getCopyShader();
+
+        this.avgTotal = 0;
+        this.avgTimer = 0;
+        this.avgCount = 0;
+        this.displayText = "";
+
+        this.location = new pc.Vec4(0, 0, 256, 128);
+        this.visible = true;
+
+        app.on('framestart', this.update.bind(this));
+        app.on('frameend', this.render.bind(this));
+    };
+
+    Object.assign(Graph.prototype, {
+        update: function (ms) {
+            var timings = this.timer.timings;
+
+            // calculate stacked total
+            var total = timings.reduce(function (a, v) {
+                return a + v;
+            }, 0);
+
+            // update averages
+            this.avgTotal += total;
+            this.avgTimer += ms;
+            this.avgCount++;
+            if (this.avgTimer > 1000) {
+                this.displayText = this.name + ' ' + (this.avgTotal / this.avgCount).toFixed(1) + 'ms';
+                this.avgTimer = 0;
+                this.avgTotal = 0;
+                this.avgCount = 0;
+            }
+
+            var timingColors = [
+                [255,96,96,255],
+                [96,255,96,255],
+                [96,96,255,255],
+                [196,196,196,255]
+            ];
+
+            // update texture with new timings
+            var y = 0;
+            var index = 0;
+            for (var i = 0; i < timings.length; ++i) {
+                var pixels = Math.min(128 - y, Math.floor(timings[i] * (128.0 / 48.0)));
+                var colors = timingColors[i % timingColors.length];
+                for (var j = 0; j < pixels; ++j) {
+                    this.slivver[index++] = colors[0];
+                    this.slivver[index++] = colors[1];
+                    this.slivver[index++] = colors[2];
+                    this.slivver[index++] = colors[3];
+                    y++;
+                }
+            }
+
+            while (y < 128) {
+                this.slivver[index++] = 0;
+                this.slivver[index++] = 0;
+                this.slivver[index++] = 0;
+                this.slivver[index++] = 255;
+                y++;
+            }
+
+            // update the texture
+            var gl = this.device.gl;
+            this.device.bindTexture(this.texture);
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, 0, 1, 128, gl.RGBA, gl.UNSIGNED_BYTE, this.slivver, 0);
+
+            this.cursor++;
+            if (this.cursor === 256) {
+                this.cursor = 0;
+            }
+        },
+
+        render: function () {
+            this.device.constantTexSource.setValue(this.texture);
+            pc.drawQuadWithShader(this.device, null, this.shader, this.location);
+        }
+    });
+
+    var FrameTimer = function (app) {
+        this.ms = 0;
+
+        var self = this;
+
+        app.on('framestart', function (ms) {
+            self.ms = ms;
+        });
+    };
+
+    Object.defineProperty(FrameTimer.prototype, 'timings', {
+        get: function () {
+            return [this.ms];
+        }
+    });
+
+    var MiniStats = function (app) {
+        this.frameGraph = new Graph(app, 'Frame', new FrameTimer(app));
+        this.cpuGraph = new Graph(app, 'CPU', new pc.CpuTimer(app));
+        this.cpuGraph.location.set(0, 130, 256, 128);
+
+        if (app.graphicsDevice.extDisjointTimerQuery) {
+            this.gpuGraph = new Graph(app, 'GPU', new pc.GpuTimer(app));
+            this.gpuGraph.location.set(0, 260, 256, 128);
+        }
+
+        var cf = new pc.CanvasFont(app, {
+            color: new pc.Color(1, 1, 1), // white
+            fontName: "Arial",
+            fontSize: 32,
+            width: 256,
+            height: 256
+        });
+
+        cf.createTextures('CGPUFrame0123456789ms');
+    };
+
+    return {
+        MiniStats: MiniStats
     };
 }());
