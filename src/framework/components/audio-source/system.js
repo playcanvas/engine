@@ -18,12 +18,12 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.AudioSourceComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
-     * @param {pc.Application} app The application managing this system.
-     * @param {pc.SoundManager} manager A sound manager instance.
+     * @param {pc.Application} app - The application managing this system.
+     * @param {pc.SoundManager} manager - A sound manager instance.
      */
     var AudioSourceComponentSystem = function (app, manager) {
         pc.ComponentSystem.call(this, app);
@@ -109,7 +109,7 @@ Object.assign(pc, function () {
          * @name pc.AudioSourceComponentSystem#setVolume
          * @description Set the volume for the entire AudioSource system. All sources will
          * have their volume multiplied by this value.
-         * @param {Number} volume The value to set the volume to. Valid from 0 to 1.
+         * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
          */
         setVolume: function (volume) {
             this.manager.setVolume(volume);

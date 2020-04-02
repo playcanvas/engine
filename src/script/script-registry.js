@@ -1,12 +1,12 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptRegistry
-     * @extends pc.EventHandler
-     * @classdesc Container for all Script Types that are available to this application
+     * @augments pc.EventHandler
+     * @classdesc Container for all Script Types that are available to this application.
      * @description Create an instance of a pc.ScriptRegistry.
      * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
-     * @param {pc.Application} app Application to attach registry to.
+     * @param {pc.Application} app - Application to attach registry to.
      */
     var ScriptRegistry = function (app) {
         pc.EventHandler.call(this);
@@ -23,6 +23,7 @@ Object.assign(pc, function () {
         this.off();
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#add
@@ -30,13 +31,14 @@ Object.assign(pc, function () {
      * Note: when {@link pc.createScript} is called, it will add the {@link pc.ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
-     * @param {pc.ScriptType} script Script Type that is created using {@link pc.createScript}
-     * @returns {Boolean} True if added for the first time or false if script already exists
+     * @param {Class<pc.ScriptType>} script - Script Type that is created using {@link pc.createScript}.
+     * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
      * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
-     * app.scripts.has('playerController') === true; // true
+     * console.log(app.scripts.has('playerController')); // outputs true
      */
+    /* eslint-enable jsdoc/no-undefined-types */
     ScriptRegistry.prototype.add = function (script) {
         var self = this;
 
@@ -137,8 +139,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptRegistry#remove
      * @description Remove {@link pc.ScriptType}.
-     * @param {String} name Name of a {@link pc.ScriptType} to remove
-     * @returns {Boolean} True if removed or False if already not in registry
+     * @param {string} name - Name of a {@link pc.ScriptType} to remove.
+     * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
      */
@@ -161,15 +163,17 @@ Object.assign(pc, function () {
         return true;
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#get
      * @description Get {@link pc.ScriptType} by name.
-     * @param {String} name Name of a {@link pc.ScriptType}.
-     * @returns {pc.ScriptType} The Script Type if it exists in the registry or null otherwise.
+     * @param {string} name - Name of a {@link pc.ScriptType}.
+     * @returns {Class<pc.ScriptType>} The Script Type if it exists in the registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
+    /* eslint-enable jsdoc/no-undefined-types */
     ScriptRegistry.prototype.get = function (name) {
         return this._scripts[name] || null;
     };
@@ -178,8 +182,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptRegistry#has
      * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
-     * @param {String} name Name of a {@link pc.ScriptType}
-     * @returns {Boolean} True if {@link pc.ScriptType} is in registry
+     * @param {string} name - Name of a {@link pc.ScriptType}.
+     * @returns {boolean} True if {@link pc.ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -189,17 +193,19 @@ Object.assign(pc, function () {
         return this._scripts.hasOwnProperty(name);
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#list
      * @description Get list of all {@link pc.ScriptType}s from registry.
-     * @returns {pc.ScriptType[]} list of all {@link pc.ScriptType}s in registry
+     * @returns {Array<Class<pc.ScriptType>>} list of all {@link pc.ScriptType}s in registry.
      * @example
      * // logs array of all Script Type names available in registry
-     * console.log(app.scripts.list().map(function(o) {
+     * console.log(app.scripts.list().map(function (o) {
      *     return o.name;
      * }));
      */
+    /* eslint-enable jsdoc/no-undefined-types */
     ScriptRegistry.prototype.list = function () {
         return this._list;
     };

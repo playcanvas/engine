@@ -66,6 +66,8 @@ Object.assign(pc, function () {
 
                 data.shape = this.createPhysicalShape(component.entity, data);
 
+                var firstCompoundChild = ! component._compoundParent;
+
                 if (data.type === 'compound' && (! component._compoundParent || component === component._compoundParent)) {
                     component._compoundParent = component;
 
@@ -90,10 +92,14 @@ Object.assign(pc, function () {
 
                 if (component._compoundParent) {
                     if (component !== component._compoundParent) {
-                        this.system.updateCompoundChildTransform(entity);
+                        if (firstCompoundChild && component._compoundParent.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(component._compoundParent);
+                        } else {
+                            this.system.updateCompoundChildTransform(entity);
 
-                        if (component._compoundParent.entity.rigidbody)
-                            component._compoundParent.entity.rigidbody.activate();
+                            if (component._compoundParent.entity.rigidbody)
+                                component._compoundParent.entity.rigidbody.activate();
+                        }
                     }
                 }
 
@@ -447,10 +453,7 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (data.model) {
-                if (data.shape) {
-                    Ammo.destroy(data.shape);
-                    data.shape = null;
-                }
+                this.destroyShape(data);
 
                 data.shape = this.createPhysicalShape(entity, data);
 
@@ -491,15 +494,22 @@ Object.assign(pc, function () {
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
         },
 
-        remove: function (entity, data) {
-            if (data.shape) {
-                var numShapes = data.shape.getNumChildShapes();
-                for (var i = 0; i < numShapes; i++) {
-                    var shape = data.shape.getChildShape(i);
-                    Ammo.destroy(shape);
-                }
+        destroyShape: function (data) {
+            if (!data.shape)
+                return;
+
+            var numShapes = data.shape.getNumChildShapes();
+            for (var i = 0; i < numShapes; i++) {
+                var shape = data.shape.getChildShape(i);
+                Ammo.destroy(shape);
             }
 
+            Ammo.destroy(data.shape);
+            data.shape = null;
+        },
+
+        remove: function (entity, data) {
+            this.destroyShape(data);
             CollisionSystemImpl.prototype.remove.call(this, entity, data);
         }
     });
@@ -553,12 +563,12 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.CollisionComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.CollisionComponent}s.
      * @description Creates a new CollisionComponentSystem.
-     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Application} app - The running {pc.Application}.
      */
     var CollisionComponentSystem = function CollisionComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -745,11 +755,14 @@ Object.assign(pc, function () {
         },
 
         _removeCompoundChild: function (collision, shape) {
-            // TODO
-            // use removeChildShape once it is exposed in ammo.js
-            var ind = collision._getCompoundChildShapeIndex(shape);
-            if (ind !== null)
-                collision.shape.removeChildShapeByIndex(ind);
+            if (collision.shape.removeChildShape) {
+                collision.shape.removeChildShape(shape);
+            } else {
+                var ind = collision._getCompoundChildShapeIndex(shape);
+                if (ind !== null) {
+                    collision.shape.removeChildShapeByIndex(ind);
+                }
+            }
         },
 
         onTransformChanged: function (component, position, rotation, scale) {
@@ -792,6 +805,7 @@ Object.assign(pc, function () {
 
                 pos = vec3;
                 rot = quat;
+
                 mat4.getTranslation(pos);
                 rot.setFromMat4(mat4);
             } else {

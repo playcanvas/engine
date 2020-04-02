@@ -4,13 +4,13 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ModelComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
-     * @description Create a new ModelComponentSystem
-     * @param {pc.Application} app The Application.
+     * @description Create a new ModelComponentSystem.
+     * @param {pc.Application} app - The Application.
      */
     var ModelComponentSystem = function ModelComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

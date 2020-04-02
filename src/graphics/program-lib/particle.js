@@ -31,7 +31,9 @@ pc.programlib.particle = {
         if (options.mesh) vshader += "#define USE_MESH\n";
         if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
 
+        if (options.animTex) vshader += "\nuniform vec2 animTexTilesParams;\n";
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
+        if (options.animTex) vshader += "\nuniform vec2 animTexIndexParams;\n";
         if (options.normal == 2) vshader += "\nvarying mat3 ParticleMat;\n";
         if (options.normal == 1) vshader += "\nvarying vec3 Normal;\n";
         if (options.soft) vshader += "\nvarying float vDepth;\n";

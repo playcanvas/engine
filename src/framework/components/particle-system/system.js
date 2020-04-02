@@ -53,19 +53,23 @@ Object.assign(pc, function () {
         'normalMap',
         'animTilesX',
         'animTilesY',
+        'animStartFrame',
         'animNumFrames',
+        'animNumAnimations',
+        'animIndex',
+        'randomizeAnimIndex',
         'animSpeed',
         'animLoop',
         'layers'
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ParticleSystemComponentSystem
-     * @extends pc.ComponentSystem
-     * @classdesc Allows an Entity to render a particle system
-     * @description Create a new ParticleSystemComponentSystem
-     * @param {pc.Application} app The Application.
+     * @augments pc.ComponentSystem
+     * @classdesc Allows an Entity to render a particle system.
+     * @description Create a new ParticleSystemComponentSystem.
+     * @param {pc.Application} app - The Application.
      */
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

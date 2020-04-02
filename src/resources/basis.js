@@ -1,65 +1,105 @@
 Object.assign(pc, function () {
 
-    // Basis compression format enums
-    // Note: these must match definitions in the BASIS module
-    var BASIS_FORMAT = {
-        cTFETC1: 0,                         // etc1
-        cTFETC2: 1,                         // etc2
-        cTFBC1: 2,                          // dxt1
-        cTFBC3: 3,                          // dxt5
-        cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
-        cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
-        cTFASTC_4x4: 10,                    // ASTC
-        cTFATC_RGB: 11,                     // ATC rgb
-        cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
-        // uncompressed (fallback) formats
-        cTFRGB565: 14,                      // rgb 565
-        cTFRGBA4444: 16                     // rgbq 4444
-    };
-
-    // Map GPU to basis format for textures without alpha
-    var opaqueMapping = {
-        astc: BASIS_FORMAT.cTFASTC_4x4,
-        dxt: BASIS_FORMAT.cTFBC1,
-        etc2: BASIS_FORMAT.cTFETC1,
-        etc1: BASIS_FORMAT.cTFETC1,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
-        atc: BASIS_FORMAT.cTFATC_RGB,
-        none: BASIS_FORMAT.cTFRGB565
-    };
-
-    // Map GPU to basis format for textures with alpha
-    var alphaMapping = {
-        astc: BASIS_FORMAT.cTFASTC_4x4,
-        dxt: BASIS_FORMAT.cTFBC3,
-        etc2: BASIS_FORMAT.cTFETC2,
-        etc1: BASIS_FORMAT.cTFRGBA4444,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
-        atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
-        none: BASIS_FORMAT.cTFRGBA4444
-    };
-
-    // Map basis format to engine pixel format
-    var basisToEngineMapping = { };
-    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = pc.PIXELFORMAT_ETC1;
-    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = pc.PIXELFORMAT_ETC2_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = pc.PIXELFORMAT_DXT1;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = pc.PIXELFORMAT_DXT5;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = pc.PIXELFORMAT_ASTC_4x4;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = pc.PIXELFORMAT_ATC_RGB;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
-
-    // Basis worker function. The function assumes BASIS module is loaded as well as the format
-    // mappings above.
+    // Basis worker function. The function assumes pc.PIXELFORMAT_ enums are available.
     var BasisWorker = function () {
 
+        // Basis compression format enums
+        // Note: these must match definitions in the BASIS module
+        var BASIS_FORMAT = {
+            cTFETC1: 0,                         // etc1
+            cTFETC2: 1,                         // etc2
+            cTFBC1: 2,                          // dxt1
+            cTFBC3: 3,                          // dxt5
+            cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
+            cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
+            cTFASTC_4x4: 10,                    // ASTC
+            cTFATC_RGB: 11,                     // ATC rgb
+            cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
+            // uncompressed (fallback) formats
+            cTFRGBA32: 13,                      // rgba 8888
+            cTFRGB565: 14,                      // rgb 565
+            cTFRGBA4444: 16                     // rgba 4444
+        };
+
+        // Map GPU to basis format for textures without alpha
+        var opaqueMapping = {
+            astc: BASIS_FORMAT.cTFASTC_4x4,
+            dxt: BASIS_FORMAT.cTFBC1,
+            etc2: BASIS_FORMAT.cTFETC1,
+            etc1: BASIS_FORMAT.cTFETC1,
+            pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
+            atc: BASIS_FORMAT.cTFATC_RGB,
+            none: BASIS_FORMAT.cTFRGB565
+        };
+
+        // Map GPU to basis format for textures with alpha
+        var alphaMapping = {
+            astc: BASIS_FORMAT.cTFASTC_4x4,
+            dxt: BASIS_FORMAT.cTFBC3,
+            etc2: BASIS_FORMAT.cTFETC2,
+            etc1: BASIS_FORMAT.cTFRGBA4444,
+            pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
+            atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
+            none: BASIS_FORMAT.cTFRGBA4444
+        };
+
+        // Map basis format to engine pixel format
+        var basisToEngineMapping = { };
+        basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = pc.PIXELFORMAT_ETC1;
+        basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = pc.PIXELFORMAT_ETC2_RGBA;
+        basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = pc.PIXELFORMAT_DXT1;
+        basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = pc.PIXELFORMAT_DXT5;
+        basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
+        basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
+        basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = pc.PIXELFORMAT_ASTC_4x4;
+        basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = pc.PIXELFORMAT_ATC_RGB;
+        basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = pc.PIXELFORMAT_R8_G8_B8_A8;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
+
+        var hasPerformance = typeof performance !== 'undefined';
+
+        // unswizzle two-component gggr8888 normal data into rgba8888
+        var unswizzleGGGR = function (data) {
+            // given R and G generate B
+            var genB = function (R, G) {
+                var r = R * (2.0 / 255.0) - 1.0;
+                var g = G * (2.0 / 255.0) - 1.0;
+                var b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
+                return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
+            };
+
+            for (var offset = 0; offset < data.length; offset += 4) {
+                var R = data[offset + 3];
+                var G = data[offset + 1];
+                data[offset + 0] = R;
+                data[offset + 2] = genB(R, G);
+                data[offset + 3] = 255;
+            }
+
+            return data;
+        };
+
+        // pack rgba8888 data into rgb565
+        var pack565 = function (data) {
+            var result = new Uint16Array(data.length / 4);
+
+            for (var offset = 0; offset < data.length; offset += 4) {
+                var R = data[offset + 0];
+                var G = data[offset + 1];
+                var B = data[offset + 2];
+                result[offset / 4] = ((R & 0xf8) << 8) |  // 5
+                                     ((G & 0xfc) << 3) |  // 6
+                                     ((B >> 3));          // 5
+            }
+
+            return result;
+        };
+
         // transcode the basis super-compressed data into one of the runtime gpu native formats
-        var transcode = function (basis, url, format, data) {
-            var funcStart = performance.now();
+        var transcode = function (basis, url, format, data, options) {
+            var funcStart = hasPerformance ? performance.now() : 0;
             var basisFile = new basis.BasisFile(new Uint8Array(data));
 
             var width = basisFile.getImageWidth(0, 0);
@@ -77,11 +117,29 @@ Object.assign(pc, function () {
             // select format based on supported formats
             var basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
+            // PVR does not support non-square or non-pot textures. In these cases we
+            // transcode to an uncompressed format.
+            if ((basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB ||
+                 basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA)) {
+                // if not power-of-two or not square
+                if (((width & (width - 1)) !== 0) || (width !== height)) {
+                    basisFormat = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB) ?
+                        BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA32;
+                }
+            }
+
+            if (options && options.unswizzleGGGR) {
+                // in order unswizzle we need gggr8888
+                basisFormat = BASIS_FORMAT.cTFRGBA32;
+            }
+
             if (!basisFile.startTranscoding()) {
                 basisFile.close();
                 basisFile.delete();
                 throw new Error('Failed to start transcoding url=' + url);
             }
+
+            var i;
 
             var levelData = [];
             for (var mip = 0; mip < levels; ++mip) {
@@ -94,8 +152,7 @@ Object.assign(pc, function () {
                     throw new Error('Failed to transcode image url=' + url);
                 }
 
-                var i;
-                if (basisFormat === 14 /* BASIS_FORMAT.cTFRGB565 */ || basisFormat === 16 /* BASIS_FORMAT.cTFRGBA4444 */) {
+                if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                     // 16 bit formats require Uint16 typed array
                     var dst16 = new Uint16Array(dstSize / 2);
                     for (i = 0; i < dstSize / 2; ++i) {
@@ -110,6 +167,14 @@ Object.assign(pc, function () {
             basisFile.close();
             basisFile.delete();
 
+            // handle unswizzle option
+            if (options && options.unswizzleGGGR) {
+                basisFormat = BASIS_FORMAT.cTFRGB565;
+                for (i = 0; i < levelData.length; ++i) {
+                    levelData[i] = pack565(unswizzleGGGR(levelData[i]));
+                }
+            }
+
             return {
                 format: basisToEngineMapping[basisFormat],
                 width: (width + 3) & ~3,
@@ -117,7 +182,7 @@ Object.assign(pc, function () {
                 levels: levelData,
                 cubemap: false,
                 mipmaps: true,
-                transcodeTime: performance.now() - funcStart,
+                transcodeTime: hasPerformance ? (performance.now() - funcStart) : 0,
                 url: url
             };
         };
@@ -127,20 +192,16 @@ Object.assign(pc, function () {
 
         // download and transcode the file given the basis module and
         // file url
-        var workerTranscode = function (url, format, data) {
-            if (basis) {
-                try {
-                    // texture data has been provided
-                    var result = transcode(basis, url, format, data);
-                    result.levels = result.levels.map(function (v) {
-                        return v.buffer;
-                    });
-                    self.postMessage( { url: url, data: result }, result.levels);
-                } catch (err) {
-                    self.postMessage( { url: url.toString(), err: err.toString() } );
-                }
-            } else {
-                queue.push([url, format, data]);
+        var workerTranscode = function (url, format, data, options) {
+            try {
+                // texture data has been provided
+                var result = transcode(basis, url, format, data, options);
+                result.levels = result.levels.map(function (v) {
+                    return v.buffer;
+                });
+                self.postMessage( { url: url, data: result }, result.levels);
+            } catch (err) {
+                self.postMessage( { url: url.toString(), err: err.toString() } );
             }
         };
 
@@ -159,9 +220,9 @@ Object.assign(pc, function () {
                 basis = instance;
                 basis.initializeBasis();
                 for (var i = 0; i < queue.length; ++i) {
-                    workerTranscode(queue[i][0], queue[i][1], queue[i][2]);
+                    workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
                 }
-                queue = null;
+                queue = [];
             } );
         };
 
@@ -173,7 +234,11 @@ Object.assign(pc, function () {
                     workerInit(data.module);
                     break;
                 case 'transcode':
-                    workerTranscode(data.url, data.format, data.data);
+                    if (basis) {
+                        workerTranscode(data.url, data.format, data.data, data.options);
+                    } else {
+                        queue.push(data);
+                    }
                     break;
             }
         };
@@ -192,7 +257,7 @@ Object.assign(pc, function () {
     })();
 
     // select the most desirable gpu texture compression format given the device's capabilities
-    var selectTextureCompressionFormat = function (device) {
+    var chooseTargetFormat = function (device) {
         if (device.extCompressedTextureASTC) {
             return 'astc';
         } else if (device.extCompressedTextureS3TC) {
@@ -215,6 +280,13 @@ Object.assign(pc, function () {
     var callbacks = { };
     var format = null;
     var transcodeQueue = [];
+
+    var basisTargetFormat = function () {
+        if (!format) {
+            format = chooseTargetFormat(pc.app.graphicsDevice);
+        }
+        return format;
+    };
 
     var handleWorkerResponse = function (message) {
         var url = message.data.url;
@@ -254,20 +326,27 @@ Object.assign(pc, function () {
     };
 
     // post a transcode job to the web worker
-    var transcode = function (url, data, callback) {
+    var transcode = function (url, data, callback, options) {
         if (!callbacks.hasOwnProperty(url)) {
-            if (!format) {
-                format = selectTextureCompressionFormat(pc.app.graphicsDevice);
-            }
             // store url and kick off worker job
             callbacks[url] = [callback];
-            worker.postMessage({ type: 'transcode', url: url, format: format, data: data }, [data]);
+            worker.postMessage({ type: 'transcode', url: url, format: basisTargetFormat(), data: data, options: options }, [data]);
         } else {
             // the basis worker is already busy processing this url, store callback
             // (this shouldn't really happen since the asset system only requests
             // a resource once)
             callbacks[url].push(callback);
         }
+    };
+
+    var extractPixelFormats = function () {
+        var result = { };
+        for (var key in pc) {
+            if (pc.hasOwnProperty(key) && key.startsWith('PIXELFORMAT_')) {
+                result[key] = pc[key];
+            }
+        }
+        return result;
     };
 
     // initialize the basis worker given the basis module script (glue or fallback)
@@ -277,9 +356,7 @@ Object.assign(pc, function () {
             "/* basis.js */",
             basisCode,
             "/* mappings */",
-            "var opaqueMapping=" + JSON.stringify(opaqueMapping) + ";",
-            "var alphaMapping=" + JSON.stringify(alphaMapping) + ";",
-            "var basisToEngineMapping=" + JSON.stringify(basisToEngineMapping) + ";",
+            "var pc=" + JSON.stringify(extractPixelFormats()) + ";\n",
             " /* worker */",
             '(' + BasisWorker.toString() + ')()\n\n'
         ].join('\n');
@@ -294,7 +371,7 @@ Object.assign(pc, function () {
         // module is initialized, initiate queued jobs
         for (var i = 0; i < transcodeQueue.length; ++i) {
             var entry = transcodeQueue[i];
-            transcode(entry[0], entry[1], entry[2]);
+            transcode(entry.url, entry.data, entry.callback, entry.options);
         }
     };
 
@@ -385,20 +462,25 @@ Object.assign(pc, function () {
     };
 
     // render thread worker manager
-    var basisTranscode = function (url, data, callback) {
+    // options supports the following members:
+    //   unswizzleGGGR - convert the two-component GGGR normal data to RGB
+    //                   and pack into 565 format. this is used to overcome
+    //                   quality issues on apple devices.
+    var basisTranscode = function (url, data, callback, options) {
         if (!worker) {
             // store transcode job if no worker exists
-            transcodeQueue.push([url, data, callback]);
+            transcodeQueue.push({ url: url, data: data, callback: callback, options: options });
             // if the basis module download has not yet been initiated, do so now
             if (!downloadInitiated) {
                 basisDownloadFromConfig();
             }
         } else {
-            transcode(url, data, callback);
+            transcode(url, data, callback, options);
         }
     };
 
     return {
+        basisTargetFormat: basisTargetFormat,
         basisInitialize: basisInitialize,
         basisDownload: basisDownload,
         basisDownloadFromConfig: basisDownloadFromConfig,

@@ -2,10 +2,10 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.AnimationHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Animation} resources
+     * @classdesc Resource handler used for loading {@link pc.Animation} resources.
      */
     var AnimationHandler = function () {
         this.retryRequests = false;
@@ -39,6 +39,13 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
+            if (pc.path.getExtension(url) === '.glb') {
+                var glb = pc.GlbParser.parse("filename.glb", data, null);
+                if (!glb) {
+                    return null;
+                }
+                return glb.animations;
+            }
             return this["_parseAnimationV" + data.animation.version](data);
         },
 

@@ -3,7 +3,7 @@ Object.assign(pc, function () {
     var _tmpAabb = new pc.BoundingBox();
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mesh
      * @classdesc A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
@@ -14,23 +14,25 @@ Object.assign(pc, function () {
      * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
      * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
      * set to pc.RENDERSTYLE_WIREFRAME.
-     * @property {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
-     * mesh should be interpreted by the graphics device. For details on the primitive object, see
-     * @property {Number} primitive[].type The type of primitive to render. Can be:
-     * <ul>
-     *     <li>{@link pc.PRIMITIVE_POINTS}</li>
-     *     <li>{@link pc.PRIMITIVE_LINES}</li>
-     *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
-     *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
-     *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
-     *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
-     *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
-     * </ul>
-     * @property {Number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
-     * @property {Number} primitive[].count The number of indices or vertices to dispatch in the draw call.
-     * @property {Boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+     * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
+     * mesh should be interpreted by the graphics device. For details on the primitive object, see.
+     * @property {number} primitive[].type The type of primitive to render. Can be:
+     *
+     * * {@link pc.PRIMITIVE_POINTS}
+     * * {@link pc.PRIMITIVE_LINES}
+     * * {@link pc.PRIMITIVE_LINELOOP}
+     * * {@link pc.PRIMITIVE_LINESTRIP}
+     * * {@link pc.PRIMITIVE_TRIANGLES}
+     * * {@link pc.PRIMITIVE_TRISTRIP}
+     * * {@link pc.PRIMITIVE_TRIFAN}
+     *
+     * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
+     * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
+     * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * {@link pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
+     * @property {pc.Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
+     * @property {pc.Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
      */
     var Mesh = function () {
         this._refCount = 0;
@@ -67,40 +69,43 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.MeshInstance
      * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
      * mesh instances that can have different transforms and materials.
      * @description Create a new mesh instance.
-     * @param {pc.GraphNode} node The graph node defining the transform for this instance.
-     * @param {pc.Mesh} mesh The graphics mesh being instanced.
-     * @param {pc.Material} material The material used to render this instance.
+     * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
+     * @param {pc.Mesh} mesh - The graphics mesh being instanced.
+     * @param {pc.Material} material - The material used to render this instance.
+     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
+     * mesh instance.
+     * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
+     * Defaults to false.
+     * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
+     * But note that the mesh instance is still in the hierarchy and still in the draw call list.
+     * @property {pc.GraphNode} node The graph node defining the transform for this instance.
+     * @property {pc.Mesh} mesh The graphics mesh being instanced.
+     * @property {pc.Material} material The material used by this mesh instance.
+     * @property {number} renderStyle The render style of the mesh instance. Can be:
+     *
+     * * {@link pc.RENDERSTYLE_SOLID}
+     * * {@link pc.RENDERSTYLE_WIREFRAME}
+     * * {@link pc.RENDERSTYLE_POINTS}
+     *
+     * Defaults to pc.RENDERSTYLE_SOLID.
+     * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
+     * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
+     * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
+     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
+     * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
+     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
+     * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);
      * var material = new pc.StandardMaterial();
      * var node = new pc.GraphNode();
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
-     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
-     * mesh instance.
-     * @property {Boolean} castShadow Controls whether the mesh instance casts shadows.
-     * Defaults to false.
-     * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
-     * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {pc.GraphNode} node The graph node defining the transform for this instance.
-     * @property {pc.Mesh} mesh The graphics mesh being instanced.
-     * @property {pc.Material} material The material used by this mesh instance.
-     * @property {Number} renderStyle The render style of the mesh instance. Can be:
-     * <ul>
-     *     <li>pc.RENDERSTYLE_SOLID</li>
-     *     <li>pc.RENDERSTYLE_WIREFRAME</li>
-     *     <li>pc.RENDERSTYLE_POINTS</li>
-     * </ul>
-     * Defaults to pc.RENDERSTYLE_SOLID.
-     * @property {Boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
-     * @property {Number} drawOrder Use this value to affect rendering order of mesh instances.
-     * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
-     * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0, 0];
@@ -135,6 +140,7 @@ Object.assign(pc, function () {
         this.pick = true;
         this._updateAabb = true;
         this._updateAabbFunc = null;
+        this._calculateSortDistance = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -407,8 +413,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
             var prevMat = this._material;
+
             this._material = material;
 
             if (this._material) {
@@ -416,18 +422,17 @@ Object.assign(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
-            }
 
-            if (material) {
-                if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
-
-                    var scene = material._scene;
+                var prevBlend = prevMat && (prevMat.blendType !== pc.BLEND_NONE);
+                var thisBlend = this._material.blendType !== pc.BLEND_NONE;
+                if (prevBlend !== thisBlend) {
+                    var scene = this._material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                     if (scene) {
                         scene.layers._dirtyBlend = true;
                     } else {
-                        material._dirtyBlend = true;
+                        this._material._dirtyBlend = true;
                     }
                 }
             }
@@ -441,6 +446,15 @@ Object.assign(pc, function () {
         set: function (layer) {
             this._layer = layer;
             this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'calculateSortDistance', {
+        get: function () {
+            return this._calculateSortDistance;
+        },
+        set: function (calculateSortDistance) {
+            this._calculateSortDistance = calculateSortDistance;
         }
     });
 
@@ -491,7 +505,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.MeshInstance#mask
-     * @type Number
+     * @type {number}
      * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
      * Defaults to 1.
      */
@@ -507,6 +521,21 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.MeshInstance#instancingCount
+     * @type {number}
+     * @description Number of instances when using hardware instancing to render the mesh.
+     */
+    Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
+        get: function () {
+            return this.instancingData ? this.instancingData.count : 0;
+        },
+        set: function (value) {
+            if (this.instancingData)
+                this.instancingData.count = value;
+        }
+    });
+
     Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
@@ -517,6 +546,27 @@ Object.assign(pc, function () {
             this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
                                                    (material.alphaToCoverage || material.alphaTest) ? pc.BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
                                                    false, material.id);
+        },
+
+        /**
+         * @function
+         * @name pc.MeshInstance#setInstancing
+         * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
+         * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+         * Pass null to turn off hardware instancing.
+         */
+        setInstancing: function (vertexBuffer) {
+            if (vertexBuffer) {
+                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
+                this.instancingData.offset = 0;
+                this.instancingData.vertexBuffer = vertexBuffer;
+
+                // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
+                this.cull = false;
+            } else {
+                this.instancingData = null;
+                this.cull = true;
+            }
         },
 
         setParameter: pc.Material.prototype.setParameter,
@@ -542,22 +592,12 @@ Object.assign(pc, function () {
         }
     });
 
-    var InstancingData = function (numObjects, dynamic, instanceSize) {
-        instanceSize = instanceSize || 16;
-        this.buffer = new Float32Array(numObjects * instanceSize);
+    // internal data structure used to store data used by hardware instancing
+    var InstancingData = function (numObjects) {
         this.count = numObjects;
+        this.vertexBuffer = null;
         this.offset = 0;
-        this.usage = dynamic ? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
-        this._buffer = null;
     };
-
-    Object.assign(InstancingData.prototype, {
-        update: function () {
-            if (this._buffer) {
-                this._buffer.setData(this.buffer);
-            }
-        }
-    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:
