@@ -1,6 +1,69 @@
 Object.assign(pc, function () {
     var id = 0;
-    var _tmpAabb = new pc.BoundingBox();
+
+    // Helper class used to store vertex / index data streams and related properties, when mesh is programatically modified
+    var GeometryData = function () {
+        this.initDefaults();
+    };
+
+    Object.assign(GeometryData.prototype, {
+        initDefaults: function () {
+
+            // by default, existing mesh is updated but not recreated, until .clear function is called
+            this.recreate = false;
+
+            // usage for buffers
+            this.verticesUsage = pc.BUFFER_STATIC;
+            this.indicesUsage = pc.BUFFER_STATIC;
+
+            // vertex and index buffer allocated size (maximum number of vertices / indices that can be stored in those without the need to reallocate them)
+            this.maxVertices = 0;
+            this.maxIndices = 0;
+
+            // current number of vertices and indices in use
+            this.vertexCount = 0;
+            this.indexCount = 0;
+
+            // dirty flags representing what needs be updated
+            this.vertexStreamsUpdated = false;
+            this.indexStreamUpdated = false;
+
+            // dictionary of vertex streams that need to be updated, looked up by semantic
+            this.vertexStreamDictionary = {};
+
+            // index stream data that needs to be updated
+            this.indices = null;
+        },
+
+        // function called when vertex stream is requested to be updated, and validates / updates currently used vertex count
+        _changeVertexCount: function (count, semantic) {
+
+            // update vertex count and validate it with existing streams
+            if (!this.vertexCount) {
+                this.vertexCount = count;
+            } else if (this.vertexCount !== count) {
+                // #ifdef DEBUG
+                console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+                // #endif
+            }
+        }
+    });
+
+    // default counts for vertex components
+    Object.defineProperties(GeometryData, {
+        DEFAULT_COMPONENTS_POSITION: { value: 3 },
+        DEFAULT_COMPONENTS_NORMAL: { value: 3 },
+        DEFAULT_COMPONENTS_UV: { value: 2 },
+        DEFAULT_COMPONENTS_COLORS: { value: 4 }
+    });
+
+    // class storing information about single vertex data stream
+    var GeometryVertexStream = function (data, componentCount, dataType, dataTypeNormalize) {
+        this.data = data;                           // array of data
+        this.componentCount = componentCount;       // number of components
+        this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
+        this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+    };
 
     /**
      * @class
@@ -8,6 +71,48 @@ Object.assign(pc, function () {
      * @classdesc A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
      * primitive and the portion of the vertex or index buffer to use.
+     * ***
+     * Mesh APIs
+     * =========
+     * There are two ways a mesh can be generated or updated.
+     *
+     * Simple Mesh API
+     * ---------
+     * {@link pc.Mesh} class provides interfaces such as {@link pc.Mesh#setPositions} and {@link pc.Mesh#setUvs} that provide a simple way to provide
+     * vertex and index data for the Mesh, and hiding the complexity of creative the {@link pc.VertexFormat}. This is the recommended interface to use.
+     *
+     * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
+     * ~~~
+     * var mesh = new pc.Mesh();
+     * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
+     * mesh.setPositions(positions);
+     * mesh.updateGeometry(device);
+     * ~~~
+     *
+     * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
+     * Float32Array is used for positions and uvs.
+     * ~~~
+     * var mesh = new pc.Mesh();
+     * var positions = new Float32Array([0, 0, 0,     1, 0, 0,     1, 1, 0,      0, 1, 0]);
+     * var uvs = new Float32Array([0, 0,     1, 0,     1, 1,     0, 1]);
+     * var indices = [0, 1, 2,    0, 2, 3];
+     * mesh.setPositions(positions);
+     * mesh.setUvs(0, uvs);
+     * mesh.setIndices(indices);
+     * mesh.updateGeometry(device);
+     * ~~~
+     *
+     * Follow these links for more complex examples showing the functionality.
+     * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
+     * * {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
+     * * {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
+     * * {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
+     *
+     * Update Vertex and Index buffers.
+     * ---------
+     * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for example sharing a Vertex or Index Buffer between multiple meshes.
+     * See {@link pc.VertexBuffer}, {@link pc.IndexBuffer} and {@link pc.VertexFormat} for details.
+     * ***
      * @description Create a new mesh.
      * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
      * @property {pc.IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
@@ -46,6 +151,7 @@ Object.assign(pc, function () {
         }];
         this.skin = null;
         this.morph = null;
+        this._geometryData = null;
 
         // AABB for object space mesh vertices
         this._aabb = new pc.BoundingBox();
@@ -68,556 +174,467 @@ Object.assign(pc, function () {
         }
     });
 
-    /**
-     * @class
-     * @name pc.MeshInstance
-     * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
-     * mesh instances that can have different transforms and materials.
-     * @description Create a new mesh instance.
-     * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
-     * @param {pc.Mesh} mesh - The graphics mesh being instanced.
-     * @param {pc.Material} material - The material used to render this instance.
-     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
-     * mesh instance.
-     * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
-     * Defaults to false.
-     * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
-     * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {pc.GraphNode} node The graph node defining the transform for this instance.
-     * @property {pc.Mesh} mesh The graphics mesh being instanced.
-     * @property {pc.Material} material The material used by this mesh instance.
-     * @property {number} renderStyle The render style of the mesh instance. Can be:
-     *
-     * * {@link pc.RENDERSTYLE_SOLID}
-     * * {@link pc.RENDERSTYLE_WIREFRAME}
-     * * {@link pc.RENDERSTYLE_POINTS}
-     *
-     * Defaults to pc.RENDERSTYLE_SOLID.
-     * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
-     * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
-     * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
-     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
-     * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
-     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
-     * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
-     * @example
-     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.StandardMaterial();
-     * var node = new pc.GraphNode();
-     * var meshInstance = new pc.MeshInstance(node, mesh, material);
-     */
-    var MeshInstance = function MeshInstance(node, mesh, material) {
-        this._key = [0, 0];
-        this._shader = [null, null, null];
+    Object.assign(Mesh.prototype, {
 
-        this.isStatic = false;
-        this._staticLightList = null;
-        this._staticSource = null;
+        /**
+         * @function
+         * @name pc.Mesh#destroy
+         * @description Destroys {@link pc.VertexBuffer} and {@link pc.IndexBuffer} associate with the mesh.
+         * This is normally called by {@link pc.Model#destroy} and does not need to be called manually.
+         */
+        destroy: function () {
 
-        this.node = node;           // The node that defines the transform of the mesh instance
-        this._mesh = mesh;           // The mesh that this instance renders
-        mesh._refCount++;
-        this.material = material;   // The material with which to render this instance
-
-        this._shaderDefs = pc.MASK_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_DYNAMIC
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? pc.SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? pc.SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? pc.SHADERDEF_VCOLOR : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? pc.SHADERDEF_TANGENTS : 0;
-
-        this._lightHash = 0;
-
-        // Render options
-        this.visible = true;
-        this.layer = pc.LAYER_WORLD; // legacy
-        this.renderStyle = pc.RENDERSTYLE_SOLID;
-        this.castShadow = false;
-        this._receiveShadow = true;
-        this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
-        this.cull = true;
-        this.pick = true;
-        this._updateAabb = true;
-        this._updateAabbFunc = null;
-        this._calculateSortDistance = null;
-
-        // 64-bit integer key that defines render order of this mesh instance
-        this.updateKey();
-
-        this._skinInstance = null;
-        this.morphInstance = null;
-        this.instancingData = null;
-
-        // World space AABB
-        this.aabb = new pc.BoundingBox();
-
-        this._boneAabb = null;
-        this._aabbVer = -1;
-
-        this.drawOrder = 0;
-        this.visibleThisFrame = 0;
-
-        // custom function used to customize culling (e.g. for 2D UI elements)
-        this.isVisibleFunc = null;
-
-        this.parameters = {};
-
-        this.stencilFront = null;
-        this.stencilBack = null;
-        // Negative scale batching support
-        this.flipFaces = false;
-    };
-
-    Object.defineProperty(MeshInstance.prototype, 'mesh', {
-        get: function () {
-            return this._mesh;
-        },
-        set: function (mesh) {
-            if (this._mesh) this._mesh._refCount--;
-            this._mesh = mesh;
-            if (mesh) mesh._refCount++;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'aabb', {
-        get: function () {
-            var aabb;
-
-            if (!this._updateAabb) return this._aabb;
-            if (this._updateAabbFunc) {
-                return this._updateAabbFunc(this._aabb);
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+                this.vertexBuffer = null;
             }
 
-            if (this.skinInstance) {
-                var numBones = this.mesh.skin.boneNames.length;
-                var boneUsed, i;
-                // Initialize local bone AABBs if needed
-                if (!this.mesh.boneAabb) {
-
-                    this.mesh.boneAabb = [];
-                    this.mesh.boneUsed = [];
-                    var elems = this.mesh.vertexBuffer.format.elements;
-                    var numVerts = this.mesh.vertexBuffer.numVertices;
-                    var vertSize = this.mesh.vertexBuffer.format.size;
-                    var index;
-                    var offsetP, offsetI, offsetW;
-                    var j, k, l;
-                    for (i = 0; i < elems.length; i++) {
-                        if (elems[i].name === pc.SEMANTIC_POSITION) {
-                            offsetP = elems[i].offset;
-                        } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
-                            offsetI = elems[i].offset;
-                        } else if (elems[i].name === pc.SEMANTIC_BLENDWEIGHT) {
-                            offsetW = elems[i].offset;
-                        }
-                    }
-
-                    var data8 = new Uint8Array(this.mesh.vertexBuffer.storage);
-                    var dataF = new Float32Array(this.mesh.vertexBuffer.storage);
-                    var offsetPF = offsetP / 4;
-                    var offsetWF = offsetW / 4;
-                    var vertSizeF = vertSize / 4;
-
-                    var bMax, bMin;
-                    var x, y, z;
-                    var boneMin = [];
-                    var boneMax = [];
-                    boneUsed = this.mesh.boneUsed;
-
-                    for (i = 0; i < numBones; i++) {
-                        boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-                        boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-                    }
-
-                    // Find bone AABBs by attached vertices
-                    for (j = 0; j < numVerts; j++) {
-                        for (k = 0; k < 4; k++) {
-                            if (dataF[j * vertSizeF + offsetWF + k] > 0) {
-                                index = data8[j * vertSize + offsetI + k];
-                                // Vertex j is affected by bone index
-                                x = dataF[j * vertSizeF + offsetPF];
-                                y = dataF[j * vertSizeF + offsetPF + 1];
-                                z = dataF[j * vertSizeF + offsetPF + 2];
-
-                                bMax = boneMax[index];
-                                bMin = boneMin[index];
-
-                                if (bMin.x > x) bMin.x = x;
-                                if (bMin.y > y) bMin.y = y;
-                                if (bMin.z > z) bMin.z = z;
-
-                                if (bMax.x < x) bMax.x = x;
-                                if (bMax.y < y) bMax.y = y;
-                                if (bMax.z < z) bMax.z = z;
-
-                                boneUsed[index] = true;
-                            }
-                        }
-                    }
-
-                    // Apply morphing to bone AABBs
-                    if (this.morphInstance) {
-                        var vertIndex;
-                        var targets = this.morphInstance.morph._targets;
-
-                        // Find min/max morphed vertex positions
-                        var minMorphedPos = new Float32Array(numVerts * 3);
-                        var maxMorphedPos = new Float32Array(numVerts * 3);
-                        var m, dx, dy, dz;
-                        var target, mtIndices, mtIndicesLength, deltaPos;
-
-                        for (j = 0; j < numVerts; j++) {
-                            minMorphedPos[j * 3] = maxMorphedPos[j * 3] = dataF[j * vertSizeF + offsetPF];
-                            minMorphedPos[j * 3 + 1] = maxMorphedPos[j * 3 + 1] = dataF[j * vertSizeF + offsetPF + 1];
-                            minMorphedPos[j * 3 + 2] = maxMorphedPos[j * 3 + 2] = dataF[j * vertSizeF + offsetPF + 2];
-                        }
-
-                        for (l = 0; l < targets.length; l++) {
-                            target = targets[l];
-                            mtIndices = target.indices;
-                            mtIndicesLength = mtIndices.length;
-                            deltaPos = target.deltaPositions;
-                            for (k = 0; k < mtIndicesLength; k++) {
-                                vertIndex = mtIndices[k];
-
-                                dx = deltaPos[k * 3];
-                                dy = deltaPos[k * 3 + 1];
-                                dz = deltaPos[k * 3 + 2];
-
-                                if (dx < 0) {
-                                    minMorphedPos[vertIndex * 3] += dx;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3] += dx;
-                                }
-
-                                if (dy < 0) {
-                                    minMorphedPos[vertIndex * 3 + 1] += dy;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3 + 1] += dy;
-                                }
-
-                                if (dz < 0) {
-                                    minMorphedPos[vertIndex * 3 + 2] += dz;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3 + 2] += dz;
-                                }
-                            }
-                        }
-
-                        // Re-evaluate bone AABBs against min/max morphed positions
-                        for (l = 0; l < targets.length; l++) {
-                            target = targets[l];
-                            mtIndices = target.indices;
-                            mtIndicesLength = mtIndices.length;
-                            deltaPos = target.deltaPositions;
-                            for (k = 0; k < mtIndicesLength; k++) {
-                                vertIndex = mtIndices[k];
-                                for (m = 0; m < 4; m++) {
-                                    if (dataF[vertIndex * vertSizeF + offsetWF + m] > 0) {
-                                        index = data8[vertIndex * vertSize + offsetI + m];
-                                        // Vertex vertIndex is affected by bone index
-                                        bMax = boneMax[index];
-                                        bMin = boneMin[index];
-
-                                        x = minMorphedPos[vertIndex * 3];
-                                        y = minMorphedPos[vertIndex * 3 + 1];
-                                        z = minMorphedPos[vertIndex * 3 + 2];
-                                        if (bMin.x > x) bMin.x = x;
-                                        if (bMin.y > y) bMin.y = y;
-                                        if (bMin.z > z) bMin.z = z;
-
-                                        x = maxMorphedPos[vertIndex * 3];
-                                        y = maxMorphedPos[vertIndex * 3 + 1];
-                                        z = maxMorphedPos[vertIndex * 3 + 2];
-                                        if (bMax.x < x) bMax.x = x;
-                                        if (bMax.y < y) bMax.y = y;
-                                        if (bMax.z < z) bMax.z = z;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    for (i = 0; i < numBones; i++) {
-                        aabb = new pc.BoundingBox();
-                        aabb.setMinMax(boneMin[i], boneMax[i]);
-                        this.mesh.boneAabb.push(aabb);
-                    }
-                }
-
-                // Initialize per-instance AABBs if needed
-                if (!this._boneAabb) {
-                    this._boneAabb = [];
-                    for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                        this._boneAabb[i] = new pc.BoundingBox();
-                    }
-                }
-
-                boneUsed = this.mesh.boneUsed;
-
-                // Update per-instance bone AABBs
-                for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                    if (!boneUsed[i]) continue;
-                    this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
-                }
-
-                // Update full instance AABB
-                var rootNodeTransform = this.node.getWorldTransform();
-                var first = true;
-                for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                    if (!boneUsed[i]) continue;
-                    if (first) {
-                        _tmpAabb.center.copy(this._boneAabb[i].center);
-                        _tmpAabb.halfExtents.copy(this._boneAabb[i].halfExtents);
-                        first = false;
-                    } else {
-                        _tmpAabb.add(this._boneAabb[i]);
-                    }
-                }
-                this._aabb.setFromTransformedAabb(_tmpAabb, rootNodeTransform);
-
-            } else if (this.node._aabbVer !== this._aabbVer) {
-                 // if there is no mesh then reset aabb
-                aabb = this.mesh ? this.mesh.aabb : this._aabb;
-                if (!this.mesh) {
-                    aabb.center.set(0, 0, 0);
-                    aabb.halfExtents.set(0, 0, 0);
-                }
-
-                this._aabb.setFromTransformedAabb(aabb, this.node.getWorldTransform());
-                this._aabbVer = this.node._aabbVer;
-            }
-            return this._aabb;
-        },
-        set: function (aabb) {
-            this._aabb = aabb;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'material', {
-        get: function () {
-            return this._material;
-        },
-        set: function (material) {
-            var i;
-            for (i = 0; i < this._shader.length; i++) {
-                this._shader[i] = null;
-            }
-            // Remove the material's reference to this mesh instance
-            if (this._material) {
-                var meshInstances = this._material.meshInstances;
-                i = meshInstances.indexOf(this);
-                if (i !== -1) {
-                    meshInstances.splice(i, 1);
-                }
+            var j, ib;
+            for (j = 0; j < this.indexBuffer.length; j++) {
+                ib = this.indexBuffer[j];
+                if (ib)
+                    ib.destroy();
             }
 
-            var prevMat = this._material;
+            this.indexBuffer.length = 0;
+            this._geometryData = null;
+        },
 
-            this._material = material;
+        // when mesh API to modify vertex / index data are used, this allocates structure to store the data
+        _initGeometryData: function () {
+            if (!this._geometryData) {
+                this._geometryData = new pc.GeometryData();
 
-            if (this._material) {
-                // Record that the material is referenced by this mesh instance
-                this._material.meshInstances.push(this);
+                // if vertex buffer exists aleady, store the sizes
+                if (this.vertexBuffer) {
+                    this._geometryData.vertexCount = this.vertexBuffer.numVertices;
+                    this._geometryData.maxVertices = this.vertexBuffer.numVertices;
+                }
 
-                this.updateKey();
-
-                var prevBlend = prevMat && (prevMat.blendType !== pc.BLEND_NONE);
-                var thisBlend = this._material.blendType !== pc.BLEND_NONE;
-                if (prevBlend !== thisBlend) {
-                    var scene = this._material._scene;
-                    if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
-
-                    if (scene) {
-                        scene.layers._dirtyBlend = true;
-                    } else {
-                        this._material._dirtyBlend = true;
-                    }
+                // if index buffer exists aleady, store the sizes
+                if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
+                    this._geometryData.indexCount = this.indexBuffer[0].numIndices;
+                    this._geometryData.maxIndices = this.indexBuffer[0].numIndices;
                 }
             }
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'layer', {
-        get: function () {
-            return this._layer;
-        },
-        set: function (layer) {
-            this._layer = layer;
-            this.updateKey();
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'calculateSortDistance', {
-        get: function () {
-            return this._calculateSortDistance;
-        },
-        set: function (calculateSortDistance) {
-            this._calculateSortDistance = calculateSortDistance;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'receiveShadow', {
-        get: function () {
-            return this._receiveShadow;
-        },
-        set: function (val) {
-            this._receiveShadow = val;
-            this._shaderDefs = val ? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_FORWARDHDR] = null;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
-        get: function () {
-            return this._skinInstance;
-        },
-        set: function (val) {
-            this._skinInstance = val;
-            this._shaderDefs = val ? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
-            for (var i = 0; i < this._shader.length; i++) {
-                this._shader[i] = null;
-            }
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'screenSpace', {
-        get: function () {
-            return this._screenSpace;
-        },
-        set: function (val) {
-            this._screenSpace = val;
-            this._shaderDefs = val ? (this._shaderDefs | pc.SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~pc.SHADERDEF_SCREENSPACE);
-            this._shader[pc.SHADER_FORWARD] = null;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'key', {
-        get: function () {
-            return this._key[pc.SORTKEY_FORWARD];
-        },
-        set: function (val) {
-            this._key[pc.SORTKEY_FORWARD] = val;
-        }
-    });
-
-    /**
-     * @name pc.MeshInstance#mask
-     * @type {number}
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
-     * Defaults to 1.
-     */
-    Object.defineProperty(MeshInstance.prototype, 'mask', {
-        get: function () {
-            return this._shaderDefs >> 16;
-        },
-        set: function (val) {
-            var toggles = this._shaderDefs & 0x0000FFFF;
-            this._shaderDefs = toggles | (val << 16);
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_FORWARDHDR] = null;
-        }
-    });
-
-    /**
-     * @name pc.MeshInstance#instancingCount
-     * @type {number}
-     * @description Number of instances when using hardware instancing to render the mesh.
-     */
-    Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
-        get: function () {
-            return this.instancingData ? this.instancingData.count : 0;
-        },
-        set: function (value) {
-            if (this.instancingData)
-                this.instancingData.count = value;
-        }
-    });
-
-    Object.assign(MeshInstance.prototype, {
-        syncAabb: function () {
-            // Deprecated
-        },
-
-        updateKey: function () {
-            var material = this.material;
-            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
-                                                   (material.alphaToCoverage || material.alphaTest) ? pc.BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
-                                                   false, material.id);
         },
 
         /**
          * @function
-         * @name pc.MeshInstance#setInstancing
-         * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
-         * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
-         * Pass null to turn off hardware instancing.
+         * @name pc.Mesh#clear
+         * @description Clears the mesh of existing vertices and indices and resets the
+         * {@link pc.VertexFormat} associated with the mesh. This call is typically followed by calls
+         * to such as {@link pc.Mesh#setPositions}, {@link pc.Mesh#setVertexStream} or {@link pc.Mesh#setIndices} and
+         * finally {@link pc.Mesh#updateGeometry} to rebuild the mesh, allowing different {@link pc.VertexFormat}.
+         * @param {boolean} [verticesDynamic] - Indicates the {@link pc.VertexBuffer} should be craeted with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
+         * @param {boolean} [indicesDynamic] - Indicates the {@link pc.IndexBuffer} should be craeted with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
+         * @param {number} [maxVertices] - {@link pc.VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
+         * no value is provided, a size to fit the provided vertices will be allocated.
+         * @param {number} [maxIndices] - {@link pc.IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
+         * no value is provided, a size to fit the provided indices will be allocated.
          */
-        setInstancing: function (vertexBuffer) {
-            if (vertexBuffer) {
-                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
-                this.instancingData.offset = 0;
-                this.instancingData.vertexBuffer = vertexBuffer;
+        clear: function (verticesDynamic, indicesDynamic, maxVertices, maxIndices) {
+            this._initGeometryData();
+            this._geometryData.initDefaults();
 
-                // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
-                this.cull = false;
+            this._geometryData.recreate = true;
+            this._geometryData.maxVertices = maxVertices || 0;
+            this._geometryData.maxIndices = maxIndices || 0;
+            this._geometryData.verticesUsage = verticesDynamic ? pc.BUFFER_STATIC : pc.BUFFER_DYNAMIC;
+            this._geometryData.indicesUsage = indicesDynamic ? pc.BUFFER_STATIC : pc.BUFFER_DYNAMIC;
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setVertexStream
+         * @description Sets the vertex data for any supported semantic.
+         * @param {string} semantic - The meaning of the vertex element. For supported semantics, see pc.SEMANTIC_* in {@link pc.VertexFormat}.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex data for the specified semantic.
+         * @param {number} componentCount - The number of values that form a single Vertex element. For example when setting a 3D position represented by 3 numbers
+         * per vertex, number 3 should be specified.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         * @param {number} [dataType] - The format of data when stored in the {@link pc.VertexBuffer}, see pc.TYPE_* in {@link pc.VertexFormat}. When not specified, pc.TYPE_FLOAT32 is used.
+         * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a 0 to 255 range down to 0 to 1 when fed to a shader.
+         * If false, vertex attribute data is left unchanged. If this property is unspecified, false is assumed.
+         */
+        setVertexStream: function (semantic, data, componentCount, numVertices, dataType, dataTypeNormalize) {
+            this._initGeometryData();
+            var vertexCount = numVertices || data.length / componentCount;
+            this._geometryData._changeVertexCount(vertexCount, semantic);
+            this._geometryData.vertexStreamsUpdated = true;
+
+            this._geometryData.vertexStreamDictionary[semantic] = new pc.GeometryVertexStream(
+                data,
+                componentCount,
+                dataType || pc.TYPE_FLOAT32,
+                dataTypeNormalize || false
+            );
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getVertexStream
+         * @description Gets the vertex data corresponding to a semantic.
+         * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see pc.SEMANTIC_* in {@link pc.VertexFormat}.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An array to populate with the vertex data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of vertices populated.
+         */
+        getVertexStream: function (semantic, data) {
+            var count = 0;
+            var done = false;
+
+            // see if we have un-applied stream
+            if (this._geometryData) {
+                var stream = this._geometryData.vertexStreamDictionary[semantic];
+                if (stream) {
+                    done = true;
+                    count = this._geometryData.vertexCount;
+
+                    if (ArrayBuffer.isView(data)) {
+                        // destination data is typed array
+                        data.set(stream.data);
+                    } else {
+                        // destination data is array
+                        data.length = 0;
+                        data.push(stream.data);
+                    }
+                }
+            }
+
+            if (!done) {
+                // get stream from VertexBuffer
+                if (this.vertexBuffer) {
+                    var iterator = new pc.VertexIterator(this.vertexBuffer);
+                    count = iterator.readData(semantic, data);
+                    iterator.end();
+                }
+            }
+
+            return count;
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setPositions
+         * @description Sets the vertex positions array. Vertices are stored using pc.TYPE_FLOAT32 format.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex data containing positions.
+         * @param {number} [componentCount] - The number of values that form a single position element. Defaults to 3 if not specified, corresponding to x, y and z coordinates.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setPositions: function (positions, componentCount, numVertices) {
+            this.setVertexStream(pc.SEMANTIC_POSITION, positions, componentCount || GeometryData.DEFAULT_COMPONENTS_POSITION, numVertices, pc.TYPE_FLOAT32, false);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setNormals
+         * @description Sets the vertex normals array. Normals are stored using pc.TYPE_FLOAT32 format.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex data containing normals.
+         * @param {number} [componentCount] - The number of values that form a single normal element. Defaults to 3 if not specified, corresponding to x, y and z direction.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setNormals: function (normals, componentCount, numVertices) {
+            this.setVertexStream(pc.SEMANTIC_NORMAL, normals, componentCount || GeometryData.DEFAULT_COMPONENTS_NORMAL, numVertices, pc.TYPE_FLOAT32, false);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setUvs
+         * @description Sets the vertex uv array. Uvs are stored using pc.TYPE_FLOAT32 format.
+         * @param {number} channel - The uv channel in [0..7] range.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex data containing uv-coordinates.
+         * @param {number} [componentCount] - The number of values that form a single uv element. Defaults to 2 if not specified, corresponding to u and v coordinates.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setUvs: function (channel, uvs, componentCount, numVertices) {
+            this.setVertexStream(pc.SEMANTIC_TEXCOORD + channel, uvs, componentCount || GeometryData.DEFAULT_COMPONENTS_UV, numVertices, pc.TYPE_FLOAT32, false);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setColors
+         * @description Sets the vertex color array. Colors are stored using pc.TYPE_FLOAT32 format, which is useful for HDR colors.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors.
+         * @param {number} [componentCount] - The number of values that form a single color element. Defaults to 4 if not specified, corresponding to r, g, b and a.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setColors: function (colors, componentCount, numVertices) {
+            this.setVertexStream(pc.SEMANTIC_COLOR, colors, componentCount || GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices, pc.TYPE_FLOAT32, false);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setColors32
+         * @description Sets the vertex color array. Colors are stored using pc.TYPE_UINT8 format, which is useful for LDR colors. Values in the array are expected in
+         * [0..255] range, and are mapped to [0..1] range in the shader.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors. The array is
+         * expected to contain 4 components per vertex, corresponding to r, g, b and a.
+         * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setColors32: function (colors, numVertices) {
+            this.setVertexStream(pc.SEMANTIC_COLOR, colors, GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices, pc.TYPE_UINT8, true);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#setIndices
+         * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 indices are specified, in which case 32-bit format is used.
+         * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
+         * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
+         */
+        setIndices: function (indices, numIndices) {
+            this._initGeometryData();
+            this._geometryData.indexStreamUpdated = true;
+            this._geometryData.indices = indices;
+            this._geometryData.indexCount = numIndices || indices.length;
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getPositions
+         * @description Gets the vertex positions data.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - An array to populate with the vertex data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of vertices populated.
+         */
+        getPositions: function (positions) {
+            return this.getVertexStream(pc.SEMANTIC_POSITION, positions);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getNormals
+         * @description Gets the vertex normals data.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - An array to populate with the vertex data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of vertices populated.
+         */
+        getNormals: function (normals) {
+            return this.getVertexStream(pc.SEMANTIC_NORMAL, normals);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getUvs
+         * @description Gets the vertex uv data.
+         * @param {number} channel - The uv channel in [0..7] range.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - An array to populate with the vertex data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of vertices populated.
+         */
+        getUvs: function (channel, uvs) {
+            return this.getVertexStream(pc.SEMANTIC_TEXCOORD + channel, uvs);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getColors
+         * @description Gets the vertex color data.
+         * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - An array to populate with the vertex data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of vertices populated.
+         */
+        getColors: function (colors) {
+            return this.getVertexStream(pc.SEMANTIC_COLOR, colors);
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#getColors
+         * @description Gets the index data.
+         * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - An array to populate with the index data.
+         * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+         * @returns {number} Returns the number of indices populated.
+         */
+        getIndices: function (indices) {
+
+            var count = 0;
+
+            // see if we have un-applied indices
+            if (this._geometryData && this._geometryData.indices) {
+                var streamIndices = this._geometryData.indices;
+                count = this._geometryData.indexCount;
+
+                if (ArrayBuffer.isView(data)) {
+                    // destination data is typed array
+                    indices.set(streamIndices);
+                } else {
+                    // destination data is array
+                    indices.length = 0;
+                    indices.push(streamIndices);
+                }
             } else {
-                this.instancingData = null;
-                this.cull = true;
+                // get data from IndexBuffer
+                if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
+                    var indexBuffer = this.indexBuffer[0];
+                    count = indexBuffer.readData(indices);
+                }
+            }
+
+            return count;
+        },
+
+        /**
+         * @function
+         * @name pc.Mesh#updateGeometry
+         * @description Applies any changes to vertex stream and indices to mesh. This allocates or reallocates {@link pc.vertexBuffer} or {@link pc.IndexBuffer}
+         * to fit all provided vertices and indices, and fills them with data.
+         * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+         * @param {number} [topology] - The type of primitive to render. Can be one of pc.PRIMITIVE_* - see primitive[].type section above. Defaults
+         * to pc.PRIMITIVE_TRIANGLES if unspecified.
+         * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time updateGeometry
+         * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link pc.Mesh#setPositions}. Defaults to true if unspecified.
+         * Set this to false to avoid update of the bounding box and use aabb property to set it instead.
+         */
+        updateGeometry: function (device, topology, updateBoundingBox) {
+
+            if (this._geometryData) {
+
+                // update bounding box if needed
+                if (updateBoundingBox || updateBoundingBox === undefined) {
+
+                    // find vec3 position stream
+                    var stream = this._geometryData.vertexStreamDictionary[pc.SEMANTIC_POSITION];
+                    if (stream) {
+                        if (stream.componentCount == 3) {
+                            this._aabb.compute(stream.data, this._geometryData.vertexCount);
+                        }
+                    }
+                }
+
+                // destroy vertex buffer if recreate was requested or if vertices don't fit
+                var destroyVB = this._geometryData.recreate;
+                if (this._geometryData.vertexCount > this._geometryData.maxVertices) {
+                    destroyVB = true;
+                    this._geometryData.maxVertices = this._geometryData.vertexCount;
+                }
+
+                if (destroyVB) {
+                    if (this.vertexBuffer) {
+                        this.vertexBuffer.destroy();
+                        this.vertexBuffer = null;
+                    }
+                }
+
+                // destroy index buffer if recreate was requested or if indices don't fit
+                var destroyIB = this._geometryData.recreate;
+                if (this._geometryData.indexCount > this._geometryData.maxIndices) {
+                    destroyIB = true;
+                    this._geometryData.maxIndices = this._geometryData.indexCount;
+                }
+
+                if (destroyIB) {
+                    if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
+                        this.indexBuffer[0].destroy();
+                        this.indexBuffer[0] = null;
+                    }
+                }
+
+                // update vertices if needed
+                if (this._geometryData.vertexStreamsUpdated) {
+                    this._updateVertexBuffer(device);
+                }
+
+                // update indices if needed
+                if (this._geometryData.indexStreamUpdated) {
+                    this._updateIndexBuffer(device);
+                }
+
+                // set up primitive parameters
+                this.primitive[0].type = (topology === undefined ? pc.PRIMITIVE_TRIANGLES : topology);
+
+                if (this.indexBuffer && this.indexBuffer[0]) {      // indexed
+                    if (this._geometryData.indexStreamUpdated) {
+                        this.primitive[0].count = this._geometryData.indexCount;
+                        this.primitive[0].indexed = true;
+                    }
+                } else {        // non-indexed
+                    if (this._geometryData.vertexStreamsUpdated) {
+                        this.primitive[0].count = this._geometryData.vertexCount;
+                        this.primitive[0].indexed = false;
+                    }
+                }
+
+                // counts can be changed on next frame, so set them to 0
+                this._geometryData.vertexCount = 0;
+                this._geometryData.indexCount = 0;
+
+                this._geometryData.vertexStreamsUpdated = false;
+                this._geometryData.indexStreamUpdated = false;
+                this._geometryData.recreate = false;
             }
         },
 
-        setParameter: pc.Material.prototype.setParameter,
-        setParameters: pc.Material.prototype.setParameters,
-        deleteParameter: pc.Material.prototype.deleteParameter,
-        getParameter: pc.Material.prototype.getParameter,
-        getParameters: pc.Material.prototype.getParameters,
-        clearParameters: pc.Material.prototype.clearParameters
-    });
+        // builds vertex format based on attached vertex streams
+        _buildVertexFormat: function (device, vertexCount) {
 
-    var Command = function (layer, blendType, command) {
-        this._key = [];
-        this._key[pc.SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
-        this.command = command;
-    };
+            var vertexDesc = [];
 
-    Object.defineProperty(Command.prototype, 'key', {
-        get: function () {
-            return this._key[pc.SORTKEY_FORWARD];
+            for (var semantic in this._geometryData.vertexStreamDictionary) {
+                var stream = this._geometryData.vertexStreamDictionary[semantic];
+                vertexDesc.push({
+                    semantic: semantic,
+                    components: stream.componentCount,
+                    type: stream.dataType,
+                    normalize: stream.dataTypeNormalize
+                });
+            }
+
+            return new pc.VertexFormat(device, vertexDesc, vertexCount);
         },
-        set: function (val) {
-            this._key[pc.SORTKEY_FORWARD] = val;
+
+        // copy attached data into vertex buffer
+        _updateVertexBuffer: function (device) {
+
+            // if we don't have vertex buffer, create new one, otherwise update existing one
+            if (!this.vertexBuffer) {
+                var allocateVertexCount = this._geometryData.maxVertices;
+                var format = this._buildVertexFormat(device, allocateVertexCount);
+                this.vertexBuffer = new pc.VertexBuffer(device, format, allocateVertexCount, this._geometryData.verticesUsage);
+            }
+
+            // lock vertex buffer and create typed access arrays for individual elements
+            var iterator = new pc.VertexIterator(this.vertexBuffer);
+
+            // copy all stream data into vertex buffer
+            var numVertices = this._geometryData.vertexCount;
+            for (var semantic in this._geometryData.vertexStreamDictionary) {
+                var stream = this._geometryData.vertexStreamDictionary[semantic];
+                iterator.writeData(semantic, stream.data, numVertices);
+
+                // remove stream
+                delete this._geometryData.vertexStreamDictionary[semantic];
+            }
+
+            iterator.end();
+        },
+
+        // copy attached data into index buffer
+        _updateIndexBuffer: function (device) {
+
+            // if we don't have index buffer, create new one, otherwise update existing one
+            if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
+                var allocateIndexCount = this._geometryData.maxIndices;
+                var createFormat = allocateIndexCount > 0xffff ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
+                this.indexBuffer[0] = new pc.IndexBuffer(device, createFormat, allocateIndexCount, this._geometryData.indicesUsage);
+            }
+
+            var srcIndices = this._geometryData.indices;
+            if (srcIndices) {
+
+                var indexBuffer = this.indexBuffer[0];
+                indexBuffer.writeData(srcIndices, this._geometryData.indexCount);
+
+                // remove data
+                this._geometryData.indices = null;
+            }
         }
     });
 
-    // internal data structure used to store data used by hardware instancing
-    var InstancingData = function (numObjects) {
-        this.count = numObjects;
-        this.vertexBuffer = null;
-        this.offset = 0;
-    };
-
-    function getKey(layer, blendType, isCommand, materialId) {
-        // Key definition:
-        // Bit
-        // 31      : sign bit (leave)
-        // 27 - 30 : layer
-        // 26      : translucency type (opaque/transparent)
-        // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-        // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
-        return ((layer & 0x0f) << 27) |
-               ((blendType === pc.BLEND_NONE ? 1 : 0) << 26) |
-               ((isCommand ? 1 : 0) << 25) |
-               ((materialId & 0x1ffffff) << 0);
-    }
-
     return {
-        Command: Command,
-        Mesh: Mesh,
-        MeshInstance: MeshInstance,
-        InstancingData: InstancingData,
-        _getDrawcallSortKey: getKey
+        GeometryData: GeometryData,
+        GeometryVertexStream: GeometryVertexStream,
+        Mesh: Mesh
     };
 }());

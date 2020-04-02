@@ -155,7 +155,65 @@ Object.assign(pc, function () {
             this.storage = data;
             this.unlock();
             return true;
+        },
+
+        _lockTypedArray: function () {
+
+            var lock = this.lock();
+            var indices = this.format === pc.INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
+                (this.format === pc.INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock) );
+            return indices;
+        },
+
+        // Copies count elements from data into index buffer.
+        // optimized for performance from both typed array as well as array
+        writeData: function (data, count) {
+
+            var indices = this._lockTypedArray();
+
+            // if data contains more indices than needed, copy from its subarray
+            if (data.length > count) {
+
+                // if data is typed array
+                if (ArrayBuffer.isView(data)) {
+                    data = data.subarray(0, count);
+                    indices.set(data);
+                } else {
+                    // data is array, copy right amount manually
+                    var i;
+                    for (i = 0; i < count; i++)
+                        indices[i] = data[i];
+                }
+            } else {
+                // copy whole data
+                indices.set(data);
+            }
+
+            this.unlock();
+        },
+
+        // copies index data from index buffer into provided data array
+        readData: function (data) {
+
+            var indices = this._lockTypedArray();
+            var count = this.numIndices;
+
+            if (ArrayBuffer.isView(data.buffer)) {
+                // destination data is typed array
+                data.set(indices);
+            } else {
+                // data is array, copy right amount manually
+                data.length = 0;
+                var i;
+                for (i = 0; i < count; i++)
+                    data[i] = indices[i];
+            }
+
+            this.unlock();
+
+            return count;
         }
+
     });
 
     return {

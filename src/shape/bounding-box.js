@@ -318,11 +318,12 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#compute
          * @description Compute the size of the AABB to encapsulate all specified vertices.
          * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
+         * @param {number} [numVerts] - Number of verticies to use from the beginning of vertices array. All vertices are used if not specified.
          */
-        compute: function (vertices) {
+        compute: function (vertices, numVerts) {
             var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
             var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
-            var numVerts = vertices.length / 3;
+            numVerts = numVerts || vertices.length / 3;
 
             for (var i = 1; i < numVerts; i++) {
                 var x = vertices[i * 3 + 0];
