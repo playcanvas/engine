@@ -120,6 +120,16 @@ Object.assign(pc, function () {
             return this.data.animations[name];
         },
 
+        /**
+         * @function
+         * @name pc.AnimationComponent#getSkeleton
+         * @description Return the current skeleton.
+         * @returns {pc.Skeleton} A skeleton.
+         */
+        getSkeleton: function () {
+            return this.data.skeleton;
+        },
+
         setModel: function (model) {
             var data = this.data;
 
