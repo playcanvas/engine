@@ -90,6 +90,9 @@ Object.assign(pc, function () {
      *
      * // register the class as a script
      * pc.registerScript(PlayerController);
+     *
+     * // declare script attributes (Must be after pc.registerScript())
+     * PlayerController.attributes.add('attribute1', {type: 'number'});
      */
     /* eslint-enable jsdoc/check-examples */
     /* eslint-enable jsdoc/no-undefined-types */
