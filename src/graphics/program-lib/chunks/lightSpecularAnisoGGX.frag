@@ -1,7 +1,7 @@
 // Anisotropic GGX
 float getLightSpecular() {
     float PI = 3.141592653589793;
-    float roughness = (1.0 - dGlossiness) * (1.0 - dGlossiness);
+    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);
     float anisotropy = material_anisotropy * roughness;
  
     float at = max((roughness + anisotropy), roughness / 4.0);
