@@ -111,6 +111,25 @@ Object.assign(pc, function () {
 
         /**
          * @function
+         * @name pc.AnimationComponent#getAnimations
+         * @description Return all loaded animation assets.
+         * @returns {pc.Animation[]} Array of animation assets.
+         */
+        getAnimations: function () {
+            var animations = this.data.animations;
+            var array = [];
+
+            for (var key in animations) {
+                if (animations.hasOwnProperty(key)) {
+                    array.push(animations[key]);
+                }
+            }
+
+            return array;
+        },
+
+        /**
+         * @function
          * @name pc.AnimationComponent#getAnimation
          * @description Return an animation.
          * @param {string} name - The name of the animation asset.
