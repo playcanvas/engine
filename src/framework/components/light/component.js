@@ -260,7 +260,6 @@ Object.assign(pc, function () {
             } else {
                 this.light.mask &= ~pc.MASK_DYNAMIC;
             }
-            this.light.mask = this.light._mask;
         });
         _defineProperty("affectLightmapped", false, function (newValue, oldValue) {
             if (newValue) {
@@ -270,7 +269,6 @@ Object.assign(pc, function () {
                 this.light.mask &= ~pc.MASK_BAKED;
                 if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
             }
-            this.light.mask = this.light._mask;
         });
         _defineProperty("bake", false, function (newValue, oldValue) {
             if (newValue) {
@@ -280,7 +278,6 @@ Object.assign(pc, function () {
                 this.light.mask &= ~pc.MASK_LIGHTMAP;
                 if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
             }
-            this.light.mask = this.light._mask;
         });
         _defineProperty("bakeDir", true, function (newValue, oldValue) {
             this.light.bakeDir = newValue;
@@ -400,7 +397,7 @@ Object.assign(pc, function () {
 
             this._cookieAsset = asset;
 
-            if (this.light._enabled)
+            if (this.light.enabled)
                 this.onCookieAssetSet();
 
             this._cookieAsset.on('load', this.onCookieAssetLoad, this);
