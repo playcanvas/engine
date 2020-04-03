@@ -1,28 +1,28 @@
 Object.assign(pc, function () {
     'use strict';
 
+    // render 2d textured quads
+
     var Render2d = function (device, maxQuads) {
         maxQuads = maxQuads || 128;
 
-        var vertexShader = " \
-            attribute vec4 vertex_position; \
-            varying vec2 uv0; \
-            void main(void) { \
-                gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0); \
-                uv0 = vertex_position.zw; \
-            } \
-        ";
+        var vertexShader =
+            'attribute vec4 vertex_position;' +
+            'varying vec2 uv0;' +
+            'void main(void) {' +
+            '    gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);' +
+            '    uv0 = vertex_position.zw;' +
+            '}';
 
-        var fragmentShader = " \
-            varying vec2 uv0; \
-            uniform sampler2D source; \
-            uniform vec4 clr; \
-            void main (void) { \
-                gl_FragColor = texture2D(source, uv0) * clr; \
-            } \
-        ";
+        var fragmentShader =
+            'varying vec2 uv0;' +
+            'uniform sampler2D source;' +
+            'uniform vec4 clr;' +
+            'void main (void) {' +
+            '    gl_FragColor = texture2D(source, uv0) * clr;' +
+            '}';
 
-        var format = new pc.VertexFormat(device, [ {
+        var format = new pc.VertexFormat(device, [{
             semantic: pc.SEMANTIC_POSITION,
             components: 4,
             type: pc.TYPE_FLOAT32
@@ -88,12 +88,14 @@ Object.assign(pc, function () {
             var u1 = (u + w) / tw;
             var v1 = (v + h) / th;
 
-            this.data.set([x0, y0, u0, v0,
-                           x1, y0, u1, v0,
-                           x1, y1, u1, v1,
-                           x0, y0, u0, v0,
-                           x1, y1, u1, v1,
-                           x0, y1, u0, v1], 6 * 4 * quad);
+            this.data.set([
+                x0, y0, u0, v0,
+                x1, y0, u1, v0,
+                x1, y1, u1, v1,
+                x0, y0, u0, v0,
+                x1, y1, u1, v1,
+                x0, y1, u0, v1
+            ], 6 * 4 * quad);
         },
 
         render: function (clr) {
@@ -130,7 +132,9 @@ Object.assign(pc, function () {
         }
     });
 
-    var RenderText = function (device, words) {
+    // Word atlas
+
+    var WordAtlas = function (device, words) {
         var canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 32;
@@ -150,7 +154,7 @@ Object.assign(pc, function () {
         var padding = 5;
         var x = padding;
         var y = 32 - padding;
-        var placements = [ ];
+        var placements = [];
         var i;
 
         for (i = 0; i < words.length; ++i) {
@@ -207,7 +211,7 @@ Object.assign(pc, function () {
         this.wordMap = wordMap;
     };
 
-    Object.assign(RenderText.prototype, {
+    Object.assign(WordAtlas.prototype, {
         render: function (render2d, word, x, y) {
             var placement = this.placements[this.wordMap[word]];
             if (placement) {
@@ -218,9 +222,10 @@ Object.assign(pc, function () {
         }
     });
 
+    // Realtime performance graph
+
     var Graph = function (app, timer, width, height) {
         this.device = app.graphicsDevice;
-        this.name = name;
         this.timer = timer;
         this.enabled = false;
 
@@ -247,7 +252,7 @@ Object.assign(pc, function () {
                 mipmaps: false
             });
             var source = texture.lock();
-            for (var i = 0; i < source.length/4; ++i) {
+            for (var i = 0; i < source.length / 4; ++i) {
                 source[i * 4] = 0;
                 source[i * 4 + 1] = 0;
                 source[i * 4 + 2] = 0;
@@ -282,10 +287,10 @@ Object.assign(pc, function () {
 
             if (this.enabled) {
                 var timingColors = [
-                    [255,96,96,255],
-                    [96,255,96,255],
-                    [96,96,255,255],
-                    [196,196,196,255]
+                    [255, 96, 96, 255],
+                    [96, 255, 96, 255],
+                    [96, 96, 255, 255],
+                    [196, 196, 196, 255]
                 ];
 
                 var black = [0, 0, 0, 255];
@@ -328,8 +333,10 @@ Object.assign(pc, function () {
         render: function (render2d, x, y) {
             var texture = this.texture;
             render2d.quad(texture, x, y, texture.width, texture.height, this.cursor, 0);
-        },
+        }
     });
+
+    // Frame timer interface for graph
 
     var FrameTimer = function (app) {
         this.ms = 0;
@@ -346,6 +353,8 @@ Object.assign(pc, function () {
             return [this.ms];
         }
     });
+
+    // MiniStats rendering of CPU and GPU timing information
 
     var MiniStats = function (app) {
         var device = app.graphicsDevice;
@@ -376,18 +385,18 @@ Object.assign(pc, function () {
         }
 
         var render2d = new Render2d(device);
-        var renderText = new RenderText(device, [ "Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4" , "5", "6" , "7", "8", "9", "." ]);
+        var wordAtlas = new WordAtlas(device, ["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]);
 
         var gspacing = 2;
         var clr = [1, 1, 1, 0.6];
 
         app.on('frameend', function () {
-            var i, j, gx, gy;
+            var i, j, gx, gy, graph;
 
             // render graphs
             gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
-                var graph = graphs[i];
+                graph = graphs[i];
                 graph.graph.render(render2d, gx, gy);
                 gy += gh + gspacing;
             }
@@ -395,12 +404,12 @@ Object.assign(pc, function () {
             // render text
             gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
-                var graph = graphs[i];
+                graph = graphs[i];
                 var x = gx;
                 var y = gy + gh - 12;
 
                 // name
-                x += renderText.render(render2d, graph.name, x, y);
+                x += wordAtlas.render(render2d, graph.name, x, y);
 
                 // space
                 x += 10;
@@ -408,11 +417,11 @@ Object.assign(pc, function () {
                 // timing
                 var timingText = graph.graph.timingText;
                 for (j = 0; j < timingText.length; ++j) {
-                    x += renderText.render(render2d, timingText[j], x, y);
+                    x += wordAtlas.render(render2d, timingText[j], x, y);
                 }
 
                 // ms
-                renderText.render(render2d, 'ms', x, y);
+                wordAtlas.render(render2d, 'ms', x, y);
 
                 gy += gh + gspacing;
             }
@@ -421,7 +430,7 @@ Object.assign(pc, function () {
         });
 
         // calculate height of all graphs
-        var overallHeight = function() {
+        var overallHeight = function () {
             return gh * graphs.length + gspacing * (graphs.length - 1);
         };
 
@@ -444,7 +453,7 @@ Object.assign(pc, function () {
             size = (size + 1) % sizes.length;
             gw = sizes[size][0];
             gh = sizes[size][1];
-            for (i = 0; i < graphs.length; ++i) {
+            for (var i = 0; i < graphs.length; ++i) {
                 graphs[i].graph.init(gw, gh);
                 graphs[i].graph.enabled = size != 0;
             }
