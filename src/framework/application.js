@@ -829,6 +829,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
@@ -845,6 +847,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
@@ -866,6 +870,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and automatically apply the scene settings to the current scene.
@@ -885,6 +891,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
