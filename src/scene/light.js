@@ -300,10 +300,10 @@ Object.assign(pc, function () {
 
     Object.defineProperty(Light.prototype, 'enabled', {
         get: function () {
-            return this._type;
+            return this._enabled;
         },
         set: function (value) {
-            if (this._type === value)
+            if (this._enabled === value)
                 return;
 
             this._enabled = value;
