@@ -13,14 +13,28 @@ Object.assign(pc, function () {
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines basic surface color (aka albedo).
-     * @property {boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
-     * @property {pc.Texture|null} diffuseMap The diffuse map of the material (default is null).
-     * @property {number} diffuseMapUv Diffuse map UV channel.
-     * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
-     * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {string} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} diffuseTint Multiply main (primary) diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * @property {pc.Texture|null} diffuseMap The main (primary) diffuse map of the material (default is null).
+     * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
+     * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
+     * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each component is between 0 and 1.
+     * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
      * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
+     * @property {pc.Texture|null} diffuseDetailMap The detail (secondary) diffuse map of the material (default is null). Will only be used if main (primary) diffuse map is non-null.
+     * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
+     * @property {pc.Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse map.
+     * @property {pc.Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
+     * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} diffuseDetailBlend Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
+     * * {@link pc.DETAILBLEND_COLORS_MUL}: Multiply together the primary and secondary colors.
+     * * {@link pc.DETAILBLEND_COLORS_ADD}: Add together the primary and secondary colors.
+     * * {@link pc.DETAILBLEND_COLORS_SCREEN}: Softer version of {@link pc.DETAILBLEND_COLORS_ADD}.
+     * * {@link pc.DETAILBLEND_COLORS_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+     * * {@link pc.DETAILBLEND_COLORS_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+     * * {@link pc.DETAILBLEND_COLORS_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+     * Defaults to {@link pc.DETAILBLEND_COLORS_MUL}.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
@@ -94,13 +108,26 @@ Object.assign(pc, function () {
      * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
      * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
      *
-     * @property {pc.Texture|null} normalMap The normal map of the material (default is null).
+     * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
-     * @property {number} normalMapUv Normal map UV channel.
-     * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
-     * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
+     * @property {number} normalMapUv Main (primary) normal map UV channel.
+     * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
+     * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each component is between 0 and 1.
+     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main (primary) normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     *
+     * @property {pc.Texture|null} normalDetailMap The detail (secondary) normal map of the material (default is null). Will only be used if main (primary) normal map is non-null.
+     * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
+     * @property {pc.Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal map.
+     * @property {pc.Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
+     * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
+     * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     * @property {string} normalDetailBlend Determines how the detail (secondary) and detail (secondary) diffuse maps are blended together. Can be:
+     * * {@link pc.DETAILBLEND_NORMALS_RNM}: Blend normals using Reoriented Normal Mapping. Slowest but also most accurate.
+     * * {@link pc.DETAILBLEND_NORMALS_PD}: Blend normals using Partial Derivatives. Cheaper but less accurate than {@link pc.DETAILBLEND_NORMALS_RNM}.
+     * * {@link pc.DETAILBLEND_NORMALS_WHITEOUT}: Blend normals based on AMD's ruby Whiteout demo. Slightly cheaper than {@link pc.DETAILBLEND_NORMALS_PD}.
+     * * {@link pc.DETAILBLEND_NORMALS_UDN}: Blend normals using the "Unreal Developer Network" approach. Cheapest method but also least accurate.
+     * Defaults to {@link pc.DETAILBLEND_NORMALS_RNM}.
      *
      * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
