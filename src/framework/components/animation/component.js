@@ -478,12 +478,6 @@ Object.assign(pc, function () {
             get: function () {
                 return this.data.animations[this.data.currAnim].duration;
             }
-        },
-
-        skeleton: {
-            get: function () {
-                return this.data.skeleton;
-            }
         }
     });
 
