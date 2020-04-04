@@ -734,6 +734,10 @@ Object.assign(pc, function () {
                 this._setParameter('material_bumpiness', this.bumpiness);
             }
 
+            if (this.normalMap && this.normalDetailMap) {
+                this._setParameter('material_normalDetailMapBumpiness', this.normalDetailMapBumpiness);
+            }
+
             if (this.heightMap) {
                 uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
                 this._setParameter(uniform.name, uniform.value);
@@ -951,6 +955,7 @@ Object.assign(pc, function () {
         _defineFloat(obj, "opacity", 1);
         _defineFloat(obj, "alphaTest", 0);
         _defineFloat(obj, "bumpiness", 1);
+        _defineFloat(obj, "normalDetailMapBumpiness", 1);
         _defineFloat(obj, "reflectivity", 1);
         _defineFloat(obj, "occludeSpecularIntensity", 1);
         _defineFloat(obj, "refraction", 0);

@@ -91,6 +91,7 @@
         normalDetailMapTiling: 'vec2',
         normalDetailMapOffset: 'vec2',
         normalDetailMapUv: 'number',
+        normalDetailMapBumpiness: 'number',
 
         heightMap: 'texture',
         heightMapChannel: 'string',
