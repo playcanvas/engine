@@ -948,6 +948,8 @@ pc.programlib.standard = {
             if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
+                code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
+
                 var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.normalizeNormalMap) {
                     code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
@@ -979,7 +981,9 @@ pc.programlib.standard = {
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
+        code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, chunks);
         code += this._addMap("diffuse", "diffusePS", options, chunks);
+
         if (options.blendType !== pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
             code += this._addMap("opacity", "opacityPS", options, chunks);
         }
