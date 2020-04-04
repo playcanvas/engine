@@ -402,6 +402,18 @@
          */
         SPECULAR_BLINN: 1,
 
+        DETAILBLEND_COLORS_MUL: 'mul',
+        DETAILBLEND_COLORS_ADD: 'add',
+        DETAILBLEND_COLORS_SCREEN: 'screen',
+        DETAILBLEND_COLORS_OVERLAY: 'overlay',
+        DETAILBLEND_COLORS_MIN: 'min',
+        DETAILBLEND_COLORS_MAX: 'max',
+
+        DETAILBLEND_NORMALS_RNM: 'rnm',
+        DETAILBLEND_NORMALS_PD: 'pd',
+        DETAILBLEND_NORMALS_WHITEOUT: 'whiteout',
+        DETAILBLEND_NORMALS_UDN: 'udn',
+
         /**
          * @constant
          * @name pc.GAMMA_NONE
