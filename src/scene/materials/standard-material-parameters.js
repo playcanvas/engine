@@ -32,6 +32,7 @@
         diffuseDetailMapUv: 'number',
         diffuseDetailMapTiling: 'vec2',
         diffuseDetailMapOffset: 'vec2',
+        diffuseDetailBlend: 'string',
 
         specular: 'rgb',
         specularTint: 'boolean',
@@ -92,6 +93,7 @@
         normalDetailMapOffset: 'vec2',
         normalDetailMapUv: 'number',
         normalDetailMapBumpiness: 'number',
+        normalDetailBlend: 'string',
 
         heightMap: 'texture',
         heightMapChannel: 'string',

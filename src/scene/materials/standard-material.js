@@ -254,7 +254,7 @@ Object.assign(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor, detailBlend) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -264,6 +264,7 @@ Object.assign(pc, function () {
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
         var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
+        var privMapDetailBlend = "_" + name + "DetailBlend";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
@@ -277,6 +278,7 @@ Object.assign(pc, function () {
             if (vertexColor) obj[privMapVertexColorChannel] = channel;
         }
         if (vertexColor) obj[privMapVertexColor] = false;
+        if (detailBlend) obj[privMapDetailBlend] = detailBlend === "colors" ? pc.DETAILBLEND_COLORS_MUL : pc.DETAILBLEND_NORMALS_RNM;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -379,6 +381,18 @@ Object.assign(pc, function () {
             });
         }
 
+        if (detailBlend) {
+            Object.defineProperty(StandardMaterial.prototype, privMapDetailBlend.substring(1), {
+                get: function () {
+                    return this[privMapDetailBlend];
+                },
+                set: function (value) {
+                    this.dirtyShader = true;
+                    this[privMapDetailBlend] = value;
+                }
+            });
+        }
+
         _propsSerial.push(privMap.substring(1));
         _propsSerial.push(privMapTiling.substring(1));
         _propsSerial.push(privMapOffset.substring(1));
@@ -387,6 +401,9 @@ Object.assign(pc, function () {
         if (vertexColor) {
             _propsSerial.push(privMapVertexColor.substring(1));
             _propsSerial.push(privMapVertexColorChannel.substring(1));
+        }
+        if (detailBlend) {
+            _propsSerial.push(privMapDetailBlend.substring(1));
         }
         _propsInternalNull.push(mapTransform);
     };
@@ -1023,8 +1040,8 @@ Object.assign(pc, function () {
         _defineTex2D(obj, "ao", 0, 1, "", true);
         _defineTex2D(obj, "light", 1, 3, "", true);
         _defineTex2D(obj, "msdf", 0, 3, "", false);
-        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false);
-        _defineTex2D(obj, "normalDetail", 0, -1, "", false);
+        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, "colors");
+        _defineTex2D(obj, "normalDetail", 0, -1, "", false, "normals");
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");
