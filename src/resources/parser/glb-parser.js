@@ -1147,6 +1147,8 @@ Object.assign(pc, function () {
         callback(null, gltf);
     };
 
+    var magicSignature = 0x46546C67; // equals ASCII string "glTF"
+
     // parse glb data, returns the gltf and binary chunk
     var parseGlb = function (glbData, callback) {
         var data = new DataView(glbData);
@@ -1156,8 +1158,8 @@ Object.assign(pc, function () {
         var version = data.getUint32(4, true);
         var length = data.getUint32(8, true);
 
-        if (magic !== 0x46546C67) {
-            callback("Invalid magic number found in glb header. Expected 0x46546C67, found 0x" + magic.toString(16));
+        if (magic !== magicSignature) {
+            callback("Invalid magic signature found in glb header. Expected 0x" + magicSignature.toString(16) + ", found 0x" + magic.toString(16));
             return;
         }
 
