@@ -1154,7 +1154,7 @@ Object.assign(pc, function () {
         var data = new DataView(glbData);
         var magic = data.getUint32(0, true);
         return magic === magicSignature;
-    }
+    };
 
     // parse glb data, returns the gltf and binary chunk
     var parseGlb = function (glbData, callback) {
