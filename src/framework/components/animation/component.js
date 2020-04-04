@@ -13,7 +13,8 @@ Object.assign(pc, function () {
      * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
      * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
-     * @property {number} duration Get the duration in seconds of the current animation.
+     * @property {number} duration Get the duration in seconds of the current animation. [read only]
+     * @property {pc.Skeleton} skeleton Get the skeleton for the current model. [read only]
      */
     var AnimationComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
@@ -118,16 +119,6 @@ Object.assign(pc, function () {
          */
         getAnimation: function (name) {
             return this.data.animations[name];
-        },
-
-        /**
-         * @function
-         * @name pc.AnimationComponent#getSkeleton
-         * @description Return the current skeleton.
-         * @returns {pc.Skeleton} A skeleton.
-         */
-        getSkeleton: function () {
-            return this.data.skeleton;
         },
 
         setModel: function (model) {
@@ -486,6 +477,12 @@ Object.assign(pc, function () {
         duration: {
             get: function () {
                 return this.data.animations[this.data.currAnim].duration;
+            }
+        },
+
+        skeleton: {
+            get: function () {
+                return this.data.skeleton;
             }
         }
     });
