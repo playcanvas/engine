@@ -872,8 +872,8 @@ pc.programlib.standard = {
         // code += chunks.basePS;
         code = this._fsAddBaseCode(code, device, chunks, options);
 
-        code += chunks.blendColorsPS;
-        code += chunks.blendNormalsPS;
+        if (options.detailBlendColors) code += chunks.blendColorsPS;
+        if (options.detailBlendNormals) code += chunks.blendNormalsPS;
 
         var codeBegin = code;
         code = "";
@@ -957,7 +957,9 @@ pc.programlib.standard = {
             if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
-                code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
+                if (options.normalDetail) {
+                    code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
+                }
 
                 var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.normalizeNormalMap) {
@@ -990,7 +992,10 @@ pc.programlib.standard = {
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
-        code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, chunks);
+        if (options.diffuseDetail) {
+            code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, chunks);
+        }
+
         code += this._addMap("diffuse", "diffusePS", options, chunks);
 
         if (options.blendType !== pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {

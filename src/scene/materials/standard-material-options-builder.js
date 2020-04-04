@@ -120,8 +120,12 @@ Object.assign(pc, function () {
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
         options.aoMapUv = stdMat.aoUvSet; // backwards componen
+        options.diffuseDetail = !!stdMat.diffuseMap;
+        options.normalDetail = !!stdMat.normalMap;
         options.diffuseDetailBlend = stdMat.diffuseDetailBlend;
         options.normalDetailBlend = stdMat.normalDetailBlend;
+        options.detailBlendColors = !!options.diffuseDetail;
+        options.detailBlendNormals = !!options.normalDetail;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {
