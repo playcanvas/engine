@@ -254,7 +254,7 @@ Object.assign(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels, defChannel) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -274,9 +274,9 @@ Object.assign(pc, function () {
         if (channels > 0) {
             var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
             obj[privMapChannel] = channel;
-            obj[privMapVertexColorChannel] = channel;
+            if (vertexColor) obj[privMapVertexColorChannel] = channel;
         }
-        obj[privMapVertexColor] = false;
+        if (vertexColor) obj[privMapVertexColor] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -357,32 +357,37 @@ Object.assign(pc, function () {
                 this[privMapChannel] = value;
             }
         });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function () {
-                return this[privMapVertexColor];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapVertexColor] = value;
-            }
-        });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function () {
-                return this[privMapVertexColorChannel];
-            },
-            set: function (value) {
-                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
-                this[privMapVertexColorChannel] = value;
-            }
-        });
+
+        if (vertexColor) {
+            Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
+                get: function () {
+                    return this[privMapVertexColor];
+                },
+                set: function (value) {
+                    this.dirtyShader = true;
+                    this[privMapVertexColor] = value;
+                }
+            });
+            Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
+                get: function () {
+                    return this[privMapVertexColorChannel];
+                },
+                set: function (value) {
+                    if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
+                    this[privMapVertexColorChannel] = value;
+                }
+            });
+        }
 
         _propsSerial.push(privMap.substring(1));
         _propsSerial.push(privMapTiling.substring(1));
         _propsSerial.push(privMapOffset.substring(1));
         _propsSerial.push(privMapUv.substring(1));
         _propsSerial.push(privMapChannel.substring(1));
-        _propsSerial.push(privMapVertexColor.substring(1));
-        _propsSerial.push(privMapVertexColorChannel.substring(1));
+        if (vertexColor) {
+            _propsSerial.push(privMapVertexColor.substring(1));
+            _propsSerial.push(privMapVertexColorChannel.substring(1));
+        }
         _propsInternalNull.push(mapTransform);
     };
 
@@ -1002,17 +1007,17 @@ Object.assign(pc, function () {
         _defineFlag(obj, "twoSidedLighting", false);
         _defineFlag(obj, "nineSlicedMode", pc.SPRITE_RENDERMODE_SLICED);
 
-        _defineTex2D(obj, "diffuse", 0, 3);
-        _defineTex2D(obj, "specular", 0, 3);
-        _defineTex2D(obj, "emissive", 0, 3);
-        _defineTex2D(obj, "normal", 0, -1);
-        _defineTex2D(obj, "metalness", 0, 1);
-        _defineTex2D(obj, "gloss", 0, 1);
-        _defineTex2D(obj, "opacity", 0, 1, 'a');
-        _defineTex2D(obj, "height", 0, 1);
-        _defineTex2D(obj, "ao", 0, 1);
-        _defineTex2D(obj, "light", 1, 3);
-        _defineTex2D(obj, "msdf", 0, 3);
+        _defineTex2D(obj, "diffuse", 0, 3, "", true);
+        _defineTex2D(obj, "specular", 0, 3, "", true);
+        _defineTex2D(obj, "emissive", 0, 3, "", true);
+        _defineTex2D(obj, "normal", 0, -1, "", false);
+        _defineTex2D(obj, "metalness", 0, 1, "", true);
+        _defineTex2D(obj, "gloss", 0, 1, "", true);
+        _defineTex2D(obj, "opacity", 0, 1, "a", true);
+        _defineTex2D(obj, "height", 0, 1, "", false);
+        _defineTex2D(obj, "ao", 0, 1, "", true);
+        _defineTex2D(obj, "light", 1, 3, "", true);
+        _defineTex2D(obj, "msdf", 0, 3, "", false);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");
