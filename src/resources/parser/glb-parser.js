@@ -1149,6 +1149,13 @@ Object.assign(pc, function () {
 
     var magicSignature = 0x46546C67; // equals ASCII string "glTF"
 
+    // check if glb data actually is a glTF binary
+    var checkIfGlb = function (glbData) {
+        var data = new DataView(glbData);
+        var magic = data.getUint32(0, true);
+        return magic === magicSignature;
+    }
+
     // parse glb data, returns the gltf and binary chunk
     var parseGlb = function (glbData, callback) {
         var data = new DataView(glbData);
@@ -1210,7 +1217,7 @@ Object.assign(pc, function () {
 
     // parse the chunk of data, which can be glb or gltf
     var parseChunk = function (filename, data, callback) {
-        if (filename && filename.toLowerCase().endsWith('.glb')) {
+        if (checkIfGlb(data)) {
             parseGlb(data, callback);
         } else {
             callback(null, {
