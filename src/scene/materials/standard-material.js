@@ -1018,6 +1018,8 @@ Object.assign(pc, function () {
         _defineTex2D(obj, "ao", 0, 1, "", true);
         _defineTex2D(obj, "light", 1, 3, "", true);
         _defineTex2D(obj, "msdf", 0, 3, "", false);
+        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false);
+        _defineTex2D(obj, "normalDetail", 0, -1, "", false);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");
