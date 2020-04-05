@@ -64,6 +64,7 @@ pc.programlib.basic = {
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
+        code += "   gl_PointSize = 1.0;\n";
         code += "   gl_Position = getPosition();\n";
 
         if (options.pass === pc.SHADER_DEPTH) {
