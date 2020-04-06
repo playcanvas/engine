@@ -39,16 +39,17 @@ Object.assign(pc, function () {
      * var material = new pc.StandardMaterial();
      * var node = new pc.GraphNode();
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
-     * 
+     *
      * @example
      * // A script you can attach on an entity to test if it is visible on a Layer
      * var MeshVisScript = pc.createScript('meshVisScript');
-     * MeshVisScript.prototype.initialize = function() {
-     * this.app.scene.layers.getLayerByName("World").onPostCull = (cameraIndex) => {
-     *    var meshInstance = this.entity.model.model.meshInstances[0];
-     *    console.log("visible: " + meshInstance.visibleThisFrame);
-     *  }    
-     *};
+     * MeshVisScript.prototype.initialize = function () {
+     *     var _this = this;
+     *     this.app.scene.layers.getLayerByName("World").onPostCull = function (cameraIndex) {
+     *         var meshInstance = _this.entity.model.model.meshInstances[0];
+     *         console.log("visible: " + meshInstance.visibleThisFrame);
+     *     };
+     * };
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0, 0];
