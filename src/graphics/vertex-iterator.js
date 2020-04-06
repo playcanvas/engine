@@ -7,7 +7,45 @@ Object.assign(pc, function () {
      * @classdesc Helps with accessing a specific vertex attribute.
      * @description Returns a new pc.VertexIteratorAccessor object.
      * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
-     * @param {pc.VertexAttributeElement} vertexElement - The vertex attribute to be accessed.
+     * @param {object} vertexElement - The vertex attribute to be accessed.
+     * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
+     * the vertex data to a shader input. Can be:
+     *
+     * * {@link pc.SEMANTIC_POSITION}
+     * * {@link pc.SEMANTIC_NORMAL}
+     * * {@link pc.SEMANTIC_TANGENT}
+     * * {@link pc.SEMANTIC_BLENDWEIGHT}
+     * * {@link pc.SEMANTIC_BLENDINDICES}
+     * * {@link pc.SEMANTIC_COLOR}
+     * * {@link pc.SEMANTIC_TEXCOORD0}
+     * * {@link pc.SEMANTIC_TEXCOORD1}
+     * * {@link pc.SEMANTIC_TEXCOORD2}
+     * * {@link pc.SEMANTIC_TEXCOORD3}
+     * * {@link pc.SEMANTIC_TEXCOORD4}
+     * * {@link pc.SEMANTIC_TEXCOORD5}
+     * * {@link pc.SEMANTIC_TEXCOORD6}
+     * * {@link pc.SEMANTIC_TEXCOORD7}
+     *
+     * If vertex data has a meaning other that one of those listed above, use the user-defined
+     * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+     * @param {number} vertexElement.numComponents - The number of components of the vertex attribute.
+     * Can be 1, 2, 3 or 4.
+     * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
+     *
+     * * {@link pc.TYPE_INT8}
+     * * {@link pc.TYPE_UINT8}
+     * * {@link pc.TYPE_INT16}
+     * * {@link pc.TYPE_UINT16}
+     * * {@link pc.TYPE_INT32}
+     * * {@link pc.TYPE_UINT32}
+     * * {@link pc.TYPE_FLOAT32}
+     * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped from a
+     * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+     * unchanged. If this property is unspecified, false is assumed.
+     * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
+     * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
+     * @param {pc.ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
+     * @param {number} vertexElement.size - The size of the attribute in bytes.
      */
     function VertexIteratorAccessor(buffer, vertexElement) {
         this.index = 0;
