@@ -22,9 +22,8 @@
     <script>
         var canvas = document.getElementById("application-canvas");
 
-        // Create the application and start the update loop
+        // Create the application
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -66,6 +65,7 @@
             return light;
         }
 
+        // create 4 lights that will move in the scene and deform the mesh as well
         var lights = [
             { radius: 7, speed: 1,    scale: 2.5, light: createLight(new pc.Color(0.3, 0.9, 0.6), 1.0) },
             { radius: 3, speed: 1.2,  scale: 3.0, light: createLight(new pc.Color(0.7, 0.2, 0.3), 1.3) },
@@ -115,14 +115,64 @@
             }
         }
 
+        // helper function to update required vertex / index streams
+        function UpdateMesh(device, mesh, initAll) {
+
+            // Set updated positions and normal each frame
+            mesh.setPositions(this.positions);
+            mesh.setNormals(pc.calculateNormals(this.positions, this.indexArray));
+
+            // update mesh Uvs and Indices only one time, as they do not change each frame
+            if (initAll) {
+                mesh.setUvs(0, this.uvs);
+                mesh.setIndices(this.indexArray);
+            }
+
+            // Let mesh update Vertex and Index buffer as needed
+            self.mesh.updateGeometry(device, pc.PRIMITIVE_TRIANGLES);
+        }
+
         // Create a mesh with dynamic vertex buffer and static index buffer
         this.mesh = new pc.Mesh();
         this.mesh.clear(true, false);
+        UpdateMesh(this.app.graphicsDevice, this.mesh, true);
+
+        // Create the mesh instance
+        var node = new pc.GraphNode();
+        var material = new pc.StandardMaterial();
+        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
+
+        // Create a model and add the mesh instance to it
+        var model = new pc.Model();
+        model.graph = node;
+        model.meshInstances = [ meshInstance ];
+
+        // Create Entity and add it to the scene
+        this.entity = new pc.Entity();
+        app.root.addChild(this.entity);
+
+        // Add a model compoonent
+        app.systems.model.addComponent(this.entity, {
+            type: 'asset'
+        });
+        this.entity.model.model = model;
+
+        // load a texture, create material and apply it to our MeshInstance
+        app.assets.loadFromUrl("../assets/textures/playcanvas-grey.png", "texture", function (err, asset) {
+            var material = new pc.StandardMaterial();
+            material.diffuseMap = asset.resource;
+            material.update();
+
+            self.entity.model.model.meshInstances[0].material = material;
+
+            // start application update loop when texture is loaded
+            app.start();
+        });
+
 
         // Set an update function on the app's update event
         var self = this;
         var time = 0;
-        var firstTime = true;
         app.on("update", function (dt) {
             time += dt;
 
@@ -157,52 +207,8 @@
                 }
             }
 
-            // update mesh Uvs and Indices only one time, as they do not change each frame
-            if (firstTime) {
-                self.mesh.setUvs(0, self.uvs);
-                self.mesh.setIndices(self.indexArray);
-            }
-
-            // Set updated positions and normal each frame
-            self.mesh.setPositions(self.positions);
-            self.mesh.setNormals(pc.calculateNormals(self.positions, indexArray));
-
-            // Let mesh update Vertex and Index buffer as needed
-            self.mesh.updateGeometry(self.app.graphicsDevice, pc.PRIMITIVE_TRIANGLES);
-
-            // On the first frame, create MeshIstance, Material, and add it to the scene to be rendered
-            if (firstTime) {
-                firstTime = false;
-
-                // Create the mesh instance
-                var node = new pc.GraphNode();
-                var material = new pc.StandardMaterial();
-                var meshInstance = new pc.MeshInstance(node, self.mesh, material);
-
-                // Create a model and add the mesh instance to it
-                var model = new pc.Model();
-                model.graph = node;
-                model.meshInstances = [ meshInstance ];
-
-                // Create Entity and add it to the scene
-                self.entity = new pc.Entity();
-                app.root.addChild(self.entity);
-
-                // Add a model compoonent
-                app.systems.model.addComponent(self.entity, {
-                    type: 'asset'
-                });
-                self.entity.model.model = model;
-            }
-        });
-
-        // load a texture, create material and apply it to our MeshInstance
-        app.assets.loadFromUrl("../assets/textures/playcanvas-grey.png", "texture", function (err, asset) {
-            var material = new pc.StandardMaterial();
-            material.diffuseMap = asset.resource;
-            material.update();
-
-            self.entity.model.model.meshInstances[0].material = material;
+            // update the mesh
+            UpdateMesh(self.app.graphicsDevice, self.mesh);
         });
 
     </script>

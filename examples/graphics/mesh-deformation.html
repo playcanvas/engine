@@ -22,9 +22,8 @@
     <script>
         var canvas = document.getElementById("application-canvas");
 
-        // Create the app and start the update loop
+        // Create the app
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -35,18 +34,6 @@
         });
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-        // Load a model file and create a Entity with a model component
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
-            this.entity = new pc.Entity();
-            this.entity.addComponent("model", {
-                type: "asset",
-                asset: asset,
-                castShadows: true
-            });
-            app.root.addChild(this.entity);
-        });
 
         // Create an Entity with a camera component
         var camera = new pc.Entity();
@@ -67,47 +54,54 @@
         light.translate(5, 0, 15);
         app.root.addChild(light);
 
-        this.firstTime = true;
+        // collected info about meshes to modify
+        this.allMeshes = [];
+
+        // Load a model file and create a Entity with a model component
+        var url = "../assets/models/statue/statue.json";
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
+            this.entity = new pc.Entity();
+            this.entity.addComponent("model", {
+                type: "asset",
+                asset: asset,
+                castShadows: true
+            });
+            app.root.addChild(this.entity);
+
+            // collect positions from all mesh instances to work on
+            var i, meshInstances = this.entity.model.model.meshInstances;
+            for (i = 0; i < meshInstances.length; i++) {
+
+                var meshInstance = meshInstances[i];
+
+                // get positions from the mesh
+                var mesh = meshInstance.mesh;
+                var srcPositions = [];
+                mesh.getPositions(srcPositions);
+
+                // store it
+                this.allMeshes.push({
+                    mesh: mesh,
+                    srcPositions: srcPositions
+                });
+            }
+
+            // start the application when all is set up
+            app.start();
+        });
 
         // temporary work array of positions to avoid per frame allocations
         this.tempPositions = [];
 
-        // collected info about meshes to modify
-        this.allMeshes = [];
-
         var self = this;
-        var time = 0;
+        var i, k, time = 0;
         app.on("update", function (dt) {
             time += dt;
 
-            // rotate the model around
             if (self.entity) {
+
+                // rotate the model around
                 self.entity.rotate(0, 5 * dt, 0);
-
-                // mesh instances to work on
-                var meshInstances = self.entity.model.model.meshInstances;
-                var i, k;
-
-                // on first time the mesh was loaded, extract original positions from all its meshes
-                if (self.firstTime) {
-                    self.firstTime = false;
-
-                    for (i = 0; i < meshInstances.length; i++) {
-
-                        var meshInstance = meshInstances[i];
-
-                        // get positions from the mesh
-                        var mesh = meshInstance.mesh;
-                        var srcPositions = [];
-                        mesh.getPositions(srcPositions);
-
-                        // store it
-                        self.allMeshes.push({
-                            mesh: mesh,
-                            srcPositions: srcPositions
-                        });
-                    }
-                }
 
                 var strength = 50;
                 var tempPositions = self.tempPositions;

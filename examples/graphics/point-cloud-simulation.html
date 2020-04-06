@@ -106,17 +106,61 @@
             self.oldPositions[i] = self.positions[i] + Math.random() * 0.04 - 0.01;
         }
 
+        // helper function to update vertex of the mesh
+        function UpdateMesh(device, mesh) {
+
+            // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
+            // For best performance, we could preallocate enough space using mesh.Clear.
+            // Also turn off bounding box generation, as we set up large box manually
+            mesh.setPositions(this.positions, 3, visiblePoints);
+            mesh.updateGeometry(device, pc.PRIMITIVE_POINTS, false);
+        }
+
         // Create a mesh with dynamic vertex buffer (index buffer is not needed)
         this.mesh = new pc.Mesh();
         this.mesh.clear(true);
-        
+        UpdateMesh(this.app.graphicsDevice, this.mesh);
+
         // set large bounding box so we don't need to update it each frame
         this.mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
+
+        // Create the shader from the vertex and fragment shaders
+        shader = new pc.Shader(app.graphicsDevice, {
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vshader: document.getElementById("vshader").textContent,
+            fshader: document.getElementById("fshader").textContent
+        });
+
+        // Create a new material with the new shader and additive alpha blending
+        material = new pc.Material();
+        material.shader = shader;
+        material.blendType = pc.BLEND_ADDITIVEALPHA;
+        material.depthWrite = false; 
+
+        // Create the mesh instance
+        var node = new pc.GraphNode();
+        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
+
+        // Create a model and add the mesh instance to it
+        var model = new pc.Model();
+        model.graph = node;
+        model.meshInstances = [ meshInstance ];
+
+        // Create Entity and add it to the scene
+        this.entity = new pc.Entity();
+        app.root.addChild(this.entity);
+
+        // Add a model compoonent
+        app.systems.model.addComponent(this.entity, {
+            type: 'asset',
+            castShadows: false
+        });
+        this.entity.model.model = model;
+
 
         // Set an update function on the app's update event
         var self = this;
         var time = 0, previousTime;
-        var firstTime = true;
         app.on("update", function (dt) {
             previousTime = time;
             time += dt;
@@ -147,49 +191,8 @@
             if (Math.round(time) !== Math.round(previousTime))
                 visiblePoints = Math.floor(10000 + Math.random() * self.maxNumPoints - 10000);
 
-            // set current positions on mesh - this reallocates vertex buffer if more space is needed to test it
-            // for best performance, we could preallocate enough space using mesh.Clear
-            // also turn off bounding box generation, as we set up large box already
-            self.mesh.setPositions(self.positions, 3, visiblePoints);
-            self.mesh.updateGeometry(self.app.graphicsDevice, pc.PRIMITIVE_POINTS, false);
-
-            // On the first frame, create MeshIstance, Material, and add it to the scene to be rendered
-            if (firstTime) {
-                firstTime = false;
-
-                // Create the shader from the vertex and fragment shaders
-                shader = new pc.Shader(app.graphicsDevice, {
-                    attributes: { aPosition: pc.SEMANTIC_POSITION },
-                    vshader: document.getElementById("vshader").textContent,
-                    fshader: document.getElementById("fshader").textContent
-                });
-
-                // Create a new material with the new shader and additive alpha blending
-                material = new pc.Material();
-                material.shader = shader;
-                material.blendType = pc.BLEND_ADDITIVEALPHA;
-                material.depthWrite = false; 
-
-                // Create the mesh instance
-                var node = new pc.GraphNode();
-                var meshInstance = new pc.MeshInstance(node, self.mesh, material);
-
-                // Create a model and add the mesh instance to it
-                var model = new pc.Model();
-                model.graph = node;
-                model.meshInstances = [ meshInstance ];
-
-                // Create Entity and add it to the scene
-                self.entity = new pc.Entity();
-                app.root.addChild(self.entity);
-
-                // Add a model compoonent
-                app.systems.model.addComponent(self.entity, {
-                    type: 'asset',
-                    castShadows: false
-                });
-                self.entity.model.model = model;
-            }
+            // update mesh vertices
+            UpdateMesh(self.app.graphicsDevice, self.mesh);
 
             // Rotate the camera around
             var cameraTime = time * 0.2;
