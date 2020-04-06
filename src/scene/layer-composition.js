@@ -56,7 +56,7 @@ Object.assign(pc, function () {
         target._sortedLights[pc.LIGHTTYPE_SPOT].length = 0;
         for (var i = 0; i < lights.length; i++) {
             light = lights[i];
-            if (light._enabled) {
+            if (light.enabled) {
                 target._sortedLights[light._type].push(light);
             }
         }

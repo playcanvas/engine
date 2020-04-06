@@ -332,19 +332,19 @@ Object.assign(pc, function () {
             var sceneLights = activeComp._lights;
             var mask;
             for (i = 0; i < sceneLights.length; i++) {
-                if (sceneLights[i]._enabled) {
-                    mask = sceneLights[i]._mask;
+                if (sceneLights[i].enabled) {
+                    mask = sceneLights[i].mask;
                     if ((mask & maskLightmap) !== 0) {
                         origMask.push(mask);
                         origShadowMode.push(sceneLights[i].shadowUpdateMode);
-                        sceneLights[i]._mask = 0xFFFFFFFF;
+                        sceneLights[i].mask = 0xFFFFFFFF;
                         sceneLights[i].shadowUpdateMode =
                             sceneLights[i]._type === pc.LIGHTTYPE_DIRECTIONAL ? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                         sceneLights[i].isStatic = false; // if baked, can't be used as static
                     }
                 }
-                origEnabled.push(sceneLights[i]._enabled);
+                origEnabled.push(sceneLights[i].enabled);
                 sceneLights[i].enabled = false;
             }
 
@@ -775,7 +775,7 @@ Object.assign(pc, function () {
 
             // Enable all lights back
             for (i = 0; i < lights.length; i++) {
-                lights[i]._mask = origMask[i];
+                lights[i].mask = origMask[i];
                 lights[i].shadowUpdateMode = origShadowMode[i];
             }
 
