@@ -42,6 +42,8 @@
 
         useMetalness: 'boolean',
         metalness: 'number',
+        enableGGXSpecular: 'boolean',
+        anisotropy: 'number',
         metalnessTint: 'boolean',
         metalnessVertexColor: 'boolean',
         metalnessVertexColorChannel: 'string',

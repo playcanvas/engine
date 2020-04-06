@@ -57,9 +57,6 @@
         });
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
-        app.assets.on('load:' + fontAsset.id, function () {
-            app.start();
-        });
 
         // create camera
         var c = new pc.Entity();
@@ -168,6 +165,8 @@
         var showCanvasAtlasForDebug = false;
         renderAtlases();
 
+        // start the application
+        app.start();
     </script>
 </body>
 </html>

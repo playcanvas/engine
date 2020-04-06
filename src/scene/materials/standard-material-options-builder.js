@@ -69,6 +69,7 @@ Object.assign(pc, function () {
         var specularTint = false;
         var useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap) || (!!stdMat.dpAtlas);
         useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
+        useSpecular = useSpecular || stdMat.enableGGXSpecular;
 
         if (useSpecular) {
             if ((stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) && !stdMat.useMetalness) {
@@ -114,6 +115,7 @@ Object.assign(pc, function () {
         options.customFragmentShader = stdMat.customFragmentShader;
         options.refraction = !!stdMat.refraction;
         options.useMetalness = stdMat.useMetalness;
+        options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
@@ -248,8 +250,8 @@ Object.assign(pc, function () {
         var i;
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
-            if (light._enabled) {
-                if (light._mask & mask) {
+            if (light.enabled) {
+                if (light.mask & mask) {
                     if (lType !== pc.LIGHTTYPE_DIRECTIONAL) {
                         if (light.isStatic) {
                             continue;
