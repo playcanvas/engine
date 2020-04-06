@@ -110,10 +110,11 @@ Object.assign(pc, function () {
             };
             this.elements.push(element);
 
-            if (vertexCount)
+            if (vertexCount) {
                 offset += elementSize * vertexCount;
-            else
+            } else {
                 offset += Math.ceil(elementSize / 4) * 4;
+            }
 
             if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD0) {
                 this.hasUv0 = true;
@@ -126,8 +127,9 @@ Object.assign(pc, function () {
             }
         }
 
-        if (vertexCount)
+        if (vertexCount) {
             this.verticesByteSize = offset;
+        }
     };
 
     VertexFormat.init = function (graphicsDevice) {
