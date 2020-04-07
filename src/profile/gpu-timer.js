@@ -14,21 +14,15 @@ Object.assign(pc, function () {
 
         app.on('framestart', this.begin.bind(this, 'update'));
         app.on('framerender', this.mark.bind(this, 'render'));
-        app.on('frameend', this.mark.bind(this, 'other'));
+        app.on('frameend', this.end.bind(this));
     };
 
     Object.assign(GpuTimer.prototype, {
         // mark the beginning of the frame
         begin: function (name) {
-            if (!this._ext) {
-                return;
-            }
-
             // store previous frame's queries
             if (this._frameQueries.length > 0) {
-                this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
-                this._frames.push(this._frameQueries);
-                this._frameQueries = [];
+                this.end();
             }
 
             // check if all in-flight queries have been invalidated
@@ -52,10 +46,6 @@ Object.assign(pc, function () {
 
         // mark
         mark: function (name) {
-            if (!this._ext) {
-                return;
-            }
-
             // end previous query
             if (this._frameQueries.length > 0) {
                 this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
@@ -66,6 +56,13 @@ Object.assign(pc, function () {
             query[0] = name;
             this._gl.beginQuery(this._ext.TIME_ELAPSED_EXT, query[1]);
             this._frameQueries.push(query);
+        },
+
+        // end of frame
+        end: function () {
+            this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
+            this._frames.push(this._frameQueries);
+            this._frameQueries = [];
         },
 
         // check if the gpu has been interrupted thereby invalidating all
