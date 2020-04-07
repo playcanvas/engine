@@ -305,9 +305,9 @@ Object.assign(pc, function () {
             if (!done) {
                 // get stream from VertexBuffer
                 if (this.vertexBuffer) {
+                    // note: there is no need to .end the iterator, as we are only reading data from it
                     var iterator = new pc.VertexIterator(this.vertexBuffer);
                     count = iterator.readData(semantic, data);
-                    iterator.end();
                 }
             }
 

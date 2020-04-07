@@ -195,6 +195,7 @@ Object.assign(pc, function () {
         // copies index data from index buffer into provided data array
         readData: function (data) {
 
+            // note: there is no need to unlock this buffer, as we are only reading from it
             var indices = this._lockTypedArray();
             var count = this.numIndices;
 
@@ -208,8 +209,6 @@ Object.assign(pc, function () {
                 for (i = 0; i < count; i++)
                     data[i] = indices[i];
             }
-
-            this.unlock();
 
             return count;
         }
