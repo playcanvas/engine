@@ -79,7 +79,7 @@ Object.assign(pc, function () {
      * Simple Mesh API
      * ---------
      * {@link pc.Mesh} class provides interfaces such as {@link pc.Mesh#setPositions} and {@link pc.Mesh#setUvs} that provide a simple way to provide
-     * vertex and index data for the Mesh, and hiding the complexity of creative the {@link pc.VertexFormat}. This is the recommended interface to use.
+     * vertex and index data for the Mesh, and hiding the complexity of creating the {@link pc.VertexFormat}. This is the recommended interface to use.
      *
      * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
      * ~~~
@@ -224,10 +224,10 @@ Object.assign(pc, function () {
          * @name pc.Mesh#clear
          * @description Clears the mesh of existing vertices and indices and resets the
          * {@link pc.VertexFormat} associated with the mesh. This call is typically followed by calls
-         * to such as {@link pc.Mesh#setPositions}, {@link pc.Mesh#setVertexStream} or {@link pc.Mesh#setIndices} and
+         * to methods such as {@link pc.Mesh#setPositions}, {@link pc.Mesh#setVertexStream} or {@link pc.Mesh#setIndices} and
          * finally {@link pc.Mesh#updateGeometry} to rebuild the mesh, allowing different {@link pc.VertexFormat}.
-         * @param {boolean} [verticesDynamic] - Indicates the {@link pc.VertexBuffer} should be craeted with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
-         * @param {boolean} [indicesDynamic] - Indicates the {@link pc.IndexBuffer} should be craeted with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
+         * @param {boolean} [verticesDynamic] - Indicates the {@link pc.VertexBuffer} should be created with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
+         * @param {boolean} [indicesDynamic] - Indicates the {@link pc.IndexBuffer} should be created with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
          * @param {number} [maxVertices] - {@link pc.VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
          * no value is provided, a size to fit the provided vertices will be allocated.
          * @param {number} [maxIndices] - {@link pc.IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
@@ -481,13 +481,13 @@ Object.assign(pc, function () {
          * @description Applies any changes to vertex stream and indices to mesh. This allocates or reallocates {@link pc.vertexBuffer} or {@link pc.IndexBuffer}
          * to fit all provided vertices and indices, and fills them with data.
          * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
-         * @param {number} [topology] - The type of primitive to render. Can be one of pc.PRIMITIVE_* - see primitive[].type section above. Defaults
+         * @param {number} [primitiveType] - The type of primitive to render. Can be one of pc.PRIMITIVE_* - see primitive[].type section above. Defaults
          * to pc.PRIMITIVE_TRIANGLES if unspecified.
          * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time updateGeometry
          * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link pc.Mesh#setPositions}. Defaults to true if unspecified.
          * Set this to false to avoid update of the bounding box and use aabb property to set it instead.
          */
-        updateGeometry: function (device, topology, updateBoundingBox) {
+        updateGeometry: function (device, primitiveType, updateBoundingBox) {
 
             if (this._geometryData) {
 
@@ -542,7 +542,7 @@ Object.assign(pc, function () {
                 }
 
                 // set up primitive parameters
-                this.primitive[0].type = (topology === undefined ? pc.PRIMITIVE_TRIANGLES : topology);
+                this.primitive[0].type = (primitiveType === undefined ? pc.PRIMITIVE_TRIANGLES : primitiveType);
 
                 if (this.indexBuffer && this.indexBuffer[0]) {      // indexed
                     if (this._geometryData.indexStreamUpdated) {

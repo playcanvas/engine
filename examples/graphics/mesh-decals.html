@@ -106,7 +106,7 @@
         }
 
         // Helper function to generate a decal with index i at position pos. It fills up information for all 4 vertices of a quad
-        function CreateDecal(i, pos) {
+        function createDecal(i, pos) {
 
             // random size and rotation angle
             var size = 0.5 + Math.random();
@@ -133,7 +133,7 @@
         }
 
         // helper function to update required vertex streams
-        function UpdateMesh(device, mesh, updatePositions, updateColors, initAll) {
+        function updateMesh(device, mesh, updatePositions, updateColors, initAll) {
 
             // update positions when needed
             if (updatePositions)
@@ -155,7 +155,7 @@
         // Create a mesh with dynamic vertex buffer and static index buffer
         this.mesh = new pc.Mesh();
         this.mesh.clear(true, false);
-        UpdateMesh(this.app.graphicsDevice, this.mesh, true, true, true);
+        updateMesh(this.app.graphicsDevice, this.mesh, true, true, true);
 
         // create material
         this.material = new pc.StandardMaterial();
@@ -188,8 +188,8 @@
         // load a texture, create material and apply it to our MeshInstance
         app.assets.loadFromUrl("../assets/textures/spark.png", "texture", function (err, asset) {
             // update material with texture
-            this.entity.model.model.meshInstances[0].material.emissiveMap = asset.resource;
-            this.entity.model.model.meshInstances[0].material.update();
+            this.entity.model.meshInstances[0].material.emissiveMap = asset.resource;
+            this.entity.model.meshInstances[0].material.update();
 
             // start app here when all is ready
             app.start();
@@ -217,7 +217,7 @@
             if ((previousElevation < 0 && elevation >= 0) || (elevation < 0 && previousElevation >= 0)) {
 
                 // create new decal at next index, and roll the index around if out of range
-                CreateDecal(decalIndex, self.ball.getLocalPosition());
+                createDecal(decalIndex, self.ball.getLocalPosition());
                 decalIndex++;
                 if (decalIndex >= self.numDecals)
                     decalIndex = 0;
@@ -237,7 +237,7 @@
             }
 
             // update mesh with the streams that were updated
-            UpdateMesh(self.app.graphicsDevice, self.mesh, positionsUpdated, colorsUpdated);
+            updateMesh(self.app.graphicsDevice, self.mesh, positionsUpdated, colorsUpdated);
         });
 
     </script>
