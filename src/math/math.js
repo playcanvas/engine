@@ -263,19 +263,12 @@ pc.math = {
     /**
      * @function
      * @name pc.math.roundUp
-     * @description Rounds a number up to nearest multiple. Works for positive parameters.
+     * @description Rounds a number up to nearest multiple.
      * @param {number} numToRound - The number to round up.
      * @param {number} multiple - The multiple to round up to.
      * @returns {number} A number rounded up to nearest multiple.
      */
     roundUp: function (numToRound, multiple) {
-        if (multiple == 0)
-            return numToRound;
-
-        var remainder = numToRound % multiple;
-        if (remainder == 0)
-            return numToRound;
-
-        return numToRound + multiple - remainder;
+        return Math.ceil(numToRound / multiple) * multiple;
     }
 };
