@@ -5,7 +5,9 @@
 uniform samplerCube texture_prefilteredCubeMap128;
 #endif
 uniform float material_reflectivity;
-
+#ifdef CLEARCOAT
+    uniform float material_clear_coat_reflectivity;
+#endif
 void addReflection() {
 
     float bias = saturate(1.0 - dGlossiness) * 5.0; // multiply by max mip level
@@ -15,5 +17,15 @@ void addReflection() {
     vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
 
     dReflection += vec4(refl, material_reflectivity);
+
+    #ifdef CLEARCOAT
+        bias = saturate(1.0 - ccGlossiness) * 5.0; // multiply by max mip level
+        fixedReflDir = fixSeams(cubeMapProject(ccReflDirW), bias);
+        fixedReflDir.x *= -1.0;
+
+        refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
+
+        ccReflection += vec4(refl, material_clear_coat_reflectivity);
+    #endif
 }
 

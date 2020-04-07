@@ -869,6 +869,10 @@ pc.programlib.standard = {
         var codeBegin = code;
         code = "";
 
+        if (options.clearCoat>0) {
+            code += '#define CLEARCOAT 1\n';
+        } 
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         var shadowTypeUsed = [];
@@ -1238,6 +1242,9 @@ pc.programlib.standard = {
 
             code += "   getNormal();\n";
             if (options.useSpecular) {
+                if (options.clearCoat) {
+                    code += "   getNormalCC();\n";
+                }
                 if (options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
@@ -1378,11 +1385,16 @@ pc.programlib.standard = {
                 }
 
                 code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                
+                if (options.useSpecular && options.clearCoat ) {
+                    code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                }
 
                 if (options.useSpecular) {
                     code += "       dAtten *= getLightSpecular();\n";
                     code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
+
 
                 if (lightType !== pc.LIGHTTYPE_DIRECTIONAL) {
                     code += "   }\n"; // BRANCH END
@@ -1463,6 +1475,12 @@ pc.programlib.standard = {
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+        if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";       
+        if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";    
+        if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
+        if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";    
+        if (code.includes("ccSpecularity")) structCode += "vec3 ccSpecularity;\n";
+        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness=0.9;\n";        
 
         code = codeBegin + structCode + code;
 

@@ -40,6 +40,9 @@ Object.assign(pc, function () {
      * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
      * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
      *
+     * @property {number} clearCoat Defines the strength of clear coat layer, clear coat layer is disabled when clearCoat == 0
+     * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer
+     *
      * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
      * This can be used as alternative to specular color to save space.
@@ -692,6 +695,13 @@ Object.assign(pc, function () {
                 }
             }
 
+            if (this.clearCoat>0)
+            {
+                this._setParameter('material_clear_coat_specularity', this.clearCoat);
+                this._setParameter('material_clear_coat_glossiness', this.clearCoatGlossiness);
+                this._setParameter('material_clear_coat_reflectivity', this.clearCoat); // for now don't separate this
+            }
+
             uniform = this.getUniform("shininess", this.shininess, true);
             this._setParameter(uniform.name, uniform.value);
 
@@ -952,6 +962,8 @@ Object.assign(pc, function () {
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
         _defineFloat(obj, "anisotropy", 0);
+        _defineFloat(obj, "clearCoat", 0);
+        _defineFloat(obj, "clearCoatGlossiness", 75);       
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
