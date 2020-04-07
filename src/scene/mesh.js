@@ -379,7 +379,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Mesh#setIndices
-         * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 indices are specified, in which case 32-bit format is used.
+         * @description Sets the index array. Indices are stored using 16-bit format by default, unless more than 65535 vertices are specified, in which case 32-bit format is used.
          * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
          * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
          */
@@ -615,9 +615,8 @@ Object.assign(pc, function () {
 
             // if we don't have index buffer, create new one, otherwise update existing one
             if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
-                var allocateIndexCount = this._geometryData.maxIndices;
-                var createFormat = allocateIndexCount > 0xffff ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
-                this.indexBuffer[0] = new pc.IndexBuffer(device, createFormat, allocateIndexCount, this._geometryData.indicesUsage);
+                var createFormat = this._geometryData.maxVertices > 0xffff ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
+                this.indexBuffer[0] = new pc.IndexBuffer(device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
             }
 
             var srcIndices = this._geometryData.indices;
