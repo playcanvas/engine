@@ -807,7 +807,7 @@ Object.assign(pc, function () {
                 interpolation));
         }
 
-        var quaternions = [];
+        var quatArrays = [];
 
         // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
@@ -816,17 +816,22 @@ Object.assign(pc, function () {
             var curve = curves[channel.sampler];
             curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
 
+            // if this target is a set of quaternion keys, make note of its index so we can perform
+            // quaternion-specific processing on it.
             if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
-                quaternions.push(curve.output);
+                quatArrays.push(curve.output);
             }
         }
 
-        // flip quaternion keys so consecutive orientations fall in the same
-        // winding (taking into consideration double cover)
-        quaternions.sort();
+        // sort the list of array indexes so we can skip dups
+        quatArrays.sort();
+
+        // run through the quaternion data arrays flipping quaternion keys
+        // that don't fall in the same winding order.
         var prevIndex = null;
-        for (i = 0; i < quaternions.length; ++i) {
-            var index = quaternions[i];
+        for (i = 0; i < quatArrays.length; ++i) {
+            var index = quatArrays[i];
+            // skip over duplicate array indices
             if (i === 0 || index !== prevIndex) {
                 var data = outputs[index];
                 if (data.components === 4) {
