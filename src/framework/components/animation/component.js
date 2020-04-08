@@ -13,7 +13,9 @@ Object.assign(pc, function () {
      * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
      * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
-     * @property {number} duration Get the duration in seconds of the current animation.
+     * @property {number} duration Get the duration in seconds of the current animation. [read only]
+     * @property {pc.Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
+     * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
      */
     var AnimationComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
