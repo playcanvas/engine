@@ -1057,8 +1057,11 @@ pc.programlib.standard = {
             code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
         }
 
-        if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
-            code += chunks.refractionPS;
+        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+            code += chunks.reflectionPS;
+            if (options.refraction){
+                code += chunks.refractionPS;
+            }
         }
 
         if (numShadowLights > 0) {
@@ -1136,6 +1139,10 @@ pc.programlib.standard = {
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        if (options.clearCoat > 0 ) {
+            code += chunks.combineClearCoatPS;
         }
 
         var addAmbient = true;
@@ -1383,7 +1390,7 @@ pc.programlib.standard = {
 
                 code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
-                if (options.useSpecular && options.clearCoat > 0 ) {
+                if (options.clearCoat > 0 ) {
                     code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
 

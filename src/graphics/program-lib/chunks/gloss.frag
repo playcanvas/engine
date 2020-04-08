@@ -7,7 +7,7 @@ uniform sampler2D texture_glossMap;
 #endif
 
 #ifdef CLEARCOAT
-uniform float material_clear_coat_glossiness;
+uniform float material_clearCoatGlossiness;
 #endif
 
 void getGlossiness() {
@@ -29,7 +29,7 @@ void getGlossiness() {
 
     #ifdef CLEARCOAT
         ccGlossiness = 1.0;
-        ccGlossiness *= material_clear_coat_glossiness*0.01;
+        ccGlossiness *= material_clearCoatGlossiness*0.01;
         ccGlossiness += 0.0000001;
     #endif
 }

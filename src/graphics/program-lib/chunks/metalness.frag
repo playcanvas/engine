@@ -13,7 +13,7 @@ uniform sampler2D texture_metalnessMap;
 #endif
 
 #ifdef CLEARCOAT
-uniform float material_clear_coat_specularity;
+uniform float material_clearCoatSpecularity;
 #endif
 
 void getSpecularity() {
@@ -35,7 +35,7 @@ void getSpecularity() {
 
     #ifdef CLEARCOAT
         ccSpecularity = vec3(1.0);
-        ccSpecularity *= material_clear_coat_specularity;
+        ccSpecularity *= material_clearCoatSpecularity;
     #endif
 }
 

@@ -24,7 +24,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -84,7 +83,7 @@
             app.root.addChild(sphere);
         }
 
-        // load a textures, create materials and spheres
+        // async load a textures, create materials and spheres, then start app 
         app.assets.loadFromUrl("../assets/textures/flakes5n.png", "texture", function (err, asset) {
             var normalMap = asset.resource;
             app.assets.loadFromUrl("../assets/textures/flakes5c.png", "texture", function (err, asset) {
@@ -127,6 +126,8 @@
                     clearCoatMaterial.update();
 
                     createSphere(0.5, 0, 0, clearCoatMaterial);
+
+                    app.start();
                 });
             });
         });

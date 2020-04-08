@@ -696,9 +696,9 @@ Object.assign(pc, function () {
             }
 
             if (this.clearCoat > 0) {
-                this._setParameter('material_clear_coat_specularity', this.clearCoat);
-                this._setParameter('material_clear_coat_glossiness', this.clearCoatGlossiness);
-                this._setParameter('material_clear_coat_reflectivity', this.clearCoat); // for now don't separate this
+                this._setParameter('material_clearCoatSpecularity', this.clearCoat);
+                this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
+                this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
             }
 
             uniform = this.getUniform("shininess", this.shininess, true);

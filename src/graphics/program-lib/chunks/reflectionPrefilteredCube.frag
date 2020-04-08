@@ -7,12 +7,7 @@ uniform samplerCube texture_prefilteredCubeMap8;
 #define PMREM4
 uniform samplerCube texture_prefilteredCubeMap4;
 #endif
-uniform float material_reflectivity;
-#ifdef CLEARCOAT
-    uniform float material_clear_coat_reflectivity;
-#endif
-vec4 addReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
-
+vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
     // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.
     // We fix mip0 to 128x128, so code is rather static.
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
@@ -64,11 +59,3 @@ vec4 addReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivi
     return vec4(refl, tmaterial_reflectivity);
 }
 
-void addReflection() {
-
-    dReflection += addReflection(dReflDirW, dGlossiness, material_reflectivity);
-
-    #ifdef CLEARCOAT
-        ccReflection += addReflection(ccReflDirW, ccGlossiness, material_clear_coat_reflectivity);
-    #endif   
-}

@@ -1,8 +1,5 @@
 uniform sampler2D texture_sphereMap;
-uniform float material_reflectivity;
-#ifdef CLEARCOAT
-    uniform float material_clear_coat_reflectivity;
-#endif
+
 vec2 getDpAtlasUv(vec2 uv, float mip) {
 
     vec4 rect;
@@ -27,8 +24,7 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
     return uv;
 }
 
-vec4 addReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
-
+vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
     vec3 reflDir = normalize(cubeMapProject(tReflDirW));
 
     // Convert vector to DP coords
@@ -54,14 +50,3 @@ vec4 addReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivi
 
     return vec4(tex1, tmaterial_reflectivity);
 }
-
-void addReflection() {
-
-    dReflection += addReflection(dReflDirW, dGlossiness, material_reflectivity);
-
-    #ifdef CLEARCOAT
-        ccReflection += addReflection(ccReflDirW, ccGlossiness, material_clear_coat_reflectivity);
-    #endif   
-}
-
-

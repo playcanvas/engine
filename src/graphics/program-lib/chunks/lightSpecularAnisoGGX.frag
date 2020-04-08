@@ -1,5 +1,5 @@
 // Anisotropic GGX
-float getLightSpecular(float tGlossiness, vec3 tNormalW) {
+float calcLightSpecular(float tGlossiness, vec3 tNormalW) {
     float PI = 3.141592653589793;
     float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
     float anisotropy = material_anisotropy * roughness;
@@ -34,11 +34,9 @@ float getLightSpecular(float tGlossiness, vec3 tNormalW) {
 }
 
 float getLightSpecular() {
-
-    return getLightSpecular(dGlossiness, dNormalW);
+    return calcLightSpecular(dGlossiness, dNormalW);
 }
 
 float getLightSpecularCC() {
-
-    return getLightSpecular(ccGlossiness, ccNormalW);
+    return calcLightSpecular(ccGlossiness, ccNormalW);
 }
