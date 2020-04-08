@@ -26,7 +26,7 @@ void getSpecularity() {
     #endif
 
     #ifdef CLEARCOAT
-        cSpecularity = vec3(1.0);
+        ccSpecularity = vec3(1.0);
         ccSpecularity *= material_clear_coat_specularity;
     #endif
 }

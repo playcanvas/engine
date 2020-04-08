@@ -1242,9 +1242,6 @@ pc.programlib.standard = {
 
             code += "   getNormal();\n";
             if (options.useSpecular) {
-                if (options.clearCoat) {
-                    code += "   getNormalCC();\n";
-                }
                 if (options.enableGGXSpecular) {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
@@ -1386,7 +1383,7 @@ pc.programlib.standard = {
 
                 code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 
-                if (options.useSpecular && options.clearCoat ) {
+                if (options.useSpecular && options.clearCoat>0 ) {
                     code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
 

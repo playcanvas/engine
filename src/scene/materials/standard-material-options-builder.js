@@ -22,6 +22,8 @@ Object.assign(pc, function () {
         options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
+        options.clearCoat = stdMat.clearCoat;
+        options.clearCoatGlossiness = stdMat.clearCoatGlossiness;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
