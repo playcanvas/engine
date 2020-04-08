@@ -1,12 +1,13 @@
 Object.assign(pc, function () {
 
     /**
-     * @private
      * @class
      * @name pc.SceneRegistryItem
      * @description Item to be stored in the {@link pc.SceneRegistry}.
      * @param {string} name - The name of the scene.
      * @param {string} url - The url of the scene file.
+     * @property {string} name - The name of the scene.
+     * @property {string} url - The url of the scene file.
      */
     var SceneRegistryItem = function (name, url) {
         this.name = name;
@@ -14,7 +15,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @class
      * @name pc.SceneRegistry
      * @description Container for storing the name and url for scene files.
@@ -32,7 +32,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#list
      * @description Return the list of scene.
@@ -43,7 +42,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#add
      * @description  Add a new item to the scene registry.
@@ -69,7 +67,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#find
      * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}.
@@ -85,7 +82,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#findByUrl
      * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}.
@@ -100,7 +96,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#remove
      * @description  Remove an item from the scene registry.
@@ -129,7 +124,6 @@ Object.assign(pc, function () {
 
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
@@ -190,7 +184,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
@@ -231,7 +224,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used by the pc.Application.
