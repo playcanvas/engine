@@ -14,7 +14,7 @@ Object.assign(pc, function () {
      * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
      * @property {number} duration Get the duration in seconds of the current animation. [read only]
-     * @property {pc.Skeleton} skeleton Get or Set the skeleton for the current model.
+     * @property {pc.Skeleton} skeleton Get the skeleton for the current model. [read only]
      * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
      */
     var AnimationComponent = function (system, entity) {
