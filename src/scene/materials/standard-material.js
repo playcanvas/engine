@@ -695,8 +695,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (this.clearCoat>0)
-            {
+            if (this.clearCoat > 0) {
                 this._setParameter('material_clear_coat_specularity', this.clearCoat);
                 this._setParameter('material_clear_coat_glossiness', this.clearCoatGlossiness);
                 this._setParameter('material_clear_coat_reflectivity', this.clearCoat); // for now don't separate this
@@ -963,7 +962,7 @@ Object.assign(pc, function () {
         _defineFloat(obj, "metalness", 1);
         _defineFloat(obj, "anisotropy", 0);
         _defineFloat(obj, "clearCoat", 0);
-        _defineFloat(obj, "clearCoatGlossiness", 75);       
+        _defineFloat(obj, "clearCoatGlossiness", 75);
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
