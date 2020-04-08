@@ -94,8 +94,16 @@ Object.assign(pc, function () {
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             elementSize = elementDesc.components * _typeSize[elementDesc.type];
-            if (vertexCount)
+            if (vertexCount) {
                 offset = pc.math.roundUp(offset, elementSize);
+
+                // #ifdef DEBUG
+                // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
+                // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
+                if ( (elementSize % 4) !== 0)
+                    console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
+                // #endif
+            }
 
             element = {
                 name: elementDesc.semantic,
