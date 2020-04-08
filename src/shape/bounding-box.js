@@ -321,7 +321,7 @@ Object.assign(pc, function () {
          * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
          */
         compute: function (vertices, numVerts) {
-            numVerts = numVerts || vertices.length / 3;
+            numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
             if (numVerts > 0) {
                 var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
                 var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
