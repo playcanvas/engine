@@ -807,11 +807,47 @@ Object.assign(pc, function () {
                 interpolation));
         }
 
+        var quaternions = [];
+
         // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            curves[channel.sampler]._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+            var curve = curves[channel.sampler];
+            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+
+            if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
+                quaternions.push(curve.output);
+            }
+        }
+
+        // flip quaternion keys so consecutive orientations fall in the same
+        // winding (taking into consideration double cover)
+        quaternions.sort();
+        var prevIndex = null;
+        for (i = 0; i < quaternions.length; ++i) {
+            var index = quaternions[i];
+            if (i === 0 || index !== prevIndex) {
+                var data = outputs[index];
+                if (data.components === 4) {
+                    var d = data.data;
+                    var len = d.length - 4;
+                    for (var j = 0; j < len; j += 4) {
+                        var dp = d[j + 0] * d[j + 4] +
+                                 d[j + 1] * d[j + 5] +
+                                 d[j + 2] * d[j + 6] +
+                                 d[j + 3] * d[j + 7];
+
+                        if (dp < 0) {
+                            d[j + 4] *= -1;
+                            d[j + 5] *= -1;
+                            d[j + 6] *= -1;
+                            d[j + 7] *= -1;
+                        }
+                    }
+                }
+                prevIndex = index;
+            }
         }
 
         // calculate duration of the animation as maximum time value
