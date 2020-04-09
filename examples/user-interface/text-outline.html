@@ -59,23 +59,61 @@
             color: new pc.Color(0, 0, 0),
             fontSize: 128,
             outlineColor: new pc.Color(1, 1, 1),
-            outlineThickness: 0.75,
+            outlineThickness: 1.0,
             pivot: [ 0.5, 0.5 ],
-            text: "Outline",
+            text: "Outlines v1",
             type: pc.ELEMENTTYPE_TEXT,
             width: 640
         });
         screen.addChild(text);
+        text.setLocalPosition(0, 150, 0);
+
+        var text2 = new pc.Entity();
+        text2.addComponent("element", {
+            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            autoWidth: false,
+            color: new pc.Color(0, 0, 0),
+            fontSize: 128,
+            outlineColor: new pc.Color(1, 1, 1),
+            outlineThickness: 2.0,
+            pivot: [ 0.5, 0.5 ],
+            text: "Outlines v2",
+            type: pc.ELEMENTTYPE_TEXT,
+            width: 640
+        });
+        screen.addChild(text2);
+        text2.setLocalPosition(0, -150, 0);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('Arial_1.json', "font", {url: "../assets/fonts/Arial_1.json"});
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;
         });
 
+        //var fontAsset2 = new pc.Asset('OpenSans-Bold.json', "font", {url: "../assets/fonts/OpenSans-Bold.json"});
+        var fontAsset2 = new pc.Asset('Arial_2.json', "font", {url: "../assets/fonts/Arial_2.json"});
+        fontAsset2.on('load', function () {
+            // Apply the font to the text element
+            text2.element.fontAsset = fontAsset2;
+        });
+
         app.assets.add(fontAsset);
+        app.assets.add(fontAsset2);        
         app.assets.load(fontAsset);
+        app.assets.load(fontAsset2);        
+
+        // Set an update function on the app's update event
+        var thickness = 0;
+        app.on("update", function (dt) {
+            thickness += dt;
+            if (thickness > 5) {
+                thickness = 0;
+            }
+
+            //text.element.outlineThickness=thickness;
+            //text2.element.outlineThickness=thickness;
+        });        
     </script>
 </body>
 </html>

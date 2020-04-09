@@ -1594,10 +1594,12 @@ Object.assign(pc, function () {
         set: function (value) {
 
             var previousFontType;
+            var previousFontVersion;
 
             if (this._font) {
                 previousFontType = this._font.type;
-
+                previousFontVersion = this._font.data.version;
+ 
                 // remove render event listener
                 if (this._font.off) this._font.off('render', this._onFontRender, this);
             }
@@ -1643,6 +1645,16 @@ Object.assign(pc, function () {
             this._multiPassEnabled = !(this._outlineThickness > 1.0 && this._font.textures.length == 1); // this line forces a call to _updateMeshInfos
 
             this._updateText();
+
+            // if font version has changed we will need to change the _outlineThicknessScale and update the material parameter
+            if (value.data.version !== previousFontVersion) {
+                this._outlineThicknessScale = (this._font.data.version==3) ? 0.2 : 0.1;
+
+                for (var i = 0; i < this._model.meshInstances.length; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("outline_thickness", this._outlineThicknessScale * Math.min(this._outlineThickness,(this._font.data.version==3) ? 1.0 : 5.0));
+                }
+            }
         }
     });
 
@@ -1830,7 +1842,7 @@ Object.assign(pc, function () {
 
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * Math.min(this._outlineThickness,(this._font.data.version==3) ? 1.0 : 5.0));
                     }
                 }
             }

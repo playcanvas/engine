@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     function upgradeDataSchema(data) {
         // convert v1 and v2 to v3 font data schema
-        if (data.version < 3) {
+        if (data.version < 3 || data.version == 4) { //seems upgraded schema is never saved out?
             if (data.version < 2) {
                 data.info.maps = data.info.maps || [{
                     width: data.info.width,
@@ -20,7 +20,7 @@ Object.assign(pc, function () {
                 newChars[newKey] = existing;
                 return newChars;
             }, {});
-            data.version = 3;
+            data.version = Math.max(data.version, 3);
         }
         return data;
     }
