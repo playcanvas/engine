@@ -29,7 +29,7 @@ void getGlossiness() {
 
     #ifdef CLEARCOAT
         ccGlossiness = 1.0;
-        ccGlossiness *= material_clearCoatGlossiness*0.01;
+        ccGlossiness *= material_clearCoatGlossiness;
         ccGlossiness += 0.0000001;
     #endif
 }
