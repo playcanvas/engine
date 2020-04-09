@@ -86,7 +86,7 @@ Object.assign(pc, function () {
      * var mesh = new pc.Mesh();
      * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
      * mesh.setPositions(positions);
-     * mesh.updateGeometry(device);
+     * mesh.update();
      * ~~~
      *
      * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
@@ -99,7 +99,7 @@ Object.assign(pc, function () {
      * mesh.setPositions(positions);
      * mesh.setUvs(0, uvs);
      * mesh.setIndices(indices);
-     * mesh.updateGeometry(device);
+     * mesh.update();
      * ~~~
      *
      * Follow these links for more complex examples showing the functionality.
@@ -114,6 +114,8 @@ Object.assign(pc, function () {
      * See {@link pc.VertexBuffer}, {@link pc.IndexBuffer} and {@link pc.VertexFormat} for details.
      * ***
      * @description Create a new mesh.
+     * @param {pc.GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
+     * from the {@link pc.Application}.
      * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
      * @property {pc.IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
      * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
@@ -139,9 +141,10 @@ Object.assign(pc, function () {
      * @property {pc.Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
      * @property {pc.Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
      */
-    var Mesh = function () {
+    var Mesh = function (graphicsDevice) {
         this._refCount = 0;
         this.id = id++;
+        this.device = graphicsDevice || pc.Application.getApplication().graphicsDevice;
         this.vertexBuffer = null;
         this.indexBuffer = [null];
         this.primitive = [{
@@ -225,7 +228,7 @@ Object.assign(pc, function () {
          * @description Clears the mesh of existing vertices and indices and resets the
          * {@link pc.VertexFormat} associated with the mesh. This call is typically followed by calls
          * to methods such as {@link pc.Mesh#setPositions}, {@link pc.Mesh#setVertexStream} or {@link pc.Mesh#setIndices} and
-         * finally {@link pc.Mesh#updateGeometry} to rebuild the mesh, allowing different {@link pc.VertexFormat}.
+         * finally {@link pc.Mesh#update} to rebuild the mesh, allowing different {@link pc.VertexFormat}.
          * @param {boolean} [verticesDynamic] - Indicates the {@link pc.VertexBuffer} should be created with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
          * @param {boolean} [indicesDynamic] - Indicates the {@link pc.IndexBuffer} should be created with {@link pc.BUFFER_DYNAMIC} usage. If not specified, {@link pc.BUFFER_STATIC} is used.
          * @param {number} [maxVertices] - {@link pc.VertexBuffer} will be allocated with at least maxVertices, allowing additional vertices to be added to it without the allocation. If
@@ -477,17 +480,16 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.Mesh#updateGeometry
+         * @name pc.Mesh#update
          * @description Applies any changes to vertex stream and indices to mesh. This allocates or reallocates {@link pc.vertexBuffer} or {@link pc.IndexBuffer}
          * to fit all provided vertices and indices, and fills them with data.
-         * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
          * @param {number} [primitiveType] - The type of primitive to render. Can be one of pc.PRIMITIVE_* - see primitive[].type section above. Defaults
          * to pc.PRIMITIVE_TRIANGLES if unspecified.
-         * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time updateGeometry
+         * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time update
          * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link pc.Mesh#setPositions}. Defaults to true if unspecified.
          * Set this to false to avoid update of the bounding box and use aabb property to set it instead.
          */
-        updateGeometry: function (device, primitiveType, updateBoundingBox) {
+        update: function (primitiveType, updateBoundingBox) {
 
             if (this._geometryData) {
 
@@ -533,12 +535,12 @@ Object.assign(pc, function () {
 
                 // update vertices if needed
                 if (this._geometryData.vertexStreamsUpdated) {
-                    this._updateVertexBuffer(device);
+                    this._updateVertexBuffer();
                 }
 
                 // update indices if needed
                 if (this._geometryData.indexStreamUpdated) {
-                    this._updateIndexBuffer(device);
+                    this._updateIndexBuffer();
                 }
 
                 // set up primitive parameters
@@ -567,7 +569,7 @@ Object.assign(pc, function () {
         },
 
         // builds vertex format based on attached vertex streams
-        _buildVertexFormat: function (device, vertexCount) {
+        _buildVertexFormat: function (vertexCount) {
 
             var vertexDesc = [];
 
@@ -581,17 +583,17 @@ Object.assign(pc, function () {
                 });
             }
 
-            return new pc.VertexFormat(device, vertexDesc, vertexCount);
+            return new pc.VertexFormat(this.device, vertexDesc, vertexCount);
         },
 
         // copy attached data into vertex buffer
-        _updateVertexBuffer: function (device) {
+        _updateVertexBuffer: function () {
 
             // if we don't have vertex buffer, create new one, otherwise update existing one
             if (!this.vertexBuffer) {
                 var allocateVertexCount = this._geometryData.maxVertices;
-                var format = this._buildVertexFormat(device, allocateVertexCount);
-                this.vertexBuffer = new pc.VertexBuffer(device, format, allocateVertexCount, this._geometryData.verticesUsage);
+                var format = this._buildVertexFormat(allocateVertexCount);
+                this.vertexBuffer = new pc.VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage);
             }
 
             // lock vertex buffer and create typed access arrays for individual elements
@@ -611,12 +613,12 @@ Object.assign(pc, function () {
         },
 
         // copy attached data into index buffer
-        _updateIndexBuffer: function (device) {
+        _updateIndexBuffer: function () {
 
             // if we don't have index buffer, create new one, otherwise update existing one
             if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
                 var createFormat = this._geometryData.maxVertices > 0xffff ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
-                this.indexBuffer[0] = new pc.IndexBuffer(device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
+                this.indexBuffer[0] = new pc.IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
             }
 
             var srcIndices = this._geometryData.indices;

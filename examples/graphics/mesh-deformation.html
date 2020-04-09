@@ -122,7 +122,7 @@
                     // set new positions on the mesh
                     var mesh = self.allMeshes[i].mesh;
                     mesh.setPositions(tempPositions);
-                    mesh.updateGeometry(self.app.graphicsDevice);
+                    mesh.update();
                 }
             }
         });

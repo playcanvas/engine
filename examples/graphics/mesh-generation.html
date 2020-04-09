@@ -116,7 +116,7 @@
         }
 
         // helper function to update required vertex / index streams
-        function UpdateMesh(device, mesh, initAll) {
+        function updateMesh(mesh, initAll) {
 
             // Set updated positions and normal each frame
             mesh.setPositions(this.positions);
@@ -129,13 +129,13 @@
             }
 
             // Let mesh update Vertex and Index buffer as needed
-            self.mesh.updateGeometry(device, pc.PRIMITIVE_TRIANGLES);
+            self.mesh.update(pc.PRIMITIVE_TRIANGLES);
         }
 
         // Create a mesh with dynamic vertex buffer and static index buffer
         this.mesh = new pc.Mesh();
         this.mesh.clear(true, false);
-        UpdateMesh(this.app.graphicsDevice, this.mesh, true);
+        updateMesh(this.mesh, true);
 
         // Create the mesh instance
         var node = new pc.GraphNode();
@@ -208,7 +208,7 @@
             }
 
             // update the mesh
-            UpdateMesh(self.app.graphicsDevice, self.mesh);
+            updateMesh(self.mesh);
         });
 
     </script>

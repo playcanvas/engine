@@ -133,7 +133,7 @@
         }
 
         // helper function to update required vertex streams
-        function updateMesh(device, mesh, updatePositions, updateColors, initAll) {
+        function updateMesh(mesh, updatePositions, updateColors, initAll) {
 
             // update positions when needed
             if (updatePositions)
@@ -149,13 +149,13 @@
                 mesh.setUvs(0, self.uvs);
             }
 
-            mesh.updateGeometry(device, pc.PRIMITIVE_TRIANGLES);
+            mesh.update(pc.PRIMITIVE_TRIANGLES);
         }
 
         // Create a mesh with dynamic vertex buffer and static index buffer
         this.mesh = new pc.Mesh();
         this.mesh.clear(true, false);
-        updateMesh(this.app.graphicsDevice, this.mesh, true, true, true);
+        updateMesh(this.mesh, true, true, true);
 
         // create material
         this.material = new pc.StandardMaterial();
@@ -237,7 +237,7 @@
             }
 
             // update mesh with the streams that were updated
-            updateMesh(self.app.graphicsDevice, self.mesh, positionsUpdated, colorsUpdated);
+            updateMesh(self.mesh, positionsUpdated, colorsUpdated);
         });
 
     </script>
