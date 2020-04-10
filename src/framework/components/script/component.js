@@ -484,18 +484,28 @@ Object.assign(pc, function () {
             return scriptInstance instanceof scriptType; // will return false if scriptInstance undefined
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#get
-         * @description Get a script instance (if attached) using name of {@link pc.ScriptType}.
-         * @param {string} name - The name of the Script Type.
+         * @description Get a script instance (if attached).
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {pc.ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
          * @example
          * var controller = entity.script.get('playerController');
          */
-        get: function (name) {
-            var index = this._scriptsIndex[name];
-            return (index && index.instance) || null;
+        /* eslint-enable jsdoc/no-undefined-types */
+        get: function (nameOrType) {
+            if (typeof nameOrType === 'string') {
+                var data = this._scriptsIndex[nameOrType];
+                return data ? data.instance : null;
+            }
+
+            var scriptType = nameOrType;
+            var scriptName = scriptType.__name;
+            var scriptData = this._scriptsIndex[scriptName];
+            var scriptInstance = scriptData && scriptData.instance;
+            return scriptInstance instanceof scriptType ? scriptInstance : null;
         },
 
         /* eslint-disable jsdoc/no-undefined-types */
