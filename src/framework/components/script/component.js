@@ -835,31 +835,39 @@ Object.assign(pc, function () {
             }
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#move
          * @description Move script instance to different position to alter update order of scripts within entity.
-         * @param {string} name - The name of the Script Type.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @param {number} ind - New position index.
          * @returns {boolean} If it was successfully moved.
          * @example
          * entity.script.move('playerController', 0);
          */
-        move: function (name, ind) {
+        /* eslint-enable jsdoc/no-undefined-types */
+        move: function (nameOrType, ind) {
             var len = this._scripts.length;
             if (ind >= len || ind < 0)
                 return false;
 
-            var scriptName = name;
+            var scriptType = nameOrType;
+            var scriptName = nameOrType;
 
             if (typeof scriptName !== 'string')
-                scriptName = name.__name;
+                scriptName = nameOrType.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
             if (!scriptData || !scriptData.instance)
                 return false;
 
-            var indOld = this._scripts.indexOf(scriptData.instance);
+            // if script type specified, make sure instance of said type
+            var scriptInstance = scriptData.instance;
+            if (scriptType && !(scriptInstance instanceof scriptType))
+                return false;
+
+            var indOld = this._scripts.indexOf(scriptInstance);
             if (indOld === -1 || indOld === ind)
                 return false;
 
@@ -871,8 +879,8 @@ Object.assign(pc, function () {
             this._updateList.sort();
             this._postUpdateList.sort();
 
-            this.fire('move', scriptName, scriptData.instance, ind, indOld);
-            this.fire('move:' + scriptName, scriptData.instance, ind, indOld);
+            this.fire('move', scriptName, scriptInstance, ind, indOld);
+            this.fire('move:' + scriptName, scriptInstance, ind, indOld);
 
             return true;
         }
