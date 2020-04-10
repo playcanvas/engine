@@ -41,35 +41,36 @@ Object.assign(pc, function () {
     /* eslint-enable jsdoc/no-undefined-types */
     ScriptRegistry.prototype.add = function (script) {
         var self = this;
+        var scriptName = script.__name;
 
-        if (this._scripts.hasOwnProperty(script.__name)) {
+        if (this._scripts.hasOwnProperty(scriptName)) {
             setTimeout(function () {
                 if (script.prototype.swap) {
                     // swapping
-                    var old = self._scripts[script.__name];
+                    var old = self._scripts[scriptName];
                     var ind = self._list.indexOf(old);
                     self._list[ind] = script;
-                    self._scripts[script.__name] = script;
+                    self._scripts[scriptName] = script;
 
-                    self.fire('swap', script.__name, script);
-                    self.fire('swap:' + script.__name, script);
+                    self.fire('swap', scriptName, script);
+                    self.fire('swap:' + scriptName, script);
                 } else {
-                    console.warn('script registry already has \'' + script.__name + '\' script, define \'swap\' method for new script type to enable code hot swapping');
+                    console.warn('script registry already has \'' + scriptName + '\' script, define \'swap\' method for new script type to enable code hot swapping');
                 }
             });
             return false;
         }
 
-        this._scripts[script.__name] = script;
+        this._scripts[scriptName] = script;
         this._list.push(script);
 
-        this.fire('add', script.__name, script);
-        this.fire('add:' + script.__name, script);
+        this.fire('add', scriptName, script);
+        this.fire('add:' + scriptName, script);
 
         // for all components awaiting Script Type
         // create script instance
         setTimeout(function () {
-            if (!self._scripts.hasOwnProperty(script.__name))
+            if (!self._scripts.hasOwnProperty(scriptName))
                 return;
 
 
@@ -88,13 +89,13 @@ Object.assign(pc, function () {
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
                 var component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (component._scriptsIndex[script.__name] && component._scriptsIndex[script.__name].awaiting) {
-                    if (component._scriptsData && component._scriptsData[script.__name])
-                        attributes = component._scriptsData[script.__name].attributes;
+                if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
+                    if (component._scriptsData && component._scriptsData[scriptName])
+                        attributes = component._scriptsData[scriptName].attributes;
 
-                    scriptInstance = component.create(script.__name, {
+                    scriptInstance = component.create(scriptName, {
                         preloading: true,
-                        ind: component._scriptsIndex[script.__name].ind,
+                        ind: component._scriptsIndex[scriptName].ind,
                         attributes: attributes
                     });
 
