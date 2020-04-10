@@ -178,19 +178,26 @@ Object.assign(pc, function () {
         return this._scripts[name] || null;
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#has
      * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
-     * @param {string} name - Name of a {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if {@link pc.ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
      * }
      */
-    ScriptRegistry.prototype.has = function (name) {
-        return this._scripts.hasOwnProperty(name);
+    /* eslint-enable jsdoc/no-undefined-types */
+    ScriptRegistry.prototype.has = function (nameOrType) {
+        if (typeof nameOrType === 'string') {
+            return this._scripts.hasOwnProperty(nameOrType);
+        }
+
+        var scriptName = scriptType.__name;
+        return this._scripts[scriptName] == scriptType;
     };
 
     /* eslint-disable jsdoc/no-undefined-types */
