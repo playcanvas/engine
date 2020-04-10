@@ -135,30 +135,36 @@ Object.assign(pc, function () {
         return true;
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#remove
      * @description Remove {@link pc.ScriptType}.
-     * @param {string} name - Name of a {@link pc.ScriptType} to remove.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
      */
-    ScriptRegistry.prototype.remove = function (name) {
-        if (typeof name === 'function')
-            name = name.__name;
+    /* eslint-enable jsdoc/no-undefined-types */
+    ScriptRegistry.prototype.remove = function (nameOrType) {
+        var scriptType = nameOrType;
+        var scriptName = nameOrType;
 
-        if (!this._scripts.hasOwnProperty(name))
+        if (typeof scriptName !== 'string') {
+            scriptName = scriptType.__name;
+        } else {
+            scriptType = this.get(scriptName);
+        }
+
+        if (this.get(scriptName) !== scriptType)
             return false;
 
-        var item = this._scripts[name];
-        delete this._scripts[name];
-
-        var ind = this._list.indexOf(item);
+        delete this._scripts[scriptName];
+        var ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
-        this.fire('remove', name, item);
-        this.fire('remove:' + name, item);
+        this.fire('remove', scriptName, scriptType);
+        this.fire('remove:' + scriptName, scriptType);
 
         return true;
     };
