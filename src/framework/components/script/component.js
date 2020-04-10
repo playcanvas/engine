@@ -10,7 +10,6 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
      */
-
     var ScriptComponent = function ScriptComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
@@ -460,19 +459,29 @@ Object.assign(pc, function () {
             }
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#has
-         * @description Detect if script is attached to an entity using name of {@link pc.ScriptType}.
-         * @param {string} name - The name of the Script Type.
+         * @description Detect if script is attached to an entity.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {boolean} If script is attached to an entity.
          * @example
          * if (entity.script.has('playerController')) {
          *     // entity has script
          * }
          */
-        has: function (name) {
-            return !!this._scriptsIndex[name];
+        /* eslint-enable jsdoc/no-undefined-types */
+        has: function (nameOrType) {
+            if (typeof nameOrType === 'string') {
+                return !!this._scriptsIndex[nameOrType];
+            }
+
+            var scriptType = nameOrType;
+            var scriptName = scriptType.__name;
+            var scriptData = this._scriptsIndex[scriptName];
+            var scriptInstance = scriptData && scriptData.instance;
+            return scriptInstance instanceof scriptType; // will return false if scriptInstance undefined
         },
 
         /**
