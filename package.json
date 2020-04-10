@@ -37,7 +37,7 @@
     "@playcanvas/eslint-config": "^1.0.5",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
-    "fs-extra": "^9.0.0",
+    "fs-extra": "^8.1.0",
     "google-closure-compiler": "20200406.0.0",
     "http-server": "^0.12.1",
     "jsdoc": "^3.6.4",
