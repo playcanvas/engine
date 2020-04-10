@@ -670,14 +670,28 @@ Object.assign(pc, function () {
             return true;
         },
 
-        swap: function (script) {
-            var scriptType = script;
+        /* eslint-disable jsdoc/no-undefined-types */
+        /**
+         * @private
+         * @function
+         * @name pc.ScriptComponent#swap
+         * @description Swap the script instance.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+         * @returns {boolean} If it was successfully swapped.
+         */
+        /* eslint-enable jsdoc/no-undefined-types */
+        swap: function (nameOrType) {
+            var scriptName = nameOrType;
+            var scriptType = nameOrType;
 
             // shorthand using script name
-            if (typeof scriptType === 'string')
+            if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
+            } else if (scriptType) {
+                scriptName = scriptType.__name;
+            }
 
-            var old = this._scriptsIndex[scriptType.__name];
+            var old = this._scriptsIndex[scriptName];
             if (!old || !old.instance) return false;
 
             var scriptInstanceOld = old.instance;
@@ -697,8 +711,8 @@ Object.assign(pc, function () {
 
             // add to component
             this._scripts[ind] = scriptInstance;
-            this._scriptsIndex[scriptType.__name].instance = scriptInstance;
-            this[scriptType.__name] = scriptInstance;
+            this._scriptsIndex[scriptName].instance = scriptInstance;
+            this[scriptName] = scriptInstance;
 
             // set execution order and make sure we update
             // our update and postUpdate lists
@@ -719,8 +733,8 @@ Object.assign(pc, function () {
 
             this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
 
-            this.fire('swap', scriptType.__name, scriptInstance);
-            this.fire('swap:' + scriptType.__name, scriptInstance);
+            this.fire('swap', scriptName, scriptInstance);
+            this.fire('swap:' + scriptName, scriptInstance);
 
             return true;
         },
