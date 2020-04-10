@@ -52,8 +52,7 @@
             color: new pc.Color(1, 0.8, 0.25)
         });
         app.root.addChild(light);
-        var e = light.getLocalEulerAngles();
-        light.setLocalEulerAngles(e.x+85, e.y-100, e.z);
+        light.setLocalEulerAngles(85, -100, 0);
 
         // Load a cubemap asset. This DDS file was 'prefiltered' in the
         // PlayCanvas Editor and then downloaded.
@@ -94,9 +93,9 @@
                     var material = new pc.StandardMaterial();
                     material.diffuseMap = diffuseMap;
                     material.metalnessMap = otherMap;
-                    material.metalnessMapChannel ='r'
+                    material.metalnessMapChannel ='r';
                     material.glossMap = otherMap;
-                    material.glossMapChannel ='g'
+                    material.glossMapChannel ='g';
                     material.normalMap = normalMap;
                     material.diffuse = new pc.Color(0.6, 0.6, 0.9);
                     material.diffuseTint = true;
