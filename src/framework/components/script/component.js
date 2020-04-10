@@ -512,8 +512,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#create
-         * @description Create a script instance using name of a {@link pc.ScriptType} and attach to an entity script component.
-         * @param {string|Class<pc.ScriptType>} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate).
+         * @description Create a script instance and attach to an entity script component.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @param {object} [args] - Object with arguments for a script.
          * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
          * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
@@ -530,12 +530,12 @@ Object.assign(pc, function () {
          * });
          */
         /* eslint-enable jsdoc/no-undefined-types */
-        create: function (name, args) {
+        create: function (nameOrType, args) {
             var self = this;
             args = args || { };
 
-            var scriptType = name;
-            var scriptName = name;
+            var scriptType = nameOrType;
+            var scriptName = nameOrType;
 
             // shorthand using script name
             if (typeof scriptType === 'string') {
@@ -545,7 +545,7 @@ Object.assign(pc, function () {
             }
 
             if (scriptType) {
-                if (!this._scriptsIndex[scriptType.__name] || !this._scriptsIndex[scriptType.__name].instance) {
+                if (!this._scriptsIndex[scriptName] || !this._scriptsIndex[scriptName].instance) {
                     // create script instance
                     var scriptInstance = new scriptType({
                         app: this.system.app,
@@ -561,22 +561,22 @@ Object.assign(pc, function () {
 
                     this._insertScriptInstance(scriptInstance, ind, len);
 
-                    this._scriptsIndex[scriptType.__name] = {
+                    this._scriptsIndex[scriptName] = {
                         instance: scriptInstance,
                         onSwap: function () {
-                            self.swap(scriptType.__name);
+                            self.swap(scriptName);
                         }
                     };
 
-                    this[scriptType.__name] = scriptInstance;
+                    this[scriptName] = scriptInstance;
 
                     if (!args.preloading)
                         scriptInstance.__initializeAttributes();
 
-                    this.fire('create', scriptType.__name, scriptInstance);
-                    this.fire('create:' + scriptType.__name, scriptInstance);
+                    this.fire('create', scriptName, scriptInstance);
+                    this.fire('create:' + scriptName, scriptInstance);
 
-                    this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
+                    this.system.app.scripts.on('swap:' + scriptName, this._scriptsIndex[scriptName].onSwap);
 
                     if (!args.preloading) {
 
