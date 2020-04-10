@@ -611,45 +611,48 @@ Object.assign(pc, function () {
             return null;
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#destroy
          * @description Destroy the script instance that is attached to an entity.
-         * @param {string} name - The name of the Script Type.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {boolean} If it was successfully destroyed.
          * @example
          * entity.script.destroy('playerController');
          */
-        destroy: function (name) {
-            var scriptName = name;
-            var scriptType = name;
+        /* eslint-enable jsdoc/no-undefined-types */
+        destroy: function (nameOrType) {
+            var scriptName = nameOrType;
+            var scriptType = nameOrType;
 
             // shorthand using script name
             if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
-                if (scriptType)
-                    scriptName = scriptType.__name;
+            } else if (scriptType) {
+                scriptName = scriptType.__name;
             }
 
             var scriptData = this._scriptsIndex[scriptName];
             delete this._scriptsIndex[scriptName];
             if (!scriptData) return false;
 
-            if (scriptData.instance && !scriptData.instance._destroyed) {
-                scriptData.instance.enabled = false;
-                scriptData.instance._destroyed = true;
+            var scriptInstance = scriptData.instance;
+            if (scriptInstance && !scriptInstance._destroyed) {
+                scriptInstance.enabled = false;
+                scriptInstance._destroyed = true;
 
                 // if we are not currently looping through our scripts
                 // then it's safe to remove the script
                 if (!this._isLoopingThroughScripts) {
-                    var ind = this._removeScriptInstance(scriptData.instance);
+                    var ind = this._removeScriptInstance(scriptInstance);
                     if (ind >= 0) {
                         this._resetExecutionOrder(ind, this._scripts.length);
                     }
                 } else {
                     // otherwise push the script in _destroyedScripts and
                     // remove it from _scripts when the loop is over
-                    this._destroyedScripts.push(scriptData.instance);
+                    this._destroyedScripts.push(scriptInstance);
                 }
             }
 
@@ -658,11 +661,11 @@ Object.assign(pc, function () {
 
             delete this[scriptName];
 
-            this.fire('destroy', scriptName, scriptData.instance || null);
-            this.fire('destroy:' + scriptName, scriptData.instance || null);
+            this.fire('destroy', scriptName, scriptInstance || null);
+            this.fire('destroy:' + scriptName, scriptInstance || null);
 
-            if (scriptData.instance)
-                scriptData.instance.fire('destroy');
+            if (scriptInstance)
+                scriptInstance.fire('destroy');
 
             return true;
         },
