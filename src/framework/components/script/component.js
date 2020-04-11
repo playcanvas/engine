@@ -477,6 +477,7 @@ Object.assign(pc, function () {
                 return !!this._scriptsIndex[nameOrType];
             }
 
+            if (!nameOrType) return false;
             var scriptType = nameOrType;
             var scriptName = scriptType.__name;
             var scriptData = this._scriptsIndex[scriptName];
@@ -501,6 +502,7 @@ Object.assign(pc, function () {
                 return data ? data.instance : null;
             }
 
+            if (!nameOrType) return null;
             var scriptType = nameOrType;
             var scriptName = scriptType.__name;
             var scriptData = this._scriptsIndex[scriptName];
@@ -855,8 +857,11 @@ Object.assign(pc, function () {
             var scriptType = nameOrType;
             var scriptName = nameOrType;
 
-            if (typeof scriptName !== 'string')
+            if (typeof scriptName !== 'string') {
                 scriptName = nameOrType.__name;
+            } else {
+                scriptType = null;
+            }
 
             var scriptData = this._scriptsIndex[scriptName];
             if (!scriptData || !scriptData.instance)
