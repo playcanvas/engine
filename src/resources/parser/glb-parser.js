@@ -807,11 +807,52 @@ Object.assign(pc, function () {
                 interpolation));
         }
 
+        var quatArrays = [];
+
         // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            curves[channel.sampler]._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+            var curve = curves[channel.sampler];
+            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+
+            // if this target is a set of quaternion keys, make note of its index so we can perform
+            // quaternion-specific processing on it.
+            if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
+                quatArrays.push(curve.output);
+            }
+        }
+
+        // sort the list of array indexes so we can skip dups
+        quatArrays.sort();
+
+        // run through the quaternion data arrays flipping quaternion keys
+        // that don't fall in the same winding order.
+        var prevIndex = null;
+        for (i = 0; i < quatArrays.length; ++i) {
+            var index = quatArrays[i];
+            // skip over duplicate array indices
+            if (i === 0 || index !== prevIndex) {
+                var data = outputs[index];
+                if (data.components === 4) {
+                    var d = data.data;
+                    var len = d.length - 4;
+                    for (var j = 0; j < len; j += 4) {
+                        var dp = d[j + 0] * d[j + 4] +
+                                 d[j + 1] * d[j + 5] +
+                                 d[j + 2] * d[j + 6] +
+                                 d[j + 3] * d[j + 7];
+
+                        if (dp < 0) {
+                            d[j + 4] *= -1;
+                            d[j + 5] *= -1;
+                            d[j + 6] *= -1;
+                            d[j + 7] *= -1;
+                        }
+                    }
+                }
+                prevIndex = index;
+            }
         }
 
         // calculate duration of the animation as maximum time value
