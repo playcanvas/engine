@@ -4,16 +4,12 @@
 #extension GL_EXT_shader_texture_lod : enable
 uniform samplerCube texture_prefilteredCubeMap128;
 #endif
-uniform float material_reflectivity;
-
-void addReflection() {
-
-    float bias = saturate(1.0 - dGlossiness) * 5.0; // multiply by max mip level
-    vec3 fixedReflDir = fixSeams(cubeMapProject(dReflDirW), bias);
+vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
+    float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
+    vec3 fixedReflDir = fixSeams(cubeMapProject(tReflDirW), bias);
     fixedReflDir.x *= -1.0;
 
     vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
 
-    dReflection += vec4(refl, material_reflectivity);
+    return vec4(refl, tmaterial_reflectivity);
 }
-
