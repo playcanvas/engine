@@ -22,6 +22,8 @@ Object.assign(pc, function () {
         options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
+        options.clearCoat = stdMat.clearCoat;
+        options.clearCoatGlossiness = stdMat.clearCoatGlossiness;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
@@ -70,6 +72,7 @@ Object.assign(pc, function () {
         var useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap) || (!!stdMat.dpAtlas);
         useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
         useSpecular = useSpecular || stdMat.enableGGXSpecular;
+        useSpecular = useSpecular || (stdMat.clearCoat > 0);
 
         if (useSpecular) {
             if ((stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) && !stdMat.useMetalness) {

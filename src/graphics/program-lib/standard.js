@@ -869,6 +869,10 @@ pc.programlib.standard = {
         var codeBegin = code;
         code = "";
 
+        if (options.clearCoat > 0) {
+            code += '#define CLEARCOAT 1\n';
+        }
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         var shadowTypeUsed = [];
@@ -1053,8 +1057,11 @@ pc.programlib.standard = {
             code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
         }
 
-        if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
-            code += chunks.refractionPS;
+        if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+            code += chunks.reflectionPS;
+            if (options.refraction){
+                code += chunks.refractionPS;
+            }
         }
 
         if (numShadowLights > 0) {
@@ -1132,6 +1139,10 @@ pc.programlib.standard = {
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        if (options.clearCoat > 0 ) {
+            code += chunks.combineClearCoatPS;
         }
 
         var addAmbient = true;
@@ -1379,10 +1390,15 @@ pc.programlib.standard = {
 
                 code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
+                if (options.clearCoat > 0 ) {
+                    code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                }
+
                 if (options.useSpecular) {
                     code += "       dAtten *= getLightSpecular();\n";
                     code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
+
 
                 if (lightType !== pc.LIGHTTYPE_DIRECTIONAL) {
                     code += "   }\n"; // BRANCH END
@@ -1463,6 +1479,12 @@ pc.programlib.standard = {
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+        if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
+        if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
+        if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
+        if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
+        if (code.includes("ccSpecularity")) structCode += "vec3 ccSpecularity;\n";
+        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness=0.9;\n";
 
         code = codeBegin + structCode + code;
 
