@@ -68,6 +68,7 @@ Object.assign(pc, function () {
         this._startTime = Math.max(0, Number(options.startTime) || 0);
         this._overlap = !!(options.overlap);
         this._autoPlay = !!(options.autoPlay);
+        this._stream = !!(options.stream);
         this._firstNode = null;
         this._lastNode = null;
 
@@ -114,7 +115,7 @@ Object.assign(pc, function () {
 
             // if not loaded then load first
             // and then set sound resource on the created instance
-            if (!this.isLoaded) {
+            if (!this.isLoaded && !this._stream) {
                 var onLoad = function (sound) {
                     var playWhenLoaded = instance._playWhenLoaded;
                     instance.sound = sound;
@@ -321,7 +322,11 @@ Object.assign(pc, function () {
             if (this._hasAsset()) {
                 var asset = this._assets.get(this._asset);
                 if (asset) {
-                    sound = asset.resource;
+                    if (this._stream) {
+                        sound = asset;
+                    } else {
+                        sound = asset.resource;
+                    }
                 }
             }
 
@@ -332,6 +337,7 @@ Object.assign(pc, function () {
             data.loop = this._loop;
             data.startTime = this._startTime;
             data.duration = this._duration;
+            data.stream = this._stream;
 
             data.onPlay = this._onInstancePlayHandler;
             data.onPause = this._onInstancePauseHandler;

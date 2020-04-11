@@ -53,6 +53,7 @@ Object.assign(pc, function () {
             this._volume = options.volume !== undefined ? pc.math.clamp(Number(options.volume) || 0, 0, 1) : 1;
             this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
             this._loop = !!(options.loop !== undefined ? options.loop : false);
+            this._stream = !!(options.stream !== undefined ? options.stream : false);
 
             this._sound = sound;
 
@@ -145,23 +146,28 @@ Object.assign(pc, function () {
                     this._createSource();
                 }
 
-                // calculate start offset
-                var offset = capTime(this._startOffset, this.duration);
-                offset = capTime(this._startTime + offset, this._sound.duration);
-                // reset start offset now that we started the sound
-                this._startOffset = null;
-
-                // start source with specified offset and duration
-                if (this._duration) {
-                    this.source.start(0, offset, this._duration);
+                if (this._stream) {
+                    this.sourceAudio.play();
                 } else {
-                    this.source.start(0, offset);
+                    // calculate start offset
+                    var offset = capTime(this._startOffset, this.duration);
+                    offset = capTime(this._startTime + offset, this._sound.duration);
+                    // reset start offset now that we started the sound
+                    this._startOffset = null;
+    
+                    // start source with specified offset and duration
+                    if (this._duration) {
+                        this.source.start(0, offset, this._duration);
+                    } else {
+                        this.source.start(0, offset);
+                    }
+
+                    this._currentOffset = offset;
                 }
 
                 // reset times
                 this._startedAt = this._manager.context.currentTime;
                 this._currentTime = 0;
-                this._currentOffset = offset;
 
                 // set state to playing
                 this._state = STATE_PLAYING;
@@ -424,7 +430,17 @@ Object.assign(pc, function () {
 
                 var context = this._manager.context;
 
-                if (this._sound.buffer) {
+                if (this._stream) {
+                    var audio = new Audio();
+                    audio.crossOrigin = "anonymous";
+                    audio.src = this._sound.getFileUrl();
+
+                    this.sourceAudio = audio;
+                    this.source = context.createMediaElementSource(audio);
+
+                    // Connect up the nodes
+                    this.source.connect(this._inputNode);
+                } else if (this._sound.buffer) {
                     this.source = context.createBufferSource();
                     this.source.buffer = this._sound.buffer;
 
@@ -495,7 +511,7 @@ Object.assign(pc, function () {
                 this._startedAt = this._manager.context.currentTime;
 
                 this._pitch = Math.max(Number(pitch) || 0, 0.01);
-                if (this.source) {
+                if (this.source && this.source.playbackRate) {
                     this.source.playbackRate.value = this._pitch;
                 }
 
