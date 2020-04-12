@@ -64,110 +64,119 @@ Object.assign(pc, function () {
         if (!device.textureFloatRenderable)
             return false;
 
-        var gl = device.gl;
         var chunks = pc.shaderChunks;
         var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
         var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
-        var size = 1;
 
-        var tex = new pc.Texture(device, {
+        var textureOptions = {
             format: pc.PIXELFORMAT_RGBA32F,
-            width: size,
-            height: size,
+            width: 1,
+            height: 1,
             mipmaps: false,
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST
-        });
-        var targ = new pc.RenderTarget(device, tex, {
+        };
+        var tex1 = new pc.Texture(device, textureOptions);
+        tex1.name = 'testFHP';
+        var targ1 = new pc.RenderTarget(device, tex1, {
             depth: false
         });
-        pc.drawQuadWithShader(device, targ, test1);
+        pc.drawQuadWithShader(device, targ1, test1);
 
-        var tex2 = new pc.Texture(device, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: size,
-            height: size,
-            mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST
-        });
+        textureOptions.format = pc.PIXELFORMAT_R8_G8_B8_A8;
+        var tex2 = new pc.Texture(device, textureOptions);
+        tex2.name = 'testFHP';
         var targ2 = new pc.RenderTarget(device, tex2, {
             depth: false
         });
-        device.constantTexSource.setValue(tex);
+        device.constantTexSource.setValue(tex1);
         pc.drawQuadWithShader(device, targ2, test2);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
+        var prevFramebuffer = device.activeFramebuffer;
+        device.setFramebuffer(targ2._glFrameBuffer);
 
-        var pixels = new Uint8Array(size * size * 4);
-        gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        var pixels = new Uint8Array(4);
+        device.readPixels(0, 0, 1, 1, pixels);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, device.activeFramebuffer);
+        device.setFramebuffer(prevFramebuffer);
 
-        var x = pixels[0] / 255.0;
-        var y = pixels[1] / 255.0;
-        var z = pixels[2] / 255.0;
-        var w = pixels[3] / 255.0;
-        var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
+        var x = pixels[0] / 255;
+        var y = pixels[1] / 255;
+        var z = pixels[2] / 255;
+        var w = pixels[3] / 255;
+        var f = x / (256 * 256 * 256) + y / (256 * 256) + z / 256 + w;
 
-        tex.destroy();
-        targ.destroy();
+        tex1.destroy();
+        targ1.destroy();
         tex2.destroy();
         targ2.destroy();
 
-        return f === 0.0;
+        return f === 0;
     }
 
     /**
      * @readonly
      * @name pc.GraphicsDevice#precision
-     * @type String
+     * @type {string}
      * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxCubeMapSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a cube map.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxTextureSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a texture.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxVolumeSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a 3D texture (any axis).
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxAnisotropy
-     * @type Number
+     * @type {number}
      * @description The maximum supported texture anisotropy setting.
+     */
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#supportsInstancing
+     * @type {boolean}
+     * @description True if hardware instancing is supported.
      */
     /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
-     * @description The 'resizecanvas' event is fired when the canvas is resized
-     * @param {Number} width The new width of the canvas in pixels
-     * @param {Number} height The new height of the canvas in pixels
+     * @description The 'resizecanvas' event is fired when the canvas is resized.
+     * @param {number} width - The new width of the canvas in pixels.
+     * @param {number} height - The new height of the canvas in pixels.
      */
 
     /**
-     * @constructor
+     * @class
      * @name pc.GraphicsDevice
+     * @augments pc.EventHandler
      * @classdesc The graphics device manages the underlying graphics context. It is responsible
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one
      * canvas element per page and create a new graphics device against each.
      * @description Creates a new graphics device.
-     * @param {Object} canvas The canvas to which the graphics device is tied.
-     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+     * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
+     * @param {object} [options] - Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
+     * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
+     * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only].
+     * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only].
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
      */
     var GraphicsDevice = function (canvas, options) {
+        pc.EventHandler.call(this);
+
         var i;
         this.canvas = canvas;
         this.shader = null;
@@ -177,7 +186,9 @@ Object.assign(pc, function () {
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
+        this.defaultFramebuffer = null;
         this.boundBuffer = null;
+        this.boundElementBuffer = null;
         this.instancedAttribs = { };
         this.enabledAttributes = { };
         this.transformFeedbackBuffer = null;
@@ -188,11 +199,18 @@ Object.assign(pc, function () {
         this.renderTarget = null;
         this.feedback = null;
 
+        // enable temporary texture unit workaround on desktop safari
+        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+
         // local width/height without pixelRatio applied
         this._width = 0;
         this._height = 0;
 
         this.updateClientRect();
+
+        // Shader code to WebGL shader cache
+        this.vertexShaderCache = {};
+        this.fragmentShaderCache = {};
 
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
@@ -203,23 +221,26 @@ Object.assign(pc, function () {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        canvas.addEventListener("webglcontextlost", function (event) {
+        this._contextLostHandler = function (event) {
             event.preventDefault();
             this.contextLost = true;
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
-        }.bind(this), false);
+        }.bind(this);
 
-        canvas.addEventListener("webglcontextrestored", function () {
+        this._contextRestoredHandler = function () {
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.initializeContext();
             this.contextLost = false;
             this.fire('devicerestored');
-        }.bind(this), false);
+        }.bind(this);
+
+        canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+        canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -358,6 +379,30 @@ Object.assign(pc, function () {
             gl.FLOAT
         ];
 
+        this.pcUniformType = {};
+        this.pcUniformType[gl.BOOL]         = pc.UNIFORMTYPE_BOOL;
+        this.pcUniformType[gl.INT]          = pc.UNIFORMTYPE_INT;
+        this.pcUniformType[gl.FLOAT]        = pc.UNIFORMTYPE_FLOAT;
+        this.pcUniformType[gl.FLOAT_VEC2]   = pc.UNIFORMTYPE_VEC2;
+        this.pcUniformType[gl.FLOAT_VEC3]   = pc.UNIFORMTYPE_VEC3;
+        this.pcUniformType[gl.FLOAT_VEC4]   = pc.UNIFORMTYPE_VEC4;
+        this.pcUniformType[gl.INT_VEC2]     = pc.UNIFORMTYPE_IVEC2;
+        this.pcUniformType[gl.INT_VEC3]     = pc.UNIFORMTYPE_IVEC3;
+        this.pcUniformType[gl.INT_VEC4]     = pc.UNIFORMTYPE_IVEC4;
+        this.pcUniformType[gl.BOOL_VEC2]    = pc.UNIFORMTYPE_BVEC2;
+        this.pcUniformType[gl.BOOL_VEC3]    = pc.UNIFORMTYPE_BVEC3;
+        this.pcUniformType[gl.BOOL_VEC4]    = pc.UNIFORMTYPE_BVEC4;
+        this.pcUniformType[gl.FLOAT_MAT2]   = pc.UNIFORMTYPE_MAT2;
+        this.pcUniformType[gl.FLOAT_MAT3]   = pc.UNIFORMTYPE_MAT3;
+        this.pcUniformType[gl.FLOAT_MAT4]   = pc.UNIFORMTYPE_MAT4;
+        this.pcUniformType[gl.SAMPLER_2D]   = pc.UNIFORMTYPE_TEXTURE2D;
+        this.pcUniformType[gl.SAMPLER_CUBE] = pc.UNIFORMTYPE_TEXTURECUBE;
+        if (this.webgl2) {
+            this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = pc.UNIFORMTYPE_TEXTURE2D_SHADOW;
+            this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = pc.UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_3D]          = pc.UNIFORMTYPE_TEXTURE3D;
+        }
+
         this.targetToSlot = {};
         this.targetToSlot[gl.TEXTURE_2D] = 0;
         this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
@@ -475,8 +520,6 @@ Object.assign(pc, function () {
         for (var generator in pc.programlib)
             this.programLib.register(generator, pc.programlib[generator]);
 
-        pc.events.attach(this);
-
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
         this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
@@ -499,10 +542,6 @@ Object.assign(pc, function () {
 
         if (this.unmaskedRenderer === 'Mali-450 MP') {
             this.boneLimit = 34;
-        }
-
-        if (this.unmaskedRenderer === 'Apple A8 GPU') {
-            this.forceCpuParticles = true;
         }
 
         // Profiler stats
@@ -558,10 +597,50 @@ Object.assign(pc, function () {
             this.textureHalfFloatRenderable = false;
         }
 
-        this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+        this._textureFloatHighPrecision = undefined;
+
+        // #ifdef DEBUG
+        this._spectorMarkers = [];
+        this._spectorCurrentMarker = "";
+        // #endif
+
+        this.createGrabPass(options.alpha);
+
+        pc.VertexFormat.init(this);
     };
+    GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
+    GraphicsDevice.prototype.constructor = GraphicsDevice;
 
     Object.assign(GraphicsDevice.prototype, {
+
+        // #ifdef DEBUG
+        updateMarker: function () {
+            this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
+        },
+
+        pushMarker: function (name) {
+            if (window.spector) {
+                this._spectorMarkers.push(name);
+                this.updateMarker();
+                window.spector.setMarker(this._spectorCurrentMarker);
+            }
+        },
+
+        popMarker: function () {
+            if (window.spector) {
+                if (this._spectorMarkers.length) {
+                    this._spectorMarkers.pop();
+                    this.updateMarker();
+
+                    if (this._spectorMarkers.length)
+                        window.spector.setMarker(this._spectorCurrentMarker);
+                    else
+                        window.spector.clearMarker();
+                }
+            }
+        },
+        // #endif
+
         getPrecision: function () {
             var gl = this.gl;
             var precision = "highp";
@@ -599,6 +678,7 @@ Object.assign(pc, function () {
 
         initializeExtensions: function () {
             var gl = this.gl;
+            var ext;
 
             var supportedExtensions = gl.getSupportedExtensions();
             var getExtension = function () {
@@ -621,17 +701,35 @@ Object.assign(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extTextureLod = true;
                 this.extUintElement = true;
+                this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
             } else {
                 this.extBlendMinmax = getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = getExtension('EXT_draw_buffers');
                 this.extInstancing = getExtension("ANGLE_instanced_arrays");
+                if (this.extInstancing) {
+                    // Install the WebGL 2 Instancing API for WebGL 1.0
+                    ext = this.extInstancing;
+                    gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
+                    gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
+                    gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
+                }
+
                 this.extStandardDerivatives = getExtension("OES_standard_derivatives");
                 this.extTextureFloat = getExtension("OES_texture_float");
                 this.extTextureHalfFloat = getExtension("OES_texture_half_float");
                 this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
                 this.extTextureLod = getExtension('EXT_shader_texture_lod');
                 this.extUintElement = getExtension("OES_element_index_uint");
+                this.extVertexArrayObject = getExtension("OES_vertex_array_object");
+                if (this.extVertexArrayObject) {
+                    // Install the WebGL 2 VAO API for WebGL 1.0
+                    ext = this.extVertexArrayObject;
+                    gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
+                    gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
+                    gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
+                    gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
+                }
                 this.extColorBufferFloat = null;
             }
 
@@ -639,8 +737,14 @@ Object.assign(pc, function () {
             this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
             this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
             this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
             this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+            this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
+            this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
+            this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+
+            this.supportsInstancing = !!this.extInstancing;
         },
 
         initializeCapabilities: function () {
@@ -679,6 +783,8 @@ Object.assign(pc, function () {
 
             ext = this.extTextureFilterAnisotropic;
             this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
+
+            this.samples = gl.getParameter(gl.SAMPLES);
         },
 
         initializeRenderState: function () {
@@ -771,6 +877,11 @@ Object.assign(pc, function () {
             gl.enable(gl.SCISSOR_TEST);
 
             gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
+            this.unpackFlipY = false;
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+            this.unpackPremultiplyAlpha = false;
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         },
 
@@ -782,7 +893,7 @@ Object.assign(pc, function () {
             // Recompile all shaders (they'll be linked when they're next actually used)
             var i, len;
             for (i = 0, len = this.shaders.length; i < len; i++) {
-                this.shaders[i].compile();
+                this.compileAndLinkShader(this.shaders[i]);
             }
             this.shader = null;
 
@@ -792,6 +903,7 @@ Object.assign(pc, function () {
                 this.buffers[i].unlock();
             }
             this.boundBuffer = null;
+            this.boundElementBuffer = null;
             this.indexBuffer = null;
             this.attributesInvalidated = true;
             this.enabledAttributes = {};
@@ -825,6 +937,82 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
+        createGrabPass: function (alpha) {
+            if (this.grabPassTexture) return;
+
+            var format = alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
+
+            var grabPassTexture = new pc.Texture(this, {
+                format: format,
+                minFilter: pc.FILTER_LINEAR,
+                magFilter: pc.FILTER_LINEAR,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: false
+            });
+
+            grabPassTexture.name = 'texture_grabPass';
+
+            var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
+            grabPassTextureId.setValue(grabPassTexture);
+
+            var grabPassRenderTarget = new pc.RenderTarget({
+                colorBuffer: grabPassTexture,
+                depth: false
+            });
+            this.initRenderTarget(grabPassRenderTarget);
+
+            this.grabPassRenderTarget = grabPassRenderTarget;
+            this.grabPassTextureId = grabPassTextureId;
+            this.grabPassTexture = grabPassTexture;
+        },
+
+        updateGrabPass: function () {
+            var gl = this.gl;
+
+            var renderTarget = this.renderTarget;
+            var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+            var grabPassTexture = this.grabPassTexture;
+            var width = this.width;
+            var height = this.height;
+
+            if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
+                if (resolveRenderTarget) renderTarget.resolve(true);
+
+                var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
+                var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+                var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
+                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
+                gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
+
+            } else {
+                if (resolveRenderTarget) {
+                    renderTarget.resolve(true);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
+                }
+
+                var format = grabPassTexture._glFormat;
+                gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
+                grabPassTexture._width = width;
+                grabPassTexture._height = height;
+
+                if (resolveRenderTarget) {
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
+                }
+            }
+        },
+
+        destroyGrabPass: function () {
+            this.grabPassRenderTarget.destroy();
+            this.grabPassRenderTarget = null;
+
+            this.grabPassTextureId = null;
+            this.grabPassTexture.destroy();
+            this.grabPassTexture = null;
+        },
+
         updateClientRect: function () {
             this.clientRect = this.canvas.getBoundingClientRect();
         },
@@ -833,10 +1021,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setViewport
          * @description Set the active rectangle for rendering on the specified device.
-         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the viewport.
-         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
-         * @param {Number} w The width of the viewport in pixels.
-         * @param {Number} h The height of the viewport in pixels.
+         * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.
+         * @param {number} y - The pixel space y-coordinate of the bottom left corner of the viewport.
+         * @param {number} w - The width of the viewport in pixels.
+         * @param {number} h - The height of the viewport in pixels.
          */
         setViewport: function (x, y, w, h) {
             if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
@@ -852,10 +1040,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setScissor
          * @description Set the active scissor rectangle on the specified device.
-         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
-         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
-         * @param {Number} w The width of the scissor rectangle in pixels.
-         * @param {Number} h The height of the scissor rectangle in pixels.
+         * @param {number} x - The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {number} y - The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {number} w - The width of the scissor rectangle in pixels.
+         * @param {number} h - The height of the scissor rectangle in pixels.
          */
         setScissor: function (x, y, w, h) {
             if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
@@ -886,7 +1074,7 @@ Object.assign(pc, function () {
          * device is created with a program library that manages all of the programs that are
          * used to render any graphical primitives. However, this function allows the user to
          * replace the existing program library with a new one.
-         * @param {pc.ProgramLibrary} programLib The program library to assign to the device.
+         * @param {pc.ProgramLibrary} programLib - The program library to assign to the device.
          */
         setProgramLibrary: function (programLib) {
             this.programLib = programLib;
@@ -923,6 +1111,16 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.GraphicsDevice#copyRenderTarget
+         * @description Copies source render target into destination render target. Mostly used by post-effects.
+         * @param {pc.RenderTarget} source - The source render target.
+         * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
+         * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
+         * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+         * @returns {boolean} True if the copy was successful, false otherwise.
+         */
         copyRenderTarget: function (source, dest, color, depth) {
             var gl = this.gl;
 
@@ -987,15 +1185,162 @@ Object.assign(pc, function () {
                 this.renderTarget = prevRt;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
             } else {
-                if (!this._copyShader) {
-                    var chunks = pc.shaderChunks;
-                    this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
-                }
+                var shader = this.getCopyShader();
                 this.constantTexSource.setValue(source._colorBuffer);
-                pc.drawQuadWithShader(this, dest, this._copyShader);
+                pc.drawQuadWithShader(this, dest, shader);
             }
 
             return true;
+        },
+
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#initRenderTarget
+         * @description Initialize render target before it can be used.
+         * @param {pc.RenderTarget} target - The render target to be initialized.
+         */
+        initRenderTarget: function (target) {
+            if (target._glFrameBuffer) return;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.fire('fbo:create', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            // Set RT's device
+            target._device = this;
+            var gl = this.gl;
+
+            // ##### Create main FBO #####
+            target._glFrameBuffer = gl.createFramebuffer();
+            this.setFramebuffer(target._glFrameBuffer);
+
+            // --- Init the provided color buffer (optional) ---
+            var colorBuffer = target._colorBuffer;
+            if (colorBuffer) {
+                if (!colorBuffer._glTexture) {
+                    // Clamp the render buffer size to the maximum supported by the device
+                    colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
+                    colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
+                    this.setTexture(colorBuffer, 0);
+                }
+                // Attach the color buffer
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER,
+                    gl.COLOR_ATTACHMENT0,
+                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                    colorBuffer._glTexture,
+                    0
+                );
+            }
+
+            var depthBuffer = target._depthBuffer;
+            if (depthBuffer && this.webgl2) {
+                // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
+                if (!depthBuffer._glTexture) {
+                    // Clamp the render buffer size to the maximum supported by the device
+                    depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
+                    depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
+                    this.setTexture(depthBuffer, 0);
+                }
+                // Attach
+                if (target._stencil) {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
+                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            target._depthBuffer._glTexture, 0);
+                } else {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            target._depthBuffer._glTexture, 0);
+                }
+            } else if (target._depth) {
+                // --- Init a new depth/stencil buffer (optional) ---
+                // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                var willRenderMsaa = target._samples > 1 && this.webgl2;
+                if (!willRenderMsaa) {
+                    if (!target._glDepthBuffer) {
+                        target._glDepthBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                    if (target._stencil) {
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    } else {
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                }
+            }
+
+            // #ifdef DEBUG
+            this._checkFbo();
+            // #endif
+
+            // ##### Create MSAA FBO (WebGL2 only) #####
+            if (this.webgl2 && target._samples > 1) {
+
+                // Use previous FBO for resolves
+                target._glResolveFrameBuffer = target._glFrameBuffer;
+
+                // Actual FBO will be MSAA
+                target._glFrameBuffer = gl.createFramebuffer();
+                this.setFramebuffer(target._glFrameBuffer);
+
+                // Create an optional MSAA color buffer
+                if (colorBuffer) {
+                    if (!target._glMsaaColorBuffer) {
+                        target._glMsaaColorBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
+                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
+                }
+
+                // Optionally add a MSAA depth/stencil buffer
+                if (target._depth) {
+                    if (!target._glMsaaDepthBuffer) {
+                        target._glMsaaDepthBuffer = gl.createRenderbuffer();
+                    }
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    if (target._stencil) {
+                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    } else {
+                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                    }
+                }
+                // #ifdef DEBUG
+                this._checkFbo();
+                // #endif
+            }
+
+            this.targets.push(target);
+
+            // #ifdef PROFILER
+            this._renderTargetCreationTime += pc.now() - startTime;
+            // #endif
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#getCopyShader
+         * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
+         * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+         */
+        getCopyShader: function () {
+            if (!this._copyShader) {
+                var chunks = pc.shaderChunks;
+                this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            }
+            return this._copyShader;
         },
 
         /**
@@ -1007,144 +1352,30 @@ Object.assign(pc, function () {
          * and pc.GraphicsDevice#updateEnd must not be nested.
          */
         updateBegin: function () {
-            var gl = this.gl;
-
             this.boundBuffer = null;
-            this.indexBuffer = null;
+            this.boundElementBuffer = null;
+
+            // clear texture units once a frame on desktop safari
+            if (this._tempEnableSafariTextureUnitWorkaround) {
+                for (var unit = 0; unit < this.textureUnits.length; ++unit) {
+                    for (var slot = 0; slot < 3; ++slot) {
+                        this.textureUnits[unit][slot] = null;
+                    }
+                }
+            }
 
             // Set the render target
             var target = this.renderTarget;
             if (target) {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
-
-                    // #ifdef PROFILER
-                    var startTime = pc.now();
-                    this.fire('fbo:create', {
-                        timestamp: startTime,
-                        target: this
-                    });
-                    // #endif
-
-                    // Set RT's device
-                    target._device = this;
-
-                    // ##### Create main FBO #####
-                    target._glFrameBuffer = gl.createFramebuffer();
-                    this.setFramebuffer(target._glFrameBuffer);
-
-                    // --- Init the provided color buffer (optional) ---
-                    var colorBuffer = target._colorBuffer;
-                    if (colorBuffer) {
-                        if (!colorBuffer._glTexture) {
-                            // Clamp the render buffer size to the maximum supported by the device
-                            colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
-                            colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
-                            this.setTexture(colorBuffer, 0);
-                        }
-                        // Attach the color buffer
-                        gl.framebufferTexture2D(
-                            gl.FRAMEBUFFER,
-                            gl.COLOR_ATTACHMENT0,
-                            colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                            colorBuffer._glTexture,
-                            0
-                        );
-                    }
-
-                    var depthBuffer = target._depthBuffer;
-                    if (depthBuffer && this.webgl2) {
-                        // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                        if (!depthBuffer._glTexture) {
-                            // Clamp the render buffer size to the maximum supported by the device
-                            depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
-                            depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
-                            this.setTexture(depthBuffer, 0);
-                        }
-                        // Attach
-                        if (target._stencil) {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTexture, 0);
-                        } else {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTexture, 0);
-                        }
-                    } else if (target._depth) {
-                        // --- Init a new depth/stencil buffer (optional) ---
-                        // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-                        var willRenderMsaa = target._samples > 1 && this.webgl2;
-                        if (!willRenderMsaa) {
-                            if (!target._glDepthBuffer) {
-                                target._glDepthBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                            if (target._stencil) {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            } else {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-                        }
-                    }
-
-                    // #ifdef DEBUG
-                    this._checkFbo();
-                    // #endif
-
-                    // ##### Create MSAA FBO (WebGL2 only) #####
-                    if (this.webgl2 && target._samples > 1) {
-
-                        // Use previous FBO for resolves
-                        target._glResolveFrameBuffer = target._glFrameBuffer;
-
-                        // Actual FBO will be MSAA
-                        target._glFrameBuffer = gl.createFramebuffer();
-                        this.setFramebuffer(target._glFrameBuffer);
-
-                        // Create an optional MSAA color buffer
-                        if (colorBuffer) {
-                            if (!target._glMsaaColorBuffer) {
-                                target._glMsaaColorBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
-                            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
-                        }
-
-                        // Optionally add a MSAA depth/stencil buffer
-                        if (target._depth) {
-                            if (!target._glMsaaDepthBuffer) {
-                                target._glMsaaDepthBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            if (target._stencil) {
-                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            } else {
-                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
-                            }
-                        }
-                        // #ifdef DEBUG
-                        this._checkFbo();
-                        // #endif
-                    }
-
-                    this.targets.push(target);
-
-                    // #ifdef PROFILER
-                    this._renderTargetCreationTime += pc.now() - startTime;
-                    // #endif
+                    this.initRenderTarget(target);
 
                 } else {
                     this.setFramebuffer(target._glFrameBuffer);
                 }
             } else {
-                this.setFramebuffer(null);
+                this.setFramebuffer(this.defaultFramebuffer);
             }
         },
 
@@ -1163,7 +1394,7 @@ Object.assign(pc, function () {
             if (target) {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
+                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer.pot) {
                     this.activeTexture(this.maxCombinedTextures - 1);
                     this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
@@ -1265,6 +1496,31 @@ Object.assign(pc, function () {
                     ext = this.extCompressedTexturePVRTC;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_ETC2_RGB:
+                    ext = this.extCompressedTextureETC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB8_ETC2;
+                    break;
+                case pc.PIXELFORMAT_ETC2_RGBA:
+                    ext = this.extCompressedTextureETC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
+                    break;
+                case pc.PIXELFORMAT_ASTC_4x4:
+                    ext = this.extCompressedTextureASTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_ASTC_4x4_KHR;
+                    break;
+                case pc.PIXELFORMAT_ATC_RGB:
+                    ext = this.extCompressedTextureATC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_ATC_WEBGL;
+                    break;
+                case pc.PIXELFORMAT_ATC_RGBA:
+                    ext = this.extCompressedTextureATC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     // definition varies between WebGL1 and 2
@@ -1403,15 +1659,39 @@ Object.assign(pc, function () {
             }
         },
 
+        setUnpackFlipY: function (flipY) {
+            if (this.unpackFlipY !== flipY) {
+                this.unpackFlipY = flipY;
+
+                // Note: the WebGL spec states that UNPACK_FLIP_Y_WEBGL only affects
+                // texImage2D and texSubImage2D, not compressedTexImage2D
+                var gl = this.gl;
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+            }
+        },
+
+        setUnpackPremultiplyAlpha: function (premultiplyAlpha) {
+            if (this.unpackPremultiplyAlpha !== premultiplyAlpha) {
+                this.unpackPremultiplyAlpha = premultiplyAlpha;
+
+                // Note: the WebGL spec states that UNPACK_PREMULTIPLY_ALPHA_WEBGL only affects
+                // texImage2D and texSubImage2D, not compressedTexImage2D
+                var gl = this.gl;
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
+            }
+        },
+
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture._pot))
+            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
                 return;
 
             var mipLevel = 0;
             var mipObject;
             var resMult;
+
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -1425,9 +1705,10 @@ Object.assign(pc, function () {
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && !texture._compressed) {
+                if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    // (this implies the call to _completePartialMipLevels above was unsuccessful)
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }
@@ -1435,8 +1716,6 @@ Object.assign(pc, function () {
                 if (texture._cubemap) {
                     // ----- CUBEMAP -----
                     var face;
-
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
@@ -1456,6 +1735,8 @@ Object.assign(pc, function () {
                                 }
                             }
 
+                            this.setUnpackFlipY(false);
+                            this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                             gl.texImage2D(
                                 gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                 mipLevel,
@@ -1484,6 +1765,8 @@ Object.assign(pc, function () {
                                     texData
                                 );
                             } else {
+                                this.setUnpackFlipY(false);
+                                this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                                 gl.texImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -1502,7 +1785,6 @@ Object.assign(pc, function () {
                     // ----- 3D -----
                     // Image/canvas/video not supported (yet?)
                     // Upload the byte array
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
                         gl.compressedTexImage3D(gl.TEXTURE_3D,
@@ -1514,6 +1796,8 @@ Object.assign(pc, function () {
                                                 0,
                                                 mipObject);
                     } else {
+                        this.setUnpackFlipY(false);
+                        this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                         gl.texImage3D(gl.TEXTURE_3D,
                                       mipLevel,
                                       texture._glInternalFormat,
@@ -1540,7 +1824,8 @@ Object.assign(pc, function () {
                         }
 
                         // Upload the image, canvas or video
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture._flipY);
+                        this.setUnpackFlipY(texture._flipY);
+                        this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -1551,7 +1836,6 @@ Object.assign(pc, function () {
                         );
                     } else {
                         // Upload the byte array
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                         resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
                             gl.compressedTexImage2D(
@@ -1564,6 +1848,8 @@ Object.assign(pc, function () {
                                 mipObject
                             );
                         } else {
+                            this.setUnpackFlipY(false);
+                            this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                             gl.texImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
@@ -1596,7 +1882,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
+            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture.pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
                 texture._mipmapsUploaded = true;
             }
@@ -1668,7 +1954,7 @@ Object.assign(pc, function () {
 
             if (flags & 1) {
                 var filter = texture._minFilter;
-                if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                if (!texture.pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                     if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                         filter = pc.FILTER_NEAREST;
                     } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
@@ -1685,7 +1971,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture.pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 8) {
@@ -1693,7 +1979,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture.pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 16) {
@@ -1723,7 +2009,7 @@ Object.assign(pc, function () {
             if (!texture._glTexture)
                 this.initializeTexture(texture);
 
-            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPassTexture) {
                 // Ensure the specified texture unit is active
                 this.activeTexture(textureUnit);
                 // Ensure the texture is bound on correct target of the specified texture unit
@@ -1734,7 +2020,10 @@ Object.assign(pc, function () {
                     texture._parameterFlags = 0;
                 }
 
-                if (texture._needsUpload || texture._needsMipmapsUpload) {
+                if (texture === this.grabPassTexture) {
+                    this.updateGrabPass();
+
+                } else if (texture._needsUpload || texture._needsMipmapsUpload) {
                     this.uploadTexture(texture);
                     texture._needsUpload = false;
                     texture._needsMipmapsUpload = false;
@@ -1743,60 +2032,19 @@ Object.assign(pc, function () {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
                 // If the texture is already bound to the correct target on the specified unit, there's no need
                 // to actually make the specified texture unit active because the texture itself does not need
-                // to be udpated.
+                // to be updated.
                 this.bindTextureOnUnit(texture, textureUnit);
             }
         },
 
-        /**
-         * @function
-         * @name pc.GraphicsDevice#draw
-         * @description Submits a graphical primitive to the hardware for immediate rendering.
-         * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {Number} primitive.type The type of primitive to render. Can be:
-         * <ul>
-         *     <li>pc.PRIMITIVE_POINTS</li>
-         *     <li>pc.PRIMITIVE_LINES</li>
-         *     <li>pc.PRIMITIVE_LINELOOP</li>
-         *     <li>pc.PRIMITIVE_LINESTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIANGLES</li>
-         *     <li>pc.PRIMITIVE_TRISTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIFAN</li>
-         * </ul>
-         * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
-         * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-         * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
-         * @example
-         * // Render a single, unindexed triangle
-         * device.draw({
-         *     type: pc.PRIMITIVE_TRIANGLES,
-         *     base: 0,
-         *     count: 3,
-         *     indexed: false
-         * )};
-         */
-        draw: function (primitive, numInstances) {
+        setBuffers: function (numInstances) {
             var gl = this.gl;
-
-            var i, j, len; // Loop counting
-            var sampler, samplerValue, texture, numTextures; // Samplers
-            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
-            var shader = this.shader;
-            var samplers = shader.samplers;
-            var uniforms = shader.uniforms;
-
-            if (numInstances > 1) {
-                this.boundBuffer = null;
-                this.attributesInvalidated = true;
-            }
+            var attribute, element, vertexBuffer, vbOffset, bufferId, locationId;
+            var attributes = this.shader.attributes;
 
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
-                var attribute, element, vertexBuffer, vbOffset, bufferId;
-                var attributes = shader.attributes;
-
-                for (i = 0, len = attributes.length; i < len; i++) {
+                for (var i = 0, len = attributes.length; i < len; i++) {
                     attribute = attributes[i];
 
                     // Retrieve vertex element for this shader attribute
@@ -1830,13 +2078,13 @@ Object.assign(pc, function () {
                             element.offset + vbOffset
                         );
 
-                        if (element.stream === 1 && numInstances > 1) {
+                        if (element.stream === 1 && numInstances > 0) {
                             if (!this.instancedAttribs[locationId]) {
-                                this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
+                                gl.vertexAttribDivisor(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
                             }
                         } else if (this.instancedAttribs[locationId]) {
-                            this.extInstancing.vertexAttribDivisorANGLE(locationId, 0);
+                            gl.vertexAttribDivisor(locationId, 0);
                             this.instancedAttribs[locationId] = false;
                         }
                     }
@@ -1844,6 +2092,57 @@ Object.assign(pc, function () {
 
                 this.attributesInvalidated = false;
             }
+
+            // Set the active index buffer object
+            bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+            if (this.boundElementBuffer !== bufferId) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
+                this.boundElementBuffer = bufferId;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#draw
+         * @description Submits a graphical primitive to the hardware for immediate rendering.
+         * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
+         * @param {number} primitive.type - The type of primitive to render. Can be:
+         * * {@link pc.PRIMITIVE_POINTS}
+         * * {@link pc.PRIMITIVE_LINES}
+         * * {@link pc.PRIMITIVE_LINELOOP}
+         * * {@link pc.PRIMITIVE_LINESTRIP}
+         * * {@link pc.PRIMITIVE_TRIANGLES}
+         * * {@link pc.PRIMITIVE_TRISTRIP}
+         * * {@link pc.PRIMITIVE_TRIFAN}
+         * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the draw call.
+         * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
+         * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {number} [numInstances=1] - The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
+         * @example
+         * // Render a single, unindexed triangle
+         * device.draw({
+         *     type: pc.PRIMITIVE_TRIANGLES,
+         *     base: 0,
+         *     count: 3,
+         *     indexed: false
+         * });
+         */
+        draw: function (primitive, numInstances) {
+            var gl = this.gl;
+
+            var i, j, len; // Loop counting
+            var sampler, samplerValue, texture, numTextures; // Samplers
+            var uniform, scopeId, uniformVersion, programVersion; // Uniforms
+            var shader = this.shader;
+            var samplers = shader.samplers;
+            var uniforms = shader.uniforms;
+
+            if (numInstances > 0) {
+                this.boundBuffer = null;
+                this.attributesInvalidated = true;
+            }
+
+            this.setBuffers(numInstances);
 
             // Commit the shader program variables
             var textureUnit = 0;
@@ -1910,50 +2209,32 @@ Object.assign(pc, function () {
                 }
             }
 
-            this._drawCallsPerFrame++;
-            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
-
             if (this.webgl2 && this.transformFeedbackBuffer) {
                 // Enable TF, start writing to out buffer
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
                 gl.beginTransformFeedback(gl.POINTS);
             }
 
+            var mode = this.glPrimitive[primitive.type];
+            var count = primitive.count;
+
             if (primitive.indexed) {
-                if (numInstances > 1) {
-                    this.extInstancing.drawElementsInstancedANGLE(
-                        this.glPrimitive[primitive.type],
-                        primitive.count,
-                        this.indexBuffer.glFormat,
-                        primitive.base * 2,
-                        numInstances
-                    );
-                    this.boundBuffer = null;
-                    this.attributesInvalidated = true;
+                var indexBuffer = this.indexBuffer;
+                var format = indexBuffer.glFormat;
+                var offset = primitive.base * indexBuffer.bytesPerIndex;
+
+                if (numInstances > 0) {
+                    gl.drawElementsInstanced(mode, count, format, offset, numInstances);
                 } else {
-                    gl.drawElements(
-                        this.glPrimitive[primitive.type],
-                        primitive.count,
-                        this.indexBuffer.glFormat,
-                        primitive.base * this.indexBuffer.bytesPerIndex
-                    );
+                    gl.drawElements(mode, count, format, offset);
                 }
             } else {
-                if (numInstances > 1) {
-                    this.extInstancing.drawArraysInstancedANGLE(
-                        this.glPrimitive[primitive.type],
-                        primitive.base,
-                        primitive.count,
-                        numInstances
-                    );
-                    this.boundBuffer = null;
-                    this.attributesInvalidated = true;
+                var first = primitive.base;
+
+                if (numInstances > 0) {
+                    gl.drawArraysInstanced(mode, first, count, numInstances);
                 } else {
-                    gl.drawArrays(
-                        this.glPrimitive[primitive.type],
-                        primitive.base,
-                        primitive.count
-                    );
+                    gl.drawArrays(mode, first, count);
                 }
             }
 
@@ -1962,22 +2243,25 @@ Object.assign(pc, function () {
                 gl.endTransformFeedback();
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
+
+            // #ifdef PROFILER
+            this._drawCallsPerFrame++;
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+            // #endif
         },
 
         /**
          * @function
          * @name pc.GraphicsDevice#clear
          * @description Clears the frame buffer of the currently set render target.
-         * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
-         * @param {Number[]} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
-         * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-         * @param {Number} options.flags The buffers to clear (the types being color, depth and stencil). Can be any bitwise
+         * @param {object} options - Optional options object that controls the behavior of the clear operation defined as follows:
+         * @param {number[]} options.color - The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
+         * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
+         * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
          * combination of:
-         * <ul>
-         *     <li>pc.CLEARFLAG_COLOR</li>
-         *     <li>pc.CLEARFLAG_DEPTH</li>
-         *     <li>pc.CLEARFLAG_STENCIL</li>
-         * </ul>
+         * * pc.CLEARFLAG_COLOR
+         * * pc.CLEARFLAG_DEPTH
+         * * pc.CLEARFLAG_STENCIL
          * @example
          * // Clear color buffer to black and depth buffer to 1.0
          * device.clear();
@@ -2070,7 +2354,7 @@ Object.assign(pc, function () {
          * @description Sets the specified render target on the device. If null
          * is passed as a parameter, the back buffer becomes the current target
          * for all rendering operations.
-         * @param {pc.RenderTarget} renderTarget The render target to activate.
+         * @param {pc.RenderTarget} renderTarget - The render target to activate.
          * @example
          * // Set a render target to receive all rendering output
          * device.setRenderTarget(renderTarget);
@@ -2099,7 +2383,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthTest
          * @description Queries whether depth testing is enabled.
-         * @returns {Boolean} true if depth testing is enabled and false otherwise.
+         * @returns {boolean} True if depth testing is enabled and false otherwise.
          * @example
          * var depthTest = device.getDepthTest();
          * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
@@ -2113,7 +2397,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthTest
          * @description Enables or disables depth testing of fragments. Once this state
          * is set, it persists until it is changed. By default, depth testing is enabled.
-         * @param {Boolean} depthTest true to enable depth testing and false otherwise.
+         * @param {boolean} depthTest - True to enable depth testing and false otherwise.
          * @example
          * device.setDepthTest(true);
          */
@@ -2133,17 +2417,15 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setDepthFunc
          * @description Configures the depth test.
-         * @param {Number} func A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: don't draw</li>
-         *     <li>pc.FUNC_LESS: draw if new depth < depth buffer</li>
-         *     <li>pc.FUNC_EQUAL: draw if new depth == depth buffer</li>
-         *     <li>pc.FUNC_LESSEQUAL: draw if new depth <= depth buffer</li>
-         *     <li>pc.FUNC_GREATER: draw if new depth > depth buffer</li>
-         *     <li>pc.FUNC_NOTEQUAL: draw if new depth != depth buffer</li>
-         *     <li>pc.FUNC_GREATEREQUAL: draw if new depth >= depth buffer</li>
-         *     <li>pc.FUNC_ALWAYS: always draw</li>
-         * </ul>
+         * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
+         * * {@link pc.FUNC_NEVER}: don't draw
+         * * {@link pc.FUNC_LESS}: draw if new depth < depth buffer
+         * * {@link pc.FUNC_EQUAL}: draw if new depth == depth buffer
+         * * {@link pc.FUNC_LESSEQUAL}: draw if new depth <= depth buffer
+         * * {@link pc.FUNC_GREATER}: draw if new depth > depth buffer
+         * * {@link pc.FUNC_NOTEQUAL}: draw if new depth != depth buffer
+         * * {@link pc.FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
+         * * {@link pc.FUNC_ALWAYS}: always draw
          */
         setDepthFunc: function (func) {
             if (this.depthFunc === func) return;
@@ -2155,7 +2437,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthWrite
          * @description Queries whether writes to the depth buffer are enabled.
-         * @returns {Boolean} true if depth writing is enabled and false otherwise.
+         * @returns {boolean} True if depth writing is enabled and false otherwise.
          * @example
          * var depthWrite = device.getDepthWrite();
          * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
@@ -2169,7 +2451,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthWrite
          * @description Enables or disables writes to the depth buffer. Once this state
          * is set, it persists until it is changed. By default, depth writes are enabled.
-         * @param {Boolean} writeDepth true to enable depth writing and false otherwise.
+         * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
          * @example
          * device.setDepthWrite(true);
          */
@@ -2186,10 +2468,10 @@ Object.assign(pc, function () {
          * @description Enables or disables writes to the color buffer. Once this state
          * is set, it persists until it is changed. By default, color writes are enabled
          * for all color channels.
-         * @param {Boolean} writeRed true to enable writing of the red channel and false otherwise.
-         * @param {Boolean} writeGreen true to enable writing of the green channel and false otherwise.
-         * @param {Boolean} writeBlue true to enable writing of the blue channel and false otherwise.
-         * @param {Boolean} writeAlpha true to enable writing of the alpha channel and false otherwise.
+         * @param {boolean} writeRed - True to enable writing of the red channel and false otherwise.
+         * @param {boolean} writeGreen - True to enable writing of the green channel and false otherwise.
+         * @param {boolean} writeBlue - True to enable writing of the blue channel and false otherwise.
+         * @param {boolean} writeAlpha - True to enable writing of the alpha channel and false otherwise.
          * @example
          * // Just write alpha into the frame buffer
          * device.setColorWrite(false, false, false, true);
@@ -2212,7 +2494,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setAlphaToCoverage
          * @description Enables or disables alpha to coverage (WebGL2 only).
-         * @param {Boolean} state True to enable alpha to coverage and false to disable it.
+         * @param {boolean} state - True to enable alpha to coverage and false to disable it.
          */
         setAlphaToCoverage: function (state) {
             if (!this.webgl2) return;
@@ -2231,7 +2513,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setTransformFeedbackBuffer
          * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
-         * @param {pc.VertexBuffer} tf The output vertex buffer
+         * @param {pc.VertexBuffer} tf - The output vertex buffer.
          */
         setTransformFeedbackBuffer: function (tf) {
             if (this.transformFeedbackBuffer === tf)
@@ -2257,7 +2539,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setRaster
          * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
-         * @param {Boolean} on True to enable rasterization and false to disable it.
+         * @param {boolean} on - True to enable rasterization and false to disable it.
          */
         setRaster: function (on) {
             if (this.raster === on) return;
@@ -2293,7 +2575,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getBlending
          * @description Queries whether blending is enabled.
-         * @returns {Boolean} True if blending is enabled and false otherwise.
+         * @returns {boolean} True if blending is enabled and false otherwise.
          */
         getBlending: function () {
             return this.blending;
@@ -2303,7 +2585,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setBlending
          * @description Enables or disables blending.
-         * @param {Boolean} blending True to enable blending and false to disable it.
+         * @param {boolean} blending - True to enable blending and false to disable it.
          */
         setBlending: function (blending) {
             if (this.blending !== blending) {
@@ -2321,7 +2603,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilTest
          * @description Enables or disables stencil test.
-         * @param {Boolean} enable True to enable stencil test and false to disable it.
+         * @param {boolean} enable - True to enable stencil test and false to disable it.
          */
         setStencilTest: function (enable) {
             if (this.stencil !== enable) {
@@ -2339,20 +2621,18 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFunc
          * @description Configures stencil test for both front and back faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
+         * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
          * reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
+         * @param {number} ref - Reference value used in comparison.
+         * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFunc: function (func, ref, mask) {
             if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
@@ -2369,20 +2649,18 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFuncFront
          * @description Configures stencil test for front faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * @param {number} func - A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
+         * @param {number} ref - Reference value used in comparison.
+         * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncFront: function (func, ref, mask) {
             if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
@@ -2398,20 +2676,18 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFuncBack
          * @description Configures stencil test for back faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * @param {number} func - A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
+         * @param {number} ref - Reference value used in comparison.
+         * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncBack: function (func, ref, mask) {
             if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
@@ -2428,21 +2704,19 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperation
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for both front and back faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
+         * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+         * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
@@ -2464,21 +2738,19 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationFront
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for front faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
+         * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+         * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
@@ -2498,21 +2770,19 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationBack
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for back faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
+         * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
+         * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
@@ -2532,21 +2802,19 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendFunction
          * @description Configures blending operations. Both source and destination
          * blend modes can take the following values:
-         * <ul>
-         *     <li>pc.BLENDMODE_ZERO</li>
-         *     <li>pc.BLENDMODE_ONE</li>
-         *     <li>pc.BLENDMODE_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_DST_ALPHA</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
-         * </ul>
-         * @param {Number} blendSrc The source blend function.
-         * @param {Number} blendDst The destination blend function.
+         * * {@link pc.BLENDMODE_ZERO}
+         * * {@link pc.BLENDMODE_ONE}
+         * * {@link pc.BLENDMODE_SRC_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
+         * * {@link pc.BLENDMODE_DST_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
+         * * {@link pc.BLENDMODE_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_DST_ALPHA}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+         * @param {number} blendSrc - The source blend function.
+         * @param {number} blendDst - The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
@@ -2562,23 +2830,21 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendFunctionSeparate
          * @description Configures blending operations. Both source and destination
          * blend modes can take the following values:
-         * <ul>
-         *     <li>pc.BLENDMODE_ZERO</li>
-         *     <li>pc.BLENDMODE_ONE</li>
-         *     <li>pc.BLENDMODE_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_DST_ALPHA</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
-         * </ul>
-         * @param {Number} blendSrc The source blend function.
-         * @param {Number} blendDst The destination blend function.
-         * @param {Number} blendSrcAlpha The separate source blend function for the alpha channel.
-         * @param {Number} blendDstAlpha The separate destination blend function for the alpha channel.
+         * * {@link pc.BLENDMODE_ZERO}
+         * * {@link pc.BLENDMODE_ONE}
+         * * {@link pc.BLENDMODE_SRC_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
+         * * {@link pc.BLENDMODE_DST_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
+         * * {@link pc.BLENDMODE_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_DST_ALPHA}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
+         * @param {number} blendSrc - The source blend function.
+         * @param {number} blendDst - The destination blend function.
+         * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
+         * @param {number} blendDstAlpha - The separate destination blend function for the alpha channel.
          */
         setBlendFunctionSeparate: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
             if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
@@ -2597,15 +2863,14 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendEquation
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
-         * @param {Number} blendEquation The blend equation. Can be:
-         * <ul>
-         *     <li>pc.BLENDEQUATION_ADD</li>
-         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_MIN</li>
-         *     <li>pc.BLENDEQUATION_MAX</li>
+         * @param {number} blendEquation - The blend equation. Can be:
+         * * {@link pc.BLENDEQUATION_ADD}
+         * * {@link pc.BLENDEQUATION_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_MIN}
+         * * {@link pc.BLENDEQUATION_MAX}
+         *
          * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
-         * </ul>
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
@@ -2620,16 +2885,15 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendEquationSeparate
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
-         * @param {Number} blendEquation The blend equation. Can be:
-         * <ul>
-         *     <li>pc.BLENDEQUATION_ADD</li>
-         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_MIN</li>
-         *     <li>pc.BLENDEQUATION_MAX</li>
+         * @param {number} blendEquation - The blend equation. Can be:
+         * * {@link pc.BLENDEQUATION_ADD}
+         * * {@link pc.BLENDEQUATION_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_MIN}
+         * * {@link pc.BLENDEQUATION_MAX}
+         *
          * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
-         * @param {Number} blendAlphaEquation A separate blend equation for the alpha channel. Accepts same values as blendEquation.
-         * </ul>
+         * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel. Accepts same values as blendEquation.
          */
         setBlendEquationSeparate: function (blendEquation, blendAlphaEquation) {
             if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
@@ -2645,13 +2909,11 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setCullMode
          * @description Controls how triangles are culled based on their face direction.
          * The default cull mode is pc.CULLFACE_BACK.
-         * @param {Number} cullMode The cull mode to set. Can be:
-         * <ul>
-         *     <li>pc.CULLFACE_NONE</li>
-         *     <li>pc.CULLFACE_BACK</li>
-         *     <li>pc.CULLFACE_FRONT</li>
-         *     <li>pc.CULLFACE_FRONTANDBACK</li>
-         * </ul>
+         * @param {number} cullMode - The cull mode to set. Can be:
+         * * {@link pc.CULLFACE_NONE}
+         * * {@link pc.CULLFACE_BACK}
+         * * {@link pc.CULLFACE_FRONT}
+         * * {@link pc.CULLFACE_FRONTANDBACK}
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
@@ -2682,17 +2944,11 @@ Object.assign(pc, function () {
          * @description Sets the current index buffer on the graphics device. On subsequent
          * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
          * index data for any indexed primitives.
-         * @param {pc.IndexBuffer} indexBuffer The index buffer to assign to the device.
+         * @param {pc.IndexBuffer} indexBuffer - The index buffer to assign to the device.
          */
         setIndexBuffer: function (indexBuffer) {
             // Store the index buffer
-            if (this.indexBuffer !== indexBuffer) {
-                this.indexBuffer = indexBuffer;
-
-                // Set the active index buffer object
-                var gl = this.gl;
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
-            }
+            this.indexBuffer = indexBuffer;
         },
 
         /**
@@ -2701,9 +2957,9 @@ Object.assign(pc, function () {
          * @description Sets the current vertex buffer for a specific stream index on the graphics
          * device. On subsequent calls to pc.GraphicsDevice#draw, the specified vertex buffer will be
          * used to provide vertex data for any primitives.
-         * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
-         * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
-         * @param {Number} [vbOffset=0] The byte offset into the vertex buffer data. Defaults to 0.
+         * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+         * @param {number} stream - The stream index for the vertex buffer, indexed from 0 upwards.
+         * @param {number} [vbOffset=0] - The byte offset into the vertex buffer data. Defaults to 0.
          */
         setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
             if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
@@ -2726,26 +2982,224 @@ Object.assign(pc, function () {
             }
         },
 
+        compileShaderSource: function (src, isVertexShader) {
+            var gl = this.gl;
+
+            var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
+
+            if (!glShader) {
+                // #ifdef PROFILER
+                var startTime = pc.now();
+                this.fire('shader:compile:start', {
+                    timestamp: startTime,
+                    target: this
+                });
+                // #endif
+
+                glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+
+                gl.shaderSource(glShader, src);
+                gl.compileShader(glShader);
+
+                // #ifdef PROFILER
+                var endTime = pc.now();
+                this.fire('shader:compile:end', {
+                    timestamp: endTime,
+                    target: this
+                });
+                this._shaderStats.compileTime += endTime - startTime;
+                // #endif
+
+                if (isVertexShader) {
+                    this.vertexShaderCache[src] = glShader;
+                    // #ifdef PROFILER
+                    this._shaderStats.vsCompiled++;
+                    // #endif
+                } else {
+                    this.fragmentShaderCache[src] = glShader;
+                    // #ifdef PROFILER
+                    this._shaderStats.fsCompiled++;
+                    // #endif
+                }
+            }
+
+            return glShader;
+        },
+
+        compileAndLinkShader: function (shader) {
+            var gl = this.gl;
+
+            var definition = shader.definition;
+            var glVertexShader = this.compileShaderSource(definition.vshader, true);
+            var glFragmentShader = this.compileShaderSource(definition.fshader, false);
+
+            var glProgram = gl.createProgram();
+
+            gl.attachShader(glProgram, glVertexShader);
+            gl.attachShader(glProgram, glFragmentShader);
+
+            if (this.webgl2 && definition.useTransformFeedback) {
+                // Collect all "out_" attributes and use them for output
+                var attrs = definition.attributes;
+                var outNames = [];
+                for (var attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push("out_" + attr);
+                    }
+                }
+                gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
+            }
+
+            gl.linkProgram(glProgram);
+
+            // Cache the WebGL objects on the shader
+            shader._glVertexShader = glVertexShader;
+            shader._glFragmentShader = glFragmentShader;
+            shader._glProgram = glProgram;
+
+            // #ifdef PROFILER
+            this._shaderStats.linked++;
+            if (definition.tag === pc.SHADERTAG_MATERIAL) {
+                this._shaderStats.materialShaders++;
+            }
+            // #endif
+        },
+
+        createShader: function (shader) {
+            this.compileAndLinkShader(shader);
+
+            this.shaders.push(shader);
+        },
+
+        destroyShader: function (shader) {
+            var idx = this.shaders.indexOf(shader);
+            if (idx !== -1) {
+                this.shaders.splice(idx, 1);
+            }
+
+            if (shader._glProgram) {
+                this.gl.deleteProgram(shader._glProgram);
+                shader._glProgram = null;
+                this.removeShaderFromCache(shader);
+            }
+        },
+
+        _addLineNumbers: function (src) {
+            var lines = src.split("\n");
+
+            // Chrome reports shader errors on lines indexed from 1
+            for (var i = 0, len = lines.length; i < len; i++) {
+                lines[i] = (i + 1) + ":\t" + lines[i];
+            }
+
+            return lines.join( "\n" );
+        },
+
+        postLink: function (shader) {
+            var gl = this.gl;
+
+            var glVertexShader = shader._glVertexShader;
+            var glFragmentShader = shader._glFragmentShader;
+            var glProgram = shader._glProgram;
+
+            var definition = shader.definition;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.fire('shader:link:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            // Check for errors
+            if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
+                return false;
+            }
+            if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
+                return false;
+            }
+            if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+                console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
+                return false;
+            }
+
+            var i, info, location, shaderInput;
+
+            // Query the program for each vertex buffer input (GLSL 'attribute')
+            i = 0;
+            var numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
+            while (i < numAttributes) {
+                info = gl.getActiveAttrib(glProgram, i++);
+                location = gl.getAttribLocation(glProgram, info.name);
+
+                // Check attributes are correctly linked up
+                if (definition.attributes[info.name] === undefined) {
+                    console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
+                }
+
+                shaderInput = new pc.ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location);
+
+                shader.attributes.push(shaderInput);
+            }
+
+            // Query the program for each shader state (GLSL 'uniform')
+            i = 0;
+            var numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
+            while (i < numUniforms) {
+                info = gl.getActiveUniform(glProgram, i++);
+                location = gl.getUniformLocation(glProgram, info.name);
+
+                shaderInput = new pc.ShaderInput(this, info.name, this.pcUniformType[info.type], location);
+
+                if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
+                    (this.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                ) {
+                    shader.samplers.push(shaderInput);
+                } else {
+                    shader.uniforms.push(shaderInput);
+                }
+            }
+
+            shader.ready = true;
+
+            // #ifdef PROFILER
+            var endTime = pc.now();
+            this.fire('shader:link:end', {
+                timestamp: endTime,
+                target: this
+            });
+            this._shaderStats.compileTime += endTime - startTime;
+            // #endif
+
+            return true;
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
-         * @param {pc.Shader} shader The shader to set to assign to the device.
-         * @returns {Boolean} true if the shader was successfully set, false otherwise.
+         * @param {pc.Shader} shader - The shader to set to assign to the device.
+         * @returns {boolean} True if the shader was successfully set, false otherwise.
          */
         setShader: function (shader) {
             if (shader !== this.shader) {
-                this.shader = shader;
-
                 if (!shader.ready) {
-                    if (!shader.link()) {
+                    if (!this.postLink(shader)) {
                         return false;
                     }
                 }
 
+                this.shader = shader;
+
                 // Set the active shader
+                this.gl.useProgram(shader._glProgram);
+
+                // #ifdef PROFILER
                 this._shaderSwitchesPerFrame++;
-                this.gl.useProgram(shader.program);
+                // #endif
 
                 this.attributesInvalidated = true;
             }
@@ -2771,7 +3225,7 @@ Object.assign(pc, function () {
          * available uniform vectors available after subtracting the number taken by a typical
          * heavyweight shader. If a different number is required, it can be tuned via
          * pc.GraphicsDevice#setBoneLimit.
-         * @returns {Number} The maximum number of bones that can be supported by the host hardware.
+         * @returns {number} The maximum number of bones that can be supported by the host hardware.
          */
         getBoneLimit: function () {
             return this.boneLimit;
@@ -2784,7 +3238,7 @@ Object.assign(pc, function () {
          * @description Specifies the maximum number of bones that the device can support on
          * the current hardware. This function allows the default calculated value based on
          * available vector uniforms to be overridden.
-         * @param {Number} maxBones The maximum number of bones supported by the host hardware.
+         * @param {number} maxBones - The maximum number of bones supported by the host hardware.
          */
         setBoneLimit: function (maxBones) {
             this.boneLimit = maxBones;
@@ -2797,8 +3251,8 @@ Object.assign(pc, function () {
          * Note that the specified width and height values will be multiplied by the value of
          * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
          * the canvas.
-         * @param {Number} width The new width of the canvas.
-         * @param {Number} height The new height of the canvas.
+         * @param {number} width - The new width of the canvas.
+         * @param {number} height - The new height of the canvas.
          */
         resizeCanvas: function (width, height) {
             this._width = width;
@@ -2823,9 +3277,20 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#clearShaderCache
-         * @description Frees memory from all shaders ever allocated with this device
+         * @description Frees memory from all shaders ever allocated with this device.
          */
         clearShaderCache: function () {
+            var gl = this.gl;
+            var shaderSrc;
+            for (shaderSrc in this.fragmentShaderCache) {
+                gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
+                delete this.fragmentShaderCache[shaderSrc];
+            }
+            for (shaderSrc in this.vertexShaderCache) {
+                gl.deleteShader(this.vertexShaderCache[shaderSrc]);
+                delete this.vertexShaderCache[shaderSrc];
+            }
+
             this.programLib.clearCache();
         },
 
@@ -2834,16 +3299,31 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
+            var gl = this.gl;
+
+            this.destroyGrabPass();
+
             if (this.webgl2 && this.feedback) {
-                this.gl.deleteTransformFeedback(this.feedback);
+                gl.deleteTransformFeedback(this.feedback);
             }
+
+            this.clearShaderCache();
+
+            this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
+            this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
+
+            this._contextLostHandler = null;
+            this._contextRestoredHandler = null;
+
+            this.canvas = null;
+            this.gl = null;
         }
     });
 
     /**
      * @readonly
      * @name pc.GraphicsDevice#width
-     * @type Number
+     * @type {number}
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
@@ -2855,7 +3335,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#height
-     * @type Number
+     * @type {number}
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
@@ -2864,6 +3344,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#fullscreen
+     * @type {boolean}
+     * @description Fullscreen mode.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () {
             return !!document.fullscreenElement;
@@ -2878,6 +3363,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @private
+     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @type {boolean}
+     * @description Automatic instancing.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
         get: function () {
             return this._enableAutoInstancing;
@@ -2887,6 +3378,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#maxPixelRatio
+     * @type {number}
+     * @description Maximum pixel ratio.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
             return this._maxPixelRatio;
@@ -2894,6 +3390,21 @@ Object.assign(pc, function () {
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#textureFloatHighPrecision
+     * @type {number}
+     * @description Check if high precision floating-point textures are supported.
+     */
+    Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+        get: function () {
+            if (this._textureFloatHighPrecision === undefined) {
+                this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+            }
+            return this._textureFloatHighPrecision;
         }
     });
 

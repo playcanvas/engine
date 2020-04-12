@@ -1,7 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.StandardMaterial
+     * @augments pc.Material
      * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
      * Most maps can use 3 types of input values in any combination: constant (color or number), mesh vertex colors and a texture. All enabled inputs are multiplied together.
@@ -12,222 +13,218 @@ Object.assign(pc, function () {
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines basic surface color (aka albedo).
-     * @property {Boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
-     * @property {pc.Texture} diffuseMap The diffuse map of the material.
-     * @property {Number} diffuseMapUv Diffuse map UV channel
+     * @property {boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * @property {pc.Texture|null} diffuseMap The diffuse map of the material (default is null).
+     * @property {number} diffuseMapUv Diffuse map UV channel.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {String} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
-     * @property {String} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
+     * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines surface reflection/specular color. Affects specular intensity and tint.
-     * @property {Boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
-     * @property {pc.Texture} specularMap The specular map of the material.
-     * @property {Number} specularMapUv Specular map UV channel
+     * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
+     * @property {pc.Texture|null} specularMap The specular map of the material (default is null).
+     * @property {number} specularMapUv Specular map UV channel.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {String} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
-     * @property {String} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
+     * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Boolean} useMetalness Use metalness properties instead of specular.
+     * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables anisotropy parameter to set material anisotropy.
+     * @property {number} anisotropy Defines amount of anisotropy. Requires enableGGXSpecular is set to true.
+     * * When anisotropy == 0, specular is isotropic.
+     * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
+     * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+     *
+     * @property {number} clearCoat Defines the strength of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+     * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+     *
+     * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
      * This can be used as alternative to specular color to save space.
      * With metaless == 0, the pixel is assumed to be dielectric, and diffuse color is used as normal.
      * With metaless == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
-     * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
-     * @property {pc.Texture} metalnessMap Monochrome metalness map.
-     * @property {Number} metalnessMapUv Metalness map UV channel
+     * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
+     * @property {pc.Texture|null} metalnessMap Monochrome metalness map (default is null).
+     * @property {number} metalnessMapUv Metalness map UV channel.
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
      * @property {pc.Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
-     * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
-     * @property {String} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
+     * @property {string} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
+     * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
+     * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
      *
-     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
+     * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
      * A higher shininess value results in a more focused specular highlight.
      * Glossiness map/vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used directly as constant output.
-     * @property {pc.Texture} glossMap Glossiness map. If set, will be multiplied by normalized 'shininess' value and/or vertex colors.
-     * @property {Number} glossMapUv Gloss map UV channel
-     * @property {String} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
+     * @property {pc.Texture|null} glossMap Glossiness map (default is null). If specified, will be multiplied by normalized 'shininess' value and/or vertex colors.
+     * @property {number} glossMapUv Gloss map UV channel.
+     * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
-     * @property {Boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
-     * @property {String} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
+     * @property {boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
+     * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
      *
-     * @property {Number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
-     * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
+     * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
+     * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      *
      * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {Boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
-     * @property {pc.Texture} emissiveMap The emissive map of the material. Can be HDR.
-     * @property {Number} emissiveIntensity Emissive color multiplier.
-     * @property {Number} emissiveMapUv Emissive map UV channel.
+     * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
+     * @property {pc.Texture|null} emissiveMap The emissive map of the material (default is null). Can be HDR.
+     * @property {number} emissiveIntensity Emissive color multiplier.
+     * @property {number} emissiveMapUv Emissive map UV channel.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
-     * @property {String} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
-     * @property {String} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
+     * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
+     * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
      * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
      * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
-     * @property {pc.Texture} opacityMap The opacity map of the material.
-     * @property {Number} opacityMapUv Opacity map UV channel
-     * @property {String} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
+     * @property {pc.Texture|null} opacityMap The opacity map of the material (default is null).
+     * @property {number} opacityMapUv Opacity map UV channel.
+     * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {Boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
-     * @property {String} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
+     * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
+     * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
      *
-     * @property {pc.Texture} normalMap The normal map of the material.
+     * @property {pc.Texture|null} normalMap The normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
-     * @property {Number} normalMapUv Normal map UV channel
+     * @property {number} normalMapUv Normal map UV channel.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
+     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
      *
-     * @property {pc.Texture} heightMap The height map of the material. Used for a view-dependent parallax effect.
+     * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
      * It is recommended to use it together with a normal map.
-     * @property {Number} heightMapUv Height map UV channel
-     * @property {String} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
+     * @property {number} heightMapUv Height map UV channel.
+     * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
+     * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
      *
-     * @property {pc.Texture} sphereMap The spherical environment map of the material. Affects reflections.
-     * @property {pc.Texture} cubeMap The cubic environment map of the material. Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
-     * @property {Number} cubeMapProjection The type of projection applied to the cubeMap property:
-     * <ul>
-     *     <li>{@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.</li>
-     *     <li>{@link pc.CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.</li>
-     * </ul>
+     * @property {pc.Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
+     * @property {pc.Texture|null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
+     * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
+     * * {@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
+     * * {@link pc.CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
      * Defaults to pc.CUBEPROJ_NONE.
      * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
      * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
-     * @property {Number} reflectivity Environment map intensity.
+     * @property {number} reflectivity Environment map intensity.
      *
-     * @property {pc.Texture} lightMap A custom lightmap of the material. Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
-     * @property {Number} lightMapUv Lightmap UV channel
-     * @property {String} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {pc.Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
+     * @property {number} lightMapUv Lightmap UV channel
+     * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {pc.Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
      * @property {pc.Vec2} lightMapOffset Controls the 2D offset of the lightmap. Each component is between 0 and 1.
-     * @property {Boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
-     * @property {String} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
+     * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
-     * @property {pc.Texture} aoMap Baked ambient occlusion (AO) map. Modulates ambient color.
-     * @property {Number} aoMapUv AO map UV channel
-     * @property {String} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
+     * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
+     * @property {pc.Texture|null} aoMap Baked ambient occlusion (AO) map (default is null). Modulates ambient color.
+     * @property {number} aoMapUv AO map UV channel
+     * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} aoMapTiling Controls the 2D tiling of the AO map.
      * @property {pc.Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0 and 1.
-     * @property {Boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
-     * @property {String} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
-     * @property {Number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
-     * <ul>
-     *     <li>{@link pc.SPECOCC_NONE}: No specular occlusion</li>
-     *     <li>{@link pc.SPECOCC_AO}: Use AO directly to occlude specular.</li>
-     *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.</li>
-     * </ul>
-     * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
-     * @property {Number} occludeDirect Tells if AO should darken directional lighting.
+     * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
+     * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
+     * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
+     * * {@link pc.SPECOCC_NONE}: No specular occlusion
+     * * {@link pc.SPECOCC_AO}: Use AO directly to occlude specular.
+     * * {@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
+     * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
+     * @property {number} occludeDirect Tells if AO should darken directional lighting.
      *
-     * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
-     * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
+     * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
+     * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
      * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
-     * @property {Number} shadingModel Defines the shading model.
-     * <ul>
-     *     <li>{@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
-     *     <li>{@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.</li>
-     * </ul>
-     * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
+     * @property {number} shadingModel Defines the shading model.
+     * * {@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
+     * * {@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
+     * @property {number} fresnelModel Defines the formula used for Fresnel effect.
      * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
      * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
-     * <ul>
-     *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
-     *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
-     * </ul>
-     * @property {Boolean} useFog Apply fogging (as configured in scene settings)
-     * @property {Boolean} useLighting Apply lighting
-     * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
-     * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
-     * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
-     * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * * {@link pc.FRESNEL_NONE}: No Fresnel.
+     * * {@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
+     * @property {boolean} useFog Apply fogging (as configured in scene settings)
+     * @property {boolean} useLighting Apply lighting
+     * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
+     * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
+     * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
+     * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * @property {object} chunks Object containing custom shader chunks that will replace default ones.
      *
-     * @property {Function} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
+     * @property {pc.callbacks.UpdateShader} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
      * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
      * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
      * Properties of the object passed into this function are:
-     * <ul>
-     *     <li>pass: value of {@link pc.Layer#shaderPass} of the Layer being rendered.</li>
-     *     <li>chunks: Object containing custom shader chunks that will replace default ones.</li>
-     *     <li>customFragmentShader: Completely replace fragment shader with this code.</li>
-     *     <li>forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.</li>
-     *     <li>fog: the type of fog being applied in the shader. See {@link pc.Scene#fog} for the list of possible values.</li>
-     *     <li>gamma: the type of gamma correction being applied in the shader. See {@link pc.Scene#gammaCorrection} for the list of possible values.</li>
-     *     <li>toneMap: the type of tone mapping being applied in the shader. See {@link pc.Scene#toneMapping} for the list of possible values.</li>
-     *     <li>ambientTint: the value of {@link pc.StandardMaterial#ambientTint}.</li>
-     *     <li>specularAntialias: the value of {@link pc.StandardMaterial#specularAntialias}.</li>
-     *     <li>conserveEnergy: the value of {@link pc.StandardMaterial#conserveEnergy}.</li>
-     *     <li>occludeSpecular: the value of {@link pc.StandardMaterial#occludeSpecular}.</li>
-     *     <li>occludeDirect: the value of {@link pc.StandardMaterial#occludeDirect}.</li>
-     *     <li>shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.</li>
-     *     <li>fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.</li>
-     *     <li>cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.</li>
-     *     <li>useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.</li>
-     *     <li>blendType: the value of {@link pc.Material#blendType}.</li>
-     *     <li>twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.</li>
-     *     <li>diffuseTint: defines if {@link pc.StandardMaterial#diffuse} constant should affect diffuse color.</li>
-     *     <li>specularTint: defines if {@link pc.StandardMaterial#specular} constant should affect specular color.</li>
-     *     <li>metalnessTint: defines if {@link pc.StandardMaterial#metalness} constant should affect metalness value.</li>
-     *     <li>glossTint: defines if {@link pc.StandardMaterial#shininess} constant should affect glossiness value.</li>
-     *     <li>emissiveTint: defines if {@link pc.StandardMaterial#emissive} constant should affect emission value.</li>
-     *     <li>opacityTint: defines if {@link pc.StandardMaterial#opacity} constant should affect opacity value.</li>
-     *     <li>occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.</li>
-     *     <li>alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.</li>
-     *     <li>alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.</li>
-     *     <li>sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.</li>
-     *     <li>cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.</li>
-     *     <li>dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.</li>
-     *     <li>ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.</li>
-     *     <li>useSpecular: if any specular or reflections are needed at all.</li>
-     *     <li>rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.</li>
-     *     <li>hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.</li>
-     *     <li>rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.</li>
-     *     <li>hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.</li>
-     *     <li>fixSeams: if cubemaps require seam fixing (see {@link pc.Texture#options.fixCubemapSeams}).</li>
-     *     <li>prefilteredCubemap: if prefiltered cubemaps are used.</li>
-     *     <li>emissiveFormat: how emissiveMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:</li>
-     *     <ul>
-     *          <li>0: sRGB texture</li>
-     *          <li>1: RGBM-encoded HDR texture</li>
-     *          <li>2: Simple read (no conversion from sRGB)</li>
-     *     </ul>
-     *     <li>lightMapFormat: how lightMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:</li>
-     *     <ul>
-     *          <li>0: sRGB texture</li>
-     *          <li>1: RGBM-encoded HDR texture</li>
-     *          <li>2: Simple read (no conversion from sRGB)</li>
-     *     </ul>
-     *     <li>useRgbm: if decodeRGBM() function is needed in the shader at all.</li>
-     *     <li>packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.</li>
-     *     <li>forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use default.</li>
-     *     <li>fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.</li>
-     *     <li>refraction: if refraction is used.</li>
-     *     <li>skyboxIntensity: if reflected skybox intensity should be modulated.</li>
-     *     <li>useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.</li>
-     * </ul>
-     *
+     * * pass: value of {@link pc.Layer#shaderPass} of the Layer being rendered.
+     * * chunks: Object containing custom shader chunks that will replace default ones.
+     * * customFragmentShader: Completely replace fragment shader with this code.
+     * * forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.
+     * * fog: the type of fog being applied in the shader. See {@link pc.Scene#fog} for the list of possible values.
+     * * gamma: the type of gamma correction being applied in the shader. See {@link pc.Scene#gammaCorrection} for the list of possible values.
+     * * toneMap: the type of tone mapping being applied in the shader. See {@link pc.Scene#toneMapping} for the list of possible values.
+     * * ambientTint: the value of {@link pc.StandardMaterial#ambientTint}.
+     * * specularAntialias: the value of {@link pc.StandardMaterial#specularAntialias}.
+     * * conserveEnergy: the value of {@link pc.StandardMaterial#conserveEnergy}.
+     * * occludeSpecular: the value of {@link pc.StandardMaterial#occludeSpecular}.
+     * * occludeDirect: the value of {@link pc.StandardMaterial#occludeDirect}.
+     * * shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.
+     * * fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.
+     * * cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.
+     * * useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.
+     * * blendType: the value of {@link pc.Material#blendType}.
+     * * twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.
+     * * diffuseTint: defines if {@link pc.StandardMaterial#diffuse} constant should affect diffuse color.
+     * * specularTint: defines if {@link pc.StandardMaterial#specular} constant should affect specular color.
+     * * metalnessTint: defines if {@link pc.StandardMaterial#metalness} constant should affect metalness value.
+     * * glossTint: defines if {@link pc.StandardMaterial#shininess} constant should affect glossiness value.
+     * * emissiveTint: defines if {@link pc.StandardMaterial#emissive} constant should affect emission value.
+     * * opacityTint: defines if {@link pc.StandardMaterial#opacity} constant should affect opacity value.
+     * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
+     * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
+     * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
+     * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
+     * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
+     * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
+     * * ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.
+     * * useSpecular: if any specular or reflections are needed at all.
+     * * rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.
+     * * hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.
+     * * rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.
+     * * hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.
+     * * fixSeams: if cubemaps require seam fixing (see {@link pc.Texture#options.fixCubemapSeams}).
+     * * prefilteredCubemap: if prefiltered cubemaps are used.
+     * * emissiveFormat: how emissiveMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:
+     *   * 0: sRGB texture
+     *   * 1: RGBM-encoded HDR texture
+     *   * 2: Simple read (no conversion from sRGB)
+     * * lightMapFormat: how lightMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:
+     *   * 0: sRGB texture
+     *   * 1: RGBM-encoded HDR texture
+     *   * 2: Simple read (no conversion from sRGB)
+     * * useRgbm: if decodeRGBM() function is needed in the shader at all.
+     * * packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
+     * * forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use default.
+     * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
+     * * refraction: if refraction is used.
+     * * skyboxIntensity: if reflected skybox intensity should be modulated.
+     * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
+     * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
      * @example
      * // Create a new Standard material
      * var material = new pc.StandardMaterial();
@@ -238,8 +235,6 @@ Object.assign(pc, function () {
      *
      * // Notify the material that it has been modified
      * material.update();
-     *
-     * @extends pc.Material
      */
 
     var StandardMaterial = function () {
@@ -249,8 +244,9 @@ Object.assign(pc, function () {
         this._assetReferences = {};
         this._validator = null;
 
+        this.shaderOptBuilder = new pc.StandardMaterialOptionsBuilder();
+
         this.reset();
-        this.update();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
     StandardMaterial.prototype.constructor = StandardMaterial;
@@ -266,6 +262,7 @@ Object.assign(pc, function () {
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
         var mapTransform = privMap.substring(1) + "Transform";
+        var mapTransformUniform = mapTransform + "Uniform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
@@ -275,6 +272,7 @@ Object.assign(pc, function () {
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
+        obj[mapTransformUniform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
             var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
@@ -405,13 +403,13 @@ Object.assign(pc, function () {
                 this.dirtyShader = true;
                 return this[priv];
             },
-            set: function (value) {
-                var oldVal = this[priv];
-                var wasBw = (oldVal.data[0] === 0 && oldVal.data[1] === 0 && oldVal.data[2] === 0) || (oldVal.data[0] === 1 && oldVal.data[1] === 1 && oldVal.data[2] === 1);
-                var isBw = (value.data[0] === 0 && value.data[1] === 0 && value.data[2] === 0) || (value.data[0] === 1 && value.data[1] === 1 && value.data[2] === 1);
-                if (wasBw ^ isBw) this.dirtyShader = true;
+            set: function (newValue) {
+                var oldValue = this[priv];
+                var wasRound = (oldValue.r === 0 && oldValue.g === 0 && oldValue.b === 0) || (oldValue.r === 1 && oldValue.g === 1 && oldValue.b === 1);
+                var isRound = (newValue.r === 0 && newValue.g === 0 && newValue.b === 0) || (newValue.r === 1 && newValue.g === 1 && newValue.b === 1);
+                if (wasRound ^ isRound) this.dirtyShader = true;
                 this.dirtyColor = true;
-                this[priv] = value;
+                this[priv] = newValue;
             }
         });
         _propsSerial.push(name);
@@ -441,13 +439,13 @@ Object.assign(pc, function () {
                 get: function () {
                     return this[pmult];
                 },
-                set: function (value) {
-                    var oldVal = this[pmult];
-                    var wasBw = oldVal === 0 || oldVal === 1;
-                    var isBw = value === 0 || value === 1;
-                    if (wasBw ^ isBw) this.dirtyShader = true;
+                set: function (newValue) {
+                    var oldValue = this[pmult];
+                    var wasRound = oldValue === 0 || oldValue === 1;
+                    var isRound = newValue === 0 || newValue === 1;
+                    if (wasRound ^ isRound) this.dirtyShader = true;
                     this.dirtyColor = true;
-                    this[pmult] = value;
+                    this[pmult] = newValue;
                 }
             });
             _propsSerial.push(mult);
@@ -478,12 +476,18 @@ Object.assign(pc, function () {
             get: function () {
                 return this[priv];
             },
-            set: function (value) {
-                var oldVal = this[priv];
-                var wasBw = oldVal === 0 || oldVal === 1;
-                var isBw = value === 0 || value === 1;
-                if (wasBw ^ isBw) this.dirtyShader = true;
-                this[priv] = value;
+            set: function (newValue) {
+                var oldValue = this[priv];
+                if (oldValue === newValue) return;
+                this[priv] = newValue;
+
+                // This is not always optimal and will sometimes trigger redundant shader
+                // recompilation. However, no number property on a standard material
+                // triggers a shader recompile if the previous and current values both
+                // have a fractional part.
+                var wasRound = oldValue === 0 || oldValue === 1;
+                var isRound = newValue === 0 || newValue === 1;
+                if (wasRound || isRound) this.dirtyShader = true;
             }
         });
         _propsSerial.push(name);
@@ -563,8 +567,6 @@ Object.assign(pc, function () {
     Object.assign(StandardMaterial.prototype, {
 
         reset: function () {
-            this.blendType = pc.BLEND_NONE;
-
             var i;
             for (i = 0; i < _propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
@@ -593,7 +595,6 @@ Object.assign(pc, function () {
          */
         clone: function () {
             var clone = new pc.StandardMaterial();
-
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
@@ -612,80 +613,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!clone.shader)
-                clone.update();
-
             return clone;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name  pc.StandardMaterial#initialize
-         * @description  Initialize material properties from the material data block e.g. loading from server
-         * @param  {Object} data The data block that is used to initialize
-         */
-        initialize: function (data) {
-            this.reset();
-
-            // usual flow is that data is validated in resource loader
-            // but if not, validate here.
-            if (!data.validated) {
-                if (!this._validator) {
-                    this._validator = new pc.StandardMaterialValidator();
-                }
-                this._validator.validate(data);
-            }
-
-            if (data.chunks) {
-                this.chunks.copy(data.chunks);
-            }
-
-            // initialize material values from the input data
-            for (var key in data) {
-                var type = pc.StandardMaterial.PARAMETER_TYPES[key];
-                var value = data[key];
-
-                if (type === 'vec2') {
-                    this[key] = new pc.Vec2(value[0], value[1]);
-                } else if (type === 'rgb') {
-                    this[key] = new pc.Color(value[0], value[1], value[2]);
-                } else if (type === 'texture') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'cubemap') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'boundingbox') {
-                    var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
-                    var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
-                    this[key] = new pc.BoundingBox(center, halfExtents);
-                } else {
-                    // number, boolean and enum types don't require type creation
-                    this[key] = data[key];
-                }
-
-            }
-
-            this.update();
-        },
-
-        /**
-         * @private
-         * @name pc.StandardMaterial#init
-         * @description Update material data from a data block, as found on a material Asset.
-         * @param {Object} data JSON material data.
-         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
-         */
-        init: function (data) {
-            console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
-            this.initialize(data);
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
@@ -694,33 +622,6 @@ Object.assign(pc, function () {
 
             if ((transform.x === 1) && (transform.y === 1) && (transform.z === 0) && (transform.w === 0)) return null;
             return transform;
-        },
-
-        _collectLights: function (lType, lights, lightsFiltered, mask, staticLightList) {
-            var light;
-            var i;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                if (light._enabled) {
-                    if (light._mask & mask) {
-                        if (lType !== pc.LIGHTTYPE_DIRECTIONAL) {
-                            if (light.isStatic) {
-                                continue;
-                            }
-                        }
-                        lightsFiltered.push(light);
-                    }
-                }
-            }
-
-            if (staticLightList) {
-                for (i = 0; i < staticLightList.length; i++) {
-                    light = staticLightList[i];
-                    if (light._type === lType) {
-                        lightsFiltered.push(light);
-                    }
-                }
-            }
         },
 
         _setParameter: function (name, value) {
@@ -742,6 +643,10 @@ Object.assign(pc, function () {
             if (this[mname]) {
                 this._setParameter("texture_" + mname, this[mname]);
                 var tname = mname + "Transform";
+                var uname = mname + "TransformUniform";
+                if (!this[tname]) {
+                    this[uname] = new Float32Array(4);
+                }
                 this[tname] = this._updateMapTransform(
                     this[tname],
                     this[mname + "Tiling"],
@@ -749,7 +654,11 @@ Object.assign(pc, function () {
                 );
 
                 if (this[tname]) {
-                    this._setParameter('texture_' + tname, this[tname].data);
+                    this[uname][0] = this[tname].x;
+                    this[uname][1] = this[tname].y;
+                    this[uname][2] = this[tname].z;
+                    this[uname][3] = this[tname].w;
+                    this._setParameter('texture_' + tname, this[uname]);
                 }
             }
         },
@@ -762,7 +671,7 @@ Object.assign(pc, function () {
             return null;
         },
 
-        update: function () {
+        updateUniforms: function () {
             var uniform;
             this._clearParameters();
 
@@ -780,6 +689,16 @@ Object.assign(pc, function () {
                 if (!this.metalnessMap || this.metalness < 1) {
                     this._setParameter('material_metalness', this.metalness);
                 }
+
+                if (this.enableGGXSpecular){
+                    this._setParameter('material_anisotropy', this.anisotropy);
+                }
+            }
+
+            if (this.clearCoat > 0) {
+                this._setParameter('material_clearCoatSpecularity', this.clearCoat);
+                this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
+                this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
             }
 
             uniform = this.getUniform("shininess", this.shininess, true);
@@ -893,12 +812,14 @@ Object.assign(pc, function () {
             for (i = 0; i < _propsColor.length; i++) {
                 var clr = this["_" + _propsColor[i]];
                 var arr = this[_propsColor[i] + "Uniform"];
-                for (c = 0; c < 3; c++ ) {
-                    if (gammaCorrection) {
-                        arr[c] = Math.pow(clr.data[c], 2.2);
-                    } else {
-                        arr[c] = clr.data[c];
-                    }
+                if (gammaCorrection) {
+                    arr[0] = Math.pow(clr.r, 2.2);
+                    arr[1] = Math.pow(clr.g, 2.2);
+                    arr[2] = Math.pow(clr.b, 2.2);
+                } else {
+                    arr[0] = clr.r;
+                    arr[1] = clr.g;
+                    arr[2] = clr.b;
                 }
             }
             for (c = 0; c < 3; c++) {
@@ -907,39 +828,12 @@ Object.assign(pc, function () {
             this.dirtyColor = false;
         },
 
-        _getMapTransformID: function (xform, uv) {
-            if (!xform) return 0;
-            if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
-
-            var i, j, same;
-            for (i = 0; i < this._mapXForms[uv].length; i++) {
-                same = true;
-                for ( j = 0; j < xform.data.length; j++) {
-                    if (this._mapXForms[uv][i][j] != xform.data[j]) {
-                        same = false;
-                        break;
-                    }
-                }
-                if (same) {
-                    return i + 1;
-                }
-            }
-            var newID = this._mapXForms[uv].length;
-            this._mapXForms[uv][newID] = [];
-            for (j = 0; j < xform.data.length; j++) {
-                this._mapXForms[uv][newID][j] = xform.data[j];
-            }
-            return newID + 1;
-        },
-
         updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
 
             if (!this._colorProcessed && this._scene) {
                 this._colorProcessed = true;
                 this._processColor();
             }
-
-            this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
             var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
@@ -971,9 +865,9 @@ Object.assign(pc, function () {
 
                 if (useDp && allMips) {
                     if (!prefilteredCubeMap128.dpAtlas) {
-                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
-                                                                           [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
-                                                                               prefilteredCubeMap8, prefilteredCubeMap4]);
+                        var atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
+                            prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
+                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device, atlas);
                         prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
                     }
                     this.dpAtlas = prefilteredCubeMap128.dpAtlas;
@@ -1005,203 +899,15 @@ Object.assign(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) &&
-                                (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
-
-            var specularTint = false;
-            var useSpecular = (this.useMetalness ? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.data[0] === 0 && this.specular.data[1] === 0 && this.specular.data[2] === 0));
-
-            if (useSpecular) {
-                if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
-                    specularTint = this.specular.data[0] !== 1 || this.specular.data[1] !== 1 || this.specular.data[2] !== 1;
-                }
-            }
-
-            var rgbmAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) ||
-                              (this.cubeMap ? this.cubeMap.rgbm : false) ||
-                              (this.dpAtlas ? this.dpAtlas.rgbm : false);
-
-            var hdrAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
-
-            var rgbmReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm : false) ||
-                                 (this.sphereMap ? this.sphereMap.rgbm : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm : false);
-
-            var hdrReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
-
-            var emissiveTint = this.emissiveMap ? 0 : 3;
-            if (!emissiveTint) {
-                emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
-                emissiveTint = emissiveTint ? 3 : (this.emissiveIntensity !== 1 ? 1 : 0);
-            }
-
-            var options;
+            var generator = pc.programlib.standard;
+            // Minimal options for Depth and Shadow passes
             var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
+            var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
 
-            if (minimalOptions) {
-                // minimal options
-                options = {
-                    opacityTint: this.opacity !== 1 && this.blendType !== pc.BLEND_NONE,
-                    alphaTest: this.alphaTest > 0,
-                    forceFragmentPrecision: this.forceFragmentPrecision,
-                    chunks: this.chunks,
-                    blendType: this.blendType,
-                    forceUv1: this.forceUv1,
-                    pass: pass
-                };
-            } else {
-                // full options
-                options = {
-                    fog: this.useFog ? scene.fog : "none",
-                    gamma: this.useGammaTonemap ? scene.gammaCorrection : pc.GAMMA_NONE,
-                    toneMap: this.useGammaTonemap ? scene.toneMapping : -1,
-                    blendMapsWithColors: true,
-                    ambientTint: this.ambientTint,
-                    diffuseTint: diffuseTint,
-                    specularTint: specularTint ? 3 : 0,
-                    metalnessTint: (this.useMetalness && this.metalness < 1) ? 1 : 0,
-                    glossTint: 1,
-                    emissiveTint: emissiveTint,
-                    opacityTint: (this.opacity !== 1 && this.blendType !== pc.BLEND_NONE) ? 1 : 0,
-                    alphaTest: this.alphaTest > 0,
-                    alphaToCoverage: this.alphaToCoverage,
-                    needsNormalFloat: this.normalizeNormalMap,
-                    sphereMap: !!this.sphereMap,
-                    cubeMap: !!this.cubeMap,
-                    dpAtlas: !!this.dpAtlas,
-                    ambientSH: !!this.ambientSH,
-                    useSpecular: useSpecular,
-                    rgbmAmbient: rgbmAmbient,
-                    rgbmReflection: rgbmReflection,
-                    hdrAmbient: hdrAmbient,
-                    hdrReflection: hdrReflection,
-                    fixSeams: prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap ? this.cubeMap.fixCubemapSeams : false),
-                    prefilteredCubemap: !!prefilteredCubeMap128,
-                    emissiveFormat: this.emissiveMap ? (this.emissiveMap.rgbm ? 1 : (this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-                    lightMapFormat: this.lightMap ? (this.lightMap.rgbm ? 1 : (this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-                    useRgbm: rgbmReflection || rgbmAmbient || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0),
-                    specularAntialias: this.specularAntialias,
-                    conserveEnergy: this.conserveEnergy,
-                    occludeSpecular: this.occludeSpecular,
-                    occludeSpecularFloat: (this.occludeSpecularIntensity !== 1.0),
-                    occludeDirect: this.occludeDirect,
-                    shadingModel: this.shadingModel,
-                    fresnelModel: this.fresnelModel,
-                    packedNormal: this.normalMap ? (this.normalMap.format === pc.PIXELFORMAT_DXT5) : false,
-                    forceFragmentPrecision: this.forceFragmentPrecision,
-                    fastTbn: this.fastTbn,
-                    cubeMapProjection: this.cubeMapProjection,
-                    chunks: this.chunks,
-                    customFragmentShader: this.customFragmentShader,
-                    refraction: !!this.refraction,
-                    useMetalness: this.useMetalness,
-                    blendType: this.blendType,
-                    skyboxIntensity: (prefilteredCubeMap128 === globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity !== 1),
-                    forceUv1: this.forceUv1,
-                    useTexCubeLod: useTexCubeLod,
-                    msdf: !!this.msdfMap,
-                    twoSidedLighting: this.twoSidedLighting,
-                    pixelSnap: this.pixelSnap,
-                    pass: pass,
-                    nineSlicedMode: this.nineSlicedMode
-                };
-
-                if (pass === pc.SHADER_FORWARDHDR) {
-                    if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
-                    options.toneMap = pc.TONEMAP_LINEAR;
-                }
-            }
-
-            var hasUv0 = false;
-            var hasUv1 = false;
-            var hasVcolor = false;
-            if (objDefs) {
-                if (!minimalOptions) {
-                    options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
-                    if ((objDefs & pc.SHADERDEF_LM) !== 0) {
-                        options.lightMapFormat = 1; // rgbm
-                        options.lightMap = true;
-                        options.lightMapChannel = "rgb";
-                        options.lightMapUv = 1;
-                        options.lightMapTransform = 0;
-                        options.lightMapWithoutAmbient = !this.lightMap;
-                        options.useRgbm = true;
-                        if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
-                            options.dirLightMap = true;
-                        }
-                    }
-                    if (this.normalMap) options.hasTangents = (objDefs & pc.SHADERDEF_TANGENTS) !== 0;
-                }
-                options.screenSpace = (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
-                options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
-                options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
-                hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
-                hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
-                hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
-            }
-
-            var isOpacity;
-            for (var p in pc._matTex2D) {
-                isOpacity = p === "opacity";
-                if (isOpacity && this.blendType === pc.BLEND_NONE && this.alphaTest === 0.0 && !this.alphaToCoverage) continue;
-
-                if (minimalOptions && !isOpacity) continue;
-
-                var cname;
-                var mname = p + "Map";
-                var vname = p + "VertexColor";
-                if (p !== "height" && this[vname]) {
-                    if (hasVcolor) {
-                        cname = p + "VertexColorChannel";
-                        options[vname] = this[vname];
-                        options[cname] = this[cname];
-                        options.vertexColors = true;
-                    }
-                }
-                if (this[mname]) {
-                    var uname = mname + "Uv";
-                    var allow = true;
-                    if (this[uname] === 0 && !hasUv0) allow = false;
-                    if (this[uname] === 1 && !hasUv1) allow = false;
-                    if (allow) {
-                        options[mname] = !!this[mname];
-                        var tname = mname + "Transform";
-                        cname = mname + "Channel";
-                        options[tname] = this._getMapTransformID(this[tname], this[uname]);
-                        options[cname] = this[cname];
-                        options[uname] = this[uname];
-                    }
-                }
-            }
-
-            this._mapXForms = null;
-
-            if (this.useLighting && !minimalOptions) {
-                var lightsFiltered = [];
-                var mask = objDefs ? (objDefs >> 16) : 1;
-                if (sortedLights) {
-                    this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, sortedLights[pc.LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                    this._collectLights(pc.LIGHTTYPE_POINT,       sortedLights[pc.LIGHTTYPE_POINT], lightsFiltered, mask, staticLightList);
-                    this._collectLights(pc.LIGHTTYPE_SPOT,        sortedLights[pc.LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
-                }
-                options.lights = lightsFiltered;
-            } else {
-                options.lights = [];
-            }
-
-            if (!minimalOptions) {
-                options.aoMapUv = options.aoMapUv || this.aoUvSet; // backwards component
-                if (options.lights.length === 0) {
-                    options.noShadow = false;
-                }
-            }
+            if (minimalOptions)
+                this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            else
+                this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
@@ -1254,6 +960,9 @@ Object.assign(pc, function () {
         _defineFloat(obj, "refraction", 0);
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
+        _defineFloat(obj, "anisotropy", 0);
+        _defineFloat(obj, "clearCoat", 0);
+        _defineFloat(obj, "clearCoatGlossiness", 1);
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
@@ -1285,6 +994,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "fastTbn", false);
         _defineFlag(obj, "specularAntialias", false);
         _defineFlag(obj, "useMetalness", false);
+        _defineFlag(obj, "enableGGXSpecular", false);
         _defineFlag(obj, "occludeDirect", false);
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);

@@ -2,26 +2,26 @@ Object.assign(pc, function () {
     var _tempScrollValue = new pc.Vec2();
 
     /**
-     * @private
      * @component
+     * @class
      * @name pc.ScrollViewComponent
-     * @description Create a new ScrollViewComponent
+     * @augments pc.Component
      * @classdesc A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with optional horizontal and vertical scroll bars.
-     * @param {pc.ScrollViewComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
-     * @property {Boolean} horizontal Whether to enable horizontal scrolling.
-     * @property {Boolean} vertical Whether to enable vertical scrolling.
-     * @property {pc.SCROLL_MODE} scrollMode Specifies how the scroll view should behave when the user scrolls past the end of the content. Modes are defined as follows:
-     * <ul>
-     *     <li>{@link pc.SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.</li>
-     *     <li>{@link pc.SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.</li>
-     *     <li>{@link pc.SCROLL_MODE_INFINITE}: Content can scroll forever.</li>
-     * </ul>
-     * @property {Number} bounceAmount Controls how far the content should move before bouncing back.
-     * @property {Number} friction Controls how freely the content should move if thrown, i.e. by flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
-     * @property {pc.SCROLLBAR_VISIBILITY} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
-     * @property {pc.SCROLLBAR_VISIBILITY} verticalScrollbarVisibility Controls whether the vertical scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
+     * @description Create a new ScrollViewComponent.
+     * @param {pc.ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
+     * @property {boolean} horizontal Whether to enable horizontal scrolling.
+     * @property {boolean} vertical Whether to enable vertical scrolling.
+     * @property {number} scrollMode Specifies how the scroll view should behave when the user scrolls past the end of the content. Modes are defined as follows:
+     *
+     * * {@link pc.SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.
+     * * {@link pc.SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.
+     * * {@link pc.SCROLL_MODE_INFINITE}: Content can scroll forever.
+     *
+     * @property {number} bounceAmount Controls how far the content should move before bouncing back.
+     * @property {number} friction Controls how freely the content should move if thrown, i.e. By flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
+     * @property {number} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
+     * @property {number} verticalScrollbarVisibility Controls whether the vertical scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
      * @property {pc.Entity} viewportEntity The entity to be used as the masked viewport area, within which the content will scroll. This entity must have an ElementGroup component.
      * @property {pc.Entity} contentEntity The entity which contains the scrolling content itself. This entity must have an Element component.
      * @property {pc.Entity} horizontalScrollbarEntity The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
@@ -52,8 +52,16 @@ Object.assign(pc, function () {
             'scrollbar#gain': this._onVerticalScrollbarGain
         });
 
+        this._prevContentSizes = {};
+        this._prevContentSizes[pc.ORIENTATION_HORIZONTAL] = null;
+        this._prevContentSizes[pc.ORIENTATION_VERTICAL] = null;
+
         this._scroll = new pc.Vec2();
         this._velocity = new pc.Vec3();
+
+        this._dragStartPosition = new pc.Vec3();
+        this._disabledContentInput = false;
+        this._disabledContentInputEntities = [];
 
         this._toggleLifecycleListeners('on', system);
         this._toggleElementListeners('on');
@@ -65,8 +73,6 @@ Object.assign(pc, function () {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
-
-            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
@@ -105,8 +111,12 @@ Object.assign(pc, function () {
         _onContentElementGain: function () {
             this._destroyDragHelper();
             this._contentDragHelper = new pc.ElementDragHelper(this._contentReference.entity.element);
+            this._contentDragHelper.on('drag:start', this._onContentDragStart, this);
             this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
             this._contentDragHelper.on('drag:move', this._onContentDragMove, this);
+
+            this._prevContentSizes[pc.ORIENTATION_HORIZONTAL] = null;
+            this._prevContentSizes[pc.ORIENTATION_VERTICAL] = null;
 
             this._syncAll();
         },
@@ -115,14 +125,37 @@ Object.assign(pc, function () {
             this._destroyDragHelper();
         },
 
+        _onContentDragStart: function () {
+            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._dragStartPosition.copy(this._contentReference.entity.getLocalPosition());
+            }
+        },
+
         _onContentDragEnd: function () {
             this._prevContentDragPosition = null;
+            this._enableContentInput();
         },
 
         _onContentDragMove: function (position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._wasDragged = true;
                 this._setScrollFromContentPosition(position);
                 this._setVelocityFromContentPositionDelta(position);
+
+                // if we haven't already, when scrolling starts
+                // disable input on all child elements
+                if (!this._disabledContentInput) {
+
+                    // Disable input events on content after we've moved past a threshold value
+                    var dx = (position.x - this._dragStartPosition.x);
+                    var dy = (position.y - this._dragStartPosition.y);
+
+                    if (Math.abs(dx) > this.dragThreshold ||
+                        Math.abs(dy) > this.dragThreshold) {
+                        this._disableContentInput();
+                    }
+
+                }
             }
         },
 
@@ -132,14 +165,12 @@ Object.assign(pc, function () {
 
         _onSetHorizontalScrollbarValue: function (scrollValueX) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] && this.enabled && this.entity.enabled) {
-                this._velocity.set(0, 0, 0);
                 this._onSetScroll(scrollValueX, null);
             }
         },
 
         _onSetVerticalScrollbarValue: function (scrollValueY) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] && this.enabled && this.entity.enabled) {
-                this._velocity.set(0, 0, 0);
                 this._onSetScroll(null, scrollValueY);
             }
         },
@@ -162,7 +193,11 @@ Object.assign(pc, function () {
             this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
-        _onSetScroll: function (x, y) {
+        _onSetScroll: function (x, y, resetVelocity) {
+            if (resetVelocity !== false) {
+                this._velocity.set(0, 0, 0);
+            }
+
             var hasChanged = false;
             hasChanged |= this._updateAxis(x, 'x', pc.ORIENTATION_HORIZONTAL);
             hasChanged |= this._updateAxis(y, 'y', pc.ORIENTATION_VERTICAL);
@@ -175,7 +210,11 @@ Object.assign(pc, function () {
         _updateAxis: function (scrollValue, axis, orientation) {
             var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
-            if (hasChanged) {
+            // always update if dragging because drag helper directly updates the entity position
+            // always update if scrollValue === 0 because it will be clamped to 0
+            // if viewport is larger than content and position could be moved by drag helper but
+            // hasChanged will never be true
+            if (hasChanged || this._isDragging() || scrollValue === 0) {
                 this._scroll[axis] = this._determineNewScrollValue(scrollValue, axis, orientation);
                 this._syncContentPosition(orientation);
                 this._syncScrollbarPosition(orientation);
@@ -223,10 +262,28 @@ Object.assign(pc, function () {
             var contentEntity = this._contentReference.entity;
 
             if (contentEntity) {
-                var offset = this._scroll[axis] *  this._getMaxOffset(orientation);
+                var prevContentSize = this._prevContentSizes[orientation];
+                var currContentSize = this._getContentSize(orientation);
+
+                // If the content size has changed, adjust the scroll value so that the content will
+                // stay in the same place from the user's perspective.
+                if (prevContentSize !== null && Math.abs(prevContentSize - currContentSize) > 1e-4) {
+                    var prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
+                    var currMaxOffset = this._getMaxOffset(orientation, currContentSize);
+                    if (currMaxOffset === 0) {
+                        this._scroll[axis] = 1;
+                    } else {
+                        this._scroll[axis] = pc.math.clamp(this._scroll[axis] * prevMaxOffset / currMaxOffset, 0, 1);
+                    }
+                }
+
+                var offset = this._scroll[axis] * this._getMaxOffset(orientation);
                 var contentPosition = contentEntity.getLocalPosition();
                 contentPosition[axis] = offset * sign;
+
                 contentEntity.setLocalPosition(contentPosition);
+
+                this._prevContentSizes[orientation] = currContentSize;
             }
         },
 
@@ -277,15 +334,28 @@ Object.assign(pc, function () {
         },
 
         _contentPositionToScrollValue: function (contentPosition) {
-            return _tempScrollValue.set(
-                contentPosition.x / this._getMaxOffset(pc.ORIENTATION_HORIZONTAL),
-                contentPosition.y / -this._getMaxOffset(pc.ORIENTATION_VERTICAL)
-            );
+            var maxOffsetH = this._getMaxOffset(pc.ORIENTATION_HORIZONTAL);
+            var maxOffsetV = this._getMaxOffset(pc.ORIENTATION_VERTICAL);
+
+            if (maxOffsetH === 0) {
+                _tempScrollValue.x = 0;
+            } else {
+                _tempScrollValue.x = contentPosition.x / maxOffsetH;
+            }
+
+            if (maxOffsetV === 0) {
+                _tempScrollValue.y = 0;
+            } else {
+                _tempScrollValue.y = contentPosition.y / -maxOffsetV;
+            }
+
+            return _tempScrollValue;
         },
 
-        _getMaxOffset: function (orientation) {
+        _getMaxOffset: function (orientation, contentSize) {
+            contentSize = contentSize === undefined ? this._getContentSize(orientation) : contentSize;
+
             var viewportSize = this._getViewportSize(orientation);
-            var contentSize = this._getContentSize(orientation);
 
             if (contentSize < viewportSize) {
                 return -this._getViewportSize(orientation);
@@ -371,8 +441,8 @@ Object.assign(pc, function () {
             }
         },
 
-        _onUpdate: function () {
-            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+        onUpdate: function () {
+            if (this._contentReference.entity) {
                 this._updateVelocity();
                 this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
                 this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
@@ -391,13 +461,13 @@ Object.assign(pc, function () {
                     }
                 }
 
-                this._velocity.data[0] *= (1 - this.friction);
-                this._velocity.data[1] *= (1 - this.friction);
+                this._velocity.x *= (1 - this.friction);
+                this._velocity.y *= (1 - this.friction);
 
                 if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
                     var position = this._contentReference.entity.getLocalPosition();
-                    position.x += this._velocity.data[0];
-                    position.y += this._velocity.data[1];
+                    position.x += this._velocity.x;
+                    position.y += this._velocity.y;
                     this._contentReference.entity.setLocalPosition(position);
 
                     this._setScrollFromContentPosition(position);
@@ -446,7 +516,38 @@ Object.assign(pc, function () {
 
         _setScrollFromContentPosition: function (position) {
             var scrollValue = this._contentPositionToScrollValue(position);
-            this._onSetScroll(scrollValue.x, scrollValue.y);
+
+            if (this._isDragging()) {
+                scrollValue = this._applyScrollValueTension(scrollValue);
+            }
+
+            this._onSetScroll(scrollValue.x, scrollValue.y, false);
+        },
+
+        // Create nice tension effect when dragging past the extents of the viewport
+        _applyScrollValueTension: function (scrollValue) {
+            var max;
+            var overshoot;
+            var factor = 1;
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_HORIZONTAL);
+            overshoot = this._toOvershoot(scrollValue.x, pc.ORIENTATION_HORIZONTAL);
+            if (overshoot > 0) {
+                scrollValue.x = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.x = -factor * Math.log10(1 - overshoot);
+            }
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_VERTICAL);
+            overshoot = this._toOvershoot(scrollValue.y, pc.ORIENTATION_VERTICAL);
+
+            if (overshoot > 0) {
+                scrollValue.y = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.y = -factor * Math.log10(1 - overshoot);
+            }
+
+            return scrollValue;
         },
 
         _isDragging: function () {
@@ -467,6 +568,47 @@ Object.assign(pc, function () {
             if (this._contentDragHelper) {
                 this._contentDragHelper.enabled = enabled;
             }
+        },
+
+        // re-enable useInput flag on any descendent that was disabled
+        _enableContentInput: function () {
+            while (this._disabledContentInputEntities.length) {
+                var e = this._disabledContentInputEntities.pop();
+                if (e.element) {
+                    e.element.useInput = true;
+                }
+            }
+
+            this._disabledContentInput = false;
+        },
+
+        // disable useInput flag on all descendents of this contentEntity
+        _disableContentInput: function () {
+            var self = this;
+            var _disableInput = function (e) {
+                if (e.element && e.element.useInput) {
+                    self._disabledContentInputEntities.push(e);
+                    e.element.useInput = false;
+                }
+
+                var children = e.children;
+                var i, l;
+                for (i = 0, l = children.length; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            };
+
+            var contentEntity = this._contentReference.entity;
+            if (contentEntity) {
+                // disable input recursively for all children of the content entity
+                var children = contentEntity.children;
+                var i, l = children.length;
+                for (i = 0; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            }
+
+            this._disabledContentInput = true;
         },
 
         onEnable: function () {
@@ -508,9 +650,8 @@ Object.assign(pc, function () {
 }());
 
 /**
- * @private
  * @event
  * @name pc.ScrollViewComponent#set:scroll
  * @description Fired whenever the scroll position changes.
- * @param {pc.Vec2} scrollPosition Horizontal and vertical scroll values in the range 0...1.
+ * @param {pc.Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
  */

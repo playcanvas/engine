@@ -15,6 +15,13 @@ Object.assign(pc, function () {
         lightMap: 'white'
     };
 
+    /**
+     * @class
+     * @name pc.MaterialHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Material} resources.
+     * @param {pc.Application} app - The running {@link pc.Application}.
+     */
     var MaterialHandler = function (app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;
@@ -22,12 +29,22 @@ Object.assign(pc, function () {
         this._placeholderTextures = null;
 
         this._parser = new pc.JsonStandardMaterialParser();
+        this.retryRequests = false;
     };
 
     Object.assign(MaterialHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // Loading from URL (engine-only)
-            pc.http.get(url, function (err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     if (callback) {
                         response._engine = true;
@@ -35,7 +52,7 @@ Object.assign(pc, function () {
                     }
                 } else {
                     if (callback) {
-                        callback(pc.string.format("Error loading material: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading material: {0} [{1}]", url.original, err));
                     }
                 }
             });
@@ -47,6 +64,7 @@ Object.assign(pc, function () {
             // temp storage for engine-only as we need this during patching
             if (data._engine) {
                 material._data = data;
+                delete data._engine;
             }
 
             return material;
@@ -74,6 +92,7 @@ Object.assign(pc, function () {
                     height: 2,
                     format: pc.PIXELFORMAT_R8_G8_B8_A8
                 });
+                this._placeholderTextures[key].name = 'placeholder';
 
                 // fill pixels with color
                 var pixels = this._placeholderTextures[key].lock();
@@ -93,6 +112,10 @@ Object.assign(pc, function () {
                 delete asset.resource._data; // remove from temp storage
             }
 
+            // patch the name of the asset over the material name property
+            asset.data.name = asset.name;
+            asset.resource.name = asset.name;
+
             this._bindAndAssignAssets(asset, assets);
 
             asset.off('unload', this._onAssetUnload, this);
@@ -108,6 +131,21 @@ Object.assign(pc, function () {
 
         _assignTexture: function (parameterName, materialAsset, texture) {
             materialAsset.data[parameterName] = texture;
+            materialAsset.resource[parameterName] = texture;
+        },
+
+        // assign a placeholder texture while waiting for one to load
+        // placeholder textures do not replace the data[parameterName] value
+        // in the asset.data thus preserving the final asset id until it is loaded
+        _assignPlaceholderTexture: function (parameterName, materialAsset) {
+            // create placeholder textures on-demand
+            if (!this._placeholderTextures) {
+                this._createPlaceholders();
+            }
+
+            var placeholder = PLACEHOLDER_MAP[parameterName];
+            var texture = this._placeholderTextures[placeholder];
+
             materialAsset.resource[parameterName] = texture;
         },
 
@@ -144,7 +182,7 @@ Object.assign(pc, function () {
 
         _onCubemapLoad: function (parameterName, materialAsset, cubemapAsset) {
             this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources);
-            materialAsset.resource.initialize(materialAsset.data);
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
         },
 
         _onCubemapAdd: function (parameterName, materialAsset, cubemapAsset) {
@@ -165,18 +203,6 @@ Object.assign(pc, function () {
             }
         },
 
-        // assign a placeholder texture while waiting for one to load
-        _assignPlaceholderTexture: function (parameterName, materialAsset) {
-            // create placeholder textures on-demand
-            if (!this._placeholderTextures) {
-                this._createPlaceholders();
-            }
-
-            var placeholder = PLACEHOLDER_MAP[parameterName];
-            var texture = this._placeholderTextures[placeholder];
-            this._assignTexture(parameterName, materialAsset, texture);
-        },
-
         _bindAndAssignAssets: function (materialAsset, assets) {
             // always migrate before updating material from asset data
             var data = this._parser.migrate(materialAsset.data);
@@ -186,6 +212,12 @@ Object.assign(pc, function () {
             var pathMapping = (data.mappingFormat === "path");
 
             var TEXTURES = pc.StandardMaterial.TEXTURE_PARAMETERS;
+
+            // texture paths are measured from the material directory
+            var dir;
+            if (pathMapping) {
+                dir = pc.path.getDirectory(materialAsset.getFileUrl());
+            }
 
             var i, name, assetReference;
             // iterate through all texture parameters
@@ -207,7 +239,7 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.url = data[name];
+                        assetReference.url = pc.path.join(dir, data[name]);
                     } else {
                         assetReference.id = data[name];
                     }
@@ -277,7 +309,7 @@ Object.assign(pc, function () {
             }
 
             // call to re-initialize material after all textures assigned
-            material.initialize(data);
+            this._parser.initialize(material, data);
         }
     });
 

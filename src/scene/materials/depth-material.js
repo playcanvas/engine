@@ -2,7 +2,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.DepthMaterial
      * @classdesc A Depth material is for rendering linear depth values to a render target.
      */
@@ -25,11 +25,7 @@ Object.assign(pc, function () {
 
             pc.Material.prototype._cloneInternal.call(this, clone);
 
-            clone.update();
             return clone;
-        },
-
-        update: function () {
         },
 
         updateShader: function (device) {

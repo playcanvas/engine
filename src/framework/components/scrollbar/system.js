@@ -8,19 +8,18 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
+     * @class
      * @name pc.ScrollbarComponentSystem
-     * @description Create a new ScrollbarComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @description Create a new ScrollbarComponentSystem.
+     * @param {pc.Application} app - The application.
      */
     var ScrollbarComponentSystem = function ScrollbarComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'scrollbar';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScrollbarComponent;
         this.DataType = pc.ScrollbarComponentData;

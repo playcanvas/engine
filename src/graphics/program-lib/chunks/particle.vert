@@ -38,10 +38,19 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 }
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY) {
-    vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+   vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+   return pos;
+}
+
+vec3 customFace(vec3 InstanceCoords, vec2 quadXY) {
+    vec3 pos = faceTangent * quadXY.x + faceBinorm * quadXY.y;
     return pos;
 }
 
+vec2 safeNormalize(vec2 v) {
+    float l = length(v);
+    return (l > 1e-06) ? v / l : v;
+}
 
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
@@ -53,8 +62,11 @@ void main(void) {
     float uv = id / numParticlesPot;
     readInput(uv);
 
+#ifdef LOCAL_SPACE
+    inVel = mat3(matrix_model) * inVel;
+#endif
+    vec2 velocityV = safeNormalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
 
-    vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
     float particleLifetime = lifetime;
 
     if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);
@@ -69,7 +81,11 @@ void main(void) {
 
     scale += (scaleDiv * 2.0 - 1.0) * scaleDivMult * fract(rndFactor*10000.0);
 
-    texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5,    (alphaDiv * 2.0 - 1.0) * alphaDivMult * fract(rndFactor*1000.0),    nlife);
+#ifndef USE_MESH
+    texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, (alphaDiv * 2.0 - 1.0) * alphaDivMult * fract(rndFactor*1000.0), nlife);
+#else
+    texCoordsAlphaLife = vec4(particle_uv, (alphaDiv * 2.0 - 1.0) * alphaDivMult * fract(rndFactor*1000.0), nlife);
+#endif
 
     vec3 particlePos = inPos;
     vec3 particlePosMoved = vec3(0.0);

@@ -43,7 +43,6 @@ describe("pc.Vec2", function () {
     it("constructor: no args", function () {
         var v = new pc.Vec2();
 
-        equal(2, v.data.length);
         equal(v.x, 0);
         equal(v.y, 0);
     });
@@ -52,7 +51,6 @@ describe("pc.Vec2", function () {
     it("constructor: args", function() {
         var v = new pc.Vec2(1, 2);
 
-        equal(2, v.data.length);
         equal(1, v.x);
         equal(2, v.y);
     });

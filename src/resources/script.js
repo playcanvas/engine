@@ -2,12 +2,13 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptHandler
-     * @classdesc ResourceHandler for loading JavaScript files dynamically
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler for loading JavaScript files dynamically
      * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link pc.createScript},
      * or regular JavaScript files, such as third-party libraries.
-     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Application} app - The running {@link pc.Application}.
      */
     var ScriptHandler = function (app) {
         this._app = app;
@@ -26,10 +27,18 @@ Object.assign(pc, function () {
 
     Object.assign(ScriptHandler.prototype, {
         load: function (url, callback) {
+            // Scripts don't support bundling since we concatenate them. Below is for consistency.
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
             pc.script.app = this._app;
 
-            this._loadScript(url, function (err, url, extra) {
+            this._loadScript(url.original, function (err, url, extra) {
                 if (!err) {
                     if (pc.script.legacy) {
                         var Type = null;

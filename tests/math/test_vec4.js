@@ -59,7 +59,6 @@ describe("pc.Vec4", function () {
     it("constructor: no args", function () {
         var v = new pc.Vec4();
 
-        equal(4, v.data.length);
         equal(v.x, 0);
         equal(v.y, 0);
         equal(v.z, 0);
@@ -70,7 +69,6 @@ describe("pc.Vec4", function () {
     it("constructor: args", function() {
         var v = new pc.Vec4(1, 2, 3, 4);
 
-        equal(4, v.data.length);
         equal(1, v.x);
         equal(2, v.y);
         equal(3, v.z);

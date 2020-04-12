@@ -4,6 +4,9 @@
         name: 'string',
         chunks: 'chunks',
 
+        mappingFormat: 'string',
+        _engine: 'boolean', // internal param for engine-only loading
+
         ambient: 'rgb',
         ambientTint: 'boolean',
 
@@ -39,6 +42,10 @@
 
         useMetalness: 'boolean',
         metalness: 'number',
+        enableGGXSpecular: 'boolean',
+        anisotropy: 'number',
+        clearCoat: 'number',
+        clearCoatGlossiness: 'number',
         metalnessTint: 'boolean',
         metalnessVertexColor: 'boolean',
         metalnessVertexColorChannel: 'string',

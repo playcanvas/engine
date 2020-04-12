@@ -1,37 +1,22 @@
 Object.assign(pc, function () {
     var _schema = [
-        'enabled',
-        'type',
-        'asset',
-        'materialAsset',
-        'castShadows',
-        'receiveShadows',
-        'castShadowsLightmap',
-        'lightmapped',
-        'lightmapSizeMultiplier',
-        'isStatic',
-        'material',
-        'model',
-        'layers',
-        'batchGroupId',
-        'mapping'
+        'enabled'
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ModelComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
-     * @description Create a new ModelComponentSystem
-     * @param {pc.Application} app The Application.
-     * @extends pc.ComponentSystem
+     * @description Create a new ModelComponentSystem.
+     * @param {pc.Application} app - The Application.
      */
     var ModelComponentSystem = function ModelComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
@@ -45,7 +30,7 @@ Object.assign(pc, function () {
         this.plane = null;
         this.sphere = null;
 
-        this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial = app.scene.defaultMaterial;
 
         this.on('beforeremove', this.onRemove, this);
     };
@@ -56,42 +41,41 @@ Object.assign(pc, function () {
 
     Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
+            properties = [
+                'material',
+                'materialAsset',
+                'asset',
+                'castShadows',
+                'receiveShadows',
+                'castShadowsLightmap',
+                'lightmapped',
+                'lightmapSizeMultiplier',
+                'type',
+                'mapping',
+                'layers',
+                'isStatic',
+                'batchGroupId'
+            ];
 
-            // copy data into new structure
-            var data = {};
-            var name;
-            for (var i = 0; i < properties.length; i++) {
-                name = properties[i];
-                data[name] = _data[name];
-            }
-
-            data.material = this.defaultMaterial;
-
-            if (data.batchGroupId === null || data.batchGroupId === undefined) {
-                data.batchGroupId = -1;
+            if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
+                _data.batchGroupId = -1;
             }
 
             // duplicate layer list
-            if (data.layers && pc.type(data.layers) === 'array') {
-                data.layers = data.layers.slice(0);
+            if (_data.layers && _data.layers.length) {
+                _data.layers = _data.layers.slice(0);
             }
 
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-        },
-
-        removeComponent: function (entity) {
-            var data = entity.model.data;
-            entity.model.asset = null;
-            if (data.type !== 'asset' && data.model) {
-                entity.model.removeModelFromLayers(entity.model.model);
-                entity.removeChild(data.model.getGraph());
-                data.model = null;
+            for (var i = 0; i < properties.length; i++) {
+                if (_data.hasOwnProperty(properties[i])) {
+                    component[properties[i]] = _data[properties[i]];
+                }
             }
 
-            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, _data, ['enabled']);
+
+
         },
 
         cloneComponent: function (entity, clone) {
@@ -120,7 +104,7 @@ Object.assign(pc, function () {
 
             var material = entity.model.material;
             if (!material ||
-                material === pc.ModelHandler.DEFAULT_MATERIAL ||
+                material === this.defaultMaterial ||
                 !materialAsset ||
                 material === materialAsset.resource) {
 
@@ -139,6 +123,7 @@ Object.assign(pc, function () {
             if (!data.materialAsset)
                 component.material = material;
 
+            // TODO: we should copy all relevant meshinstance properties here
             if (entity.model.model) {
                 var meshInstances = entity.model.model.meshInstances;
                 var meshInstancesClone = component.model.meshInstances;
@@ -152,9 +137,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, component) {
-            // Unhook any material asset events
-            entity.model.materialAsset = null;
-            component.remove();
+            component.onRemove();
         }
     });
 

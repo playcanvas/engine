@@ -2,19 +2,18 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScreenComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScreenComponent}s.
-     * @description Create a new ScreenComponentSystem
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @description Create a new ScreenComponentSystem.
+     * @param {pc.Application} app - The application.
      */
     var ScreenComponentSystem = function ScreenComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'screen';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScreenComponent;
         this.DataType = pc.ScreenComponentData;
@@ -28,7 +27,7 @@ Object.assign(pc, function () {
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
-        pc.ComponentSystem.on('update', this._onUpdate, this);
+        pc.ComponentSystem.bind('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };
@@ -41,6 +40,7 @@ Object.assign(pc, function () {
         initializeComponentData: function (component, data, properties) {
             if (data.priority !== undefined) component.priority = data.priority;
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            component.cull = component.screenSpace;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
             if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
             if (data.resolution !== undefined) {
@@ -63,6 +63,11 @@ Object.assign(pc, function () {
             // queue up a draw order sync
             component.syncDrawOrder();
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        },
+
+        destroy: function () {
+            this.off();
+            this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         },
 
         _onUpdate: function (dt) {

@@ -8,7 +8,6 @@ Object.assign(pc, (function () {
     var DummyComponentSystem = function DummyComponentSystem(app) {
         this.id = 'dummy';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.DummyComponent;
         this.DataType = pc.DummyComponentData;

@@ -4,11 +4,11 @@
 * Example usage:
 *
 * // regular release build
-* node build.js -l 0 -o output/playcanvas-latest.js
+* node build.js -l 0 -o output/playcanvas.js
 * // production minified build
-* node build.js -l 1 -o output/playcanvas-latest.min.js
+* node build.js -l 1 -o output/playcanvas.min.js
 * // include extra debug code
-* node build.js -l 0 -d -o output/playcanvas-latest.dbg.js
+* node build.js -l 0 -d -o output/playcanvas.dbg.js
 */
 
 var fs = require("fs");
@@ -36,8 +36,9 @@ try {
     process.exit(1);
 }
 
-var DEFAULT_OUTPUT = "output/playcanvas-latest.js";
+var DEFAULT_OUTPUT = "output/playcanvas.js";
 var DEFAULT_TEMP = "_tmp";
+var DEFAULT_SOURCE = "../src";
 var SRC_DIR = "../";
 
 var COMPILER_LEVEL = [
@@ -48,7 +49,9 @@ var COMPILER_LEVEL = [
 
 var debug = false;
 var profiler = false;
+var sourceMap = false;
 var outputPath = DEFAULT_OUTPUT;
+var sourcePath = DEFAULT_SOURCE;
 var tempPath = DEFAULT_TEMP;
 var compilerLevel = COMPILER_LEVEL[0];
 var formattingLevel = undefined;
@@ -158,11 +161,15 @@ var preprocess = function (dependencies) {
         var buffer = fs.readFileSync(filepath);
 
         var pp = new Preprocessor(buffer.toString());
-        var src = pp.process({
-            PROFILER: profiler || debug,
-            DEBUG: debug
-        });
-
+        var src;
+        // TODO: source mapped build doesn't support preprocessor yet
+        if(this.sourceMap)
+            src = buffer;
+        else 
+            src = pp.process({
+                PROFILER: profiler || debug,
+                DEBUG: debug
+            });
         var dir = path.dirname(_out);
         fse.ensureDirSync(dir);
 
@@ -172,6 +179,24 @@ var preprocess = function (dependencies) {
     });
 
     return dependenciesOut;
+};
+
+var getCopyrightNotice = function (ver, rev) {
+    var buildOptions = "";
+    if (debug || profiler) {
+        if (profiler && !debug) {
+            buildOptions += " (PROFILER)";
+        } else if (debug) {
+            buildOptions += " (DEBUG PROFILER)";
+        }
+    }
+    return [
+        "/*",
+        " * PlayCanvas Engine v" + ver + " revision " + rev + buildOptions,
+        " * Copyright 2011-" + new Date().getFullYear() + " PlayCanvas Ltd. All rights reserved.",
+        " */",
+        ""
+    ].join("\n");
 };
 
 // insert version and revision into output source file
@@ -185,6 +210,7 @@ var insertVersions = function (filepath, callback) {
 
                 var content = buffer.toString();
 
+                content = getCopyrightNotice(ver, rev) + content;
                 content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
                 content = replaceAll(content, "__REVISION__", rev);
 
@@ -234,6 +260,25 @@ var run = function () {
             if (compilerLevel === "WHITESPACE_ONLY") {
                 options.formatting = "pretty_print";
             }
+
+            if(sourceMap) {
+                var outputfilename = path.basename(outputPath);
+
+                var wrapperContent = fs.readFileSync("./umd-wrapper.js");
+                var wrapperPostamble = "\n//# sourceMappingURL=" + outputfilename + ".map";
+
+                var tempWrapperPath = path.join(tempPath, "./_umd-wrapper.js");
+                fs.writeFileSync(tempWrapperPath, wrapperContent + wrapperPostamble);
+
+                var mapFilePath = outputPath + ".map";
+                var relativeSourcePath = path.relative(path.dirname(outputPath), sourcePath);
+
+                options.output_wrapper_file = tempWrapperPath;
+                options.create_source_map = mapFilePath;
+                options.source_map_location_mapping = "_tmp/src|" + relativeSourcePath;
+                options.source_map_include_content = undefined;
+            }
+
             var closureCompiler = new ClosureCompiler(options);
 
             // compile
@@ -275,16 +320,17 @@ var arguments = function () {
     process.argv.forEach(function (arg) {
         if (arg === '-h') {
             console.log("Build Script for PlayCanvas Engine\n");
-            console.log("Usage: node build.js -l [COMPILER_LEVEL] -o [OUTPUT_PATH]\n");
+            console.log("Usage: node build.js -l [COMPILER_LEVEL] -o [OUTPUT_PATH] -m [SOURCE_PATH]\n");
             console.log("Arguments:");
             console.log("-h: show this help");
             console.log("-l COMPILER_LEVEL: Set compiler level");
             console.log("\t0: WHITESPACE_ONLY [default]");
             console.log("\t1: SIMPLE");
             console.log("\t2: ADVANCED OPTIMIZATIONS");
-            console.log("-o PATH: output file path [output/playcanvas-latest.js]");
+            console.log("-o PATH: output file path [output/playcanvas.js]");
             console.log("-d: build debug engine configuration");
             console.log("-p: build profiler engine configuration");
+            console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
             process.exit();
         }
 
@@ -309,6 +355,13 @@ var arguments = function () {
             outputPath = arg;
         }
 
+        if (arg === '-m') {
+            sourceMap = true;
+        }
+
+        if (_last === '-m' && !arg.startsWith('-')) {
+            sourcePath = arg;
+        }
         _last = arg;
     });
 };

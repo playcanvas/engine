@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.LayoutCalculator
-     * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s
+     * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s.
      */
     function LayoutCalculator() {}
 
@@ -77,8 +77,8 @@ Object.assign(pc, function () {
             allElements = allElements.filter(shouldIncludeInLayout);
             options = layoutOptions;
 
-            availableSpace.x = options.containerSize.x - options.padding.data[0] - options.padding.data[2];
-            availableSpace.y = options.containerSize.y - options.padding.data[1] - options.padding.data[3];
+            availableSpace.x = options.containerSize.x - options.padding.x - options.padding.z;
+            availableSpace.y = options.containerSize.y - options.padding.y - options.padding.w;
 
             resetAnchors(allElements);
 
@@ -105,10 +105,10 @@ Object.assign(pc, function () {
         function resetAnchors(allElements) {
             for (var i = 0; i < allElements.length; ++i) {
                 var element = allElements[i];
-                var anchor = element.anchor.data;
+                var anchor = element.anchor;
 
-                if (anchor[0] !== 0 || anchor[1] !== 0 || anchor[2] !== 0 || anchor[3] !== 0) {
-                    element.anchor = [0, 0, 0, 0];
+                if (anchor.x !== 0 || anchor.y !== 0 || anchor.z !== 0 || anchor.w !== 0) {
+                    element.anchor = pc.Vec4.ZERO;
                 }
             }
         }

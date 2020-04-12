@@ -2,14 +2,16 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
      */
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -18,7 +20,8 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -42,23 +45,40 @@ Object.assign(pc, function () {
 
 
     /**
-     * @constructor
+     * @class
      * @name pc.Sprite
-     * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used
-     * by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a single frame or a sprite animation.
-     * @param {pc.GraphicsDevice} device The graphics device of the application.
-     * @param {Object} options Options for creating the pc.Sprite.
-     * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
-     * @param {pc.SPRITE_RENDERMODE} [options.renderMode] The rendering mode of the Sprite.
-     * @param {pc.TextureAtlas} [options.atlas] The texture atlas.
-     * @property {String[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is using.
-     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
+     * @augments pc.EventHandler
+     * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}.
+     * It can be used by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a
+     * single frame or a sprite animation.
+     * @param {pc.GraphicsDevice} device - The graphics device of the application.
+     * @param {object} [options] - Options for creating the pc.Sprite.
+     * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
+     * Defaults to 1.
+     * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
+     *
+     * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
+     * * {@link pc.SPRITE_RENDERMODE_SLICED}
+     * * {@link pc.SPRITE_RENDERMODE_TILED}
+     *
+     * Defaults to pc.SPRITE_RENDERMODE_SIMPLE.
+     * @param {pc.TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
+     * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
+     * using. Defaults to null.
+     * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
      * @property {pc.TextureAtlas} atlas The texture atlas.
-     * @property {pc.SPRITE_RENDERMODE} renderMode The rendering mode of the Sprite.
-     * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+     * @property {number} renderMode The rendering mode of the sprite. Can be:
+     *
+     * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
+     * * {@link pc.SPRITE_RENDERMODE_SLICED}
+     * * {@link pc.SPRITE_RENDERMODE_TILED}
+     *
+     * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
      * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
      */
     var Sprite = function (device, options) {
+        pc.EventHandler.call(this);
+
         this._device = device;
         this._pixelsPerUnit = options && options.pixelsPerUnit !== undefined ? options.pixelsPerUnit : 1;
         this._renderMode = options && options.renderMode !== undefined ? options.renderMode : pc.SPRITE_RENDERMODE_SIMPLE;
@@ -72,12 +92,12 @@ Object.assign(pc, function () {
         // if true, endUpdate() will re-create meshes when it's called
         this._meshesDirty = false;
 
-        pc.events.attach(this);
-
         if (this._atlas && this._frameKeys) {
             this._createMeshes();
         }
     };
+    Sprite.prototype = Object.create(pc.EventHandler.prototype);
+    Sprite.prototype.constructor = Sprite;
 
     Sprite.prototype._createMeshes = function () {
         var i, len;
@@ -114,8 +134,8 @@ Object.assign(pc, function () {
         var texWidth = this._atlas.texture.width;
         var texHeight = this._atlas.texture.height;
 
-        var w = rect.data[2] / this._pixelsPerUnit;
-        var h = rect.data[3] / this._pixelsPerUnit;
+        var w = rect.z / this._pixelsPerUnit;
+        var h = rect.w / this._pixelsPerUnit;
         var hp = frame.pivot.x;
         var vp = frame.pivot.y;
 
@@ -129,10 +149,10 @@ Object.assign(pc, function () {
 
         // uvs based on frame rect
         // uvs
-        var lu = rect.data[0] / texWidth;
-        var bv = rect.data[1] / texHeight;
-        var ru = (rect.data[0] + rect.data[2]) / texWidth;
-        var tv = (rect.data[1] + rect.data[3]) / texHeight;
+        var lu = rect.x / texWidth;
+        var bv = rect.y / texHeight;
+        var ru = (rect.x + rect.z) / texWidth;
+        var tv = (rect.y + rect.w) / texHeight;
 
         var uvs = [
             lu, bv,

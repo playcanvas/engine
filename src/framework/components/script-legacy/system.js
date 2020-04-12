@@ -21,7 +21,6 @@ Object.assign(pc, function () {
 
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
@@ -38,12 +37,12 @@ Object.assign(pc, function () {
         this.instancesWithToolsUpdate = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        pc.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
-        pc.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
-        pc.ComponentSystem.on(UPDATE, this.onUpdate, this);
-        pc.ComponentSystem.on(FIXED_UPDATE, this.onFixedUpdate, this);
-        pc.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
-        pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
+        pc.ComponentSystem.bind(INITIALIZE, this.onInitialize, this);
+        pc.ComponentSystem.bind(POST_INITIALIZE, this.onPostInitialize, this);
+        pc.ComponentSystem.bind(UPDATE, this.onUpdate, this);
+        pc.ComponentSystem.bind(FIXED_UPDATE, this.onFixedUpdate, this);
+        pc.ComponentSystem.bind(POST_UPDATE, this.onPostUpdate, this);
+        pc.ComponentSystem.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
     ScriptLegacyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScriptLegacyComponentSystem.prototype.constructor = ScriptLegacyComponentSystem;
@@ -73,7 +72,7 @@ Object.assign(pc, function () {
 
         cloneComponent: function (entity, clone) {
             // overridden to make sure urls list is duplicated
-            var src = this.dataStore[entity._guid];
+            var src = this.store[entity.getGuid()];
             var data = {
                 runInTools: src.data.runInTools,
                 scripts: [],
@@ -278,7 +277,7 @@ Object.assign(pc, function () {
             if (entity.script) {
                 entity.script.data._instances = entity.script.data._instances || {};
                 if (entity.script.data._instances[name]) {
-                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity._guid));
+                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
                 }
                 entity.script.data._instances[name] = {
                     url: url,
@@ -502,7 +501,10 @@ Object.assign(pc, function () {
             } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
                 var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                 attribute.value = new curveType(attribute.value.keys);
+
+                /* eslint-disable no-self-assign */
                 attribute.value.type = attribute.value.type;
+                /* eslint-enable no-self-assign */
             }
         }
     });

@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     var _invViewProjMat = new pc.Mat4();
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Camera
      * @classdesc A camera.
      */
@@ -14,7 +14,7 @@ Object.assign(pc, function () {
         this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
-        this._shaderParams = new pc.Vec4();
+        this._shaderParams = new Float32Array(4);
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
@@ -26,7 +26,9 @@ Object.assign(pc, function () {
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
+        this._viewMatDirty = true;
         this._viewMat = new pc.Mat4();
+        this._viewProjMatDirty = true;
         this._viewProjMat = new pc.Mat4();
 
         this.vrDisplay = null;
@@ -84,7 +86,7 @@ Object.assign(pc, function () {
             clone.projection = this._projection;
             clone.nearClip = this._nearClip;
             clone.farClip = this._farClip;
-            clone._shaderParams = this._shaderParams.clone();
+            clone._shaderParams = this._shaderParams.slice();
             clone.fov = this._fov;
             clone.aspectRatio = this._aspect;
             clone._aspectRatioMode = this._aspectRatioMode;
@@ -100,10 +102,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#worldToScreen
          * @description Convert a point from 3D world space to 2D canvas pixel space.
-         * @param {pc.Vec3} worldCoord The world space coordinate to transform.
-         * @param {Number} cw The width of PlayCanvas' canvas element.
-         * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
+         * @param {pc.Vec3} worldCoord - The world space coordinate to transform.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, cw, ch, screenCoord) {
@@ -111,19 +113,20 @@ Object.assign(pc, function () {
                 screenCoord = new pc.Vec3();
             }
 
-            var projMat = this.getProjectionMatrix();
-            var wtm = this._node.getWorldTransform();
-            this._viewMat.copy(wtm).invert();
-            this._viewProjMat.mul2(projMat, this._viewMat);
+            if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
+                var projMat = this.getProjectionMatrix();
+                var viewMat = this.getViewMatrix();
+                this._viewProjMat.mul2(projMat, viewMat);
+                this._viewProjMatDirty = false;
+            }
             this._viewProjMat.transformPoint(worldCoord, screenCoord);
 
             // calculate w co-coord
-            var wp = worldCoord.data;
             var vpm = this._viewProjMat.data;
-            var w = wp[0] * vpm[3] +
-                    wp[1] * vpm[7] +
-                    wp[2] * vpm[11] +
-                        1 * vpm[15];
+            var w = worldCoord.x * vpm[3] +
+                    worldCoord.y * vpm[7] +
+                    worldCoord.z * vpm[11] +
+                               1 * vpm[15];
 
             screenCoord.x = (screenCoord.x / w + 1) * 0.5 * cw;
             screenCoord.y = (1 - screenCoord.y / w) * 0.5 * ch;
@@ -136,12 +139,12 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
-         * @param {Number} x x coordinate on PlayCanvas' canvas element.
-         * @param {Number} y y coordinate on PlayCanvas' canvas element.
-         * @param {Number} z The distance from the camera in world space to create the new point.
-         * @param {Number} cw The width of PlayCanvas' canvas element.
-         * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
+         * @param {number} x - X coordinate on PlayCanvas' canvas element.
+         * @param {number} y - Y coordinate on PlayCanvas' canvas element.
+         * @param {number} z - The distance from the camera in world space to create the new point.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
@@ -149,10 +152,12 @@ Object.assign(pc, function () {
                 worldCoord = new pc.Vec3();
             }
 
-            var projMat = this.getProjectionMatrix();
-            var wtm = this._node.getWorldTransform();
-            this._viewMat.copy(wtm).invert();
-            this._viewProjMat.mul2(projMat, this._viewMat);
+            if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
+                var projMat = this.getProjectionMatrix();
+                var viewMat = this.getViewMatrix();
+                this._viewProjMat.mul2(projMat, viewMat);
+                this._viewProjMatDirty = false;
+            }
             _invViewProjMat.copy(this._viewProjMat).invert();
 
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
@@ -192,7 +197,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
-         * @returns {Object} The options determining the behaviour of render target clears.
+         * @returns {object} The options determining the behaviour of render target clears.
          */
         getClearOptions: function () {
             return this._clearOptions;
@@ -217,14 +222,30 @@ Object.assign(pc, function () {
 
                 var n = this._nearClip;
                 var f = this._farClip;
-                this._shaderParams.x = 1 / f;
-                this._shaderParams.y = f;
-                this._shaderParams.z = (1 - f / n) / 2;
-                this._shaderParams.w = (1 + f / n) / 2;
+                this._shaderParams[0] = 1 / f;
+                this._shaderParams[1] = f;
+                this._shaderParams[2] = (1 - f / n) / 2;
+                this._shaderParams[3] = (1 + f / n) / 2;
 
                 this._projMatDirty = false;
             }
             return this._projMat;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Camera#getViewMatrix
+         * @description Retrieves the view matrix for the specified camera based on the entity world transformation.
+         * @returns {pc.Mat4} The camera's view matrix.
+         */
+        getViewMatrix: function () {
+            if (this._viewMatDirty) {
+                var wtm = this._node.getWorldTransform();
+                this._viewMat.copy(wtm).invert();
+                this._viewMatDirty = false;
+            }
+            return this._viewMat;
         },
 
         getRect: function () {
@@ -236,10 +257,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
-         * @param {Object} options The options determining the behaviour of subsequent render target clears.
-         * @param {Number[]} options.color The options determining the behaviour of subsequent render target clears.
-         * @param {Number} options.depth The options determining the behaviour of subsequent render target clears.
-         * @param {pc.CLEARFLAG} options.flags The options determining the behaviour of subsequent render target clears.
+         * @param {object} options - The options determining the behaviour of subsequent render target clears.
+         * @param {number[]} options.color - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.depth - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.flags - The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions.color[0] = options.color[0];
@@ -276,8 +297,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#aspectRatio
+     * @type {number}
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
@@ -294,13 +315,13 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#projection
-     * @description Camera's projection type, to specify whether projection is orthographic (parallel projection) or perspective. Can be:
-     * <ul>
-     *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
-     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}</li>
-     * </ul>
+     * @type {number}
+     * @description Camera's projection type, to specify whether projection is orthographic
+     * (parallel projection) or perspective. Can be:
+     *
+     * * {@link pc.PROJECTION_PERSPECTIVE}
+     * * {@link pc.PROJECTION_ORTHOGRAPHIC}
      */
     Object.defineProperty(Camera.prototype, 'projection', {
         get: function () {
@@ -316,9 +337,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#nearClip
-     * @description Camera's distance to near clipping plane
+     * @type {number}
+     * @description Camera's distance to near clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
         get: function () {
@@ -334,9 +355,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#farClip
-     * @description Camera's distance to far clipping plane
+     * @type {number}
+     * @description Camera's distance to far clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
         get: function () {
@@ -352,8 +373,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#fov
+     * @type {number}
      * @description Camera's field of view in degrees. This angle is in degrees
      * and is measured vertically or horizontally between the sides of camera planes.
      * hirozontalFov property defines the fov axis - vertical or horizontal.
@@ -372,8 +393,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Boolean
      * @name pc.Camera#horizontalFov
+     * @type {boolean}
      * @description Camera's horizontal or vertical field of view.
      */
     Object.defineProperty(Camera.prototype, 'horizontalFov', {
@@ -390,8 +411,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#orthoHeight
+     * @type {number}
      * @description Camera's half height of the orthographics view.
      */
     Object.defineProperty(Camera.prototype, 'orthoHeight', {
@@ -408,8 +429,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Array
      * @name pc.Camera#clearColor
+     * @type {number[]}
      * @description Camera's clear color.
      */
     Object.defineProperty(Camera.prototype, 'clearColor', {
@@ -426,8 +447,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearDepth
+     * @type {number}
      * @description Camera's clear depth value.
      */
     Object.defineProperty(Camera.prototype, 'clearDepth', {
@@ -441,8 +462,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearStencil
+     * @type {number}
      * @description Camera's clear stencil value.
      */
     Object.defineProperty(Camera.prototype, 'clearStencil', {
@@ -456,8 +477,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearFlags
+     * @type {number}
      * @description Camera's clear flags bits value.
      */
     Object.defineProperty(Camera.prototype, 'clearFlags', {

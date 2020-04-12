@@ -22,7 +22,9 @@ Object.assign(pc, function () {
         'alignToMotion',
         'emitterShape',
         'emitterExtents',
+        'emitterExtentsInner',
         'emitterRadius',
+        'emitterRadiusInner',
         'initialVelocity',
         'wrap',
         'wrapBounds',
@@ -31,12 +33,16 @@ Object.assign(pc, function () {
         'normalMapAsset',
         'mesh',
         'meshAsset',
+        'orientation',
+        'particleNormal',
         'localVelocityGraph',
         'localVelocityGraph2',
         'velocityGraph',
         'velocityGraph2',
         'rotationSpeedGraph',
         'rotationSpeedGraph2',
+        'radialSpeedGraph',
+        'radialSpeedGraph2',
         'scaleGraph',
         'scaleGraph2',
         'colorGraph',
@@ -47,26 +53,29 @@ Object.assign(pc, function () {
         'normalMap',
         'animTilesX',
         'animTilesY',
+        'animStartFrame',
         'animNumFrames',
+        'animNumAnimations',
+        'animIndex',
+        'randomizeAnimIndex',
         'animSpeed',
         'animLoop',
         'layers'
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ParticleSystemComponentSystem
-     * @classdesc Allows an Entity to render a particle system
-     * @description Create a new ParticleSystemComponentSystem
-     * @param {pc.Application} app The Application.
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
+     * @classdesc Allows an Entity to render a particle system.
+     * @description Create a new ParticleSystemComponentSystem.
+     * @param {pc.Application} app - The Application.
      */
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;
@@ -75,6 +84,8 @@ Object.assign(pc, function () {
 
         this.propertyTypes = {
             emitterExtents: 'vec3',
+            emitterExtentsInner: 'vec3',
+            particleNormal: 'vec3',
             wrapBounds: 'vec3',
             localVelocityGraph: 'curveset',
             localVelocityGraph2: 'curveset',
@@ -86,12 +97,14 @@ Object.assign(pc, function () {
             alphaGraph2: 'curve',
             rotationSpeedGraph: 'curve',
             rotationSpeedGraph2: 'curve',
+            radialSpeedGraph: 'curve',
+            radialSpeedGraph2: 'curve',
             scaleGraph: 'curve',
             scaleGraph2: 'curve'
         };
 
         this.on('beforeremove', this.onRemove, this);
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ParticleSystemComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ParticleSystemComponentSystem.prototype.constructor = ParticleSystemComponentSystem;
@@ -206,17 +219,17 @@ Object.assign(pc, function () {
                                 }
                                 lightCube = layer._lightCube;
                                 for (i = 0; i < 6; i++) {
-                                    lightCube[i * 3] = this.app.scene.ambientLight.data[0];
-                                    lightCube[i * 3 + 1] = this.app.scene.ambientLight.data[1];
-                                    lightCube[i * 3 + 2] = this.app.scene.ambientLight.data[2];
+                                    lightCube[i * 3] = this.app.scene.ambientLight.r;
+                                    lightCube[i * 3 + 1] = this.app.scene.ambientLight.g;
+                                    lightCube[i * 3 + 2] = this.app.scene.ambientLight.b;
                                 }
                                 var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
                                 for (j = 0; j < dirs.length; j++) {
                                     for (c = 0; c < 6; c++) {
                                         var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                        lightCube[c * 3] += dirs[j]._color.data[0] * weight;
-                                        lightCube[c * 3 + 1] += dirs[j]._color.data[1] * weight;
-                                        lightCube[c * 3 + 2] += dirs[j]._color.data[2] * weight;
+                                        lightCube[c * 3] += dirs[j]._color.r * weight;
+                                        lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
+                                        lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
                                     }
                                 }
                             }
@@ -225,7 +238,6 @@ Object.assign(pc, function () {
 
                         if (!data.paused) {
                             emitter.simTime += dt;
-                            numSteps = 0;
                             if (emitter.simTime > emitter.fixedTimeStep) {
                                 numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
                                 emitter.simTime -= numSteps * emitter.fixedTimeStep;
@@ -233,13 +245,12 @@ Object.assign(pc, function () {
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
                                 for (i = 0; i < numSteps; i++) {
-                                    emitter.addTime(emitter.fixedTimeStep);
+                                    emitter.addTime(emitter.fixedTimeStep, false);
                                 }
                                 stats._updatesPerFrame += numSteps;
                                 stats._frameTime += emitter._addTimeTime;
                                 emitter._addTimeTime = 0;
                             }
-
                             emitter.finishFrame();
                         }
                     }
@@ -248,7 +259,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, component) {
-            component.onDestroy();
+            component.onRemove();
         }
     });
 

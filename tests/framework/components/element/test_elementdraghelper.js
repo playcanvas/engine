@@ -1,5 +1,4 @@
 describe("pc.ElementDragHelper", function() {
-
     var stubbedOntouchstart;
     var app;
     var entity;
@@ -16,6 +15,7 @@ describe("pc.ElementDragHelper", function() {
         if (!('ontouchstart' in window)) {
             window.ontouchstart = {};
             stubbedOntouchstart = true;
+            pc.platform.touch = true;
         }
 
         var canvasWidth = 300;
@@ -75,8 +75,13 @@ describe("pc.ElementDragHelper", function() {
     afterEach(function () {
         sinon.restore();
 
+        dragHelper.destroy();
+
+        app.destroy();
+
         if (stubbedOntouchstart) {
             delete window.ontouchstart;
+            pc.platform.touch = false;
         }
     });
 
@@ -227,8 +232,8 @@ describe("pc.ElementDragHelper", function() {
         });
 
         expect(dragMoveHandler.callCount).to.equal(1);
-        expect(dragMoveHandler.getCall(0).args[0].x).to.be.closeTo(expectedXDelta, 0.01);
-        expect(dragMoveHandler.getCall(0).args[0].y).to.be.closeTo(expectedYDelta, 0.01);
+        expect(dragMoveHandler.getCall(0).args[0].x).to.be.closeTo(expectedXDelta, 0.02);
+        expect(dragMoveHandler.getCall(0).args[0].y).to.be.closeTo(expectedYDelta, 0.02);
     }
 
     it("includes ancestral rotation in coordinate conversion", function () {
@@ -286,5 +291,10 @@ describe("pc.ElementDragHelper", function() {
         createDragHelper("y");
 
         runTransformTest.call(this, 0, defaultYDelta);
+    });
+
+    it("takes device pixel ratio into account", function () {
+        app.graphicsDevice.maxPixelRatio = 2;
+        runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
     });
 });

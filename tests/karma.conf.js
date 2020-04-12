@@ -6,7 +6,7 @@ var sourceFiles;
 
 if (release) {
     console.log('Testing release build');
-    sourceFiles = [path.resolve('build/output/playcanvas-latest.js')];
+    sourceFiles = [path.resolve('build/output/playcanvas.js')];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {
@@ -18,6 +18,10 @@ module.exports = function (config) {
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '..',
+
+        client: {
+            args: process.argv
+        },
 
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([
@@ -40,6 +44,13 @@ module.exports = function (config) {
             { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
         ]),
 
+        // Serve .gz files with Content-Encoding: gzip
+        customHeaders: [{
+            match: '.*.gz',
+            name: 'Content-Encoding',
+            value: 'gzip'
+        }],
+
         // list of files / patterns to exclude
         exclude: [],
 
@@ -54,7 +65,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['dots'],
+        reporters: ['spec'],
 
         // web server port
         port: 9876,
@@ -66,7 +77,7 @@ module.exports = function (config) {
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
 
-        browserConsoleLogOptions: config.LOG_WARN,
+        // browserConsoleLogOptions: config.LOG_WARN,
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
@@ -81,6 +92,6 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: Infinity
+        concurrency: 1
     });
 };

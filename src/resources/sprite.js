@@ -1,7 +1,17 @@
 Object.assign(pc, function () {
+
+    /**
+     * @class
+     * @name pc.SpriteHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Sprite} resources.
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {pc.GraphicsDevice} device - The graphics device.
+     */
     var SpriteHandler = function (assets, device) {
         this._assets = assets;
         this._device = device;
+        this.retryRequests = false;
     };
 
     // The scope of this function is the sprite asset
@@ -20,9 +30,18 @@ Object.assign(pc, function () {
 
     Object.assign(SpriteHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // if given a json file (probably engine-only use case)
-            if (pc.path.getExtension(url) === '.json') {
-                pc.http.get(url, function (err, response) {
+            if (pc.path.getExtension(url.original) === '.json') {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     if (!err) {
                         callback(null, response);
                     } else {

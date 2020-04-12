@@ -147,6 +147,26 @@ describe("pc.ComponentSystem", function () {
         expect(component.vec4Property).to.not.equal(data.vec4Property);
     });
 
+    it("initializeComponentData() works if a normal value comes after an object value", function () {
+        var component = {};
+        var data = {
+            vec: [1,2,3,4],
+            num: 42
+        };
+        var properties = [
+            { name: 'vec', type: 'vec4' },
+            "num"
+        ];
+
+        system.initializeComponentData(component, data, properties);
+
+        expect(component.vec.x).to.equal(1);
+        expect(component.vec.y).to.equal(2);
+        expect(component.vec.z).to.equal(3);
+        expect(component.vec.w).to.equal(4);
+        expect(component.num).to.equal(42);
+    });
+
     it("initializeComponentData() throws if provided an unknown type", function () {
         var component = {};
         var data = {

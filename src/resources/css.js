@@ -1,15 +1,26 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var CssHandler = function () {};
+    var CssHandler = function () {
+        this.retryRequests = false;
+    };
 
     Object.assign(CssHandler.prototype, {
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading css resource: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading css resource: {0} [{1}]", url.original, err));
                 }
             });
         },
@@ -25,13 +36,13 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.createStyle
-     * @description Creates a &lt;style&gt; DOM element from a string that contains CSS
-     * @param {String} cssString A string that contains valid CSS
+     * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
+     * @param {string} cssString - A string that contains valid CSS.
      * @example
      * var css = 'body {height: 100;}';
      * var style = pc.createStyle(css);
      * document.head.appendChild(style);
-     * @returns {Element} The style DOM element
+     * @returns {Element} The style DOM element.
      */
     var createStyle = function (cssString) {
         var result = document.createElement('style');

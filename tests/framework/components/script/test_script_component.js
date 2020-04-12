@@ -2,6 +2,8 @@ describe("pc.ScriptComponent", function () {
     var app;
 
     beforeEach(function (done) {
+        this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
         app = new pc.Application(document.createElement("canvas"));
 
         window.initializeCalls = [];
@@ -215,6 +217,56 @@ describe("pc.ScriptComponent", function () {
                 },
                 "region": "eu-west-1",
                 "id": "8"
+            },
+            "9": {
+                "tags": [],
+                "name": "postCloner.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postCloner": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postCloner.js",
+                    "size": 1,
+                    "hash": "postCloner hash",
+                    "url": "base/tests/framework/components/script/postCloner.js"
+                },
+                "region": "eu-west-1",
+                "id": "9"
+            },
+            "10": {
+                "tags": [],
+                "name": "postInitializeReporter.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postInitializeReporter": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postInitializeReporter.js",
+                    "size": 1,
+                    "hash": "postInitializeReporter hash",
+                    "url": "base/tests/framework/components/script/postInitializeReporter.js"
+                },
+                "region": "eu-west-1",
+                "id": "10"
             }
         });
 
@@ -232,7 +284,6 @@ describe("pc.ScriptComponent", function () {
 
     afterEach(function () {
         app.destroy();
-
         delete window.initializeCalls;
     });
 
@@ -710,6 +761,46 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(c3, ++idx, 'postInitialize scriptB');
         checkInitCall(c2, ++idx, 'postInitialize scriptA');
         checkInitCall(c2, ++idx, 'postInitialize scriptB');
+    });
+
+    it("postInitialize is called for entities that are cloned in another postInitialize", function () {
+        var src = new pc.Entity();
+        src.enabled = false;
+        src.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postInitializeReporter"
+            ],
+            "scripts": {
+                "postInitializeReporter": {
+                    "enabled": true,
+                    "attributes": {
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(src);
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postCloner"
+            ],
+            "scripts": {
+                "postCloner": {
+                    "enabled": true,
+                    "attributes": {
+                        "entityToClone": src.getGuid()
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        expect(window.initializeCalls.length).to.equal(1);
     });
 
     it("script attributes are initialized for enabled entity", function () {
@@ -1696,7 +1787,7 @@ describe("pc.ScriptComponent", function () {
     });
 
     it('destroying entity during update does not skip updating any other script components on other entities', function () {
-        var e = new pc.Entity();
+        var e = new pc.Entity('destroyer');
         e.addComponent('script', {
             enabled: true,
             order: ['destroyer'],
@@ -1710,7 +1801,7 @@ describe("pc.ScriptComponent", function () {
             }
         });
 
-        var other = new pc.Entity();
+        var other = new pc.Entity('scriptA');
         other.addComponent('script', {
             enabled: true,
             order: ['scriptA'],
@@ -1899,6 +1990,1157 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(other, 4, 'update scriptA');
         checkInitCall(other, 5, 'postUpdate scriptA');
     });
+
+    it('update and postUpdate order follows the order in which entities have been created in the scene hierarchy', function (done) {
+        // destroy current scene
+        app.root.children[0].destroy();
+
+        // load scene
+        app.loadSceneHierarchy('base/tests/framework/components/script/scene3.json', function () {
+            window.initializeCalls.length = 0;
+            app.update();
+
+            expect(window.initializeCalls.length).to.equal(16);
+
+            // hierarchy looks like so:
+            // Root
+            // -- A
+            //    -- B
+            // -- C
+            var root = app.root.findByName('Root');
+            var a = app.root.findByName('A');
+            var b = app.root.findByName('B');
+            var c = app.root.findByName('C');
+
+            checkInitCall(root, 0, 'update scriptA');
+            checkInitCall(root, 1, 'update scriptB');
+            checkInitCall(a, 2, 'update scriptA');
+            checkInitCall(a, 3, 'update scriptB');
+            checkInitCall(b, 4, 'update scriptA');
+            checkInitCall(b, 5, 'update scriptB');
+            checkInitCall(c, 6, 'update scriptA');
+            checkInitCall(c, 7, 'update scriptB');
+
+            checkInitCall(root, 8, 'postUpdate scriptA');
+            checkInitCall(root, 9, 'postUpdate scriptB');
+            checkInitCall(a, 10, 'postUpdate scriptA');
+            checkInitCall(a, 11, 'postUpdate scriptB');
+            checkInitCall(b, 12, 'postUpdate scriptA');
+            checkInitCall(b, 13, 'postUpdate scriptB');
+            checkInitCall(c, 14, 'postUpdate scriptA');
+            checkInitCall(c, 15, 'postUpdate scriptB');
+
+            done();
+        });
+    });
+
+    it('update and postUpdate are not called on disabled script instances', function () {
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: false
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(2);
+
+        checkInitCall(a, 0, 'update scriptB');
+        checkInitCall(a, 1, 'postUpdate scriptB');
+    });
+
+    it('update and postUpdate are not called on disabled script components', function () {
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: false,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(0);
+    });
+
+    it('update and postUpdate are not called on disabled entities', function () {
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        a.enabled = false;
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(0);
+    });
+
+    it('update and postUpdate are not called on script instance that was disabled during update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update disableDuringUpdateLoop');
+            this.entity.script.scriptA.enabled = false;
+        };
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(a, 0, 'update disableDuringUpdateLoop');
+        checkInitCall(a, 1, 'disable scriptA');
+        checkInitCall(a, 2, 'state false scriptA');
+        checkInitCall(a, 3, 'postUpdate disableDuringUpdateLoop');
+    });
+
+    it('update and postUpdate are not called on script component that was disabled during update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update disableDuringUpdateLoop');
+            this.entity.script.enabled = false;
+        };
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update disableDuringUpdateLoop');
+        checkInitCall(a, 1, 'disable scriptComponent scriptA');
+        checkInitCall(a, 2, 'state scriptComponent false scriptA');
+        checkInitCall(a, 3, 'disable scriptA');
+        checkInitCall(a, 4, 'state false scriptA');
+    });
+
+    it('update and postUpdate are not called on entity that was disabled during update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update disableDuringUpdateLoop');
+            this.entity.enabled = false;
+        };
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update disableDuringUpdateLoop');
+        checkInitCall(a, 1, 'disable scriptComponent scriptA');
+        checkInitCall(a, 2, 'state scriptComponent false scriptA');
+        checkInitCall(a, 3, 'disable scriptA');
+        checkInitCall(a, 4, 'state false scriptA');
+    });
+
+    it('postUpdate not called on script instance that was disabled during post update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+            this.entity.script.scriptA.enabled = false;
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'postUpdate disableDuringUpdateLoop');
+        checkInitCall(a, 2, 'disable scriptA');
+        checkInitCall(a, 3, 'state false scriptA');
+    });
+
+    it('postUpdate not called on script component that was disabled during post update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+            this.entity.script.enabled = false;
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(6);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'postUpdate disableDuringUpdateLoop');
+        checkInitCall(a, 2, 'disable scriptComponent scriptA');
+        checkInitCall(a, 3, 'state scriptComponent false scriptA');
+        checkInitCall(a, 4, 'disable scriptA');
+        checkInitCall(a, 5, 'state false scriptA');
+    });
+
+    it('postUpdate not called on entity that was disabled during post update loop', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+            this.entity.enabled = false;
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(6);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'postUpdate disableDuringUpdateLoop');
+        checkInitCall(a, 2, 'disable scriptComponent scriptA');
+        checkInitCall(a, 3, 'state scriptComponent false scriptA');
+        checkInitCall(a, 4, 'disable scriptA');
+        checkInitCall(a, 5, 'state false scriptA');
+    });
+
+    it('update not called second time on script instance that was re-enabled during the same frame', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update disableDuringUpdateLoop');
+            this.entity.script.disableDuringUpdateLoop.enabled = false;
+        };
+
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            this.entity.script.disableDuringUpdateLoop.enabled = true; // enable first script back
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'enableDuringUpdateLoop'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(2);
+        checkInitCall(a, 0, 'update disableDuringUpdateLoop');
+        checkInitCall(a, 1, 'update enableDuringUpdateLoop');
+    });
+
+    it('post update not called second time on script instance that was re-enabled during the same frame', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+            this.entity.script.disableDuringUpdateLoop.enabled = false;
+        };
+
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate enableDuringUpdateLoop');
+            this.entity.script.disableDuringUpdateLoop.enabled = true; // enable first script back
+        };
+
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop', 'enableDuringUpdateLoop'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                },
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(2);
+        checkInitCall(a, 0, 'postUpdate disableDuringUpdateLoop');
+        checkInitCall(a, 1, 'postUpdate enableDuringUpdateLoop');
+    });
+
+    it('update not called second time on script instance whose script component was re-enabled during the same frame', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update disableDuringUpdateLoop');
+            this.entity.script.enabled = false;
+        };
+
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            var e = app.root.findByName('a');
+            e.script.enabled = true; // enable first script component back
+        };
+
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        var b = new pc.Entity('b');
+        b.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(b);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(2);
+        checkInitCall(a, 0, 'update disableDuringUpdateLoop');
+        checkInitCall(b, 1, 'update enableDuringUpdateLoop');
+    });
+
+    it('post update not called second time on script instance whose script component was re-enabled during the same frame', function () {
+        var DisableDuringUpdateLoop = pc.createScript('disableDuringUpdateLoop');
+        DisableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate disableDuringUpdateLoop');
+            this.entity.script.enabled = false;
+        };
+
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate enableDuringUpdateLoop');
+            var e = app.root.findByName('a');
+            e.script.enabled = true; // enable first script component back
+        };
+
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['disableDuringUpdateLoop'],
+            scripts: {
+                disableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        var b = new pc.Entity('b');
+        b.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(b);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(2);
+        checkInitCall(a, 0, 'postUpdate disableDuringUpdateLoop');
+        checkInitCall(b, 1, 'postUpdate enableDuringUpdateLoop');
+    });
+
+    it('update and postUpdate order for dynamically created entities follows the order in which script components were created', function () {
+        // regular entity
+        var a = new pc.Entity();
+        a.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        // child of 'a'
+        var b = new pc.Entity();
+        b.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        a.addChild(b);
+
+        // create entity but add script component later
+        var c = new pc.Entity();
+        app.root.addChild(c);
+
+        // insert entity in the beginning of the hierarchy
+        // (should not make a difference)
+        var d = new pc.Entity();
+        d.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.insertChild(d, 0);
+
+        // add script component for previously created entity
+        c.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(16);
+
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'update scriptB');
+        checkInitCall(b, 2, 'update scriptA');
+        checkInitCall(b, 3, 'update scriptB');
+        checkInitCall(d, 4, 'update scriptA');
+        checkInitCall(d, 5, 'update scriptB');
+        checkInitCall(c, 6, 'update scriptA');
+        checkInitCall(c, 7, 'update scriptB');
+
+        checkInitCall(a, 8, 'postUpdate scriptA');
+        checkInitCall(a, 9, 'postUpdate scriptB');
+        checkInitCall(b, 10, 'postUpdate scriptA');
+        checkInitCall(b, 11, 'postUpdate scriptB');
+        checkInitCall(d, 12, 'postUpdate scriptA');
+        checkInitCall(d, 13, 'postUpdate scriptB');
+        checkInitCall(c, 14, 'postUpdate scriptA');
+        checkInitCall(c, 15, 'postUpdate scriptB');
+
+    });
+
+    it('update and post update are called on the same frame for child entities that become enabled during a parent\s update', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            var e = app.root.findByName('b');
+            e.enabled = true;
+        };
+
+        // parent entity
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        // child of 'a'
+        var b = new pc.Entity('b');
+        b.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        b.enabled = false;
+        a.addChild(b);
+
+        window.initializeCalls.length = 0;
+
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(9);
+
+        checkInitCall(a, 0, 'update enableDuringUpdateLoop');
+        checkInitCall(b, 1, 'initialize scriptA');
+        checkInitCall(b, 2, 'initialize scriptB');
+        checkInitCall(b, 3, 'postInitialize scriptA');
+        checkInitCall(b, 4, 'postInitialize scriptB');
+        checkInitCall(b, 5, 'update scriptA');
+        checkInitCall(b, 6, 'update scriptB');
+        checkInitCall(b, 7, 'postUpdate scriptA');
+        checkInitCall(b, 8, 'postUpdate scriptB');
+    });
+
+    it('update is called on the next frame and post update on the same frame for parent entities whose script component becomes enabled during a child\s update', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            var e = app.root.findByName('a');
+            e.script.enabled = true;
+        };
+
+        // parent entity (note there doesn't have to be a parent-child relationship
+        // what really matters is which script component is created first by calling addComponent)
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: false,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        // child of 'a'
+        var b = new pc.Entity('b');
+        b.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                }
+            }
+        });
+        a.addChild(b);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(7);
+        checkInitCall(b, 0, 'update enableDuringUpdateLoop');
+        checkInitCall(a, 1, 'initialize scriptA');
+        checkInitCall(a, 2, 'initialize scriptB');
+        checkInitCall(a, 3, 'postInitialize scriptA');
+        checkInitCall(a, 4, 'postInitialize scriptB');
+        checkInitCall(a, 5, 'postUpdate scriptA');
+        checkInitCall(a, 6, 'postUpdate scriptB');
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'update scriptB');
+        checkInitCall(b, 2, 'update enableDuringUpdateLoop');
+        checkInitCall(a, 3, 'postUpdate scriptA');
+        checkInitCall(a, 4, 'postUpdate scriptB');
+    });
+
+    it('update is called on the same frame for subsequent script instance that gets enabled during update loop', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            this.entity.script.scriptB.enabled = true;
+        };
+
+        // parent entity (note there doesn't have to be a parent-child relationship
+        // what really matters is which script component is created first by calling addComponent)
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop', 'scriptA', 'scriptB'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: false
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(7);
+        checkInitCall(a, 0, 'update enableDuringUpdateLoop');
+        checkInitCall(a, 1, 'initialize scriptB');
+        checkInitCall(a, 2, 'postInitialize scriptB');
+        checkInitCall(a, 3, 'update scriptA');
+        checkInitCall(a, 4, 'update scriptB');
+        checkInitCall(a, 5, 'postUpdate scriptA');
+        checkInitCall(a, 6, 'postUpdate scriptB');
+    });
+
+    it('update is called on the next frame and post update on the same frame for previous script instance that gets enabled during update loop', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update enableDuringUpdateLoop');
+            this.entity.script.scriptB.enabled = true;
+        };
+
+        // parent entity (note there doesn't have to be a parent-child relationship
+        // what really matters is which script component is created first by calling addComponent)
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['scriptB', 'enableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: false
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(6);
+        checkInitCall(a, 0, 'update enableDuringUpdateLoop');
+        checkInitCall(a, 1, 'initialize scriptB');
+        checkInitCall(a, 2, 'postInitialize scriptB');
+        checkInitCall(a, 3, 'update scriptA');
+        checkInitCall(a, 4, 'postUpdate scriptB');
+        checkInitCall(a, 5, 'postUpdate scriptA');
+
+        window.initializeCalls.length = 0;
+        app.update();
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update scriptB');
+        checkInitCall(a, 1, 'update enableDuringUpdateLoop');
+        checkInitCall(a, 2, 'update scriptA');
+        checkInitCall(a, 3, 'postUpdate scriptB');
+        checkInitCall(a, 4, 'postUpdate scriptA');
+
+    });
+
+    it('post update is called on the same frame for subsequent script instance that gets enabled during post update loop', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' post update enableDuringUpdateLoop');
+            this.entity.script.scriptB.enabled = true;
+        };
+
+        // parent entity (note there doesn't have to be a parent-child relationship
+        // what really matters is which script component is created first by calling addComponent)
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['enableDuringUpdateLoop', 'scriptA', 'scriptB'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: false
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(6);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'post update enableDuringUpdateLoop');
+        checkInitCall(a, 2, 'initialize scriptB');
+        checkInitCall(a, 3, 'postInitialize scriptB');
+        checkInitCall(a, 4, 'postUpdate scriptA');
+        checkInitCall(a, 5, 'postUpdate scriptB');
+    });
+
+    it('post update is called on the next frame previous script instance that gets enabled during post update loop', function () {
+        var EnableDuringUpdateLoop = pc.createScript('enableDuringUpdateLoop');
+        EnableDuringUpdateLoop.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' post update enableDuringUpdateLoop');
+            this.entity.script.scriptB.enabled = true;
+        };
+
+        // parent entity (note there doesn't have to be a parent-child relationship
+        // what really matters is which script component is created first by calling addComponent)
+        var a = new pc.Entity('a');
+        a.addComponent('script', {
+            enabled: true,
+            order: ['scriptB', 'enableDuringUpdateLoop', 'scriptA'],
+            scripts: {
+                enableDuringUpdateLoop: {
+                    enabled: true
+                },
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: false
+                }
+            }
+        });
+        app.root.addChild(a);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update scriptA');
+        checkInitCall(a, 1, 'post update enableDuringUpdateLoop');
+        checkInitCall(a, 2, 'initialize scriptB');
+        checkInitCall(a, 3, 'postInitialize scriptB');
+        checkInitCall(a, 4, 'postUpdate scriptA');
+
+        window.initializeCalls.length = 0;
+        app.update();
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(a, 0, 'update scriptB');
+        checkInitCall(a, 1, 'update scriptA');
+        checkInitCall(a, 2, 'postUpdate scriptB');
+        checkInitCall(a, 3, 'post update enableDuringUpdateLoop');
+        checkInitCall(a, 4, 'postUpdate scriptA');
+
+    });
+
+    it('execution order remains consistent when components are destroyed', function () {
+        var e;
+        var entities = [];
+
+        // make 3 entities with scriptA
+        for (var i = 0; i < 3; i++) {
+            e = new pc.Entity();
+            e.addComponent('script', {
+                enabled: true,
+                order: ['scriptA'],
+                scripts: {
+                    scriptA: {
+                        enabled: true
+                    }
+                }
+            });
+            app.root.addChild(e);
+            entities.push(e);
+        }
+
+        // destroy first 2 entities
+        entities[0].destroy();
+        entities[1].destroy();
+
+        // make new entity
+        e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+        entities.push(e);
+
+        // disable 3rd entity
+        entities[2].enabled = false;
+
+        // enable 3rd entity
+        entities[2].enabled = true;
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        // order of updates should remain consistent (3rd entity before 4th)
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(entities[2], 0, 'update scriptA');
+        checkInitCall(entities[3], 1, 'update scriptA');
+        checkInitCall(entities[2], 2, 'postUpdate scriptA');
+        checkInitCall(entities[3], 3, 'postUpdate scriptA');
+    });
+
+    it('move() moves script instance after others', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptA', 1);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptB');
+        checkInitCall(e, 1, 'update scriptA');
+        checkInitCall(e, 2, 'postUpdate scriptB');
+        checkInitCall(e, 3, 'postUpdate scriptA');
+    });
+
+    it('move() does not accept index larger than scripts array length', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptB', 2);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+    });
+
+    it('move() does not accept negative index', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptB', -1);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+    });
+
+    it('move() during update loop will update moved script again if new index is after the script who called move()', function () {
+        var Move = pc.createScript('mover');
+        Move.prototype.update = function () {
+            this.entity.script.move('scriptA', 2);
+        };
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'mover', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                mover: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+        checkInitCall(e, 4, 'postUpdate scriptA');
+    });
+
+    it('move() during update loop will not update moved script if new index is before the script who called move()', function () {
+        var Move = pc.createScript('mover');
+        Move.prototype.update = function () {
+            this.entity.script.move('scriptB', 0);
+        };
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'mover', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                mover: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(3);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'postUpdate scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+    });
+
+    it('swap() uses the new script', function (done) {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        // create new script with the same name
+        // so that 'swap' is triggered
+        var NewScriptA = pc.createScript('scriptA');
+        NewScriptA.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update new scriptA');
+        };
+        NewScriptA.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate new scriptA');
+        };
+        NewScriptA.prototype.swap = function () {
+        };
+
+        app.scripts.on('swap', function () {
+            setTimeout(function () {
+                window.initializeCalls.length = 0;
+                app.update();
+
+                expect(window.initializeCalls.length).to.equal(4);
+                checkInitCall(e, 0, 'update new scriptA');
+                checkInitCall(e, 1, 'update scriptB');
+                checkInitCall(e, 2, 'postUpdate new scriptA');
+                checkInitCall(e, 3, 'postUpdate scriptB');
+
+                done();
+            });
+        });
+    });
+
+    it('pc.ScriptComponent#has', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        expect(e.script.has('scriptA')).to.equal(true);
+        expect(e.script.has('scriptB')).to.equal(true);
+        expect(e.script.has('scriptC')).to.equal(false);
+        expect(e.script.has('')).to.equal(false);
+        expect(e.script.has(undefined)).to.equal(false);
+        expect(e.script.has(null)).to.equal(false);
+    });
 });
-
-

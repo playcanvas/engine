@@ -51,7 +51,6 @@ describe("pc.Vec3", function () {
     it("constructor: no args", function () {
         var v = new pc.Vec3();
 
-        equal(3, v.data.length);
         equal(v.x, 0);
         equal(v.y, 0);
         equal(v.z, 0);
@@ -61,7 +60,6 @@ describe("pc.Vec3", function () {
     it("constructor: args", function() {
         var v = new pc.Vec3(1, 2, 3);
 
-        equal(3, v.data.length);
         equal(1, v.x);
         equal(2, v.y);
         equal(3, v.z);
@@ -73,6 +71,28 @@ describe("pc.Vec3", function () {
         var r = new pc.Vec3();
 
         r.cross(v1, v2);
+
+        equal(0, r.x);
+        equal(0, r.y);
+        equal(1, r.z);
+    });
+
+    it("cross: first arg is also result", function() {
+        var r = new pc.Vec3(1, 0, 0);
+        var v2 = new pc.Vec3(0, 1, 0);
+
+        r.cross(r, v2);
+
+        equal(0, r.x);
+        equal(0, r.y);
+        equal(1, r.z);
+    });
+
+    it("cross: second arg is also result", function() {
+        var v1 = new pc.Vec3(1, 0, 0);
+        var r = new pc.Vec3(0, 1, 0);
+
+        r.cross(v1, r);
 
         equal(0, r.x);
         equal(0, r.y);

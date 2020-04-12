@@ -2,45 +2,73 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {number}
      * @name pc.CURVE_LINEAR
      * @description A linear interpolation scheme.
      */
     var CURVE_LINEAR = 0;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {number}
      * @name pc.CURVE_SMOOTHSTEP
      * @description A smooth step interpolation scheme.
      */
     var CURVE_SMOOTHSTEP = 1;
     /**
-     * @enum pc.CURVE
+     * @deprecated
+     * @constant
+     * @type {number}
      * @name pc.CURVE_CATMULL
-     * @description A Catmull-Rom spline interpolation scheme.
+     * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CATMULL = 2;
     /**
-     * @enum pc.CURVE
+     * @deprecated
+     * @constant
+     * @type {number}
      * @name pc.CURVE_CARDINAL
-     * @description A cardinal spline interpolation scheme.
+     * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CARDINAL = 3;
+    /**
+     * @constant
+     * @type {number}
+     * @name pc.CURVE_SPLINE
+     * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
+     */
+    var CURVE_SPLINE = 4;
+    /**
+     * @constant
+     * @type {number}
+     * @name pc.CURVE_STEP
+     * @description A stepped interpolater, free from the shackles of blending.
+     */
+    var CURVE_STEP = 5;
 
     /**
-     * @constructor
+     * @class
      * @name pc.Curve
      * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @description Creates a new curve.
-     * @param {Number[]} [data] An array of keys (pairs of numbers with the time first and
-     * value second)
-     * @property {Number} length The number of keys in the curve. [read only]
+     * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
+     * value second).
+     * @property {number} length The number of keys in the curve. [read only].
+     * @property {number} type The curve interpolation scheme. Can be:
+     *
+     * * {@link pc.CURVE_LINEAR}
+     * * {@link pc.CURVE_SMOOTHSTEP}
+     * * {@link pc.CURVE_SPLINE}
+     * * {@link pc.CURVE_STEP}
+     *
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
      */
     var Curve = function (data) {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
-
         this.tension = 0.5; // used for CURVE_CARDINAL
+        this._eval = new pc.CurveEvaluator(this);
 
         if (data) {
             for (var i = 0; i < data.length - 1; i += 2) {
@@ -56,9 +84,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#add
          * @description Add a new key to the curve.
-         * @param {Number} time Time to add new key
-         * @param {Number} value Value of new key
-         * @returns {Number[]} [time, value] pair
+         * @param {number} time - Time to add new key.
+         * @param {number} value - Value of new key.
+         * @returns {number[]} [time, value] pair.
          */
         add: function (time, value) {
             var keys = this.keys;
@@ -80,8 +108,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#get
          * @description Return a specific key.
-         * @param {Number} index The index of the key to return
-         * @returns {Number[]} The key at the specified index
+         * @param {number} index - The index of the key to return.
+         * @returns {number[]} The key at the specified index.
          */
         get: function (index) {
             return this.keys[index];
@@ -102,116 +130,13 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
-         * @param {Number} time The time at which to calculate the value
-         * @returns {Number} The interpolated value
+         * @param {number} time - The time at which to calculate the value.
+         * @returns {number} The interpolated value.
          */
         value: function (time) {
-            var i, len;
-            var keys = this.keys;
-
-            // no keys
-            if (!keys.length) {
-                return 0;
-            }
-
-            // Clamp values before first and after last key
-            if (time < keys[0][0]) {
-                return keys[0][1];
-            } else if (time > keys[keys.length - 1][0]) {
-                return keys[keys.length - 1][1];
-            }
-
-            var leftTime = 0;
-            var leftValue = keys.length ? keys[0][1] : 0;
-
-            var rightTime = 1;
-            var rightValue = 0;
-
-            for (i = 0, len = keys.length; i < len; i++) {
-                // early exit check
-                if (keys[i][0] === time) {
-                    return keys[i][1];
-                }
-
-                rightValue = keys[i][1];
-
-                if (time < keys[i][0]) {
-                    rightTime = keys[i][0];
-                    break;
-                }
-
-                leftTime = keys[i][0];
-                leftValue = keys[i][1];
-            }
-
-            var div = rightTime - leftTime;
-            var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
-
-            if (this.type === CURVE_SMOOTHSTEP) {
-                interpolation *= interpolation * (3 - 2 * interpolation);
-            } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
-                var p1 = leftValue;
-                var p2 = rightValue;
-                var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
-                var p3 = p2 + (p2 - p1);
-
-                var dt1 = rightTime - leftTime;
-                var dt0 = dt1;
-                var dt2 = dt1;
-
-                // back up index to left key
-                if (i > 0) {
-                    i--;
-                }
-
-                if (i > 0) {
-                    p0 = keys[i - 1][1];
-                    dt0 = keys[i][0] - keys[i - 1][0];
-                }
-
-                if (keys.length > i + 1) {
-                    dt1 = keys[i + 1][0] - keys[i][0];
-                }
-
-                if (keys.length > i + 2) {
-                    dt2 = keys[i + 2][0] - keys[i + 1][0];
-                    p3 = keys[i + 2][1];
-                }
-
-                // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0 - p1) * dt1 / dt0;
-                p3 = p2 + (p3 - p2) * dt1 / dt2;
-
-                if (this.type === CURVE_CATMULL) {
-                    return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
-                }
-
-                return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
-            }
-
-            return pc.math.lerp(leftValue, rightValue, interpolation);
-        },
-
-        _interpolateHermite: function (p0, p1, t0, t1, s) {
-            var s2 = s * s;
-            var s3 = s * s * s;
-            var h0 = 2 * s3 - 3 * s2 + 1;
-            var h1 = -2 * s3 + 3 * s2;
-            var h2 = s3 - 2 * s2 + s;
-            var h3 = s3 - s2;
-
-            return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
-        },
-
-        _interpolateCardinal: function (p0, p1, p2, p3, s, t) {
-            var t0 = t * (p2 - p0);
-            var t1 = t * (p3 - p1);
-
-            return this._interpolateHermite(p1, p2, t0, t1, s);
-        },
-
-        _interpolateCatmullRom: function (p0, p1, p2, p3, s) {
-            return this._interpolateCardinal(p0, p1, p2, p3, s, 0.5);
+            // we for the evaluation because keys may have changed since the last evaluate
+            // (we can't know)
+            return this._eval.evaluate(time, true);
         },
 
         closest: function (time) {
@@ -237,15 +162,24 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#clone
          * @description Returns a clone of the specified curve object.
-         * @returns {pc.Curve} A clone of the specified curve
+         * @returns {pc.Curve} A clone of the specified curve.
          */
         clone: function () {
             var result = new pc.Curve();
             result.keys = pc.extend(result.keys, this.keys);
             result.type = this.type;
+            result.tension = this.tension;
             return result;
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.Curve#quantize
+         * @description Sample the curve at regular intervals over the range [0..1].
+         * @param {number} precision - The number of samples to return.
+         * @returns {Float32Array} The set of quantized values.
+         */
         quantize: function (precision) {
             precision = Math.max(precision, 2);
 
@@ -253,12 +187,31 @@ Object.assign(pc, (function () {
             var step = 1.0 / (precision - 1);
 
             // quantize graph to table of interpolated values
-            for (var i = 0; i < precision; i++) {
-                var value = this.value(step * i);
-                values[i] = value;
+            values[0] = this._eval.evaluate(0, true);
+            for (var i = 1; i < precision; i++) {
+                values[i] = this._eval.evaluate(step * i);
             }
 
             return values;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Curve#quantizeClamped
+         * @description Sample the curve at regular intervals over the range [0..1]
+         * and clamp the resulting samples to [min..max].
+         * @param {number} precision - The number of samples to return.
+         * @param {number} min - The minimum output value.
+         * @param {number} max - The maximum output value.
+         * @returns {Float32Array} The set of quantized values.
+         */
+        quantizeClamped: function (precision, min, max) {
+            var result = this.quantize(precision);
+            for (var i = 0; i < result.length; ++i) {
+                result[i] = Math.min(max, Math.max(min, result[i]));
+            }
+            return result;
         }
     });
 
@@ -273,6 +226,8 @@ Object.assign(pc, (function () {
         CURVE_LINEAR: CURVE_LINEAR,
         CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP,
         CURVE_CATMULL: CURVE_CATMULL,
-        CURVE_CARDINAL: CURVE_CARDINAL
+        CURVE_CARDINAL: CURVE_CARDINAL,
+        CURVE_SPLINE: CURVE_SPLINE,
+        CURVE_STEP: CURVE_STEP
     };
 }()));

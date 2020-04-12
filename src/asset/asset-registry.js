@@ -1,14 +1,17 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.AssetRegistry
-     * @classdesc Container for all assets that are available to this application
+     * @augments pc.EventHandler
+     * @classdesc Container for all assets that are available to this application.
      * @description Create an instance of an AssetRegistry.
      * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
-     * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     * @param {pc.ResourceLoader} loader - The ResourceLoader used to load the asset files.
+     * @property {string} prefix A URL prefix that will be added to all asset loading requests.
      */
     var AssetRegistry = function (loader) {
+        pc.EventHandler.call(this);
+
         this._loader = loader;
 
         this._assets = []; // list of all assets
@@ -18,15 +21,15 @@ Object.assign(pc, function () {
         this._urls = {}; // index for looking up assets by url
 
         this.prefix = null;
-
-        Object.assign(this, pc.events);
     };
+    AssetRegistry.prototype = Object.create(pc.EventHandler.prototype);
+    AssetRegistry.prototype.constructor = AssetRegistry;
 
     /**
      * @event
      * @name pc.AssetRegistry#load
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * app.assets.on("load", function (asset) {
      *     console.log("asset loaded: " + asset.name);
@@ -36,8 +39,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#load:[id]
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -50,8 +53,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#load:url:[url]
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -64,8 +67,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      * @example
      * app.assets.on("add", function (asset) {
      *     console.log("New asset added: " + asset.name);
@@ -75,8 +78,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add:[id]
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      * @example
      * var id = 123456;
      * app.assets.on("add:" + id, function (asset) {
@@ -87,15 +90,15 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add:url:[url]
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      */
 
     /**
      * @event
      * @name pc.AssetRegistry#remove
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      * @example
      * app.assets.on("remove", function (aseet) {
      *     console.log("Asset removed: " + asset.name);
@@ -105,8 +108,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#remove:[id]
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      * @example
      * var id = 123456;
      * app.assets.on("remove:" + id, function (asset) {
@@ -117,16 +120,16 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#remove:url:[url]
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      */
 
     /**
      * @event
      * @name pc.AssetRegistry#error
-     * @description Fired when an error occurs during asset loading
-     * @param {String} err The error message
-     * @param {pc.Asset} asset The asset that generated the error
+     * @description Fired when an error occurs during asset loading.
+     * @param {string} err - The error message.
+     * @param {pc.Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -139,8 +142,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#error:[id]
-     * @description Fired when an error occurs during asset loading
-     * @param {pc.Asset} asset The asset that generated the error
+     * @description Fired when an error occurs during asset loading.
+     * @param {pc.Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -154,8 +157,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#list
-         * @description Create a filtered list of assets from the registry
-         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
+         * @description Create a filtered list of assets from the registry.
+         * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
          * @returns {pc.Asset[]} The filtered list of assets.
          */
         list: function (filters) {
@@ -172,10 +175,12 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#add
-         * @description Add an asset to the registry
-         * @param {pc.Asset} asset The asset to add
+         * @description Add an asset to the registry.
+         * @param {pc.Asset} asset - The asset to add.
          * @example
-         * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
+         * var asset = new pc.Asset("My Asset", "texture", {
+         *     url: "../path/to/image.jpg"
+         * });
          * app.assets.add(asset);
          */
         add: function (asset) {
@@ -212,15 +217,16 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#remove
-         * @description Remove an asset from the registry
-         * @param {pc.Asset} asset The asset to remove
-         * @returns {Boolean} True if the asset was successfully removed and false otherwise
+         * @description Remove an asset from the registry.
+         * @param {pc.Asset} asset - The asset to remove.
+         * @returns {boolean} True if the asset was successfully removed and false otherwise.
          * @example
          * var asset = app.assets.get(100);
          * app.assets.remove(asset);
          */
         remove: function (asset) {
             var idx = this._cache[asset.id];
+            var url = asset.file ? asset.file.url : null;
 
             if (idx !== undefined) {
                 // remove from list
@@ -232,6 +238,9 @@ Object.assign(pc, function () {
                 // name cache needs to be completely rebuilt
                 this._names = {};
 
+                // urls cache needs to be completely rebuilt
+                this._urls = [];
+
                 // update id cache and rebuild name cache
                 for (var i = 0, l = this._assets.length; i < l; i++) {
                     var a = this._assets[i];
@@ -241,11 +250,11 @@ Object.assign(pc, function () {
                         this._names[a.name] = [];
                     }
                     this._names[a.name].push(i);
-                }
 
-                var url = asset.file ? asset.file.url : null;
-                if (url)
-                    delete this._urls[url];
+                    if (a.file) {
+                        this._urls[a.file.url] = i;
+                    }
+                }
 
                 // tags cache
                 this._tags.removeItem(asset);
@@ -268,9 +277,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#get
-         * @description Retrieve an asset from the registry by its id field
-         * @param {Number} id the id of the asset to get
-         * @returns {pc.Asset} The asset
+         * @description Retrieve an asset from the registry by its id field.
+         * @param {number} id - The id of the asset to get.
+         * @returns {pc.Asset} The asset.
          * @example
          * var asset = app.assets.get(100);
          */
@@ -282,9 +291,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#getByUrl
-         * @description Retrieve an asset from the registry by it's file's URL field
-         * @param {String} url The url of the asset to get
-         * @returns {pc.Asset} The asset
+         * @description Retrieve an asset from the registry by it's file's URL field.
+         * @param {string} url - The url of the asset to get.
+         * @returns {pc.Asset} The asset.
          * @example
          * var asset = app.assets.getByUrl("../path/to/image.jpg");
          */
@@ -296,22 +305,24 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#load
-         * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded
-         * @param {pc.Asset} asset The asset to load
+         * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded.
+         * @param {pc.Asset} asset - The asset to load.
          * @example
          * // load some assets
-         * var toload = [app.assets.find("My Asset"), app.assets.find("Another Asset")]
+         * var assetsToLoad = [
+         *     app.assets.find("My Asset"),
+         *     app.assets.find("Another Asset")
+         * ];
          * var count = 0;
-         * for (var i = 0; i < toload.length; i++) {
-         *     var asset = toload[i];
-         *     asset.ready(function (asset) {
+         * assetsToLoad.forEach(function (assetToLoad) {
+         *     assetToLoad.ready(function (asset) {
          *         count++;
-         *         if (count === toload.length) {
+         *         if (count === assetsToLoad.length) {
          *             // done
          *         }
          *     });
-         *     app.assets.load(asset)
-         * }
+         *     app.assets.load(assetToLoad);
+         * });
          */
         load: function (asset) {
             if (asset.loading)
@@ -432,21 +443,41 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#loadFromUrl
          * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
-         * if you are not integrated with the PlayCanvas Editor
-         * @param {String} url The url to load
-         * @param {String} type The type of asset to load
-         * @param {Function} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+         * if you are not integrated with the PlayCanvas Editor.
+         * @param {string} url - The url to load.
+         * @param {string} type - The type of asset to load.
+         * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
          * });
          */
         loadFromUrl: function (url, type, callback) {
+            this.loadFromUrlAndFilename(url, null, type, callback);
+        },
+
+        /**
+         * @function
+         * @name pc.AssetRegistry#loadFromUrlAndFilename
+         * @description Use this to load and create an asset when both the URL and filename are required. For example, use this function when loading
+         * BLOB assets, where the URL does not adequately identify the file.
+         * @param {string} url - The url to load.
+         * @param {string} filename - The filename of the asset to load.
+         * @param {string} type - The type of asset to load.
+         * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+         * @example
+         * var file = magicallyAttainAFile();
+         * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
+         *     var texture = asset.resource;
+         * });
+         */
+        loadFromUrlAndFilename: function (url, filename, type, callback) {
             var self = this;
 
-            var name = pc.path.getBasename(url);
+            var name = pc.path.getBasename(filename || url);
 
             var file = {
+                filename: filename || name,
                 url: url
             };
             var data = {};
@@ -457,14 +488,31 @@ Object.assign(pc, function () {
                 self.add(asset);
             }
 
+            var onLoadAsset = function (loadedAsset) {
+                if (type === 'material') {
+                    self._loadTextures([loadedAsset], function (err, textures) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, loadedAsset);
+                        }
+                    });
+                } else {
+                    callback(null, loadedAsset);
+                }
+            };
+
+            if (asset.resource) {
+                onLoadAsset(asset);
+                return;
+            }
+
             if (type === 'model') {
                 self._loadModel(asset, callback);
                 return;
             }
 
-            asset.once("load", function (loadedAsset) {
-                callback(null, loadedAsset);
-            });
+            asset.once("load", onLoadAsset);
             asset.once("error", function (err) {
                 callback(err);
             });
@@ -480,7 +528,6 @@ Object.assign(pc, function () {
             var basename = pc.path.getBasename(url);
             var ext = pc.path.getExtension(url);
 
-
             var _loadAsset = function (assetToLoad) {
                 asset.once("load", function (loadedAsset) {
                     callback(null, loadedAsset);
@@ -491,9 +538,9 @@ Object.assign(pc, function () {
                 self.load(assetToLoad);
             };
 
-            if (ext === '.json') {
+            if (ext === '.json' || ext === '.glb') {
                 // playcanvas model format supports material mapping file
-                var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+                var mappingUrl = pc.path.join(dir, basename.replace(ext, ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
                         asset.data = { mapping: [] };
@@ -510,21 +557,23 @@ Object.assign(pc, function () {
                 // other model format (e.g. obj)
                 _loadAsset(asset);
             }
-
         },
 
         // private method used for engine-only loading of model data
         _loadMaterials: function (dir, mapping, callback) {
+            if (dir) {
+                // dir is generated from a call to pc.path.getDirectory which never returns
+                // a path ending in a forward slash so add one here
+                dir += '/';
+                if (this.prefix && dir.startsWith(this.prefix)) {
+                    dir = dir.slice(this.prefix.length);
+                }
+            }
+
             var self = this;
             var i;
             var count = mapping.mapping.length;
             var materials = [];
-
-            var done = function (err, loadedMaterials) {
-                self._loadTextures(loadedMaterials, function (e, textures) {
-                    callback(null, loadedMaterials);
-                });
-            };
 
             if (count === 0) {
                 callback(null, materials);
@@ -534,47 +583,61 @@ Object.assign(pc, function () {
                 materials.push(asset);
                 count--;
                 if (count === 0)
-                    done(null, materials);
+                    callback(null, materials);
             };
 
             for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
-                    self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
+                    path = pc.path.join(dir, path);
+                    self.loadFromUrl(path, "material", onLoadAsset);
                 } else {
                     count--;
                 }
             }
-
-
         },
 
         // private method used for engine-only loading of model data
-        _loadTextures: function (materials, callback) {
+        _loadTextures: function (materialAssets, callback) {
             var self = this;
-            var i, j;
+            var i;
             var used = {}; // prevent duplicate urls
             var urls = [];
             var textures = [];
             var count = 0;
-            for (i = 0; i < materials.length; i++) {
-                if (materials[i].data.parameters) {
-                    // old material format
-                    var params = materials[i].data.parameters;
-                    for (j = 0; j < params.length; j++) {
-                        if (params[j].type === "texture") {
-                            var url = materials[i].getFileUrl();
-                            var dir = pc.path.getDirectory(url);
-                            url = pc.path.join(dir, params[j].data);
-                            if (!used[url]) {
-                                used[url] = true;
-                                urls.push(url);
-                                count++;
-                            }
+            for (i = 0; i < materialAssets.length; i++) {
+                var materialData = materialAssets[i].data;
+
+                if (materialData.mappingFormat !== 'path') {
+                    console.warn('Skipping: ' + materialAssets[i].name + ', material files must be mappingFormat: "path" to be loaded from URL');
+                    continue;
+                }
+
+                var url = materialAssets[i].getFileUrl();
+                var dir = pc.path.getDirectory(url);
+                if (dir) {
+                    // pc.path.getDirectory never returns a path ending in a forward slash so add one
+                    dir += '/';
+
+                    if (this.prefix && dir.startsWith(this.prefix)) {
+                        dir = dir.slice(this.prefix.length);
+                    }
+                }
+
+                var textureUrl;
+
+                for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
+                    var paramName = pc.StandardMaterial.TEXTURE_PARAMETERS[pi];
+
+                    if (materialData[paramName] && typeof(materialData[paramName]) === 'string') {
+                        var texturePath = materialData[paramName];
+                        textureUrl = pc.path.join(dir, texturePath);
+                        if (!used[textureUrl]) {
+                            used[textureUrl] = true;
+                            urls.push(textureUrl);
+                            count++;
                         }
                     }
-                } else {
-                    console.warn("Update material asset loader to support new material format");
                 }
             }
 
@@ -600,10 +663,10 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#findAll
-         * @description Return all Assets with the specified name and type found in the registry
-         * @param {String} name The name of the Assets to find
-         * @param {String} [type] The type of the Assets to find
-         * @returns {pc.Asset[]} A list of all Assets found
+         * @description Return all Assets with the specified name and type found in the registry.
+         * @param {string} name - The name of the Assets to find.
+         * @param {string} [type] - The type of the Assets to find.
+         * @returns {pc.Asset[]} A list of all Assets found.
          * @example
          * var assets = app.assets.findAll("myTextureAsset", "texture");
          * console.log("Found " + assets.length + " assets called " + name);
@@ -642,9 +705,9 @@ Object.assign(pc, function () {
          * @description Return all Assets that satisfy the search query.
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
-         * A query that consists of an array of tags can be used to match assets that have each tag of array
-         * @param {String} tag Name of a tag or array of tags
-         * @returns {pc.Asset[]} A list of all Assets matched query
+         * A query that consists of an array of tags can be used to match assets that have each tag of array.
+         * @param {...*} query - Name of a tag or array of tags.
+         * @returns {pc.Asset[]} A list of all Assets matched query.
          * @example
          * var assets = app.assets.findByTag("level-1");
          * // returns all assets that tagged by `level-1`
@@ -652,10 +715,10 @@ Object.assign(pc, function () {
          * var assets = app.assets.findByTag("level-1", "level-2");
          * // returns all assets that tagged by `level-1` OR `level-2`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"]);
          * // returns all assets that tagged by `level-1` AND `monster`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ], [ "level-2", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
          * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
          */
         findByTag: function () {
@@ -665,11 +728,11 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#filter
-         * @description Return all Assets that satisfy filter callback
-         * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
-         * @returns {pc.Asset[]} A list of all Assets found
+         * @description Return all Assets that satisfy filter callback.
+         * @param {pc.callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
+         * @returns {pc.Asset[]} A list of all Assets found.
          * @example
-         * var assets = app.assets.filter(function(asset) {
+         * var assets = app.assets.filter(function (asset) {
          *     return asset.name.indexOf('monster') !== -1;
          * });
          * console.log("Found " + assets.length + " assets, where names contains 'monster'");
@@ -686,22 +749,16 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#find
-         * @description Return the first Asset with the specified name and type found in the registry
-         * @param {String} name The name of the Asset to find
-         * @param {String} [type] The type of the Asset to find
-         * @returns {pc.Asset} A single Asset or null if no Asset is found
+         * @description Return the first Asset with the specified name and type found in the registry.
+         * @param {string} name - The name of the Asset to find.
+         * @param {string} [type] - The type of the Asset to find.
+         * @returns {pc.Asset} A single Asset or null if no Asset is found.
          * @example
          * var asset = app.assets.find("myTextureAsset", "texture");
          */
         find: function (name, type) {
             var asset = this.findAll(name, type);
             return asset ? asset[0] : null;
-        },
-
-        // backwards compatibility
-        getAssetById: function (id) {
-            console.warn("DEPRECATED: getAssetById() use get() instead");
-            return this.get(id);
         }
     });
 

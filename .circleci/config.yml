@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/openjdk:8-jdk-node-browsers
+      - image: circleci/openjdk@sha256:0405d443a664898c7b59f97b4cfebbe8d369370b2edf4f82b8fc1945bdd3b2e0
 
     working_directory: ~/repo
 
@@ -39,6 +39,10 @@ jobs:
       - run:
           name: test-release
           command: npm run test:release
+
+      - run:
+          name: test-tsd
+          command: npm run test:tsd
 
       - run:
           name: lint

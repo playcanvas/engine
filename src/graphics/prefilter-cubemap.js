@@ -13,6 +13,13 @@ Object.assign(pc, (function () {
         tex._levels[0][face] = pixels;
     }
 
+    /**
+     * @static
+     * @function
+     * @name pc.prefilterCubemap
+     * @description Prefilter a cubemap for use by a {@link pc.StandardMaterial} as an environment map. Should only be used for cubemaps that can't be prefiltered ahead of time (in the editor).
+     * @param {object} options - The options for how the cubemap is prefiltered.
+     */
     function prefilterCubemap(options) {
         var device = options.device;
         var sourceCubemap = options.sourceCubemap;
@@ -41,9 +48,9 @@ Object.assign(pc, (function () {
         var format = sourceCubemap.format;
 
         var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
-        var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
-        var mipSize = [64, 32, 16, 8, 4]; // TODO: make non-static?
-        var numMips = 5;
+        var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25, 0.15, 0.1] : [512, 128, 32, 8, 2, 1, 1]; // TODO: calc more correct values depending on mip
+        var mipSize = [64, 32, 16, 8, 4, 2, 1]; // TODO: make non-static?
+        var numMips = 7;                        // generate all mips down to 1x1
         var targ;
         var i, face, pass;
 
@@ -56,7 +63,7 @@ Object.assign(pc, (function () {
         if ((rgbFormat || isImg) && cpuSync) {
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 format: format,
@@ -64,6 +71,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -88,7 +96,7 @@ Object.assign(pc, (function () {
             for (i = 0; i < steps; i++) {
                 size = sourceCubemap.width * 0.5;
                 var sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
-                nextCubemap = new pc.gfx.Texture(device, {
+                nextCubemap = new pc.Texture(device, {
                     cubemap: true,
                     rgbm: rgbmSource,
                     format: format,
@@ -96,6 +104,7 @@ Object.assign(pc, (function () {
                     height: size,
                     mipmaps: false
                 });
+                nextCubemap.name = 'prefiltered-cube';
                 for (face = 0; face < 6; face++) {
                     targ = new pc.RenderTarget(device, nextCubemap, {
                         face: face,
@@ -120,7 +129,7 @@ Object.assign(pc, (function () {
 
         var sourceCubemapRgbm = null;
         if (!rgbmSource && options.filteredFixedRgbm) {
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -128,6 +137,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -152,7 +162,7 @@ Object.assign(pc, (function () {
         for (i = 0; i < numMips; i++) {
             for (pass = startPass; pass < cmapsList.length; pass++) {
                 if (cmapsList[pass] != null) {
-                    cmapsList[pass][i] = new pc.gfx.Texture(device, {
+                    cmapsList[pass][i] = new pc.Texture(device, {
                         cubemap: true,
                         rgbm: pass < 2 ? rgbmSource : true,
                         format: pass < 2 ? format : pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -161,6 +171,7 @@ Object.assign(pc, (function () {
                         height: mipSize[i],
                         mipmaps: false
                     });
+                    cmapsList[pass][i].name = 'prefiltered-cube';
                 }
             }
         }
@@ -203,16 +214,8 @@ Object.assign(pc, (function () {
 
         var mips;
         if (cpuSync && options.singleFilteredFixed) {
-            mips = [
-                sourceCubemap,
-                options.filteredFixed[0],
-                options.filteredFixed[1],
-                options.filteredFixed[2],
-                options.filteredFixed[3],
-                options.filteredFixed[4],
-                options.filteredFixed[5]
-            ];
-            cubemap = new pc.gfx.Texture(device, {
+            mips = [sourceCubemap].concat(options.filteredFixed);
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 fixCubemapSeams: true,
@@ -222,7 +225,8 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for (i = 0; i < 6; i++)
+            cubemap.name = 'prefiltered-cube';
+            for (i = 0; i < mips.length; i++)
                 cubemap._levels[i] = mips[i]._levels[0];
 
             cubemap.upload();
@@ -231,16 +235,8 @@ Object.assign(pc, (function () {
         }
 
         if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
-            mips = [
-                sourceCubemapRgbm,
-                options.filteredFixedRgbm[0],
-                options.filteredFixedRgbm[1],
-                options.filteredFixedRgbm[2],
-                options.filteredFixedRgbm[3],
-                options.filteredFixedRgbm[4],
-                options.filteredFixedRgbm[5]
-            ];
-            cubemap = new pc.gfx.Texture(device, {
+            mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 fixCubemapSeams: true,
@@ -250,7 +246,8 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for (i = 0; i < 6; i++) {
+            cubemap.name = 'prefiltered-cube';
+            for (i = 0; i < mips.length; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
             cubemap.upload();
@@ -325,6 +322,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex.name = 'prefiltered-cube';
                     tex._levels[0] = img;
                     tex.upload();
 
@@ -336,6 +334,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex2.name = 'prefiltered-cube';
 
                     var targ = new pc.RenderTarget(device, tex2, {
                         depth: false

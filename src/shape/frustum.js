@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var viewProj = new pc.Mat4();
 
     /**
-     * @constructor
+     * @class
      * @name pc.Frustum
      * @classdesc A frustum is a shape that defines the viewing space of a camera.
      * @description Creates a new frustum shape.
@@ -11,8 +11,8 @@ Object.assign(pc, function () {
      * var projectionMatrix = entity.camera.projectionMatrix;
      * var viewMatrix = entity.camera.viewMatrix;
      * var frustum = new pc.Frustum(projectionMatrix, viewMatrix);
-     * @param {pc.Mat4} projectionMatrix The projection matrix describing the shape of the frustum.
-     * @param {pc.Mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
+     * @param {pc.Mat4} projectionMatrix - The projection matrix describing the shape of the frustum.
+     * @param {pc.Mat4} viewMatrix - The inverse of the world transformation matrix for the frustum.
      */
     var Frustum = function Frustum(projectionMatrix, viewMatrix) {
         projectionMatrix = projectionMatrix || new pc.Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
@@ -30,8 +30,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Frustum#update
          * @description Updates the frustum shape based on a view matrix and a projection matrix.
-         * @param {pc.Mat4} projectionMatrix The projection matrix describing the shape of the frustum.
-         * @param {pc.Mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
+         * @param {pc.Mat4} projectionMatrix - The projection matrix describing the shape of the frustum.
+         * @param {pc.Mat4} viewMatrix - The inverse of the world transformation matrix for the frustum.
          */
         update: function (projectionMatrix, viewMatrix) {
             viewProj.mul2(projectionMatrix, viewMatrix);
@@ -115,8 +115,8 @@ Object.assign(pc, function () {
          * @name pc.Frustum#containsPoint
          * @description Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
          * considered to be outside the frustum.
-         * @param {pc.Vec3} point The point to test
-         * @returns {Boolean} true if the point is inside the frustum, false otherwise
+         * @param {pc.Vec3} point - The point to test.
+         * @returns {boolean} True if the point is inside the frustum, false otherwise.
          */
         containsPoint: function (point) {
             for (var p = 0; p < 6; p++)
@@ -135,9 +135,9 @@ Object.assign(pc, function () {
          * zero is returned. If the sphere intersects the frustum, 1 is returned. If the sphere is completely inside
          * the frustum, 2 is returned. Note that a sphere touching a frustum plane from the outside is considered to
          * be outside the frustum.
-         * @param {pc.BoundingSphere} sphere The sphere to test
-         * @returns {Number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
-         * it is contained by the frustum
+         * @param {pc.BoundingSphere} sphere - The sphere to test.
+         * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
+         * it is contained by the frustum.
          */
         containsSphere: function (sphere) {
             var c = 0;
@@ -145,10 +145,10 @@ Object.assign(pc, function () {
             var p;
 
             var sr = sphere.radius;
-            var sc = sphere.center.data;
-            var scx = sc[0];
-            var scy = sc[1];
-            var scz = sc[2];
+            var sc = sphere.center;
+            var scx = sc.x;
+            var scy = sc.y;
+            var scz = sc.z;
             var planes = this.planes;
             var plane;
 

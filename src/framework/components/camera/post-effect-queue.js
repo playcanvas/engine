@@ -1,11 +1,12 @@
 Object.assign(pc, function () {
+    var depthLayer;
     /**
-     * @constructor
+     * @class
      * @name pc.PostEffectQueue
-     * @classdesc Used to manage multiple post effects for a camera
-     * @description Create a new PostEffectQueue
-     * @param {pc.Application} app The application
-     * @param {pc.CameraComponent} camera The camera component
+     * @classdesc Used to manage multiple post effects for a camera.
+     * @description Create a new PostEffectQueue.
+     * @param {pc.Application} app - The application.
+     * @param {pc.CameraComponent} camera - The camera component.
      */
     function PostEffectQueue(app, camera) {
         var self = this;
@@ -30,6 +31,11 @@ Object.assign(pc, function () {
         };
 
         camera.on('set_rect', this.onCameraRectChanged, this);
+
+        this._origOverrideClear = false;
+        this._origClearColorBuffer = false;
+        this._origDepthColorBuffer = false;
+        this._origStencilColorBuffer = false;
     }
 
     Object.assign(PostEffectQueue.prototype, {
@@ -37,10 +43,10 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.PostEffectQueue#_createOffscreenTarget
-         * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
-         * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
-         * @param {Boolean} hdr Use HDR render target format
-         * @returns {pc.RenderTarget} The render target
+         * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer.
+         * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer.
+         * @param {boolean} hdr - Use HDR render target format.
+         * @returns {pc.RenderTarget} The render target.
          */
 
         _createOffscreenTarget: function (useDepth, hdr) {
@@ -51,19 +57,22 @@ Object.assign(pc, function () {
 
             var device = this.app.graphicsDevice;
             var format = hdr ? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
+            var useStencil =  this.app.graphicsDevice.supportsStencil;
+            var samples = useDepth ? device.samples : 1;
 
             var colorBuffer = new pc.Texture(device, {
                 format: format,
                 width: width,
                 height: height
             });
+            colorBuffer.name = 'posteffect #' + this.effects.length;
 
             colorBuffer.minFilter = pc.FILTER_NEAREST;
             colorBuffer.magFilter = pc.FILTER_NEAREST;
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth });
+            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
         },
 
         _resizeOffscreenTarget: function (rt) {
@@ -82,6 +91,7 @@ Object.assign(pc, function () {
                 width: width,
                 height: height
             });
+            colorBuffer.name = 'posteffect';
 
             colorBuffer.minFilter = pc.FILTER_NEAREST;
             colorBuffer.magFilter = pc.FILTER_NEAREST;
@@ -89,6 +99,15 @@ Object.assign(pc, function () {
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
             rt._colorBuffer = colorBuffer;
+            rt.destroy();
+        },
+
+        _destroyOffscreenTarget: function (rt) {
+            if (rt._colorBuffer)
+                rt._colorBuffer.destroy();
+            if (rt._depthBuffer)
+                rt._depthBuffer.destroy();
+
             rt.destroy();
         },
 
@@ -102,7 +121,7 @@ Object.assign(pc, function () {
          * @name pc.PostEffectQueue#addEffect
          * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
          * automatically enable the queue.
-         * @param {pc.PostEffect} effect The post effect to add to the queue.
+         * @param {pc.PostEffect} effect - The post effect to add to the queue.
          */
         addEffect: function (effect) {
             // first rendering of the scene requires depth buffer
@@ -138,6 +157,12 @@ Object.assign(pc, function () {
                 for (i = start; i >= 0; i--) {
                     if (layerList[i].id === pc.LAYERID_UI) {
                         start = i - 1;
+
+                        this._origOverrideClear = layerList[i].overrideClear;
+                        this._origClearColorBuffer = layerList[i].clearColorBuffer;
+                        this._origDepthColorBuffer = layerList[i].clearDepthBuffer;
+                        this._origStencilColorBuffer = layerList[i].clearStencilBuffer;
+
                         layerList[i].overrideClear = true;
                         layerList[i].clearColorBuffer = false;
                         layerList[i].clearDepthBuffer = this.camera.clearDepthBuffer;
@@ -145,15 +170,26 @@ Object.assign(pc, function () {
                         break;
                     }
                 }
-                for (i = start; i >= 0; i--) {
-                    if (layerList[i].cameras.indexOf(this.camera) >= 0) {
-                        if (order === 0) {
-                            order = i + 1;
+
+                this._sourceLayers = [];
+
+                for (i = 0; i < this.camera.layers.length; i++) {
+                    var layerID = this.camera.layers[i];
+                    var layer = this.app.scene.layers.getLayerById(layerID);
+                    var index = this.app.scene.layers.layerList.indexOf(layer);
+
+                    if (index <= start) {
+                        if (layerID != pc.LAYERID_DEPTH) {
+                            layer.renderTarget = newEntry.inputTarget;
+                            this._sourceLayers.push(layer);
                         }
-                        layerList[i].renderTarget = newEntry.inputTarget;
+
+                        if (index > order)
+                            order = index;
                     }
                 }
-                this.app.scene.layers.insertOpaque(this.layer, order);
+                this.app.scene.layers.insertOpaque(this.layer, order + 1);
+                this._sourceTarget = newEntry.inputTarget;
                 this.layer._commandList = [];
                 this.layer.isPostEffect = true;
             }
@@ -166,19 +202,27 @@ Object.assign(pc, function () {
                 effects[len - 2].outputTarget = newEntry.inputTarget;
             }
 
+            // Request depthmap if needed
+            this._newPostEffect = effect;
+            if (effect.needsDepthBuffer) {
+                this._requestDepthMap();
+            }
+
+
             this.enable();
+            this._newPostEffect = undefined;
         },
 
         /**
          * @function
          * @name pc.PostEffectQueue#removeEffect
          * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
-         * @param {pc.PostEffect} effect The post effect to remove.
+         * @param {pc.PostEffect} effect - The post effect to remove.
          */
         removeEffect: function (effect) {
             // find index of effect
-            var index = -1;
-            for (var i = 0, len = this.effects.length; i < len; i++) {
+            var i, len, index = -1;
+            for (i = 0, len = this.effects.length; i < len; i++) {
                 if (this.effects[i].effect === effect) {
                     index = i;
                     break;
@@ -197,23 +241,27 @@ Object.assign(pc, function () {
                         // the input render target of the effect that will now become the first one
                         // has a depth buffer
                         if (!this.effects[1].inputTarget._depth) {
-                            this.effects[1].inputTarget.destroy();
+                            this._destroyOffscreenTarget(this.effects[1].inputTarget);
                             this.effects[1].inputTarget = this._createOffscreenTarget(true, this.effects[1].hdr);
+                            this._sourceTarget = this.effects[1].inputTarget;
+                        }
+                        // Also apply to the source layers
+                        for (i = 0; i < this._sourceLayers.length; i++) {
+                            this._sourceLayers[i].renderTarget = this.effects[1].inputTarget;
                         }
 
-                        this.camera.renderTarget = this.effects[1].inputTarget;
                     }
                 }
 
                 // release memory for removed effect
-                this.effects[index].inputTarget.destroy();
+                this._destroyOffscreenTarget(this.effects[index].inputTarget);
 
                 this.effects.splice(index, 1);
             }
 
             if (this.enabled) {
                 if (effect.needsDepthBuffer) {
-                    this.camera.releaseDepthMap();
+                    this._releaseDepthMap();
                 }
             }
 
@@ -222,28 +270,40 @@ Object.assign(pc, function () {
             }
         },
 
-        requestDepthMap: function () {
+        _requestDepthMaps: function () {
             for (var i = 0, len = this.effects.length; i < len; i++) {
                 var effect = this.effects[i].effect;
+                if (this._newPostEffect === effect)
+                    continue;
+
                 if (effect.needsDepthBuffer) {
-                    this.camera.camera.requestDepthMap();
+                    this._requestDepthMap();
                 }
             }
         },
 
-        releaseDepthMap: function () {
+        _releaseDepthMaps: function () {
             for (var i = 0, len = this.effects.length; i < len; i++) {
                 var effect = this.effects[i].effect;
                 if (effect.needsDepthBuffer) {
-                    this.camera.releaseDepthMap();
+                    this._releaseDepthMap();
                 }
             }
+        },
+
+        _requestDepthMap: function () {
+            if (!depthLayer) depthLayer = this.app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+            if (depthLayer) depthLayer.incrementCounter();
+        },
+
+        _releaseDepthMap: function () {
+            if (depthLayer) depthLayer.decrementCounter();
         },
 
         /**
          * @function
          * @name pc.PostEffectQueue#destroy
-         * @description Removes all the effects from the queue and disables it
+         * @description Removes all the effects from the queue and disables it.
          */
         destroy: function () {
             // release memory for all effects
@@ -266,7 +326,7 @@ Object.assign(pc, function () {
                 this.enabled = true;
 
                 var self = this;
-                this.requestDepthMap();
+                this._requestDepthMaps();
 
                 this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
 
@@ -291,7 +351,6 @@ Object.assign(pc, function () {
                                 if (i === len - 1) {
                                     rect = self.camera.rect;
                                 }
-
                                 fx.effect.render(fx.inputTarget, fx.outputTarget, rect);
                             }
                         }
@@ -313,14 +372,36 @@ Object.assign(pc, function () {
 
                 this.app.graphicsDevice.off('resizecanvas', this._onCanvasResized, this);
 
-                this.camera.renderTarget = null;
-                this.releaseDepthMap();
+                this._releaseDepthMaps();
+                this._destroyOffscreenTarget(this._sourceTarget);
 
                 // remove the draw command
                 var i = this.layer._commandList.indexOf(this.command);
                 if (i >= 0) {
                     this.layer._commandList.splice(i, 1);
                 }
+
+                // Reset the UI layer to its original state
+                var layerList = this.app.scene.layers.layerList;
+                var start = layerList.length - 1;
+                for (i = 0; i <= layerList.length; i++) {
+                    if (layerList[i].id === pc.LAYERID_UI) {
+                        start = i - 1;
+                        layerList[i].overrideClear = this._origOverrideClear;
+                        layerList[i].clearColorBuffer = this._origClearColorBuffer;
+                        layerList[i].clearDepthBuffer = this._origDepthColorBuffer;
+                        layerList[i].clearStencilBuffer = this._origStencilColorBuffer;
+                        break;
+                    }
+                }
+                for (i = start; i >= 0; i--) {
+                    if (layerList[i].cameras.indexOf(this.camera) >= 0) {
+                        layerList[i].renderTarget = undefined;
+                    }
+                }
+
+                this.app.scene.layers.removeOpaque(this.layer);
+                this.layer = null;
             }
         },
 

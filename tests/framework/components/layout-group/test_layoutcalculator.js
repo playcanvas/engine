@@ -2,6 +2,7 @@ describe("pc.LayoutCalculator", function () {
     var app;
     var calculator;
     var options;
+    var elements;
     var mixedWidthElements;
     var mixedHeightElements;
     var mixedWidthElementsWithLayoutChildComponents;
@@ -412,8 +413,8 @@ describe("pc.LayoutCalculator", function () {
         options.orientation = pc.ORIENTATION_HORIZONTAL;
         options.widthFitting = pc.FITTING_STRETCH;
         options.containerSize.x = 600;
-        options.padding.data[0] = 20;
-        options.padding.data[2] = 40;
+        options.padding.x = 20;
+        options.padding.z = 40;
         options.spacing.x = 10;
 
         calculate();
@@ -496,8 +497,8 @@ describe("pc.LayoutCalculator", function () {
         options.orientation = pc.ORIENTATION_HORIZONTAL;
         options.widthFitting = pc.FITTING_SHRINK;
         options.containerSize.x = 300;
-        options.padding.data[0] = 20;
-        options.padding.data[2] = 40;
+        options.padding.x = 20;
+        options.padding.z = 40;
         options.spacing.x = 10;
 
         calculate();
@@ -662,8 +663,8 @@ describe("pc.LayoutCalculator", function () {
         options.wrap = true;
         options.orientation = pc.ORIENTATION_HORIZONTAL;
         options.widthFitting = pc.FITTING_NONE;
-        options.padding.data[0] = 20;
-        options.padding.data[2] = 40;
+        options.padding.x = 20;
+        options.padding.z = 40;
         options.spacing.x = 10;
         options.spacing.y = 15;
         options.containerSize.x = 260;

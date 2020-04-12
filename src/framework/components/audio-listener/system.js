@@ -2,20 +2,19 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.AudioListenerComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
-     * @description Create a new AudioListenerComponentSystem
-     * @param {pc.Application} app The application managing this system.
-     * @param {pc.SoundManager} manager A sound manager instance.
-     * @extends pc.ComponentSystem
+     * @description Create a new AudioListenerComponentSystem.
+     * @param {pc.Application} app - The application managing this system.
+     * @param {pc.SoundManager} manager - A sound manager instance.
      */
     var AudioListenerComponentSystem = function (app, manager) {
         pc.ComponentSystem.call(this, app);
 
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;
@@ -25,7 +24,7 @@ Object.assign(pc, function () {
         this.manager = manager;
         this.current = null;
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     AudioListenerComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;

@@ -2,14 +2,14 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Quat
      * @classdesc A quaternion.
      * @description Create a new Quat object.
-     * @param {Number} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
-     * @param {Number} [y] The quaternion's y component. Default value 0.
-     * @param {Number} [z] The quaternion's z component. Default value 0.
-     * @param {Number} [w] The quaternion's w component. Default value 1.
+     * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
+     * @param {number} [y] - The quaternion's y component. Default value 0.
+     * @param {number} [z] - The quaternion's z component. Default value 0.
+     * @param {number} [w] - The quaternion's w component. Default value 1.
      */
     var Quat = function (x, y, z, w) {
         if (x && x.length === 4) {
@@ -27,8 +27,8 @@ Object.assign(pc, (function () {
 
     /**
      * @field
-     * @type Number
      * @name pc.Quat#x
+     * @type {number}
      * @description The x component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -41,8 +41,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#y
+     * @type {number}
      * @description The y component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -55,8 +55,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#z
+     * @type {number}
      * @description The z component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -69,8 +69,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#w
+     * @type {number}
      * @description The w component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -110,7 +110,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#copy
          * @description Copies the contents of a source quaternion to a destination quaternion.
-         * @param {pc.Quat} rhs The quaternion to be copied.
+         * @param {pc.Quat} rhs - The quaternion to be copied.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var src = new pc.Quat();
@@ -131,8 +131,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#equals
          * @description Reports whether two quaternions are equal.
-         * @param {pc.Quat} rhs The quaternion to be compared against.
-         * @returns {Boolean} true if the quaternions are equal and false otherwise.
+         * @param {pc.Quat} rhs - The quaternion to be compared against.
+         * @returns {boolean} True if the quaternions are equal and false otherwise.
          * @example
          * var a = new pc.Quat();
          * var b = new pc.Quat();
@@ -150,15 +150,15 @@ Object.assign(pc, (function () {
          *  setFromAxisAngle, this method will return the same
          *  values as provided in the original parameter list
          *  OR functionally equivalent values.
-         * @param {pc.Vec3} axis The 3-dimensional vector to receive the axis of rotation.
-         * @returns {Number} Angle, in degrees, of the rotation
+         * @param {pc.Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
+         * @returns {number} Angle, in degrees, of the rotation.
          * @example
          * var q = new pc.Quat();
          * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);
          * var v = new pc.Vec3();
          * var angle = q.getAxisAngle(v);
          * // Should output 90
-         * console.log(angle)
+         * console.log(angle);
          * // Should output [0, 1, 0]
          * console.log(v.toString());
          */
@@ -189,7 +189,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#getEulerAngles
          * @description Converts the supplied quaternion to Euler angles.
-         * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
+         * @param {pc.Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
          * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
          * correspond to the supplied quaternion.
          */
@@ -241,7 +241,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#length
          * @description Returns the magnitude of the specified quaternion.
-         * @returns {Number} The magnitude of the specified quaternion.
+         * @returns {number} The magnitude of the specified quaternion.
          * @example
          * var q = new pc.Quat(0, 0, 0, 5);
          * var len = q.length();
@@ -249,21 +249,14 @@ Object.assign(pc, (function () {
          * console.log("The length of the quaternion is: " + len);
          */
         length: function () {
-            var x, y, z, w;
-
-            x = this.x;
-            y = this.y;
-            z = this.z;
-            w = this.w;
-
-            return Math.sqrt(x * x + y * y + z * z + w * w);
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         },
 
         /**
          * @function
          * @name pc.Quat#lengthSq
          * @description Returns the magnitude squared of the specified quaternion.
-         * @returns {Number} The magnitude of the specified quaternion.
+         * @returns {number} The magnitude of the specified quaternion.
          * @example
          * var q = new pc.Quat(3, 4, 0);
          * var lenSq = q.lengthSq();
@@ -271,15 +264,14 @@ Object.assign(pc, (function () {
          * console.log("The length squared of the quaternion is: " + lenSq);
          */
         lengthSq: function () {
-            var x, y, z, w;
-            return x * x + y * y + z * z + w * w;
+            return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         },
 
         /**
          * @function
          * @name pc.Quat#mul
          * @description Returns the result of multiplying the specified quaternions together.
-         * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
+         * @param {pc.Quat} rhs - The quaternion used as the second multiplicand of the operation.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
@@ -289,7 +281,7 @@ Object.assign(pc, (function () {
          * // In other words, a = a * b
          * a.mul(b);
          *
-         * console.log("The result of the multiplication is: " a.toString());
+         * console.log("The result of the multiplication is: " + a.toString());
          */
         mul: function (rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -316,8 +308,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#mul2
          * @description Returns the result of multiplying the specified quaternions together.
-         * @param {pc.Quat} lhs The quaternion used as the first multiplicand of the operation.
-         * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
+         * @param {pc.Quat} lhs - The quaternion used as the first multiplicand of the operation.
+         * @param {pc.Quat} rhs - The quaternion used as the second multiplicand of the operation.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
@@ -328,7 +320,7 @@ Object.assign(pc, (function () {
          * // In other words, r = a * b
          * r.mul2(a, b);
          *
-         * console.log("The result of the multiplication is: " r.toString());
+         * console.log("The result of the multiplication is: " + r.toString());
          */
         mul2: function (lhs, rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -384,10 +376,10 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#set
          * @description Sets the specified quaternion to the supplied numerical values.
-         * @param {Number} x The x component of the quaternion.
-         * @param {Number} y The y component of the quaternion.
-         * @param {Number} z The z component of the quaternion.
-         * @param {Number} w The w component of the quaternion.
+         * @param {number} x - The x component of the quaternion.
+         * @param {number} y - The y component of the quaternion.
+         * @param {number} z - The z component of the quaternion.
+         * @param {number} w - The w component of the quaternion.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();
@@ -409,8 +401,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#setFromAxisAngle
          * @description Sets a quaternion from an angular rotation around an axis.
-         * @param {pc.Vec3} axis World space axis around which to rotate.
-         * @param {Number} angle Angle to rotate around the given axis in degrees.
+         * @param {pc.Vec3} axis - World space axis around which to rotate.
+         * @param {number} angle - Angle to rotate around the given axis in degrees.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();
@@ -436,9 +428,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#setFromEulerAngles
          * @description Sets a quaternion from Euler angles specified in XYZ order.
-         * @param {Number} ex Angle to rotate around X axis in degrees.
-         * @param {Number} ey Angle to rotate around Y axis in degrees.
-         * @param {Number} ez Angle to rotate around Z axis in degrees.
+         * @param {number} ex - Angle to rotate around X axis in degrees.
+         * @param {number} ey - Angle to rotate around Y axis in degrees.
+         * @param {number} ez - Angle to rotate around Z axis in degrees.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();
@@ -473,7 +465,7 @@ Object.assign(pc, (function () {
          * @description Converts the specified 4x4 matrix to a quaternion. Note that since
          * a quaternion is purely a representation for orientation, only the translational part
          * of the matrix is lost.
-         * @param {pc.Mat4} m The 4x4 matrix to convert.
+         * @param {pc.Mat4} m - The 4x4 matrix to convert.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
@@ -500,9 +492,18 @@ Object.assign(pc, (function () {
             m22 = m[10];
 
             // Remove the scale from the matrix
-            lx = 1 / Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-            ly = 1 / Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-            lz = 1 / Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
+            lx = m00 * m00 + m01 * m01 + m02 * m02;
+            if (lx === 0)
+                return this;
+            lx = 1 / Math.sqrt(lx);
+            ly = m10 * m10 + m11 * m11 + m12 * m12;
+            if (ly === 0)
+                return this;
+            ly = 1 / Math.sqrt(ly);
+            lz = m20 * m20 + m21 * m21 + m22 * m22;
+            if (lz === 0)
+                return this;
+            lz = 1 / Math.sqrt(lz);
 
             m00 *= lx;
             m01 *= lx;
@@ -578,15 +579,15 @@ Object.assign(pc, (function () {
          * @name pc.Quat#slerp
          * @description Performs a spherical interpolation between two quaternions. The result of
          * the interpolation is written to the quaternion calling the function.
-         * @param {pc.Quat} lhs The quaternion to interpolate from.
-         * @param {pc.Quat} rhs The quaternion to interpolate to.
-         * @param {Number} alpha The value controlling the interpolation in relation to the two input
+         * @param {pc.Quat} lhs - The quaternion to interpolate from.
+         * @param {pc.Quat} rhs - The quaternion to interpolate to.
+         * @param {number} alpha - The value controlling the interpolation in relation to the two input
          * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
          * in between generating a spherical interpolation between the two.
          * @returns {pc.Quat} Self for chaining.
          * @example
-         * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
-         * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
+         * var q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+         * var q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
          *
          * var result;
          * result = new pc.Quat().slerp(q1, q2, 0);   // Return q1
@@ -655,8 +656,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#transformVector
          * @description Transforms a 3-dimensional vector by the specified quaternion.
-         * @param {pc.Vec3} vec The 3-dimensional vector to be transformed.
-         * @param {pc.Vec3} [res] An optional 3-dimensional vector to receive the result of the transformation.
+         * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.
+         * @param {pc.Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
          * @returns {pc.Vec3} The input vector v transformed by the current instance.
          * @example
          * // Create a 3-dimensional vector
@@ -693,7 +694,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Quat#toString
          * @description Converts the quaternion to string form.
-         * @returns {String} The quaternion in string form.
+         * @returns {string} The quaternion in string form.
          * @example
          * var v = new pc.Quat(0, 0, 0, 1);
          * // Should output '[0, 0, 0, 1]'
@@ -708,34 +709,23 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Quat
      * @name pc.Quat.IDENTITY
+     * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
-    Object.defineProperty(Quat, 'IDENTITY', {
-        get: (function () {
-            var identity = new Quat();
-            return function () {
-                return identity;
-            };
-        }())
-    });
 
     /**
      * @field
      * @static
      * @readonly
-     * @type pc.Quat
      * @name pc.Quat.ZERO
+     * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 0].
      */
-    Object.defineProperty(Quat, 'ZERO', {
-        get: (function () {
-            var zero = new Quat(0, 0, 0, 0);
-            return function () {
-                return zero;
-            };
-        }())
+
+    Object.defineProperties(Quat, {
+        ZERO: { value: new Quat(0, 0, 0, 0) },
+        IDENTITY: { value: new Quat(0, 0, 0, 1) }
     });
 
     return {

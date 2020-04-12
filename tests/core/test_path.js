@@ -1,5 +1,5 @@
 describe('pc.path', function () {
-    it("path.getDirectory ", function() {
+    it("path.getDirectory", function() {
         expect("folder").to.equal(pc.path.getDirectory("folder/file.txt"));
         expect("folder").to.equal(pc.path.getDirectory("folder/another"));
         expect("folder/another").to.equal(pc.path.getDirectory("folder/another/"));
@@ -43,4 +43,30 @@ describe('pc.path', function () {
         }).to.throw();
     });
 
+    it("path.normalize normalizes", function () {
+        // equal('a/b/c', pc.path.normalize('a/b/c'));
+        // equal('/a/b/c', pc.path.normalize('/a/b/c'));
+        // equal('a/b/c', pc.path.normalize('a//b/c'));
+        // equal('b/c', pc.path.normalize('a/../b/c'));
+        // equal('a/b/c', pc.path.normalize('a/./b/c'));
+        // equal('a/b', pc.path.normalize('a/b/c/..'));
+        // equal('a/b/c/', pc.path.normalize('a/b/c/'));
+        // equal('../a/b/c/', pc.path.normalize('../a/b/c/'));
+        // // equal('../../a/b/c', pc.path.normalize('../../a/b/c')); // TODO: fix this
+        // equal('/', pc.path.normalize('/'));
+        // equal('../', pc.path.normalize('../'));
+        // equal('./', pc.path.normalize('./'));
+        // equal('./', pc.path.normalize('././'));
+        // equal('../../', pc.path.normalize('../../'));
+        // equal('.', pc.path.normalize('.'));
+        // equal('..', pc.path.normalize('./../.'));
+    });
+
+    it("path.extractPath", function () {
+        expect("./path/to").to.equal(pc.path.extractPath("path/to/file"));
+        expect("./path/to").to.equal(pc.path.extractPath("./path/to/file"));
+        expect("../path/to").to.equal(pc.path.extractPath("../path/to/file"));
+        expect("/path/to").to.equal(pc.path.extractPath("/path/to/file"));
+        expect("./path/../path/to").to.equal(pc.path.extractPath("path/../path/to/file.txt"));
+    });
 })

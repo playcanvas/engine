@@ -1,12 +1,14 @@
 Object.assign(pc, function () {
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {string}
      * @name pc.SCALEMODE_NONE
      * @description Always use the application's resolution as the resolution for the {@link pc.ScreenComponent}.
      */
     pc.SCALEMODE_NONE = "none";
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {string}
      * @name pc.SCALEMODE_BLEND
      * @description Scale the {@link pc.ScreenComponent} when the application's resolution is different than the ScreenComponent's referenceResolution.
      */
@@ -15,16 +17,17 @@ Object.assign(pc, function () {
     // var counter = 1;
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ScreenComponent
+     * @augments pc.Component
      * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
-     * @description Create a new ScreenComponent
-     * @param {pc.ScreenComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
-     * @property {Boolean} screenSpace If true then the ScreenComponent will render its child {@link pc.ElementComponent}s in screen space instead of world space. Enable this to create 2D user interfaces.
-     * @property {String} scaleMode Can either be {@link pc.SCALEMODE_NONE} or {@link pc.SCALEMODE_BLEND}. See the description of referenceResolution for more information.
-     * @property {Number} scaleBlend A value between 0 and 1 that is used when scaleMode is equal to {@link pc.SCALEMODE_BLEND}. Scales the ScreenComponent with width as a reference (when value is 0), the height as a reference (when value is 1) or anything in between.
+     * @description Create a new ScreenComponent.
+     * @param {pc.ScreenComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
+     * @property {boolean} screenSpace If true then the ScreenComponent will render its child {@link pc.ElementComponent}s in screen space instead of world space. Enable this to create 2D user interfaces.
+     * @property {boolean} cull If true then elements inside this screen will be not be rendered when outside of the screen (only valid when screenSpace is true).
+     * @property {string} scaleMode Can either be {@link pc.SCALEMODE_NONE} or {@link pc.SCALEMODE_BLEND}. See the description of referenceResolution for more information.
+     * @property {number} scaleBlend A value between 0 and 1 that is used when scaleMode is equal to {@link pc.SCALEMODE_BLEND}. Scales the ScreenComponent with width as a reference (when value is 0), the height as a reference (when value is 1) or anything in between.
      * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
      * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
      */
@@ -42,6 +45,7 @@ Object.assign(pc, function () {
         this._priority = 0;
 
         this._screenSpace = false;
+        this.cull = this._screenSpace;
         this._screenMatrix = new pc.Mat4();
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
@@ -69,10 +73,15 @@ Object.assign(pc, function () {
             }
 
             if (e.element) {
+                var prevDrawOrder = e.element.drawOrder;
                 e.element.drawOrder = i++;
+
+                if (e.element._batchGroupId >= 0 && prevDrawOrder != e.element.drawOrder) {
+                    this.system.app.batcher.markGroupDirty(e.element._batchGroupId);
+                }
             }
 
-            var children = e.getChildren();
+            var children = e.children;
             for (var j = 0; j < children.length; j++) {
                 i = this._recurseDrawOrderSync(children[j], i);
             }
@@ -136,6 +145,9 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
             this.fire('remove');
+
+            // remove all events used by elements
+            this.off();
         }
     });
 
@@ -153,7 +165,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:resolution", this._resolution);
         },
@@ -169,7 +181,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:referenceresolution", this._resolution);
         },
@@ -191,7 +203,7 @@ Object.assign(pc, function () {
             this.resolution = this._resolution; // force update either way
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire('set:screenspace', this._screenSpace);
         },
@@ -228,7 +240,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:scaleblend", this._scaleBlend);
         },

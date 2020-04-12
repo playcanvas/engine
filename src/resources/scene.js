@@ -1,19 +1,50 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /**
+     * @class
+     * @name pc.SceneHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Scene} resources.
+     * @param {pc.Application} app - The running {@link pc.Application}.
+     */
     var SceneHandler = function (app) {
         this._app = app;
+        this.retryRequests = false;
     };
 
     Object.assign(SceneHandler.prototype, {
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback("Error requesting scene: " + url);
-                }
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
 
+            var assets = this._app.assets;
+
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
+                if (!err) {
+                    pc.TemplateUtils.waitForTemplatesInScene(
+                        response,
+                        assets,
+                        callback);
+                } else {
+                    var errMsg = 'Error while loading scene ' + url.original;
+                    if (err.message) {
+                        errMsg += ': ' + err.message;
+                        if (err.stack) {
+                            errMsg += '\n' + err.stack;
+                        }
+                    } else {
+                        errMsg += ': ' + err;
+                    }
+
+                    callback(errMsg);
+                }
             });
         },
 
@@ -21,7 +52,7 @@ Object.assign(pc, function () {
             // prevent script initialization until entire scene is open
             this._app.systems.script.preloading = true;
 
-            var parser = new pc.SceneParser(this._app);
+            var parser = new pc.SceneParser(this._app, false);
             var parent = parser.parse(data);
 
             // set scene root

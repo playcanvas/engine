@@ -1,12 +1,13 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.BasicMaterial
+     * @augments pc.Material
      * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
      * color map modulated with a color.
      * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
-     * @property {pc.Texture} colorMap The color map of the material. If specified, the color map is
+     * @property {pc.Texture|null} colorMap The color map of the material (default is null). If specified, the color map is
      * modulated by the color property.
      * @example
      * // Create a new Basic material
@@ -18,17 +19,15 @@ Object.assign(pc, function () {
      *
      * // Notify the material that it has been modified
      * material.update();
-     *
-     * @extends pc.Material
      */
     var BasicMaterial = function () {
         pc.Material.call(this);
 
         this.color = new pc.Color(1, 1, 1, 1);
+        this.colorUniform = new Float32Array(4);
+
         this.colorMap = null;
         this.vertexColors = false;
-
-        this.update();
     };
     BasicMaterial.prototype = Object.create(pc.Material.prototype);
     BasicMaterial.prototype.constructor = BasicMaterial;
@@ -50,14 +49,17 @@ Object.assign(pc, function () {
             clone.colorMap = this.colorMap;
             clone.vertexColors = this.vertexColors;
 
-            clone.update();
             return clone;
         },
 
-        update: function () {
+        updateUniforms: function () {
             this.clearParameters();
 
-            this.setParameter('uColor', this.color.data);
+            this.colorUniform[0] = this.color.r;
+            this.colorUniform[1] = this.color.g;
+            this.colorUniform[2] = this.color.b;
+            this.colorUniform[3] = this.color.a;
+            this.setParameter('uColor', this.colorUniform);
             if (this.colorMap) {
                 this.setParameter('texture_diffuseMap', this.colorMap);
             }

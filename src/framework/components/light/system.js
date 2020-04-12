@@ -1,11 +1,11 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.LightComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc A Light Component is used to dynamically light the scene.
      * @description Create a new LightComponentSystem.
-     * @param {pc.Application} app The application.
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,
@@ -18,23 +18,24 @@ Object.assign(pc, function () {
 
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
+
+        this.on('beforeremove', this._onRemoveComponent, this);
     };
     LightComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     LightComponentSystem.prototype.constructor = LightComponentSystem;
 
     Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
+            var properties = pc._lightProps;
+
             // duplicate because we're modifying the data
             var data = {};
-            var _props = pc._lightProps;
-            var name;
-            for (var i = 0; i < _props.length; i++) {
-                name = _props[i];
-                data[name] = _data[name];
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
             }
 
             if (!data.type)
@@ -66,14 +67,11 @@ Object.assign(pc, function () {
             light._scene = this.app.scene;
             component.data.light = light;
 
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _props);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
-        removeComponent: function (entity) {
-            var data = entity.light.data;
-            data.light.destroy();
-
-            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
+        _onRemoveComponent: function (entity, component) {
+            component.onRemove();
         },
 
         cloneComponent: function (entity, clone) {

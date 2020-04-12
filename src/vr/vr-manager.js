@@ -1,26 +1,23 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @private
+     * @deprecated
+     * @class
      * @name pc.VrManager
+     * @augments pc.EventHandler
      * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
-     * @param {pc.Application} app The main application
-     * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
-     * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
-     * @property {Boolean} isSupported Reports whether this device supports the WebVR API
-     * @property {Boolean} usesPolyfill Reports whether this device supports the WebVR API using a polyfill
+     * @param {pc.Application} app - The main application.
+     * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device.
+     * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list.
+     * @property {boolean} isSupported Reports whether this device supports the WebVR API.
      */
     var VrManager = function (app) {
-        pc.events.attach(this);
+        pc.EventHandler.call(this);
 
         var self = this;
 
         this.isSupported = VrManager.isSupported;
-        this.usesPolyfill = VrManager.usesPolyfill;
-
-        // if required initialize webvr polyfill
-        if (window.InitializeWebVRPolyfill)
-            window.InitializeWebVRPolyfill();
 
         this._index = { };
         this.displays = [];
@@ -47,12 +44,16 @@ Object.assign(pc, function () {
             }
         });
     };
+    VrManager.prototype = Object.create(pc.EventHandler.prototype);
+    VrManager.prototype.constructor = VrManager;
 
     /**
+     * @private
+     * @deprecated
      * @event
      * @name pc.VrManager#displayconnect
-     * @description Fired when an VR display is connected
-     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
+     * @description Fired when an VR display is connected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
      * @example
      * this.app.vr.on("displayconnect", function (display) {
      *     // use `display` here
@@ -60,10 +61,12 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @private
+     * @deprecated
      * @event
      * @name pc.VrManager#displaydisconnect
-     * @description Fired when an VR display is disconnected
-     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
+     * @description Fired when an VR display is disconnected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
      * @example
      * this.app.vr.on("displaydisconnect", function (display) {
      *     // `display` is no longer connected
@@ -71,20 +74,18 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @private
+     * @deprecated
      * @static
      * @name pc.VrManager.isSupported
-     * @type Boolean
-     * @description Reports whether this device supports the WebVR API
+     * @type {boolean}
+     * @description Reports whether this device supports the WebVR API.
      */
-    VrManager.isSupported = !!navigator.getVRDisplays;
-
-    /**
-     * @static
-     * @name pc.VrManager.usesPolyfill
-     * @type Boolean
-     * @description Reports whether this device supports the WebVR API using a polyfill
-     */
-    VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
+    if (typeof navigator !== 'undefined') {
+        VrManager.isSupported = !!navigator.getVRDisplays;
+    } else {
+        VrManager.isSupported = false;
+    }
 
     Object.assign(VrManager.prototype, {
         _attach: function () {
@@ -98,18 +99,22 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.VrManager#destroy
-         * @description Remove events and clear up manager
+         * @description Remove events and clear up manager.
          */
         destroy: function () {
             this._detach();
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.VrManager#poll
-         * @description Called once per frame to poll all attached displays
+         * @description Called once per frame to poll all attached displays.
          */
         poll: function () {
             var l = this.displays.length;

@@ -16,23 +16,40 @@ Object.assign(pc, function () {
 
     var regexFrame = /^data\.frames\.(\d+)$/;
 
+    /**
+     * @class
+     * @name pc.TextureAtlasHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.TextureAtlas} resources.
+     * @param {pc.ResourceLoader} loader - The resource loader.
+     */
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
     Object.assign(TextureAtlasHandler.prototype, {
         // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
             var handler = this._loader.getHandler("texture");
 
             // if supplied with a json file url (probably engine-only)
             // load json data then load texture of same name
-            if (pc.path.getExtension(url) === '.json') {
-                pc.http.get(url, function (err, response) {
+            if (pc.path.getExtension(url.original) === '.json') {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     if (!err) {
                         // load texture
-                        var textureUrl = url.replace('.json', '.png');
+                        var textureUrl = url.original.replace('.json', '.png');
                         self._loader.load(textureUrl, "texture", function (err, texture) {
                             if (err) {
                                 callback(err);

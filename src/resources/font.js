@@ -1,43 +1,86 @@
 Object.assign(pc, function () {
     'use strict';
 
+    function upgradeDataSchema(data) {
+        // convert v1 and v2 to v3 font data schema
+        if (data.version < 3) {
+            if (data.version < 2) {
+                data.info.maps = data.info.maps || [{
+                    width: data.info.width,
+                    height: data.info.height
+                }];
+            }
+            data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
+                var existing = data.chars[key];
+                // key by letter instead of char code
+                var newKey = existing.letter !== undefined ? existing.letter : pc.string.fromCodePoint(key);
+                if (data.version < 2) {
+                    existing.map = existing.map || 0;
+                }
+                newChars[newKey] = existing;
+                return newChars;
+            }, {});
+            data.version = 3;
+        }
+        return data;
+    }
+
+    /**
+     * @class
+     * @name pc.FontHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Font} resources.
+     * @param {pc.ResourceLoader} loader - The resource loader.
+     */
     var FontHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
     Object.assign(FontHandler.prototype, {
         load: function (url, callback, asset) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
-            if (pc.path.getExtension(url) === '.json') {
+            if (pc.path.getExtension(url.original) === '.json') {
                 // load json data then load texture of same name
-                pc.http.get(url, function (err, response) {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
+                    // update asset data
+                    var data = upgradeDataSchema(response);
                     if (!err) {
-                        self._loadTextures(url.replace('.json', '.png'), response, function (err, textures) {
+                        self._loadTextures(url.original.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
                             callback(null, {
-                                data: response,
+                                data: data,
                                 textures: textures
                             });
                         });
                     } else {
-                        callback(pc.string.format("Error loading font resource: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading font resource: {0} [{1}]", url.original, err));
                     }
                 });
 
             } else {
-                this._loadTextures(url, asset && asset.data, callback);
+                // upgrade asset data
+                if (asset && asset.data) {
+                    asset.data = upgradeDataSchema(asset.data);
+                }
+                this._loadTextures(url.original, asset && asset.data, callback);
             }
         },
 
         _loadTextures: function (url, data, callback) {
-            var numTextures = 1;
+            var numTextures = data.info.maps.length;
             var numLoaded = 0;
             var error = null;
-
-            if (data && data.version >= 2) {
-                numTextures = data.info.maps.length;
-            }
 
             var textures = new Array(numTextures);
             var loader = this._loader;
@@ -92,6 +135,10 @@ Object.assign(pc, function () {
             } else if (!asset.data && font.data) {
                 // font data present in font but not in asset
                 asset.data = font.data;
+            }
+
+            if (asset.data) {
+                asset.data = upgradeDataSchema(asset.data);
             }
         }
     });

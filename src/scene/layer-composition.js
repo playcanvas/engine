@@ -1,23 +1,28 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.LayerComposition
+     * @augments pc.EventHandler
      * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
-     * @property {Array} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
-     * @property {Array} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
+     * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means only semi-transparent objects are rendered, and false means opaque.
-     * @property {Array} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means the layer is rendered, false means it's skipped.
-     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
+     * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. Inside
      * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
      */
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
+        pc.EventHandler.call(this);
+
         this.layerList = [];
         this.subLayerList = [];
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+        this._opaqueOrder = {};
+        this._transparentOrder = {};
 
         this._dirty = false;
         this._dirtyBlend = false;
@@ -39,9 +44,9 @@ Object.assign(pc, function () {
         // identical otherwise
         this._renderList = []; // index to layerList/subLayerList
         this._renderListCamera = []; // index to layer.cameras
-
-        pc.events.attach(this);
     };
+    LayerComposition.prototype = Object.create(pc.EventHandler.prototype);
+    LayerComposition.prototype.constructor = LayerComposition;
 
     LayerComposition.prototype._sortLights = function (target) {
         var light;
@@ -51,7 +56,7 @@ Object.assign(pc, function () {
         target._sortedLights[pc.LIGHTTYPE_SPOT].length = 0;
         for (var i = 0; i < lights.length; i++) {
             light = lights[i];
-            if (light._enabled) {
+            if (light.enabled) {
                 target._sortedLights[light._type].push(light);
             }
         }
@@ -109,11 +114,12 @@ Object.assign(pc, function () {
                     }
                 }
             }
-            // this._dirty = false;
+
             for (i = 0; i < len; i++) {
                 this.layerList[i]._dirty = false;
                 this.layerList[i]._version++;
             }
+            this._dirty = false;
         }
 
         if (this._dirtyBlend) {
@@ -153,10 +159,8 @@ Object.assign(pc, function () {
             this._dirtyBlend = false;
         }
 
-        this._dirty = false;
-
         var casters, lid, light;
-        if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
+        if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
@@ -180,9 +184,7 @@ Object.assign(pc, function () {
                     }
                 }
             }
-        }
 
-        if (this._dirtyLights) {
             this._sortLights(this);
             this._dirtyLights = false;
 
@@ -202,6 +204,14 @@ Object.assign(pc, function () {
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
                     var meshInstances = layer.shadowCasters;
+                    for (k = 0; k < casters.length;) {
+                        if (this._meshInstances.indexOf(casters[k]) < 0) {
+                            casters[k] = casters[casters.length - 1];
+                            casters.length -= 1;
+                        } else {
+                            k++;
+                        }
+                    }
                     for (k = 0; k < meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
@@ -350,15 +360,15 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#push
      * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.push = function (layer) {
         // add both opaque and transparent to the end of the array
         if (this._isLayerAdded(layer)) return;
         this.layerList.push(layer);
         this.layerList.push(layer);
-        this.subLayerList.push(false);
-        this.subLayerList.push(true);
+        this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
+        this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this.subLayerEnabled.push(true);
         this._dirty = true;
@@ -371,14 +381,18 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insert
      * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {Number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insert = function (layer, index) {
         // insert both opaque and transparent at the index
         if (this._isLayerAdded(layer)) return;
         this.layerList.splice(index, 0,    layer,  layer);
         this.subLayerList.splice(index, 0, false,  true);
+
+        var count = this.layerList.length;
+        this._updateOpaqueOrder(index, count - 1);
+        this._updateTransparentOrder(index, count - 1);
         this.subLayerEnabled.splice(index, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -390,11 +404,15 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#remove
      * @description Removes a layer (both opaque and semi-transparent parts) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.remove = function (layer) {
         // remove all occurences of a layer
         var id = this.layerList.indexOf(layer);
+
+        delete this._opaqueOrder[id];
+        delete this._transparentOrder[id];
+
         while (id >= 0) {
             this.layerList.splice(id, 1);
             this.subLayerList.splice(id, 1);
@@ -405,6 +423,11 @@ Object.assign(pc, function () {
             this._dirtyCameras = true;
             this.fire("remove", layer);
         }
+
+        // update both orders
+        var count = this.layerList.length;
+        this._updateOpaqueOrder(0, count - 1);
+        this._updateTransparentOrder(0, count - 1);
     };
 
     // Sublayer API
@@ -413,13 +436,13 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#pushOpaque
      * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.pushOpaque = function (layer) {
         // add opaque to the end of the array
         if (this._isSublayerAdded(layer, false)) return;
         this.layerList.push(layer);
-        this.subLayerList.push(false);
+        this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -431,14 +454,18 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insertOpaque
      * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {Number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insertOpaque = function (layer, index) {
         // insert opaque at index
         if (this._isSublayerAdded(layer, false)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, false);
+
+        var count = this.subLayerList.length;
+        this._updateOpaqueOrder(index, count - 1);
+
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -450,14 +477,18 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#removeOpaque
      * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.removeOpaque = function (layer) {
         // remove opaque occurences of a layer
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (var i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && !this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
+
+                len--;
+                this._updateOpaqueOrder(i, len - 1);
+
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -474,13 +505,13 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#pushTransparent
      * @description Adds part of the layer with semi-transparent objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.pushTransparent = function (layer) {
         // add transparent to the end of the array
         if (this._isSublayerAdded(layer, true)) return;
         this.layerList.push(layer);
-        this.subLayerList.push(true);
+        this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -492,14 +523,18 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insertTransparent
      * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {Number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insertTransparent = function (layer, index) {
         // insert transparent at index
         if (this._isSublayerAdded(layer, true)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, true);
+
+        var count = this.subLayerList.length;
+        this._updateTransparentOrder(index, count - 1);
+
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -511,14 +546,18 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#removeTransparent
      * @description Removes a transparent part of the layer from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.removeTransparent = function (layer) {
         // remove transparent occurences of a layer
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (var i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
+
+                len--;
+                this._updateTransparentOrder(i, len - 1);
+
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -550,8 +589,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getOpaqueIndex
      * @description Gets index of the opaque part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
-     * @returns {Number} The index of the opaque part of the specified layer.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
+     * @returns {number} The index of the opaque part of the specified layer.
      */
     LayerComposition.prototype.getOpaqueIndex = function (layer) {
         return this._getSublayerIndex(layer, false);
@@ -561,8 +600,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getTransparentIndex
      * @description Gets index of the semi-transparent part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
-     * @returns {Number} The index of the semi-transparent part of the specified layer.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
+     * @returns {number} The index of the semi-transparent part of the specified layer.
      */
     LayerComposition.prototype.getTransparentIndex = function (layer) {
         return this._getSublayerIndex(layer, true);
@@ -571,8 +610,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerById
-     * @description Finds a layer inside this composition by its ID. null is returned, if nothing is found.
-     * @param {Number} id An ID of the layer to find.
+     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     * @param {number} id - An ID of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerById = function (id) {
@@ -585,8 +624,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerByName
-     * @description Finds a layer inside this composition by its name. null is returned, if nothing is found.
-     * @param {String} name The name of the layer to find.
+     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     * @param {string} name - The name of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerByName = function (name) {
@@ -594,6 +633,87 @@ Object.assign(pc, function () {
             if (this.layerList[i].name === name) return this.layerList[i];
         }
         return null;
+    };
+
+    LayerComposition.prototype._updateOpaqueOrder = function (startIndex, endIndex) {
+        for (var i = startIndex; i <= endIndex; i++) {
+            if (this.subLayerList[i] === false) {
+                this._opaqueOrder[this.layerList[i].id] = i;
+            }
+        }
+    };
+
+    LayerComposition.prototype._updateTransparentOrder = function (startIndex, endIndex) {
+        for (var i = startIndex; i <= endIndex; i++) {
+            if (this.subLayerList[i] === true) {
+                this._transparentOrder[this.layerList[i].id] = i;
+            }
+        }
+    };
+
+    // Used to determine which array of layers has any sublayer that is
+    // on top of all the sublayers in the other array. The order is a dictionary
+    // of <layerId, index>.
+    LayerComposition.prototype._sortLayersDescending = function (layersA, layersB, order) {
+        var i = 0;
+        var len = 0;
+        var id = 0;
+        var topLayerA = -1;
+        var topLayerB = -1;
+
+        // search for which layer is on top in layersA
+        for (i = 0, len = layersA.length; i < len; i++) {
+            id = layersA[i];
+            if (order.hasOwnProperty(id)) {
+                topLayerA = Math.max(topLayerA, order[id]);
+            }
+        }
+
+        // search for which layer is on top in layersB
+        for (i = 0, len = layersB.length; i < len; i++) {
+            id = layersB[i];
+            if (order.hasOwnProperty(id)) {
+                topLayerB = Math.max(topLayerB, order[id]);
+            }
+        }
+
+        // if the layers of layersA or layersB do not exist at all
+        // in the composition then return early with the other.
+        if (topLayerA === -1 && topLayerB !== -1) {
+            return 1;
+        } else if (topLayerB === -1 && topLayerA !== -1) {
+            return -1;
+        }
+
+        // sort in descending order since we want
+        // the higher order to be first
+        return topLayerB - topLayerA;
+    };
+
+    /**
+     * @function
+     * @name pc.LayerComposition#sortTransparentLayers
+     * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
+     * @param {number[]} layersA - IDs of layers.
+     * @param {number[]} layersB - IDs of layers.
+     * @returns {number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
+     * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
+     */
+    LayerComposition.prototype.sortTransparentLayers = function (layersA, layersB) {
+        return this._sortLayersDescending(layersA, layersB, this._transparentOrder);
+    };
+
+    /**
+     * @function
+     * @name pc.LayerComposition#sortOpaqueLayers
+     * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
+     * @param {number[]} layersA - IDs of layers.
+     * @param {number[]} layersB - IDs of layers.
+     * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
+     * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     */
+    LayerComposition.prototype.sortOpaqueLayers = function (layersA, layersB) {
+        return this._sortLayersDescending(layersA, layersB, this._opaqueOrder);
     };
 
     return {

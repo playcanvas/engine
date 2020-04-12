@@ -2,12 +2,12 @@ describe("pc.Mat4", function () {
     function approx(actual, expected, message) {
         var epsilon = 0.00001;
         var delta = actual - expected;
-        ok( Math.abs(delta) < epsilon, message);
+        ok(Math.abs(delta) < epsilon, message);
     }
 
-    /** clip to 3 decimal places and convert to string for comparison **/
+    // clip to 3 decimal places and convert to string for comparison
     var clip = function (m) {
-        var i,l = m.length;
+        var i, l = m.length;
         var a = [];
         for (i = 0; i < l; i++) {
             a[i] = parseFloat(m[i].toFixed(3));
@@ -16,27 +16,27 @@ describe("pc.Mat4", function () {
         return a;
     };
 
-    it("create", function() {
+    it("create", function () {
         var m = new pc.Mat4();
         ok(m);
 
         // Check the matrix is identity
-        var identity = new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
-        for(var i=0 ; i<16; ++i) {
+        var identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        for (var i = 0; i < 16; ++i) {
             equal(m.data[i], identity[i]);
         }
     });
 
-    it("clone", function() {
-        var m = new pc.Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+    it("clone", function () {
+        var m = new pc.Mat4().set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
         var c = m.clone();
 
-        for(var i=0;i<16;++i) {
-           equal(m.data[i], c.data[i]);
+        for (var i = 0; i < 16; ++i) {
+            equal(m.data[i], c.data[i]);
         }
     });
 
-    it("mul2: I*I = I", function() {
+    it("mul2: I*I = I", function () {
         var m1 = new pc.Mat4();
         var m2 = new pc.Mat4();
         var m3 = new pc.Mat4();
@@ -46,7 +46,7 @@ describe("pc.Mat4", function () {
         deepEqual(m3.data, m4.data);
     });
 
-    it("mul2: I*A = A", function() {
+    it("mul2: I*A = A", function () {
         var m1 = new pc.Mat4();
         var m2 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180 / 8);
         var m3 = new pc.Mat4();
@@ -55,7 +55,7 @@ describe("pc.Mat4", function () {
         deepEqual(m2.data, m3.data);
     });
 
-    it("mul2: A*I = A", function() {
+    it("mul2: A*I = A", function () {
         var m1 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180 / 8);
         var m2 = new pc.Mat4();
         var m3 = new pc.Mat4();
@@ -64,7 +64,7 @@ describe("pc.Mat4", function () {
         deepEqual(m1.data, m3.data);
     });
 
-    it("transformPoint", function() {
+    it("transformPoint", function () {
         var t = new pc.Mat4();
         var v = new pc.Vec3(1, 0, 0);
         var r = new pc.Vec3();
@@ -77,7 +77,7 @@ describe("pc.Mat4", function () {
         expect(r.z).to.be.closeTo(0, 0.00001);
     });
 
-    it("transformPoint: src and result same", function() {
+    it("transformPoint: src and result same", function () {
         var t = new pc.Mat4();
         var v = new pc.Vec3(1, 0, 0);
 
@@ -89,10 +89,10 @@ describe("pc.Mat4", function () {
         expect(v.z).to.be.closeTo(0, 0.00001);
     });
 
-    it("setLookAt", function() {
+    it("setLookAt", function () {
         var position = new pc.Vec3(0, 0, 10);
-        var target   = new pc.Vec3(0, 0, 0);
-        var up       = new pc.Vec3(0, 1, 0);
+        var target = new pc.Vec3(0, 0, 0);
+        var up = new pc.Vec3(0, 1, 0);
 
         var lookAt = new pc.Mat4().setLookAt(position, target, up);
 
@@ -122,12 +122,12 @@ describe("pc.Mat4", function () {
         m.setFromAxisAngle(pc.Vec3.UP, 90);
         var r = new pc.Mat4();
         var heading = new pc.Vec3(-m.data[8], -m.data[9], -m.data[10]);
-        var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
-        var up      = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
+        var left = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
+        var up = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
 
         r.setLookAt(new pc.Vec3(), heading, up);
 
-        for(var index = 0; index < 16; index++) {
+        for (var index = 0; index < 16; index++) {
             equal(r.data[index], m.data[index]);
         }
     });
@@ -137,17 +137,17 @@ describe("pc.Mat4", function () {
         m.setFromAxisAngle(pc.Vec3.UP, 90);
         var r = new pc.Mat4();
         var heading = new pc.Vec3(-m.data[8], -m.data[9], -m.data[10]);
-        var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
-        var up      = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
+        var left = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
+        var up = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
 
         r.setLookAt(new pc.Vec3(), heading, up);
 
-        for(var index = 0; index < 16; index++) {
+        for (var index = 0; index < 16; index++) {
             equal(r.data[index], m.data[index]);
         }
     });
 
-    it("setTranslate", function() {
+    it("setTranslate", function () {
         var x = 10;
         var y = 20;
         var z = 30;
@@ -167,7 +167,7 @@ describe("pc.Mat4", function () {
     });
 
 
-    it("transpose", function() {
+    it("transpose", function () {
         var x = 10;
         var y = 20;
         var z = 30;
@@ -179,7 +179,7 @@ describe("pc.Mat4", function () {
         deepEqual(m.data, mTransTrans.data);
     });
 
-    it("invert", function() {
+    it("invert", function () {
         var x = 10;
         var y = 20;
         var z = 30;
@@ -193,7 +193,7 @@ describe("pc.Mat4", function () {
     });
 
     it("getX", function () {
-        var m = new pc.Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+        var m = new pc.Mat4().set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
         var v1 = m.getX();
 
         equal(v1.x, 1);
@@ -210,7 +210,7 @@ describe("pc.Mat4", function () {
     });
 
     it("getY", function () {
-        var m = new pc.Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+        var m = new pc.Mat4().set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
         var v1 = m.getY();
 
         equal(v1.x, 5);
@@ -227,7 +227,7 @@ describe("pc.Mat4", function () {
     });
 
     it("getZ", function () {
-        var m = new pc.Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+        var m = new pc.Mat4().set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
         var v1 = m.getZ();
 
         equal(v1.x, 9);
@@ -243,8 +243,8 @@ describe("pc.Mat4", function () {
         equal(v2.z, 11);
     });
 
-    it("getTranslation", function() {
-        var m = new pc.Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+    it("getTranslation", function () {
+        var m = new pc.Mat4().set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
         var v1 = m.getTranslation();
 
         equal(v1.x, 13);
@@ -260,8 +260,8 @@ describe("pc.Mat4", function () {
         equal(v2.z, 15);
     });
 
-    it("getScale", function() {
-        var m = new pc.Mat4(2,0,0,1,0,3,0,1,0,0,4,1,0,0,0,1);
+    it("getScale", function () {
+        var m = new pc.Mat4().set([2, 0, 0, 1, 0, 3, 0, 1, 0, 0, 4, 1, 0, 0, 0, 1]);
         var v1 = m.getScale();
 
         equal(v1.x, 2);
@@ -281,38 +281,38 @@ describe("pc.Mat4", function () {
     it("getEulerAngles", function () {
         var m, e;
 
-        m = new pc.Mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
+        m = new pc.Mat4().set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         e = new pc.Vec3();
         m.getEulerAngles(e);
         equal(e.x, 0);
         equal(e.y, 0);
         equal(e.z, 0);
 
-        m = new pc.Mat4(1,0,0,0, 0,0,1,0, 0,-1,0,0, 0,0,0,1);
+        m = new pc.Mat4().set([1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1]);
         m.getEulerAngles(e);
         approx(e.x, 90, e.x.toString() + " ~= " + 90);
         equal(e.y, 0);
         equal(e.z, 0);
 
-        m = new pc.Mat4(1,0,0,0 ,0,1,0,0, 0,0,1,0, 0,0,0,1);
+        m = new pc.Mat4().set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         m.getEulerAngles(e);
         equal(e.x, 0);
         equal(e.y, 0);
         equal(e.z, 0);
 
-        m = new pc.Mat4(0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0,0,0,0,1);
+        m = new pc.Mat4().set([0.7071067811865476, 0, 0.7071067811865476, 0, 0, 1, 0, 0, -0.7071067811865476, 0, 0.7071067811865476, 0, 0, 0, 0, 1]);
         m.getEulerAngles(e);
         equal(e.x, 0);
         approx(e.y, -45, e.y.toString() + " ~= " + -45);
         equal(e.z, 0);
 
-        m = new pc.Mat4(1,0,0,0, 0,0.7071067811865476,-0.7071067811865476,0, 0,0.7071067811865476,0.7071067811865476,0, 0,0,0,1);
+        m = new pc.Mat4().set([1, 0, 0, 0, 0, 0.7071067811865476, -0.7071067811865476, 0, 0, 0.7071067811865476, 0.7071067811865476, 0, 0, 0, 0, 1]);
         m.getEulerAngles(e);
         approx(e.x, -45, e.x.toString() + " ~= " + -45);
         equal(e.y, 0);
         equal(e.z, 0);
 
-        m = new pc.Mat4(0.7071067811865476,-0.7071067811865476,0,0, 0.7071067811865476,0.7071067811865476,0,0, 0,0,1,0, 0,0,0,1);
+        m = new pc.Mat4().set([0.7071067811865476, -0.7071067811865476, 0, 0, 0.7071067811865476, 0.7071067811865476, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         m.getEulerAngles(e);
         equal(e.x, 0);
         equal(e.y, 0);
@@ -322,31 +322,29 @@ describe("pc.Mat4", function () {
     it("setFromEulerAngles", function () {
         var m, mr, mrx, mry, mrz, x, y, z;
 
-
-
         // no rotation -> identity
         x = y = z = 0;
-        m = new pc.Mat4().setFromEulerAngles(x,y,z);
-        deepEqual(clip(m.data), [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+        m = new pc.Mat4().setFromEulerAngles(x, y, z);
+        deepEqual(clip(m.data), [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
         // Rotate 45 around y
         y = 45;
         x = z = 0;
-        m = new pc.Mat4().setFromEulerAngles(x,y,z);
+        m = new pc.Mat4().setFromEulerAngles(x, y, z);
         var m1 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, y);
-        deepEqual(clip(m.data), [0.707,0,-0.707,0,0,1,0,0,0.707,0,0.707,0, 0,0,0,1]);
+        deepEqual(clip(m.data), [0.707, 0, -0.707, 0, 0, 1, 0, 0, 0.707, 0, 0.707, 0, 0, 0, 0, 1]);
 
         // Rotate 45 around x
         x = 45;
         y = z = 0;
-        m = new pc.Mat4().setFromEulerAngles(x,y,z);
-        deepEqual(clip(m.data), [1,0,0,0, 0,0.707,0.707,0, 0,-0.707,0.707,0, 0,0,0,1]);
+        m = new pc.Mat4().setFromEulerAngles(x, y, z);
+        deepEqual(clip(m.data), [1, 0, 0, 0, 0, 0.707, 0.707, 0, 0, -0.707, 0.707, 0, 0, 0, 0, 1]);
 
         // Rotate 45 around z
         z = 45;
         y = x = 0;
-        m = new pc.Mat4().setFromEulerAngles(x,y,z);
-        deepEqual(clip(m.data), [0.707,0.707,0,0, -0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
+        m = new pc.Mat4().setFromEulerAngles(x, y, z);
+        deepEqual(clip(m.data), [0.707, 0.707, 0, 0, -0.707, 0.707, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
         // Arbitrary rotation
         x = 33;
@@ -363,17 +361,17 @@ describe("pc.Mat4", function () {
 
     it("fromEuler and back", function () {
 
-        var m1 = new pc.Mat4(0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0, 0,0,0,1);
+        var m1 = new pc.Mat4().set([0.7071067811865476, 0, 0.7071067811865476, 0, 0, 1, 0, 0, -0.7071067811865476, 0, 0.7071067811865476, 0, 0, 0, 0, 1]);
         var m2;
 
         var r = new pc.Vec3();
         m1.getEulerAngles(r);
         m2 = new pc.Mat4().setFromEulerAngles(r.x, r.y, r.z);
 
-        deepEqual(clip(m1.data),clip(m2.data));
+        deepEqual(clip(m1.data), clip(m2.data));
     });
 
-    it("setTRS", function() {
+    it("setTRS", function () {
 
         var tx = 10;
         var ty = 20;
@@ -390,7 +388,8 @@ describe("pc.Mat4", function () {
         var temp = new pc.Mat4().mul2(mt, mr);
         var m2 = new pc.Mat4().mul2(temp, ms);
 
-        for (var i = 0; i < m1.length; i++) {
+        var i;
+        for (i = 0; i < m1.length; i++) {
             close(m1.data[i], m2.data[i], 0.0001);
         }
 
@@ -400,27 +399,20 @@ describe("pc.Mat4", function () {
         m1 = new pc.Mat4().setTRS(t, r, s);
         m2 = [0, 0, -2, 0, 0, 3, 0, 0, 4, 0, 0, 0, 10, 20, 30, 1];
 
-        for (var i = 0; i < m1.length; i++) {
+        for (i = 0; i < m1.length; i++) {
             expect(m1.data[i]).to.equal(m2.data[i]);
         }
     });
 
+    // it("makeRotate", function() {
+    //     ok(false, "Not written");
+    // });
 
-    /*
+    // it("makeFrustum", function() {
+    //     ok(false, "Not written")
+    // });
 
-    it("makeRotate", function() {
-        ok(false, "Not written");
-    });
-
-    it("makeFrustum", function() {
-        ok(false, "Not written")
-    });
-
-    it("makePerspective", function() {
-        ok(false, "Not written");
-    });
-
-    */
-
+    // it("makePerspective", function() {
+    //     ok(false, "Not written");
+    // });
 });
-

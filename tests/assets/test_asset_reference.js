@@ -15,6 +15,11 @@ describe('pc.AssetReference', function () {
         this.add = sinon.fake();
     });
 
+    afterEach(function () {
+        this.app.destroy();
+        sinon.restore();
+    });
+
     it('pc.AssetReference, load callback', function (done) {
         var reg = new pc.AssetReference('propName', this.parent, this.app.assets, {
             load: this.load

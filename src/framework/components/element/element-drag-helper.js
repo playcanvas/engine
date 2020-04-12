@@ -14,13 +14,17 @@ Object.assign(pc, function () {
 
     /**
      * @component
+     * @class
      * @name pc.ElementDragHelper
-     * @description Create a new ElementDragHelper
+     * @augments pc.EventHandler
+     * @description Create a new ElementDragHelper.
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
-     * @param {pc.ElementComponent} element The Element that should become draggable.
-     * @param {String} [axis] Optional axis to constrain to, either 'x', 'y' or null.
+     * @param {pc.ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
      */
     var ElementDragHelper = function ElementDragHelper(element, axis) {
+        pc.EventHandler.call(this);
+
         if (!element || !(element instanceof pc.ElementComponent)) {
             throw new Error('Element was null or not an ElementComponent');
         }
@@ -40,10 +44,10 @@ Object.assign(pc, function () {
         this._deltaHandlePosition = new pc.Vec3();
         this._isDragging = false;
 
-        pc.events.attach(this);
-
         this._toggleLifecycleListeners('on');
     };
+    ElementDragHelper.prototype = Object.create(pc.EventHandler.prototype);
+    ElementDragHelper.prototype.constructor = ElementDragHelper;
 
     Object.assign(ElementDragHelper.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {
@@ -67,10 +71,12 @@ Object.assign(pc, function () {
             // Note that we handle release events directly on the window object, rather than
             // on app.mouse or app.touch. This is in order to correctly handle cases where the
             // user releases the mouse/touch outside of the window.
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            if (this._app.mouse) {
+                this._app.mouse[onOrOff]('mousemove', this._onMove, this);
+                window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            }
 
-            if ('ontouchstart' in window) {
+            if (pc.platform.touch) {
                 this._app.touch[onOrOff]('touchmove', this._onMove, this);
                 window[addOrRemoveEventListener]('touchend', this._handleMouseUpOrTouchEnd, false);
                 window[addOrRemoveEventListener]('touchcancel', this._handleMouseUpOrTouchEnd, false);
@@ -132,12 +138,14 @@ Object.assign(pc, function () {
         },
 
         _determineInputPosition: function (event) {
+            var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+
             if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
-                _inputScreenPosition.x = event.x;
-                _inputScreenPosition.y = event.y;
+                _inputScreenPosition.x = event.x * devicePixelRatio;
+                _inputScreenPosition.y = event.y * devicePixelRatio;
             } else if (event.changedTouches) {
-                _inputScreenPosition.x = event.changedTouches[0].x;
-                _inputScreenPosition.y = event.changedTouches[0].y;
+                _inputScreenPosition.x = event.changedTouches[0].x * devicePixelRatio;
+                _inputScreenPosition.y = event.changedTouches[0].y * devicePixelRatio;
             } else {
                 console.warn('Could not determine position from input event');
             }
@@ -172,9 +180,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            dragScale.data[0] = 1 / dragScale.data[0];
-            dragScale.data[1] = 1 / dragScale.data[1];
-            dragScale.data[2] = 1 / dragScale.data[2];
+            dragScale.x = 1 / dragScale.x;
+            dragScale.y = 1 / dragScale.y;
+            dragScale.z = 1 / dragScale.z;
         },
 
         _onMove: function (event) {
@@ -240,5 +248,5 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ElementDragHelper#drag:move
  * @description Fired whenever the position of the dragged element changes.
- * @param {pc.Vec3} value The current position.
+ * @param {pc.Vec3} value - The current position.
  */

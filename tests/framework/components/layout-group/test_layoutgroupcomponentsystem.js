@@ -7,9 +7,9 @@ describe("pc.LayoutGroupComponentSystem", function () {
         app = new pc.Application(document.createElement("canvas"));
         system = app.systems.layoutgroup;
 
-        entity0 = buildLayoutGroupEntity();
-        entity0_0 = buildLayoutGroupEntity();
-        entity0_0_0 = buildLayoutGroupEntity();
+        entity0 = buildLayoutGroupEntity("0");
+        entity0_0 = buildLayoutGroupEntity("0_0");
+        entity0_0_0 = buildLayoutGroupEntity("0_0_0");
 
         app.root.addChild(entity0);
         entity0.addChild(entity0_0);
@@ -27,8 +27,8 @@ describe("pc.LayoutGroupComponentSystem", function () {
         app.destroy();
     });
 
-    var buildLayoutGroupEntity = function () {
-        var entity = new pc.Entity("myEntity", app);
+    var buildLayoutGroupEntity = function (name) {
+        var entity = new pc.Entity("myEntity" + name, app);
 
         app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_GROUP });
         app.systems.layoutgroup.addComponent(entity);

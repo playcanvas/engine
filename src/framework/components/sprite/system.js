@@ -4,19 +4,17 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @private
-     * @constructor
+     * @class
      * @name pc.SpriteComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.SpriteComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var SpriteComponentSystem = function SpriteComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'sprite';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.SpriteComponent;
         this.DataType = pc.SpriteComponentData;
@@ -32,6 +30,7 @@ Object.assign(pc, function () {
         pixelData[2] = 255.0;
         pixelData[3] = 255.0;
         pixels.set(pixelData);
+        this._defaultTexture.name = 'sprite';
         this._defaultTexture.unlock();
 
         // default material used by sprites
@@ -64,7 +63,7 @@ Object.assign(pc, function () {
         this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
         this.default9SlicedMaterialTiledMode.update();
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
     SpriteComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -73,6 +72,11 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
     Object.assign(SpriteComponentSystem.prototype, {
+        destroy: function () {
+            this._defaultTexture.destroy();
+            this._defaultTexture = null;
+        },
+
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;
@@ -90,12 +94,15 @@ Object.assign(pc, function () {
 
             if (data.color !== undefined) {
                 if (data.color instanceof pc.Color) {
-                    component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
+                    component.color.set(data.color.r, data.color.g, data.color.b, data.opacity !== undefined ? data.opacity : 1);
                 } else {
                     component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.color = component.color;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.opacity !== undefined) {

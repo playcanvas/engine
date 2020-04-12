@@ -24,8 +24,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
-
             // if the scripts of the component have been loaded
             // then call the appropriate methods on the component
             if (this.data.areScriptsLoaded && !this.system.preloading) {
@@ -42,7 +40,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this.system._disableScriptComponent(this);
         },
 

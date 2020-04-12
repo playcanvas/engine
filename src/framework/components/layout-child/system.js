@@ -2,19 +2,18 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @private
+     * @class
      * @name pc.LayoutChildComponentSystem
-     * @description Create a new LayoutChildComponentSystem
+     * @augments pc.ComponentSystem
+     * @description Create a new LayoutChildComponentSystem.
      * @classdesc Manages creation of {@link pc.LayoutChildComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'layoutchild';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.LayoutChildComponent;
         this.DataType = pc.LayoutChildComponentData;

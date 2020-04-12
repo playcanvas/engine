@@ -1,6 +1,6 @@
 /**
  * @private
- * @constructor
+ * @class
  */
 pc.AudioSourceComponentData = function AudioSourceComponentData() {
     // serialized

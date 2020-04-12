@@ -3,6 +3,10 @@ Object.assign(pc, function () {
 
     // checks if user is running IE
     var ie = (function () {
+        if (typeof window === 'undefined') {
+            // Node.js => return false
+            return false;
+        }
         var ua = window.navigator.userAgent;
 
         var msie = ua.indexOf('MSIE ');
@@ -21,8 +25,16 @@ Object.assign(pc, function () {
         return false;
     })();
 
+    /**
+     * @class
+     * @name pc.AudioHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Sound} resources.
+     * @param {pc.SoundManager} manager - The sound manager.
+     */
     var AudioHandler = function (manager) {
         this.manager = manager;
+        this.retryRequests = false;
     };
 
     Object.assign(AudioHandler.prototype, {
@@ -46,23 +58,33 @@ Object.assign(pc, function () {
         },
 
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var success = function (resource) {
                 callback(null, new pc.Sound(resource));
             };
 
-            var error = function (msg) {
-                msg = msg || 'Error loading audio url: ' + url;
+            var error = function (err) {
+                var msg = 'Error loading audio url: ' + url.original;
+                if (err) {
+                    msg += ': ' + (err.message || err);
+                }
                 console.warn(msg);
                 callback(msg);
             };
 
             if (this._createSound) {
-                if (!this._isSupported(url)) {
-                    error(pc.string.format('Audio format for {0} not supported', url));
+                if (!this._isSupported(url.original)) {
+                    error(pc.string.format('Audio format for {0} not supported', url.original));
                     return;
                 }
 
-                this._createSound(url, success, error);
+                this._createSound(url.load, success, error);
             } else {
                 error(null);
             }
@@ -78,11 +100,11 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SoundHandler._createSound
-         * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively
-         * @param {String} url The url of the audio asset
-         * @param {Function} success Function to be called if the audio asset was loaded or if we
+         * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
+         * @param {string} url - The url of the audio asset.
+         * @param {Function} success - Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param {Function} error Function to be called if there was an error while loading the audio asset
+         * @param {Function} error - Function to be called if there was an error while loading the audio asset.
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var manager = this.manager;
@@ -92,7 +114,16 @@ Object.assign(pc, function () {
                 return;
             }
 
-            pc.http.get(url, function (err, response) {
+            // if this is a blob URL we need to set the response type to arraybuffer
+            var options = {
+                retry: this.retryRequests
+            };
+
+            if (url.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+            }
+
+            pc.http.get(url, options, function (err, response) {
                 if (err) {
                     error(err);
                     return;
@@ -107,11 +138,11 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SoundHandler._createSound
-         * @description Loads an audio asset using an Audio element by URL and calls success or error with the created resource or error respectively
-         * @param {String} url The url of the audio asset
-         * @param {Function} success Function to be called if the audio asset was loaded or if we
+         * @description Loads an audio asset using an Audio element by URL and calls success or error with the created resource or error respectively.
+         * @param {string} url - The url of the audio asset.
+         * @param {Function} success - Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param {Function} error Function to be called if there was an error while loading the audio asset
+         * @param {Function} error - Function to be called if there was an error while loading the audio asset.
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var audio = null;
