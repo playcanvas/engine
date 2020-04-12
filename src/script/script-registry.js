@@ -41,35 +41,36 @@ Object.assign(pc, function () {
     /* eslint-enable jsdoc/no-undefined-types */
     ScriptRegistry.prototype.add = function (script) {
         var self = this;
+        var scriptName = script.__name;
 
-        if (this._scripts.hasOwnProperty(script.__name)) {
+        if (this._scripts.hasOwnProperty(scriptName)) {
             setTimeout(function () {
                 if (script.prototype.swap) {
                     // swapping
-                    var old = self._scripts[script.__name];
+                    var old = self._scripts[scriptName];
                     var ind = self._list.indexOf(old);
                     self._list[ind] = script;
-                    self._scripts[script.__name] = script;
+                    self._scripts[scriptName] = script;
 
-                    self.fire('swap', script.__name, script);
-                    self.fire('swap:' + script.__name, script);
+                    self.fire('swap', scriptName, script);
+                    self.fire('swap:' + scriptName, script);
                 } else {
-                    console.warn('script registry already has \'' + script.__name + '\' script, define \'swap\' method for new script type to enable code hot swapping');
+                    console.warn('script registry already has \'' + scriptName + '\' script, define \'swap\' method for new script type to enable code hot swapping');
                 }
             });
             return false;
         }
 
-        this._scripts[script.__name] = script;
+        this._scripts[scriptName] = script;
         this._list.push(script);
 
-        this.fire('add', script.__name, script);
-        this.fire('add:' + script.__name, script);
+        this.fire('add', scriptName, script);
+        this.fire('add:' + scriptName, script);
 
         // for all components awaiting Script Type
         // create script instance
         setTimeout(function () {
-            if (!self._scripts.hasOwnProperty(script.__name))
+            if (!self._scripts.hasOwnProperty(scriptName))
                 return;
 
 
@@ -88,13 +89,13 @@ Object.assign(pc, function () {
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
                 var component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (component._scriptsIndex[script.__name] && component._scriptsIndex[script.__name].awaiting) {
-                    if (component._scriptsData && component._scriptsData[script.__name])
-                        attributes = component._scriptsData[script.__name].attributes;
+                if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
+                    if (component._scriptsData && component._scriptsData[scriptName])
+                        attributes = component._scriptsData[scriptName].attributes;
 
-                    scriptInstance = component.create(script.__name, {
+                    scriptInstance = component.create(scriptName, {
                         preloading: true,
-                        ind: component._scriptsIndex[script.__name].ind,
+                        ind: component._scriptsIndex[scriptName].ind,
                         attributes: attributes
                     });
 
@@ -135,30 +136,36 @@ Object.assign(pc, function () {
         return true;
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#remove
      * @description Remove {@link pc.ScriptType}.
-     * @param {string} name - Name of a {@link pc.ScriptType} to remove.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
      */
-    ScriptRegistry.prototype.remove = function (name) {
-        if (typeof name === 'function')
-            name = name.__name;
+    /* eslint-enable jsdoc/no-undefined-types */
+    ScriptRegistry.prototype.remove = function (nameOrType) {
+        var scriptType = nameOrType;
+        var scriptName = nameOrType;
 
-        if (!this._scripts.hasOwnProperty(name))
+        if (typeof scriptName !== 'string') {
+            scriptName = scriptType.__name;
+        } else {
+            scriptType = this.get(scriptName);
+        }
+
+        if (this.get(scriptName) !== scriptType)
             return false;
 
-        var item = this._scripts[name];
-        delete this._scripts[name];
-
-        var ind = this._list.indexOf(item);
+        delete this._scripts[scriptName];
+        var ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
-        this.fire('remove', name, item);
-        this.fire('remove:' + name, item);
+        this.fire('remove', scriptName, scriptType);
+        this.fire('remove:' + scriptName, scriptType);
 
         return true;
     };
@@ -178,19 +185,26 @@ Object.assign(pc, function () {
         return this._scripts[name] || null;
     };
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
      * @name pc.ScriptRegistry#has
      * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
-     * @param {string} name - Name of a {@link pc.ScriptType}.
+     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if {@link pc.ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
      * }
      */
-    ScriptRegistry.prototype.has = function (name) {
-        return this._scripts.hasOwnProperty(name);
+    /* eslint-enable jsdoc/no-undefined-types */
+    ScriptRegistry.prototype.has = function (nameOrType) {
+        if (typeof nameOrType === 'string') {
+            return this._scripts.hasOwnProperty(nameOrType);
+        }
+
+        var scriptName = scriptType.__name;
+        return this._scripts[scriptName] == scriptType;
     };
 
     /* eslint-disable jsdoc/no-undefined-types */
