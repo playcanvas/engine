@@ -56,7 +56,8 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "falling-shapes",
+            "raycast"
         ]
     }, {
         name: "sound",
