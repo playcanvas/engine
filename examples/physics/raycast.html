@@ -28,7 +28,6 @@
     }
 
     function demo() {
-        // ***********    Initialize application   *******************
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
@@ -63,8 +62,8 @@
             type: "directional"
         });
 
-        light.setLocalEulerAngles(45, 30, 0);
         app.root.addChild(light);
+        light.setEulerAngles(45, 30, 0);
 
         // Create camera
         var camera = new pc.Entity();
@@ -73,7 +72,7 @@
         });
 
         app.root.addChild(camera);
-        camera.translate(5, 0, 15);
+        camera.setPosition(5, 0, 15);
 
         function createPhysicalShape(type, material, x, y, z) {
             var e = new pc.Entity();
@@ -95,6 +94,7 @@
             return e;
         }
 
+        // Create two rows of physical geometric shapes
         var types = [ 'box', 'capsule', 'cone', 'cylinder', 'sphere' ];
         types.forEach(function (type, idx) {
             createPhysicalShape(type, green, idx * 2 + 1, 2, 0);
