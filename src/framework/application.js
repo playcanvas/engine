@@ -566,6 +566,9 @@ Object.assign(pc, function () {
         this.vr = null;
         this.xr = new pc.XrManager(this);
 
+        if (this.elementInput)
+            this.elementInput.attachSelectEvents();
+
         this._inTools = false;
 
         this._skyboxLast = 0;

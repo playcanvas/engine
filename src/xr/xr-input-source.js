@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     var quat = new pc.Quat();
+    var ids = 0;
 
 
     var targetRayModes = {
@@ -62,6 +63,7 @@ Object.assign(pc, function () {
      * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
      * @param {pc.XrManager} manager - WebXR Manager.
      * @param {object} xrInputSource - XRInputSource object that is created by WebXR API.
+     * @property {number} id Unique number associated with instance of input source. Same physical devices when reconnected will not share this ID.
      * @property {object} inputSource XRInputSource object that is associated with this input source.
      * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
      *
@@ -82,10 +84,13 @@ Object.assign(pc, function () {
      * @property {pc.Quat|null} rotation If {@link pc.XrInputSource#grip} is true, then rotation will represent rotation of handheld input source in local space of XR session.
      * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
      * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
+     * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
      * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
      */
     var XrInputSource = function (manager, xrInputSource) {
         pc.EventHandler.call(this);
+
+        this._id = ++ids;
 
         this._manager = manager;
         this._xrInputSource = xrInputSource;
@@ -95,6 +100,8 @@ Object.assign(pc, function () {
         this._position = null;
         this._rotation = null;
         this._selecting = false;
+
+        this._elementInput = true;
 
         this._hitTestSources = [];
     };
@@ -269,6 +276,12 @@ Object.assign(pc, function () {
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     };
 
+    Object.defineProperty(XrInputSource.prototype, 'id', {
+        get: function () {
+            return this._id;
+        }
+    });
+
     Object.defineProperty(XrInputSource.prototype, 'inputSource', {
         get: function () {
             return this._xrInputSource;
@@ -326,6 +339,18 @@ Object.assign(pc, function () {
     Object.defineProperty(XrInputSource.prototype, 'selecting', {
         get: function () {
             return this._selecting;
+        }
+    });
+
+    Object.defineProperty(XrInputSource.prototype, 'elementInput', {
+        get: function () {
+            return this._elementInput;
+        },
+        set: function (value) {
+            if (this._elementInput === value)
+                return;
+
+            this._elementInput = value;
         }
     });
 
