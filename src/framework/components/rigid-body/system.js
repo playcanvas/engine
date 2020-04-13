@@ -330,6 +330,12 @@ Object.assign(pc, function () {
          * @returns {pc.RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
          */
         raycastAll: function (start, end) {
+            // #ifdef DEBUG
+            if (!Ammo.AllHitsRayResultCallback) {
+                console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
+            }
+            // #endif
+
             var results = [];
 
             ammoRayStart.setValue(start.x, start.y, start.z);

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Raycasting</title>
+    <title>PlayCanvas Raycast</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -103,9 +103,11 @@
             createPhysicalShape(type, green, idx * 2 + 1, -2, 0);
         });
 
+        // Allocate some colors
         var white = new pc.Color(1, 1, 1);
         var blue = new pc.Color(0, 0, 1);
 
+        // Allocate some vectors
         var start = new pc.Vec3();
         var end = new pc.Vec3();
         var temp = new pc.Vec3();
@@ -124,12 +126,14 @@
             start.set(0, y, 0);
             end.set(10, y, 0);
 
+            // Render the ray used in the raycast
             app.renderLine(start, end, white);
 
             var result = app.systems.rigidbody.raycastFirst(start, end);
             if (result) {
                 result.entity.model.material = red;
 
+                // Render the normal on the surface from the hit point
                 temp.copy(result.normal).scale(0.3).add(result.point);
                 app.renderLine(result.point, temp, blue);
             }
@@ -138,12 +142,14 @@
             start.set(0, y, 0);
             end.set(10, y, 0);
 
+            // Render the ray used in the raycast
             app.renderLine(start, end, white);
 
             var results = app.systems.rigidbody.raycastAll(start, end);
             results.forEach(function (result) {
                 result.entity.model.material = red;
 
+                // Render the normal on the surface from the hit point
                 temp.copy(result.normal).scale(0.3).add(result.point);
                 app.renderLine(result.point, temp, blue);
             }, this);
