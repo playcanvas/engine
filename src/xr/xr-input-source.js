@@ -95,10 +95,8 @@ Object.assign(pc, function () {
         this._worldTransform = null;
         this._position = new pc.Vec3();
         this._rotation = new pc.Quat();
-        this._eulerAngles = null;
         this._localPosition = null;
         this._localRotation = null;
-        this._localEulerAngles = null;
         this._dirtyLocal = true;
 
         this._selecting = false;
@@ -197,11 +195,8 @@ Object.assign(pc, function () {
                     this._localTransform = new pc.Mat4();
                     this._worldTransform = new pc.Mat4();
 
-                    this._eulerAngles = new pc.Vec3();
-
                     this._localPosition = new pc.Vec3();
                     this._localRotation = new pc.Quat();
-                    this._localEulerAngles = new pc.Vec3();
                 }
                 this._dirtyLocal = true;
                 this._localPosition.copy(gripPose.transform.position);
@@ -315,34 +310,6 @@ Object.assign(pc, function () {
      */
     XrInputSource.prototype.getLocalRotation = function () {
         return this._localRotation;
-    };
-
-    /**
-     * @function
-     * @name pc.XrInputSource#getEulerAngles
-     * @description Get the world space rotation in euler angles of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
-     * @returns {pc.Vec3|null} The world space rotation in euler angles of handheld input source.
-     */
-    XrInputSource.prototype.getEulerAngles = function() {
-        if (! this._eulerAngles) return null;
-
-        this._updateTransforms()
-        this._worldTransform.getEulerAngles(this._eulerAngles);
-
-        return this._eulerAngles;
-    };
-
-    /**
-     * @function
-     * @name pc.XrInputSource#getLocalEulerAngles
-     * @description Get the local space rotation in euler angles of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
-     * @returns {pc.Vec3|null} The world space rotation in euler angles of handheld input source.
-     */
-    XrInputSource.prototype.getLocalEulerAngles = function() {
-        if (! this._localEulerAngles) return null;
-
-        this._localRotation.getEulerAngles(this._localEulerAngles);
-        return this._localEulerAngles;
     };
 
     /**
