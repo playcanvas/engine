@@ -163,8 +163,8 @@
                         if (inputSource.grip) {
                             // some controllers can be gripped
                             controllers[i].enabled = true;
-                            controllers[i].setPosition(inputSource.position);
-                            controllers[i].setRotation(inputSource.rotation);
+                            controllers[i].setLocalPosition(inputSource.getLocalPosition());
+                            controllers[i].setLocalRotation(inputSource.getLocalRotation());
                         } else {
                             // some controllers cannot be gripped
                             controllers[i].enabled = false;
