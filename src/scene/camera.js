@@ -213,7 +213,7 @@ Object.assign(pc, function () {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
-                    this._projMatSkybox.setPerspective(90, this._aspect, this._nearClip, this._farClip);
+                    this._projMatSkybox.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 }
 
                 var n = this._nearClip;
