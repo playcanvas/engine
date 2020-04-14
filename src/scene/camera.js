@@ -26,6 +26,7 @@ Object.assign(pc, function () {
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
+        this._projMatSkybox = new pc.Mat4();    // projection matrix used by skybox rendering shader is always perspective
         this._viewMatDirty = true;
         this._viewMat = new pc.Mat4();
         this._viewProjMatDirty = true;
@@ -203,21 +204,16 @@ Object.assign(pc, function () {
             return this._clearOptions;
         },
 
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getProjectionMatrix
-         * @description Retrieves the projection matrix for the specified camera.
-         * @returns {pc.Mat4} The camera's projection matrix.
-         */
-        getProjectionMatrix: function () {
+        _evaluateProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                     this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._horizontalFov);
+                    this._projMatSkybox.copy(this._projMat);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
+                    this._projMatSkybox.setPerspective(90, this._aspect, this._nearClip, this._farClip);
                 }
 
                 var n = this._nearClip;
@@ -229,7 +225,23 @@ Object.assign(pc, function () {
 
                 this._projMatDirty = false;
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Camera#getProjectionMatrix
+         * @description Retrieves the projection matrix for the specified camera.
+         * @returns {pc.Mat4} The camera's projection matrix.
+         */
+        getProjectionMatrix: function () {
+            this._evaluateProjectionMatrix();
             return this._projMat;
+        },
+
+        getProjectionMatrixSkybox: function () {
+            this._evaluateProjectionMatrix();
+            return this._projMatSkybox;
         },
 
         /**
