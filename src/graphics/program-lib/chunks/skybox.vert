@@ -5,7 +5,7 @@ attribute vec3 aPosition;
 uniform mat4 matrix_view;
 #endif
 
-uniform mat4 matrix_projection_skybox;
+uniform mat4 matrix_projectionSkybox;
 
 varying vec3 vViewDir;
 
@@ -13,7 +13,7 @@ void main(void)
 {
     mat4 view = matrix_view;
     view[3][0] = view[3][1] = view[3][2] = 0.0;
-    gl_Position = matrix_projection_skybox * view * vec4(aPosition, 1.0);
+    gl_Position = matrix_projectionSkybox * view * vec4(aPosition, 1.0);
 
     // Force skybox to far Z, regardless of the clip planes on the camera
     // Subtract a tiny fudge factor to ensure floating point errors don't

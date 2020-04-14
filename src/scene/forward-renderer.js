@@ -371,7 +371,7 @@ Object.assign(pc, function () {
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
-        this.projSkyboxId = scope.resolve('matrix_projection_skybox');
+        this.projSkyboxId = scope.resolve('matrix_projectionSkybox');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
