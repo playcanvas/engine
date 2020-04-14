@@ -83,7 +83,7 @@ Object.assign(pc, function () {
      *
      * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to form a single triangle.
      * ~~~
-     * var mesh = new pc.Mesh();
+     * var mesh = new pc.Mesh(device);
      * var positions = [0, 0, 0,     1, 0, 0,     1, 1, 0];
      * mesh.setPositions(positions);
      * mesh.update();
@@ -92,7 +92,7 @@ Object.assign(pc, function () {
      * An example which creates a Mesh with 4 vertices, containing position and uv coordinates in channel 0, and an index buffer to form two triangles.
      * Float32Array is used for positions and uvs.
      * ~~~
-     * var mesh = new pc.Mesh();
+     * var mesh = new pc.Mesh(device);
      * var positions = new Float32Array([0, 0, 0,     1, 0, 0,     1, 1, 0,      0, 1, 0]);
      * var uvs = new Float32Array([0, 0,     1, 0,     1, 1,     0, 1]);
      * var indices = [0, 1, 2,    0, 2, 3];

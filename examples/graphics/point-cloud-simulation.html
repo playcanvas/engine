@@ -117,7 +117,7 @@
         }
 
         // Create a mesh with dynamic vertex buffer (index buffer is not needed)
-        this.mesh = new pc.Mesh();
+        this.mesh = new pc.Mesh(this.app.graphicsDevice);
         this.mesh.clear(true);
         updateMesh(this.mesh);
 

@@ -312,7 +312,7 @@ Object.assign(pc, function () {
 
             var vertexBuffer = createVertexBuffer(device, attributes, indices, accessors, bufferViews, buffers);
 
-            var mesh = new pc.Mesh();
+            var mesh = new pc.Mesh(device);
             mesh.vertexBuffer = vertexBuffer;
             mesh.primitive[0].type = getPrimitiveType(primitive);
             mesh.primitive[0].base = 0;
