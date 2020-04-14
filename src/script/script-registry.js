@@ -203,8 +203,9 @@ Object.assign(pc, function () {
             return this._scripts.hasOwnProperty(nameOrType);
         }
 
-        var scriptName = scriptType.__name;
-        return this._scripts[scriptName] == scriptType;
+        if (!nameOrType) return false;
+        var scriptName = nameOrType.__name;
+        return this._scripts[scriptName] === nameOrType;
     };
 
     /* eslint-disable jsdoc/no-undefined-types */
