@@ -704,6 +704,7 @@ Object.assign(pc, function () {
             materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
             material.useLighting = false;
 
+            // copy diffuse into emissive
             material.emissive.copy(material.diffuse);
             material.emissiveTint = material.diffuseTint;
             material.emissiveMap = material.diffuseMap;
@@ -714,7 +715,7 @@ Object.assign(pc, function () {
             material.emissiveVertexColor = material.diffuseVertexColor;
             material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
 
-            // copy diffuse into emissive and blank diffuse
+            // blank diffuse
             material.diffuse.set(0, 0, 0);
             material.diffuseTint = false;
             material.diffuseMap = null;
