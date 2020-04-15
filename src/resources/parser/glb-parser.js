@@ -451,11 +451,6 @@ Object.assign(pc, function () {
             material.name = materialData.name;
         }
 
-        if (materialData.hasOwnProperty('extensions') &&
-            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
-            material.useLighting = false;
-        }
-
         var color, texture;
         if (materialData.hasOwnProperty('extensions') &&
             materialData.extensions.hasOwnProperty('KHR_materials_pbrSpecularGlossiness')) {
@@ -701,6 +696,30 @@ Object.assign(pc, function () {
         } else {
             material.twoSidedLighting = false;
             material.cull = pc.CULLFACE_BACK;
+        }
+
+        // handle unlit material by disabling lighting and copying diffuse colours
+        // into emissive.
+        if (materialData.hasOwnProperty('extensions') &&
+            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
+            material.useLighting = false;
+
+            // copy diffuse into emissive
+            material.emissive.copy(material.diffuse);
+            material.emissiveTint = material.diffuseTint;
+            material.emissiveMap = material.diffuseMap;
+            material.emissiveMapUv = material.diffuseMapUv;
+            material.emissiveMapTiling.copy(material.diffuseMapTiling);
+            material.emissiveMapOffset.copy(material.diffuseMapOffset);
+            material.emissiveMapChannel = material.diffuseMapChannel;
+            material.emissiveVertexColor = material.diffuseVertexColor;
+            material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
+
+            // blank diffuse
+            material.diffuse.set(0, 0, 0);
+            material.diffuseTint = false;
+            material.diffuseMap = null;
+            material.diffuseVertexColor = false;
         }
 
         material.update();
