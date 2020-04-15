@@ -20,6 +20,20 @@ Object.assign(pc, function () {
         this.direction = direction || new pc.Vec3(0, 0, -1);
     };
 
+    /**
+     * @function
+     * @name pc.Ray#set
+     * @description Sets origin and direction to the supplied vector values.
+     * @param {pc.Vec3} origin - The starting point of the ray.
+     * @param {pc.Vec3} direction - The direction of the ray.
+     * @returns {pc.Ray} Self for chaining.
+     */
+    Ray.prototype.set = function (origin, direction) {
+        this.origin.copy(origin);
+        this.direction.copy(direction);
+        return this;
+    };
+
     return {
         Ray: Ray
     };
