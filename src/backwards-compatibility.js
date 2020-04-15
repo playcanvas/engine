@@ -526,3 +526,30 @@ Object.defineProperty(pc.MouseEvent.prototype, 'wheel', {
         return this.wheelDelta * -2;
     }
 });
+
+Object.defineProperty(pc.XrInputSource.prototype, 'ray', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#ray is deprecated. Use pc.XrInputSource#getOrigin and pc.XrInputSource#getDirection instead.');
+        // #endif
+        return this._rayLocal;
+    }
+});
+
+Object.defineProperty(pc.XrInputSource.prototype, 'position', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#position is deprecated. Use pc.XrInputSource#getLocalPosition instead.');
+        // #endif
+        return this._localPosition;
+    }
+});
+
+Object.defineProperty(pc.XrInputSource.prototype, 'rotation', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#rotation is deprecated. Use pc.XrInputSource#getLocalRotation instead.');
+        // #endif
+        return this._localRotation;
+    }
+});

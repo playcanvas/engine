@@ -79,6 +79,18 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @name pc.Application#scenes
+     * @type {pc.SceneRegistry}
+     * @description The scene registry managed by the application.
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * var sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+
+    /**
      * @name pc.Application#assets
      * @type {pc.AssetRegistry}
      * @description The asset registry managed by the application.
@@ -308,7 +320,7 @@ Object.assign(pc, function () {
 
         this.i18n = new pc.I18n(this);
 
-        this._sceneRegistry = new pc.SceneRegistry(this);
+        this.scenes = new pc.SceneRegistry(this);
 
         var self = this;
         this.defaultLayerWorld = new pc.Layer({
@@ -823,6 +835,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
@@ -830,15 +844,19 @@ Object.assign(pc, function () {
          * @returns {string} The URL of the scene file.
          */
         getSceneUrl: function (name) {
-            var entry = this._sceneRegistry.find(name);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
+            // #endif
+            var entry = this.scenes.find(name);
             if (entry) {
                 return entry.url;
             }
             return null;
-
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
@@ -856,10 +874,15 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneHierarchy: function (url, callback) {
-            this._sceneRegistry.loadSceneHierarchy(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
+            // #endif
+            this.scenes.loadSceneHierarchy(url, callback);
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and automatically apply the scene settings to the current scene.
@@ -875,10 +898,15 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneSettings: function (url, callback) {
-            this._sceneRegistry.loadSceneSettings(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
+            // #endif
+            this.scenes.loadSceneSettings(url, callback);
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
@@ -895,7 +923,10 @@ Object.assign(pc, function () {
          * });
          */
         loadScene: function (url, callback) {
-            this._sceneRegistry.loadScene(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
+            // #endif
+            this.scenes.loadScene(url, callback);
         },
 
         _preloadScripts: function (sceneData, callback) {
@@ -1048,7 +1079,7 @@ Object.assign(pc, function () {
             if (!scenes) return;
 
             for (var i = 0; i < scenes.length; i++) {
-                this._sceneRegistry.add(scenes[i].name, scenes[i].url);
+                this.scenes.add(scenes[i].name, scenes[i].url);
             }
         },
 
@@ -1782,8 +1813,8 @@ Object.assign(pc, function () {
             this.scripts.destroy();
             this.scripts = null;
 
-            this._sceneRegistry.destroy();
-            this._sceneRegistry = null;
+            this.scenes.destroy();
+            this.scenes = null;
 
             this.lightmapper.destroy();
             this.lightmapper = null;

@@ -13,15 +13,14 @@
                 overflow: hidden;
             }
             canvas {
-                width:100%;
-                height:100%;
-
+                width: 100%;
+                height: 100%;
             }
             .message {
                 position: absolute;
                 padding: 8px 16px;
                 left: 20px;
-                bottom: 0px;
+                bottom: 20px;
                 color: #ccc;
                 background-color: rgba(0, 0, 0, .5);
                 font-family: "Proxima Nova", Arial, sans-serif;
@@ -31,30 +30,7 @@
 
     <body>
         <canvas id="application-canvas"></canvas>
-        <div>
-            <p class="message"></p>
-        </div>
-        <script>
-            // draw some axes
-            var drawAxes = function (pos, scale) {
-                var color = new pc.Color(1,0,0);
-
-                var axis = new pc.Vec3();
-                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
-
-                app.renderLine(pos, end, color);
-
-                color.set(0, 1, 0);
-                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
-                app.renderLine(pos, end, color);
-
-                color.set(0, 0, 1);
-                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
-                app.renderLine(pos, end, color);
-            }
-        </script>
-
-
+        <div class="message"></div>
         <script>
             var message = function (msg) {
                 var el = document.querySelector('.message');
@@ -187,8 +163,8 @@
                         if (inputSource.grip) {
                             // some controllers can be gripped
                             controllers[i].enabled = true;
-                            controllers[i].setPosition(inputSource.position);
-                            controllers[i].setRotation(inputSource.rotation);
+                            controllers[i].setLocalPosition(inputSource.getLocalPosition());
+                            controllers[i].setLocalRotation(inputSource.getLocalRotation());
                         } else {
                             // some controllers cannot be gripped
                             controllers[i].enabled = false;
