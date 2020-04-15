@@ -114,17 +114,6 @@ Object.assign(pc, function () {
      * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
      */
 
-    Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
-        get: function () {
-            console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
-            return this.type;
-        },
-        set: function (type) {
-            console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
-            this.type = type;
-        }
-    });
-
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
         get: function () {
             if (!this.isKinematic()) {
@@ -639,7 +628,7 @@ Object.assign(pc, function () {
          */
         syncBodyToEntity: function () {
             var body = this.body;
-            if (body.isActive()) {
+            if (body) {
                 var motionState = body.getMotionState();
                 if (motionState) {
                     motionState.getWorldTransform(ammoTransform);
@@ -709,22 +698,18 @@ Object.assign(pc, function () {
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-         * @param {number} dt - Delta time for the current frame.
          */
-        _updateKinematic: function (dt) {
-            this._displacement.copy(this._linearVelocity).scale(dt);
-            this.entity.translate(this._displacement);
+        _updateKinematic: function () {
+            var body = this.body;
+            if (body) {
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    var wtm = this.entity.getWorldTransform();
 
-            this._displacement.copy(this._angularVelocity).scale(dt);
-            this.entity.rotate(this._displacement.x, this._displacement.y, this._displacement.z);
-            if (this.body.getMotionState()) {
-                var pos = this.entity.getPosition();
-                var rot = this.entity.getRotation();
+                    ammoTransform.setFromOpenGLMatrix(wtm.data);
 
-                ammoTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                ammoTransform.setRotation(ammoQuat);
-                this.body.getMotionState().setWorldTransform(ammoTransform);
+                    motionState.setWorldTransform(ammoTransform);
+                }
             }
         },
 

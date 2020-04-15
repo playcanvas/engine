@@ -164,6 +164,10 @@ Object.assign(pc, function () {
         this.fixedTimeStep = 1 / 60;
         this.gravity = new pc.Vec3(0, -9.81, 0);
 
+        // Temporary arrays for accumulating body types every frame
+        this._dynamic = [];
+        this._kinematic = [];
+
         this.on('remove', this.onRemove, this);
     };
     RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -469,6 +473,8 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function (dt) {
+            var i, j;
+
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
             // #endif
@@ -480,30 +486,39 @@ Object.assign(pc, function () {
                 this.dynamicsWorld.setGravity(gravity);
             }
 
+            this._dynamic.length = 0;
+            this._kinematic.length = 0;
+
+            var id, entity, componentData;
+            var components = this.store;
+            for (id in components) {
+                if (components.hasOwnProperty(id)) {
+                    entity = components[id].entity;
+                    componentData = components[id].data;
+                    if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
+                        if (componentData.type === pc.BODYTYPE_KINEMATIC)
+                            this._kinematic.push(entity.rigidbody);
+                        else if (componentData.type === pc.BODYTYPE_DYNAMIC)
+                            this._dynamic.push(entity.rigidbody);
+                    }
+                }
+            }
+
+            for (i = 0; i < this._kinematic.length; i++) {
+                this._kinematic[i]._updateKinematic();
+            }
+
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
-            // Update the transforms of all entities referencing a body
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
-                        if (componentData.type === pc.BODYTYPE_DYNAMIC) {
-                            entity.rigidbody.syncBodyToEntity();
-                        } else if (componentData.type === pc.BODYTYPE_KINEMATIC) {
-                            entity.rigidbody._updateKinematic(dt);
-                        }
-                    }
-
-                }
+            // Update the transforms of all entities referencing a dynamic body
+            for (i = 0; i < this._dynamic.length; i++) {
+                this._dynamic[i].syncBodyToEntity();
             }
 
             // Check for collisions and fire callbacks
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
-            var i, j;
 
             frameCollisions = {};
 

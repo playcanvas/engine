@@ -482,6 +482,21 @@ pc.Material.prototype.setShader = function (shader) {
     this.shader = shader;
 };
 
+Object.defineProperty(pc.RigidBodyComponent.prototype, "bodyType", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        // #endif
+        return this.type;
+    },
+    set: function (type) {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        // #endif
+        this.type = type;
+    }
+});
+
 pc.RigidBodyComponentSystem.prototype.setGravity = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
