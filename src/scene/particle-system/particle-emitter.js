@@ -675,8 +675,12 @@ Object.assign(pc, function () {
 
             this.resetTime();
 
-            this.addTime(0, false); // fill dynamic textures and constants with initial data
-            if (this.preWarm) this.prewarm(this.lifetime);
+            if (this.preWarm) {
+                this.prewarm(this.lifetime);
+            } else {
+                // fill dynamic textures and constants with initial data
+                this.addTime(0, false); 
+            }
         },
 
         _isAnimated: function () {

@@ -556,7 +556,11 @@ Object.assign(pc, function () {
                 this.emitter.resetMaterial();
             }
         },
-
+        /**
+         * @function
+         * @name pc.ParticleSystemComponent#reset
+         * @description Resets particle state, doesn't affect playing.
+         */
         onSetComplexProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
@@ -574,31 +578,14 @@ Object.assign(pc, function () {
             }
         },
 
-
-        onEnable: function () {
-            // get data store once
-            var data = this.data;
-
-            // load any assets that haven't been loaded yet
-            for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
-                var asset = data[ASSET_PROPERTIES[i]];
-                if (asset) {
-                    if (!(asset instanceof pc.Asset)) {
-                        var id = parseInt(asset, 10);
-                        if (id >= 0) {
-                            asset = this.system.app.assets.get(asset);
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    if (asset && !asset.resource) {
-                        this.system.app.assets.load(asset);
-                    }
-                }
-            }
-
+        /**
+         * @function
+         * @name pc.ParticleSystemComponent#prepare
+         * @description Prepares the simulation. Should be used when creating many {@link pc.Particlesystem}s (such as in a pool) and called before enabling the {@link pc.Entity} where a framerate drop is allowable (e.g changing scenes).
+         */
+        prepare: function () {
             if (!this.emitter) {
+                var data = this.data;
                 var mesh = data.mesh;
 
                 // mesh might be an asset id of an asset
@@ -691,6 +678,32 @@ Object.assign(pc, function () {
                     this.emitter.meshInstance.visible = false;
                 }
             }
+        },
+
+        onEnable: function () {
+            // get data store once
+            var data = this.data;
+
+            // load any assets that haven't been loaded yet
+            for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
+                var asset = data[ASSET_PROPERTIES[i]];
+                if (asset) {
+                    if (!(asset instanceof pc.Asset)) {
+                        var id = parseInt(asset, 10);
+                        if (id >= 0) {
+                            asset = this.system.app.assets.get(asset);
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    if (asset && !asset.resource) {
+                        this.system.app.assets.load(asset);
+                    }
+                }
+            }
+
+            this.prepare();
 
             if (data.model && this.emitter.colorMap) {
                 this.addModelToLayers();
