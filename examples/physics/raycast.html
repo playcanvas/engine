@@ -76,20 +76,23 @@
 
         function createPhysicalShape(type, material, x, y, z) {
             var e = new pc.Entity();
+
+            // Have to set the position of the entity before adding the static rigidbody
+            // component because static bodies cannot be moved after creation
+            app.root.addChild(e);
+            e.setPosition(x, y, z);
+
             e.addComponent("model", {
                 type: type,
                 material: material
             });
             e.addComponent("rigidbody", {
-                type: "kinematic"
+                type: "static"
             });
             e.addComponent("collision", {
                 type: type,
                 height: type === 'capsule' ? 2 : 1
             });
-
-            app.root.addChild(e);
-            e.setPosition(x, y, z);
 
             return e;
         }
