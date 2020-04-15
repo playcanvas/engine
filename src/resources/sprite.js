@@ -1,12 +1,12 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.SpriteHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Sprite} resources
-     * @param {pc.AssetRegistry} assets The asset registry
-     * @param {pc.GraphicsDevice} device The graphics device
+     * @classdesc Resource handler used for loading {@link pc.Sprite} resources.
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {pc.GraphicsDevice} device - The graphics device.
      */
     var SpriteHandler = function (assets, device) {
         this._assets = assets;

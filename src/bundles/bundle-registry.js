@@ -3,9 +3,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.BundleRegistry
-     * @param {pc.AssetRegistry} assets The asset registry
+     * @param {pc.AssetRegistry} assets - The asset registry.
      * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
      */
     var BundleRegistry = function (assets) {
@@ -257,7 +257,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BundleRegistry#listBundlesForAsset
          * @description Lists all of the available bundles that reference the specified asset id.
-         * @param {pc.Asset} asset The asset
+         * @param {pc.Asset} asset - The asset.
          * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
          */
         listBundlesForAsset: function (asset) {
@@ -284,9 +284,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.BundleRegistry#hasUrl
-         * @description Returns true if there is a bundle that contains the specified URL
-         * @param {String} url The url
-         * @returns {Boolean} True or false
+         * @description Returns true if there is a bundle that contains the specified URL.
+         * @param {string} url - The url.
+         * @returns {boolean} True or false.
          */
         hasUrl: function (url) {
             return !!this._urlsInBundles[url];
@@ -298,8 +298,8 @@ Object.assign(pc, function () {
          * @name pc.BundleRegistry#canLoadUrl
          * @description Returns true if there is a bundle that contains the specified URL
          * and that bundle is either loaded or currently being loaded.
-         * @param {String} url The url
-         * @returns {Boolean} True or false
+         * @param {string} url - The url.
+         * @returns {boolean} True or false.
          */
         canLoadUrl: function (url) {
             return !!this._findLoadedOrLoadingBundleForUrl(url);
@@ -310,8 +310,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BundleRegistry#loadUrl
          * @description Loads the specified file URL from a bundle that is either loaded or currently being loaded.
-         * @param {String} url The URL. Make sure you are using a relative URL that does not contain any query parameters.
-         * @param {Function} callback The callback is called when the file has been loaded or if an error occures. The callback
+         * @param {string} url - The URL. Make sure you are using a relative URL that does not contain any query parameters.
+         * @param {Function} callback - The callback is called when the file has been loaded or if an error occures. The callback
          * expects the first argment to be the error message (if any) and the second argument is the file blob URL.
          * @example
          * var url = asset.getFileUrl().split('?')[0]; // get normalized asset URL

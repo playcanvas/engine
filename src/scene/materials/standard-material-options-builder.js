@@ -22,6 +22,8 @@ Object.assign(pc, function () {
         options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
+        options.clearCoat = stdMat.clearCoat;
+        options.clearCoatGlossiness = stdMat.clearCoatGlossiness;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
@@ -69,6 +71,8 @@ Object.assign(pc, function () {
         var specularTint = false;
         var useSpecular = (stdMat.useMetalness ? true : !!stdMat.specularMap) || (!!stdMat.sphereMap) || (!!stdMat.cubeMap) || (!!stdMat.dpAtlas);
         useSpecular = useSpecular || (stdMat.useMetalness ? true : !(stdMat.specular.r === 0 && stdMat.specular.g === 0 && stdMat.specular.b === 0));
+        useSpecular = useSpecular || stdMat.enableGGXSpecular;
+        useSpecular = useSpecular || (stdMat.clearCoat > 0);
 
         if (useSpecular) {
             if ((stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) && !stdMat.useMetalness) {
@@ -82,6 +86,8 @@ Object.assign(pc, function () {
             emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
         }
 
+        var isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5 || stdMat.normalMap.swizzleGGGR) : false;
+
         options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE) ? 1 : 0;
         options.blendMapsWithColors = true;
         options.ambientTint = stdMat.ambientTint;
@@ -91,7 +97,7 @@ Object.assign(pc, function () {
         options.glossTint = 1;
         options.emissiveTint = emissiveTint;
         options.alphaToCoverage = stdMat.alphaToCoverage;
-        options.needsNormalFloat = stdMat.normalizeNormalMap;
+        options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.sphereMap = !!stdMat.sphereMap;
         options.cubeMap = !!stdMat.cubeMap;
         options.dpAtlas = !!stdMat.dpAtlas;
@@ -99,19 +105,20 @@ Object.assign(pc, function () {
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
-        options.specularAntialias = stdMat.specularAntialias;
+        options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.occludeSpecular = stdMat.occludeSpecular;
         options.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
         options.occludeDirect = stdMat.occludeDirect;
         options.shadingModel = stdMat.shadingModel;
         options.fresnelModel = stdMat.fresnelModel;
-        options.packedNormal = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5) : false;
+        options.packedNormal = isPackedNormalMap;
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
         options.refraction = !!stdMat.refraction;
         options.useMetalness = stdMat.useMetalness;
+        options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
@@ -246,8 +253,8 @@ Object.assign(pc, function () {
         var i;
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
-            if (light._enabled) {
-                if (light._mask & mask) {
+            if (light.enabled) {
+                if (light.mask & mask) {
                     if (lType !== pc.LIGHTTYPE_DIRECTIONAL) {
                         if (light.isStatic) {
                             continue;

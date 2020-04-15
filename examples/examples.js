@@ -14,23 +14,32 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "batching-dynamic",
+            "hardware-instancing",
             "layers",
             "lights",
+            "lights-baked",
             "loader-obj",
+            "material-anisotropic",
+            "material-clear-coat",
             "material-physical",
             "model-asset",
             "model-box",
+            "model-outline",
             "model-shapes",
             "model-textured-box",
+            "point-cloud",
             "portal",
+            "particles-anim-index",
+            "particles-random-sprites",
             "particles-snow",
             "particles-sparks",
             "post-effects",
+            "render-to-texture",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis",
-            "virtual-reality"
+            "texture-basis"
         ]
     }, {
         name: "input",
@@ -47,7 +56,8 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "falling-shapes",
+            "raycast"
         ]
     }, {
         name: "sound",
@@ -68,6 +78,16 @@ var categories = [
             "text-typewriter",
             "text-wrap",
             "various"
+        ]
+    }, {
+        name: "xr",
+        examples: [
+            'ar-basic',
+            'ar-hit-test',
+            'vr-basic',
+            'vr-controllers',
+            'vr-movement',
+            'xr-picking'
         ]
     }
 ];

@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     var _invViewProjMat = new pc.Mat4();
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Camera
      * @classdesc A camera.
      */
@@ -26,6 +26,7 @@ Object.assign(pc, function () {
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
+        this._projMatSkybox = new pc.Mat4();    // projection matrix used by skybox rendering shader is always perspective
         this._viewMatDirty = true;
         this._viewMat = new pc.Mat4();
         this._viewProjMatDirty = true;
@@ -102,10 +103,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#worldToScreen
          * @description Convert a point from 3D world space to 2D canvas pixel space.
-         * @param {pc.Vec3} worldCoord The world space coordinate to transform.
-         * @param {Number} cw The width of PlayCanvas' canvas element.
-         * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
+         * @param {pc.Vec3} worldCoord - The world space coordinate to transform.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, cw, ch, screenCoord) {
@@ -139,12 +140,12 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
-         * @param {Number} x x coordinate on PlayCanvas' canvas element.
-         * @param {Number} y y coordinate on PlayCanvas' canvas element.
-         * @param {Number} z The distance from the camera in world space to create the new point.
-         * @param {Number} cw The width of PlayCanvas' canvas element.
-         * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
+         * @param {number} x - X coordinate on PlayCanvas' canvas element.
+         * @param {number} y - Y coordinate on PlayCanvas' canvas element.
+         * @param {number} z - The distance from the camera in world space to create the new point.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
@@ -197,27 +198,22 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
-         * @returns {Object} The options determining the behaviour of render target clears.
+         * @returns {object} The options determining the behaviour of render target clears.
          */
         getClearOptions: function () {
             return this._clearOptions;
         },
 
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getProjectionMatrix
-         * @description Retrieves the projection matrix for the specified camera.
-         * @returns {pc.Mat4} The camera's projection matrix.
-         */
-        getProjectionMatrix: function () {
+        _evaluateProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                     this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._horizontalFov);
+                    this._projMatSkybox.copy(this._projMat);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
+                    this._projMatSkybox.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 }
 
                 var n = this._nearClip;
@@ -229,7 +225,23 @@ Object.assign(pc, function () {
 
                 this._projMatDirty = false;
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Camera#getProjectionMatrix
+         * @description Retrieves the projection matrix for the specified camera.
+         * @returns {pc.Mat4} The camera's projection matrix.
+         */
+        getProjectionMatrix: function () {
+            this._evaluateProjectionMatrix();
             return this._projMat;
+        },
+
+        getProjectionMatrixSkybox: function () {
+            this._evaluateProjectionMatrix();
+            return this._projMatSkybox;
         },
 
         /**
@@ -257,10 +269,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
-         * @param {Object} options The options determining the behaviour of subsequent render target clears.
-         * @param {Number[]} options.color The options determining the behaviour of subsequent render target clears.
-         * @param {Number} options.depth The options determining the behaviour of subsequent render target clears.
-         * @param {Number} options.flags The options determining the behaviour of subsequent render target clears.
+         * @param {object} options - The options determining the behaviour of subsequent render target clears.
+         * @param {number[]} options.color - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.depth - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.flags - The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions.color[0] = options.color[0];
@@ -297,8 +309,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#aspectRatio
+     * @type {number}
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
@@ -315,13 +327,13 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#projection
-     * @description Camera's projection type, to specify whether projection is orthographic (parallel projection) or perspective. Can be:
-     * <ul>
-     *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
-     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}</li>
-     * </ul>
+     * @type {number}
+     * @description Camera's projection type, to specify whether projection is orthographic
+     * (parallel projection) or perspective. Can be:
+     *
+     * * {@link pc.PROJECTION_PERSPECTIVE}
+     * * {@link pc.PROJECTION_ORTHOGRAPHIC}
      */
     Object.defineProperty(Camera.prototype, 'projection', {
         get: function () {
@@ -337,9 +349,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#nearClip
-     * @description Camera's distance to near clipping plane
+     * @type {number}
+     * @description Camera's distance to near clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
         get: function () {
@@ -355,9 +367,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#farClip
-     * @description Camera's distance to far clipping plane
+     * @type {number}
+     * @description Camera's distance to far clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
         get: function () {
@@ -373,8 +385,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#fov
+     * @type {number}
      * @description Camera's field of view in degrees. This angle is in degrees
      * and is measured vertically or horizontally between the sides of camera planes.
      * hirozontalFov property defines the fov axis - vertical or horizontal.
@@ -393,8 +405,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Boolean
      * @name pc.Camera#horizontalFov
+     * @type {boolean}
      * @description Camera's horizontal or vertical field of view.
      */
     Object.defineProperty(Camera.prototype, 'horizontalFov', {
@@ -411,8 +423,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#orthoHeight
+     * @type {number}
      * @description Camera's half height of the orthographics view.
      */
     Object.defineProperty(Camera.prototype, 'orthoHeight', {
@@ -429,8 +441,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Array
      * @name pc.Camera#clearColor
+     * @type {number[]}
      * @description Camera's clear color.
      */
     Object.defineProperty(Camera.prototype, 'clearColor', {
@@ -447,8 +459,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearDepth
+     * @type {number}
      * @description Camera's clear depth value.
      */
     Object.defineProperty(Camera.prototype, 'clearDepth', {
@@ -462,8 +474,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearStencil
+     * @type {number}
      * @description Camera's clear stencil value.
      */
     Object.defineProperty(Camera.prototype, 'clearStencil', {
@@ -477,8 +489,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearFlags
+     * @type {number}
      * @description Camera's clear flags bits value.
      */
     Object.defineProperty(Camera.prototype, 'clearFlags', {

@@ -1,20 +1,35 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /* eslint-disable jsdoc/check-examples */
     /**
-     * @constructor
+     * @class
      * @name pc.TransformFeedback
      * @classdesc Transform feedback helper object.
-     * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).
-     *  How to use:<br>
-     *  <ol>
-     *  <li>First, check that you're on WebGL2, by looking at the <code>app.graphicsDevice.webgl2</code> value.</li>
-     *  <li>Define the outputs in your vertex shader. The syntax is <code>out vec3 out_vertex_position</code>, note that there must be out_ in the name. You can then simply assign values to these outputs in VS. The order and size of shader outputs must match the output buffer layout.</li>
-     *  <li>Create the shader using <code>pc.TransformFeedback.createShader(device, vsCode, yourShaderName)</code>.</li>
-     *  <li>Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created, or from a pc.Mesh.</li>
-     *  <li>Create the pc.TransformFeedback object: <code>var tf = new pc.TransformFeedback(inputBuffer)</code>. This object will internally create an output buffer.</li>
-     *  <li>Run the shader: <code>tf.process(shader)</code>. Shader will take the input buffer, process it and write to the output buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.</li>
-     *  </ol>
+     * @description This object allows you to configure and use the transform feedback feature (WebGL2
+     * only). How to use:
+     *
+     * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.webgl2`` value.
+     * 2. Define the outputs in your vertex shader. The syntax is `out vec3 out_vertex_position`,
+     * note that there must be out_ in the name. You can then simply assign values to these outputs
+     * in VS. The order and size of shader outputs must match the output buffer layout.
+     * 3. Create the shader using `pc.TransformFeedback.createShader(device, vsCode, yourShaderName)`.
+     * 4. Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created,
+     * or from a pc.Mesh.
+     * 5. Create the pc.TransformFeedback object: `var tf = new pc.TransformFeedback(inputBuffer)`.
+     * This object will internally create an output buffer.
+     * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and
+     * write to the output buffer, then the input/output buffers will be automatically swapped, so
+     * you'll immediately see the result.
+     * @param {pc.VertexBuffer} inputBuffer - The input vertex buffer.
+     * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
+     *
+     * * {@link pc.BUFFER_STATIC}
+     * * {@link pc.BUFFER_DYNAMIC}
+     * * {@link pc.BUFFER_STREAM}
+     * * {@link pc.BUFFER_GPUDYNAMIC}
+     *
+     * Defaults to pc.BUFFER_GPUDYNAMIC (which is recommended for continuous update).
      * @example
      * // *** shader asset ***
      * attribute vec3 vertex_position;
@@ -62,9 +77,8 @@ Object.assign(pc, function () {
      *     if (!this.app.graphicsDevice.webgl2) return;
      *     this.tf.process(this.shader);
      * };
-     * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
-     * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
+    /* eslint-enable jsdoc/check-examples */
     var TransformFeedback = function (inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
         this.device = inputBuffer.device;
@@ -84,9 +98,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.TransformFeedback#createShader
      * @description Creates a transform feedback ready vertex shader from code.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
-     * @param {String} vsCode Vertex shader code. Should contain output variables starting with "out_".
-     * @param {String} name Unique name for caching the shader.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} name - Unique name for caching the shader.
      * @returns {pc.Shader} A shader to use in the process() function.
      */
     TransformFeedback.createShader = function (graphicsDevice, vsCode, name) {
@@ -97,7 +111,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.TransformFeedback#destroy
-         * @description Destroys the transform feedback helper object
+         * @description Destroys the transform feedback helper object.
          */
         destroy: function () {
             this._outputBuffer.destroy();
@@ -107,8 +121,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.TransformFeedback#process
          * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
-         * @param {pc.Shader} shader A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
-         * @param {Boolean} [swap] Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
+         * @param {pc.Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
+         * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
          */
         process: function (shader, swap) {
             if (swap === undefined) swap = true;
@@ -142,8 +156,8 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.TransformFeedback#inputBuffer
-     * @type pc.VertexBuffer
-     * @description The current input buffer
+     * @type {pc.VertexBuffer}
+     * @description The current input buffer.
      */
     Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
         get: function () {
@@ -154,8 +168,8 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.TransformFeedback#outputBuffer
-     * @type pc.VertexBuffer
-     * @description The current output buffer
+     * @type {pc.VertexBuffer}
+     * @description The current output buffer.
      */
     Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
         get: function () {

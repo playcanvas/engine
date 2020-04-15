@@ -35,7 +35,6 @@
                 mouse: new pc.Mouse(document.body),
                 touch: new pc.TouchDevice(document.body)
             });
-            app.start();
 
             // Set the canvas to fill the window and automatically change
             // resolution to be the same as the canvas size
@@ -73,6 +72,8 @@
             });
 
             function run() {
+                app.start();
+
                 // Create a physical floor
                 var floor = new pc.Entity();
                 floor.addComponent("collision", {

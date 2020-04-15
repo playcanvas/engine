@@ -1,4 +1,8 @@
+  #ifdef CLEARCOAT
+   gl_FragColor.rgb = combineColorCC();
+  #else
    gl_FragColor.rgb = combineColor();
+  #endif 
    gl_FragColor.rgb += getEmission();
    gl_FragColor.rgb = addFog(gl_FragColor.rgb);
    #ifndef HDR

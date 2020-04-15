@@ -1,11 +1,11 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.ModelHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Model} resources
-     * @param {pc.GraphicsDevice} device The graphics device that will be rendering
-     * @param {pc.StandardMaterial} defaultMaterial The shared default material that is used in any place that a material is not specified
+     * @classdesc Resource handler used for loading {@link pc.Model} resources.
+     * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
+     * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
      */
     var ModelHandler = function (device, defaultMaterial) {
         this._device = device;
@@ -16,15 +16,18 @@ Object.assign(pc, function () {
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
         });
+        this.addParser(new pc.GlbModelParser(this._device), function (url, data) {
+            return (pc.path.getExtension(url) === '.glb');
+        });
     };
 
     Object.assign(ModelHandler.prototype, {
         /**
          * @function
          * @name pc.ModelHandler#load
-         * @description Fetch model data from a remote url
-         * @param {String} url The URL of the model data.
-         * @param {pc.callbacks.ResourceHandler} callback Callback function called when the load completes. The
+         * @description Fetch model data from a remote url.
+         * @param {string} url - The URL of the model data.
+         * @param {pc.callbacks.ResourceHandler} callback - Callback function called when the load completes. The
          * callback is of the form fn(err, response), where err is a String error message in
          * the case where the load fails, and response is the model data that has been
          * successfully loaded.
@@ -62,8 +65,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ModelHandler#open
          * @description Process data in deserialized format into a pc.Model object.
-         * @param {String} url The URL of the model data.
-         * @param {Object} data The data from model file deserialized into a JavaScript Object.
+         * @param {string} url - The URL of the model data.
+         * @param {object} data - The data from model file deserialized into a JavaScript Object.
          * @returns {pc.Model} The loaded model.
          */
         open: function (url, data) {
@@ -143,9 +146,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ModelHandler#addParser
          * @description Add a parser that converts raw data into a {@link pc.Model}
-         * Default parser is for JSON models
-         * @param {Object} parser See JsonModelParser for example
-         * @param {pc.callbacks.AddParser} decider Function that decides on which parser to use.
+         * Default parser is for JSON models.
+         * @param {object} parser - See JsonModelParser for example.
+         * @param {pc.callbacks.AddParser} decider - Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.
          */

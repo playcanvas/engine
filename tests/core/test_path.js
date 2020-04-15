@@ -1,5 +1,5 @@
 describe('pc.path', function () {
-    it("path.getDirectory ", function() {
+    it("path.getDirectory", function() {
         expect("folder").to.equal(pc.path.getDirectory("folder/file.txt"));
         expect("folder").to.equal(pc.path.getDirectory("folder/another"));
         expect("folder/another").to.equal(pc.path.getDirectory("folder/another/"));
@@ -62,4 +62,11 @@ describe('pc.path', function () {
         // equal('..', pc.path.normalize('./../.'));
     });
 
+    it("path.extractPath", function () {
+        expect("./path/to").to.equal(pc.path.extractPath("path/to/file"));
+        expect("./path/to").to.equal(pc.path.extractPath("./path/to/file"));
+        expect("../path/to").to.equal(pc.path.extractPath("../path/to/file"));
+        expect("/path/to").to.equal(pc.path.extractPath("/path/to/file"));
+        expect("./path/../path/to").to.equal(pc.path.extractPath("path/../path/to/file.txt"));
+    });
 })

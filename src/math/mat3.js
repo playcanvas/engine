@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
      * @description Creates a new identity Mat3 object.
@@ -36,8 +36,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#copy
          * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
-         * @param {pc.Mat3} rhs A 3x3 matrix to be copied.
-         * @returns {pc.Mat3} Self for chaining
+         * @param {pc.Mat3} rhs - A 3x3 matrix to be copied.
+         * @returns {pc.Mat3} Self for chaining.
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
          * var dst = new pc.Mat3();
@@ -65,8 +65,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#set
          * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
-         * @param {Number[]} src An array[9] to be copied.
-         * @returns {pc.Mat3} Self for chaining
+         * @param {number[]} src - An array[9] to be copied.
+         * @returns {pc.Mat3} Self for chaining.
          * @example
          * var dst = new pc.Mat3();
          * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
@@ -90,9 +90,9 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Mat3#equals
-         * @param {pc.Mat3} rhs The other matrix.
+         * @param {pc.Mat3} rhs - The other matrix.
          * @description Reports whether two matrices are equal.
-         * @returns {Boolean} true if the matrices are equal and false otherwise.
+         * @returns {boolean} True if the matrices are equal and false otherwise.
          * @example
          * var a = new pc.Mat3().translate(10, 20, 30);
          * var b = new pc.Mat3();
@@ -117,7 +117,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#isIdentity
          * @description Reports whether the specified matrix is the identity matrix.
-         * @returns {Boolean} true if the matrix is identity and false otherwise.
+         * @returns {boolean} True if the matrix is identity and false otherwise.
          * @example
          * var m = new pc.Mat3();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
@@ -165,7 +165,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#toString
          * @description Converts the matrix to string form.
-         * @returns {String} The matrix in string form.
+         * @returns {string} The matrix in string form.
          * @example
          * var m = new pc.Mat3();
          * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
@@ -208,34 +208,23 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Mat3
      * @name pc.Mat3.IDENTITY
+     * @type {pc.Mat3}
      * @description A constant matrix set to the identity.
      */
-    Object.defineProperty(Mat3, 'IDENTITY', {
-        get: function () {
-            var identity = new Mat3();
-            return function () {
-                return identity;
-            };
-        }()
-    });
 
     /**
      * @field
      * @static
      * @readonly
-     * @type pc.Mat3
      * @name pc.Mat3.ZERO
+     * @type {pc.Mat3}
      * @description A constant matrix with all elements set to 0.
      */
-    Object.defineProperty(Mat3, 'ZERO', {
-        get: function () {
-            var zero = new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]);
-            return function () {
-                return zero;
-            };
-        }()
+
+    Object.defineProperties(Mat3, {
+        ZERO: { value: new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]) },
+        IDENTITY: { value: new Mat3() }
     });
 
     return {

@@ -2,11 +2,11 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.SceneHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Scene} resources
-     * @param {pc.Application} app The running {@link pc.Application}
+     * @classdesc Resource handler used for loading {@link pc.Scene} resources.
+     * @param {pc.Application} app - The running {@link pc.Application}.
      */
     var SceneHandler = function (app) {
         this._app = app;

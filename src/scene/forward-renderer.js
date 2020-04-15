@@ -339,11 +339,11 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @constructor
+     * @class
      * @name pc.ForwardRenderer
      * @classdesc The forward renderer render scene objects.
      * @description Creates a new forward renderer object.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      */
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
@@ -371,6 +371,7 @@ Object.assign(pc, function () {
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
+        this.projSkyboxId = scope.resolve('matrix_projectionSkybox');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
@@ -555,6 +556,10 @@ Object.assign(pc, function () {
                 viewInvMat.copy(viewMat).invert();
                 this.viewInvId.setValue(viewInvMat.data);
                 camera.frustum.update(projMat, viewMat);
+            } else if (camera.xr && camera.xr.views.length) {
+                // calculate frustum based on XR view
+                var view = camera.xr.views[0];
+                camera.frustum.update(view.projMat, view.viewOffMat);
                 return;
             }
 
@@ -577,43 +582,9 @@ Object.assign(pc, function () {
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
         setCamera: function (camera, target, clear, cullBorder) {
             var vrDisplay = camera.vrDisplay;
-            if (!vrDisplay || !vrDisplay.presenting) {
-                // Projection Matrix
-                projMat = camera.getProjectionMatrix();
-                if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
-                this.projId.setValue(projMat.data);
+            var parent, transform;
 
-                // ViewInverse Matrix
-                if (camera.overrideCalculateTransform) {
-                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
-                } else {
-                    var pos = camera._node.getPosition();
-                    var rot = camera._node.getRotation();
-                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
-                }
-                this.viewInvId.setValue(viewInvMat.data);
-
-                // View Matrix
-                viewMat.copy(viewInvMat).invert();
-                this.viewId.setValue(viewMat.data);
-
-                // View 3x3
-                mat3FromMat4(viewMat3, viewMat);
-                this.viewId3.setValue(viewMat3.data);
-
-                // ViewProjection Matrix
-                viewProjMat.mul2(projMat, viewMat);
-                this.viewProjId.setValue(viewProjMat.data);
-
-                // View Position (world space)
-                var cameraPos = camera._node.getPosition();
-                this.viewPos[0] = cameraPos.x;
-                this.viewPos[1] = cameraPos.y;
-                this.viewPos[2] = cameraPos.z;
-                this.viewPosId.setValue(this.viewPos);
-
-                camera.frustum.update(projMat, viewMat);
-            } else {
+            if (vrDisplay && vrDisplay.presenting) {
                 // Projection LR
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
@@ -632,9 +603,9 @@ Object.assign(pc, function () {
                     viewR.copy(viewInvR).invert();
                     viewMat.copy(viewInvMat).invert();
                 } else {
-                    var parent = camera._node.parent;
+                    parent = camera._node.parent;
                     if (parent) {
-                        var transform = parent.getWorldTransform();
+                        transform = parent.getWorldTransform();
 
                         // ViewInverse LR (parent)
                         viewInvL.mul2(transform, vrDisplay.leftViewInv);
@@ -676,6 +647,72 @@ Object.assign(pc, function () {
                 viewPosR.x = viewInvR.data[12];
                 viewPosR.y = viewInvR.data[13];
                 viewPosR.z = viewInvR.data[14];
+
+                camera.frustum.update(projMat, viewMat);
+            } else if (camera.xr && camera.xr.session) {
+                parent = camera._node.parent;
+                if (parent) transform = parent.getWorldTransform();
+
+                var views = camera.xr.views;
+
+                for (var v = 0; v < views.length; v++) {
+                    var view = views[v];
+
+                    if (parent) {
+                        view.viewInvOffMat.mul2(transform, view.viewInvMat);
+                        view.viewOffMat.copy(view.viewInvOffMat).invert();
+                    } else {
+                        view.viewInvOffMat.copy(view.viewInvMat);
+                        view.viewOffMat.copy(view.viewMat);
+                    }
+
+                    mat3FromMat4(view.viewMat3, view.viewOffMat);
+                    view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
+
+                    view.position[0] = view.viewInvOffMat.data[12];
+                    view.position[1] = view.viewInvOffMat.data[13];
+                    view.position[2] = view.viewInvOffMat.data[14];
+
+                    camera.frustum.update(view.projMat, view.viewOffMat);
+                }
+            } else {
+                // Projection Matrix
+                projMat = camera.getProjectionMatrix();
+                if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
+                this.projId.setValue(projMat.data);
+
+                // Skybox Projection Matrix
+                this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
+
+                // ViewInverse Matrix
+                if (camera.overrideCalculateTransform) {
+                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
+                } else {
+                    var pos = camera._node.getPosition();
+                    var rot = camera._node.getRotation();
+                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                }
+                this.viewInvId.setValue(viewInvMat.data);
+
+                // View Matrix
+                viewMat.copy(viewInvMat).invert();
+                this.viewId.setValue(viewMat.data);
+
+                // View 3x3
+                mat3FromMat4(viewMat3, viewMat);
+                this.viewId3.setValue(viewMat3.data);
+
+                // ViewProjection Matrix
+                viewProjMat.mul2(projMat, viewMat);
+                this.viewProjId.setValue(viewProjMat.data);
+
+                // View Position (world space)
+                var cameraPos = camera._node.getPosition();
+                this.viewPos[0] = cameraPos.x;
+                this.viewPos[1] = cameraPos.y;
+                this.viewPos[2] = cameraPos.z;
+
+                this.viewPosId.setValue(this.viewPos);
 
                 camera.frustum.update(projMat, viewMat);
             }
@@ -761,7 +798,7 @@ Object.assign(pc, function () {
             var scope = this.device.scope;
 
             for (i = 0; i < numDirs; i++) {
-                if (!(dirs[i]._mask & mask)) continue;
+                if (!(dirs[i].mask & mask)) continue;
 
                 directional = dirs[i];
                 wtm = directional._node.getWorldTransform();
@@ -952,7 +989,7 @@ Object.assign(pc, function () {
 
             for (i = 0; i < numPnts; i++) {
                 point = pnts[i];
-                if (!(point._mask & mask)) continue;
+                if (!(point.mask & mask)) continue;
                 if (point.isStatic) continue;
                 this.dispatchPointLight(scene, scope, point, cnt);
                 cnt++;
@@ -971,7 +1008,7 @@ Object.assign(pc, function () {
 
             for (i = 0; i < numSpts; i++) {
                 spot = spts[i];
-                if (!(spot._mask & mask)) continue;
+                if (!(spot.mask & mask)) continue;
                 if (spot.isStatic) continue;
                 this.dispatchSpotLight(scene, scope, spot, cnt);
                 cnt++;
@@ -1057,7 +1094,7 @@ Object.assign(pc, function () {
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 type = light._type;
-                if (light.castShadows && light._enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE) {
+                if (light.castShadows && light.enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE) {
                     if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                         light.getBoundingSphere(tempSphere);
                         if (!camera.frustum.containsSphere(tempSphere)) continue;
@@ -1175,16 +1212,19 @@ Object.assign(pc, function () {
             }
         },
 
+        // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
         drawInstance: function (device, meshInstance, mesh, style, normal) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 modelMatrix = meshInstance.node.worldTransform;
@@ -1201,27 +1241,29 @@ Object.assign(pc, function () {
                 }
 
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         // used for stereo
         drawInstance2: function (device, meshInstance, mesh, style) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 // matrices are already set
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         renderShadows: function (lights, cameraPass) {
@@ -1243,7 +1285,7 @@ Object.assign(pc, function () {
                 light = lights[i];
                 type = light._type;
 
-                if (!light.castShadows || !light._enabled) continue;
+                if (!light.castShadows || !light.enabled) continue;
 
                 if (!light._shadowCamera) {
                     this.getShadowCamera(device, light); // fix accessing non-existing shadow map/camera when the light was created/applied, but shadowmap was never initialized
@@ -1282,6 +1324,10 @@ Object.assign(pc, function () {
                         passes = 6;
 
                     }
+
+                    // #ifdef DEBUG
+                    this.device.pushMarker("SHADOW " + light._node.name);
+                    // #endif
 
                     if (type !== pc.LIGHTTYPE_POINT) {
                         shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
@@ -1329,6 +1375,15 @@ Object.assign(pc, function () {
                     }
 
                     while (pass < passes) {
+
+                        // #ifdef DEBUG
+                        var doPopMarker = false;
+                        if (passes > 1) {
+                            this.device.pushMarker("PASS " + pass);
+                            doPopMarker = true;
+                        }
+                        // #endif
+
                         if (type === pc.LIGHTTYPE_POINT) {
                             shadowCamNode.setRotation(pointLightRotations[pass]);
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
@@ -1404,9 +1459,20 @@ Object.assign(pc, function () {
                         }
                         pass++;
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) light._visibleLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
+
+                        // #ifdef DEBUG
+                        if (doPopMarker)
+                            this.device.popMarker();
+                        // #endif
+
                     } // end pass
 
                     if (light._isVsm) {
+
+                        // #ifdef DEBUG
+                        this.device.pushMarker("VSM");
+                        // #endif
+
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;
@@ -1453,7 +1519,15 @@ Object.assign(pc, function () {
                             this.pixelOffsetId.setValue(pixelOffset);
                             pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                         }
+
+                        // #ifdef DEBUG
+                        this.device.popMarker();
+                        // #endif
                     }
+
+                    // #ifdef DEBUG
+                    this.device.popMarker();
+                    // #endif
                 }
             }
 
@@ -1699,6 +1773,7 @@ Object.assign(pc, function () {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.projId.setValue(projL.data);
+                        this.projSkyboxId.setValue(projL.data);
                         this.viewInvId.setValue(viewInvL.data);
                         this.viewId.setValue(viewL.data);
                         this.viewId3.setValue(viewMat3L.data);
@@ -1713,6 +1788,7 @@ Object.assign(pc, function () {
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.projId.setValue(projR.data);
+                        this.projSkyboxId.setValue(projR.data);
                         this.viewInvId.setValue(viewInvR.data);
                         this.viewId.setValue(viewR.data);
                         this.viewId3.setValue(viewMat3R.data);
@@ -1723,6 +1799,30 @@ Object.assign(pc, function () {
                         this.viewPosId.setValue(this.viewPos);
                         i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
+                    } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                        var views = camera.xr.views;
+
+                        for (var v = 0; v < views.length; v++) {
+                            var view = views[v];
+
+                            device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
+
+                            this.projId.setValue(view.projMat.data);
+                            this.projSkyboxId.setValue(view.projMat.data);
+                            this.viewId.setValue(view.viewOffMat.data);
+                            this.viewInvId.setValue(view.viewInvOffMat.data);
+                            this.viewId3.setValue(view.viewMat3.data);
+                            this.viewProjId.setValue(view.projViewOffMat.data);
+                            this.viewPosId.setValue(view.position);
+
+                            if (v === 0) {
+                                i += this.drawInstance(device, drawCall, mesh, style, true);
+                            } else {
+                                i += this.drawInstance2(device, drawCall, mesh, style, true);
+                            }
+
+                            this._forwardDrawCalls++;
+                        }
                     } else {
                         i += this.drawInstance(device, drawCall, mesh, style, true);
                         this._forwardDrawCalls++;
@@ -1755,18 +1855,9 @@ Object.assign(pc, function () {
         },
 
         setupInstancing: function (device) {
-            if (!pc._instanceVertexFormat) {
-                var formatDesc = [
-                    { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
-                ];
-                pc._instanceVertexFormat = new pc.VertexFormat(device, formatDesc);
-            }
             if (device.enableAutoInstancing) {
                 if (!pc._autoInstanceBuffer) {
-                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc._instanceVertexFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
+                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc.VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
                     pc._autoInstanceBufferData = new Float32Array(pc._autoInstanceBuffer.lock());
                 }
             }
@@ -1852,8 +1943,8 @@ Object.assign(pc, function () {
                         for (j = 0; j < lights.length; j++) {
                             light = lights[j];
                             if (light._type !== lightTypePass) continue;
-                            if (light._enabled) {
-                                if (light._mask & drawCall.mask) {
+                            if (light.enabled) {
+                                if (light.mask & drawCall.mask) {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
@@ -2284,7 +2375,6 @@ Object.assign(pc, function () {
             }
 
             for (pass = 0; pass < passes; pass++) {
-
                 if (type === pc.LIGHTTYPE_POINT) {
                     shadowCamNode.setRotation(pointLightRotations[pass]);
                     shadowCam.renderTarget = light._shadowCubeMap[pass];
@@ -2352,7 +2442,7 @@ Object.assign(pc, function () {
 
             // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
             shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-            c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
+            c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
             for (i = 0; i < 8; i++) {
                 c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
@@ -2548,11 +2638,11 @@ Object.assign(pc, function () {
                 var l;
                 for (i = 0; i < stats.lights; i++) {
                     l = comp._lights[i];
-                    if (l._enabled) {
-                        if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                    if (l.enabled) {
+                        if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
                             stats.dynamicLights++;
                         }
-                        if (l._mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                        if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
                             stats.bakedLights++;
                         }
                     }
@@ -2650,7 +2740,7 @@ Object.assign(pc, function () {
                 light = comp._lights[i];
                 if (!light.visibleThisFrame) continue;
                 if (light._type === pc.LIGHTTYPE_DIRECTIONAL) continue;
-                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                if (!light.castShadows || !light.enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
                 this.cullLocalShadowmap(light, casters);
             }
@@ -2663,7 +2753,7 @@ Object.assign(pc, function () {
                 light = comp._lights[i];
                 if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                 globalLightCounter++;
-                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                if (!light.castShadows || !light.enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
                 cameras = comp._globalLightCameras[globalLightCounter];
                 for (j = 0; j < cameras.length; j++) {
@@ -2695,6 +2785,11 @@ Object.assign(pc, function () {
                 transparent = comp.subLayerList[comp._renderList[i]];
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
+
+                // #ifdef DEBUG
+                this.device.pushMarker(layer.name);
+                this.device.pushMarker(((camera && camera.node) ? camera.node.name : "noname"));
+                // #endif
 
                 // #ifdef PROFILER
                 drawTime = pc.now();
@@ -2803,6 +2898,11 @@ Object.assign(pc, function () {
                         layer._postRenderCounter = layer._postRenderCounterMax;
                     }
                 }
+
+                // #ifdef DEBUG
+                this.device.popMarker();
+                this.device.popMarker();
+                // #endif
 
                // #ifdef PROFILER
                 layer._renderTime += pc.now() - drawTime;

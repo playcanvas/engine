@@ -254,13 +254,13 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.TextureHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources
-     * @param {pc.GraphicsDevice} device The graphics device
-     * @param {pc.AssetRegistry} assets The asset registry
-     * @param {pc.ResourceLoader} loader The resource loader
+     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources.
+     * @param {pc.GraphicsDevice} device - The graphics device.
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {pc.ResourceLoader} loader - The resource loader.
      */
     var TextureHandler = function (device, assets, loader) {
         this._device = device;
@@ -278,7 +278,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(TextureHandler.prototype, {
-        load: function (url, callback) {
+        load: function (url, callback, asset) {
             if (typeof url === 'string') {
                 url = {
                     load: url,
@@ -312,7 +312,19 @@ Object.assign(pc, function () {
                         if (err) {
                             callback(err, result);
                         } else {
-                            pc.basisTranscode(url.load, result, callback);
+                            // massive hack for pvr textures (i.e. apple devices)
+                            // the quality of GGGR normal maps under PVR compression is still terrible
+                            // so here we instruct the basis transcoder to unswizzle the normal map data
+                            // and pack to 565
+                            var unswizzleGGGR = pc.basisTargetFormat() === 'pvr' &&
+                                                asset && asset.file && asset.file.variants &&
+                                                asset.file.variants.basis &&
+                                                ((asset.file.variants.basis.opt & 8) !== 0);
+                            if (unswizzleGGGR) {
+                                // remove the swizzled flag from the asset
+                                asset.file.variants.basis.opt &= ~8;
+                            }
+                            pc.basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
                         }
                     });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
@@ -501,6 +513,15 @@ Object.assign(pc, function () {
             var rgbm = !!asset.data.rgbm;
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
                 texture.rgbm = rgbm;
+
+            if (asset.file && asset.getPreferredFile) {
+                var preferredFile = asset.getPreferredFile();
+                if (preferredFile) {
+                    if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
+                        texture.swizzleGGGR = true;
+                    }
+                }
+            }
         }
     });
 
