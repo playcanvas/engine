@@ -239,25 +239,13 @@
                     }
 
                     // after movement and rotation is done
-                    // we can get camera parent position and rotation
-                    // to offset controller ray and model
-                    var parentPosition = cameraParent.getPosition();
-                    var parentRotation = cameraParent.getRotation();
-
-                    // then we update/render controllers
+                    // we update/render controllers
                     for(var i = 0; i < controllers.length; i++) {
                         var inputSource = controllers[i].inputSource;
 
-                        // transform ray into parent space
-                        //      position
-                        tmpVec3A.copy(inputSource.ray.origin);
-                        parentRotation.transformVector(tmpVec3A, tmpVec3A);
-                        tmpVec3A.add(parentPosition);
-                        //      rotation
-                        tmpVec3B.copy(inputSource.ray.direction);
-                        parentRotation.transformVector(tmpVec3B, tmpVec3B);
-
                         // render controller ray
+                        tmpVec3A.copy(inputSource.getOrigin());
+                        tmpVec3B.copy(inputSource.getDirection());
                         tmpVec3B.scale(100).add(tmpVec3A);
                         app.renderLine(tmpVec3A, tmpVec3B, lineColor);
 
@@ -265,8 +253,8 @@
                         if (inputSource.grip) {
                             // some controllers can be gripped
                             controllers[i].model.enabled = true;
-                            controllers[i].setLocalPosition(inputSource.position);
-                            controllers[i].setLocalRotation(inputSource.rotation);
+                            controllers[i].setLocalPosition(inputSource.getLocalPosition);
+                            controllers[i].setLocalRotation(inputSource.getLocalRotation);
                         } else {
                             // some controllers cannot be gripped
                             controllers[i].model.enabled = false;
