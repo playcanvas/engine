@@ -1076,7 +1076,8 @@ Object.assign(pc, function () {
                     usedTex = mipTex;
             }
             material.setParameter("texture_cubeMap", usedTex);
-            material.cull = pc.CULLFACE_NONE;
+            material.cull = pc.CULLFACE_FRONT;
+            material.depthWrite = false;
 
             var skyLayer = this.layers.getLayerById(pc.LAYERID_SKYBOX);
             if (skyLayer) {
