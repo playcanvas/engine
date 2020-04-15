@@ -345,6 +345,8 @@ pc.AssetRegistry.prototype.getAssetById = function (id) {
     return this.get(id);
 };
 
+pc.AudioManager = pc.SoundManager;
+
 pc.GraphNode.prototype._dirtify = function (local) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#_dirtify is deprecated. Use pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');

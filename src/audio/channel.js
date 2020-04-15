@@ -3,14 +3,14 @@ Object.assign(pc, function () {
 
     var Channel;
 
-    if (pc.AudioManager.hasAudioContext()) {
+    if (pc.SoundManager.hasAudioContext()) {
         /**
          * @private
          * @class
          * @name pc.Channel
-         * @classdesc A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
-         * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
-         * @param {pc.AudioManager} manager - The AudioManager instance.
+         * @classdesc A channel is created when the pc.SoundManager begins playback of a pc.Sound. Usually created internally by
+         * pc.SoundManager#playSound or pc.SoundManager#playSound3d. Developers usually won't have to create Channels manually.
+         * @param {pc.SoundManager} manager - The SoundManager instance.
          * @param {pc.Sound} sound - The sound to playback.
          * @param {object} [options] - Optional options object.
          * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
@@ -196,7 +196,7 @@ Object.assign(pc, function () {
                 }
             }
         });
-    } else if (pc.AudioManager.hasAudio()) {
+    } else if (pc.SoundManager.hasAudio()) {
         Channel = function (manager, sound, options) {
             this.volume = options.volume || 1;
             this.loop = options.loop || false;
