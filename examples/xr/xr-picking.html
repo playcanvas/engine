@@ -135,6 +135,7 @@
 
                 // when input source is triggers select
                 // pick closest box and change its color
+                var ray = new pc.Ray();
                 app.xr.input.on('select', function(inputSource) {
                     var candidate = null;
                     var candidateDist = Infinity;
@@ -143,7 +144,8 @@
                         var mesh = cubes[i].model.meshInstances[0];
 
                         // check if mesh bounding box intersects with input source ray
-                        if (mesh.aabb.intersectsRay(inputSource.ray)) {
+                        ray.set(inputSource.getOrigin(), inputSource.getDirection());
+                        if (mesh.aabb.intersectsRay(ray)) {
                             // check distance to camera
                             var dist = mesh.aabb.center.distance(c.getPosition());
 
@@ -174,10 +176,10 @@
                     for(var i = 0; i < app.xr.input.inputSources.length; i++) {
                         var inputSource = app.xr.input.inputSources[i];
 
-                        tmpVec.copy(inputSource.ray.direction);
-                        tmpVec.scale(100).add(inputSource.ray.origin);
+                        tmpVec.copy(inputSource.getDirection());
+                        tmpVec.scale(100).add(inputSource.getOrigin());
 
-                        app.renderLine(inputSource.ray.origin, tmpVec, lineColor);
+                        app.renderLine(inputSource.getOrigin(), tmpVec, lineColor);
                     }
                 });
             } else {
