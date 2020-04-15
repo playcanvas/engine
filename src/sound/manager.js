@@ -192,9 +192,6 @@ Object.assign(pc, function () {
         }
     });
 
-    // backwards compatibility
-    pc.AudioManager = SoundManager;
-
     return {
         SoundManager: SoundManager
     };
