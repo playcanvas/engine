@@ -237,7 +237,7 @@ Object.assign(pc, function () {
                 sourceArray = new Uint32Array(source.buffer, source.offset, source.count * source.stride / 4);
                 sourceStride = source.stride / 4;
 
-                var src = 0;//source.offset / 4;
+                var src = 0;
                 var dst = target.offset / 4;
                 for (j = 0; j < numVertices; ++j) {
                     for (k = 0; k < source.size / 4; ++k) {
