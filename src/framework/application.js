@@ -290,7 +290,7 @@ Object.assign(pc, function () {
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
-        this._audioManager = new pc.SoundManager(options);
+        this._soundManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader(this);
 
         // stores all entities that have been created
@@ -585,7 +585,7 @@ Object.assign(pc, function () {
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
-        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("audio", new pc.AudioHandler(this._soundManager));
         this.loader.addHandler("script", new pc.ScriptHandler(this));
         this.loader.addHandler("scene", new pc.SceneHandler(this));
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
@@ -614,9 +614,9 @@ Object.assign(pc, function () {
         } else {
             this.systems.add(new pc.ScriptComponentSystem(this));
         }
-        this.systems.add(new pc.AudioSourceComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.SoundComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.AudioListenerComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.AudioSourceComponentSystem(this, this._soundManager));
+        this.systems.add(new pc.SoundComponentSystem(this, this._soundManager));
+        this.systems.add(new pc.AudioListenerComponentSystem(this, this._soundManager));
         this.systems.add(new pc.ParticleSystemComponentSystem(this));
         this.systems.add(new pc.ScreenComponentSystem(this));
         this.systems.add(new pc.ElementComponentSystem(this));
@@ -1443,9 +1443,9 @@ Object.assign(pc, function () {
          */
         onVisibilityChange: function () {
             if (this.isHidden()) {
-                this._audioManager.suspend();
+                this._soundManager.suspend();
             } else {
-                this._audioManager.resume();
+                this._soundManager.resume();
             }
         },
 
@@ -1844,9 +1844,9 @@ Object.assign(pc, function () {
 
             this.off(); // remove all events
 
-            if (this._audioManager) {
-                this._audioManager.destroy();
-                this._audioManager = null;
+            if (this._soundManager) {
+                this._soundManager.destroy();
+                this._soundManager = null;
             }
 
             pc.http = new pc.Http();

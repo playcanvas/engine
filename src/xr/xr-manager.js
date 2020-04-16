@@ -128,8 +128,8 @@ Object.assign(pc, function () {
         this._pose = null;
         this.views = [];
         this.viewsPool = [];
-        this.position = new pc.Vec3();
-        this.rotation = new pc.Quat();
+        this._localPosition = new pc.Vec3();
+        this._localRotation = new pc.Quat();
 
         this._depthNear = 0.1;
         this._depthFar = 1000;
@@ -481,8 +481,8 @@ Object.assign(pc, function () {
             // reset position
             var posePosition = this._pose.transform.position;
             var poseOrientation = this._pose.transform.orientation;
-            this.position.set(posePosition.x, posePosition.y, posePosition.z);
-            this.rotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
+            this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
+            this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
             layer = frame.session.renderState.baseLayer;
 
@@ -504,8 +504,8 @@ Object.assign(pc, function () {
         }
 
         // position and rotate camera based on calculated vectors
-        this._camera.camera._node.setLocalPosition(this.position);
-        this._camera.camera._node.setLocalRotation(this.rotation);
+        this._camera.camera._node.setLocalPosition(this._localPosition);
+        this._camera.camera._node.setLocalRotation(this._localRotation);
 
         this.input.update(frame);
 

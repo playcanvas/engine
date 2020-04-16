@@ -56,8 +56,10 @@ Object.assign(pc, function () {
      * @param {pc.XrInputSource} inputSource - Input source that triggered select event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
+     * var ray = new pc.Ray();
      * app.xr.input.on('select', function (inputSource, evt) {
-     *     if (obj.intersectsRay(inputSource.ray)) {
+     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
+     *     if (obj.intersectsRay(ray)) {
      *         // selected an object with input source
      *     }
      * });
