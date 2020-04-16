@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     function upgradeDataSchema(data) {
         // convert v1 and v2 to v3 font data schema
-        if (data.version < 3 || data.version == 4) { //seems upgraded schema is never saved out?
+        if (data.version < 3 || data.version == 4) { // seems upgraded schema is never saved out?
             if (data.version < 2) {
                 data.info.maps = data.info.maps || [{
                     width: data.info.width,
@@ -20,7 +20,7 @@ Object.assign(pc, function () {
                 newChars[newKey] = existing;
                 return newChars;
             }, {});
-            data.version = Math.max(data.version+1, 3);
+            data.version = Math.max(data.version + 1, 3);
         }
         return data;
     }
@@ -60,8 +60,8 @@ Object.assign(pc, function () {
 
                             callback(null, {
                                 data: data,
-                                textures: textures//,
-                                //textures2: textures2
+                                textures: textures// ,
+                                // textures2: textures2
                             });
                         });
                     } else {
@@ -81,7 +81,7 @@ Object.assign(pc, function () {
         _loadTextures: function (url, data, callback) {
             var numTextures = data.info.maps.length;
             var numLoaded = 0;
-            
+
             var error = null;
 
             var textures = new Array(numTextures);
@@ -90,22 +90,21 @@ Object.assign(pc, function () {
             var textures2 = null;
 
             var loadTexture = function (index) {
-                if (data.version >= 4)
-                {
+                if (data.version >= 4) {
                     textures2 = new Array(numTextures);
-    
+
                     var onLoaded2 = function (err, texture) {
                         if (error) return;
-    
+
                         if (err) {
                             error = err;
                             return callback(err);
                         }
-    
+
                         texture.upload();
                         textures2[index] = texture;
                     };
-    
+
                     if (index === 0) {
                         loader.load(url.replace('.png', 'A.png'), "texture", onLoaded2);
                     } else {

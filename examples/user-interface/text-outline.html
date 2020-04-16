@@ -59,15 +59,16 @@
             color: new pc.Color(0, 0, 0),
             fontSize: 128,
             outlineColor: new pc.Color(1, 1, 1),
-            outlineThickness: 1.0,
+            outlineThickness: 0.75,
             pivot: [ 0.5, 0.5 ],
-            text: "Outlines v1",
+            text: "Outlines",
             type: pc.ELEMENTTYPE_TEXT,
             width: 640
         });
         screen.addChild(text);
         text.setLocalPosition(0, 150, 0);
 
+        // Create a text element a thicker font outline enabled
         var text2 = new pc.Entity();
         text2.addComponent("element", {
             anchor: [ 0.5, 0.5, 0.5, 0.5 ],
@@ -75,9 +76,9 @@
             color: new pc.Color(0, 0, 0),
             fontSize: 128,
             outlineColor: new pc.Color(1, 1, 1),
-            outlineThickness: 2.0,
+            outlineThickness: 3.0,
             pivot: [ 0.5, 0.5 ],
-            text: "Outlines v2",
+            text: "Thicker Outlines",
             type: pc.ELEMENTTYPE_TEXT,
             width: 640
         });
@@ -91,8 +92,7 @@
             text.element.fontAsset = fontAsset;
         });
 
-        //var fontAsset2 = new pc.Asset('OpenSans-Bold.json', "font", {url: "../assets/fonts/OpenSans-Bold.json"});
-        var fontAsset2 = new pc.Asset('Arial.json', "font", {url: "../assets/fonts/Arial4/Arial.json"});
+        var fontAsset2 = new pc.Asset('Arial.json', "font", {url: "../assets/fonts/Arial-v4/Arial.json"});
         fontAsset2.on('load', function () {
             // Apply the font to the text element
             text2.element.fontAsset = fontAsset2;
@@ -102,20 +102,7 @@
         app.assets.add(fontAsset2);        
         app.assets.load(fontAsset);
         app.assets.load(fontAsset2);        
-
-        // Set an update function on the app's update event
-        var thickness = 0;
-        var pingpong = 1;
-        app.on("update", function (dt) {
-            thickness += dt*pingpong;
-            if (thickness > 5 || thickness < 0) {
-                pingpong = -pingpong;
-                thickness = pc.math.clamp(thickness, 0, 5);
-            }
-
-            //text.element.outlineThickness=thickness;
-            text2.element.outlineThickness=thickness;
-        });        
+ 
     </script>
 </body>
 </html>

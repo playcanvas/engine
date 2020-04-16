@@ -48,21 +48,13 @@ vec4 applyMsdf(vec4 color) {
 #ifdef MSDFA
     float num = float(sigDist<0.5)*clamp((outline_thickness-0.2)*5.0,0.0,1.0);
 
-    t_outline_thickness=mix(outline_thickness, outline_thickness*0.25+0.02, num);
-
-    //float tsamplea = min(texture2D(texture_msdfMapA, vUv0).r, sigDist);
-    //float ssamplea = min(texture2D(texture_msdfMapA, uvShdw).r, sigDistShdw);
-//    sigDist=mix(sigDist,tsamplea, float(outline_thickness>0.2)*clamp((0.3-tsamplea)*10.0,0.0,1.0));
-//    sigDistShdw=mix(sigDistShdw,ssamplea, float(outline_thickness>0.2)*clamp((0.3-ssamplea)*10.0,0.0,1.0));
-
-    //float num = float(sigDist<0.5)*clamp((t_outline_thickness-0.2)*20.0,0.0,1.0);
-
     float tsamplea = texture2D(texture_msdfMapA, vUv0).r;
     float ssamplea = texture2D(texture_msdfMapA, uvShdw).r;
 
     sigDist=mix(sigDist, tsamplea, num);
     sigDistShdw=mix(sigDistShdw, ssamplea, num);
 
+    t_outline_thickness=mix(outline_thickness, outline_thickness*0.25+0.02, num);
     t_font_pxrange=mix(font_pxrange, font_pxrange*4.0, num);
 #endif
 
