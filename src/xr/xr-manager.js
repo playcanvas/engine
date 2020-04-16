@@ -511,6 +511,8 @@ Object.assign(pc, function () {
 
         if (this._type === pc.XRTYPE_AR && this.hitTest.supported)
             this.hitTest.update(frame);
+
+        this.fire('update');
     };
 
     Object.defineProperty(XrManager.prototype, 'supported', {
