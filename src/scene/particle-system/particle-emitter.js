@@ -773,6 +773,55 @@ Object.assign(pc, function () {
             this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
         },
 
+        cloneGraphs: function (sourceEmitter) {
+            var precision = this.precision;
+            var gd = this.graphicsDevice;
+
+            this.qLocalVelocity = sourceEmitter.qLocalVelocity.slice();
+            this.qVelocity =      sourceEmitter.qVelocity.slice();
+            this.qColor =         sourceEmitter.qColor.slice();
+            this.qRotSpeed =      sourceEmitter.qRotSpeed.slice();
+            this.qScale =         sourceEmitter.qScale.slice();
+            this.qAlpha =         sourceEmitter.qAlpha.slice();
+            this.qRadialSpeed =   sourceEmitter.qRadialSpeed.slice();
+
+            this.qLocalVelocity2 = sourceEmitter.qLocalVelocity2.slice();
+            this.qVelocity2 =      sourceEmitter.qVelocity2.slice();
+            this.qColor2 =         sourceEmitter.qColor2.slice();
+            this.qRotSpeed2 =      sourceEmitter.qRotSpeed2.slice();
+            this.qScale2 =         sourceEmitter.qScale2.slice();
+            this.qAlpha2 =         sourceEmitter.qAlpha2.slice();
+            this.qRadialSpeed2 =   sourceEmitter.qRadialSpeed2.slice();
+
+            this.localVelocityUMax = sourceEmitter.localVelocityUMax.slice();
+            this.velocityUMax =      sourceEmitter.velocityUMax.slice();
+            this.colorUMax =         sourceEmitter.colorUMax.slice();
+            this.rotSpeedUMax =      sourceEmitter.rotSpeedUMax.slice();
+            this.scaleUMax =         sourceEmitter.scaleUMax.slice();
+            this.alphaUMax =         sourceEmitter.alphaUMax.slice();
+            this.radialSpeedUMax =   sourceEmitter.radialSpeedUMax.slice();
+            this.qLocalVelocityDiv = sourceEmitter.qLocalVelocityDiv.slice();
+            this.qVelocityDiv =      sourceEmitter.qVelocityDiv.slice();
+            this.qColorDiv =         sourceEmitter.qColorDiv.slice();
+            this.qRotSpeedDiv =      sourceEmitter.qRotSpeedDiv.slice();
+            this.qScaleDiv =         sourceEmitter.qScaleDiv.slice();
+            this.qAlphaDiv =         sourceEmitter.qAlphaDiv.slice();
+            this.qRadialSpeedDiv =   sourceEmitter.qRadialSpeedDiv.slice();
+
+            if (this.pack8) {
+                this.maxVel = sourceEmitter.maxVel;
+            }
+
+            if (!this.useCpu) {
+                this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
+                this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
+                this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
+                this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
+            }
+            
+            this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+        }, 
+
         _initializeTextures: function () {
             if (this.colorMap) {
                 this.material.setParameter('colorMap', this.colorMap);
