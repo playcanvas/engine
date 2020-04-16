@@ -4,10 +4,12 @@ Object.assign(pc, function () {
     var vecB = new pc.Vec3();
 
     var rayA = new pc.Ray();
-    rayA.end = new pc.Vec3();
-
     var rayB = new pc.Ray();
+    var rayC = new pc.Ray();
+
+    rayA.end = new pc.Vec3();
     rayB.end = new pc.Vec3();
+    rayC.end = new pc.Vec3();
 
     var _pq = new pc.Vec3();
     var _pa = new pc.Vec3();
@@ -670,10 +672,12 @@ Object.assign(pc, function () {
             var camera;
 
             if (inputSource.elementInput) {
+                rayC.set(inputSource.getOrigin(), inputSource.getDirection());
+
                 for (var i = cameras.length - 1; i >= 0; i--) {
                     camera = cameras[i];
 
-                    element = this._getTargetElementByRay(inputSource.ray, camera);
+                    element = this._getTargetElementByRay(rayC, camera);
                     if (element)
                         break;
                 }
