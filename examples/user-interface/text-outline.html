@@ -85,14 +85,14 @@
         text2.setLocalPosition(0, -150, 0);
 
         // Load a font
-        var fontAsset = new pc.Asset('Arial_1.json', "font", {url: "../assets/fonts/Arial_1.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;
         });
 
         //var fontAsset2 = new pc.Asset('OpenSans-Bold.json', "font", {url: "../assets/fonts/OpenSans-Bold.json"});
-        var fontAsset2 = new pc.Asset('Arial.json', "font", {url: "../assets/fonts/Arial3/Arial.json"});
+        var fontAsset2 = new pc.Asset('Arial.json', "font", {url: "../assets/fonts/Arial4/Arial.json"});
         fontAsset2.on('load', function () {
             // Apply the font to the text element
             text2.element.fontAsset = fontAsset2;
@@ -105,14 +105,16 @@
 
         // Set an update function on the app's update event
         var thickness = 0;
+        var pingpong = 1;
         app.on("update", function (dt) {
-            thickness += dt;
-            if (thickness > 5) {
-                thickness = 0;
+            thickness += dt*pingpong;
+            if (thickness > 5 || thickness < 0) {
+                pingpong = -pingpong;
+                thickness = pc.math.clamp(thickness, 0, 5);
             }
 
             //text.element.outlineThickness=thickness;
-            //text2.element.outlineThickness=thickness;
+            text2.element.outlineThickness=thickness;
         });        
     </script>
 </body>

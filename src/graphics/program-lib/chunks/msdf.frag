@@ -42,31 +42,48 @@ vec4 applyMsdf(vec4 color) {
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
+    float t_outline_thickness = outline_thickness;
+    float t_font_pxrange = font_pxrange;
+
 #ifdef MSDFA
+    float num = float(sigDist<0.5)*clamp((outline_thickness-0.2)*5.0,0.0,1.0);
+
+    t_outline_thickness=mix(outline_thickness, outline_thickness*0.25+0.02, num);
+
+    //float tsamplea = min(texture2D(texture_msdfMapA, vUv0).r, sigDist);
+    //float ssamplea = min(texture2D(texture_msdfMapA, uvShdw).r, sigDistShdw);
+//    sigDist=mix(sigDist,tsamplea, float(outline_thickness>0.2)*clamp((0.3-tsamplea)*10.0,0.0,1.0));
+//    sigDistShdw=mix(sigDistShdw,ssamplea, float(outline_thickness>0.2)*clamp((0.3-ssamplea)*10.0,0.0,1.0));
+
+    //float num = float(sigDist<0.5)*clamp((t_outline_thickness-0.2)*20.0,0.0,1.0);
+
     float tsamplea = texture2D(texture_msdfMapA, vUv0).r;
     float ssamplea = texture2D(texture_msdfMapA, uvShdw).r;
-    sigDist=mix(sigDist,tsamplea, clamp((0.4-tsamplea)*10.0,0.0,1.0));
-    sigDistShdw=mix(sigDistShdw,ssamplea, clamp((0.4-ssamplea)*10.0,0.0,1.0));
+
+    sigDist=mix(sigDist, tsamplea, num);
+    sigDistShdw=mix(sigDistShdw, ssamplea, num);
+
+    t_font_pxrange=mix(font_pxrange, font_pxrange*4.0, num);
 #endif
 
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
         vec2 w = fwidth(vUv0);
-        float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
+        float smoothing = clamp(w.x * font_textureWidth / t_font_pxrange, 0.0, 0.5);
     #else
         float font_size = 16.0; // TODO fix this
         // smoothing gets smaller as the font size gets bigger
         // don't have fwidth we can approximate from font size, this doesn't account for scaling
         // so a big font scaled down will be wrong...
-        float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5); 
+        float smoothing = clamp(t_font_pxrange / font_size, 0.0, 0.5); 
     #endif
     float mapMin = 0.05;
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
 
     // remap to a smaller range (used on smaller font sizes)
     float sigDistInner = map(mapMin, mapMax, sigDist);
-    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
-    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
+    float sigDistOutline = map(mapMin, mapMax, sigDist + t_outline_thickness);
+    sigDistShdw = map(mapMin, mapMax, sigDistShdw + t_outline_thickness);
 
     float center = 0.5;
     // calculate smoothing and use to generate opacity

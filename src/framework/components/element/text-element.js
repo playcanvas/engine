@@ -103,7 +103,7 @@ Object.assign(pc, function () {
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
-        this._outlineThicknessScale = 0.1; // was 0.2 now 0.1 - coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThicknessScale = 0.2; //0.1; // was 0.2 now 0.1 - coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
 
         this._multiPassEnabled = false; // when true multi pass text rendering is enabled for correct thicker outline rendering
@@ -1664,14 +1664,14 @@ Object.assign(pc, function () {
             this._updateText();
 
             // if font version has changed we will need to change the _outlineThicknessScale and update the material parameter
-            if (value.data.version !== previousFontVersion) {
-                this._outlineThicknessScale = (this._font.data.version==3) ? 0.2 : 0.1;
+            /*if (value.data.version !== previousFontVersion) {
+                this._outlineThicknessScale = (this._font.data.version == 3) ? 0.2 : 0.1;
 
                 for (var i = 0; i < this._model.meshInstances.length; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter("outline_thickness", this._outlineThicknessScale * Math.min(this._outlineThickness,(this._font.data.version==3) ? 1.0 : 5.0));
                 }
-            }
+            }*/
         }
     });
 
