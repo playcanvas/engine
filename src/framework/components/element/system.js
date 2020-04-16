@@ -314,6 +314,7 @@ Object.assign(pc, function () {
                         this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
                         this.defaultScreenSpaceTextMaterial.name = "defaultScreenSpaceTextMaterial";
                         this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
+                        this.defaultScreenSpaceTextMaterial.msdfMapA = this._defaultTexture;
                         this.defaultScreenSpaceTextMaterial.useLighting = false;
                         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
                         this.defaultScreenSpaceTextMaterial.useFog = false;
@@ -357,6 +358,7 @@ Object.assign(pc, function () {
                     this.defaultTextMaterial = new pc.StandardMaterial();
                     this.defaultTextMaterial.name = "defaultTextMaterial";
                     this.defaultTextMaterial.msdfMap = this._defaultTexture;
+                    this.defaultTextMaterial.msdfMapA = this._defaultTexture;
                     this.defaultTextMaterial.useLighting = false;
                     this.defaultTextMaterial.useGammaTonemap = false;
                     this.defaultTextMaterial.useFog = false;

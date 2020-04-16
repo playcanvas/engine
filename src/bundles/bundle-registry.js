@@ -104,6 +104,10 @@ Object.assign(pc, function () {
                 var numFiles = asset.data.info.maps.length;
                 for (var i = 1; i < numFiles; i++) {
                     urls.push(url.replace('.png', i + '.png'));
+                    if (asset.data.version >= 4)
+                    {
+                        urls.push(url.replace('.png', i + 'A.png'));
+                    }
                 }
             }
 

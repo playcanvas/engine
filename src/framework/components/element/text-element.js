@@ -249,8 +249,8 @@ Object.assign(pc, function () {
             var i;
             var len;
 
-            var multiPassNeeded = (this._outlineThickness > 1.0 && this._font.textures.length == 1);
-            var mesh_num_needed = (multiPassNeeded) ? 5 : this._font.textures.length;
+            var multiPassNeeded = (this._outlineThickness > 1.0 && this._font.textures[0].length == 1);
+            var mesh_num_needed = (multiPassNeeded) ? 5 : this._font.textures[0].length;
 
             for (i = 0, len = mesh_num_needed; i < len; i++) {
                 var ti = (multiPassNeeded) ? 0 : i;
@@ -264,11 +264,12 @@ Object.assign(pc, function () {
                         mi.setParameter("font_sdfIntensity", this._font.intensity);
                         mi.setParameter("font_pxrange", this._getPxRange(this._font));
                         mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
-                        this._setTextureParams(mi, this._font.textures[ti]);
 
                         if (multiPassNeeded) {
+                            this._setTextureParams(mi, this._font.textures[0][ti], this._font.textures[1][ti]);
                             mi.setParameter("render_pass", RenderPass.TEXT);
                         } else {
+                            this._setTextureParams(mi, this._font.textures[0][ti], null);
                             mi.setParameter("render_pass", RenderPass.ALL_IN_ONE);
                         }
                     }
@@ -325,7 +326,7 @@ Object.assign(pc, function () {
             var results;
             var tags;
 
-            if (this._multiPassEnabled != (this._outlineThickness > 1.0 && this._font.textures.length == 1)) {
+            if (this._multiPassEnabled != (this._outlineThickness > 1.0 && this._font.textures[0].length == 1)) {
                 this._updateMeshInfos();
                 this._updateMaterial(this._element._isScreenSpace());
             }
@@ -540,7 +541,15 @@ Object.assign(pc, function () {
                         mi.isVisibleFunc = visibleFn;
                     }
 
-                    this._setTextureParams(mi, this._font.textures[ti]);
+                    if (this._multiPassEnabled)
+                    {
+                        this._setTextureParams(mi, this._font.textures[0][ti], this._font.textures[1][ti]);
+                    }
+                    else
+                    {
+                        this._setTextureParams(mi, this._font.textures[0][ti], null);
+                    }
+
                     if (this._symbolColors) {
                         // when per-vertex coloring is present, disable material emissive color
                         this._colorUniform[0] = 1;
@@ -874,7 +883,7 @@ Object.assign(pc, function () {
                             } else {
                                 // Move back to the beginning of the current word.
                                 var backtrack = Math.max(i - wordStartIndex, 0);
-                                if (this._font.textures.length <= 1) {
+                                if (this._font.textures[0].length <= 1) {
                                     meshInfo.lines[lines - 1] -= backtrack;
                                     meshInfo.quad -= backtrack;
                                 } else {
@@ -1163,12 +1172,20 @@ Object.assign(pc, function () {
 
         },
 
-        _setTextureParams: function (mi, texture) {
+        _setTextureParams: function (mi, texture, textureA) {
             if (this._font) {
                 if (this._font.type === pc.FONT_MSDF) {
                     mi.deleteParameter("texture_emissiveMap");
                     mi.deleteParameter("texture_opacityMap");
                     mi.setParameter("texture_msdfMap", texture);
+                    if (textureA)
+                    {
+                        mi.setParameter("texture_msdfMapA", textureA);
+                    }
+                    else
+                    {
+                        mi.setParameter("texture_msdfMapA", texture);
+                    }
                 } else if (this._font.type === pc.FONT_BITMAP) {
                     mi.deleteParameter("texture_msdfMap");
                     mi.setParameter("texture_emissiveMap", texture);
@@ -1642,7 +1659,7 @@ Object.assign(pc, function () {
             // make sure we have as many meshInfo entries
             // as the number of font textures and outline passes
 
-            this._multiPassEnabled = !(this._outlineThickness > 1.0 && this._font.textures.length == 1); // this line forces a call to _updateMeshInfos
+            this._multiPassEnabled = !(this._outlineThickness > 1.0 && this._font.textures[0].length == 1); // this line forces a call to _updateMeshInfos
 
             this._updateText();
 

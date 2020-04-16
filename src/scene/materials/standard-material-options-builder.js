@@ -115,6 +115,7 @@ Object.assign(pc, function () {
         options.refraction = !!stdMat.refraction;
         options.useMetalness = stdMat.useMetalness;
         options.msdf = !!stdMat.msdfMap;
+        options.msdfA = !!stdMat.msdfMapA;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
         options.aoMapUv = stdMat.aoUvSet; // backwards componen

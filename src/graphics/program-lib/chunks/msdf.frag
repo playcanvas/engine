@@ -1,5 +1,10 @@
 uniform sampler2D texture_msdfMap;
 
+#define MSDFA
+#ifdef MSDFA
+uniform sampler2D texture_msdfMapA;
+#endif
+
 #ifdef GL_OES_standard_derivatives
 #define USE_FWIDTH
 #endif
@@ -37,11 +42,12 @@ vec4 applyMsdf(vec4 color) {
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
-    float tsamplea = texture2D(texture_msdfMap, vUv0).a;
-    float ssamplea = texture2D(texture_msdfMap, uvShdw).a;
-
+#ifdef MSDFA
+    float tsamplea = texture2D(texture_msdfMapA, vUv0).r;
+    float ssamplea = texture2D(texture_msdfMapA, uvShdw).r;
     sigDist=mix(sigDist,tsamplea, clamp((0.4-tsamplea)*10.0,0.0,1.0));
     sigDistShdw=mix(sigDistShdw,ssamplea, clamp((0.4-ssamplea)*10.0,0.0,1.0));
+#endif
 
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
@@ -71,6 +77,7 @@ vec4 applyMsdf(vec4 color) {
     vec4 scolor = max(shadow,outline)*mix(vec4(shadow_color.a * shadow_color.rgb, shadow_color.a), vec4(outline_color.a * outline_color.rgb, outline_color.a), outline);
     vec4 tcolor = mix(scolor, color, inside);
     
+#ifdef MSDFA    
     if (render_pass==1.0 && inside==0.0)
     {
         discard;
@@ -95,6 +102,7 @@ vec4 applyMsdf(vec4 color) {
     {
         return vec4(0.0);
     }
+#endif
 
     return vec4(tcolor.rgb,tcolor.a);
 }
