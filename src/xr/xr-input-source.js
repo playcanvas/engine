@@ -82,6 +82,7 @@ Object.assign(pc, function () {
      * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
      * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
      * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
+     * @property {pc.Entity} elementEntity If {@link pc.XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
      * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
      */
     var XrInputSource = function (manager, xrInputSource) {
@@ -107,6 +108,7 @@ Object.assign(pc, function () {
         this._selecting = false;
 
         this._elementInput = true;
+        this._elementEntity = null;
 
         this._hitTestSources = [];
     };
@@ -467,6 +469,15 @@ Object.assign(pc, function () {
                 return;
 
             this._elementInput = value;
+
+            if (! this._elementInput)
+                this._elementEntity = null;
+        }
+    });
+
+    Object.defineProperty(XrInputSource.prototype, 'elementEntity', {
+        get: function () {
+            return this._elementEntity;
         }
     });
 

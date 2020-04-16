@@ -646,7 +646,10 @@ Object.assign(pc, function () {
 
         _onXrInputRemove: function (inputSource) {
             var hovered = this._selectedElements[inputSource.id];
-            if (hovered) this._fireEvent('selectleave', new ElementSelectEvent(null, hovered, null, inputSource));
+            if (hovered) {
+                inputSource._elementEntity = null;
+                this._fireEvent('selectleave', new ElementSelectEvent(null, hovered, null, inputSource));
+            }
 
             delete this._selectedElements[inputSource.id];
             delete this._selectedPressedElements[inputSource.id];
@@ -682,6 +685,8 @@ Object.assign(pc, function () {
                         break;
                 }
             }
+
+            inputSource._elementEntity = element || null;
 
             if (element) {
                 this._selectedElements[inputSource.id] = element;
