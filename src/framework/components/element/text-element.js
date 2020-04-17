@@ -103,7 +103,7 @@ Object.assign(pc, function () {
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
-        this._outlineThicknessScale = 0.2; // coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
 
         this._multiPassEnabled = false; // when true multi pass text rendering is enabled for correct thicker outline rendering
@@ -113,8 +113,6 @@ Object.assign(pc, function () {
         this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
         this._shadowOffset = new pc.Vec2(0, 0);
         this._shadowOffsetUniform = new Float32Array(2);
-
-        this._zeroColorUniform = new Float32Array(4);
 
         this._enableMarkup = false;
 
@@ -461,20 +459,16 @@ Object.assign(pc, function () {
 
                     meshInfo.count = l;
 
-                    switch (this._meshInfo[i].renderPass) {
-                        case RenderPass.TEXT:
-                        case RenderPass.ALL_IN_ONE:
-                            meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
-                            meshInfo.indices.length = l * 3 * 2;
-                            meshInfo.uvs.length = l * 2 * 4;
-                            meshInfo.colors.length = l * 4 * 4;
-                            break;
-                        default:
-                            meshInfo.positions.length = meshInfo.normals.length = 0;
-                            meshInfo.indices.length = 0;
-                            meshInfo.uvs.length = 0;
-                            meshInfo.colors.length = 0;
-                            break;
+                    if (!this._multiPassEnabled || this._meshInfo[i].renderPass == RenderPass.TEXT) {
+                        meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
+                        meshInfo.indices.length = l * 3 * 2;
+                        meshInfo.uvs.length = l * 2 * 4;
+                        meshInfo.colors.length = l * 4 * 4;
+                    } else {
+                        meshInfo.positions.length = meshInfo.normals.length = 0;
+                        meshInfo.indices.length = 0;
+                        meshInfo.uvs.length = 0;
+                        meshInfo.colors.length = 0;
                     }
 
                     // destroy old mesh
@@ -491,48 +485,44 @@ Object.assign(pc, function () {
 
                     var mesh = null;
 
-                    switch (this._meshInfo[i].renderPass) {
-                        case RenderPass.TEXT:
-                        case RenderPass.ALL_IN_ONE:
-                            // set up indices and normals whose values don't change when we call _updateMeshes
-                            for (var v = 0; v < l; v++) {
-                                // create index and normal arrays since they don't change
-                                // if the length doesn't change
-                                meshInfo.indices[v * 3 * 2 + 0] = v * 4;
-                                meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
-                                meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
-                                meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
-                                meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
-                                meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
+                    if (!this._multiPassEnabled || this._meshInfo[i].renderPass == RenderPass.TEXT) {
+                        // set up indices and normals whose values don't change when we call _updateMeshes
+                        for (var v = 0; v < l; v++) {
+                            // create index and normal arrays since they don't change
+                            // if the length doesn't change
+                            meshInfo.indices[v * 3 * 2 + 0] = v * 4;
+                            meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
+                            meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
+                            meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
+                            meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
+                            meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
 
-                                meshInfo.normals[v * 4 * 3 + 0] = 0;
-                                meshInfo.normals[v * 4 * 3 + 1] = 0;
-                                meshInfo.normals[v * 4 * 3 + 2] = -1;
+                            meshInfo.normals[v * 4 * 3 + 0] = 0;
+                            meshInfo.normals[v * 4 * 3 + 1] = 0;
+                            meshInfo.normals[v * 4 * 3 + 2] = -1;
 
-                                meshInfo.normals[v * 4 * 3 + 3] = 0;
-                                meshInfo.normals[v * 4 * 3 + 4] = 0;
-                                meshInfo.normals[v * 4 * 3 + 5] = -1;
+                            meshInfo.normals[v * 4 * 3 + 3] = 0;
+                            meshInfo.normals[v * 4 * 3 + 4] = 0;
+                            meshInfo.normals[v * 4 * 3 + 5] = -1;
 
-                                meshInfo.normals[v * 4 * 3 + 6] = 0;
-                                meshInfo.normals[v * 4 * 3 + 7] = 0;
-                                meshInfo.normals[v * 4 * 3 + 8] = -1;
+                            meshInfo.normals[v * 4 * 3 + 6] = 0;
+                            meshInfo.normals[v * 4 * 3 + 7] = 0;
+                            meshInfo.normals[v * 4 * 3 + 8] = -1;
 
-                                meshInfo.normals[v * 4 * 3 + 9] = 0;
-                                meshInfo.normals[v * 4 * 3 + 10] = 0;
-                                meshInfo.normals[v * 4 * 3 + 11] = -1;
-                            }
-                            mesh = pc.createMesh(this._system.app.graphicsDevice,
-                                                 meshInfo.positions,
-                                                 {
-                                                     uvs: meshInfo.uvs,
-                                                     normals: meshInfo.normals,
-                                                     colors: meshInfo.colors,
-                                                     indices: meshInfo.indices
-                                                 });
-                            break;
-                        default:
-                            mesh = this._model.meshInstances[ti].mesh;
-                            break;
+                            meshInfo.normals[v * 4 * 3 + 9] = 0;
+                            meshInfo.normals[v * 4 * 3 + 10] = 0;
+                            meshInfo.normals[v * 4 * 3 + 11] = -1;
+                        }
+                        mesh = pc.createMesh(this._system.app.graphicsDevice,
+                                             meshInfo.positions,
+                                             {
+                                                 uvs: meshInfo.uvs,
+                                                 normals: meshInfo.normals,
+                                                 colors: meshInfo.colors,
+                                                 indices: meshInfo.indices
+                                             });
+                    } else {
+                        mesh = this._model.meshInstances[ti].mesh;
                     }
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
@@ -565,6 +555,7 @@ Object.assign(pc, function () {
                         this._colorUniform[2] = this._color.b;
                     }
                     mi.setParameter("material_emissive", this._colorUniform);
+                    mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
@@ -573,29 +564,21 @@ Object.assign(pc, function () {
                     this._outlineColorUniform[1] = this._outlineColor.g;
                     this._outlineColorUniform[2] = this._outlineColor.b;
                     this._outlineColorUniform[3] = this._outlineColor.a;
-
+                    mi.setParameter("outline_color", this._outlineColorUniform);
                     mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
 
                     this._shadowColorUniform[0] = this._shadowColor.r;
                     this._shadowColorUniform[1] = this._shadowColor.g;
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
+                    mi.setParameter("shadow_color", this._shadowColorUniform);
 
                     var ratio = this._font.data.info.maps[ti].width / this._font.data.info.maps[ti].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                     this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
-                    this._zeroColorUniform[0] = 0.0;
-                    this._zeroColorUniform[1] = 0.0;
-                    this._zeroColorUniform[2] = 0.0;
-                    this._zeroColorUniform[3] = 0.0;
-
                     mi.setParameter("render_pass", this._meshInfo[i].renderPass);
-
-                    mi.setParameter("material_opacity", this._color.a);
-                    mi.setParameter("outline_color", this._outlineColorUniform);
-                    mi.setParameter("shadow_color", this._shadowColorUniform);
 
                     meshInfo.meshInstance = mi;
 
@@ -1393,15 +1376,17 @@ Object.assign(pc, function () {
 
             var i, len;
 
-            for (i = 0, len = (this._multiPassEnabled) ? 1 : this._meshInfo.length; i < len; i++) {
-                var start = startChars[i] || 0;
-                var end = endChars[i] || 0;
-                var instance = this._meshInfo[i].meshInstance;
-                if (instance) {
-                    var mesh = instance.mesh;
-                    if (mesh) {
-                        mesh.primitive[0].base = start * 3 * 2;
-                        mesh.primitive[0].count = (end - start) * 3 * 2;
+            for (i = 0, len = this._meshInfo.length; i < len; i++) {
+                if (!this._multiPassEnabled || this._meshInfo[i].renderPass == RenderPass.TEXT) {
+                    var start = startChars[i] || 0;
+                    var end = endChars[i] || 0;
+                    var instance = this._meshInfo[i].meshInstance;
+                    if (instance) {
+                        var mesh = instance.mesh;
+                        if (mesh) {
+                            mesh.primitive[0].base = start * 3 * 2;
+                            mesh.primitive[0].count = (end - start) * 3 * 2;
+                        }
                     }
                 }
             }
@@ -1492,9 +1477,9 @@ Object.assign(pc, function () {
             this._color.a = value;
 
             if (this._model) {
-                for (var i = 0; i < this._model.meshInstances.length; i++) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter("material_opacity", this._color.a);
+                    mi.setParameter('material_opacity', value);
                 }
             }
         }
@@ -1799,7 +1784,7 @@ Object.assign(pc, function () {
 
                 if (opaquenessChanged) this._updateText();
 
-                for (var i = 0; i < this._model.meshInstances.length; i++) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter("outline_color", this._outlineColorUniform);
                 }
@@ -1822,7 +1807,7 @@ Object.assign(pc, function () {
 
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_thickness", this._outlineThicknessScale * Math.min(this._outlineThickness, (this._font.data.version == 3) ? 1.0 : 5.0));
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * Math.min(this._outlineThickness, (this._font.data.version >= 4) ? 5.0 : 1.0));
                     }
                 }
             }

@@ -112,5 +112,5 @@ vec4 applyMsdf(vec4 color) {
     }
 #endif
 
-    return vec4(tcolor.rgb,tcolor.a);
+    return tcolor;
 }
