@@ -595,27 +595,17 @@ Object.assign(pc, function () {
         syncEntityToBody: function () {
             var body = this.body;
             if (body) {
-                var pos = this.entity.getPosition();
-                var rot = this.entity.getRotation();
+                var wtm = this.entity.getWorldTransform();
+                ammoTransform.setFromOpenGLMatrix(wtm.data);
 
-                var transform = body.getWorldTransform();
-                var origin = transform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
+                body.setWorldTransform(ammoTransform);
 
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                transform.setRotation(ammoQuat);
-
-                // update the motion state for kinematic bodies
-                if (this.isKinematic()) {
-                    var motionState = this.body.getMotionState();
+                if (this.type === pc.BODYTYPE_KINEMATIC) {
+                    var motionState = body.getMotionState();
                     if (motionState) {
-                        motionState.setWorldTransform(transform);
+                        motionState.setWorldTransform(ammoTransform);
                     }
                 }
-
-                Ammo.destroy(origin);
-                Ammo.destroy(transform);
-                body.activate();
             }
         },
 
@@ -638,6 +628,7 @@ Object.assign(pc, function () {
                     this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
+                body.activate();
             }
         },
 
@@ -690,27 +681,6 @@ Object.assign(pc, function () {
                 this.entity.setPosition(arguments[0], arguments[1], arguments[2]);
             }
             this.syncEntityToBody();
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.RigidBodyComponent#_updateKinematic
-         * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
-         * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-         */
-        _updateKinematic: function () {
-            var body = this.body;
-            if (body) {
-                var motionState = body.getMotionState();
-                if (motionState) {
-                    var wtm = this.entity.getWorldTransform();
-
-                    ammoTransform.setFromOpenGLMatrix(wtm.data);
-
-                    motionState.setWorldTransform(ammoTransform);
-                }
-            }
         },
 
         onEnable: function () {

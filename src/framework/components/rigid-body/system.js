@@ -505,7 +505,7 @@ Object.assign(pc, function () {
             }
 
             for (i = 0; i < this._kinematic.length; i++) {
-                this._kinematic[i]._updateKinematic();
+                this._kinematic[i].syncEntityToBody();
             }
 
             // Update the transforms of all bodies
