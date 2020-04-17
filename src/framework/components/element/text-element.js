@@ -492,10 +492,10 @@ Object.assign(pc, function () {
                     switch (this._meshInfo[i].renderPass) {
                         case RenderPass.TEXT:
                         case RenderPass.ALL_IN_ONE:
-                                // set up indices and normals whose values don't change when we call _updateMeshes
+                            // set up indices and normals whose values don't change when we call _updateMeshes
                             for (var v = 0; v < l; v++) {
-                                    // create index and normal arrays since they don't change
-                                    // if the length doesn't change
+                                // create index and normal arrays since they don't change
+                                // if the length doesn't change
                                 meshInfo.indices[v * 3 * 2 + 0] = v * 4;
                                 meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
                                 meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
