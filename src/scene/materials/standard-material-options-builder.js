@@ -126,9 +126,7 @@ Object.assign(pc, function () {
         options.diffuseDetail = !!stdMat.diffuseMap;
         options.normalDetail = !!stdMat.normalMap;
         options.diffuseDetailBlend = stdMat.diffuseDetailBlend;
-        options.normalDetailBlend = stdMat.normalDetailBlend;
-        options.detailBlendColors = !!options.diffuseDetail;
-        options.detailBlendNormals = !!options.normalDetail;
+        options.detailBlends = !!options.diffuseDetail;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {

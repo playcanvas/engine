@@ -28,13 +28,13 @@ Object.assign(pc, function () {
      * @property {pc.Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
      * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {string} diffuseDetailBlend Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
-     * * {@link pc.DETAILBLEND_COLORS_MUL}: Multiply together the primary and secondary colors.
-     * * {@link pc.DETAILBLEND_COLORS_ADD}: Add together the primary and secondary colors.
-     * * {@link pc.DETAILBLEND_COLORS_SCREEN}: Softer version of {@link pc.DETAILBLEND_COLORS_ADD}.
-     * * {@link pc.DETAILBLEND_COLORS_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
-     * * {@link pc.DETAILBLEND_COLORS_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
-     * * {@link pc.DETAILBLEND_COLORS_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
-     * Defaults to {@link pc.DETAILBLEND_COLORS_MUL}.
+     * * {@link pc.DETAILBLEND_MUL}: Multiply together the primary and secondary colors.
+     * * {@link pc.DETAILBLEND_ADD}: Add together the primary and secondary colors.
+     * * {@link pc.DETAILBLEND_SCREEN}: Softer version of {@link pc.DETAILBLEND_ADD}.
+     * * {@link pc.DETAILBLEND_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+     * * {@link pc.DETAILBLEND_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+     * * {@link pc.DETAILBLEND_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+     * Defaults to {@link pc.DETAILBLEND_MUL}.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
@@ -125,12 +125,6 @@ Object.assign(pc, function () {
      * @property {pc.Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
      * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
-     * @property {string} normalDetailBlend Determines how the detail (secondary) and detail (secondary) diffuse maps are blended together. Can be:
-     * * {@link pc.DETAILBLEND_NORMALS_RNM}: Blend normals using Reoriented Normal Mapping. Slowest but also most accurate.
-     * * {@link pc.DETAILBLEND_NORMALS_PD}: Blend normals using Partial Derivatives. Cheaper but less accurate than {@link pc.DETAILBLEND_NORMALS_RNM}.
-     * * {@link pc.DETAILBLEND_NORMALS_WHITEOUT}: Blend normals based on AMD's ruby Whiteout demo. Slightly cheaper than {@link pc.DETAILBLEND_NORMALS_PD}.
-     * * {@link pc.DETAILBLEND_NORMALS_UDN}: Blend normals using the "Unreal Developer Network" approach. Cheapest method but also least accurate.
-     * Defaults to {@link pc.DETAILBLEND_NORMALS_RNM}.
      *
      * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
@@ -294,7 +288,7 @@ Object.assign(pc, function () {
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
         var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
-        var privMapDetailBlend = "_" + name + "DetailBlend";
+        var privMapDetailBlend = "_" + name + "Blend";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
@@ -308,7 +302,7 @@ Object.assign(pc, function () {
             if (vertexColor) obj[privMapVertexColorChannel] = channel;
         }
         if (vertexColor) obj[privMapVertexColor] = false;
-        if (detailBlend) obj[privMapDetailBlend] = detailBlend === "colors" ? pc.DETAILBLEND_COLORS_MUL : pc.DETAILBLEND_NORMALS_RNM;
+        if (detailBlend) obj[privMapDetailBlend] = pc.DETAILBLEND_MUL;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -1078,8 +1072,8 @@ Object.assign(pc, function () {
         _defineTex2D(obj, "ao", 0, 1, "", true);
         _defineTex2D(obj, "light", 1, 3, "", true);
         _defineTex2D(obj, "msdf", 0, 3, "", false);
-        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, "colors");
-        _defineTex2D(obj, "normalDetail", 0, -1, "", false, "normals");
+        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, true);
+        _defineTex2D(obj, "normalDetail", 0, -1, "", false);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");

@@ -404,75 +404,46 @@
 
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_MUL
+         * @name pc.DETAILBLEND_MUL
          * @type {string}
          * @description Multiply together the primary and secondary colors.
          */
-        DETAILBLEND_COLORS_MUL: 'mul',
+        DETAILBLEND_MUL: 'mul',
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_ADD
+         * @name pc.DETAILBLEND_ADD
          * @type {string}
          * @description Add together the primary and secondary colors.
          */
-        DETAILBLEND_COLORS_ADD: 'add',
+        DETAILBLEND_ADD: 'add',
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_SCREEN
+         * @name pc.DETAILBLEND_SCREEN
          * @type {string}
-         * @description Softer version of {@link pc.DETAILBLEND_COLORS_ADD}.
+         * @description Softer version of {@link pc.DETAILBLEND_ADD}.
          */
-        DETAILBLEND_COLORS_SCREEN: 'screen',
+        DETAILBLEND_SCREEN: 'screen',
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_OVERLAY
+         * @name pc.DETAILBLEND_OVERLAY
          * @type {string}
          * @description Multiplies or screens the colors, depending on the primary color.
          */
-        DETAILBLEND_COLORS_OVERLAY: 'overlay',
+        DETAILBLEND_OVERLAY: 'overlay',
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_MIN
+         * @name pc.DETAILBLEND_MIN
          * @type {string}
          * @description Select whichever of the primary and secondary colors is darker, component-wise.
          */
-        DETAILBLEND_COLORS_MIN: 'min',
+        DETAILBLEND_MIN: 'min',
         /**
          * @constant
-         * @name pc.DETAILBLEND_COLORS_MAX
+         * @name pc.DETAILBLEND_MAX
          * @type {string}
          * @description Select whichever of the primary and secondary colors is lighter, component-wise.
          */
-        DETAILBLEND_COLORS_MAX: 'max',
-
-        /**
-         * @constant
-         * @name pc.DETAILBLEND_NORMALS_RNM
-         * @type {string}
-         * @description Blend normals using Reoriented Normal Mapping. Slowest but also most accurate.
-         */
-        DETAILBLEND_NORMALS_RNM: 'rnm',
-        /**
-         * @constant
-         * @name pc.DETAILBLEND_NORMALS_PD
-         * @type {string}
-         * @description Blend normals using Partial Derivatives. Cheaper but less accurate than {@link pc.DETAILBLEND_NORMALS_RNM}.
-         */
-        DETAILBLEND_NORMALS_PD: 'pd',
-        /**
-         * @constant
-         * @name pc.DETAILBLEND_NORMALS_WHITEOUT
-         * @type {string}
-         * @description Blend normals based on AMD's ruby Whiteout demo. Slightly cheaper than {@link pc.DETAILBLEND_NORMALS_PD}.
-         */
-        DETAILBLEND_NORMALS_WHITEOUT: 'whiteout',
-        /**
-         * @constant
-         * @name pc.DETAILBLEND_NORMALS_UDN
-         * @type {string}
-         * @description Blend normals using the "Unreal Developer Network" approach. Cheapest method but also least accurate.
-         */
-        DETAILBLEND_NORMALS_UDN: 'udn',
+        DETAILBLEND_MAX: 'max',
 
         /**
          * @constant

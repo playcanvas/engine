@@ -872,8 +872,9 @@ pc.programlib.standard = {
         // code += chunks.basePS;
         code = this._fsAddBaseCode(code, device, chunks, options);
 
-        if (options.detailBlendColors) code += chunks.blendColorsPS;
-        if (options.detailBlendNormals) code += chunks.blendNormalsPS;
+        if (options.detailBlends) {
+            code += chunks.detailBlendsPS;
+        }
 
         var codeBegin = code;
         code = "";
