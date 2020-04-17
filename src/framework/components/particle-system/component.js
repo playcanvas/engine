@@ -582,8 +582,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ParticleSystemComponent#prepare
          * @description Prepares the simulation. Should be used when creating many {@link pc.Particlesystem}s (such as in a pool) and called before enabling the {@link pc.Entity} where a framerate drop is allowable (e.g changing scenes).
+         * @param sourceParticleSystem (Optional) If passed, it will use it's data as a base instead of recalculating everything
          */
-        prepare: function () {
+        prepare: function (sourceParticleSystem) {
             if (!this.emitter) {
                 var data = this.data;
                 var mesh = data.mesh;
@@ -663,6 +664,12 @@ Object.assign(pc, function () {
                     node: this.entity,
                     blendType: data.blendType
                 });
+
+                if (sourceParticleSystem && sourceParticleSystem.emitter) {
+                    this.emitter.buildFrom(sourceParticleSystem.emitter);
+                } else {
+                    this.emitter.rebuild();
+                }
 
                 this.emitter.meshInstance.node = this.entity;
 

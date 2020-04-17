@@ -311,8 +311,6 @@ Object.assign(pc, function () {
         this.beenReset = false;
 
         this._layer = null;
-
-        this.rebuild();
     };
 
     function calcEndTime(emitter) {
@@ -518,7 +516,14 @@ Object.assign(pc, function () {
             this.localBounds.setMinMax(bMin, bMax);
         },
 
-        rebuild: function () {
+        /**
+         * @private
+         * @function
+         * @name pc.ParticleEmitter#build
+         * @description Builds all data used by this particle emitter.
+         * @param sourceEmitter (Optional) If passed, it will build the emitter using as much data as it can from the sourceEmitter (e.g. color and velocity graphs).
+         */
+        build: function (sourceEmitter) {
             var i;
             var gd = this.graphicsDevice;
 
@@ -549,8 +554,15 @@ Object.assign(pc, function () {
             }
 
             this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
-            this.rebuildGraphs();
-            this.calculateLocalBounds();
+            
+            if (sourceEmitter) {
+                this.cloneGraphs(sourceEmitter);
+                this.localBounds.copy(sourceEmitter.localBounds);
+            } else {
+                this.rebuildGraphs();
+                this.calculateLocalBounds();
+            }
+
             this.resetWorldBounds();
 
             if (this.node) {
@@ -574,7 +586,6 @@ Object.assign(pc, function () {
 
             this._gpuUpdater.randomize();
 
-            this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null || this.localSpace){
@@ -586,13 +597,18 @@ Object.assign(pc, function () {
                 extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
                 extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
             }
-            for (i = 0; i < this.numParticles; i++) {
-                this._cpuUpdater.calcSpawnPosition(this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i);
-                if (this.useCpu) this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
+
+            if (sourceEmitter) {
+                this.particleTex = sourceEmitter.particleTex.slice();
+            } else {
+                this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
+                for (i = 0; i < this.numParticles; i++) {
+                    this._cpuUpdater.calcSpawnPosition(this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, i);
+                    if (this.useCpu) this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
+                }
             }
 
-            this.particleTexStart = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
-            for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
+            this.particleTexStart = this.particleTex.slice();
 
             if (!this.useCpu) {
                 if (this.pack8) {
@@ -681,6 +697,21 @@ Object.assign(pc, function () {
                 // fill dynamic textures and constants with initial data
                 this.addTime(0, false); 
             }
+        },
+
+        rebuild: function() {
+            this.build();
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.ParticleEmitter#buildFrom
+         * @description Builds as little as it can using the sourceEmitter as a base.
+         * @param sourceEmitter - The emitter where data will be copied from during the build of the emitter.
+         */
+        buildFrom: function(sourceEmitter) {
+            this.build(sourceEmitter);
         },
 
         _isAnimated: function () {
