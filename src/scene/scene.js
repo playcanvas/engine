@@ -404,6 +404,49 @@
 
         /**
          * @constant
+         * @name pc.DETAILMODE_MUL
+         * @type {string}
+         * @description Multiply together the primary and secondary colors.
+         */
+        DETAILMODE_MUL: 'mul',
+        /**
+         * @constant
+         * @name pc.DETAILMODE_ADD
+         * @type {string}
+         * @description Add together the primary and secondary colors.
+         */
+        DETAILMODE_ADD: 'add',
+        /**
+         * @constant
+         * @name pc.DETAILMODE_SCREEN
+         * @type {string}
+         * @description Softer version of {@link pc.DETAILMODE_ADD}.
+         */
+        DETAILMODE_SCREEN: 'screen',
+        /**
+         * @constant
+         * @name pc.DETAILMODE_OVERLAY
+         * @type {string}
+         * @description Multiplies or screens the colors, depending on the primary color.
+         */
+        DETAILMODE_OVERLAY: 'overlay',
+        /**
+         * @constant
+         * @name pc.DETAILMODE_MIN
+         * @type {string}
+         * @description Select whichever of the primary and secondary colors is darker, component-wise.
+         */
+        DETAILMODE_MIN: 'min',
+        /**
+         * @constant
+         * @name pc.DETAILMODE_MAX
+         * @type {string}
+         * @description Select whichever of the primary and secondary colors is lighter, component-wise.
+         */
+        DETAILMODE_MAX: 'max',
+
+        /**
+         * @constant
          * @name pc.GAMMA_NONE
          * @type {number}
          * @description No gamma correction.
