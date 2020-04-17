@@ -3261,6 +3261,10 @@ Object.assign(pc, function () {
             var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
             width *= ratio;
             height *= ratio;
+
+            if (this.canvas.width === width && this.canvas.height === height)
+                return;
+
             this.canvas.width = width;
             this.canvas.height = height;
             this.fire(EVENT_RESIZE, width, height);

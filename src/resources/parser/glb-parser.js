@@ -143,8 +143,7 @@ Object.assign(pc, function () {
                     var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
                     var buffer = buffers[bufferView.buffer];
                     sourceDesc[semantic] = {
-                        array: new Uint32Array(buffer.buffer),
-                        buffer: bufferView.buffer,
+                        buffer: buffer.buffer,
                         size: size,
                         offset: (accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0) +
                                 (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
@@ -178,8 +177,7 @@ Object.assign(pc, function () {
             });
 
             sourceDesc[pc.SEMANTIC_NORMAL] = {
-                array: new Uint32Array(normals.buffer),
-                buffer: null,
+                buffer: normals.buffer,
                 size: 12,
                 offset: 0,
                 stride: 12,
@@ -220,25 +218,26 @@ Object.assign(pc, function () {
 
         var vertexData = vertexBuffer.lock();
         var targetArray = new Uint32Array(vertexData);
-        var sourceArray, targetStride, sourceStride;
+        var sourceArray;
 
         if (isCorrectlyInterleaved) {
             // copy data
-            sourceArray = new Uint32Array(positionDesc.array.buffer,
+            sourceArray = new Uint32Array(positionDesc.buffer,
                                           positionDesc.offset,
                                           numVertices * vertexBuffer.format.size / 4);
             targetArray.set(sourceArray);
         } else {
+            var targetStride, sourceStride;
             // copy data and interleave
             for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
                 target = vertexBuffer.format.elements[i];
                 targetStride = target.stride / 4;
 
                 source = sourceDesc[target.name];
-                sourceArray = source.array;
+                sourceArray = new Uint32Array(source.buffer, source.offset, source.count * source.stride / 4);
                 sourceStride = source.stride / 4;
 
-                var src = source.offset / 4;
+                var src = 0;
                 var dst = target.offset / 4;
                 for (j = 0; j < numVertices; ++j) {
                     for (k = 0; k < source.size / 4; ++k) {
@@ -449,11 +448,6 @@ Object.assign(pc, function () {
 
         if (materialData.hasOwnProperty('name')) {
             material.name = materialData.name;
-        }
-
-        if (materialData.hasOwnProperty('extensions') &&
-            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
-            material.useLighting = false;
         }
 
         var color, texture;
@@ -701,6 +695,30 @@ Object.assign(pc, function () {
         } else {
             material.twoSidedLighting = false;
             material.cull = pc.CULLFACE_BACK;
+        }
+
+        // handle unlit material by disabling lighting and copying diffuse colours
+        // into emissive.
+        if (materialData.hasOwnProperty('extensions') &&
+            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
+            material.useLighting = false;
+
+            // copy diffuse into emissive
+            material.emissive.copy(material.diffuse);
+            material.emissiveTint = material.diffuseTint;
+            material.emissiveMap = material.diffuseMap;
+            material.emissiveMapUv = material.diffuseMapUv;
+            material.emissiveMapTiling.copy(material.diffuseMapTiling);
+            material.emissiveMapOffset.copy(material.diffuseMapOffset);
+            material.emissiveMapChannel = material.diffuseMapChannel;
+            material.emissiveVertexColor = material.diffuseVertexColor;
+            material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
+
+            // blank diffuse
+            material.diffuse.set(0, 0, 0);
+            material.diffuseTint = false;
+            material.diffuseMap = null;
+            material.diffuseVertexColor = false;
         }
 
         material.update();

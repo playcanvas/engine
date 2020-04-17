@@ -371,6 +371,7 @@ Object.assign(pc, function () {
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
+        this.projSkyboxId = scope.resolve('matrix_projectionSkybox');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
@@ -679,6 +680,9 @@ Object.assign(pc, function () {
                 projMat = camera.getProjectionMatrix();
                 if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
+
+                // Skybox Projection Matrix
+                this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
 
                 // ViewInverse Matrix
                 if (camera.overrideCalculateTransform) {
@@ -1769,6 +1773,7 @@ Object.assign(pc, function () {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.projId.setValue(projL.data);
+                        this.projSkyboxId.setValue(projL.data);
                         this.viewInvId.setValue(viewInvL.data);
                         this.viewId.setValue(viewL.data);
                         this.viewId3.setValue(viewMat3L.data);
@@ -1783,6 +1788,7 @@ Object.assign(pc, function () {
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.projId.setValue(projR.data);
+                        this.projSkyboxId.setValue(projR.data);
                         this.viewInvId.setValue(viewInvR.data);
                         this.viewId.setValue(viewR.data);
                         this.viewId3.setValue(viewMat3R.data);
@@ -1802,6 +1808,7 @@ Object.assign(pc, function () {
                             device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
                             this.projId.setValue(view.projMat.data);
+                            this.projSkyboxId.setValue(view.projMat.data);
                             this.viewId.setValue(view.viewOffMat.data);
                             this.viewInvId.setValue(view.viewInvOffMat.data);
                             this.viewId3.setValue(view.viewMat3.data);
