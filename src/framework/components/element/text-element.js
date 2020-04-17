@@ -276,26 +276,26 @@ Object.assign(pc, function () {
                 var ti = i % this._font.textures[0].length;
                 var p = (i - ti) / this._font.textures[0].length;
 
+                if (!this._meshInfo[i]) {
+                    this._meshInfo[i] = new MeshInfo();
+                }
+
                 if (multiPassNeeded) {
                     this._meshInfo[i].renderPass = passes[p];
                 } else {
                     this._meshInfo[i].renderPass = RenderPass.ALL_IN_ONE;
                 }
 
-                if (!this._meshInfo[i]) {
-                    this._meshInfo[i] = new MeshInfo();
-                } else {
-                    // keep existing entry but set correct parameters to mesh instance
-                    var mi = this._meshInfo[i].meshInstance;
-                    if (mi) {
-                        mi.setParameter("font_sdfIntensity", this._font.intensity);
-                        mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                        mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
-
-                        mi.setParameter("render_pass", this._meshInfo[i].renderPass);
-                        this._setTextureParams(mi, this._font.textures[0][ti], (multiPassNeeded) ? this._font.textures[1][ti]: null);
-                    }
+                // set correct parameters to mesh instance (if valid)
+                var mi = this._meshInfo[i].meshInstance;
+                if (mi) {
+                    mi.setParameter("font_sdfIntensity", this._font.intensity);
+                    mi.setParameter("font_pxrange", this._getPxRange(this._font));
+                    mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
+                    mi.setParameter("render_pass", this._meshInfo[i].renderPass);
+                    this._setTextureParams(mi, this._font.textures[0][ti], (multiPassNeeded) ? this._font.textures[1][ti] : null);
                 }
+
             }
 
             // destroy any excess mesh instances
