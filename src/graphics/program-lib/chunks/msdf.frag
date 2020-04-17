@@ -45,16 +45,16 @@ vec4 applyMsdf(vec4 color) {
     float t_font_pxrange = font_pxrange;
 
 #ifdef MSDFA
-    float num = float(sigDist<0.5)*clamp((outline_thickness-0.2)*5.0,0.0,1.0);
+    float alpha = float(sigDist<0.5)*clamp((outline_thickness-0.2)*5.0,0.0,1.0);
 
     float tsamplea = texture2D(texture_msdfMapA, vUv0).r;
     float ssamplea = texture2D(texture_msdfMapA, uvShdw).r;
 
-    sigDist=mix(sigDist, tsamplea, num);
-    sigDistShdw=mix(sigDistShdw, ssamplea, num);
+    sigDist=mix(sigDist, tsamplea, alpha);
+    sigDistShdw=mix(sigDistShdw, ssamplea, alpha);
 
-    t_outline_thickness=mix(outline_thickness, outline_thickness*0.25+0.02, num);
-    t_font_pxrange=mix(font_pxrange, font_pxrange*4.0, num);
+    t_outline_thickness=mix(outline_thickness, outline_thickness*0.25+0.02, alpha); // 0.02 is fudge factor needed probably due to rounding differences in msdf and sdf generation?
+    t_font_pxrange=mix(font_pxrange, font_pxrange*4.0, alpha);
 #endif
 
     #ifdef USE_FWIDTH
@@ -86,6 +86,11 @@ vec4 applyMsdf(vec4 color) {
     vec4 tcolor = mix(scolor, color, inside);
     
 #ifdef MSDFA    
+    if (render_pass==5.0) //stencil clear
+    {
+        return vec4(0.0);
+    }
+
     if (render_pass==1.0 && inside==0.0) //text
     {
         discard;
@@ -96,29 +101,14 @@ vec4 applyMsdf(vec4 color) {
         discard;
     }
 
-    if (render_pass==3.0 && outline==0.0) //outline_aa
+    if (render_pass==3.0 && shadow<1.0) //drop_shadow
     {
         discard;
     }
 
-    if (render_pass==4.0 && shadow<1.0) //drop_shadow
+    if (render_pass==4.0 && tcolor.a==0.0) //edge aa
     {
         discard;
-    }
-
-    if (render_pass==5.0 && shadow==0.0) //drop_shadow_aa
-    {
-        discard;
-    }
-
-    if (render_pass==6.0 && tcolor.a==0.0) //edge aa
-    {
-        discard;
-    }
-
-    if (render_pass==7.0) //stencil clear
-    {
-        return vec4(0.0);
     }
 #endif
 

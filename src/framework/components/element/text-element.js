@@ -4,11 +4,9 @@ Object.assign(pc, function () {
         ALL_IN_ONE: 0,
         TEXT: 1,
         OUTLINE: 2,
-        OUTLINE_AA: 3,
-        DROP_SHADOW: 4,
-        DROP_SHADOW_AA: 5,
-        EDGE_AA: 6,
-        STENCIL_CLEAR: 7
+        DROP_SHADOW: 3,
+        EDGE_AA: 4,
+        STENCIL_CLEAR: 5
     };
 
     var MeshInfo = function () {
@@ -256,44 +254,25 @@ Object.assign(pc, function () {
             if (multiPassNeeded) {
                 if (this._shadowOffset.x != 0 && this._shadowOffset.y != 0 && this._shadowColor.a > 0) {
                     // with drop shadow
-                    if (true || this._outlineColor.a < 1 || this._shadowColor.a < 1) {
-                        // with edge AA pass
-                        passes.length = 5;
-                        passes[0] = RenderPass.TEXT;
-                        passes[1] = RenderPass.OUTLINE;
-                        passes[2] = RenderPass.DROP_SHADOW;
-                        passes[3] = RenderPass.EDGE_AA;
-                        passes[4] = RenderPass.STENCIL_CLEAR;
-                    } else {
-                        // no edge AA pass
-                        passes.length = 4;
-                        passes[0] = RenderPass.TEXT;
-                        passes[1] = RenderPass.OUTLINE_AA;
-                        passes[2] = RenderPass.DROP_SHADOW_AA;
-                        passes[3] = RenderPass.STENCIL_CLEAR;
-                    }
+                    passes.length = 5;
+                    passes[0] = RenderPass.TEXT;
+                    passes[1] = RenderPass.OUTLINE;
+                    passes[2] = RenderPass.DROP_SHADOW;
+                    passes[3] = RenderPass.EDGE_AA;
+                    passes[4] = RenderPass.STENCIL_CLEAR;
                 } else {
                     // no drop shadow
-                    if (true || this._outlineColor.a < 1 ) {
-                        // with edge AA pass
-                        passes.length = 4;
-                        passes[0] = RenderPass.TEXT;
-                        passes[1] = RenderPass.OUTLINE;
-                        passes[2] = RenderPass.EDGE_AA;
-                        passes[3] = RenderPass.STENCIL_CLEAR;
-                    } else {
-                        // no edge AA pass
-                        passes.length = 3;
-                        passes[0] = RenderPass.TEXT;
-                        passes[1] = RenderPass.OUTLINE_AA;
-                        passes[2] = RenderPass.STENCIL_CLEAR;
-                    }
+                    passes.length = 4;
+                    passes[0] = RenderPass.TEXT;
+                    passes[1] = RenderPass.OUTLINE;
+                    passes[2] = RenderPass.EDGE_AA;
+                    passes[3] = RenderPass.STENCIL_CLEAR;
                 }
             }
 
-            var mesh_infos_num_needed = (multiPassNeeded) ? passes.length * this._font.textures[0].length : this._font.textures[0].length;
+            var numMeshInfosNeeded = (multiPassNeeded) ? passes.length * this._font.textures[0].length : this._font.textures[0].length;
 
-            for (i = 0; i < mesh_infos_num_needed; i++) {
+            for (i = 0; i < numMeshInfosNeeded; i++) {
                 var ti = i % this._font.textures[0].length;
                 var p = (i - ti) / this._font.textures[0].length;
 
@@ -326,7 +305,7 @@ Object.assign(pc, function () {
 
             // destroy any excess mesh instances
             var removedModel = false;
-            for (i = mesh_infos_num_needed; i < this._meshInfo.length; i++) {
+            for (i = numMeshInfosNeeded; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].meshInstance) {
                     if (!removedModel) {
                         // remove model from scene so that excess mesh instances are removed
@@ -338,8 +317,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (mesh_infos_num_needed < this._meshInfo.length) {
-                this._meshInfo.splice(mesh_infos_num_needed, this._meshInfo.length - mesh_infos_num_needed);
+            if (numMeshInfosNeeded < this._meshInfo.length) {
+                this._meshInfo.splice(numMeshInfosNeeded, this._meshInfo.length - numMeshInfosNeeded);
                 this._element.addModelToLayers(this._model);
             }
 
@@ -1299,13 +1278,11 @@ Object.assign(pc, function () {
                                         });
                                         mi.stencilBack = mi.stencilFront;
                                         break;
-                                    case RenderPass.OUTLINE_AA: // second pass (just border, use stencil and set stencil)
-                                    case RenderPass.DROP_SHADOW_AA: // third pass (just drop shadow, use stencil and set stencil)
                                     case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
                                         mi.stencilFront = new pc.StencilParameters({
                                             ref: stencilParams.ref,
                                             func: pc.FUNC_EQUAL,
-                                            zpass: pc.STENCILOP_INCREMENT
+                                            zpass: pc.STENCILOP_KEEP
                                         });
                                         mi.stencilBack = mi.stencilFront;
                                         break;
@@ -1334,8 +1311,6 @@ Object.assign(pc, function () {
                                         });
                                         mi.stencilBack = mi.stencilFront;
                                         break;
-                                    case RenderPass.OUTLINE_AA: // second pass (just border, use stencil and set stencil)
-                                    case RenderPass.DROP_SHADOW_AA: // third pass (just drop shadow, use stencil and set stencil)
                                     case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
                                         mi.stencilFront = new pc.StencilParameters({
                                             ref: 42,
