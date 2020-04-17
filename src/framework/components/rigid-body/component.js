@@ -23,10 +23,10 @@ Object.assign(pc, function () {
      * Defaults to 0.
      * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
      * Defaults to 0.
-     * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis.
-     * Defaults to 1 in all axes.
-     * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis.
-     * Defaults to 1 in all axes.
+     * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
+     * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
+     * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
+     * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
      * @property {number} friction The friction value used when contacts occur between two bodies. A higher
      * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
      * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
@@ -41,7 +41,8 @@ Object.assign(pc, function () {
      *
      * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
      * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
-     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
+     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
+     * by setting their velocity or position.
      *
      * Defaults to pc.BODYTYPE_STATIC.
      */
@@ -116,45 +117,43 @@ Object.assign(pc, function () {
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
         get: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getLinearVelocity();
-                    this._linearVelocity.set(vel.x(), vel.y(), vel.z());
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var vel = body.getLinearVelocity();
+                this._linearVelocity.set(vel.x(), vel.y(), vel.z());
             }
             return this._linearVelocity;
         },
         set: function (lv) {
-            this.activate();
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    ammoVec1.setValue(lv.x, lv.y, lv.z);
-                    this.body.setLinearVelocity(ammoVec1);
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                ammoVec1.setValue(lv.x, lv.y, lv.z);
+                body.setLinearVelocity(ammoVec1);
+                body.activate();
+
+                this._linearVelocity.copy(lv);
             }
-            this._linearVelocity.copy(lv);
         }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
         get: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getAngularVelocity();
-                    this._angularVelocity.set(vel.x(), vel.y(), vel.z());
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var vel = body.getAngularVelocity();
+                this._angularVelocity.set(vel.x(), vel.y(), vel.z());
             }
             return this._angularVelocity;
         },
         set: function (av) {
-            this.activate();
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    ammoVec1.setValue(av.x, av.y, av.z);
-                    this.body.setAngularVelocity(ammoVec1);
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                ammoVec1.setValue(av.x, av.y, av.z);
+                body.setAngularVelocity(ammoVec1);
+                body.activate();
+
+                this._angularVelocity.copy(av);
             }
-            this._angularVelocity.copy(av);
         }
     });
 
@@ -246,21 +245,20 @@ Object.assign(pc, function () {
          * @returns {boolean} True if the body is active.
          */
         isActive: function () {
-            if (this.body) {
-                return this.body.isActive();
-            }
-
-            return false;
+            var body = this.body;
+            return body ? body.isActive() : false;
         },
 
         /**
          * @function
          * @name pc.RigidBodyComponent#activate
-         * @description Forcibly activate the rigid body simulation.
+         * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
+         * type pc.BODYTYPE_DYNAMIC.
          */
         activate: function () {
-            if (this.body) {
-                this.body.activate();
+            var body = this.body;
+            if (body) {
+                body.activate();
             }
         },
 
