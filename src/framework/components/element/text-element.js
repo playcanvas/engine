@@ -276,6 +276,12 @@ Object.assign(pc, function () {
                 var ti = i % this._font.textures[0].length;
                 var p = (i - ti) / this._font.textures[0].length;
 
+                if (multiPassNeeded) {
+                    this._meshInfo[i].renderPass = passes[p];
+                } else {
+                    this._meshInfo[i].renderPass = RenderPass.ALL_IN_ONE;
+                }
+
                 if (!this._meshInfo[i]) {
                     this._meshInfo[i] = new MeshInfo();
                 } else {
@@ -286,20 +292,9 @@ Object.assign(pc, function () {
                         mi.setParameter("font_pxrange", this._getPxRange(this._font));
                         mi.setParameter("font_textureWidth", this._font.data.info.maps[ti].width);
 
-                        if (multiPassNeeded) {
-                            this._setTextureParams(mi, this._font.textures[0][ti], this._font.textures[1][ti]);
-                            mi.setParameter("render_pass", passes[p]);
-                        } else {
-                            this._setTextureParams(mi, this._font.textures[0][ti], null);
-                            mi.setParameter("render_pass", RenderPass.ALL_IN_ONE);
-                        }
+                        mi.setParameter("render_pass", this._meshInfo[i].renderPass);
+                        this._setTextureParams(mi, this._font.textures[0][ti], (multiPassNeeded) ? this._font.textures[1][ti]: null);
                     }
-                }
-
-                if (multiPassNeeded) {
-                    this._meshInfo[i].renderPass = passes[p];
-                } else {
-                    this._meshInfo[i].renderPass = RenderPass.ALL_IN_ONE;
                 }
             }
 
