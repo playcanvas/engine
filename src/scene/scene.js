@@ -404,46 +404,46 @@
 
         /**
          * @constant
-         * @name pc.DETAILBLEND_MUL
+         * @name pc.DETAILMODE_MUL
          * @type {string}
          * @description Multiply together the primary and secondary colors.
          */
-        DETAILBLEND_MUL: 'mul',
+        DETAILMODE_MUL: 'mul',
         /**
          * @constant
-         * @name pc.DETAILBLEND_ADD
+         * @name pc.DETAILMODE_ADD
          * @type {string}
          * @description Add together the primary and secondary colors.
          */
-        DETAILBLEND_ADD: 'add',
+        DETAILMODE_ADD: 'add',
         /**
          * @constant
-         * @name pc.DETAILBLEND_SCREEN
+         * @name pc.DETAILMODE_SCREEN
          * @type {string}
-         * @description Softer version of {@link pc.DETAILBLEND_ADD}.
+         * @description Softer version of {@link pc.DETAILMODE_ADD}.
          */
-        DETAILBLEND_SCREEN: 'screen',
+        DETAILMODE_SCREEN: 'screen',
         /**
          * @constant
-         * @name pc.DETAILBLEND_OVERLAY
+         * @name pc.DETAILMODE_OVERLAY
          * @type {string}
          * @description Multiplies or screens the colors, depending on the primary color.
          */
-        DETAILBLEND_OVERLAY: 'overlay',
+        DETAILMODE_OVERLAY: 'overlay',
         /**
          * @constant
-         * @name pc.DETAILBLEND_MIN
+         * @name pc.DETAILMODE_MIN
          * @type {string}
          * @description Select whichever of the primary and secondary colors is darker, component-wise.
          */
-        DETAILBLEND_MIN: 'min',
+        DETAILMODE_MIN: 'min',
         /**
          * @constant
-         * @name pc.DETAILBLEND_MAX
+         * @name pc.DETAILMODE_MAX
          * @type {string}
          * @description Select whichever of the primary and secondary colors is lighter, component-wise.
          */
-        DETAILBLEND_MAX: 'max',
+        DETAILMODE_MAX: 'max',
 
         /**
          * @constant

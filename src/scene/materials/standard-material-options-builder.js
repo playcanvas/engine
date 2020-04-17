@@ -125,8 +125,8 @@ Object.assign(pc, function () {
         options.aoMapUv = stdMat.aoUvSet; // backwards componen
         options.diffuseDetail = !!stdMat.diffuseMap;
         options.normalDetail = !!stdMat.normalMap;
-        options.diffuseDetailBlend = stdMat.diffuseDetailBlend;
-        options.detailBlends = !!options.diffuseDetail;
+        options.diffuseDetailMode = stdMat.diffuseDetailMode;
+        options.detailModes = !!options.diffuseDetail;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {

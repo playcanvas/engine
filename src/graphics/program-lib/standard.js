@@ -293,12 +293,12 @@ pc.programlib.standard = {
         var vertexColorChannelPropName = propName + "VertexColorChannel";
         var tintPropName = propName + "Tint";
         var vertexColorPropName = propName + "VertexColor";
-        var detailBlendPropName = propName + "Blend";
+        var detailModePropName = propName + "Mode";
 
         var tintOption = options[tintPropName];
         var vertexColorOption = options[vertexColorPropName];
         var textureOption = options[mapPropName];
-        var detailBlendOption = options[detailBlendPropName];
+        var detailModeOption = options[detailModePropName];
 
         var subCode = chunks[chunkName];
 
@@ -317,8 +317,8 @@ pc.programlib.standard = {
             subCode = subCode.replace(/\$VC/g, options[vertexColorChannelPropName]);
         }
 
-        if (detailBlendOption) {
-            subCode = subCode.replace(/\$DETAILBLEND/g, detailBlendOption);
+        if (detailModeOption) {
+            subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
         var isFloatTint = (tintOption === 1);
@@ -872,8 +872,8 @@ pc.programlib.standard = {
         // code += chunks.basePS;
         code = this._fsAddBaseCode(code, device, chunks, options);
 
-        if (options.detailBlends) {
-            code += chunks.detailBlendsPS;
+        if (options.detailModes) {
+            code += chunks.detailModesPS;
         }
 
         var codeBegin = code;

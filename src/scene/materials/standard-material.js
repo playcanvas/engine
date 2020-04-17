@@ -27,14 +27,14 @@ Object.assign(pc, function () {
      * @property {pc.Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse map.
      * @property {pc.Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
      * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {string} diffuseDetailBlend Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
-     * * {@link pc.DETAILBLEND_MUL}: Multiply together the primary and secondary colors.
-     * * {@link pc.DETAILBLEND_ADD}: Add together the primary and secondary colors.
-     * * {@link pc.DETAILBLEND_SCREEN}: Softer version of {@link pc.DETAILBLEND_ADD}.
-     * * {@link pc.DETAILBLEND_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
-     * * {@link pc.DETAILBLEND_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
-     * * {@link pc.DETAILBLEND_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
-     * Defaults to {@link pc.DETAILBLEND_MUL}.
+     * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
+     * * {@link pc.DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+     * * {@link pc.DETAILMODE_ADD}: Add together the primary and secondary colors.
+     * * {@link pc.DETAILMODE_SCREEN}: Softer version of {@link pc.DETAILMODE_ADD}.
+     * * {@link pc.DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+     * * {@link pc.DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+     * * {@link pc.DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+     * Defaults to {@link pc.DETAILMODE_MUL}.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
@@ -278,7 +278,7 @@ Object.assign(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor, detailBlend) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor, detailMode) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -288,7 +288,7 @@ Object.assign(pc, function () {
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
         var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
-        var privMapDetailBlend = "_" + name + "Blend";
+        var privMapDetailMode = "_" + name + "Mode";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
@@ -302,7 +302,7 @@ Object.assign(pc, function () {
             if (vertexColor) obj[privMapVertexColorChannel] = channel;
         }
         if (vertexColor) obj[privMapVertexColor] = false;
-        if (detailBlend) obj[privMapDetailBlend] = pc.DETAILBLEND_MUL;
+        if (detailMode) obj[privMapDetailMode] = pc.DETAILMODE_MUL;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -405,14 +405,14 @@ Object.assign(pc, function () {
             });
         }
 
-        if (detailBlend) {
-            Object.defineProperty(StandardMaterial.prototype, privMapDetailBlend.substring(1), {
+        if (detailMode) {
+            Object.defineProperty(StandardMaterial.prototype, privMapDetailMode.substring(1), {
                 get: function () {
-                    return this[privMapDetailBlend];
+                    return this[privMapDetailMode];
                 },
                 set: function (value) {
                     this.dirtyShader = true;
-                    this[privMapDetailBlend] = value;
+                    this[privMapDetailMode] = value;
                 }
             });
         }
@@ -426,8 +426,8 @@ Object.assign(pc, function () {
             _propsSerial.push(privMapVertexColor.substring(1));
             _propsSerial.push(privMapVertexColorChannel.substring(1));
         }
-        if (detailBlend) {
-            _propsSerial.push(privMapDetailBlend.substring(1));
+        if (detailMode) {
+            _propsSerial.push(privMapDetailMode.substring(1));
         }
         _propsInternalNull.push(mapTransform);
     };

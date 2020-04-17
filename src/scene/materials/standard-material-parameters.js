@@ -32,7 +32,7 @@
         diffuseDetailMapUv: 'number',
         diffuseDetailMapTiling: 'vec2',
         diffuseDetailMapOffset: 'vec2',
-        diffuseDetailBlend: 'string',
+        diffuseDetailMode: 'string',
 
         specular: 'rgb',
         specularTint: 'boolean',
