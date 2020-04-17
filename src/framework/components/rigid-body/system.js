@@ -557,11 +557,12 @@ Object.assign(pc, function () {
                 }
             }
 
+            // Update all kinematic bodies with their current transform
             for (i = 0; i < this._kinematic.length; i++) {
                 this._kinematic[i].syncEntityToBody();
             }
 
-            // Update the transforms of all bodies
+            // Step the physics simulation
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
             // Update the transforms of all entities referencing a dynamic body
@@ -727,19 +728,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        // DEPRECATED ENUMS - see rigidbody_constants.js
-        RIGIDBODY_TYPE_STATIC: 'static',
-        RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
-        RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
-        RIGIDBODY_CF_STATIC_OBJECT: 1,
-        RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
-        RIGIDBODY_CF_NORESPONSE_OBJECT: 4,
-        RIGIDBODY_ACTIVE_TAG: 1,
-        RIGIDBODY_ISLAND_SLEEPING: 2,
-        RIGIDBODY_WANTS_DEACTIVATION: 3,
-        RIGIDBODY_DISABLE_DEACTIVATION: 4,
-        RIGIDBODY_DISABLE_SIMULATION: 5,
-
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());
