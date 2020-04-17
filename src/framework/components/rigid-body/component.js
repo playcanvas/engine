@@ -616,7 +616,7 @@ Object.assign(pc, function () {
          */
         syncBodyToEntity: function () {
             var body = this.body;
-            if (body) {
+            if (body && body.isActive()) {
                 var motionState = body.getMotionState();
                 if (motionState) {
                     motionState.getWorldTransform(ammoTransform);
@@ -626,7 +626,6 @@ Object.assign(pc, function () {
                     this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
-                body.activate();
             }
         },
 
