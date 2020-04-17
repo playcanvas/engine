@@ -1,6 +1,5 @@
 uniform sampler2D texture_msdfMap;
 
-#define MSDFA
 #ifdef MSDFA
 uniform sampler2D texture_msdfMapA;
 #endif
@@ -87,27 +86,37 @@ vec4 applyMsdf(vec4 color) {
     vec4 tcolor = mix(scolor, color, inside);
     
 #ifdef MSDFA    
-    if (render_pass==1.0 && inside==0.0)
+    if (render_pass==1.0 && inside==0.0) //text
     {
         discard;
     }
 
-    if (render_pass==2.0 && outline<1.0)
+    if (render_pass==2.0 && outline<1.0) //outline
     {
         discard;
     }
 
-    if (render_pass==3.0 && shadow<1.0)
+    if (render_pass==3.0 && outline==0.0) //outline_aa
     {
         discard;
     }
 
-    if (render_pass==4.0 && tcolor.a==0.0) //edge aa
+    if (render_pass==4.0 && shadow<1.0) //drop_shadow
     {
         discard;
     }
 
-    if (render_pass==5.0) //stencil clear
+    if (render_pass==5.0 && shadow==0.0) //drop_shadow_aa
+    {
+        discard;
+    }
+
+    if (render_pass==6.0 && tcolor.a==0.0) //edge aa
+    {
+        discard;
+    }
+
+    if (render_pass==7.0) //stencil clear
     {
         return vec4(0.0);
     }

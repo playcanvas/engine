@@ -1157,6 +1157,7 @@ pc.programlib.standard = {
         }
 
         if (options.msdf) {
+            if (options.msdfA) code += "#define MSDFA\n";
             code += chunks.msdfPS;
         }
 

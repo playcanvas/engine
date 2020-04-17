@@ -60,8 +60,7 @@ Object.assign(pc, function () {
 
                             callback(null, {
                                 data: data,
-                                textures: textures// ,
-                                // textures2: textures2
+                                textures: textures
                             });
                         });
                     } else {

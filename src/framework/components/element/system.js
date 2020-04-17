@@ -49,8 +49,10 @@ Object.assign(pc, function () {
 
         // text element materials created on demand by getTextElementMaterial()
         this.defaultTextMaterial = null;
+        this.defaultMultiPassTextMaterial = null;
         this.defaultBitmapTextMaterial = null;
         this.defaultScreenSpaceTextMaterial = null;
+        this.defaultScreenSpaceMultiPassTextMaterial = null;
         this.defaultScreenSpaceBitmapTextMaterial = null;
 
         this.defaultImageMaterials = [];
@@ -307,28 +309,34 @@ Object.assign(pc, function () {
             return this.addComponent(clone, data);
         },
 
-        getTextElementMaterial: function (screenSpace, msdf) {
+        getTextElementMaterial: function (screenSpace, msdf, multiPass) {
+            var mat;
             if (screenSpace) {
                 if (msdf) {
-                    if (!this.defaultScreenSpaceTextMaterial) {
-                        this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
-                        this.defaultScreenSpaceTextMaterial.name = "defaultScreenSpaceTextMaterial";
-                        this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
-                        this.defaultScreenSpaceTextMaterial.msdfMapA = this._defaultTexture;
-                        this.defaultScreenSpaceTextMaterial.useLighting = false;
-                        this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
-                        this.defaultScreenSpaceTextMaterial.useFog = false;
-                        this.defaultScreenSpaceTextMaterial.useSkybox = false;
-                        this.defaultScreenSpaceTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                        this.defaultScreenSpaceTextMaterial.emissive.set(1, 1, 1);
-                        this.defaultScreenSpaceTextMaterial.opacity = 0.5;
-                        this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                        this.defaultScreenSpaceTextMaterial.depthWrite = false;
-                        this.defaultScreenSpaceTextMaterial.depthTest = false;
-                        this.defaultScreenSpaceTextMaterial.emissiveVertexColor = true;
-                        this.defaultScreenSpaceTextMaterial.update();
+                    if (!((multiPass) ? this.defaultScreenSpaceMultiPassTextMaterial : this.defaultScreenSpaceTextMaterial)) {
+                        if (multiPass) {
+                            this.defaultScreenSpaceMultiPassTextMaterial = new pc.StandardMaterial();
+                        } else {
+                            this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
+                        }
+                        mat = (multiPass) ? this.defaultScreenSpaceMultiPassTextMaterial : this.defaultScreenSpaceTextMaterial;
+                        mat.name = (multiPass) ? "defaultScreenSpaceMultiPassTextMaterial" : "defaultScreenSpaceTextMaterial";
+                        mat.msdfMap = this._defaultTexture;
+                        if (multiPass) mat.msdfMapA = this._defaultTexture;
+                        mat.useLighting = false;
+                        mat.useGammaTonemap = false;
+                        mat.useFog = false;
+                        mat.useSkybox = false;
+                        mat.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                        mat.emissive.set(1, 1, 1);
+                        mat.opacity = 0.5;
+                        mat.blendType = pc.BLEND_PREMULTIPLIED;
+                        mat.depthWrite = false;
+                        mat.depthTest = false;
+                        mat.emissiveVertexColor = true;
+                        mat.update();
                     }
-                    return this.defaultScreenSpaceTextMaterial;
+                    return (multiPass) ? this.defaultScreenSpaceMultiPassTextMaterial : this.defaultScreenSpaceTextMaterial;
                 }
                 if (!this.defaultScreenSpaceBitmapTextMaterial) {
                     this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
@@ -354,24 +362,29 @@ Object.assign(pc, function () {
 
             }
             if (msdf) {
-                if (!this.defaultTextMaterial) {
-                    this.defaultTextMaterial = new pc.StandardMaterial();
-                    this.defaultTextMaterial.name = "defaultTextMaterial";
-                    this.defaultTextMaterial.msdfMap = this._defaultTexture;
-                    this.defaultTextMaterial.msdfMapA = this._defaultTexture;
-                    this.defaultTextMaterial.useLighting = false;
-                    this.defaultTextMaterial.useGammaTonemap = false;
-                    this.defaultTextMaterial.useFog = false;
-                    this.defaultTextMaterial.useSkybox = false;
-                    this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                    this.defaultTextMaterial.emissive.set(1, 1, 1);
-                    this.defaultTextMaterial.opacity = 0.5;
-                    this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                    this.defaultTextMaterial.depthWrite = false;
-                    this.defaultTextMaterial.emissiveVertexColor = true;
-                    this.defaultTextMaterial.update();
+                if (!((multiPass) ? this.defaultMultiPassTextMaterial : this.defaultTextMaterial)) {
+                    if (multiPass) {
+                        this.defaultMultiPassTextMaterial = new pc.StandardMaterial();
+                    } else {
+                        this.defaultTextMaterial = new pc.StandardMaterial();
+                    }
+                    mat = (multiPass) ? this.defaultMultiPassTextMaterial : this.defaultTextMaterial;
+                    mat.name = (multiPass) ? "defaultMultiPassTextMaterial" : "defaultTextMaterial";
+                    mat.msdfMap = this._defaultTexture;
+                    if (multiPass) mat.msdfMapA = this._defaultTexture;
+                    mat.useLighting = false;
+                    mat.useGammaTonemap = false;
+                    mat.useFog = false;
+                    mat.useSkybox = false;
+                    mat.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    mat.emissive.set(1, 1, 1);
+                    mat.opacity = 0.5;
+                    mat.blendType = pc.BLEND_PREMULTIPLIED;
+                    mat.depthWrite = false;
+                    mat.emissiveVertexColor = true;
+                    mat.update();
                 }
-                return this.defaultTextMaterial;
+                return (multiPass) ? this.defaultMultiPassTextMaterial : this.defaultTextMaterial;
             }
             if (!this.defaultBitmapTextMaterial) {
                 this.defaultBitmapTextMaterial = new pc.StandardMaterial();

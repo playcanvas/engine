@@ -4,9 +4,11 @@ Object.assign(pc, function () {
         ALL_IN_ONE: 0,
         TEXT: 1,
         OUTLINE: 2,
-        DROP_SHADOW: 3,
-        EDGE_AA: 4,
-        STENCIL_CLEAR: 5
+        OUTLINE_AA: 3,
+        DROP_SHADOW: 4,
+        DROP_SHADOW_AA: 5,
+        EDGE_AA: 6,
+        STENCIL_CLEAR: 7
     };
 
     var MeshInfo = function () {
@@ -103,7 +105,7 @@ Object.assign(pc, function () {
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
-        this._outlineThicknessScale = 0.2; // 0.1; // was 0.2 now 0.1 - coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThicknessScale = 0.2; // coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
 
         this._multiPassEnabled = false; // when true multi pass text rendering is enabled for correct thicker outline rendering
@@ -247,13 +249,53 @@ Object.assign(pc, function () {
 
         _updateMeshInfos: function () {
             var i;
-            var len;
 
-            var multiPassNeeded = (this._outlineThickness > 1.0 && this._font.textures[0].length == 1);
-            var mesh_num_needed = (multiPassNeeded) ? 5 : this._font.textures[0].length;
+            var multiPassNeeded = (this._outlineThickness > 1.0 && this._outlineColor.a > 0);
 
-            for (i = 0, len = mesh_num_needed; i < len; i++) {
-                var ti = (multiPassNeeded) ? 0 : i;
+            var passes = [];
+            if (multiPassNeeded) {
+                if (this._shadowOffset.x != 0 && this._shadowOffset.y != 0 && this._shadowColor.a > 0) {
+                    // with drop shadow
+                    if (true || this._outlineColor.a < 1 || this._shadowColor.a < 1) {
+                        // with edge AA pass
+                        passes.length = 5;
+                        passes[0] = RenderPass.TEXT;
+                        passes[1] = RenderPass.OUTLINE;
+                        passes[2] = RenderPass.DROP_SHADOW;
+                        passes[3] = RenderPass.EDGE_AA;
+                        passes[4] = RenderPass.STENCIL_CLEAR;
+                    } else {
+                        // no edge AA pass
+                        passes.length = 4;
+                        passes[0] = RenderPass.TEXT;
+                        passes[1] = RenderPass.OUTLINE_AA;
+                        passes[2] = RenderPass.DROP_SHADOW_AA;
+                        passes[3] = RenderPass.STENCIL_CLEAR;
+                    }
+                } else {
+                    // no drop shadow
+                    if (true || this._outlineColor.a < 1 ) {
+                        // with edge AA pass
+                        passes.length = 4;
+                        passes[0] = RenderPass.TEXT;
+                        passes[1] = RenderPass.OUTLINE;
+                        passes[2] = RenderPass.EDGE_AA;
+                        passes[3] = RenderPass.STENCIL_CLEAR;
+                    } else {
+                        // no edge AA pass
+                        passes.length = 3;
+                        passes[0] = RenderPass.TEXT;
+                        passes[1] = RenderPass.OUTLINE_AA;
+                        passes[2] = RenderPass.STENCIL_CLEAR;
+                    }
+                }
+            }
+
+            var mesh_infos_num_needed = (multiPassNeeded) ? passes.length * this._font.textures[0].length : this._font.textures[0].length;
+
+            for (i = 0; i < mesh_infos_num_needed; i++) {
+                var ti = i % this._font.textures[0].length;
+                var p = (i - ti) / this._font.textures[0].length;
 
                 if (!this._meshInfo[i]) {
                     this._meshInfo[i] = new MeshInfo();
@@ -267,7 +309,7 @@ Object.assign(pc, function () {
 
                         if (multiPassNeeded) {
                             this._setTextureParams(mi, this._font.textures[0][ti], this._font.textures[1][ti]);
-                            mi.setParameter("render_pass", RenderPass.TEXT);
+                            mi.setParameter("render_pass", passes[p]);
                         } else {
                             this._setTextureParams(mi, this._font.textures[0][ti], null);
                             mi.setParameter("render_pass", RenderPass.ALL_IN_ONE);
@@ -276,23 +318,7 @@ Object.assign(pc, function () {
                 }
 
                 if (multiPassNeeded) {
-                    switch (i) {
-                        case 0:
-                            this._meshInfo[i].renderPass = RenderPass.TEXT;
-                            break;
-                        case 1:
-                            this._meshInfo[i].renderPass = RenderPass.OUTLINE;
-                            break;
-                        case 2:
-                            this._meshInfo[i].renderPass = RenderPass.DROP_SHADOW;
-                            break;
-                        case 3:
-                            this._meshInfo[i].renderPass = RenderPass.EDGE_AA;
-                            break;
-                        case 4:
-                            this._meshInfo[i].renderPass = RenderPass.STENCIL_CLEAR;
-                            break;
-                    }
+                    this._meshInfo[i].renderPass = passes[p];
                 } else {
                     this._meshInfo[i].renderPass = RenderPass.ALL_IN_ONE;
                 }
@@ -300,7 +326,7 @@ Object.assign(pc, function () {
 
             // destroy any excess mesh instances
             var removedModel = false;
-            for (i = mesh_num_needed; i < this._meshInfo.length; i++) {
+            for (i = mesh_infos_num_needed; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].meshInstance) {
                     if (!removedModel) {
                         // remove model from scene so that excess mesh instances are removed
@@ -308,12 +334,12 @@ Object.assign(pc, function () {
                         this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
-                    this._removeMeshInstance(this._meshInfo[i].meshInstance, (this._multiPassEnabled && i > 0) ); // removes from model array
+                    this._removeMeshInstance(this._meshInfo[i].meshInstance, (this._multiPassEnabled && this._meshInfo[i].renderPass != RenderPass.TEXT) ); // removes from model array
                 }
             }
 
-            if (mesh_num_needed < this._meshInfo.length) {
-                this._meshInfo.splice(mesh_num_needed, this._meshInfo.length - mesh_num_needed);
+            if (mesh_infos_num_needed < this._meshInfo.length) {
+                this._meshInfo.splice(mesh_infos_num_needed, this._meshInfo.length - mesh_infos_num_needed);
                 this._element.addModelToLayers(this._model);
             }
 
@@ -326,7 +352,7 @@ Object.assign(pc, function () {
             var results;
             var tags;
 
-            if (this._multiPassEnabled != (this._outlineThickness > 1.0 && this._font.textures[0].length == 1)) {
+            if (this._multiPassEnabled != (this._outlineThickness > 1.0 && this._outlineColor.a > 0)) {
                 this._updateMeshInfos();
                 this._updateMaterial(this._element._isScreenSpace());
             }
@@ -441,7 +467,7 @@ Object.assign(pc, function () {
             };
 
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
-                var ti = (this._multiPassEnabled) ? 0 : i;
+                var ti = i % this._font.textures[0].length;
 
                 var l = charactersPerTexture[ti] || 0;
                 var meshInfo = this._meshInfo[i];
@@ -472,7 +498,7 @@ Object.assign(pc, function () {
 
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
-                        this._removeMeshInstance(meshInfo.meshInstance, (this._multiPassEnabled && i > 0) );
+                        this._removeMeshInstance(meshInfo.meshInstance, (this._multiPassEnabled && meshInfo.renderPass != RenderPass.TEXT) );
                         meshInfo.meshInstance.material = null;
                     }
 
@@ -661,7 +687,7 @@ Object.assign(pc, function () {
             };
 
             var msdf = this._font && this._font.type === pc.FONT_MSDF;
-            this._material = this._system.getTextElementMaterial(screenSpace, msdf);
+            this._material = this._system.getTextElementMaterial(screenSpace, msdf, this._multiPassEnabled);
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
@@ -1056,7 +1082,7 @@ Object.assign(pc, function () {
 
             var len;
 
-            for (i = 0, len = (this._multiPassEnabled) ? 1 : this._meshInfo.length; i < len; i++) {
+            for (i = 0, len = (this._multiPassEnabled) ? this._font.textures[0].length : this._meshInfo.length; i < len; i++) {
                 if (this._meshInfo[i].count === 0) continue;
 
                 var prevQuad = 0;
@@ -1252,110 +1278,87 @@ Object.assign(pc, function () {
         },
 
         _setStencil: function (stencilParams) {
-            if (this._model) {
-                var instances = this._model.meshInstances;
-                for (var i = 0; i < instances.length; i++) {
-
-                    if (this._multiPassEnabled) {
-                        if (stencilParams) {
-                            switch (this._meshInfo[i].renderPass) {
-                                case RenderPass.ALL_IN_ONE: // first pass (just text, set stencil)
-                                    instances[i].stencilFront = stencilParams;
-                                    instances[i].stencilBack = stencilParams;
-                                    break;
-                                case RenderPass.TEXT: // first pass (just text, set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: stencilParams.ref,
-                                        func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_INCREMENT
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: stencilParams.ref,
-                                        func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_INCREMENT
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: stencilParams.ref,
-                                        func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_INCREMENT
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: stencilParams.ref,
-                                        func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_KEEP // INCREMENT
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.STENCIL_CLEAR: // fifth pass (include everything clear stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: stencilParams.ref + 1,
-                                        func: pc.FUNC_EQUAL,
-                                        zpass: pc.STENCILOP_DECREMENT
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
+            if (this._model && this._meshInfo) {
+                for (var i = 0; i < this._meshInfo.length; i++) {
+                    var mi = this._meshInfo[i].meshInstance;
+                    if (mi) {
+                        if (this._multiPassEnabled) {
+                            if (stencilParams) {
+                                switch (this._meshInfo[i].renderPass) {
+                                    case RenderPass.ALL_IN_ONE: // first pass (just text, set stencil)
+                                        mi.stencilFront = stencilParams;
+                                        mi.stencilBack = stencilParams;
+                                        break;
+                                    case RenderPass.TEXT: // first pass (just text, set stencil)
+                                    case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
+                                    case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: stencilParams.ref,
+                                            func: pc.FUNC_EQUAL,
+                                            zpass: pc.STENCILOP_INCREMENT
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                    case RenderPass.OUTLINE_AA: // second pass (just border, use stencil and set stencil)
+                                    case RenderPass.DROP_SHADOW_AA: // third pass (just drop shadow, use stencil and set stencil)
+                                    case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: stencilParams.ref,
+                                            func: pc.FUNC_EQUAL,
+                                            zpass: pc.STENCILOP_INCREMENT
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                    case RenderPass.STENCIL_CLEAR: // fifth pass (include everything clear stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: stencilParams.ref + 1,
+                                            func: pc.FUNC_EQUAL,
+                                            zpass: pc.STENCILOP_DECREMENT
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                }
+                            } else { // no mask
+                                switch (this._meshInfo[i].renderPass) {
+                                    case RenderPass.ALL_IN_ONE: // first pass (just text, set stencil)
+                                        mi.stencilFront = stencilParams;
+                                        mi.stencilBack = stencilParams;
+                                        break;
+                                    case RenderPass.TEXT: // first pass (just text, set stencil)
+                                    case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
+                                    case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: 42,
+                                            func: pc.FUNC_NOTEQUAL,
+                                            zpass: pc.STENCILOP_REPLACE
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                    case RenderPass.OUTLINE_AA: // second pass (just border, use stencil and set stencil)
+                                    case RenderPass.DROP_SHADOW_AA: // third pass (just drop shadow, use stencil and set stencil)
+                                    case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: 42,
+                                            func: pc.FUNC_NOTEQUAL,
+                                            zpass: pc.STENCILOP_KEEP
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                    case RenderPass.STENCIL_CLEAR: // fifth pass (include everything clear stencil)
+                                        mi.stencilFront = new pc.StencilParameters({
+                                            ref: 0,
+                                            func: pc.FUNC_NEVER,
+                                            fail: pc.STENCILOP_REPLACE,
+                                            zpass: pc.STENCILOP_REPLACE
+                                        });
+                                        mi.stencilBack = mi.stencilFront;
+                                        break;
+                                }
                             }
-                        } else { // no mask
-                            switch (this._meshInfo[i].renderPass) {
-                                case RenderPass.ALL_IN_ONE: // first pass (just text, set stencil)
-                                    instances[i].stencilFront = stencilParams;
-                                    instances[i].stencilBack = stencilParams;
-                                    break;
-                                case RenderPass.TEXT: // first pass (just text, set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: 42,
-                                        func: pc.FUNC_ALWAYS,
-                                        zpass: pc.STENCILOP_REPLACE
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.OUTLINE: // second pass (just border, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: 42,
-                                        func: pc.FUNC_NOTEQUAL,
-                                        zpass: pc.STENCILOP_REPLACE
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.DROP_SHADOW: // third pass (just drop shadow, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: 42,
-                                        func: pc.FUNC_NOTEQUAL,
-                                        zpass: pc.STENCILOP_REPLACE
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.EDGE_AA: // forth pass (just edge AA, use stencil and set stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: 42,
-                                        func: pc.FUNC_NOTEQUAL,
-                                        zpass: pc.STENCILOP_REPLACE
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                                case RenderPass.STENCIL_CLEAR: // fifth pass (include everything clear stencil)
-                                    instances[i].stencilFront = new pc.StencilParameters({
-                                        ref: 0,
-                                        func: pc.FUNC_NEVER,
-                                        fail: pc.STENCILOP_REPLACE,
-                                        zpass: pc.STENCILOP_REPLACE
-                                    });
-                                    instances[i].stencilBack = instances[i].stencilFront;
-                                    break;
-                            }
+                        } else {
+                            mi.stencilFront = stencilParams;
+                            mi.stencilBack = stencilParams;
                         }
-                    } else {
-                        instances[i].stencilFront = stencilParams;
-                        instances[i].stencilBack = stencilParams;
                     }
                 }
             }
@@ -1605,11 +1608,11 @@ Object.assign(pc, function () {
         set: function (value) {
 
             var previousFontType;
-            var previousFontVersion;
+            // var previousFontVersion;
 
             if (this._font) {
                 previousFontType = this._font.type;
-                previousFontVersion = this._font.data.version;
+                // previousFontVersion = this._font.data.version;
 
                 // remove render event listener
                 if (this._font.off) this._font.off('render', this._onFontRender, this);
@@ -1653,7 +1656,7 @@ Object.assign(pc, function () {
             // make sure we have as many meshInfo entries
             // as the number of font textures and outline passes
 
-            this._multiPassEnabled = !(this._outlineThickness > 1.0 && this._font.textures[0].length == 1); // this line forces a call to _updateMeshInfos
+            this._multiPassEnabled = !(this._outlineThickness > 1.0 && this._outlineColor.a > 0); // this line forces a call to _updateMeshInfos
 
             this._updateText();
 
@@ -1819,6 +1822,8 @@ Object.assign(pc, function () {
                 return;
             }
 
+            var opaquenessChanged = (this._outlineColor.a == 0) != (a == 0);
+
             this._outlineColor.r = r;
             this._outlineColor.g = g;
             this._outlineColor.b = b;
@@ -1829,6 +1834,8 @@ Object.assign(pc, function () {
                 this._outlineColorUniform[1] = this._outlineColor.g;
                 this._outlineColorUniform[2] = this._outlineColor.b;
                 this._outlineColorUniform[3] = this._outlineColor.a;
+
+                if (opaquenessChanged) this._updateText();
 
                 for (var i = 0; i < this._model.meshInstances.length; i++) {
                     var mi = this._model.meshInstances[i];
