@@ -13,7 +13,9 @@ Object.assign(pc, function () {
      * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
      * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
-     * @property {number} duration Get the duration in seconds of the current animation.
+     * @property {number} duration Get the duration in seconds of the current animation. [read only]
+     * @property {pc.Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
+     * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
      */
     var AnimationComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
@@ -91,7 +93,7 @@ Object.assign(pc, function () {
 
                     if (data.blending) {
                         // remove all but the last clip
-                        while (animController.numClips > 1) {
+                        while (animController.clips.length > 1) {
                             animController.removeClip(0);
                         }
                     } else {
@@ -172,7 +174,7 @@ Object.assign(pc, function () {
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
             } else if (hasGlb) {
-                data.animController = new pc.AnimController(graph);
+                data.animController = new pc.AnimController(new pc.DefaultAnimBinder(graph));
             }
         },
 
@@ -317,9 +319,7 @@ Object.assign(pc, function () {
                 data.skeleton.animation = null;
             }
             if (data.animController) {
-                for (var i = 0; i < data.animController.numClips; ++i) {
-                    data.animController.removeClips();
-                }
+                data.animController.removeClips();
             }
         },
 
@@ -381,8 +381,8 @@ Object.assign(pc, function () {
             }
 
             if (data.animController) {
-                for (var i = 0; i < data.animController.numClips; ++i) {
-                    data.animController.getClip(i).loop = data.loop;
+                for (var i = 0; i < data.animController.clips.length; ++i) {
+                    data.animController.clips[i].loop = data.loop;
                 }
             }
         },
@@ -399,8 +399,8 @@ Object.assign(pc, function () {
 
             if (data.animController) {
                 var animController = data.animController;
-                for (var i = 0; i < animController.numClips; ++i) {
-                    animController.getClip(i).time = newValue;
+                for (var i = 0; i < animController.clips.length; ++i) {
+                    animController.clips[i].time = newValue;
                 }
             }
         },
@@ -468,8 +468,8 @@ Object.assign(pc, function () {
 
                 if (data.animController) {
                     var animController = data.animController;
-                    for (var i = 0; i < animController.numClips; ++i) {
-                        animController.getClip(i).time = currentTime;
+                    for (var i = 0; i < animController.clips.length; ++i) {
+                        animController.clips[i].time = currentTime;
                     }
                 }
             }

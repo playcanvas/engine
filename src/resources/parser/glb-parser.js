@@ -143,8 +143,7 @@ Object.assign(pc, function () {
                     var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
                     var buffer = buffers[bufferView.buffer];
                     sourceDesc[semantic] = {
-                        array: new Uint32Array(buffer.buffer),
-                        buffer: bufferView.buffer,
+                        buffer: buffer.buffer,
                         size: size,
                         offset: (accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0) +
                                 (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
@@ -178,8 +177,7 @@ Object.assign(pc, function () {
             });
 
             sourceDesc[pc.SEMANTIC_NORMAL] = {
-                array: new Uint32Array(normals.buffer),
-                buffer: null,
+                buffer: normals.buffer,
                 size: 12,
                 offset: 0,
                 stride: 12,
@@ -220,25 +218,26 @@ Object.assign(pc, function () {
 
         var vertexData = vertexBuffer.lock();
         var targetArray = new Uint32Array(vertexData);
-        var sourceArray, targetStride, sourceStride;
+        var sourceArray;
 
         if (isCorrectlyInterleaved) {
             // copy data
-            sourceArray = new Uint32Array(positionDesc.array.buffer,
+            sourceArray = new Uint32Array(positionDesc.buffer,
                                           positionDesc.offset,
                                           numVertices * vertexBuffer.format.size / 4);
             targetArray.set(sourceArray);
         } else {
+            var targetStride, sourceStride;
             // copy data and interleave
             for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
                 target = vertexBuffer.format.elements[i];
                 targetStride = target.stride / 4;
 
                 source = sourceDesc[target.name];
-                sourceArray = source.array;
+                sourceArray = new Uint32Array(source.buffer, source.offset, source.count * source.stride / 4);
                 sourceStride = source.stride / 4;
 
-                var src = source.offset / 4;
+                var src = 0;
                 var dst = target.offset / 4;
                 for (j = 0; j < numVertices; ++j) {
                     for (k = 0; k < source.size / 4; ++k) {
@@ -449,11 +448,6 @@ Object.assign(pc, function () {
 
         if (materialData.hasOwnProperty('name')) {
             material.name = materialData.name;
-        }
-
-        if (materialData.hasOwnProperty('extensions') &&
-            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
-            material.useLighting = false;
         }
 
         var color, texture;
@@ -703,6 +697,30 @@ Object.assign(pc, function () {
             material.cull = pc.CULLFACE_BACK;
         }
 
+        // handle unlit material by disabling lighting and copying diffuse colours
+        // into emissive.
+        if (materialData.hasOwnProperty('extensions') &&
+            materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
+            material.useLighting = false;
+
+            // copy diffuse into emissive
+            material.emissive.copy(material.diffuse);
+            material.emissiveTint = material.diffuseTint;
+            material.emissiveMap = material.diffuseMap;
+            material.emissiveMapUv = material.diffuseMapUv;
+            material.emissiveMapTiling.copy(material.diffuseMapTiling);
+            material.emissiveMapOffset.copy(material.diffuseMapOffset);
+            material.emissiveMapChannel = material.diffuseMapChannel;
+            material.emissiveVertexColor = material.diffuseVertexColor;
+            material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
+
+            // blank diffuse
+            material.diffuse.set(0, 0, 0);
+            material.diffuseTint = false;
+            material.diffuseMap = null;
+            material.diffuseVertexColor = false;
+        }
+
         material.update();
 
         return material;
@@ -768,12 +786,6 @@ Object.assign(pc, function () {
             "CUBICSPLINE": pc.INTERPOLATION_CUBIC
         };
 
-        var pathMap = {
-            "translation": "_translation",
-            "rotation": "_rotation",
-            "scale": "_scale"
-        };
-
         var inputMap = { };
         var inputs = [];
 
@@ -807,21 +819,58 @@ Object.assign(pc, function () {
 
             // create curve
             curves.push(new pc.AnimCurve(
+                [],
                 inputMap[sampler.input],
                 outputMap[sampler.output],
                 interpolation));
         }
 
-        // convert nodes -> anim targets
-        var targets = nodes.map(function (node) {
-            return new pc.AnimTarget(node.name, -1, -1, -1);
-        });
+        var quatArrays = [];
 
-        // convert anim target channels
+        // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
-            targets[target.node][pathMap[target.path]] = channel.sampler;
+            var curve = curves[channel.sampler];
+            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+
+            // if this target is a set of quaternion keys, make note of its index so we can perform
+            // quaternion-specific processing on it.
+            if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
+                quatArrays.push(curve.output);
+            }
+        }
+
+        // sort the list of array indexes so we can skip dups
+        quatArrays.sort();
+
+        // run through the quaternion data arrays flipping quaternion keys
+        // that don't fall in the same winding order.
+        var prevIndex = null;
+        for (i = 0; i < quatArrays.length; ++i) {
+            var index = quatArrays[i];
+            // skip over duplicate array indices
+            if (i === 0 || index !== prevIndex) {
+                var data = outputs[index];
+                if (data.components === 4) {
+                    var d = data.data;
+                    var len = d.length - 4;
+                    for (var j = 0; j < len; j += 4) {
+                        var dp = d[j + 0] * d[j + 4] +
+                                 d[j + 1] * d[j + 5] +
+                                 d[j + 2] * d[j + 6] +
+                                 d[j + 3] * d[j + 7];
+
+                        if (dp < 0) {
+                            d[j + 4] *= -1;
+                            d[j + 5] *= -1;
+                            d[j + 6] *= -1;
+                            d[j + 7] *= -1;
+                        }
+                    }
+                }
+                prevIndex = index;
+            }
         }
 
         // calculate duration of the animation as maximum time value
@@ -835,8 +884,7 @@ Object.assign(pc, function () {
             duration,
             inputs,
             outputs,
-            curves,
-            targets);
+            curves);
     };
 
     var createNode = function (nodeData, nodeIndex) {
@@ -1019,7 +1067,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf images asynchronously, returning the images in callback
-    var loadImagesAsync = function (device, gltf, buffers, callback) {
+    var loadImagesAsync = function (device, gltf, buffers, urlBase, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1053,7 +1101,7 @@ Object.assign(pc, function () {
                     img.src = imgData.uri;
                 } else {
                     img.crossOrigin = "anonymous";
-                    img.src = imgData.uri;
+                    img.src = pc.path.join(urlBase, imgData.uri);
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1074,7 +1122,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf buffers asynchronously, returning them in the callback
-    var loadBuffersAsync = function (gltf, binaryChunk, callback) {
+    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
         var result = [];
 
         if (gltf.buffers === null || gltf.buffers.length === 0) {
@@ -1090,7 +1138,15 @@ Object.assign(pc, function () {
             }
         };
 
-        var LintHack = Uint8Array;
+        var createCallback = function (index) {
+            return function (err, result) {
+                if (err) {
+                    callback(err);
+                } else {
+                    onLoad(new Uint8Array(result), index);
+                }
+            };
+        };
 
         for (var i = 0; i < gltf.buffers.length; ++i) {
             var buffer = gltf.buffers[i];
@@ -1113,15 +1169,10 @@ Object.assign(pc, function () {
 
                     onLoad(binaryArray, i);
                 } else {
-                    var xhr = new XMLHttpRequest();
-                    xhr.responseType = 'arraybuffer';
-                    xhr.open('GET', buffer.uri, true);
-                    xhr.onload = (function (index) {
-                        return function () {
-                            onLoad(new LintHack(this.response), index);
-                        };
-                    })(i);
-                    xhr.send();
+                    pc.http.get(
+                        pc.path.join(urlBase, buffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        createCallback(i));
                 }
             } else {
                 // glb buffer reference
@@ -1230,7 +1281,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, data, device, callback) {
+    GlbParser.parseAsync = function (filename, urlBase, data, device, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1246,14 +1297,14 @@ Object.assign(pc, function () {
                 }
 
                 // async load external buffers
-                loadBuffersAsync(gltf, chunks.binaryChunk, function (err, buffers) {
+                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, function (err, buffers) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
                     // async load images
-                    loadImagesAsync(device, gltf, buffers, function (err, images) {
+                    loadImagesAsync(device, gltf, buffers, urlBase, function (err, images) {
                         if (err) {
                             callback(err);
                             return;

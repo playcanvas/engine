@@ -371,6 +371,7 @@ Object.assign(pc, function () {
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
+        this.projSkyboxId = scope.resolve('matrix_projectionSkybox');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
@@ -680,6 +681,9 @@ Object.assign(pc, function () {
                 if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
+                // Skybox Projection Matrix
+                this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
+
                 // ViewInverse Matrix
                 if (camera.overrideCalculateTransform) {
                     camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
@@ -794,7 +798,7 @@ Object.assign(pc, function () {
             var scope = this.device.scope;
 
             for (i = 0; i < numDirs; i++) {
-                if (!(dirs[i]._mask & mask)) continue;
+                if (!(dirs[i].mask & mask)) continue;
 
                 directional = dirs[i];
                 wtm = directional._node.getWorldTransform();
@@ -985,7 +989,7 @@ Object.assign(pc, function () {
 
             for (i = 0; i < numPnts; i++) {
                 point = pnts[i];
-                if (!(point._mask & mask)) continue;
+                if (!(point.mask & mask)) continue;
                 if (point.isStatic) continue;
                 this.dispatchPointLight(scene, scope, point, cnt);
                 cnt++;
@@ -1004,7 +1008,7 @@ Object.assign(pc, function () {
 
             for (i = 0; i < numSpts; i++) {
                 spot = spts[i];
-                if (!(spot._mask & mask)) continue;
+                if (!(spot.mask & mask)) continue;
                 if (spot.isStatic) continue;
                 this.dispatchSpotLight(scene, scope, spot, cnt);
                 cnt++;
@@ -1090,7 +1094,7 @@ Object.assign(pc, function () {
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 type = light._type;
-                if (light.castShadows && light._enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE) {
+                if (light.castShadows && light.enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE) {
                     if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                         light.getBoundingSphere(tempSphere);
                         if (!camera.frustum.containsSphere(tempSphere)) continue;
@@ -1281,7 +1285,7 @@ Object.assign(pc, function () {
                 light = lights[i];
                 type = light._type;
 
-                if (!light.castShadows || !light._enabled) continue;
+                if (!light.castShadows || !light.enabled) continue;
 
                 if (!light._shadowCamera) {
                     this.getShadowCamera(device, light); // fix accessing non-existing shadow map/camera when the light was created/applied, but shadowmap was never initialized
@@ -1769,6 +1773,7 @@ Object.assign(pc, function () {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.projId.setValue(projL.data);
+                        this.projSkyboxId.setValue(projL.data);
                         this.viewInvId.setValue(viewInvL.data);
                         this.viewId.setValue(viewL.data);
                         this.viewId3.setValue(viewMat3L.data);
@@ -1783,6 +1788,7 @@ Object.assign(pc, function () {
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.projId.setValue(projR.data);
+                        this.projSkyboxId.setValue(projR.data);
                         this.viewInvId.setValue(viewInvR.data);
                         this.viewId.setValue(viewR.data);
                         this.viewId3.setValue(viewMat3R.data);
@@ -1802,6 +1808,7 @@ Object.assign(pc, function () {
                             device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
                             this.projId.setValue(view.projMat.data);
+                            this.projSkyboxId.setValue(view.projMat.data);
                             this.viewId.setValue(view.viewOffMat.data);
                             this.viewInvId.setValue(view.viewInvOffMat.data);
                             this.viewId3.setValue(view.viewMat3.data);
@@ -1936,8 +1943,8 @@ Object.assign(pc, function () {
                         for (j = 0; j < lights.length; j++) {
                             light = lights[j];
                             if (light._type !== lightTypePass) continue;
-                            if (light._enabled) {
-                                if (light._mask & drawCall.mask) {
+                            if (light.enabled) {
+                                if (light.mask & drawCall.mask) {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
@@ -2631,11 +2638,11 @@ Object.assign(pc, function () {
                 var l;
                 for (i = 0; i < stats.lights; i++) {
                     l = comp._lights[i];
-                    if (l._enabled) {
-                        if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                    if (l.enabled) {
+                        if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
                             stats.dynamicLights++;
                         }
-                        if (l._mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                        if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
                             stats.bakedLights++;
                         }
                     }
@@ -2733,7 +2740,7 @@ Object.assign(pc, function () {
                 light = comp._lights[i];
                 if (!light.visibleThisFrame) continue;
                 if (light._type === pc.LIGHTTYPE_DIRECTIONAL) continue;
-                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                if (!light.castShadows || !light.enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
                 this.cullLocalShadowmap(light, casters);
             }
@@ -2746,7 +2753,7 @@ Object.assign(pc, function () {
                 light = comp._lights[i];
                 if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                 globalLightCounter++;
-                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                if (!light.castShadows || !light.enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
                 cameras = comp._globalLightCameras[globalLightCounter];
                 for (j = 0; j < cameras.length; j++) {

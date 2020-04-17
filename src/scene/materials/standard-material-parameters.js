@@ -42,6 +42,10 @@
 
         useMetalness: 'boolean',
         metalness: 'number',
+        enableGGXSpecular: 'boolean',
+        anisotropy: 'number',
+        clearCoat: 'number',
+        clearCoatGlossiness: 'number',
         metalnessTint: 'boolean',
         metalnessVertexColor: 'boolean',
         metalnessVertexColorChannel: 'string',

@@ -4,13 +4,10 @@ describe("pc.AnimController", function () {
         // create curve
         var keys = new pc.AnimData(1, [0, 1, 2]);
         var translations = new pc.AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curve = new pc.AnimCurve(0, 0, pc.INTERPOLATION_LINEAR);
-
-        // construct the target
-        var target = new pc.AnimTarget("child1", 0, -1, -1);
+        var curve = new pc.AnimCurve(["child1.translation"], 0, 0, pc.INTERPOLATION_LINEAR);
 
         // construct the animation track
-        var track = new pc.AnimTrack("test track", 2, [keys], [translations], [curve], [target]);
+        var track = new pc.AnimTrack("test track", 2, [keys], [translations], [curve]);
 
         // construct an animation clip
         var clip = new pc.AnimClip(track, 0.0, 1.0, true, true);
@@ -23,7 +20,7 @@ describe("pc.AnimController", function () {
         child1.addChild(child2);
 
         // construct the animation controller
-        var animController = new pc.AnimController(parent);
+        var animController = new pc.AnimController(new pc.DefaultAnimBinder(parent));
         animController.addClip(clip);
 
         // check initial state

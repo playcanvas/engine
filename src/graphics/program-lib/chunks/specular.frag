@@ -6,6 +6,10 @@ uniform vec3 material_specular;
 uniform sampler2D texture_specularMap;
 #endif
 
+#ifdef CLEARCOAT
+uniform float material_clearCoatSpecularity;
+#endif
+
 void getSpecularity() {
     dSpecularity = vec3(1.0);
 
@@ -19,6 +23,11 @@ void getSpecularity() {
 
     #ifdef MAPVERTEX
         dSpecularity *= saturate(vVertexColor.$VC);
+    #endif
+
+    #ifdef CLEARCOAT
+        ccSpecularity = vec3(1.0);
+        ccSpecularity *= material_clearCoatSpecularity;
     #endif
 }
 

@@ -5,5 +5,7 @@ void getNormal() {
     dNormalMap = normalMap;
     normalMap = mix(vec3(0.0, 0.0, 1.0), normalMap, material_bumpiness);
     dNormalW = normalize(dTBN * normalMap);
+    #ifdef CLEARCOAT
+        ccNormalW = normalize(dVertexNormalW);
+    #endif
 }
-
