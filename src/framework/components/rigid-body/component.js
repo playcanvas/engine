@@ -270,13 +270,20 @@ Object.assign(pc, function () {
                 if (body) {
                     this.system.addBody(body, this.group, this.mask);
 
-                    // set activation state so that the body goes back to normal simulation
-                    if (this.isKinematic()) {
-                        body.forceActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
-                        body.activate();
-                    } else {
-                        body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
-                        this.syncEntityToBody();
+                    switch (this.type) {
+                        case pc.BODYTYPE_DYNAMIC:
+                            this.system._dynamic.push(this);
+                            body.setActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            this.syncEntityToBody();
+                            break;
+                        case pc.BODYTYPE_KINEMATIC:
+                            this.system._kinematic.push(this);
+                            body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
+                            body.activate();
+                            break;
+                        case pc.BODYTYPE_STATIC:
+                            this.syncEntityToBody();
+                            break;
                     }
 
                     this.data.simulationEnabled = true;
@@ -287,10 +294,28 @@ Object.assign(pc, function () {
         disableSimulation: function () {
             var body = this.body;
             if (body && this.data.simulationEnabled) {
+                var idx;
+
+                switch (this.type) {
+                    case pc.BODYTYPE_DYNAMIC:
+                        idx = this.system._dynamic.indexOf(this);
+                        if (idx > -1) {
+                            this.system._dynamic.splice(idx, 1);
+                        }
+                        break;
+                    case pc.BODYTYPE_KINEMATIC:
+                        idx = this.system._kinematic.indexOf(this);
+                        if (idx > -1) {
+                            this.system._kinematic.splice(idx, 1);
+                        }
+                        break;
+                }
+
                 this.system.removeBody(body);
+
                 // set activation state to disable simulation to avoid body.isActive() to return
                 // true even if it's not in the dynamics world
-                body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
+                body.setActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
 
                 this.data.simulationEnabled = false;
             }

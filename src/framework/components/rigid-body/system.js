@@ -539,25 +539,7 @@ Object.assign(pc, function () {
                 this.dynamicsWorld.setGravity(gravity);
             }
 
-            this._dynamic.length = 0;
-            this._kinematic.length = 0;
-
-            var id, entity, componentData;
-            var components = this.store;
-            for (id in components) {
-                if (components.hasOwnProperty(id)) {
-                    entity = components[id].entity;
-                    componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
-                        if (componentData.type === pc.BODYTYPE_KINEMATIC)
-                            this._kinematic.push(entity.rigidbody);
-                        else if (componentData.type === pc.BODYTYPE_DYNAMIC)
-                            this._dynamic.push(entity.rigidbody);
-                    }
-                }
-            }
-
-            // Update all kinematic bodies with their current transform
+            // Update all kinematic bodies based on their current entity transform
             for (i = 0; i < this._kinematic.length; i++) {
                 this._kinematic[i]._updateKinematic();
             }
