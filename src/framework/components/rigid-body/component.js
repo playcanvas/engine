@@ -593,7 +593,7 @@ Object.assign(pc, function () {
          * in order to update the rigid body to match the Entity.
          */
         syncEntityToBody: function () {
-            var body = this.body;
+            var body = this.data.body;
             if (body) {
                 var wtm = this.entity.getWorldTransform();
                 ammoTransform.setFromOpenGLMatrix(wtm.data);
@@ -606,6 +606,7 @@ Object.assign(pc, function () {
                         motionState.setWorldTransform(ammoTransform);
                     }
                 }
+                body.activate();
             }
         },
 
@@ -617,7 +618,7 @@ Object.assign(pc, function () {
          * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
          */
         syncBodyToEntity: function () {
-            var body = this.body;
+            var body = this.data.body;
             if (body) {
                 var motionState = body.getMotionState();
                 if (motionState) {
@@ -628,7 +629,6 @@ Object.assign(pc, function () {
                     this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
-                body.activate();
             }
         },
 
@@ -653,7 +653,6 @@ Object.assign(pc, function () {
                 this.entity.setPosition(p.x(), p.y(), p.z());
                 this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
             }
-            body.activate();
         },
 
         /**
