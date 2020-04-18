@@ -559,7 +559,7 @@ Object.assign(pc, function () {
 
             // Update all kinematic bodies with their current transform
             for (i = 0; i < this._kinematic.length; i++) {
-                this._kinematic[i].syncEntityToKinematicBody();
+                this._kinematic[i]._updateKinematic();
             }
 
             // Step the physics simulation
@@ -567,7 +567,7 @@ Object.assign(pc, function () {
 
             // Update the transforms of all entities referencing a dynamic body
             for (i = 0; i < this._dynamic.length; i++) {
-                this._dynamic[i].syncBodyToEntity();
+                this._dynamic[i]._updateDynamic();
             }
 
             // Check for collisions and fire callbacks

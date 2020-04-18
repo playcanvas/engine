@@ -609,20 +609,6 @@ Object.assign(pc, function () {
             }
         },
 
-        syncEntityToKinematicBody: function () {
-            var body = this.body;
-            if (body) {
-                var motionState = body.getMotionState();
-                if (motionState) {
-                    var wtm = this.entity.getWorldTransform();
-                    ammoTransform.setFromOpenGLMatrix(wtm.data);
-
-                    body.setWorldTransform(ammoTransform);
-                    motionState.setWorldTransform(ammoTransform);
-                }
-            }
-        },
-
         /**
          * @private
          * @function
@@ -642,7 +628,32 @@ Object.assign(pc, function () {
                     this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
+                body.activate();
             }
+        },
+
+        _updateKinematic: function () {
+            var body = this.data.body;
+            var motionState = body.getMotionState();
+            if (motionState) {
+                var wtm = this.entity.getWorldTransform();
+                ammoTransform.setFromOpenGLMatrix(wtm.data);
+                motionState.setWorldTransform(ammoTransform);
+            }
+        },
+
+        _updateDynamic: function () {
+            var body = this.data.body;
+            var motionState = body.getMotionState();
+            if (motionState) {
+                motionState.getWorldTransform(ammoTransform);
+
+                var p = ammoTransform.getOrigin();
+                var q = ammoTransform.getRotation();
+                this.entity.setPosition(p.x(), p.y(), p.z());
+                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+            }
+            body.activate();
         },
 
         /**
