@@ -127,9 +127,10 @@ Object.assign(pc, function () {
         set: function (lv) {
             var body = this.body;
             if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                body.activate();
+
                 ammoVec1.setValue(lv.x, lv.y, lv.z);
                 body.setLinearVelocity(ammoVec1);
-                body.activate();
 
                 this._linearVelocity.copy(lv);
             }
@@ -148,9 +149,10 @@ Object.assign(pc, function () {
         set: function (av) {
             var body = this.body;
             if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                body.activate();
+
                 ammoVec1.setValue(av.x, av.y, av.z);
                 body.setAngularVelocity(ammoVec1);
-                body.activate();
 
                 this._angularVelocity.copy(av);
             }
@@ -607,6 +609,20 @@ Object.assign(pc, function () {
             }
         },
 
+        syncEntityToKinematicBody: function () {
+            var body = this.body;
+            if (body) {
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    var wtm = this.entity.getWorldTransform();
+                    ammoTransform.setFromOpenGLMatrix(wtm.data);
+
+                    body.setWorldTransform(ammoTransform);
+                    motionState.setWorldTransform(ammoTransform);
+                }
+            }
+        },
+
         /**
          * @private
          * @function
@@ -616,7 +632,7 @@ Object.assign(pc, function () {
          */
         syncBodyToEntity: function () {
             var body = this.body;
-            if (body && body.isActive()) {
+            if (body) {
                 var motionState = body.getMotionState();
                 if (motionState) {
                     motionState.getWorldTransform(ammoTransform);

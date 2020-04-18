@@ -559,7 +559,7 @@ Object.assign(pc, function () {
 
             // Update all kinematic bodies with their current transform
             for (i = 0; i < this._kinematic.length; i++) {
-                this._kinematic[i].syncEntityToBody();
+                this._kinematic[i].syncEntityToKinematicBody();
             }
 
             // Step the physics simulation
