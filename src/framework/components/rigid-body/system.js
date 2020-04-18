@@ -164,7 +164,7 @@ Object.assign(pc, function () {
         this.fixedTimeStep = 1 / 60;
         this.gravity = new pc.Vec3(0, -9.81, 0);
 
-        // Temporary arrays for accumulating body types every frame
+        // Arrays of pc.RigidBodyComponents filtered on body type
         this._dynamic = [];
         this._kinematic = [];
 
