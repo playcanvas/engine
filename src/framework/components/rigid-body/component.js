@@ -657,6 +657,13 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponent#_updateKinematic
+         * @description Writes the entity's world transformation matrix into the motion state
+         * of a kinematic body.
+         */
         _updateKinematic: function () {
             var body = this.data.body;
             var motionState = body.getMotionState();
@@ -667,6 +674,13 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponent#_updateDynamic
+         * @description Sets an entity's transform to match that of the world transformation
+         * matrix of a dynamic rigid body's motion state.
+         */
         _updateDynamic: function () {
             var body = this.data.body;
             var motionState = body.getMotionState();
