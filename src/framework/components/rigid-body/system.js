@@ -540,16 +540,18 @@ Object.assign(pc, function () {
             }
 
             // Update all kinematic bodies based on their current entity transform
-            for (i = 0, len = this._kinematic.length; i < len; i++) {
-                this._kinematic[i]._updateKinematic();
+            var kinematic = this._kinematic;
+            for (i = 0, len = kinematic.length; i < len; i++) {
+                kinematic[i]._updateKinematic();
             }
 
             // Step the physics simulation
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
             // Update the transforms of all entities referencing a dynamic body
-            for (i = 0, len = this._dynamic.length; i < len; i++) {
-                this._dynamic[i]._updateDynamic();
+            var dynamic = this._dynamic;
+            for (i = 0, len = dynamic.length; i < len; i++) {
+                dynamic[i]._updateDynamic();
             }
 
             // Check for collisions and fire callbacks
