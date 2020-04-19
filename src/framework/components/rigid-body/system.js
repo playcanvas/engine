@@ -526,7 +526,7 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function (dt) {
-            var i, j;
+            var i, j, len;
 
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
@@ -540,7 +540,7 @@ Object.assign(pc, function () {
             }
 
             // Update all kinematic bodies based on their current entity transform
-            for (i = 0; i < this._kinematic.length; i++) {
+            for (i = 0, len = this._kinematic.length; i < len; i++) {
                 this._kinematic[i]._updateKinematic();
             }
 
@@ -548,7 +548,7 @@ Object.assign(pc, function () {
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
             // Update the transforms of all entities referencing a dynamic body
-            for (i = 0; i < this._dynamic.length; i++) {
+            for (i = 0, len = this._dynamic.length; i < len; i++) {
                 this._dynamic[i]._updateDynamic();
             }
 
