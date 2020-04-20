@@ -218,7 +218,7 @@ Object.assign(pc, function () {
                 var bufferView = bufferViews[accessor.bufferView];
 
                 if (semanticMap.hasOwnProperty(attrib)) {
-                    var semantic = semanticMap[attrib];
+                    var semantic = semanticMap[attrib].semantic;
                     vertexDesc.push({
                         semantic: semantic,
                         components: getNumComponents(accessor.type),
@@ -257,14 +257,39 @@ Object.assign(pc, function () {
 
         var numPoints = outputGeometry.num_points();
 
-        // helper function to decode data stream with id to Float32Array
-        var extractDracoAttributeInfo = function (uniqueId) {
+        // helper function to decode data stream with id to TypedArray of appropriate type
+        var extractDracoAttributeInfo = function (uniqueId, storageType, componentSizeInBytes, normalize) {
             var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
             var numValues = numPoints * attribute.num_components();
-            var dataSize = numValues * 4;
+            componentSizeInBytes = normalize ? 4 : componentSizeInBytes;   // if normalized, always decompress to float32 buffer
+            var dataSize = numValues * componentSizeInBytes;
             var ptr = decoderModule._malloc( dataSize );
-            decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
-            var values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+            var values, k;
+
+            switch (storageType) {
+                case pc.TYPE_FLOAT32:
+                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
+                    values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+                    break;
+
+                case pc.TYPE_UINT8:
+                    if (normalize) {
+                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
+                        valuesFloat32 = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+
+                        values = new Uint8ClampedArray(numValues);
+                        for (k = 0; k < numValues; k++)
+                            values[k] = valuesFloat32[k] * 255;
+                    } else {
+                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, dataSize, ptr);
+                        values = new Uint8(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
+                    }
+                    break;
+
+                default:
+                    console.error("Element type not implemented: " + storageType);
+            }
+
             decoderModule._free(ptr);
 
             return {
@@ -279,18 +304,22 @@ Object.assign(pc, function () {
         var attributes = extDraco.attributes;
         for (var attrib in attributes) {
             if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
-                var semantic = semanticMap[attrib];
-                var attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
+                var semanticInfo = semanticMap[attrib];
+                var semantic = semanticInfo.semantic;
+                var storageType = semanticInfo.storageType;
+                var componentSizeInBytes = semanticInfo.byteSize;
+                var normalize = semanticMap[attrib].normalize;
+                var attributeInfo = extractDracoAttributeInfo(attributes[attrib], storageType, componentSizeInBytes, normalize);
 
                 vertexDesc.push({
                     semantic: semantic,
                     components: attributeInfo.numComponents,
-                    type: pc.TYPE_FLOAT32
+                    type: storageType,
+                    normalize: semanticMap[attrib].normalize
                 });
 
                 // store the info we'll need to copy this data into the vertex buffer
-                var getComponentSizeInBytes = 4;
-                var size = attributeInfo.numComponents * getComponentSizeInBytes;
+                var size = attributeInfo.numComponents * componentSizeInBytes;
                 sourceDesc[semantic] = {
                     values: attributeInfo.values,
                     buffer: attributeInfo.values.buffer,
@@ -364,15 +393,15 @@ Object.assign(pc, function () {
         var meshes = [];
 
         var semanticMap = {
-            'POSITION': pc.SEMANTIC_POSITION,
-            'NORMAL': pc.SEMANTIC_NORMAL,
-            'TANGENT': pc.SEMANTIC_TANGENT,
-            'BINORMAL': pc.SEMANTIC_BINORMAL,
-            'COLOR_0': pc.SEMANTIC_COLOR,
-            'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
-            'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
-            'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
-            'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1
+            'POSITION': { semantic: pc.SEMANTIC_POSITION,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'NORMAL': { semantic: pc.SEMANTIC_NORMAL,           storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TANGENT': { semantic: pc.SEMANTIC_TANGENT,         storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'BINORMAL': { semantic: pc.SEMANTIC_BINORMAL,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'COLOR_0': { semantic: pc.SEMANTIC_COLOR,           storageType: pc.TYPE_UINT8,   byteSize: 1,  normalize: true },
+            'JOINTS_0': { semantic: pc.SEMANTIC_BLENDINDICES,   storageType: pc.TYPE_UINT8,   byteSize: 1 },
+            'WEIGHTS_0': { semantic: pc.SEMANTIC_BLENDWEIGHT,   storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TEXCOORD_0': { semantic: pc.SEMANTIC_TEXCOORD0,    storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TEXCOORD_1': { semantic: pc.SEMANTIC_TEXCOORD1,    storageType: pc.TYPE_FLOAT32, byteSize: 4 }
         };
 
         meshData.primitives.forEach(function (primitive) {
