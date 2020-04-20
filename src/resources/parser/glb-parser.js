@@ -258,16 +258,12 @@ Object.assign(pc, function () {
         // helper function to decode data stream with id to Float32Array
         var extractDracoAttributeInfo = function (uniqueId) {
             var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
-            var attributeData = new decoderModule.DracoFloat32Array();
-            decoder.GetAttributeFloatForAllPoints(outputGeometry, attribute, attributeData);
             var numValues = numPoints * attribute.num_components();
-
-            var values = new Float32Array(numValues);
-            for (var i = 0; i < numValues; i++) {
-                values[i] = attributeData.GetValue(i);
-            }
-
-            decoderModule.destroy(attributeData);
+            var dataSize = numValues * 4;
+            var ptr = decoderModule._malloc( dataSize );
+            decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
+            var values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+            decoderModule._free(ptr);
 
             return {
                 values: values,
