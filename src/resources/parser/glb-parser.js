@@ -105,7 +105,9 @@ Object.assign(pc, function () {
         }
 
         // generate normals
-        var normals = Float32Array.from(pc.calculateNormals(positions, indices));
+        var normalsTemp = pc.calculateNormals(positions, indices);
+        var normals = new Float32Array(normalsTemp.length);
+        normals.set(normalsTemp);
 
         vertexDesc.push({
             semantic: pc.SEMANTIC_NORMAL,
