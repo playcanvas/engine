@@ -406,7 +406,7 @@ Object.assign(pc, function () {
 
         meshData.primitives.forEach(function (primitive) {
 
-            var primitiveType, vertexBuffer;
+            var primitiveType, vertexBuffer, numIndices;
             var indices = null;
             var mesh = new pc.Mesh();
 
@@ -415,9 +415,8 @@ Object.assign(pc, function () {
                 var extensions = primitive.extensions;
                 if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
 
-                    // TODO - possibly replace integration with DracoDecoderModule
+                    // access DracoDecoderModule
                     var decoderModule = window.DracoDecoderModule;
-
                     if (decoderModule) {
                         var extDraco = extensions.KHR_draco_mesh_compression;
                         if (extDraco.hasOwnProperty('attributes')) {
@@ -458,15 +457,20 @@ Object.assign(pc, function () {
                             // indices
                             var numFaces = outputGeometry.num_faces();
                             if (geometryType == decoderModule.TRIANGULAR_MESH) {
-                                var face = new decoderModule.DracoInt32Array();
-                                indices = (outputGeometry.num_points() > 65535) ? new Uint32Array(numFaces * 3) : new Uint16Array(numFaces * 3);
-                                for (var i = 0; i < numFaces; ++i) {
-                                    decoder.GetFaceFromMesh(outputGeometry, i, face);
-                                    indices[i * 3]     = face.GetValue(0);
-                                    indices[i * 3 + 1] = face.GetValue(1);
-                                    indices[i * 3 + 2] = face.GetValue(2);
+                                var bit32 = outputGeometry.num_points() > 65535;
+                                numIndices = numFaces * 3;
+                                var dataSize = numIndices * (bit32 ? 4 : 2);
+                                var ptr = decoderModule._malloc(dataSize);
+
+                                if (bit32) {
+                                    decoder.GetTrianglesUInt32Array(outputGeometry, dataSize, ptr);
+                                    indices = new Uint32Array(decoderModule.HEAPU32.buffer, ptr, numIndices).slice();
+                                } else {
+                                    decoder.GetTrianglesUInt16Array(outputGeometry, dataSize, ptr);
+                                    indices = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numIndices).slice();
                                 }
-                                decoderModule.destroy(face);
+
+                                decoderModule._free( ptr );
                             }
 
                             // vertices
@@ -510,7 +514,7 @@ Object.assign(pc, function () {
                     // don't support 32bit index data
                     indexFormat = pc.INDEXFORMAT_UINT32;
                 }
-                var numIndices = indices.length;
+                numIndices = indices.length;
                 var indexBuffer = new pc.IndexBuffer(device, indexFormat, numIndices, pc.BUFFER_STATIC, indices);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
