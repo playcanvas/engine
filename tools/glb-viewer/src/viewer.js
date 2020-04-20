@@ -311,57 +311,19 @@ Object.assign(Viewer.prototype, {
     }
 });
 
-function loadScript(src) {
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = src;
-    return new Promise(function (resolve) {
-        script.onload = resolve;
-        head.appendChild(script);
-    });
-}
-
 /* eslint-disable no-unused-vars */
 
 var viewer;
-var decoderModule;
 function startViewer () {
-    console.log("startViewer");
     viewer = new Viewer(document.getElementById("application-canvas"));
-    window["DracoDecoderModule"] = decoderModule;
 }
 
 var main = function () {
-
-    if (typeof WebAssembly !== 'object') {
-        loadScript('draco/draco_decoder.js').then(function () {
-            decoderModule = DracoDecoderModule();
-            startViewer();
-        });
+    if (wasmSupported()) {
+        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco_wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
     } else {
-        loadScript('draco/draco_wasm_wrapper.js').then(function () {
-            fetch('draco/draco_decoder.wasm').then(function (response) {
-                response.arrayBuffer().then(function (arrayBuffer) {
-                    decoderModule = DracoDecoderModule({ wasmBinary: arrayBuffer });
-                    startViewer();
-                });
-            });
-        });
+        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
     }
 };
-
-// var viewer;
-// function startViewer () {
-//     viewer = new Viewer(document.getElementById("application-canvas"));
-// }
-
-// var main = function () {
-//     if (wasmSupported()) {
-//         loadWasmModuleAsync('DracoDecoderModule', 'draco/draco_wasm_wrapper.js', 'draco/draco_decoder.wasm', startViewer);
-//     } else {
-//         loadWasmModuleAsync('DracoDecoderModule', 'draco/draco_decoder.js', '', startViewer);
-//     }
-// };
 
 /* eslint-enable no-unused-vars */
