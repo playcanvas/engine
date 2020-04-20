@@ -314,7 +314,7 @@ Object.assign(Viewer.prototype, {
 /* eslint-disable no-unused-vars */
 
 var viewer;
-function startViewer () {
+function startViewer() {
     viewer = new Viewer(document.getElementById("application-canvas"));
 }
 
