@@ -320,7 +320,7 @@ function startViewer() {
 
 var main = function () {
     if (wasmSupported()) {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco_wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
+        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
     } else {
         loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
     }
