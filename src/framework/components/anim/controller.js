@@ -38,27 +38,6 @@ Object.assign(pc, function () {
     };
 
     Object.assign(AnimController.prototype, {
-        linkAnimTrackToState: function(stateName, animTrack) {
-            for (var i = 0; i < this.states.length; i++) {
-                if (this.states[i].name === stateName) {
-                    this.states[i].animTrack = animTrack;
-                    if (this.isPlayable() && this.activate) {
-                        this.play();
-                    }
-                    return;
-                }
-            }
-            console.error('Linking animation asset to animation state that does not exist');
-        },
-        isPlayable: function() {
-            var playable = true;
-            for (var i = 0; i < this.states.length; i++) {
-                if (!this.states[i].isPlayable()) {
-                    playable = false;
-                }
-            }
-            return playable;
-        },
         _getState: function(stateName) {
             for (var i = 0; i < this.states.length; i++) {
                 if (this.states[i].name === stateName) {
@@ -67,18 +46,23 @@ Object.assign(pc, function () {
             }
             return null;
         },
+
         _getActiveState: function() {
             return this._getState(this.activeStateName);
         },
+
         _setActiveState: function(stateName) {
             return this.activeStateName = stateName;
         },
+
         _getPreviousState: function() {
             return this._getState(this.previousStateName);
         },
+
         _setPreviousState: function(stateName) {
             return this.previousStateName = stateName;
         },
+
         _getActiveStateProgress: function() {
             if (this.activeStateName === 'Start' || this.activeStateName === 'End')
                 return 1.0;
@@ -90,6 +74,7 @@ Object.assign(pc, function () {
             }
             return null;
         },
+
         _findTransition: function(from, to) {
             var transitions = this.transitions.filter((function(transition) {
                 if (to && from) {
@@ -164,6 +149,29 @@ Object.assign(pc, function () {
                 transition = this._findTransition();
             }
             this._updateStateFromTransition(transition);
+        },
+
+        linkAnimTrackToState: function(stateName, animTrack) {
+            for (var i = 0; i < this.states.length; i++) {
+                if (this.states[i].name === stateName) {
+                    this.states[i].animTrack = animTrack;
+                    if (this.isPlayable() && this.activate) {
+                        this.play();
+                    }
+                    return;
+                }
+            }
+            console.error('Linking animation asset to animation state that does not exist');
+        },
+
+        isPlayable: function() {
+            var playable = true;
+            for (var i = 0; i < this.states.length; i++) {
+                if (!this.states[i].isPlayable()) {
+                    playable = false;
+                }
+            }
+            return playable;
         },
 
         play: function(stateName) {
