@@ -79,12 +79,6 @@ Object.assign(pc, function () {
         _setPreviousState: function(stateName) {
             return this.previousStateName = stateName;
         },
-        play: function(stateName) {
-            if (stateName) {
-                this._transitionState(stateName);
-            }
-            this.playing = true;
-        },
         _getActiveStateProgress: function() {
             if (this.activeStateName === 'Start' || this.activeStateName === 'End')
                 return 1.0;
@@ -116,72 +110,69 @@ Object.assign(pc, function () {
             }
         },
 
-        _transitionState: function(newStateName) {
-            var transition;
-            if (newStateName) {
+        _updateStateFromTransition: function(transition) {
+            this._setPreviousState(this.activeStateName);
+            this._setActiveState(transition.to);
 
-                if (newStateName === this.activeStateName) {
-                    return;
-                }
-
-                if (!this._getState(newStateName)) {
-                    return;
-                }
-
-                transition = this._findTransition(this.activeStateName, newStateName);
-                if (!transition) {
-                    this._setPreviousState(null);
-                    this._setActiveState(newStateName);
-                    this.animEvaluator.removeClips();
-                    var activeState = this._getActiveState();
-                    clip = new pc.AnimClip(activeState.animTrack, 0, activeState.speed, true, true);
-                    clip.name = this.activeStateName;
-                    clip.blendWeight = 1.0;
-                    clip.reset();
-                    this.animEvaluator.addClip(clip);
-                    clip.play();
-                    return;
-                }
-            } else {
-                transition = this._findTransition();
-                if (!transition)
-                    return;
+            if (transition.time > 0) {
+                this.isTransitioning = true;
+                this.totalTransitionTime = transition.time;
+                this.currTransitionTime = 0;
             }
 
-            switch(transition.to) {
-                case 'Start':
-                case 'End':
-                    this._transitionState(transition);
-            }
-
-            if (transition.to === 'End') {
-                this._setActiveState('Start');
-                this._transitionState();
-            } else {
-                this._setPreviousState(this.activeStateName);
-                this._setActiveState(transition.to);
+            var clip = this.animEvaluator.findClip(this.activeStateName);
+            if (!clip) {
+                var activeState = this._getActiveState();
+                clip = new pc.AnimClip(activeState.animTrack, 0, activeState.speed, true, true);
+                clip.name = this.activeStateName;
                 if (transition.time > 0) {
-                    this.isTransitioning = true;
-                    this.totalTransitionTime = transition.time;
-                    this.currTransitionTime = 0;
+                    clip.blendWeight = 0.0;
+                } else {
+                    clip.blendWeight = 1.0;
                 }
-                var clip = this.animEvaluator.findClip(this.activeStateName);
-                if (!clip) {
-                    var activeState = this._getActiveState();
-                    clip = new pc.AnimClip(activeState.animTrack, 0, activeState.speed, true, true);
-                    clip.name = this.activeStateName;
-                    if (transition.time > 0) {
-                        clip.blendWeight = 0.0;
-                    } else {
-                        clip.blendWeight = 1.0;
-                    }
-                    clip.reset();
-                    this.animEvaluator.addClip(clip);
-                }
-                clip.play();
+                clip.reset();
+                this.animEvaluator.addClip(clip);
             }
+            clip.play();
         },
 
+        _transitionToState: function(newStateName) {
+            if (newStateName === this.activeStateName) {
+                return;
+            }
+
+            if (!this._getState(newStateName)) {
+                return;
+            }
+
+            var transition = this._findTransition(this.activeStateName, newStateName);
+            if (!transition) {
+                this.animEvaluator.removeClips();
+                transition = new AnimTransition(this.activeStateName, newStateName, 0, 0);
+            }
+            this._updateStateFromTransition(transition);
+        },
+
+        _transitionToNextState: function() {
+            var transition = this._findTransition();
+            if (!transition) {
+                return;
+            }
+            if (transition.to === 'End')
+            {
+                this._setActiveState('Start');
+                transition = this._findTransition();
+            }
+            this._updateStateFromTransition(transition);
+        },
+
+        play: function(stateName) {
+            if (stateName) {
+                this._transitionToState(stateName);
+            }
+            this.playing = true;
+        },
+        
         update: function(dt) {
             if (this.playing) {
                 this.animEvaluator.update(dt);
@@ -189,7 +180,7 @@ Object.assign(pc, function () {
                 var progress = this._getActiveStateProgress();
 
                 if (progress >= 1.0) {
-                    this._transitionState();
+                    this._transitionToNextState();
                 }
 
                 if (this.isTransitioning) {
