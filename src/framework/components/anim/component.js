@@ -10,14 +10,10 @@ Object.assign(pc, function () {
      * @param {pc.AnimComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
-     * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
      * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
      */
     var AnimComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
-
-        // Handle changes to the 'loop' value
-        this.on('set_loop', this.onSetLoop, this);
     };
     AnimComponent.prototype = Object.create(pc.Component.prototype);
     AnimComponent.prototype.constructor = AnimComponent;
@@ -78,10 +74,6 @@ Object.assign(pc, function () {
 
             this.data.animController.play(name);
         },
-
-        onSetLoop: function (name, oldValue, newValue) {
-        },
-
     });
 
     return {

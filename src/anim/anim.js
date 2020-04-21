@@ -678,17 +678,16 @@ Object.assign(pc, function () {
                 type: 'vector'
             }
         };
+
+        this.propertyLocator = new pc.AnimPropertyLocator();
     };
 
     Object.assign(DefaultAnimBinder.prototype, {
         resolve: function (path) {
-            var parts = this._getParts(path);
-            if (!parts) {
-                return null;
-            }
+            var pathSections = this.propertyLocator.decode(path);
 
-            var node = this.nodes[parts[0]];
-            var prop = this.schema[parts[1]];
+            var node = this.nodes[pathSections[0][0]];
+            var prop = this.schema[pathSections[2][0]];
 
             if (node.count === 0) {
                 this.activeNodes.push(node.node);
@@ -699,21 +698,18 @@ Object.assign(pc, function () {
         },
 
         unresolve: function (path) {
-            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
-            var parts = this._getParts(path);
-            if (parts) {
-                var node = this.nodes[parts[0]];
+            var pathSections = this.propertyLocator.decode(path);
+            var node = this.nodes[pathSections[0][0]];
 
-                node.count--;
-                if (node.count === 0) {
-                    var activeNodes = this.activeNodes;
-                    var i = activeNodes.indexOf(node.node);  // :(
-                    var len = activeNodes.length;
-                    if (i < len - 1) {
-                        activeNodes[i] = activeNodes[len - 1];
-                    }
-                    activeNodes.pop();
+            node.count--;
+            if (node.count === 0) {
+                var activeNodes = this.activeNodes;
+                var i = activeNodes.indexOf(node.node);  // :(
+                var len = activeNodes.length;
+                if (i < len - 1) {
+                    activeNodes[i] = activeNodes[len - 1];
                 }
+                activeNodes.pop();
             }
         },
 

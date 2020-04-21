@@ -141,12 +141,18 @@ Object.assign(pc, function () {
                     this.animEvaluator.addClip(clip);
                     clip.play();
                     return;
-               }
-           } else {
-               transition = this._findTransition();
-               if (!transition)
-                return;
-           }
+                }
+            } else {
+                transition = this._findTransition();
+                if (!transition)
+                    return;
+            }
+
+            switch(transition.to) {
+                case 'Start':
+                case 'End':
+                    this._transitionState(transition);
+            }
 
             if (transition.to === 'End') {
                 this._setActiveState('Start');

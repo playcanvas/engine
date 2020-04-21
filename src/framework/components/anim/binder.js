@@ -2,6 +2,7 @@ Object.assign(pc, function () {
 
     var AnimComponentBinder = function (animComponent, graph) {
         this.animComponent = animComponent;
+        this.propertyLocator = new pc.AnimPropertyLocator();
 
         if (graph) {
             var nodes = { };
@@ -20,35 +21,12 @@ Object.assign(pc, function () {
 
             this.nodes = nodes;                 // map of node name -> { node, count }
             this.activeNodes = [];              // list of active nodes
-            this.schema = {
-                'translation': {
-                    components: 3,
-                    target: 'localPosition',
-                    type: 'vector'
-                },
-                'rotation': {
-                    components: 4,
-                    target: 'localRotation',
-                    type: 'quaternion'
-                },
-                'scale': {
-                    components: 3,
-                    target: 'localScale',
-                    type: 'vector'
-                }
-            };
         }
     };
 
     Object.assign(AnimComponentBinder.prototype, {
         resolve: function(path) {
-            if (path.split('/').length === 3) {
-                return this._resolveGeneralPath(path);
-            }
-            return this._resolveGraphPath(path);
-        },
-        _resolveGeneralPath: function (path) {
-            var pathSections = new pc.PropertyLocator().decode(path);
+            var pathSections = this.propertyLocator.decode(path);
 
             var entityHeirarchy = pathSections[0];
             var component = pathSections[1];
@@ -59,51 +37,41 @@ Object.assign(pc, function () {
             if (!entity)
                 return null;
 
-            var propertyComponent = component === 'entity' ? entity : entity.findComponent(component); 
+            var propertyComponent;
 
-            if (!propertyComponent) {
-                return null;
+            switch(component) {
+                case 'entity':
+                    propertyComponent = entity;
+                    break;
+                case 'graph':
+                    propertyComponent = this.nodes[entityHeirarchy[0]].node;
+                    break;
+                default:
+                    entity.findComponent(component);
+                    if (!propertyComponent)
+                        return null;
             }
 
             return this._createAnimTargetForProperty(propertyComponent, propertyHeirarchy);
         },
-        
-        _resolveGraphPath: function (path) {
-            var parts = this._getParts(path);
-            if (!parts) {
-                return null;
-            }
-
-            var node = this.nodes[parts[0]];
-            var prop = this.schema[parts[1]];
-
-            if (node.count === 0) {
-                this.activeNodes.push(node.node);
-            }
-            node.count++;
-
-            return new pc.AnimTarget(this._createSetter(node.node[prop.target]), prop.type, prop.components);
-        },
 
         unresolve: function (path) {
-            if (path.split('/').length === 3) {
+            var pathSections = this.propertyLocator.decode(path);
+            if (pathSections[1] !== 'graph')
                 return;
-            }
-            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
-            var parts = this._getParts(path);
-            if (parts) {
-                var node = this.nodes[parts[0]];
 
-                node.count--;
-                if (node.count === 0) {
-                    var activeNodes = this.activeNodes;
-                    var i = activeNodes.indexOf(node.node);  // :(
-                    var len = activeNodes.length;
-                    if (i < len - 1) {
-                        activeNodes[i] = activeNodes[len - 1];
-                    }
-                    activeNodes.pop();
+            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+            var node = pathSections[0][0];
+
+            node.count--;
+            if (node.count === 0) {
+                var activeNodes = this.activeNodes;
+                var i = activeNodes.indexOf(node.node);  // :(
+                var len = activeNodes.length;
+                if (i < len - 1) {
+                    activeNodes[i] = activeNodes[len - 1];
                 }
+                activeNodes.pop();
             }
         },
 
@@ -115,59 +83,6 @@ Object.assign(pc, function () {
                     activeNodes[i]._dirtifyLocal();
                 }
             }
-        },
-
-        joinPath: function (pathSegments) {
-            var escape = function (string) {
-                return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
-            };
-            return pathSegments.map(escape).join('.');
-        },
-
-        // split a path string into its segments and resolve character escaping
-        splitPath: function (path) {
-            var result = [];
-            var curr = "";
-            var i = 0;
-            while (i < path.length) {
-                var c = path[i++];
-
-                if (c === '\\' && i < path.length) {
-                    c = path[i++];
-                    if (c === '\\' || c === '.') {
-                        curr += c;
-                    } else {
-                        curr += '\\' + c;
-                    }
-                } else if (c === '.') {
-                    result.push(curr);
-                    curr = '';
-                } else {
-                    curr += c;
-                }
-            }
-            if (curr.length > 0) {
-                result.push(curr);
-            }
-            return result;
-        },
-
-        // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
-        _getParts: function (path) {
-            var parts = this.splitPath(path);
-            if (parts.length !== 2 ||
-                !this.nodes.hasOwnProperty(parts[0]) ||
-                !this.schema.hasOwnProperty(parts[1])) {
-                return null;
-            }
-            return parts;
-        },
-
-        // create a setter function (works for pc.Vec* and pc.Quaternion) which have a 'set' function.
-        _createSetter: function (target) {
-            return function (value) {
-                target.set.apply(target, value);
-            };
         },
 
         _getEntityFromHeirarchy: function(entityHeirarchy) {
@@ -310,38 +225,35 @@ Object.assign(pc, function () {
                         animDataComponents = 4;
                         break;
                     case 'Quat':
-                        setter = this._quatSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._vecSetter(propertyComponent, propertyHeirarchy);
                         animDataType = 'quaternion';
                         animDataComponents = 4;
                         break;
                     default:
-                        break;
+                        return null;
                 }
             }
 
-            if (setter) {
-                var entityProperty = this._getEntityProperty(propertyHeirarchy);
-                if (entityProperty) {
-                    var entityPropertySetter = function(values) {
-                        // set new values on the property as before
-                        setter(values);
+            // for entity properties we cannot just set their values, we must also call the values setter function.
+            var entityProperty = this._getEntityProperty(propertyHeirarchy);
+            if (entityProperty) {
+                var entityPropertySetter = function(values) {
+                    // first set new values on the property as before
+                    setter(values);
 
-                        // create the function name of the properties setter
-                        var entityPropertySetterFunctionName = pc.string.format(
-                            'set{0}{1}',
-                            entityProperty.substring(0,1).toUpperCase(),
-                            entityProperty.substring(1)
-                        );
-                        // call the setter function for entities updated property using the newly set property value
-                        propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
-                    };
-                    return new pc.AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
-
-                } else {
-                    return new pc.AnimTarget(setter, animDataType, animDataComponents);
-                }
+                    // create the function name of the entity properties setter
+                    var entityPropertySetterFunctionName = pc.string.format(
+                        'set{0}{1}',
+                        entityProperty.substring(0,1).toUpperCase(),
+                        entityProperty.substring(1)
+                    );
+                    // call the setter function for entities updated property using the newly set property value
+                    propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
+                };
+                return new pc.AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
+            } else {
+                return new pc.AnimTarget(setter, animDataType, animDataComponents);
             }
-            return null;
         }
     });
 

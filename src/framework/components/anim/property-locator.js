@@ -1,7 +1,8 @@
 Object.assign(pc, function () {
-    var PropertyLocator = function () {
+    var AnimPropertyLocator = function () {
     };
-    Object.assign(PropertyLocator.prototype, {
+    Object.assign(AnimPropertyLocator.prototype, {
+        // split a path string into its segments and resolve character escaping
         _splitPath: function(path) {
             var result = [];
             var curr = "";
@@ -28,18 +29,22 @@ Object.assign(pc, function () {
             }
             return result;
         },
+        // join a list of path segments into a path string
+        _joinPath: function (pathSegments) {
+            var escape = function (string) {
+                return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+            };
+            return pathSegments.map(escape).join('.');
+        },
         encode: function(decodedLocator) {
             var entityHeirarchy = decodedLocator[0];
-            for (var i = 0; i < entityHeirarchy.length; i++) {
-                entityHeirarchy[i] = entityHeirarchy[i].split('.').join('\\.');
-            }
             var component = decodedLocator[1];
             var propertyHeirarchy = decodedLocator[2];
             return pc.string.format(
                 '{0}/{1}/{2}',
-                entityHeirarchy.join('.'),
+                this._joinPath(entityHeirarchy),
                 component,
-                propertyHeirarchy.join('.')
+                this._joinPath(propertyHeirarchy)
             );
         },
         decode: function(encodedLocator) {
@@ -55,6 +60,6 @@ Object.assign(pc, function () {
         }
     });
     return {
-        PropertyLocator: PropertyLocator
+        AnimPropertyLocator: AnimPropertyLocator
     }
 }());
