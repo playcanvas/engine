@@ -422,9 +422,7 @@ Object.assign(pc, function () {
                         if (extDraco.hasOwnProperty('attributes')) {
                             var bufferView = bufferViews[extDraco.bufferView];
                             var arrayBuffer = buffers[bufferView.buffer];
-                            var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
-                            var uint8Buffer = new Int8Array(arrayBuffer, byteOffset, bufferView.byteLength);
-
+                            var uint8Buffer = new Uint8Array(arrayBuffer.buffer, arrayBuffer.byteOffset + bufferView.byteOffset, bufferView.byteLength);
                             var buffer = new decoderModule.DecoderBuffer();
                             buffer.Init(uint8Buffer, uint8Buffer.length);
 
@@ -433,9 +431,6 @@ Object.assign(pc, function () {
 
                             var outputGeometry, status;
                             switch (geometryType) {
-                                case decoderModule.INVALID_GEOMETRY_TYPE:
-                                    console.error('Mesh asset - invalid draco compressed geometry type');
-                                    break;
                                 case decoderModule.POINT_CLOUD:
                                     primitiveType = pc.PRIMITIVE_POINTS;
                                     outputGeometry = new decoderModule.PointCloud();
@@ -445,6 +440,10 @@ Object.assign(pc, function () {
                                     primitiveType = pc.PRIMITIVE_TRIANGLES;
                                     outputGeometry = new decoderModule.Mesh();
                                     status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
+                                    break;
+                                default:
+                                case decoderModule.INVALID_GEOMETRY_TYPE:
+                                    console.error('Mesh asset - invalid draco compressed geometry type: ' + geometryType);
                                     break;
                             }
 
