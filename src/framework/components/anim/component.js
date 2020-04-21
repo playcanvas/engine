@@ -52,7 +52,7 @@ Object.assign(pc, function () {
             if(!animTrack)
                 console.error('linkAnimAssetToState: No animation found for given assetName');
 
-            this.data.animController.linkAnimTrackToState(stateName, animTrack);
+            this.data.animController.linkAnimationToState(stateName, animTrack);
         },
 
         /**
