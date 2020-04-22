@@ -282,7 +282,7 @@ Object.assign(pc, function () {
                             values[k] = valuesFloat32[k] * 255;
                     } else {
                         decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, dataSize, ptr);
-                        values = new Uint8(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
+                        values = new Uint8Array(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
                     }
                     break;
 
