@@ -192,6 +192,12 @@ You can develop TypeScript applications against the PlayCanvas engine. To genera
 
 This will output to build/output/playcanvas.d.ts
 
+## Generating Sourcemap
+
+Building the sourcemap to allow for easier debugging can be done using:
+
+    npm run build -- -m
+
 ## Getting Help
 
 [**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
