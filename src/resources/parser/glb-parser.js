@@ -389,7 +389,7 @@ Object.assign(pc, function () {
     var tempMat = new pc.Mat4();
     var tempVec = new pc.Vec3();
 
-    var createMesh = function (device, meshData, accessors, bufferViews, buffers) {
+    var createMesh = function (device, meshData, accessors, bufferViews, buffers, callback) {
         var meshes = [];
 
         var semanticMap = {
@@ -441,16 +441,15 @@ Object.assign(pc, function () {
                                     outputGeometry = new decoderModule.Mesh();
                                     status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
                                     break;
-                                default:
                                 case decoderModule.INVALID_GEOMETRY_TYPE:
-                                    console.error('Mesh asset - invalid draco compressed geometry type: ' + geometryType);
+                                default:
                                     break;
                             }
 
-                            if (!status.ok() || outputGeometry.ptr == 0) {
-                                // #ifdef DEBUG
-                                console.error("Failed to decode draco compressed asset: " + status.error_msg());
-                                // #endif
+                            if (!status || !status.ok() || outputGeometry.ptr == 0) {
+                                callback("Failed to decode draco compressed asset: " +
+                                (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType) ));
+                                return;
                             }
 
                             // indices
@@ -513,8 +512,7 @@ Object.assign(pc, function () {
                     // don't support 32bit index data
                     indexFormat = pc.INDEXFORMAT_UINT32;
                 }
-                numIndices = indices.length;
-                var indexBuffer = new pc.IndexBuffer(device, indexFormat, numIndices, pc.BUFFER_STATIC, indices);
+                var indexBuffer = new pc.IndexBuffer(device, indexFormat, indices.length, pc.BUFFER_STATIC, indices);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
             } else {
@@ -1121,14 +1119,14 @@ Object.assign(pc, function () {
 
     };
 
-    var createMeshes = function (device, gltf, buffers) {
+    var createMeshes = function (device, gltf, buffers, callback) {
         if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
             !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
             !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
             return [];
         }
         return gltf.meshes.map(function (meshData) {
-            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers);
+            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers, callback);
         });
 
     };
@@ -1192,7 +1190,7 @@ Object.assign(pc, function () {
         var animations = createAnimations(gltf, nodes, buffers);
         var textures = createTextures(device, gltf, images);
         var materials = createMaterials(gltf, textures);
-        var meshes = createMeshes(device, gltf, buffers);
+        var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
 
         callback(null, {
