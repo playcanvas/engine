@@ -37,26 +37,26 @@ Object.assign(pc, function () {
             return pathSegments.map(escape).join('.');
         },
         encode: function(decodedLocator) {
-            var entityHeirarchy = decodedLocator[0];
+            var entityHierarchy = decodedLocator[0];
             var component = decodedLocator[1];
-            var propertyHeirarchy = decodedLocator[2];
+            var propertyHierarchy = decodedLocator[2];
             return pc.string.format(
                 '{0}/{1}/{2}',
-                this._joinPath(entityHeirarchy),
+                this._joinPath(entityHierarchy),
                 component,
-                this._joinPath(propertyHeirarchy)
+                this._joinPath(propertyHierarchy)
             );
         },
         decode: function(encodedLocator) {
             var locatorSections = encodedLocator.split('/');
-            var entityHeirarchy = this._splitPath(locatorSections[0]);
-            for (var i = 0; i < entityHeirarchy.length; i++) {
-                entityHeirarchy[i] = entityHeirarchy[i].split('\\.').join('.');
+            var entityHierarchy = this._splitPath(locatorSections[0]);
+            for (var i = 0; i < entityHierarchy.length; i++) {
+                entityHierarchy[i] = entityHierarchy[i].split('\\.').join('.');
             }
             var component = locatorSections[1];
-            var propertyHeirarchy = locatorSections[2].split('.');
+            var propertyHierarchy = locatorSections[2].split('.');
 
-            return [entityHeirarchy, component, propertyHeirarchy];
+            return [entityHierarchy, component, propertyHierarchy];
         }
     });
     return {

@@ -28,11 +28,11 @@ Object.assign(pc, function () {
         resolve: function(path) {
             var pathSections = this.propertyLocator.decode(path);
 
-            var entityHeirarchy = pathSections[0];
+            var entityHierarchy = pathSections[0];
             var component = pathSections[1];
-            var propertyHeirarchy = pathSections[2];
+            var propertyHierarchy = pathSections[2];
 
-            var entity = this._getEntityFromHeirarchy(entityHeirarchy);
+            var entity = this._getEntityFromHierarchy(entityHierarchy);
             
             if (!entity)
                 return null;
@@ -44,7 +44,7 @@ Object.assign(pc, function () {
                     propertyComponent = entity;
                     break;
                 case 'graph':
-                    propertyComponent = this.nodes[entityHeirarchy[0]].node;
+                    propertyComponent = this.nodes[entityHierarchy[0]].node;
                     break;
                 default:
                     entity.findComponent(component);
@@ -52,7 +52,7 @@ Object.assign(pc, function () {
                         return null;
             }
 
-            return this._createAnimTargetForProperty(propertyComponent, propertyHeirarchy);
+            return this._createAnimTargetForProperty(propertyComponent, propertyHierarchy);
         },
 
         unresolve: function (path) {
@@ -85,16 +85,16 @@ Object.assign(pc, function () {
             }
         },
 
-        _getEntityFromHeirarchy: function(entityHeirarchy) {
-            if (!this.animComponent.entity.name === entityHeirarchy[0])
+        _getEntityFromHierarchy: function(entityHierarchy) {
+            if (!this.animComponent.entity.name === entityHierarchy[0])
                 return null;
 
             var currEntity = this.animComponent.entity;
-            for (var i = 0; i < entityHeirarchy.length - 1; i++) {
+            for (var i = 0; i < entityHierarchy.length - 1; i++) {
                 var entityChildren = currEntity.getChildren();
                 var child;
                 for (var j = 0; j < entityChildren.length; j++) {
-                    if (entityChildren[j].name === entityHeirarchy[i+1])
+                    if (entityChildren[j].name === entityHierarchy[i+1])
                         child = entityChildren[j];
                 }
                 if (child)
@@ -105,53 +105,53 @@ Object.assign(pc, function () {
             return currEntity;
         },
 
-        _floatSetter: function(propertyComponent, propertyHeirarchy) {
+        _floatSetter: function(propertyComponent, propertyHierarchy) {
             var setter = function(values) {
-                this._setProperty(propertyComponent, propertyHeirarchy, values[0]);
+                this._setProperty(propertyComponent, propertyHierarchy, values[0]);
             };
             return setter.bind(this);
         },
-        _booleanSetter: function(propertyComponent, propertyHeirarchy) {
+        _booleanSetter: function(propertyComponent, propertyHierarchy) {
             var setter = function(values) {
-                this._setProperty(propertyComponent, propertyHeirarchy, !!values[0]);
+                this._setProperty(propertyComponent, propertyHierarchy, !!values[0]);
             };
             return setter.bind(this);
         },
-        _colorSetter: function(propertyComponent, propertyHeirarchy) {
+        _colorSetter: function(propertyComponent, propertyHierarchy) {
             var colorKeys = ['r', 'g', 'b', 'a'];
             var setter = function(values) {
                 for (var i = 0; i < values.length; i++) {
-                    this._setProperty(propertyComponent, propertyHeirarchy.concat(colorKeys[i]), values[i]);
+                    this._setProperty(propertyComponent, propertyHierarchy.concat(colorKeys[i]), values[i]);
                 }
             };
             return setter.bind(this);
         },
-        _vecSetter: function(propertyComponent, propertyHeirarchy) {
+        _vecSetter: function(propertyComponent, propertyHierarchy) {
             var vectorKeys = ['x', 'y', 'z', 'w'];
             var setter = function(values) {
                 for (var i = 0; i < values.length; i++) {
-                    this._setProperty(propertyComponent, propertyHeirarchy.concat(vectorKeys[i]), values[i]);
+                    this._setProperty(propertyComponent, propertyHierarchy.concat(vectorKeys[i]), values[i]);
                 }
             };
             return setter.bind(this);
         },
 
-        _getProperty: function(propertyComponent, propertyHeirarchy) {
-            if (propertyHeirarchy.length === 1) {
-                return propertyComponent[propertyHeirarchy[0]];
+        _getProperty: function(propertyComponent, propertyHierarchy) {
+            if (propertyHierarchy.length === 1) {
+                return propertyComponent[propertyHierarchy[0]];
             } else {
-                var propertyObject = propertyComponent[propertyHeirarchy[0]];
-                return propertyObject[propertyHeirarchy[1]];
+                var propertyObject = propertyComponent[propertyHierarchy[0]];
+                return propertyObject[propertyHierarchy[1]];
             }
         },
 
-        _setProperty: function(propertyComponent, propertyHeirarchy, value) {
-            if (propertyHeirarchy.length === 1) {
-                propertyComponent[propertyHeirarchy[0]] = value;
+        _setProperty: function(propertyComponent, propertyHierarchy, value) {
+            if (propertyHierarchy.length === 1) {
+                propertyComponent[propertyHierarchy[0]] = value;
             } else {
-                var propertyObject = propertyComponent[propertyHeirarchy[0]];
-                propertyObject[propertyHeirarchy[1]] = value;
-                propertyComponent[propertyHeirarchy[0]] = propertyObject;
+                var propertyObject = propertyComponent[propertyHierarchy[0]];
+                propertyObject[propertyHierarchy[1]] = value;
+                propertyComponent[propertyHierarchy[0]] = propertyObject;
             }
         },
 
@@ -162,7 +162,7 @@ Object.assign(pc, function () {
             return property.constructor.name;
         },
 
-        _getEntityProperty: function(propertyHeirarchy) {
+        _getEntityProperty: function(propertyHierarchy) {
             var entityProperties = [
                 'localScale',
                 'localPosition',
@@ -174,16 +174,16 @@ Object.assign(pc, function () {
             ];
             var entityProperty;
             for (var i = 0; i < entityProperties.length; i++) {
-                if (propertyHeirarchy.indexOf(entityProperties[i]) !== -1) {
+                if (propertyHierarchy.indexOf(entityProperties[i]) !== -1) {
                     entityProperty = entityProperties[i];
                 }
             }
             return entityProperty;
         },
 
-        _createAnimTargetForProperty: function(propertyComponent, propertyHeirarchy) {
+        _createAnimTargetForProperty: function(propertyComponent, propertyHierarchy) {
 
-            var property = this._getProperty(propertyComponent, propertyHeirarchy);
+            var property = this._getProperty(propertyComponent, propertyHierarchy);
 
             if (typeof property === 'undefined')
                 return null;
@@ -193,39 +193,39 @@ Object.assign(pc, function () {
             var animDataComponents;
 
             if (typeof property === 'number') {
-                setter = this._floatSetter(propertyComponent, propertyHeirarchy);
+                setter = this._floatSetter(propertyComponent, propertyHierarchy);
                 animDataType = 'vector';
                 animDataComponents = 1;
             }
             else if (typeof property === 'boolean') {
-                setter = this._booleanSetter(propertyComponent, propertyHeirarchy);
+                setter = this._booleanSetter(propertyComponent, propertyHierarchy);
                 animDataType = 'vector';
                 animDataComponents = 1;
             }
             else if (typeof property === 'object') {
                 switch (this._getObjectPropertyType(property)) {
                     case 'Vec2':
-                        setter = this._vecSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 2;
                         break;
                     case 'Vec3':
-                        setter = this._vecSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 3;
                         break;
                     case 'Vec4':
-                        setter = this._vecSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 4;
                         break;
                     case 'Color':
-                        setter = this._colorSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._colorSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 4;
                         break;
                     case 'Quat':
-                        setter = this._vecSetter(propertyComponent, propertyHeirarchy);
+                        setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'quaternion';
                         animDataComponents = 4;
                         break;
@@ -235,7 +235,7 @@ Object.assign(pc, function () {
             }
 
             // for entity properties we cannot just set their values, we must also call the values setter function.
-            var entityProperty = this._getEntityProperty(propertyHeirarchy);
+            var entityProperty = this._getEntityProperty(propertyHierarchy);
             if (entityProperty) {
                 var entityPropertySetter = function(values) {
                     // first set new values on the property as before
