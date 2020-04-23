@@ -163,7 +163,7 @@ var preprocess = function (dependencies) {
         var pp = new Preprocessor(buffer.toString());
         var src;
         // TODO: source mapped build doesn't support preprocessor yet
-        if(this.sourceMap)
+        if(sourceMap)
             src = buffer;
         else 
             src = pp.process({
