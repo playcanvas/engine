@@ -172,15 +172,17 @@ Object.assign(Viewer.prototype, {
         if (entity) {
             var camera = this.camera;
 
-            var orbitCamera = camera.script.orbitCamera;
-            orbitCamera.focus(entity);
+            if (camera.script && camera.script.orbitCamera) {
+                var orbitCamera = camera.script.orbitCamera;
+                orbitCamera.focus(entity);
 
-            var distance = orbitCamera.distance;
-            camera.camera.nearClip = distance / 10;
-            camera.camera.farClip = distance * 10;
+                var distance = orbitCamera.distance;
+                camera.camera.nearClip = distance / 10;
+                camera.camera.farClip = distance * 10;
 
-            var light = this.light;
-            light.light.shadowDistance = distance * 2;
+                var light = this.light;
+                light.light.shadowDistance = distance * 2;
+            }
         }
     },
 
@@ -312,9 +314,16 @@ Object.assign(Viewer.prototype, {
 /* eslint-disable no-unused-vars */
 
 var viewer;
+function startViewer() {
+    viewer = new Viewer(document.getElementById("application-canvas"));
+}
 
 var main = function () {
-    viewer = new Viewer(document.getElementById("application-canvas"));
+    if (wasmSupported()) {
+        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
+    } else {
+        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
+    }
 };
 
 /* eslint-enable no-unused-vars */
