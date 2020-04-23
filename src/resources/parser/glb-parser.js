@@ -287,7 +287,10 @@ Object.assign(pc, function () {
                     break;
 
                 default:
+                    // #ifdef DEBUG
                     console.error("Element type not implemented: " + storageType);
+                    // #endif
+                    break;
             }
 
             decoderModule._free(ptr);
