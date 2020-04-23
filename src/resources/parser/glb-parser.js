@@ -98,18 +98,33 @@ Object.assign(pc, function () {
         return dummyIndices;
     };
 
-    var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers) {
-        var semanticMap = {
-            'POSITION': pc.SEMANTIC_POSITION,
-            'NORMAL': pc.SEMANTIC_NORMAL,
-            'TANGENT': pc.SEMANTIC_TANGENT,
-            'BINORMAL': pc.SEMANTIC_BINORMAL,
-            'COLOR_0': pc.SEMANTIC_COLOR,
-            'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
-            'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
-            'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
-            'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1
+    var generateNormals = function (sourceDesc, vertexDesc, positions, numVertices, indices) {
+
+        if (!indices) {
+            indices = generateIndices(numVertices);
+        }
+
+        // generate normals
+        var normalsTemp = pc.calculateNormals(positions, indices);
+        var normals = new Float32Array(normalsTemp.length);
+        normals.set(normalsTemp);
+
+        vertexDesc.push({
+            semantic: pc.SEMANTIC_NORMAL,
+            components: 3,
+            type: pc.TYPE_FLOAT32
+        });
+
+        sourceDesc[pc.SEMANTIC_NORMAL] = {
+            buffer: normals.buffer,
+            size: 12,
+            offset: 0,
+            stride: 12,
+            count: numVertices
         };
+    };
+
+    var createVertexBufferInternal = function (device, numVertices, vertexDesc, positionDesc, sourceDesc) {
 
         // order vertexDesc to match the rest of the engine
         var elementOrder = [
@@ -123,67 +138,6 @@ Object.assign(pc, function () {
             pc.SEMANTIC_TEXCOORD0,
             pc.SEMANTIC_TEXCOORD1
         ];
-
-        // build vertex buffer format desc and source
-        var vertexDesc = [];
-        var sourceDesc = {};
-        for (var attrib in attributes) {
-            if (attributes.hasOwnProperty(attrib)) {
-                var accessor = accessors[attributes[attrib]];
-                var bufferView = bufferViews[accessor.bufferView];
-
-                if (semanticMap.hasOwnProperty(attrib)) {
-                    var semantic = semanticMap[attrib];
-                    vertexDesc.push({
-                        semantic: semantic,
-                        components: getNumComponents(accessor.type),
-                        type: getComponentType(accessor.componentType)
-                    });
-                    // store the info we'll need to copy this data into the vertex buffer
-                    var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
-                    var buffer = buffers[bufferView.buffer];
-                    sourceDesc[semantic] = {
-                        buffer: buffer.buffer,
-                        size: size,
-                        offset: (accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0) +
-                                (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
-                                (buffer.byteOffset),
-                        stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
-                        count: accessor.count
-                    };
-                }
-            }
-        }
-
-        // get position attribute
-        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
-        var numVertices = positionDesc.count;
-
-        // generate normals if they're missing (this should probably be a user option)
-        if (attributes.hasOwnProperty('POSITION') && !attributes.hasOwnProperty('NORMAL')) {
-
-            var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
-            if (!indices) {
-                indices = generateIndices(numVertices);
-            }
-
-            // generate normals
-            var normals = Float32Array.from(pc.calculateNormals(positions, indices));
-
-            vertexDesc.push({
-                semantic: pc.SEMANTIC_NORMAL,
-                components: 3,
-                type: pc.TYPE_FLOAT32
-            });
-
-            sourceDesc[pc.SEMANTIC_NORMAL] = {
-                buffer: normals.buffer,
-                size: 12,
-                offset: 0,
-                stride: 12,
-                count: numVertices
-            };
-        }
 
         // sort vertex elements by engine-ideal order
         vertexDesc.sort(function (lhs, rhs) {
@@ -253,6 +207,145 @@ Object.assign(pc, function () {
         return vertexBuffer;
     };
 
+    var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap) {
+
+        // build vertex buffer format desc and source
+        var vertexDesc = [];
+        var sourceDesc = {};
+        for (var attrib in attributes) {
+            if (attributes.hasOwnProperty(attrib)) {
+                var accessor = accessors[attributes[attrib]];
+                var bufferView = bufferViews[accessor.bufferView];
+
+                if (semanticMap.hasOwnProperty(attrib)) {
+                    var semantic = semanticMap[attrib].semantic;
+                    vertexDesc.push({
+                        semantic: semantic,
+                        components: getNumComponents(accessor.type),
+                        type: getComponentType(accessor.componentType)
+                    });
+                    // store the info we'll need to copy this data into the vertex buffer
+                    var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
+                    var buffer = buffers[bufferView.buffer];
+                    sourceDesc[semantic] = {
+                        buffer: buffer.buffer,
+                        size: size,
+                        offset: (accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0) +
+                                (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
+                                (buffer.byteOffset),
+                        stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
+                        count: accessor.count
+                    };
+                }
+            }
+        }
+
+        // get position attribute
+        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
+        var numVertices = positionDesc.count;
+
+        // generate normals if they're missing (this should probably be a user option)
+        if (!sourceDesc.hasOwnProperty(pc.SEMANTIC_NORMAL)) {
+            var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
+            generateNormals(sourceDesc, vertexDesc, positions, numVertices, indices);
+        }
+
+        return createVertexBufferInternal(device, numVertices, vertexDesc, positionDesc, sourceDesc);
+    };
+
+    var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices) {
+
+        var numPoints = outputGeometry.num_points();
+
+        // helper function to decode data stream with id to TypedArray of appropriate type
+        var extractDracoAttributeInfo = function (uniqueId, storageType, componentSizeInBytes, normalize) {
+            var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
+            var numValues = numPoints * attribute.num_components();
+            componentSizeInBytes = normalize ? 4 : componentSizeInBytes;   // if normalized, always decompress to float32 buffer
+            var dataSize = numValues * componentSizeInBytes;
+            var ptr = decoderModule._malloc( dataSize );
+            var values, k;
+
+            switch (storageType) {
+                case pc.TYPE_FLOAT32:
+                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
+                    values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+                    break;
+
+                case pc.TYPE_UINT8:
+                    if (normalize) {
+                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
+                        valuesFloat32 = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+
+                        values = new Uint8ClampedArray(numValues);
+                        for (k = 0; k < numValues; k++)
+                            values[k] = valuesFloat32[k] * 255;
+                    } else {
+                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, dataSize, ptr);
+                        values = new Uint8Array(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
+                    }
+                    break;
+
+                default:
+                    // #ifdef DEBUG
+                    console.error("Element type not implemented: " + storageType);
+                    // #endif
+                    break;
+            }
+
+            decoderModule._free(ptr);
+
+            return {
+                values: values,
+                numComponents: attribute.num_components()
+            };
+        };
+
+        // build vertex buffer format desc and source
+        var vertexDesc = [];
+        var sourceDesc = {};
+        var attributes = extDraco.attributes;
+        for (var attrib in attributes) {
+            if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
+                var semanticInfo = semanticMap[attrib];
+                var semantic = semanticInfo.semantic;
+                var storageType = semanticInfo.storageType;
+                var componentSizeInBytes = semanticInfo.byteSize;
+                var normalize = semanticMap[attrib].normalize;
+                var attributeInfo = extractDracoAttributeInfo(attributes[attrib], storageType, componentSizeInBytes, normalize);
+
+                vertexDesc.push({
+                    semantic: semantic,
+                    components: attributeInfo.numComponents,
+                    type: storageType,
+                    normalize: semanticMap[attrib].normalize
+                });
+
+                // store the info we'll need to copy this data into the vertex buffer
+                var size = attributeInfo.numComponents * componentSizeInBytes;
+                sourceDesc[semantic] = {
+                    values: attributeInfo.values,
+                    buffer: attributeInfo.values.buffer,
+                    size: size,
+                    offset: 0,
+                    stride: size,
+                    count: numPoints
+                };
+            }
+        }
+
+        // get position attribute
+        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
+        var numVertices = positionDesc.count;
+
+        // generate normals if they're missing (this should probably be a user option)
+        if (!sourceDesc.hasOwnProperty(pc.SEMANTIC_NORMAL)) {
+            generateNormals(sourceDesc, vertexDesc, positionDesc.values, numVertices, indices);
+        }
+
+        return createVertexBufferInternal(device, numVertices, vertexDesc, positionDesc, sourceDesc);
+    };
+
     var createSkin = function (device, skinData, accessors, bufferViews, nodes, buffers) {
         var i, j, bindMatrix;
         var joints = skinData.joints;
@@ -298,24 +391,119 @@ Object.assign(pc, function () {
 
     var tempMat = new pc.Mat4();
     var tempVec = new pc.Vec3();
-    var createMesh = function (device, meshData, accessors, bufferViews, buffers) {
+
+    var createMesh = function (device, meshData, accessors, bufferViews, buffers, callback) {
         var meshes = [];
 
+        var semanticMap = {
+            'POSITION': { semantic: pc.SEMANTIC_POSITION,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'NORMAL': { semantic: pc.SEMANTIC_NORMAL,           storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TANGENT': { semantic: pc.SEMANTIC_TANGENT,         storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'BINORMAL': { semantic: pc.SEMANTIC_BINORMAL,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'COLOR_0': { semantic: pc.SEMANTIC_COLOR,           storageType: pc.TYPE_UINT8,   byteSize: 1,  normalize: true },
+            'JOINTS_0': { semantic: pc.SEMANTIC_BLENDINDICES,   storageType: pc.TYPE_UINT8,   byteSize: 1 },
+            'WEIGHTS_0': { semantic: pc.SEMANTIC_BLENDWEIGHT,   storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TEXCOORD_0': { semantic: pc.SEMANTIC_TEXCOORD0,    storageType: pc.TYPE_FLOAT32, byteSize: 4 },
+            'TEXCOORD_1': { semantic: pc.SEMANTIC_TEXCOORD1,    storageType: pc.TYPE_FLOAT32, byteSize: 4 }
+        };
+
         meshData.primitives.forEach(function (primitive) {
-            var attributes = primitive.attributes;
 
-            // get indices
-            var indices =
-                primitive.hasOwnProperty('indices') ?
-                    getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
-
-            var vertexBuffer = createVertexBuffer(device, attributes, indices, accessors, bufferViews, buffers);
-
+            var primitiveType, vertexBuffer, numIndices;
+            var indices = null;
             var mesh = new pc.Mesh();
+
+            // try and get draco compressed data first
+            if (primitive.hasOwnProperty('extensions')) {
+                var extensions = primitive.extensions;
+                if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
+
+                    // access DracoDecoderModule
+                    var decoderModule = window.DracoDecoderModule;
+                    if (decoderModule) {
+                        var extDraco = extensions.KHR_draco_mesh_compression;
+                        if (extDraco.hasOwnProperty('attributes')) {
+                            var bufferView = bufferViews[extDraco.bufferView];
+                            var arrayBuffer = buffers[bufferView.buffer];
+                            var uint8Buffer = new Uint8Array(arrayBuffer.buffer, arrayBuffer.byteOffset + bufferView.byteOffset, bufferView.byteLength);
+                            var buffer = new decoderModule.DecoderBuffer();
+                            buffer.Init(uint8Buffer, uint8Buffer.length);
+
+                            var decoder = new decoderModule.Decoder();
+                            var geometryType = decoder.GetEncodedGeometryType(buffer);
+
+                            var outputGeometry, status;
+                            switch (geometryType) {
+                                case decoderModule.POINT_CLOUD:
+                                    primitiveType = pc.PRIMITIVE_POINTS;
+                                    outputGeometry = new decoderModule.PointCloud();
+                                    status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
+                                    break;
+                                case decoderModule.TRIANGULAR_MESH:
+                                    primitiveType = pc.PRIMITIVE_TRIANGLES;
+                                    outputGeometry = new decoderModule.Mesh();
+                                    status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
+                                    break;
+                                case decoderModule.INVALID_GEOMETRY_TYPE:
+                                default:
+                                    break;
+                            }
+
+                            if (!status || !status.ok() || outputGeometry.ptr == 0) {
+                                callback("Failed to decode draco compressed asset: " +
+                                (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType) ));
+                                return;
+                            }
+
+                            // indices
+                            var numFaces = outputGeometry.num_faces();
+                            if (geometryType == decoderModule.TRIANGULAR_MESH) {
+                                var bit32 = outputGeometry.num_points() > 65535;
+                                numIndices = numFaces * 3;
+                                var dataSize = numIndices * (bit32 ? 4 : 2);
+                                var ptr = decoderModule._malloc(dataSize);
+
+                                if (bit32) {
+                                    decoder.GetTrianglesUInt32Array(outputGeometry, dataSize, ptr);
+                                    indices = new Uint32Array(decoderModule.HEAPU32.buffer, ptr, numIndices).slice();
+                                } else {
+                                    decoder.GetTrianglesUInt16Array(outputGeometry, dataSize, ptr);
+                                    indices = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numIndices).slice();
+                                }
+
+                                decoderModule._free( ptr );
+                            }
+
+                            // vertices
+                            vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices);
+
+                            // clean up
+                            decoderModule.destroy(outputGeometry);
+                            decoderModule.destroy(decoder);
+                            decoderModule.destroy(buffer);
+                        }
+                    } else {
+                        // #ifdef DEBUG
+                        console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
+                        // #endif
+                    }
+                }
+            }
+
+            // if mesh was not constructed from draco data, use uncompressed
+            if (!vertexBuffer) {
+                indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
+                vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap);
+                primitiveType = getPrimitiveType(primitive);
+            }
+
+            // build the mesh
             mesh.vertexBuffer = vertexBuffer;
-            mesh.primitive[0].type = getPrimitiveType(primitive);
+            mesh.primitive[0].type = primitiveType;
             mesh.primitive[0].base = 0;
             mesh.primitive[0].indexed = (indices !== null);
+
+            // index buffer
             if (indices !== null) {
                 var indexFormat;
                 if (indices instanceof Uint8Array) {
@@ -327,8 +515,7 @@ Object.assign(pc, function () {
                     // don't support 32bit index data
                     indexFormat = pc.INDEXFORMAT_UINT32;
                 }
-                var numIndices = indices.length;
-                var indexBuffer = new pc.IndexBuffer(device, indexFormat, numIndices, pc.BUFFER_STATIC, indices);
+                var indexBuffer = new pc.IndexBuffer(device, indexFormat, indices.length, pc.BUFFER_STATIC, indices);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
             } else {
@@ -935,14 +1122,14 @@ Object.assign(pc, function () {
 
     };
 
-    var createMeshes = function (device, gltf, buffers) {
+    var createMeshes = function (device, gltf, buffers, callback) {
         if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
             !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
             !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
             return [];
         }
         return gltf.meshes.map(function (meshData) {
-            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers);
+            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers, callback);
         });
 
     };
@@ -1006,7 +1193,7 @@ Object.assign(pc, function () {
         var animations = createAnimations(gltf, nodes, buffers);
         var textures = createTextures(device, gltf, images);
         var materials = createMaterials(gltf, textures);
-        var meshes = createMeshes(device, gltf, buffers);
+        var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
 
         callback(null, {
