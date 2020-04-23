@@ -51,6 +51,8 @@
  */
 
 /**
+ * @private
+ * @deprecated
  * @callback pc.callbacks.LoadHierarchy
  * @description Callback used by {@link pc.Application#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
@@ -58,12 +60,16 @@
  */
 
 /**
+ * @private
+ * @deprecated
  * @callback pc.callbacks.LoadSettings
  * @description Callback used by {@link pc.Application#loadSceneSettings}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
+ * @private
+ * @deprecated
  * @callback pc.callbacks.LoadScene
  * @description Callback used by {@link pc.Application#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
