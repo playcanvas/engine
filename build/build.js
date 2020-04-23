@@ -209,10 +209,13 @@ var insertVersions = function (filepath, callback) {
                 }
 
                 var content = buffer.toString();
-
-                content = getCopyrightNotice(ver, rev) + content;
-                content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
-                content = replaceAll(content, "__REVISION__", rev);
+                
+                // If we are generating source maps, we shouldn't add the the copyright notice as it shifts the mappings
+                if (!sourceMap) {
+                    content = getCopyrightNotice(ver, rev) + content;
+                    content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
+                    content = replaceAll(content, "__REVISION__", rev);
+                }
 
                 fs.writeFile(filepath, content, function (err) {
                     callback(err, ver);
