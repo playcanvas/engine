@@ -39,8 +39,10 @@ Object.assign(pc, function () {
                 animEvaluator,
                 asset.states,
                 asset.transitions,
+                asset.parameters,
                 this.data.activate
             );
+            this.animController = data.animController;
         },
 
         linkAnimAssetToState: function(stateName, asset) {
@@ -53,6 +55,60 @@ Object.assign(pc, function () {
                 console.error('linkAnimAssetToState: No animation found for given assetName');
 
             this.data.animController.linkAnimationToState(stateName, animTrack);
+        },
+
+        getFloat: function(name) {
+            if (this.data.animController) {
+                return this.data.animController.getFloat(name);
+            }
+        },
+
+        setFloat: function(name, value) {
+            if (this.data.animController) {
+                this.data.animController.setFloat(name, value);
+            }
+        },
+
+        getInteger: function(name) {
+            if (this.data.animController) {
+                return this.data.animController.getInteger(name);
+            }
+        },
+
+        setInteger: function(name, value) {
+            if (this.data.animController) {
+                this.data.animController.setInteger(name, value);
+            }
+        },
+
+        getBoolean: function(name) {
+            if (this.data.animController) {
+                return this.data.animController.getBoolean(name);
+            }
+        },
+
+        setBoolean: function(name, value) {
+            if (this.data.animController) {
+                this.data.animController.setBoolean(name, value);
+            }
+        },
+
+        getTrigger: function(name) {
+            if (this.data.animController) {
+                return this.data.animController.getTrigger(name);
+            }
+        },
+
+        setTrigger: function(name) {
+            if (this.data.animController) {
+                this.data.animController.setTrigger(name);
+            }
+        },
+
+        resetTrigger: function(name) {
+            if (this.data.animController) {
+                this.data.animController.resetTrigger(name);
+            }
         },
 
         /**

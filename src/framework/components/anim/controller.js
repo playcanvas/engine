@@ -10,6 +10,9 @@ Object.assign(pc, function () {
         isPlayable: function() {
             return (this.animations.length > 0 || this.name === 'Start' || this.name === 'End');
         },
+        isLooping: function() {
+            return true;
+        },
         getTotalWeight: function() {
             var sum = 0;
             for (var i = 0; i < this.animations.length; i++) {
@@ -19,21 +22,61 @@ Object.assign(pc, function () {
         }
     });
 
-    var AnimTransition = function (from, to, time, priority) {
+    var AnimTransition = function (controller, from, to, time, priority, conditions, exitTime) {
+        this.controller = controller;
         this.from = from;
         this.to = to;
         this.time = time;
         this.priority = priority;
+        this.conditions = conditions || [];
+        this.exitTime = exitTime || null;
     };
 
-    var AnimController = function (animEvaluator, states, transitions, activate) {
+    Object.assign(AnimTransition.prototype, {
+        hasConditionsMet: function() {
+            var conditionsMet = true;
+            for (var i = 0; i < this.conditions.length; i++) {
+                var condition = this.conditions[i];
+                var parameter = this.controller.getParameter(condition.parameterName);
+                switch(condition.predicate) {
+                    case 'GREATER_THAN':
+                        conditionsMet = conditionsMet && parameter.value > condition.value;
+                        break;
+                    case 'LESS_THAN':
+                        conditionsMet = conditionsMet && parameter.value < condition.value;
+                        break;
+                    case 'GREATER_THAN_EQUAL_TO':
+                        conditionsMet = conditionsMet && parameter.value >= condition.value;
+                        break;
+                    case 'LESS_THAN_EQUAL_TO':
+                        conditionsMet = conditionsMet && parameter.value <= condition.value;
+                        break;
+                    case 'EQUAL_TO':
+                        conditionsMet = conditionsMet && parameter.value === condition.value;
+                        break;
+                    case 'NOT_EQUAL_TO':
+                        conditionsMet = conditionsMet && parameter.value !== condition.value;
+                        break;
+                }
+                if (!conditionsMet)
+                    return conditionsMet;
+            }
+            return conditionsMet;
+        },
+        hasExitTime: function() {
+            return !!this.exitTime;
+        }
+    });
+
+    var AnimController = function (animEvaluator, states, transitions, parameters, activate) {
         this.animEvaluator = animEvaluator;
         this.states = states.map(function(state) {
             return new AnimState(state.name, state.speed);
         });
-        this.transitions = transitions.map(function(transition) {
-            return new AnimTransition(transition.from, transition.to, transition.time, transition.priority);
-        });
+        this.transitions = transitions.map((function(transition) {
+            return new AnimTransition(this, transition.from, transition.to, transition.time, transition.priority, transition.conditions, transition.exitTime);
+        }).bind(this));
+        this.parameters = parameters;
         this.previousStateName = null;
         this.activeStateName = 'Start';
         this.playing = false;
@@ -42,6 +85,9 @@ Object.assign(pc, function () {
         this.currTransitionTime = 1.0;
         this.totalTransitionTime = 1.0;
         this.isTransitioning = false;
+
+        this.timeInState = 0;
+        this.timeInStateBefore = 0;
     };
 
     Object.assign(AnimController.prototype, {
@@ -78,19 +124,22 @@ Object.assign(pc, function () {
             return this.previousStateName = stateName;
         },
 
-        _getActiveStateProgress: function() {
+        _getActiveStateProgress: function(checkBeforeUpdate) {
             if (this.activeStateName === 'Start' || this.activeStateName === 'End')
                 return 1.0;
             else {
-                var activeClip = this.animEvaluator.findClip(this.activeStateName);
+                var activeClip = this.animEvaluator.findClip(this._getActiveState().animations[0].name);
                 if (activeClip) {
-                    return activeClip.time / activeClip.track.duration;
+                    return (checkBeforeUpdate ? this.timeInStateBefore : this.timeInState) / activeClip.track.duration;
                 }
             }
             return null;
         },
 
         _findTransition: function(from, to) {
+            if (this.isTransitioning) {
+                return false;
+            }
             var transitions = this.transitions.filter((function(transition) {
                 if (to && from) {
                     return transition.from === from && transition.to === to;
@@ -98,15 +147,30 @@ Object.assign(pc, function () {
                     return transition.from === this.activeStateName;
                 }
             }).bind(this));
-            if (transitions.length === 0)
+            transitions = transitions.filter((function(transition) {
+                // when an exit time is present, we should only exit if it falls within the current frame delta time
+                if (transition.hasExitTime()) {
+                    var progressBefore = this._getActiveStateProgress(true);
+                    var progress = this._getActiveStateProgress();
+                    // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
+                    if (transition.exitTime < 1.0 && this._getActiveState().isLooping()) {
+                        progressBefore = progressBefore - Math.floor(progressBefore);
+                        progress = progress - Math.floor(progress);
+                    }
+                    // return false if exit time isn't within the frames delta time
+                    if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
+                        return false;
+                    }
+                }
+                return transition.hasConditionsMet();
+            }).bind(this));
+            transitions.sort(function(a, b) {
+                return a.priority < b.priority;
+            });
+            if (transitions.length > 0) {
+                return transitions[0];
+            } else {
                 return null;
-            else if (transitions.length === 1)
-                return transitions[0];
-            else {
-                transitions.sort(function(a, b) {
-                    return a.priority < b.priority;
-                });
-                return transitions[0];
             }
         },
 
@@ -114,11 +178,21 @@ Object.assign(pc, function () {
             this._setPreviousState(this.activeStateName);
             this._setActiveState(transition.to);
 
+            var triggers = transition.conditions.filter((function(condition) {
+                var parameter = this.getParameter(condition.parameterName);
+                return parameter.type === 'trigger';
+            }).bind(this));
+            for (var i = 0; i < triggers.length; i++) {
+                this.resetTrigger(triggers[i].parameterName);
+            }
+
             if (transition.time > 0) {
                 this.isTransitioning = true;
                 this.totalTransitionTime = transition.time;
                 this.currTransitionTime = 0;
             }
+            this.timeInState = 0;
+            this.timeInStateBefore = 0;
 
             var activeState = this._getActiveState();
             for (var i = 0; i < activeState.animations.length; i++) {
@@ -150,7 +224,7 @@ Object.assign(pc, function () {
             var transition = this._findTransition(this.activeStateName, newStateName);
             if (!transition) {
                 this.animEvaluator.removeClips();
-                transition = new AnimTransition(this.activeStateName, newStateName, 0, 0);
+                transition = new AnimTransition(this, this.activeStateName, newStateName, 0, 0);
             }
             this._updateStateFromTransition(transition);
         },
@@ -207,15 +281,15 @@ Object.assign(pc, function () {
         update: function(dt) {
             if (this.playing) {
                 this.animEvaluator.update(dt);
+                this.timeInStateBefore = this.timeInState;
+                this.timeInState = this.timeInState + dt;
 
-                var progress = this._getActiveStateProgress();
-
-                if (progress >= 1.0) {
-                    this._transitionToNextState();
-                }
+                var transition = this._findTransition(this.activeStateName);
+                if (transition)
+                    this._updateStateFromTransition(transition);
 
                 if (this.isTransitioning) {
-                    if (this.currTransitionTime > this.totalTransitionTime) {
+                    if (this.currTransitionTime >= this.totalTransitionTime) {
                         this.isTransitioning = false;
 
                         var previousState = this._getPreviousState();
@@ -249,6 +323,61 @@ Object.assign(pc, function () {
                 }
             }
         },
+
+        getFloat: function(name) {
+            return this.parameters[name].value;
+        },
+
+        setFloat: function(name, value) {
+            //TODO typechecking
+            var float = this.parameters[name];
+            if (float && float.type === 'float')
+                float.value = value;
+        },
+
+        getInteger: function(name) {
+            return this.parameters[name].value;
+        },
+
+        setInteger: function(name, value) {
+            //TODO typechecking
+            var integer = this.parameters[name];
+            if (integer && integer.type === 'integer')
+                integer.value = value;
+        },
+
+        getBoolean: function(name) {
+            return this.parameters[name].value;
+        },
+
+        setBoolean: function(name, value) {
+            //TODO typechecking
+            var boolean = this.parameters[name];
+            if (boolean && boolean.type === 'boolean')
+                boolean.value = value;
+        },
+
+        getTrigger: function(name) {
+            return this.parameters[name].value;
+        },
+
+        setTrigger: function(name) {
+            //TODO typechecking
+            var trigger = this.parameters[name];
+            if (trigger && trigger.type === 'trigger')
+                trigger.value = true;
+        },
+
+        resetTrigger: function(name) {
+            //TODO typechecking
+            var trigger = this.parameters[name];
+            if (trigger && trigger.type === 'trigger')
+                trigger.value = false;
+        },
+
+        getParameter: function(name) {
+            return this.parameters[name];
+        }
     });
 
     return {
