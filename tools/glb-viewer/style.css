@@ -17,8 +17,9 @@ body {
 }
 
 #panel {
-    width: 200px;
-    background-color: #888;
+    width: 250px;
+    height: 100%;
+    background-color: #374346;
 }
 
 #application-canvas {
@@ -26,20 +27,25 @@ body {
     height: 500px;
 }
 
-h2 {
-    font-size: 12pt;
-    margin: 5px 5px;
-    color: #fff;
-}
-
-.controls {
+h3 {
     margin: 0px;
     padding: 5px;
-    background-color: #666;
+    font-size: 9pt;
+    color: #fff;
+    background-color: #293538;
 }
 
-#scrub-container {
-    text-align: center;
+label {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 10pt;
+    color: #bbb;
+    width: 60px;
+}
+
+button {
+    width: 100%;
+    text-align: left;
 }
 
 ul {
@@ -52,27 +58,27 @@ ul {
 input {
     appearance: none;
     font-size: 10pt;
-}
-
-input.button {
-    width: 40px;
-}
-
-input.setting {
-    width: 120px;
+    width: 170px;
     margin: 0px;
     vertical-align: middle;
+    background-color: 293538;
 }
 
-label {
-    display: inline-block;
-    font-size: 10pt;
-    color: #fff;
-    width: 50px;
-    vertical-align: middle;
+.controls {
+    margin: 0px;
+    padding: 10px 4px;
+    background-color: #374346;
 }
 
-button {
-    width: 100%;
-    text-align: left;
+.controls div {
+    margin: 3px 0px;
+}
+
+#scrub-container {
+    text-align: center;
+    margin: 2px 0px 10px 0px;
+}
+
+#scrub-container input {
+    width: 40px;
 }
