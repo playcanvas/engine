@@ -194,6 +194,8 @@ This will output to build/output/playcanvas.d.ts
 
 ## Generating Source Map
 
+Note: The preprocessor is ignored when when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
+
 To build the source map to allow for easier engine debugging, use the following command:
 
     npm run build -- -m
