@@ -91,6 +91,7 @@ Object.assign(pc, function () {
             return new AnimTransition(this, transition.from, transition.to, transition.time, transition.priority, transition.conditions, transition.exitTime, transition.transitionOffset);
         }).bind(this));
         this.parameters = parameters;
+        this.initialParameters = JSON.parse(JSON.stringify(parameters));
         this.previousStateName = null;
         this.activeStateName = 'Start';
         this.playing = false;
@@ -269,10 +270,17 @@ Object.assign(pc, function () {
                 animTrack: animTrack,
                 weight: 1.0
             };
+
+            // Currently the anim controller only supports single animations in a state
+            if (state.animations.length > 0) {
+                state.animations = [];
+                this.reset();
+            }
             state.animations.push(animation);
 
             if (!this.playing && this.activate && this.isPlayable()) {
                 this.play();
+                return;
             }
         },
 
@@ -291,6 +299,24 @@ Object.assign(pc, function () {
                 this._transitionToState(stateName);
             }
             this.playing = true;
+        },
+
+        reset: function() {
+            this.previousStateName = null;
+            this.activeStateName = 'Start';
+            this.playing = false;
+            
+            this.currTransitionTime = 1.0;
+            this.totalTransitionTime = 1.0;
+            this.isTransitioning = false;
+
+            this.timeInState = 0;
+            this.timeInStateBefore = 0;
+
+            this.animEvaluator.removeClips();
+
+            this.parameters = JSON.parse(JSON.stringify(this.initialParameters));
+
         },
         
         update: function(dt) {

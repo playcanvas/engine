@@ -130,6 +130,12 @@ Object.assign(pc, function () {
             this.data.animController.play(name);
         },
 
+        reset: function() {
+            if (this.data.animController) {
+                this.data.animController.reset();
+            }
+        },
+
         getActiveStateName: function () {
             return this.data.animController ? this.data.animController.getActiveStateName() : null;
         },
