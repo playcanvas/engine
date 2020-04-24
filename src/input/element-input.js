@@ -3,6 +3,14 @@ Object.assign(pc, function () {
     var vecA = new pc.Vec3();
     var vecB = new pc.Vec3();
 
+    var rayA = new pc.Ray();
+    var rayB = new pc.Ray();
+    var rayC = new pc.Ray();
+
+    rayA.end = new pc.Vec3();
+    rayB.end = new pc.Vec3();
+    rayC.end = new pc.Vec3();
+
     var _pq = new pc.Vec3();
     var _pa = new pc.Vec3();
     var _pb = new pc.Vec3();
@@ -91,8 +99,10 @@ Object.assign(pc, function () {
          */
         stopPropagation: function () {
             this._stopPropagation = true;
-            this.event.stopImmediatePropagation();
-            this.event.stopPropagation();
+            if (this.event) {
+                this.event.stopImmediatePropagation();
+                this.event.stopPropagation();
+            }
         }
     });
 
@@ -183,6 +193,25 @@ Object.assign(pc, function () {
 
     /**
      * @class
+     * @name pc.ElementSelectEvent
+     * @augments pc.ElementInputEvent
+     * @classdesc Represents a XRInputSourceEvent fired on a {@link pc.ElementComponent}.
+     * @description Create an instance of a pc.ElementSelectEvent.
+     * @param {object} event - The XRInputSourceEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+     * @param {pc.XrInputSource} inputSource - The XR input source that this event was originally raised from.
+     * @property {pc.XrInputSource} inputSource The XR input source that this event was originally raised from.
+     */
+    var ElementSelectEvent = function (event, element, camera, inputSource) {
+        ElementInputEvent.call(this, event, element, camera);
+        this.inputSource = inputSource;
+    };
+    ElementSelectEvent.prototype = Object.create(ElementInputEvent.prototype);
+    ElementSelectEvent.prototype.constructor = ElementSelectEvent;
+
+    /**
+     * @class
      * @name pc.ElementInput
      * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
@@ -191,6 +220,7 @@ Object.assign(pc, function () {
      * @param {object} [options] - Optional arguments.
      * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
      * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
+     * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;
@@ -218,15 +248,18 @@ Object.assign(pc, function () {
         this._pressedElement = null;
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
+        this._selectedElements = {};
+        this._selectedPressedElements = {};
 
         this._useMouse = !options || options.useMouse !== false;
         this._useTouch = !options || options.useTouch !== false;
+        this._useXr = !options || options.useXr !== false;
+        this._selectEventsAttached = false;
 
-        if (pc.platform.touch) {
+        if (pc.platform.touch)
             this._clickedEntities = {};
-        }
 
-        this.attach(domElement, options);
+        this.attach(domElement);
     };
 
     Object.assign(ElementInput.prototype, {
@@ -261,6 +294,18 @@ Object.assign(pc, function () {
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
             }
+
+            this.attachSelectEvents();
+        },
+
+        attachSelectEvents: function () {
+            if (! this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
+                if (! this._clickedEntities)
+                    this._clickedEntities = {};
+
+                this._selectEventsAttached = true;
+                this.app.xr.on('start', this._onXrStart, this);
+            }
         },
 
         /**
@@ -285,6 +330,16 @@ Object.assign(pc, function () {
                 this._target.removeEventListener('touchend', this._touchendHandler, false);
                 this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
+            }
+
+            if (this._selectEventsAttached) {
+                this._selectEventsAttached = false;
+                this.app.xr.off('start', this._onXrStart, this);
+                this.app.xr.off('end', this._onXrEnd, this);
+                this.app.xr.off('update', this._onXrUpdate, this);
+                this.app.xr.input.off('selectstart', this._onSelectStart, this);
+                this.app.xr.input.off('selectend', this._onSelectEnd, this);
+                this.app.xr.input.off('remove', this._onXrInputRemove, this);
             }
 
             this._target = null;
@@ -323,7 +378,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEUP, event);
+            this._onElementMouseEvent('mouseup', event);
         },
 
         _handleDown: function (event) {
@@ -336,7 +391,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEDOWN, event);
+            this._onElementMouseEvent('mousedown', event);
         },
 
         _handleMove: function (event) {
@@ -346,7 +401,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEMOVE, event);
+            this._onElementMouseEvent('mousemove', event);
 
             this._lastX = targetX;
             this._lastY = targetY;
@@ -359,7 +414,7 @@ Object.assign(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEWHEEL, event);
+            this._onElementMouseEvent('mousewheel', event);
         },
 
         _determineTouchedElements: function (event) {
@@ -533,13 +588,12 @@ Object.assign(pc, function () {
 
                 this._hoveredElement = element;
 
-                if (eventType === pc.EVENT_MOUSEDOWN) {
+                if (eventType === 'mousedown') {
                     this._pressedElement = element;
                 }
             }
 
             if (hovered !== this._hoveredElement) {
-
                 // mouseleave event
                 if (hovered) {
                     this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, camera, targetX, targetY, this._lastX, this._lastY));
@@ -551,7 +605,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (eventType === pc.EVENT_MOUSEUP && this._pressedElement) {
+            if (eventType === 'mouseup' && this._pressedElement) {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
                     this._pressedElement = null;
@@ -562,6 +616,108 @@ Object.assign(pc, function () {
                     }
                 } else {
                     this._pressedElement = null;
+                }
+            }
+        },
+
+        _onXrStart: function () {
+            this.app.xr.on('end', this._onXrEnd, this);
+            this.app.xr.on('update', this._onXrUpdate, this);
+            this.app.xr.input.on('selectstart', this._onSelectStart, this);
+            this.app.xr.input.on('selectend', this._onSelectEnd, this);
+            this.app.xr.input.on('remove', this._onXrInputRemove, this);
+        },
+
+        _onXrEnd: function () {
+            this.app.xr.off('update', this._onXrUpdate, this);
+            this.app.xr.input.off('selectstart', this._onSelectStart, this);
+            this.app.xr.input.off('selectend', this._onSelectEnd, this);
+            this.app.xr.input.off('remove', this._onXrInputRemove, this);
+        },
+
+        _onXrUpdate: function () {
+            if (!this._enabled) return;
+
+            var inputSources = this.app.xr.input.inputSources;
+            for (var i = 0; i < inputSources.length; i++) {
+                this._onElementSelectEvent('selectmove', inputSources[i], null);
+            }
+        },
+
+        _onXrInputRemove: function (inputSource) {
+            var hovered = this._selectedElements[inputSource.id];
+            if (hovered) {
+                inputSource._elementEntity = null;
+                this._fireEvent('selectleave', new ElementSelectEvent(null, hovered, null, inputSource));
+            }
+
+            delete this._selectedElements[inputSource.id];
+            delete this._selectedPressedElements[inputSource.id];
+        },
+
+        _onSelectStart: function (inputSource, event) {
+            if (! this._enabled) return;
+            this._onElementSelectEvent('selectstart', inputSource, event);
+        },
+
+        _onSelectEnd: function (inputSource, event) {
+            if (! this._enabled) return;
+            this._onElementSelectEvent('selectend', inputSource, event);
+        },
+
+        _onElementSelectEvent: function (eventType, inputSource, event) {
+            var element;
+
+            var hoveredBefore = this._selectedElements[inputSource.id];
+            var hoveredNow;
+
+            var cameras = this.app.systems.camera.cameras;
+            var camera;
+
+            if (inputSource.elementInput) {
+                rayC.set(inputSource.getOrigin(), inputSource.getDirection());
+
+                for (var i = cameras.length - 1; i >= 0; i--) {
+                    camera = cameras[i];
+
+                    element = this._getTargetElementByRay(rayC, camera);
+                    if (element)
+                        break;
+                }
+            }
+
+            inputSource._elementEntity = element || null;
+
+            if (element) {
+                this._selectedElements[inputSource.id] = element;
+                hoveredNow = element;
+            } else {
+                delete this._selectedElements[inputSource.id];
+            }
+
+            if (hoveredBefore !== hoveredNow) {
+                if (hoveredBefore) this._fireEvent('selectleave', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+                if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
+            }
+
+            if (eventType === 'selectstart') {
+                this._selectedPressedElements[inputSource.id] = hoveredNow;
+                if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
+            }
+
+            var pressed = this._selectedPressedElements[inputSource.id];
+            if (! inputSource.elementInput && pressed) {
+                delete this._selectedPressedElements[inputSource.id];
+                if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            }
+
+            if (eventType === 'selectend' && inputSource.elementInput) {
+                delete this._selectedPressedElements[inputSource.id];
+
+                if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+
+                if (pressed && pressed === hoveredBefore) {
+                    this._fireEvent('click', new ElementSelectEvent(event, pressed, camera, inputSource));
                 }
             }
         },
@@ -649,20 +805,59 @@ Object.assign(pc, function () {
             // sort elements
             this._elements.sort(this._sortHandler);
 
+            var rayScreen, ray3d;
+
+            for (var i = 0, len = this._elements.length; i < len; i++) {
+                var element = this._elements[i];
+                var screen = false;
+                var ray;
+
+                // cache rays
+                if (element.screen && element.screen.screen.screenSpace) {
+                    // 2D screen
+                    if (rayScreen === undefined) {
+                        rayScreen = rayA;
+                        if (this._calculateRayScreen(x, y, camera, rayScreen) === false) {
+                            rayScreen = null;
+                        }
+                    }
+                    ray = rayScreen;
+                    screen = true;
+                } else {
+                    // 3d
+                    if (ray3d === undefined) {
+                        ray3d = rayB;
+                        if (this._calculateRay3d(x, y, camera, ray3d) === false) {
+                            ray3d = null;
+                        }
+                    }
+                    ray = ray3d;
+                }
+
+                if (ray && this._checkElement(ray, element, screen)) {
+                    result = element;
+                    break;
+                }
+            }
+
+            return result;
+        },
+
+        _getTargetElementByRay: function (ray, camera) {
+            var result = null;
+
+            rayA.origin.copy(ray.origin);
+            rayA.direction.copy(ray.direction);
+            rayA.end.copy(rayA.direction).scale(camera.farClip * 2).add(rayA.origin);
+
+            // sort elements
+            this._elements.sort(this._sortHandler);
+
             for (var i = 0, len = this._elements.length; i < len; i++) {
                 var element = this._elements[i];
 
-                // scale x, y based on the camera's rect
-
-                if (element.screen && element.screen.screen.screenSpace) {
-                    // 2D screen
-                    if (this._checkElement2d(x, y, element, camera)) {
-                        result = element;
-                        break;
-                    }
-                } else {
-                    // 3d
-                    if (this._checkElement3d(x, y, element, camera)) {
+                if (! element.screen || ! element.screen.screen.screenSpace) {
+                    if (this._checkElement(rayA, element, false)) {
                         result = element;
                         break;
                     }
@@ -718,13 +913,7 @@ Object.assign(pc, function () {
             return _accumulatedScale;
         },
 
-        _checkElement2d: function (x, y, element, camera) {
-            // ensure click is contained by any mask first
-            if (element.maskedBy) {
-                var result = this._checkElement2d(x, y, element.maskedBy.element, camera);
-                if (!result) return false;
-            }
-
+        _calculateRayScreen: function (x, y, camera, ray) {
             var sw = this.app.graphicsDevice.width;
             var sh = this.app.graphicsDevice.height;
 
@@ -739,7 +928,6 @@ Object.assign(pc, function () {
             var _x = x * sw / this._target.clientWidth;
             var _y = y * sh / this._target.clientHeight;
 
-            // check window coords are within camera rect
             if (_x >= cameraLeft && _x <= cameraRight &&
                 _y <= cameraBottom && _y >= cameraTop) {
 
@@ -750,26 +938,16 @@ Object.assign(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var scale = this._calculateScaleToScreen(element);
-                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale.x, scale.y);
-                vecA.set(_x, _y, 1);
-                vecB.set(_x, _y, -1);
+                ray.origin.set(_x, _y, 1);
+                ray.direction.set(0, 0, -1);
+                ray.end.copy(ray.direction).scale(2).add(ray.origin);
 
-                if (intersectLineQuad(vecA, vecB, hitCorners)) {
-                    return true;
-                }
+                return true;
             }
-
             return false;
         },
 
-        _checkElement3d: function (x, y, element, camera) {
-            // ensure click is contained by any mask first
-            if (element.maskedBy) {
-                var result = this._checkElement3d(x, y, element.maskedBy.element, camera);
-                if (!result) return false;
-            }
-
+        _calculateRay3d: function (x, y, camera, ray) {
             var sw = this._target.clientWidth;
             var sh = this._target.clientHeight;
 
@@ -793,17 +971,37 @@ Object.assign(pc, function () {
                 _y = sh * (_y - (cameraTop)) / cameraHeight;
 
                 // 3D screen
-                var scale = element.entity.getWorldTransform().getScale();
-                var worldCorners = this._buildHitCorners(element, element.worldCorners, scale.x, scale.y);
-                var start = vecA;
-                var end = vecB;
-                camera.screenToWorld(_x, _y, camera.nearClip, start);
-                camera.screenToWorld(_x, _y, camera.farClip, end);
+                camera.screenToWorld(_x, _y, camera.nearClip, vecA);
+                camera.screenToWorld(_x, _y, camera.farClip, vecB);
 
-                if (intersectLineQuad(start, end, worldCorners)) {
-                    return true;
-                }
+                ray.origin.copy(vecA);
+                ray.direction.set(0, 0, -1);
+                ray.end.copy(vecB);
+
+                return true;
             }
+            return false;
+        },
+
+        _checkElement: function (ray, element, screen) {
+            // ensure click is contained by any mask first
+            if (element.maskedBy) {
+                var result = this._checkElement(ray, element.maskedBy.element, screen);
+                if (!result) return false;
+            }
+
+            var scale;
+
+            if (screen) {
+                scale = this._calculateScaleToScreen(element);
+            } else {
+                scale = element.entity.getWorldTransform().getScale();
+            }
+
+            var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
+
+            if (intersectLineQuad(ray.origin, ray.end, corners))
+                return true;
 
             return false;
         }
