@@ -25,32 +25,13 @@ PlayCanvas is used by leading companies in video games, advertising and visualiz
 
 PlayCanvas is a fully featured game engine.
 
-* **Graphics**
-    * WebGL 2.0 based renderer (with fallback to WebGL 1.0)
-    * Physically based rendering (PBR)
-    * Directional, point and spot lights
-    * Shadow mapping (PCF and VSM implementations)
-    * Runtime lightmap baking
-    * Static, skinned and morphed meshes
-    * GPU Particle engine with editor
-    * PostFX library: bloom, edge detect, FXAA, vignette, etc
-    * Seamless default material support from Maya, 3DS Max, Blender, etc.
-    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](https://developer.playcanvas.com/en/user-manual/assets/)
-* **Collision & Physics**
-    * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
-* **Audio**
-    * 3D Positional audio via Web Audio API
-* **Resource Loading**
-    * Simple and powerful resource loading
-    * Streaming of individual assets
-    * Asset Variants - loads compressed textures (DXT, PVR, ETC1, ETC2) based on platform support
-* **Entity / Component System**
-    * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
-* **Scripting system**
-    * Write game behaviors by attaching JavaScript to game entities
-    * Live code hot-swap enables rapid iteration
-* **Input**
-    * Mouse, Keyboard, Touch, Gamepad, VR
+* 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL 1 & 2.
+* 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
+* ⚛️ **Physics** - Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
+* 🎮 **Input** - Mouse, keyboard, touch, gamepad and VR controller APIs
+* 🔊 **Sound** - 3D positional sounds built on the Web Audio API
+* 📦 **Assets** - Asynchronous streaming system built on [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) and [Basis](https://github.com/BinomialLLC/basis_universal) compression
+* 📜 **Scripts** - Write game behaviors in Typescript or JavaScript
 
 ## Usage
 
