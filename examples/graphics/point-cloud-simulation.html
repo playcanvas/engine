@@ -117,7 +117,7 @@
         }
 
         // Create a mesh with dynamic vertex buffer (index buffer is not needed)
-        this.mesh = new pc.Mesh(this.app.graphicsDevice);
+        this.mesh = new pc.Mesh(app.graphicsDevice);
         this.mesh.clear(true);
         updateMesh(this.mesh);
 
@@ -166,8 +166,12 @@
             time += dt;
 
             // update particle positions using simple verlet integration, and keep them inside a sphere boundary
-            var dist, pos = new pc.Vec3(), old = new pc.Vec3(); delta = new pc.Vec3(); next = new pc.Vec3();
-            for (i = 0; i < self.maxNumPoints; i++) {
+            var dist;
+            var pos = new pc.Vec3();
+            var old = new pc.Vec3(); 
+            var delta = new pc.Vec3(); 
+            var next = new pc.Vec3();
+            for (var i = 0; i < self.maxNumPoints; i++) {
 
                 // read positions from buffers
                 old.set(self.oldPositions[i * 3], self.oldPositions[i * 3 + 1], self.oldPositions[i * 3 + 2]);
