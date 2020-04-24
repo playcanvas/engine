@@ -223,23 +223,24 @@ Object.assign(pc, function () {
          */
         generateWireframe: function () {
             var i;
+            var mesh;
 
             // Build an array of unique meshes in this model
             var meshes = [];
             for (i = 0; i < this.meshInstances.length; i++) {
-                var mesh = this.meshInstances[i].mesh;
+                mesh = this.meshInstances[i].mesh;
                 if (meshes.indexOf(mesh) === -1) {
                     meshes.push(mesh);
                 }
             }
 
             for (i = 0; i < meshes.length; ++i) {
-                var mesh = meshes[i];
+                mesh = meshes[i];
                 if (!mesh.primitive[pc.RENDERSTYLE_WIREFRAME]) {
                     mesh.generateWireframe();
                 }
             }
-        },
+        }
     });
 
     return {

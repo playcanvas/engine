@@ -1,4 +1,3 @@
-
 var debugLayerFront = null;
 var debugLayerBack = null;
 
@@ -175,7 +174,7 @@ Object.assign(DebugLines.prototype, {
         var recurse = function (curr) {
             if (curr.enabled) {
                 // render child links
-                for (var i=0; i<curr.children.length; ++i) {
+                for (var i = 0; i < curr.children.length; ++i) {
                     var child = curr.children[i];
                     self.line(curr.getPosition(), child.getPosition());
                     recurse(child);

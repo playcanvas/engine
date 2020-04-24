@@ -80,10 +80,10 @@ var onMorphTargetsLoaded = function (morphList) {
         input.max = 1;
         input.value = 0;
         input.step = 'any';
-        input.oninput = (function(morph) {
+        input.oninput = (function (morph) {
             return function () {
                 theviewer.setMorphWeight(morph, this.value);
-            }
+            };
         })(morphList[i]);
 
         var div = document.createElement('div');

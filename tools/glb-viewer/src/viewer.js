@@ -1,4 +1,3 @@
-
 var assetsFolder = "../../examples/assets";
 
 var Viewer = function (canvas) {
@@ -426,9 +425,9 @@ Object.assign(Viewer.prototype, {
                 morphInstances.forEach(function (morphInstance) {
                     morphInstance.morph._targets.forEach(function (target, targetIndex) {
                         if (!morphMap.hasOwnProperty(target.name)) {
-                            morphMap[target.name] = [ { instance: morphInstance, targetIndex: targetIndex } ];
+                            morphMap[target.name] = [{ instance: morphInstance, targetIndex: targetIndex }];
                         } else {
-                            morphMap[target.name].push( { instance: morphInstance, targetIndex: targetIndex } );
+                            morphMap[target.name].push({ instance: morphInstance, targetIndex: targetIndex });
                         }
                     });
                 });
@@ -448,7 +447,7 @@ Object.assign(Viewer.prototype, {
                         })
                         .flat());
 
-            // 
+            //
             this.refocusCamera = true;
             this.renderNextFrame();
         }
@@ -465,14 +464,16 @@ Object.assign(Viewer.prototype, {
             this.entity.model &&
             this.entity.model.model) {
 
+            var i;
+            var meshInstance;
             var model = this.entity.model.model;
 
             // wireframe
             if (this.dirtyWireframe) {
                 this.dirtyWireframe = false;
 
-                for (var i = 0; i < this.meshInstances.length; ++i) {
-                    var meshInstance = this.meshInstances[i];
+                for (i = 0; i < this.meshInstances.length; ++i) {
+                    meshInstance = this.meshInstances[i];
                     if (this.wireframe) {
                         if (!meshInstance.mesh.primitive[pc.RENDERSTYLE_WIREFRAME]) {
                             meshInstance.mesh.generateWireframe();
@@ -513,14 +514,14 @@ Object.assign(Viewer.prototype, {
                 this.debugNormals.clear();
 
                 if (this.normalLength > 0) {
-                    for (var i = 0; i < this.meshInstances.length; ++i) {
-                        var meshInstance = this.meshInstances[i];
-                        var vertexBuffer = meshInstance.morphInstance ?
-                                                meshInstance.morphInstance._vertexBuffer :
-                                                    meshInstance.mesh.vertexBuffer;
-                        var skinMatrices = meshInstance.skinInstance ?
-                                                meshInstance.skinInstance.matrices :
-                                                    null;
+                    var vertexBuffer;
+                    var skinMatrices;
+                    for (i = 0; i < this.meshInstances.length; ++i) {
+                        meshInstance = this.meshInstances[i];
+                        vertexBuffer = meshInstance.morphInstance ?
+                            meshInstance.morphInstance._vertexBuffer : meshInstance.mesh.vertexBuffer;
+                        skinMatrices = meshInstance.skinInstance ?
+                            meshInstance.skinInstance.matrices : null;
                         if (vertexBuffer) {
                             this.debugNormals.generateNormals(vertexBuffer,
                                                               meshInstance.node.getWorldTransform(),

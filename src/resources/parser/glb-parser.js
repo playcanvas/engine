@@ -103,7 +103,7 @@ Object.assign(pc, function () {
             case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
             default: return null;
         }
-    }
+    };
 
     var getPrimitiveType = function (primitive) {
         if (!primitive.hasOwnProperty('mode')) {

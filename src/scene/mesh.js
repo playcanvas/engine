@@ -95,7 +95,7 @@ Object.assign(pc, function () {
                 var srcIndices = typedArray(indexBuffer);
 
                 var uniqueLineIndices = {};
-                
+
                 for (var j = base; j < base + count; j += 3) {
                     for (var k = 0; k < 3; k++) {
                         var i1 = srcIndices[j + offsets[k][0]];
