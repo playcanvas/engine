@@ -56,48 +56,41 @@ Here's a super-simple Hello World example - a spinning cube!
     <canvas id='application'></canvas>
     <script>
         // create a PlayCanvas application
-        var canvas = document.getElementById('application');
-        var app = new pc.Application(canvas, { });
-        app.start();
+        const canvas = document.getElementById('application');
+        const app = new pc.Application(canvas);
 
         // fill the available space at full resolution
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // ensure canvas is resized when window changes size
-        window.addEventListener('resize', function() {
-            app.resizeCanvas();
-        });
+        window.addEventListener('resize', () => app.resizeCanvas());
 
         // create box entity
-        var cube = new pc.Entity('cube');
-        cube.addComponent('model', {
+        const box = new pc.Entity('cube');
+        box.addComponent('model', {
             type: 'box'
         });
+        app.root.addChild(box);
 
         // create camera entity
-        var camera = new pc.Entity('camera');
+        const camera = new pc.Entity('camera');
         camera.addComponent('camera', {
             clearColor: new pc.Color(0.1, 0.1, 0.1)
         });
+        app.root.addChild(camera);
+        camera.setPosition(0, 0, 3);
 
         // create directional light entity
-        var light = new pc.Entity('light');
+        const light = new pc.Entity('light');
         light.addComponent('light');
-
-        // add to hierarchy
-        app.root.addChild(cube);
-        app.root.addChild(camera);
         app.root.addChild(light);
-
-        // set up initial positions and orientations
-        camera.setPosition(0, 0, 3);
         light.setEulerAngles(45, 0, 0);
 
-        // register a global update event
-        app.on('update', function (deltaTime) {
-            cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
-        });
+        // rotate the box according to the delta time since the last frame
+        app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+
+        app.start();
     </script>
 </body>
 </html>
