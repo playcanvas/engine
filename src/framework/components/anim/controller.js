@@ -10,19 +10,32 @@ Object.assign(pc, function () {
         isPlayable: function() {
             return (this.animations.length > 0 || this.name === 'Start' || this.name === 'End');
         },
+
         isLooping: function() {
             return true;
         },
+
         getTotalWeight: function() {
             var sum = 0;
             for (var i = 0; i < this.animations.length; i++) {
                 sum = sum + this.animations[i].weight;
             }
             return sum;
+        },
+
+        getTimelineDuration: function() {
+            var duration = 0;
+            for (var i = 0; i < this.animations.length; i++) {
+                var animation = this.animations[i];
+                if (animation.animTrack.duration > duration) {
+                    duration = animation.animTrack.duration > duration;
+                }
+            }
+            return duration;
         }
     });
 
-    var AnimTransition = function (controller, from, to, time, priority, conditions, exitTime) {
+    var AnimTransition = function (controller, from, to, time, priority, conditions, exitTime, transitionOffset) {
         this.controller = controller;
         this.from = from;
         this.to = to;
@@ -30,6 +43,7 @@ Object.assign(pc, function () {
         this.priority = priority;
         this.conditions = conditions || [];
         this.exitTime = exitTime || null;
+        this.transitionOffset = transitionOffset || null;
     };
 
     Object.assign(AnimTransition.prototype, {
@@ -74,7 +88,7 @@ Object.assign(pc, function () {
             return new AnimState(state.name, state.speed);
         });
         this.transitions = transitions.map((function(transition) {
-            return new AnimTransition(this, transition.from, transition.to, transition.time, transition.priority, transition.conditions, transition.exitTime);
+            return new AnimTransition(this, transition.from, transition.to, transition.time, transition.priority, transition.conditions, transition.exitTime, transition.transitionOffset);
         }).bind(this));
         this.parameters = parameters;
         this.previousStateName = null;
@@ -124,18 +138,6 @@ Object.assign(pc, function () {
             return this.previousStateName = stateName;
         },
 
-        _getActiveStateProgress: function(checkBeforeUpdate) {
-            if (this.activeStateName === 'Start' || this.activeStateName === 'End')
-                return 1.0;
-            else {
-                var activeClip = this.animEvaluator.findClip(this._getActiveState().animations[0].name);
-                if (activeClip) {
-                    return (checkBeforeUpdate ? this.timeInStateBefore : this.timeInState) / activeClip.track.duration;
-                }
-            }
-            return null;
-        },
-
         _findTransition: function(from, to) {
             if (this.isTransitioning) {
                 return false;
@@ -150,8 +152,8 @@ Object.assign(pc, function () {
             transitions = transitions.filter((function(transition) {
                 // when an exit time is present, we should only exit if it falls within the current frame delta time
                 if (transition.hasExitTime()) {
-                    var progressBefore = this._getActiveStateProgress(true);
-                    var progress = this._getActiveStateProgress();
+                    var progressBefore = this.getActiveStateProgress(true);
+                    var progress = this.getActiveStateProgress();
                     // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
                     if (transition.exitTime < 1.0 && this._getActiveState().isLooping()) {
                         progressBefore = progressBefore - Math.floor(progressBefore);
@@ -191,8 +193,8 @@ Object.assign(pc, function () {
                 this.totalTransitionTime = transition.time;
                 this.currTransitionTime = 0;
             }
-            this.timeInState = 0;
-            this.timeInStateBefore = 0;
+
+            var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
 
             var activeState = this._getActiveState();
             for (var i = 0; i < activeState.animations.length; i++) {
@@ -208,8 +210,21 @@ Object.assign(pc, function () {
                     clip.blendWeight = 1.0 / activeState.getTotalWeight();
                 }
                 clip.reset();
+                if (hasTransitionOffset) {
+                    clip.time = activeState.getTimelineDuration() * transition.transitionOffset;
+                }
                 clip.play();
             }
+
+            var timeInState = 0;
+            var timeInStateBefore = 0;
+            if (hasTransitionOffset) {
+                var offsetTime = activeState.getTimelineDuration() * transition.transitionOffset;
+                timeInState = offsetTime;
+                timeInStateBefore = offsetTime;
+            }
+            this.timeInState = timeInState;
+            this.timeInStateBefore = timeInStateBefore;
         },
 
         _transitionToState: function(newStateName) {
@@ -324,12 +339,27 @@ Object.assign(pc, function () {
             }
         },
 
+        getActiveStateProgress: function(checkBeforeUpdate) {
+            if (this.activeStateName === 'Start' || this.activeStateName === 'End')
+                return 1.0;
+            else {
+                var activeClip = this.animEvaluator.findClip(this._getActiveState().animations[0].name);
+                if (activeClip) {
+                    return (checkBeforeUpdate ? this.timeInStateBefore : this.timeInState) / activeClip.track.duration;
+                }
+            }
+            return null;
+        },
+
+        getActiveStateName: function() {
+            return this._getState(this.activeStateName).name;
+        },
+
         getFloat: function(name) {
             return this.parameters[name].value;
         },
 
         setFloat: function(name, value) {
-            //TODO typechecking
             var float = this.parameters[name];
             if (float && float.type === 'float')
                 float.value = value;
@@ -340,7 +370,6 @@ Object.assign(pc, function () {
         },
 
         setInteger: function(name, value) {
-            //TODO typechecking
             var integer = this.parameters[name];
             if (integer && integer.type === 'integer')
                 integer.value = value;
@@ -351,7 +380,6 @@ Object.assign(pc, function () {
         },
 
         setBoolean: function(name, value) {
-            //TODO typechecking
             var boolean = this.parameters[name];
             if (boolean && boolean.type === 'boolean')
                 boolean.value = value;
@@ -362,14 +390,12 @@ Object.assign(pc, function () {
         },
 
         setTrigger: function(name) {
-            //TODO typechecking
             var trigger = this.parameters[name];
             if (trigger && trigger.type === 'trigger')
                 trigger.value = true;
         },
 
         resetTrigger: function(name) {
-            //TODO typechecking
             var trigger = this.parameters[name];
             if (trigger && trigger.type === 'trigger')
                 trigger.value = false;

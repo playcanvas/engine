@@ -42,7 +42,6 @@ Object.assign(pc, function () {
                 asset.parameters,
                 this.data.activate
             );
-            this.animController = data.animController;
         },
 
         linkAnimAssetToState: function(stateName, asset) {
@@ -130,6 +129,14 @@ Object.assign(pc, function () {
 
             this.data.animController.play(name);
         },
+
+        getActiveStateName: function () {
+            return this.data.animController ? this.data.animController.getActiveStateName() : null;
+        },
+
+        getActiveStateProgress: function () {
+            return this.data.animController ? this.data.animController.getActiveStateProgress() : null;
+        }
     });
 
     return {
