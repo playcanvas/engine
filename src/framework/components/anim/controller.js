@@ -321,7 +321,6 @@ Object.assign(pc, function () {
         
         update: function(dt) {
             if (this.playing) {
-                this.animEvaluator.update(dt);
                 this.timeInStateBefore = this.timeInState;
                 this.timeInState = this.timeInState + dt;
 
@@ -362,6 +361,7 @@ Object.assign(pc, function () {
                     }
                     this.currTransitionTime = this.currTransitionTime + dt;
                 }
+                this.animEvaluator.update(dt);
             }
         },
 
