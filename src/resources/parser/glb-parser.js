@@ -410,7 +410,7 @@ Object.assign(pc, function () {
 
             var primitiveType, vertexBuffer, numIndices;
             var indices = null;
-            var mesh = new pc.Mesh();
+            var mesh = new pc.Mesh(device);
 
             // try and get draco compressed data first
             if (primitive.hasOwnProperty('extensions')) {
