@@ -18,8 +18,8 @@ Object.assign(pc, function () {
         this._color = new pc.Color(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
-        this._enabled = false;
-        this._mask = 1;
+        this.enabled = false;
+        this.mask = 1;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -100,7 +100,7 @@ Object.assign(pc, function () {
             clone.setColor(this._color);
             clone.intensity = this._intensity;
             clone.castShadows = this.castShadows;
-            clone.enabled = this._enabled;
+            clone.enabled = this.enabled;
 
             // Point and spot properties
             clone.attenuationStart = this.attenuationStart;
@@ -111,7 +111,7 @@ Object.assign(pc, function () {
             clone.vsmBlurMode = this.vsmBlurMode;
             clone.vsmBias = this.vsmBias;
             clone.shadowUpdateMode = this.shadowUpdateMode;
-            clone.mask = this._mask;
+            clone.mask = this.mask;
 
             // Spot properties
             clone.innerConeAngle = this._innerConeAngle;
@@ -298,18 +298,6 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(Light.prototype, 'enabled', {
-        get: function () {
-            return this._type;
-        },
-        set: function (value) {
-            if (this._type === value)
-                return;
-
-            this._enabled = value;
-        }
-    });
-
     Object.defineProperty(Light.prototype, 'type', {
         get: function () {
             return this._type;
@@ -325,18 +313,6 @@ Object.assign(pc, function () {
             var stype = this._shadowType;
             this._shadowType = null;
             this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
-        }
-    });
-
-    Object.defineProperty(Light.prototype, 'mask', {
-        get: function () {
-            return this._mask;
-        },
-        set: function (value) {
-            if (this._mask === value)
-                return;
-
-            this._mask = value;
         }
     });
 
@@ -374,7 +350,7 @@ Object.assign(pc, function () {
 
     Object.defineProperty(Light.prototype, 'castShadows', {
         get: function () {
-            return this._castShadows && this._mask !== pc.MASK_LIGHTMAP && this._mask !== 0;
+            return this._castShadows && this.mask !== pc.MASK_LIGHTMAP && this.mask !== 0;
         },
         set: function (value) {
             if (this._castShadows === value)

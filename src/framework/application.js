@@ -78,6 +78,18 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @name pc.Application#scenes
+     * @type {pc.SceneRegistry}
+     * @description The scene registry managed by the application.
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * var sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+
+    /**
      * @name pc.Application#assets
      * @type {pc.AssetRegistry}
      * @description The asset registry managed by the application.
@@ -278,7 +290,7 @@ Object.assign(pc, function () {
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
-        this._audioManager = new pc.SoundManager(options);
+        this._soundManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader(this);
 
         // stores all entities that have been created
@@ -302,7 +314,7 @@ Object.assign(pc, function () {
 
         this.i18n = new pc.I18n(this);
 
-        this._sceneRegistry = new pc.SceneRegistry(this);
+        this.scenes = new pc.SceneRegistry(this);
 
         var self = this;
         this.defaultLayerWorld = new pc.Layer({
@@ -554,6 +566,9 @@ Object.assign(pc, function () {
         this.vr = null;
         this.xr = new pc.XrManager(this);
 
+        if (this.elementInput)
+            this.elementInput.attachSelectEvents();
+
         this._inTools = false;
 
         this._skyboxLast = 0;
@@ -570,7 +585,7 @@ Object.assign(pc, function () {
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
-        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("audio", new pc.AudioHandler(this._soundManager));
         this.loader.addHandler("script", new pc.ScriptHandler(this));
         this.loader.addHandler("scene", new pc.SceneHandler(this));
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
@@ -599,9 +614,9 @@ Object.assign(pc, function () {
         } else {
             this.systems.add(new pc.ScriptComponentSystem(this));
         }
-        this.systems.add(new pc.AudioSourceComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.SoundComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.AudioListenerComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.AudioSourceComponentSystem(this, this._soundManager));
+        this.systems.add(new pc.SoundComponentSystem(this, this._soundManager));
+        this.systems.add(new pc.AudioListenerComponentSystem(this, this._soundManager));
         this.systems.add(new pc.ParticleSystemComponentSystem(this));
         this.systems.add(new pc.ScreenComponentSystem(this));
         this.systems.add(new pc.ElementComponentSystem(this));
@@ -817,6 +832,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
@@ -824,15 +841,19 @@ Object.assign(pc, function () {
          * @returns {string} The URL of the scene file.
          */
         getSceneUrl: function (name) {
-            var entry = this._sceneRegistry.find(name);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
+            // #endif
+            var entry = this.scenes.find(name);
             if (entry) {
                 return entry.url;
             }
             return null;
-
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
@@ -850,10 +871,15 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneHierarchy: function (url, callback) {
-            this._sceneRegistry.loadSceneHierarchy(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
+            // #endif
+            this.scenes.loadSceneHierarchy(url, callback);
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and automatically apply the scene settings to the current scene.
@@ -869,10 +895,15 @@ Object.assign(pc, function () {
          * });
          */
         loadSceneSettings: function (url, callback) {
-            this._sceneRegistry.loadSceneSettings(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
+            // #endif
+            this.scenes.loadSceneSettings(url, callback);
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
@@ -889,7 +920,10 @@ Object.assign(pc, function () {
          * });
          */
         loadScene: function (url, callback) {
-            this._sceneRegistry.loadScene(url, callback);
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
+            // #endif
+            this.scenes.loadScene(url, callback);
         },
 
         _preloadScripts: function (sceneData, callback) {
@@ -1042,7 +1076,7 @@ Object.assign(pc, function () {
             if (!scenes) return;
 
             for (var i = 0; i < scenes.length; i++) {
-                this._sceneRegistry.add(scenes[i].name, scenes[i].url);
+                this.scenes.add(scenes[i].name, scenes[i].url);
             }
         },
 
@@ -1409,9 +1443,9 @@ Object.assign(pc, function () {
          */
         onVisibilityChange: function () {
             if (this.isHidden()) {
-                this._audioManager.suspend();
+                this._soundManager.suspend();
             } else {
-                this._audioManager.resume();
+                this._soundManager.resume();
             }
         },
 
@@ -1776,8 +1810,8 @@ Object.assign(pc, function () {
             this.scripts.destroy();
             this.scripts = null;
 
-            this._sceneRegistry.destroy();
-            this._sceneRegistry = null;
+            this.scenes.destroy();
+            this.scenes = null;
 
             this.lightmapper.destroy();
             this.lightmapper = null;
@@ -1810,9 +1844,9 @@ Object.assign(pc, function () {
 
             this.off(); // remove all events
 
-            if (this._audioManager) {
-                this._audioManager.destroy();
-                this._audioManager = null;
+            if (this._soundManager) {
+                this._soundManager.destroy();
+                this._soundManager = null;
             }
 
             pc.http = new pc.Http();

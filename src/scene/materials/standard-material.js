@@ -13,14 +13,28 @@ Object.assign(pc, function () {
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines basic surface color (aka albedo).
-     * @property {boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
-     * @property {pc.Texture|null} diffuseMap The diffuse map of the material (default is null).
-     * @property {number} diffuseMapUv Diffuse map UV channel.
-     * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
-     * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {string} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} diffuseTint Multiply main (primary) diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * @property {pc.Texture|null} diffuseMap The main (primary) diffuse map of the material (default is null).
+     * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
+     * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
+     * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each component is between 0 and 1.
+     * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
      * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
+     * @property {pc.Texture|null} diffuseDetailMap The detail (secondary) diffuse map of the material (default is null). Will only be used if main (primary) diffuse map is non-null.
+     * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
+     * @property {pc.Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse map.
+     * @property {pc.Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
+     * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} diffuseDetailMode Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be:
+     * * {@link pc.DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+     * * {@link pc.DETAILMODE_ADD}: Add together the primary and secondary colors.
+     * * {@link pc.DETAILMODE_SCREEN}: Softer version of {@link pc.DETAILMODE_ADD}.
+     * * {@link pc.DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+     * * {@link pc.DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise.
+     * * {@link pc.DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
+     * Defaults to {@link pc.DETAILMODE_MUL}.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
@@ -39,6 +53,9 @@ Object.assign(pc, function () {
      * * When anisotropy == 0, specular is isotropic.
      * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
      * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+     *
+     * @property {number} clearCoat Defines the strength of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+     * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
      *
      * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
@@ -94,12 +111,19 @@ Object.assign(pc, function () {
      * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
      * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
      *
-     * @property {pc.Texture|null} normalMap The normal map of the material (default is null).
+     * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
-     * @property {number} normalMapUv Normal map UV channel.
-     * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
-     * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
+     * @property {number} normalMapUv Main (primary) normal map UV channel.
+     * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
+     * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each component is between 0 and 1.
+     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main (primary) normal map.
+     * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     *
+     * @property {pc.Texture|null} normalDetailMap The detail (secondary) normal map of the material (default is null). Will only be used if main (primary) normal map is non-null.
+     * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
+     * @property {pc.Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal map.
+     * @property {pc.Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
+     * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
      *
      * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
@@ -254,7 +278,7 @@ Object.assign(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels, defChannel) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor, detailMode) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -264,6 +288,7 @@ Object.assign(pc, function () {
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
         var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
+        var privMapDetailMode = "_" + name + "Mode";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
@@ -274,9 +299,10 @@ Object.assign(pc, function () {
         if (channels > 0) {
             var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
             obj[privMapChannel] = channel;
-            obj[privMapVertexColorChannel] = channel;
+            if (vertexColor) obj[privMapVertexColorChannel] = channel;
         }
-        obj[privMapVertexColor] = false;
+        if (vertexColor) obj[privMapVertexColor] = false;
+        if (detailMode) obj[privMapDetailMode] = pc.DETAILMODE_MUL;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -357,32 +383,52 @@ Object.assign(pc, function () {
                 this[privMapChannel] = value;
             }
         });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function () {
-                return this[privMapVertexColor];
-            },
-            set: function (value) {
-                this.dirtyShader = true;
-                this[privMapVertexColor] = value;
-            }
-        });
-        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function () {
-                return this[privMapVertexColorChannel];
-            },
-            set: function (value) {
-                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
-                this[privMapVertexColorChannel] = value;
-            }
-        });
+
+        if (vertexColor) {
+            Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
+                get: function () {
+                    return this[privMapVertexColor];
+                },
+                set: function (value) {
+                    this.dirtyShader = true;
+                    this[privMapVertexColor] = value;
+                }
+            });
+            Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
+                get: function () {
+                    return this[privMapVertexColorChannel];
+                },
+                set: function (value) {
+                    if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
+                    this[privMapVertexColorChannel] = value;
+                }
+            });
+        }
+
+        if (detailMode) {
+            Object.defineProperty(StandardMaterial.prototype, privMapDetailMode.substring(1), {
+                get: function () {
+                    return this[privMapDetailMode];
+                },
+                set: function (value) {
+                    this.dirtyShader = true;
+                    this[privMapDetailMode] = value;
+                }
+            });
+        }
 
         _propsSerial.push(privMap.substring(1));
         _propsSerial.push(privMapTiling.substring(1));
         _propsSerial.push(privMapOffset.substring(1));
         _propsSerial.push(privMapUv.substring(1));
         _propsSerial.push(privMapChannel.substring(1));
-        _propsSerial.push(privMapVertexColor.substring(1));
-        _propsSerial.push(privMapVertexColorChannel.substring(1));
+        if (vertexColor) {
+            _propsSerial.push(privMapVertexColor.substring(1));
+            _propsSerial.push(privMapVertexColorChannel.substring(1));
+        }
+        if (detailMode) {
+            _propsSerial.push(privMapDetailMode.substring(1));
+        }
         _propsInternalNull.push(mapTransform);
     };
 
@@ -692,6 +738,12 @@ Object.assign(pc, function () {
                 }
             }
 
+            if (this.clearCoat > 0) {
+                this._setParameter('material_clearCoatSpecularity', this.clearCoat);
+                this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
+                this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
+            }
+
             uniform = this.getUniform("shininess", this.shininess, true);
             this._setParameter(uniform.name, uniform.value);
 
@@ -727,6 +779,10 @@ Object.assign(pc, function () {
 
             if (this.normalMap) {
                 this._setParameter('material_bumpiness', this.bumpiness);
+            }
+
+            if (this.normalMap && this.normalDetailMap) {
+                this._setParameter('material_normalDetailMapBumpiness', this.normalDetailMapBumpiness);
             }
 
             if (this.heightMap) {
@@ -946,12 +1002,15 @@ Object.assign(pc, function () {
         _defineFloat(obj, "opacity", 1);
         _defineFloat(obj, "alphaTest", 0);
         _defineFloat(obj, "bumpiness", 1);
+        _defineFloat(obj, "normalDetailMapBumpiness", 1);
         _defineFloat(obj, "reflectivity", 1);
         _defineFloat(obj, "occludeSpecularIntensity", 1);
         _defineFloat(obj, "refraction", 0);
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
         _defineFloat(obj, "anisotropy", 0);
+        _defineFloat(obj, "clearCoat", 0);
+        _defineFloat(obj, "clearCoatGlossiness", 1);
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
@@ -1002,17 +1061,19 @@ Object.assign(pc, function () {
         _defineFlag(obj, "twoSidedLighting", false);
         _defineFlag(obj, "nineSlicedMode", pc.SPRITE_RENDERMODE_SLICED);
 
-        _defineTex2D(obj, "diffuse", 0, 3);
-        _defineTex2D(obj, "specular", 0, 3);
-        _defineTex2D(obj, "emissive", 0, 3);
-        _defineTex2D(obj, "normal", 0, -1);
-        _defineTex2D(obj, "metalness", 0, 1);
-        _defineTex2D(obj, "gloss", 0, 1);
-        _defineTex2D(obj, "opacity", 0, 1, 'a');
-        _defineTex2D(obj, "height", 0, 1);
-        _defineTex2D(obj, "ao", 0, 1);
-        _defineTex2D(obj, "light", 1, 3);
-        _defineTex2D(obj, "msdf", 0, 3);
+        _defineTex2D(obj, "diffuse", 0, 3, "", true);
+        _defineTex2D(obj, "specular", 0, 3, "", true);
+        _defineTex2D(obj, "emissive", 0, 3, "", true);
+        _defineTex2D(obj, "normal", 0, -1, "", false);
+        _defineTex2D(obj, "metalness", 0, 1, "", true);
+        _defineTex2D(obj, "gloss", 0, 1, "", true);
+        _defineTex2D(obj, "opacity", 0, 1, "a", true);
+        _defineTex2D(obj, "height", 0, 1, "", false);
+        _defineTex2D(obj, "ao", 0, 1, "", true);
+        _defineTex2D(obj, "light", 1, 3, "", true);
+        _defineTex2D(obj, "msdf", 0, 3, "", false);
+        _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, true);
+        _defineTex2D(obj, "normalDetail", 0, -1, "", false);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");

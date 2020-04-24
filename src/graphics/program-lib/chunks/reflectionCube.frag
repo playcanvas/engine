@@ -1,7 +1,6 @@
 uniform samplerCube texture_cubeMap;
-uniform float material_reflectivity;
-void addReflection() {
-    vec3 lookupVec = fixSeams(cubeMapProject(dReflDirW));
+vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
+    vec3 lookupVec = fixSeams(cubeMapProject(tReflDirW));
     lookupVec.x *= -1.0;
-    dReflection += vec4($textureCubeSAMPLE(texture_cubeMap, lookupVec).rgb, material_reflectivity);
+    return vec4($textureCubeSAMPLE(texture_cubeMap, lookupVec).rgb, tmaterial_reflectivity);
 }

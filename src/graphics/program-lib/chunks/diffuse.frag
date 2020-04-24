@@ -14,7 +14,7 @@ void getAlbedo() {
     #endif
 
     #ifdef MAPTEXTURE
-        dAlbedo *= texture2DSRGB(texture_diffuseMap, $UV).$CH;
+        dAlbedo *= gammaCorrectInput(addAlbedoDetail(texture2D(texture_diffuseMap, $UV).$CH));
     #endif
 
     #ifdef MAPVERTEX

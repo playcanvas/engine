@@ -13,7 +13,7 @@ Object.assign(pc, function () {
         this.velocity = new pc.Vec3();
         this.orientation = new pc.Mat4();
 
-        if (pc.AudioManager.hasAudioContext()) {
+        if (pc.SoundManager.hasAudioContext()) {
             this.listener = manager.context.listener;
         }
     };

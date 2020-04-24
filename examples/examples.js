@@ -20,11 +20,12 @@ var categories = [
             "lights",
             "lights-baked",
             "loader-obj",
-            "material-physical",
             "material-anisotropic",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
+            "material-clear-coat",
+            "material-physical",
             "model-asset",
             "model-box",
             "model-outline",
@@ -59,7 +60,8 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "falling-shapes",
+            "raycast"
         ]
     }, {
         name: "sound",
