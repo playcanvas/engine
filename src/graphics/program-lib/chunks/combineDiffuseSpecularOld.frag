@@ -1,4 +1,5 @@
 vec3 combineColor() {
-    return mix(dAlbedo * dDiffuseLight + dSpecularLight * dSpecularity, dReflection.rgb, dReflection.a);
+    vec3 combinedSpecular = dSpecularLight * dSpecularity;
+    return mix(dAlbedo * dDiffuseLight + combinedSpecular, dReflection.rgb, dReflection.a);
 }
 
