@@ -46,6 +46,7 @@ Object.assign(pc, function () {
      * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
      * @param {pc.ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
+     * @param {pc.VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
      */
     function VertexIteratorAccessor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
