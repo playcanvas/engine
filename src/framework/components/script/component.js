@@ -10,7 +10,6 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
      */
-
     var ScriptComponent = function ScriptComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
@@ -460,41 +459,63 @@ Object.assign(pc, function () {
             }
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#has
-         * @description Detect if script is attached to an entity using name of {@link pc.ScriptType}.
-         * @param {string} name - The name of the Script Type.
+         * @description Detect if script is attached to an entity.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {boolean} If script is attached to an entity.
          * @example
          * if (entity.script.has('playerController')) {
          *     // entity has script
          * }
          */
-        has: function (name) {
-            return !!this._scriptsIndex[name];
+        /* eslint-enable jsdoc/no-undefined-types */
+        has: function (nameOrType) {
+            if (typeof nameOrType === 'string') {
+                return !!this._scriptsIndex[nameOrType];
+            }
+
+            if (!nameOrType) return false;
+            var scriptType = nameOrType;
+            var scriptName = scriptType.__name;
+            var scriptData = this._scriptsIndex[scriptName];
+            var scriptInstance = scriptData && scriptData.instance;
+            return scriptInstance instanceof scriptType; // will return false if scriptInstance undefined
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#get
-         * @description Get a script instance (if attached) using name of {@link pc.ScriptType}.
-         * @param {string} name - The name of the Script Type.
+         * @description Get a script instance (if attached).
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {pc.ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
          * @example
          * var controller = entity.script.get('playerController');
          */
-        get: function (name) {
-            var index = this._scriptsIndex[name];
-            return (index && index.instance) || null;
+        /* eslint-enable jsdoc/no-undefined-types */
+        get: function (nameOrType) {
+            if (typeof nameOrType === 'string') {
+                var data = this._scriptsIndex[nameOrType];
+                return data ? data.instance : null;
+            }
+
+            if (!nameOrType) return null;
+            var scriptType = nameOrType;
+            var scriptName = scriptType.__name;
+            var scriptData = this._scriptsIndex[scriptName];
+            var scriptInstance = scriptData && scriptData.instance;
+            return scriptInstance instanceof scriptType ? scriptInstance : null;
         },
 
         /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#create
-         * @description Create a script instance using name of a {@link pc.ScriptType} and attach to an entity script component.
-         * @param {string|Class<pc.ScriptType>} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate).
+         * @description Create a script instance and attach to an entity script component.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @param {object} [args] - Object with arguments for a script.
          * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
          * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
@@ -511,12 +532,12 @@ Object.assign(pc, function () {
          * });
          */
         /* eslint-enable jsdoc/no-undefined-types */
-        create: function (name, args) {
+        create: function (nameOrType, args) {
             var self = this;
             args = args || { };
 
-            var scriptType = name;
-            var scriptName = name;
+            var scriptType = nameOrType;
+            var scriptName = nameOrType;
 
             // shorthand using script name
             if (typeof scriptType === 'string') {
@@ -526,7 +547,7 @@ Object.assign(pc, function () {
             }
 
             if (scriptType) {
-                if (!this._scriptsIndex[scriptType.__name] || !this._scriptsIndex[scriptType.__name].instance) {
+                if (!this._scriptsIndex[scriptName] || !this._scriptsIndex[scriptName].instance) {
                     // create script instance
                     var scriptInstance = new scriptType({
                         app: this.system.app,
@@ -542,22 +563,22 @@ Object.assign(pc, function () {
 
                     this._insertScriptInstance(scriptInstance, ind, len);
 
-                    this._scriptsIndex[scriptType.__name] = {
+                    this._scriptsIndex[scriptName] = {
                         instance: scriptInstance,
                         onSwap: function () {
-                            self.swap(scriptType.__name);
+                            self.swap(scriptName);
                         }
                     };
 
-                    this[scriptType.__name] = scriptInstance;
+                    this[scriptName] = scriptInstance;
 
                     if (!args.preloading)
                         scriptInstance.__initializeAttributes();
 
-                    this.fire('create', scriptType.__name, scriptInstance);
-                    this.fire('create:' + scriptType.__name, scriptInstance);
+                    this.fire('create', scriptName, scriptInstance);
+                    this.fire('create:' + scriptName, scriptInstance);
 
-                    this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
+                    this.system.app.scripts.on('swap:' + scriptName, this._scriptsIndex[scriptName].onSwap);
 
                     if (!args.preloading) {
 
@@ -592,45 +613,48 @@ Object.assign(pc, function () {
             return null;
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#destroy
          * @description Destroy the script instance that is attached to an entity.
-         * @param {string} name - The name of the Script Type.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @returns {boolean} If it was successfully destroyed.
          * @example
          * entity.script.destroy('playerController');
          */
-        destroy: function (name) {
-            var scriptName = name;
-            var scriptType = name;
+        /* eslint-enable jsdoc/no-undefined-types */
+        destroy: function (nameOrType) {
+            var scriptName = nameOrType;
+            var scriptType = nameOrType;
 
             // shorthand using script name
             if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
-                if (scriptType)
-                    scriptName = scriptType.__name;
+            } else if (scriptType) {
+                scriptName = scriptType.__name;
             }
 
             var scriptData = this._scriptsIndex[scriptName];
             delete this._scriptsIndex[scriptName];
             if (!scriptData) return false;
 
-            if (scriptData.instance && !scriptData.instance._destroyed) {
-                scriptData.instance.enabled = false;
-                scriptData.instance._destroyed = true;
+            var scriptInstance = scriptData.instance;
+            if (scriptInstance && !scriptInstance._destroyed) {
+                scriptInstance.enabled = false;
+                scriptInstance._destroyed = true;
 
                 // if we are not currently looping through our scripts
                 // then it's safe to remove the script
                 if (!this._isLoopingThroughScripts) {
-                    var ind = this._removeScriptInstance(scriptData.instance);
+                    var ind = this._removeScriptInstance(scriptInstance);
                     if (ind >= 0) {
                         this._resetExecutionOrder(ind, this._scripts.length);
                     }
                 } else {
                     // otherwise push the script in _destroyedScripts and
                     // remove it from _scripts when the loop is over
-                    this._destroyedScripts.push(scriptData.instance);
+                    this._destroyedScripts.push(scriptInstance);
                 }
             }
 
@@ -639,23 +663,37 @@ Object.assign(pc, function () {
 
             delete this[scriptName];
 
-            this.fire('destroy', scriptName, scriptData.instance || null);
-            this.fire('destroy:' + scriptName, scriptData.instance || null);
+            this.fire('destroy', scriptName, scriptInstance || null);
+            this.fire('destroy:' + scriptName, scriptInstance || null);
 
-            if (scriptData.instance)
-                scriptData.instance.fire('destroy');
+            if (scriptInstance)
+                scriptInstance.fire('destroy');
 
             return true;
         },
 
-        swap: function (script) {
-            var scriptType = script;
+        /* eslint-disable jsdoc/no-undefined-types */
+        /**
+         * @private
+         * @function
+         * @name pc.ScriptComponent#swap
+         * @description Swap the script instance.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
+         * @returns {boolean} If it was successfully swapped.
+         */
+        /* eslint-enable jsdoc/no-undefined-types */
+        swap: function (nameOrType) {
+            var scriptName = nameOrType;
+            var scriptType = nameOrType;
 
             // shorthand using script name
-            if (typeof scriptType === 'string')
+            if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
+            } else if (scriptType) {
+                scriptName = scriptType.__name;
+            }
 
-            var old = this._scriptsIndex[scriptType.__name];
+            var old = this._scriptsIndex[scriptName];
             if (!old || !old.instance) return false;
 
             var scriptInstanceOld = old.instance;
@@ -675,8 +713,8 @@ Object.assign(pc, function () {
 
             // add to component
             this._scripts[ind] = scriptInstance;
-            this._scriptsIndex[scriptType.__name].instance = scriptInstance;
-            this[scriptType.__name] = scriptInstance;
+            this._scriptsIndex[scriptName].instance = scriptInstance;
+            this[scriptName] = scriptInstance;
 
             // set execution order and make sure we update
             // our update and postUpdate lists
@@ -697,8 +735,8 @@ Object.assign(pc, function () {
 
             this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
 
-            this.fire('swap', scriptType.__name, scriptInstance);
-            this.fire('swap:' + scriptType.__name, scriptInstance);
+            this.fire('swap', scriptName, scriptInstance);
+            this.fire('swap:' + scriptName, scriptInstance);
 
             return true;
         },
@@ -799,31 +837,42 @@ Object.assign(pc, function () {
             }
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#move
          * @description Move script instance to different position to alter update order of scripts within entity.
-         * @param {string} name - The name of the Script Type.
+         * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
          * @param {number} ind - New position index.
          * @returns {boolean} If it was successfully moved.
          * @example
          * entity.script.move('playerController', 0);
          */
-        move: function (name, ind) {
+        /* eslint-enable jsdoc/no-undefined-types */
+        move: function (nameOrType, ind) {
             var len = this._scripts.length;
             if (ind >= len || ind < 0)
                 return false;
 
-            var scriptName = name;
+            var scriptType = nameOrType;
+            var scriptName = nameOrType;
 
-            if (typeof scriptName !== 'string')
-                scriptName = name.__name;
+            if (typeof scriptName !== 'string') {
+                scriptName = nameOrType.__name;
+            } else {
+                scriptType = null;
+            }
 
             var scriptData = this._scriptsIndex[scriptName];
             if (!scriptData || !scriptData.instance)
                 return false;
 
-            var indOld = this._scripts.indexOf(scriptData.instance);
+            // if script type specified, make sure instance of said type
+            var scriptInstance = scriptData.instance;
+            if (scriptType && !(scriptInstance instanceof scriptType))
+                return false;
+
+            var indOld = this._scripts.indexOf(scriptInstance);
             if (indOld === -1 || indOld === ind)
                 return false;
 
@@ -835,8 +884,8 @@ Object.assign(pc, function () {
             this._updateList.sort();
             this._postUpdateList.sort();
 
-            this.fire('move', scriptName, scriptData.instance, ind, indOld);
-            this.fire('move:' + scriptName, scriptData.instance, ind, indOld);
+            this.fire('move', scriptName, scriptInstance, ind, indOld);
+            this.fire('move:' + scriptName, scriptInstance, ind, indOld);
 
             return true;
         }

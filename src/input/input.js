@@ -91,6 +91,28 @@
 
         /**
          * @constant
+         * @type {string}
+         * @name pc.EVENT_SELECT
+         * @description Name of event fired when a new xr select occurs. For example, primary trigger was pressed.
+         */
+        EVENT_SELECT: 'select',
+        /**
+         * @constant
+         * @type {string}
+         * @name pc.EVENT_SELECTSTART
+         * @description Name of event fired when a new xr select starts. For example, primary trigger is now pressed.
+         */
+        EVENT_SELECTSTART: 'selectstart',
+        /**
+         * @constant
+         * @type {string}
+         * @name pc.EVENT_SELECTEND
+         * @description Name of event fired when xr select ends. For example, a primary trigger is now released.
+         */
+        EVENT_SELECTEND: 'selectend',
+
+        /**
+         * @constant
          * @type {number}
          * @name pc.KEY_BACKSPACE
          */

@@ -53,6 +53,10 @@ Object.assign(pc, function () {
      * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     * @param {number} [vertexCount] - When specified, vertex format will be set up for non-interleaved format with a specified
+     * number of vertices. (example: PPPPNNNNCCCC), where arrays of individual attributes will be stored one right after the other (subject to alignment requirements).
+     * Note that in this case, the format depends on the number of vertices, and needs to change when the number of vertices changes.
+     * When not specified, vertex format will be interleaved. (example: PNCPNCPNCPNC)
      * @property {object[]} elements The vertex attribute elements.
      * @property {string} elements[].name The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
@@ -105,7 +109,7 @@ Object.assign(pc, function () {
      *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
      * ]);
      */
-    var VertexFormat = function (graphicsDevice, description) {
+    var VertexFormat = function (graphicsDevice, description, vertexCount) {
         var i, len, element;
 
         this.elements = [];
@@ -114,28 +118,50 @@ Object.assign(pc, function () {
         this.hasColor = false;
         this.hasTangents = false;
         this._defaultInstancingFormat = null;
+        this.verticesByteSize = 0;
+        this.vertexCount = vertexCount;
+        this.interleaved = !vertexCount;
 
-        // calculate total size
+        // calculate total size of the vertex
         this.size = description.reduce(function (total, desc) {
             return total + Math.ceil(desc.components * _typeSize[desc.type] / 4) * 4;
         }, 0);
 
-        var offset = 0;
+        var offset = 0, elementSize;
         for (i = 0, len = description.length; i < len; i++) {
             var elementDesc = description[i];
+
+            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
+            elementSize = elementDesc.components * _typeSize[elementDesc.type];
+            if (vertexCount) {
+                offset = pc.math.roundUp(offset, elementSize);
+
+                // #ifdef DEBUG
+                // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
+                // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
+                if ( (elementSize % 4) !== 0)
+                    console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
+                // #endif
+            }
+
             element = {
                 name: elementDesc.semantic,
-                offset: elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset,
-                stride: elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size,
+                offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
+                stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
                 stream: -1,
                 scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
                 normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
-                size: elementDesc.components * _typeSize[elementDesc.type]
+                size: elementSize
             };
             this.elements.push(element);
-            offset += Math.ceil(element.size / 4) * 4;
+
+            if (vertexCount) {
+                offset += elementSize * vertexCount;
+            } else {
+                offset += Math.ceil(elementSize / 4) * 4;
+            }
 
             if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD0) {
                 this.hasUv0 = true;
@@ -146,6 +172,10 @@ Object.assign(pc, function () {
             } else if (elementDesc.semantic === pc.SEMANTIC_TANGENT) {
                 this.hasTangents = true;
             }
+        }
+
+        if (vertexCount) {
+            this.verticesByteSize = offset;
         }
     };
 

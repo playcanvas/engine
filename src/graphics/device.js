@@ -960,7 +960,6 @@ Object.assign(pc, function () {
                 colorBuffer: grabPassTexture,
                 depth: false
             });
-            this.initRenderTarget(grabPassRenderTarget);
 
             this.grabPassRenderTarget = grabPassRenderTarget;
             this.grabPassTextureId = grabPassTextureId;
@@ -981,7 +980,10 @@ Object.assign(pc, function () {
 
                 var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
                 var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+
+                this.initRenderTarget(this.grabPassRenderTarget);
                 var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
+
                 gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
                 gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
                 gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
@@ -3261,6 +3263,10 @@ Object.assign(pc, function () {
             var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
             width *= ratio;
             height *= ratio;
+
+            if (this.canvas.width === width && this.canvas.height === height)
+                return;
+
             this.canvas.width = width;
             this.canvas.height = height;
             this.fire(EVENT_RESIZE, width, height);

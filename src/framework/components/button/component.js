@@ -53,6 +53,7 @@ Object.assign(pc, function () {
 
         this._visualState = VisualState.DEFAULT;
         this._isHovering = false;
+        this._hoveringCounter = 0;
         this._isPressed = false;
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
@@ -150,6 +151,10 @@ Object.assign(pc, function () {
                 this.entity.element[onOrOff]('touchend', this._onTouchEnd, this);
                 this.entity.element[onOrOff]('touchleave', this._onTouchLeave, this);
                 this.entity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
+                this.entity.element[onOrOff]('selectstart', this._onSelectStart, this);
+                this.entity.element[onOrOff]('selectend', this._onSelectEnd, this);
+                this.entity.element[onOrOff]('selectenter', this._onSelectEnter, this);
+                this.entity.element[onOrOff]('selectleave', this._onSelectLeave, this);
                 this.entity.element[onOrOff]('click', this._onClick, this);
 
                 this._hasHitElementListeners = isAdding;
@@ -276,6 +281,41 @@ Object.assign(pc, function () {
 
             this._updateVisualState();
             this._fireIfActive('touchcancel', event);
+        },
+
+        _onSelectStart: function (event) {
+            this._isPressed = true;
+            this._updateVisualState();
+            this._fireIfActive('selectstart', event);
+        },
+
+        _onSelectEnd: function (event) {
+            this._isPressed = false;
+            this._updateVisualState();
+            this._fireIfActive('selectend', event);
+        },
+
+        _onSelectEnter: function (event) {
+            this._hoveringCounter++;
+
+            if (this._hoveringCounter === 1) {
+                this._isHovering = true;
+                this._updateVisualState();
+            }
+
+            this._fireIfActive('selectenter', event);
+        },
+
+        _onSelectLeave: function (event) {
+            this._hoveringCounter--;
+
+            if (this._hoveringCounter === 0) {
+                this._isHovering = false;
+                this._isPressed = false;
+                this._updateVisualState();
+            }
+
+            this._fireIfActive('selectleave', event);
         },
 
         _onClick: function (event) {
@@ -522,6 +562,34 @@ Object.assign(pc, function () {
  * @name pc.ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
  * @param {pc.ElementTouchEvent} event - The event.
+ */
+
+/**
+ * @event
+ * @name pc.ButtonComponent#selectstart
+ * @description Fired when a xr select starts on the component.
+ * @param {pc.ElementSelectEvent} event - The event.
+ */
+
+/**
+ * @event
+ * @name pc.ButtonComponent#selectend
+ * @description Fired when a xr select ends on the component.
+ * @param {pc.ElementSelectEvent} event - The event.
+ */
+
+/**
+ * @event
+ * @name pc.ButtonComponent#selectenter
+ * @description Fired when a xr select now hovering over the component.
+ * @param {pc.ElementSelectEvent} event - The event.
+ */
+
+/**
+ * @event
+ * @name pc.ButtonComponent#selectleave
+ * @description Fired when a xr select not hovering over the component.
+ * @param {pc.ElementSelectEvent} event - The event.
  */
 
 /**
