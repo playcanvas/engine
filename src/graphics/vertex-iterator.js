@@ -126,7 +126,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.VertexIteratorAccessor#set
-     * @description Set all the attribute components at the current index.
+     * @description Set all the attribute components at the iterator's current index.
      * @param {number} a - The first component value.
      * @param {number} [b] - The second component value (if applicable).
      * @param {number} [c] - The third component value (if applicable).
@@ -157,6 +157,18 @@ Object.assign(pc, function () {
         this.array[this.index + 2] = c;
         this.array[this.index + 3] = d;
     }
+
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#setFromArray
+     * @description Write attribute components from an input array.
+     * @param {number} index - The starting index at which to write data into the buffer. Will be used instead of the iterator's current index.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
+     * @param {number} inputIndex - The input index at which to read from the input array.
+     */
+    VertexIteratorAccessor.prototype.setFromArray = function (index, inputArray, inputIndex) {
+        // Will be replaced with specialized implementation based on number of components
+    };
 
     function VertexIteratorAccessor_arraySet1(index, inputArray, inputIndex) {
         this.array[index] = inputArray[inputIndex];
