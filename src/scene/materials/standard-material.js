@@ -183,6 +183,8 @@ Object.assign(pc, function () {
      * @property {boolean} useLighting Apply lighting
      * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
      * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
+     * @property {boolean} useSpecularOverAlpha Keep specular highlights on a transparent surface.
+     * For example, the spot on a glass surface where the sun reflects, is less transparent than the overall surface.
      * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
      * @property {object} chunks Object containing custom shader chunks that will replace default ones.
@@ -1055,6 +1057,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "useFog", true);
         _defineFlag(obj, "useLighting", true);
         _defineFlag(obj, "useGammaTonemap", true);
+        _defineFlag(obj, "useSpecularOverAlpha", false);
         _defineFlag(obj, "useSkybox", true);
         _defineFlag(obj, "forceUv1", false);
         _defineFlag(obj, "pixelSnap", false);

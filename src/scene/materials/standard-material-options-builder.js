@@ -103,6 +103,7 @@ Object.assign(pc, function () {
         options.dpAtlas = !!stdMat.dpAtlas;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
+        options.useSpecularOverAlpha = stdMat.useSpecularOverAlpha;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
