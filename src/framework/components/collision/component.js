@@ -231,6 +231,35 @@ Object.assign(pc, function () {
             }
         },
 
+        _updateCompound: function () {
+            var entity = this.entity;
+            if (entity._dirtyWorld) {
+                var dirty = entity._dirtyLocal;
+                var parent = entity;
+                while (parent && !dirty) {
+                    if (parent.collision && parent.collision === this._compoundParent)
+                        break;
+
+                    if (parent._dirtyLocal)
+                        dirty = true;
+
+                    parent = parent.parent;
+                }
+
+                if (dirty) {
+                    entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
+
+                    var bodyComponent = this._compoundParent.entity.rigidbody;
+                    if (bodyComponent)
+                        bodyComponent.activate();
+                }
+            }
+        },
+
+        _updateTrigger: function () {
+            this.entity.trigger.syncEntityToBody();
+        },
+
         onEnable: function () {
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);

@@ -585,6 +585,9 @@ Object.assign(pc, function () {
 
         this._triMeshCache = { };
 
+        this._compounds = [];
+        this._triggers = [];
+
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
 
@@ -705,39 +708,16 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function (dt) {
-            var id, entity, data;
-            var components = this.store;
+            var i, len;
 
-            for (id in components) {
-                entity = components[id].entity;
-                data = components[id].data;
+            var compounds = this._compounds;
+            for (i = 0, len = compounds.length; i < len; i++) {
+                compounds[i]._updateCompound();
+            }
 
-                if (data.enabled && entity.enabled) {
-                    if (! entity.rigidbody) {
-                        if (entity.collision._compoundParent && entity._dirtyWorld) {
-                            var dirty = entity._dirtyLocal;
-                            var parent = entity;
-                            while (parent && ! dirty) {
-                                if (parent.collision && parent.collision == entity.collision._compoundParent)
-                                    break;
-
-                                if (parent._dirtyLocal)
-                                    dirty = true;
-
-                                parent = parent.parent;
-                            }
-
-                            if (dirty) {
-                                entity.forEach(this.implementations.compound._updateEachDescendantTransform, entity);
-
-                                if (entity.collision._compoundParent.entity.rigidbody)
-                                    entity.collision._compoundParent.entity.rigidbody.activate();
-                            }
-                        } else if (entity.trigger) {
-                            entity.trigger.syncEntityToBody();
-                        }
-                    }
-                }
+            var triggers = this._triggers;
+            for (i = 0, len = triggers.length; i < len; i++) {
+                triggers[i]._updateTrigger();
             }
         },
 
