@@ -879,6 +879,10 @@ pc.programlib.standard = {
         var codeBegin = code;
         code = "";
 
+        if (options.useSpecularOverAlpha) {
+            code += '#define SPECULAROVERALPHA 1\n';
+        }
+
         if (options.clearCoat > 0) {
             code += '#define CLEARCOAT 1\n';
         }

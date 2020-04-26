@@ -143,6 +143,7 @@
         useLighting: 'boolean',
         useSkybox: 'boolean',
         useGammaTonemap: 'boolean',
+        useSpecularOverAlpha: 'boolean',
 
         prefilteredCubeMap128: 'texture',
         prefilteredCubeMap64: 'texture',
