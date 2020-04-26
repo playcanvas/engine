@@ -1,8 +1,15 @@
-![PlayCanvas](http://static.playcanvas.com/images/logo/Playcanvas_LOGOSET_SMALL-06.png)
+<div align="center">
+
+<img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL Game Engine
 
 PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
+
+[![NPM version][npm-badge]][npm-url]
+[![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
+[![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
+[![Twitter][twitter-badge]][twitter-url]
 
 ## Project Showcase
 
@@ -15,6 +22,8 @@ Many games and apps have been published using the PlayCanvas engine. Here is a s
 
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
+
+</div>
 
 ## Users
 
@@ -173,3 +182,11 @@ The PlayCanvas Engine is an open source engine which you can use to create games
 ## License
 
 The PlayCanvas Engine is released under the [MIT](https://opensource.org/licenses/MIT) license. See LICENSE file.
+
+[npm-badge]: https://img.shields.io/npm/v/playcanvas
+[npm-url]: https://www.npmjs.com/package/playcanvas
+[resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
+[open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
+[isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine
+[twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
+[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
