@@ -106,14 +106,14 @@ Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of th
 
 Now you can run various build options:
 
-| Command           | Description                      | Outputs                          |
-|-------------------|----------------------------------|----------------------------------|
-| npm run build     | Build unminified release engine  | `build\output\playcanvas.js`     |
-| npm run build:min | Build minified release engine    | `build\output\playcanvas.min.js` |
-| npm run build:prf | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
-| npm run build:dbg | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
-| npm run tsd       | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
-| npm run doc       | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
+| Command             | Description                      | Outputs                          |
+|---------------------|----------------------------------|----------------------------------|
+| `npm run build`     | Build unminified release engine  | `build\output\playcanvas.js`     |
+| `npm run build:min` | Build minified release engine    | `build\output\playcanvas.min.js` |
+| `npm run build:prf` | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
+| `npm run build:dbg` | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
+| `npm run tsd`       | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
+| `npm run doc`       | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
 
 Pre-built versions of the engine are also available.
 
@@ -144,11 +144,11 @@ This will output to `build/output/playcanvas.js.map`
 
 PlayCanvas uses of Karma for unit testing. There are three ways of running the tests:
 
-| Command              | Description                                                                           |
-|----------------------|---------------------------------------------------------------------------------------|
-| npm run test         | Runs unit tests over unbuilt engine source                                            |
-| npm run test:watch   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
-| npm run test:release | Runs unit tests on a built `playcanvas.js`                                            |
+| Command                | Description                                                                           |
+|------------------------|---------------------------------------------------------------------------------------|
+| `npm run test`         | Runs unit tests over unbuilt engine source                                            |
+| `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
+| `npm run test:release` | Runs unit tests on a built `playcanvas.js`                                            |
 
 ## How to get models?
 
