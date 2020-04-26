@@ -1,6 +1,53 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /**
+     * @class
+     * @name pc.VertexIteratorAccessor
+     * @classdesc Helps with accessing a specific vertex attribute.
+     * @description Returns a new pc.VertexIteratorAccessor object.
+     * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
+     * @param {object} vertexElement - The vertex attribute to be accessed.
+     * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
+     * the vertex data to a shader input. Can be:
+     *
+     * * {@link pc.SEMANTIC_POSITION}
+     * * {@link pc.SEMANTIC_NORMAL}
+     * * {@link pc.SEMANTIC_TANGENT}
+     * * {@link pc.SEMANTIC_BLENDWEIGHT}
+     * * {@link pc.SEMANTIC_BLENDINDICES}
+     * * {@link pc.SEMANTIC_COLOR}
+     * * {@link pc.SEMANTIC_TEXCOORD0}
+     * * {@link pc.SEMANTIC_TEXCOORD1}
+     * * {@link pc.SEMANTIC_TEXCOORD2}
+     * * {@link pc.SEMANTIC_TEXCOORD3}
+     * * {@link pc.SEMANTIC_TEXCOORD4}
+     * * {@link pc.SEMANTIC_TEXCOORD5}
+     * * {@link pc.SEMANTIC_TEXCOORD6}
+     * * {@link pc.SEMANTIC_TEXCOORD7}
+     *
+     * If vertex data has a meaning other that one of those listed above, use the user-defined
+     * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+     * @param {number} vertexElement.numComponents - The number of components of the vertex attribute.
+     * Can be 1, 2, 3 or 4.
+     * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
+     *
+     * * {@link pc.TYPE_INT8}
+     * * {@link pc.TYPE_UINT8}
+     * * {@link pc.TYPE_INT16}
+     * * {@link pc.TYPE_UINT16}
+     * * {@link pc.TYPE_INT32}
+     * * {@link pc.TYPE_UINT32}
+     * * {@link pc.TYPE_FLOAT32}
+     * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped from a
+     * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+     * unchanged. If this property is unspecified, false is assumed.
+     * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
+     * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
+     * @param {pc.ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
+     * @param {number} vertexElement.size - The size of the attribute in bytes.
+     * @param {pc.VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
+     */
     function VertexIteratorAccessor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
         this.numComponents = vertexElement.numComponents;
@@ -65,8 +112,28 @@ Object.assign(pc, function () {
         }
     }
 
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#get
+     * @description Get a attribute component at the iterator's current index.
+     * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
+     * @returns {number} The value of a attribute component.
+     */
     VertexIteratorAccessor.prototype.get = function (offset) {
         return this.array[this.index + offset];
+    };
+
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#set
+     * @description Set all the attribute components at the iterator's current index.
+     * @param {number} a - The first component value.
+     * @param {number} [b] - The second component value (if applicable).
+     * @param {number} [c] - The third component value (if applicable).
+     * @param {number} [d] - The fourth component value (if applicable).
+     */
+    VertexIteratorAccessor.prototype.set = function (a, b, c, d) {
+        // Will be replaced with specialized implementation based on number of components
     };
 
     function VertexIteratorAccessor_set1(a) {
@@ -91,6 +158,18 @@ Object.assign(pc, function () {
         this.array[this.index + 3] = d;
     }
 
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#setFromArray
+     * @description Write attribute components from an input array.
+     * @param {number} index - The starting index at which to write data into the buffer. Will be used instead of the iterator's current index.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
+     * @param {number} inputIndex - The input index at which to read from the input array.
+     */
+    VertexIteratorAccessor.prototype.setFromArray = function (index, inputArray, inputIndex) {
+        // Will be replaced with specialized implementation based on number of components
+    };
+
     function VertexIteratorAccessor_arraySet1(index, inputArray, inputIndex) {
         this.array[index] = inputArray[inputIndex];
     }
@@ -112,6 +191,18 @@ Object.assign(pc, function () {
         this.array[index + 2] = inputArray[inputIndex + 2];
         this.array[index + 3] = inputArray[inputIndex + 3];
     }
+
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#getToArray
+     * @description Read attribute components to an output array.
+     * @param {number} offset - The component offset at which to read data from the buffer. Will be used instead of the iterator's current index.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
+     * @param {number} outputIndex - The output index at which to write into the output array.
+     */
+    VertexIteratorAccessor.prototype.getToArray = function (offset, outputArray, outputIndex) {
+        // Will be replaced with specialized implementation based on number of components
+    };
 
     function VertexIteratorAccessor_arrayGet1(offset, outputArray, outputIndex) {
         outputArray[outputIndex] = this.array[offset];
@@ -141,7 +232,7 @@ Object.assign(pc, function () {
      * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
      * @description Returns a new pc.VertexIterator object.
      * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
-     * @property {object} element The vertex buffer elements.
+     * @property {object<string, pc.VertexIteratorAccessor>} element The vertex buffer elements.
      */
     function VertexIterator(vertexBuffer) {
         // Store the vertex buffer
@@ -304,6 +395,7 @@ Object.assign(pc, function () {
     });
 
     return {
+        VertexIteratorAccessor: VertexIteratorAccessor,
         VertexIterator: VertexIterator
     };
 }());
