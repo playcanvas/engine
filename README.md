@@ -104,13 +104,20 @@ Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of th
 
     npm install
 
-To execute a build of the engine to build/playcanvas-latest.js, do:
+Now you can run various build options:
 
-    npm run build
+| Command           | Description                      | Outputs                          |
+|-------------------|----------------------------------|----------------------------------|
+| npm run build     | Build unminified release engine  | `build\output\playcanvas.js`     |
+| npm run build:min | Build minified release engine    | `build\output\playcanvas.min.js` |
+| npm run build:prf | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
+| npm run build:dbg | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
+| npm run tsd       | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
+| npm run doc       | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
 
 Pre-built versions of the engine are also available.
 
-Latest development release:
+Latest development release (head revision of master branch):
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
@@ -125,78 +132,39 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
+### Generate Source Maps
+
+To build the source map to allow for easier engine debugging, you can add `-- -m` to any engine build command. For example:
+
+    npm run build -- -m
+
+This will output to `build/output/playcanvas.js.map`
+
+## How to run tests
+
+PlayCanvas uses of Karma for unit testing. There are three ways of running the tests:
+
+| Command              | Description                                                                           |
+|----------------------|---------------------------------------------------------------------------------------|
+| npm run test         | Runs unit tests over unbuilt engine source                                            |
+| npm run test:watch   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
+| npm run test:release | Runs unit tests on a built `playcanvas.js`                                            |
+
 ## How to get models?
 
 To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/engine/) in the developer documentation.
 
-## How to run tests
+## Useful Links
 
-PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
-
-    # Runs the tests once over the unbuilt source files - useful if you just want a quick 'all-clear'
-    npm run test
-
-    # Watches all source and test files for changes, and automatically re-runs the tests when they change.
-    # Open http://localhost:9876/debug.html in your browser to debug the tests in real time.
-    #
-    # You can also edit the `tests/**/test_*.js` glob in tests/karma.conf.js to run a subset of the tests,
-    # during development.
-    npm run test:watch
-
-    # Runs the tests once over playcanvas.js - mainly used by CI, but sometimes useful if you want to
-    # test the engine after building it. Make sure to do `npm run build` first to make sure you have
-    # an up-to-date build.
-    npm run test:release
-
-## Documentation
-
-Full documentation available on the [PlayCanvas Developer](https://developer.playcanvas.com) site including [API reference](https://developer.playcanvas.com/en/api/). To build a local copy of the API reference manual to the docs folder, do:
-
-    npm run docs
-
-## Tutorials & Examples
-
-See all the [tutorials](https://developer.playcanvas.com/tutorials/) here.
-
-## TypeScript Bindings
-
-You can develop TypeScript applications against the PlayCanvas engine. To generate a TypeScript definitions file for the entire API, do:
-
-    npm run tsd
-
-This will output to build/output/playcanvas.d.ts
-
-## Generating Source Map
-
-To build the source map to allow for easier engine debugging, use the following command:
-
-    npm run build -- -m
-
-This will output to build/output/playcanvas.js.map
-
-## Getting Help
-
-[**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
+* [Forum](https://forum.playcanvas.com)
+* [Developer Site](https://developer.playcanvas.com)
+* [Blog](https://blog.playcanvas.com)
 
 ## Contributing
 
 Want to help us make the best 3D engine on the web? Great!
 Check out [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) that will get you started.
 And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
-
-### Github Issues
-
-Please use [Github Issues](https://github.com/playcanvas/engine/issues) to report bugs or request features.
-
-### Reporting bugs
-
-Please follow these steps to report a bug
-
-1. **Search for related issues** - search the existing issues so that you don't create duplicates
-
-2. **Create a testcase** - Please create the smallest isolated testcase that you can that reproduces your bug
-
-3. **Share as much information as possible** - everything little helps, OS, browser version, all that stuff.
 
 ## PlayCanvas Platform
 
