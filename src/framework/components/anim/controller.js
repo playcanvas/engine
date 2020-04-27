@@ -266,7 +266,7 @@ Object.assign(pc, function () {
             }
 
             var animation = {
-                name: animTrack.name,
+                name: pc.string.format('{0}.{1}', stateName, animTrack.name),
                 animTrack: animTrack,
                 weight: 1.0
             };
