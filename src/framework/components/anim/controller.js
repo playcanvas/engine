@@ -1,5 +1,26 @@
 Object.assign(pc, function () {
 
+    var ANIM_INTERRUPTION_SOURCE_NONE = 0;
+    var ANIM_INTERRUPTION_SOURCE_CURRENT_STATE = 1;
+    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE = 2;
+    var ANIM_INTERRUPTION_SOURCE_CURRENT_STATE_NEXT_STATE = 3;
+    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_CURRENT_STATE = 4;
+
+    var ANIM_TRANSITION_PREDICATE_GREATER_THAN = 0;
+    var ANIM_TRANSITION_PREDICATE_LESS_THAN = 1;
+    var ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO = 2;
+    var ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO = 3;
+    var ANIM_TRANSITION_PREDICATE_EQUAL_TO = 4;
+    var ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO = 5;
+
+    var ANIM_PARAMETER_INTEGER = 0;
+    var ANIM_PARAMETER_FLOAT = 1;
+    var ANIM_PARAMETER_BOOLEAN = 2;
+    var ANIM_PARAMETER_TRIGGER = 3;
+
+    var ANIM_STATE_START = 'ANIM_STATE_START';
+    var ANIM_STATE_END = 'ANIM_STATE_END';
+
     var AnimState = function (name, speed) {
         this.name = name;
         this.animations = [];
@@ -8,7 +29,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimState.prototype, {
         isPlayable: function() {
-            return (this.animations.length > 0 || this.name === 'Start' || this.name === 'End');
+            return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
         },
 
         isLooping: function() {
@@ -35,7 +56,7 @@ Object.assign(pc, function () {
         }
     });
 
-    var AnimTransition = function (controller, from, to, time, priority, conditions, exitTime, transitionOffset) {
+    var AnimTransition = function (controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource) {
         this.controller = controller;
         this.from = from;
         this.to = to;
@@ -44,6 +65,7 @@ Object.assign(pc, function () {
         this.conditions = conditions || [];
         this.exitTime = exitTime || null;
         this.transitionOffset = transitionOffset || null;
+        this.interruptionSource = interruptionSource || ANIM_INTERRUPTION_SOURCE_NONE;
     };
 
     Object.assign(AnimTransition.prototype, {
@@ -53,22 +75,22 @@ Object.assign(pc, function () {
                 var condition = this.conditions[i];
                 var parameter = this.controller.getParameter(condition.parameterName);
                 switch(condition.predicate) {
-                    case 'GREATER_THAN':
+                    case ANIM_TRANSITION_PREDICATE_GREATER_THAN:
                         conditionsMet = conditionsMet && parameter.value > condition.value;
                         break;
-                    case 'LESS_THAN':
+                    case ANIM_TRANSITION_PREDICATE_LESS_THAN:
                         conditionsMet = conditionsMet && parameter.value < condition.value;
                         break;
-                    case 'GREATER_THAN_EQUAL_TO':
+                    case ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO:
                         conditionsMet = conditionsMet && parameter.value >= condition.value;
                         break;
-                    case 'LESS_THAN_EQUAL_TO':
+                    case ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO:
                         conditionsMet = conditionsMet && parameter.value <= condition.value;
                         break;
-                    case 'EQUAL_TO':
+                    case ANIM_TRANSITION_PREDICATE_EQUAL_TO:
                         conditionsMet = conditionsMet && parameter.value === condition.value;
                         break;
-                    case 'NOT_EQUAL_TO':
+                    case ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO:
                         conditionsMet = conditionsMet && parameter.value !== condition.value;
                         break;
                 }
@@ -93,7 +115,7 @@ Object.assign(pc, function () {
         this.parameters = parameters;
         this.initialParameters = JSON.parse(JSON.stringify(parameters));
         this.previousStateName = null;
-        this.activeStateName = 'Start';
+        this.activeStateName = ANIM_STATE_START;
         this.playing = false;
         this.activate = activate;
         
@@ -183,7 +205,7 @@ Object.assign(pc, function () {
 
             var triggers = transition.conditions.filter((function(condition) {
                 var parameter = this.getParameter(condition.parameterName);
-                return parameter.type === 'trigger';
+                return parameter.type === ANIM_PARAMETER_TRIGGER;
             }).bind(this));
             for (var i = 0; i < triggers.length; i++) {
                 this.resetTrigger(triggers[i].parameterName);
@@ -250,9 +272,9 @@ Object.assign(pc, function () {
             if (!transition) {
                 return;
             }
-            if (transition.to === 'End')
+            if (transition.to === ANIM_STATE_END)
             {
-                this._setActiveState('Start');
+                this._setActiveState(ANIM_STATE_START);
                 transition = this._findTransition();
             }
             this._updateStateFromTransition(transition);
@@ -303,7 +325,7 @@ Object.assign(pc, function () {
 
         reset: function() {
             this.previousStateName = null;
-            this.activeStateName = 'Start';
+            this.activeStateName = ANIM_STATE_START;
             this.playing = false;
             
             this.currTransitionTime = 1.0;
@@ -366,7 +388,7 @@ Object.assign(pc, function () {
         },
 
         getActiveStateProgress: function(checkBeforeUpdate) {
-            if (this.activeStateName === 'Start' || this.activeStateName === 'End')
+            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
                 return 1.0;
             else {
                 var activeClip = this.animEvaluator.findClip(this._getActiveState().animations[0].name);
@@ -387,7 +409,7 @@ Object.assign(pc, function () {
 
         setFloat: function(name, value) {
             var float = this.parameters[name];
-            if (float && float.type === 'float')
+            if (float && float.type === ANIM_PARAMETER_FLOAT)
                 float.value = value;
         },
 
@@ -397,7 +419,7 @@ Object.assign(pc, function () {
 
         setInteger: function(name, value) {
             var integer = this.parameters[name];
-            if (integer && integer.type === 'integer')
+            if (integer && integer.type === ANIM_PARAMETER_INTEGER)
                 integer.value = value;
         },
 
@@ -407,7 +429,7 @@ Object.assign(pc, function () {
 
         setBoolean: function(name, value) {
             var boolean = this.parameters[name];
-            if (boolean && boolean.type === 'boolean')
+            if (boolean && boolean.type === ANIM_PARAMETER_BOOLEAN)
                 boolean.value = value;
         },
 
@@ -417,13 +439,13 @@ Object.assign(pc, function () {
 
         setTrigger: function(name) {
             var trigger = this.parameters[name];
-            if (trigger && trigger.type === 'trigger')
+            if (trigger && trigger.type === ANIM_PARAMETER_TRIGGER)
                 trigger.value = true;
         },
 
         resetTrigger: function(name) {
             var trigger = this.parameters[name];
-            if (trigger && trigger.type === 'trigger')
+            if (trigger && trigger.type === ANIM_PARAMETER_TRIGGER)
                 trigger.value = false;
         },
 
