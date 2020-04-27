@@ -59,25 +59,25 @@ Object.assign(pc, function () {
 
         switch (vertexElement.dataType) {
             case pc.TYPE_INT8:
-                this.array = new Int8Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Int8Array(buffer, vertexElement.offset, bufferLength) : new Int8Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_UINT8:
-                this.array = new Uint8Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Uint8Array(buffer, vertexElement.offset, bufferLength) : new Uint8Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_INT16:
-                this.array = new Int16Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Int16Array(buffer, vertexElement.offset, bufferLength) : new Int16Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_UINT16:
-                this.array = new Uint16Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Uint16Array(buffer, vertexElement.offset, bufferLength) : new Uint16Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_INT32:
-                this.array = new Int32Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Int32Array(buffer, vertexElement.offset, bufferLength) : new Int32Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_UINT32:
-                this.array = new Uint32Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Uint32Array(buffer, vertexElement.offset, bufferLength) : new Uint32Array(buffer, vertexElement.offset);
                 break;
             case pc.TYPE_FLOAT32:
-                this.array = new Float32Array(buffer, vertexElement.offset, bufferLength);
+                this.array = bufferLength ? new Float32Array(buffer, vertexElement.offset, bufferLength) : new Float32Array(buffer, vertexElement.offset);
                 break;
         }
 
