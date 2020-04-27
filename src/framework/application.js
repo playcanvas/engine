@@ -874,7 +874,7 @@ Object.assign(pc, function () {
             // #ifdef DEBUG
             console.warn("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
             // #endif
-            this.scenes.loadSceneHierarchy(url, callback);
+            return this.scenes.loadSceneHierarchy(url, callback);
         },
 
         /**

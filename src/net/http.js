@@ -474,8 +474,10 @@ Object.assign(pc, function () {
                 // Check the content type to see if we want to parse it
                 if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
                     // It's a JSON response
-                    response = JSON.parse(xhr.responseText);
-                } else if (this._isBinaryContentType(contentType)) {
+                    if (xhr.responseText.length > 0) {
+                        response = JSON.parse(xhr.responseText);
+                    }
+                } else if (contentType && this._isBinaryContentType(contentType)) {
                     response = xhr.response;
                 } else {
                     if (contentType) {
@@ -497,7 +499,11 @@ Object.assign(pc, function () {
                     }
                 }
 
-                options.callback(null, response);
+                if (response) {
+                    options.callback(null, response);
+                } else {
+                    options.callback("Error handling response");
+                }
             } catch (err) {
                 options.callback(err);
             }

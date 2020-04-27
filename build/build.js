@@ -163,7 +163,7 @@ var preprocess = function (dependencies) {
         var pp = new Preprocessor(buffer.toString());
         var src;
         // TODO: source mapped build doesn't support preprocessor yet
-        if(this.sourceMap)
+        if(sourceMap)
             src = buffer;
         else 
             src = pp.process({
@@ -210,7 +210,9 @@ var insertVersions = function (filepath, callback) {
 
                 var content = buffer.toString();
 
-                content = getCopyrightNotice(ver, rev) + content;
+                if (!sourceMap) {
+                    content = getCopyrightNotice(ver, rev) + content;
+                }
                 content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
                 content = replaceAll(content, "__REVISION__", rev);
 

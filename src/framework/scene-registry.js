@@ -153,7 +153,7 @@ Object.assign(pc, function () {
             url = pc.path.join(this._app.assets.prefix, url);
         }
 
-        handler.load(url, function (err, data) {
+        var handle = handler.load(url, function (err, data) {
             if (err) {
                 if (callback) callback(err);
                 return;
@@ -181,7 +181,13 @@ Object.assign(pc, function () {
             // load priority and referenced scripts before opening scene
             self._app._preloadScripts(data, _loaded);
         });
+
+        return handle;
     };
+
+    SceneRegistry.prototype.cancelLoadSceneHierarchy = function (handle) {
+        handle.xhr.abort();
+    }
 
     /**
      * @function

@@ -17,9 +17,11 @@ Object.assign(pc, function () {
 
             var assets = this._app.assets;
 
-            pc.http.get(url.load, {
+            var handle;
+            var xhr = pc.http.get(url.load, {
                 retry: this.retryRequests
             }, function (err, response) {
+                handle.requestFinished = true;
                 if (!err) {
                     pc.TemplateUtils.waitForTemplatesInScene(
                         response,
@@ -39,6 +41,9 @@ Object.assign(pc, function () {
                     callback(errMsg);
                 }
             });
+
+            handle = new pc.ResourceLoadHandle(url.load, xhr);
+            return handle;
         },
 
         open: function (url, data) {
