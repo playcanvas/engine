@@ -52,33 +52,12 @@ Object.assign(pc, function () {
         this.index = 0;
         this.numComponents = vertexElement.numComponents;
 
-        // map only section of underlaying buffer for non-interleaved format
-        var bufferLength;
-        if (!vertexFormat.interleaved)
-            bufferLength = vertexFormat.vertexCount * vertexElement.numComponents;
-
-        switch (vertexElement.dataType) {
-            case pc.TYPE_INT8:
-                this.array = bufferLength ? new Int8Array(buffer, vertexElement.offset, bufferLength) : new Int8Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_UINT8:
-                this.array = bufferLength ? new Uint8Array(buffer, vertexElement.offset, bufferLength) : new Uint8Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_INT16:
-                this.array = bufferLength ? new Int16Array(buffer, vertexElement.offset, bufferLength) : new Int16Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_UINT16:
-                this.array = bufferLength ? new Uint16Array(buffer, vertexElement.offset, bufferLength) : new Uint16Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_INT32:
-                this.array = bufferLength ? new Int32Array(buffer, vertexElement.offset, bufferLength) : new Int32Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_UINT32:
-                this.array = bufferLength ? new Uint32Array(buffer, vertexElement.offset, bufferLength) : new Uint32Array(buffer, vertexElement.offset);
-                break;
-            case pc.TYPE_FLOAT32:
-                this.array = bufferLength ? new Float32Array(buffer, vertexElement.offset, bufferLength) : new Float32Array(buffer, vertexElement.offset);
-                break;
+        // create the typed array based on the element data type
+        var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
+        if (vertexFormat.interleaved) {
+            this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset);
+        } else {
+            this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset, vertexFormat.vertexCount * vertexElement.numComponents);
         }
 
         // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox, but just the constructor for Opera
