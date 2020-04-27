@@ -357,7 +357,7 @@ Object.assign(pc, function () {
                         offset += element.stride;
                     }
                 } else {
-                    if (ArrayBuffer.isView(data.buffer)) {
+                    if (ArrayBuffer.isView(data)) {
                         // destination data is typed array
                         data.set(element.array);
                     } else {
