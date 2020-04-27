@@ -12,7 +12,7 @@ var Viewer = function (canvas) {
 
     var getCanvasSize = function () {
         return {
-            width: document.body.clientWidth - 200,
+            width: document.body.clientWidth - 250,
             height: document.body.clientHeight
         };
     };
@@ -109,20 +109,35 @@ var Viewer = function (canvas) {
     window.addEventListener('drop', dropHandler, false);
 
     var graph = new Graph(app, 128);
-    app.on('prerender', function () {
-        if (self.showGraphs) {
-            graph.update();
-            graph.render();
-        }
-    });
+    app.on('prerender', this._onPrerender, this);
+    app.on('frameend', this._onFrameend, this);
 
-    // store things
+    // store app things
     this.app = app;
     this.camera = camera;
     this.light = light;
     this.entity = null;
+    this.asset = null;
     this.graph = graph;
+    this.meshInstances = [];
+    this.firstFrame = false;
+
     this.showGraphs = false;
+
+    this.wireframe = false;
+    this.showBounds = false;
+    this.showSkeleton = false;
+    this.normalLength = 0;
+    this.directLightingFactor = 1;
+    this.envLightingFactor = 1;
+
+    this.dirtyWireframe = false;
+    this.dirtyBounds = false;
+    this.dirtySkeleton = false;
+    this.dirtyNormals = false;
+    this.debugBounds = new DebugLines(app, camera);
+    this.debugSkeleton = new DebugLines(app, camera);
+    this.debugNormals = new DebugLines(app, camera);
 
     function getUrlVars() {
         var vars = {};
@@ -140,6 +155,38 @@ var Viewer = function (canvas) {
 
     // start the application
     app.start();
+};
+
+// flatten a hierarchy of nodes
+Viewer._flatten = function (node) {
+    var result = [];
+    node.forEach(function (n) {
+        result.push(n);
+    });
+    return result;
+};
+
+// get the set of unique values from the array
+Viewer._distinct = function (array) {
+    var result = [];
+    for (var i = 0; i < array.length; ++i) {
+        if (result.indexOf(array[i]) === -1) {
+            result.push(array[i]);
+        }
+    }
+    return result;
+};
+
+Viewer._calcBoundingBox = function (meshInstances) {
+    var bbox = new pc.BoundingBox();
+    for (var i = 0; i < meshInstances.length; ++i) {
+        if (i === 0) {
+            bbox.copy(meshInstances[i].aabb);
+        } else {
+            bbox.add(meshInstances[i].aabb);
+        }
+    }
+    return bbox;
 };
 
 Object.assign(Viewer.prototype, {
@@ -161,28 +208,36 @@ Object.assign(Viewer.prototype, {
         }
 
         this.graph.clear();
+        this.meshInstances = [];
 
         this.animationMap = { };
         onAnimationsLoaded([]);
+
+        this.morphMap = { };
+        onMorphTargetsLoaded([]);
+
+        this.dirtyWireframe = this.dirtyBounds = this.dirtySkeleton = this.dirtyNormals = true;
     },
 
     // move the camera to view the loaded object
     focusCamera: function () {
         var entity = this.entity;
         if (entity) {
-            var camera = this.camera;
+            var camera = this.camera.camera;
+            var orbitCamera = this.camera.script.orbitCamera;
 
-            if (camera.script && camera.script.orbitCamera) {
-                var orbitCamera = camera.script.orbitCamera;
-                orbitCamera.focus(entity);
+            // calculate scene bounding box
+            var bbox = Viewer._calcBoundingBox(this.meshInstances);
+            var radius = bbox.halfExtents.length();
+            var distance = (radius * 1.5) / Math.cos(0.5 * camera.fov * camera.aspectRatio * pc.math.DEG_TO_RAD);
 
-                var distance = orbitCamera.distance;
-                camera.camera.nearClip = distance / 10;
-                camera.camera.farClip = distance * 10;
+            orbitCamera.pivotPoint = bbox.center;
+            orbitCamera.distance = distance;
+            camera.nearClip = distance / 10;
+            camera.farClip = distance * 10;
 
-                var light = this.light;
-                light.light.shadowDistance = distance * 2;
-            }
+            var light = this.light;
+            light.light.shadowDistance = distance * 2;
         }
     },
 
@@ -218,8 +273,55 @@ Object.assign(Viewer.prototype, {
         }
     },
 
-    setGraphs: function (show) {
+    setShowGraphs: function (show) {
         this.showGraphs = show;
+        this.renderNextFrame();
+    },
+
+    setWireframe: function (wireframe) {
+        this.wireframe = wireframe;
+        this.dirtyWireframe = true;
+        this.renderNextFrame();
+    },
+
+    setShowBounds: function (show) {
+        this.showBounds = show;
+        this.dirtyBounds = true;
+        this.renderNextFrame();
+    },
+
+    setShowSkeleton: function (show) {
+        this.showSkeleton = show;
+        this.dirtySkeleton = true;
+        this.renderNextFrame();
+    },
+
+    setNormalLength: function (length) {
+        this.normalLength = length;
+        this.dirtyNormals = true;
+        this.renderNextFrame();
+    },
+
+    setDirectLighting: function (factor) {
+        this.light.light.intensity = factor;
+        this.renderNextFrame();
+    },
+
+    setEnvLighting: function (factor) {
+        this.app.scene.skyboxIntensity = factor;
+        this.renderNextFrame();
+    },
+
+    // set the morphing value
+    setMorphWeight: function (name, weight) {
+        if (this.morphMap.hasOwnProperty(name)) {
+            var morphs = this.morphMap[name];
+            morphs.forEach(function (morph) {
+                morph.instance.setWeight(morph.targetIndex, weight);
+            });
+            this.dirtyNormals = true;
+            this.renderNextFrame();
+        }
     },
 
     update: function () {
@@ -227,12 +329,19 @@ Object.assign(Viewer.prototype, {
         var cameraWorldTransform = this.camera.getWorldTransform();
         if (!this.prevCameraMat.equals(cameraWorldTransform)) {
             this.prevCameraMat.copy(cameraWorldTransform);
-            this.app.renderNextFrame = true;
+            this.renderNextFrame();
         }
         // or an animation is loaded and we're animating
         if (this.entity && this.entity.animation && this.entity.animation.playing) {
-            this.app.renderNextFrame = true;
+            this.dirtyBounds = true;
+            this.dirtySkeleton = true;
+            this.dirtyNormals = true;
+            this.renderNextFrame();
         }
+    },
+
+    renderNextFrame: function () {
+        this.app.renderNextFrame = true;
     },
 
     _onLoaded: function (err, asset) {
@@ -302,11 +411,141 @@ Object.assign(Viewer.prototype, {
                 setTimeout(createAnimGraphs.bind(this), 1000);
             }
 
+            // setup morph targets
+            if (entity.model && entity.model.model && entity.model.model.morphInstances.length > 0) {
+                var morphInstances = entity.model.model.morphInstances;
+                // make a list of all the morph instance target names
+                var morphMap = { };
+                morphInstances.forEach(function (morphInstance) {
+                    morphInstance.morph._targets.forEach(function (target, targetIndex) {
+                        if (!morphMap.hasOwnProperty(target.name)) {
+                            morphMap[target.name] = [{ instance: morphInstance, targetIndex: targetIndex }];
+                        } else {
+                            morphMap[target.name].push({ instance: morphInstance, targetIndex: targetIndex });
+                        }
+                    });
+                });
+
+                this.morphMap = morphMap;
+                onMorphTargetsLoaded(Object.keys(morphMap));
+            }
+
             this.app.root.addChild(entity);
             this.entity = entity;
             this.asset = asset;
+            this.meshInstances =
+                Viewer._distinct(
+                    Viewer._flatten(entity)
+                        .map( function (node) {
+                            return node.model ? node.model.meshInstances : [];
+                        })
+                        .flat());
 
+            // we can't refocus the camera here because the scene hierarchy only gets updated
+            // during render. we must instead set a flag, wait for a render to take place and
+            // then focus the camera.
+            this.firstFrame = true;
+            this.renderNextFrame();
+        }
+    },
+
+    // generate and render debug elements on prerender
+    _onPrerender: function () {
+        if (this.showGraphs) {
+            this.graph.update();
+            this.graph.render();
+        }
+
+        if (this.entity &&
+            this.entity.model &&
+            this.entity.model.model &&
+            !this.firstFrame) {             // don't update on the first frame
+
+            var i;
+            var meshInstance;
+            var model = this.entity.model.model;
+
+            // wireframe
+            if (this.dirtyWireframe) {
+                this.dirtyWireframe = false;
+
+                for (i = 0; i < this.meshInstances.length; ++i) {
+                    meshInstance = this.meshInstances[i];
+                    if (this.wireframe) {
+                        if (!meshInstance.mesh.primitive[pc.RENDERSTYLE_WIREFRAME]) {
+                            meshInstance.mesh.generateWireframe();
+                        }
+                        meshInstance.renderStyle = pc.RENDERSTYLE_WIREFRAME;
+                    } else {
+                        meshInstance.renderStyle = pc.RENDERSTYLE_SOLID;
+                    }
+                }
+            }
+
+            // debug bounds
+            if (this.dirtyBounds) {
+                this.dirtyBounds = false;
+                this.debugBounds.clear();
+
+                if (this.showBounds) {
+                    var bbox = Viewer._calcBoundingBox(this.meshInstances);
+                    this.debugBounds.box(bbox.getMin(), bbox.getMax());
+                }
+                this.debugBounds.update();
+            }
+
+            // debug skeleton
+            if (this.dirtySkeleton) {
+                this.dirtySkeleton = false;
+                this.debugSkeleton.clear();
+
+                if (this.showSkeleton) {
+                    this.debugSkeleton.generateSkeleton(model.graph);
+                }
+                this.debugSkeleton.update();
+            }
+
+            // debug normals
+            if (this.dirtyNormals) {
+                this.dirtyNormals = false;
+                this.debugNormals.clear();
+
+                if (this.normalLength > 0) {
+                    for (i = 0; i < this.meshInstances.length; ++i) {
+                        meshInstance = this.meshInstances[i];
+                        var vertexBuffer = meshInstance.morphInstance ?
+                            meshInstance.morphInstance._vertexBuffer : meshInstance.mesh.vertexBuffer;
+
+                        if (vertexBuffer) {
+                            var skinMatrices = meshInstance.skinInstance ?
+                                meshInstance.skinInstance.matrices : null;
+
+                            // if there is skinning we need to manually update matrices here otherwise
+                            // our normals are always a frame behind
+                            if (skinMatrices) {
+                                meshInstance.skinInstance.updateMatrices(meshInstance.node);
+                            }
+
+                            this.debugNormals.generateNormals(vertexBuffer,
+                                                              meshInstance.node.getWorldTransform(),
+                                                              this.normalLength,
+                                                              skinMatrices);
+                        }
+                    }
+                }
+                this.debugNormals.update();
+            }
+        }
+    },
+
+    _onFrameend: function () {
+        if (this.firstFrame) {
+            this.firstFrame = false;
+
+            // focus camera after first frame otherwise skinned model bounding
+            // boxes are incorrect
             this.focusCamera();
+            this.renderNextFrame();
         }
     }
 });

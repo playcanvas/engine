@@ -36,6 +36,7 @@ Object.assign(pc, function () {
             case 5121: return pc.TYPE_UINT8;
             case 5122: return pc.TYPE_INT16;
             case 5123: return pc.TYPE_UINT16;
+            case 5124: return pc.TYPE_INT32;
             case 5125: return pc.TYPE_UINT32;
             case 5126: return pc.TYPE_FLOAT32;
             default: return 0;
@@ -48,6 +49,7 @@ Object.assign(pc, function () {
             case 5121: return 1;    // uint8
             case 5122: return 2;    // int16
             case 5123: return 2;    // uint16
+            case 5124: return 4;    // int32
             case 5125: return 4;    // uint32
             case 5126: return 4;    // float32
             default: return 0;
@@ -55,18 +57,48 @@ Object.assign(pc, function () {
     };
 
     var getAccessorData = function (accessor, bufferViews, buffers) {
-        var bufferView = bufferViews[accessor.bufferView];
+        var bufferViewIdx;
+        var count;
+        if (accessor.hasOwnProperty("sparse")) {
+            bufferViewIdx = accessor.sparse.values.bufferView;
+            count = accessor.sparse.count;
+        } else {
+            bufferViewIdx = accessor.bufferView;
+            count = accessor.count;
+        }
+
+        var bufferView = bufferViews[bufferViewIdx];
         var typedArray = buffers[bufferView.buffer];
         var accessorByteOffset = accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0;
         var bufferViewByteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
         var byteOffset = typedArray.byteOffset + accessorByteOffset + bufferViewByteOffset;
-        var length = accessor.count * getNumComponents(accessor.type);
+        var length = count * getNumComponents(accessor.type);
 
         switch (accessor.componentType) {
             case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
             case 5121: return new Uint8Array(typedArray.buffer, byteOffset, length);
             case 5122: return new Int16Array(typedArray.buffer, byteOffset, length);
             case 5123: return new Uint16Array(typedArray.buffer, byteOffset, length);
+            case 5124: return new Int32Array(typedArray.buffer, byteOffset, length);
+            case 5125: return new Uint32Array(typedArray.buffer, byteOffset, length);
+            case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
+            default: return null;
+        }
+    };
+
+    var getSparseAccessorIndices = function (accessor, bufferViews, buffers) {
+        var bufferView = bufferViews[accessor.sparse.indices.bufferView];
+        var typedArray = buffers[bufferView.buffer];
+        var bufferViewByteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
+        var byteOffset = typedArray.byteOffset + bufferViewByteOffset;
+        var length = accessor.sparse.count;
+
+        switch (accessor.sparse.indices.componentType) {
+            case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
+            case 5121: return new Uint8Array(typedArray.buffer, byteOffset, length);
+            case 5122: return new Int16Array(typedArray.buffer, byteOffset, length);
+            case 5123: return new Uint16Array(typedArray.buffer, byteOffset, length);
+            case 5124: return new Int32Array(typedArray.buffer, byteOffset, length);
             case 5125: return new Uint32Array(typedArray.buffer, byteOffset, length);
             case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
             default: return null;
@@ -535,19 +567,37 @@ Object.assign(pc, function () {
             if (primitive.hasOwnProperty('targets')) {
                 var targets = [];
 
-                primitive.targets.forEach(function (target) {
+                primitive.targets.forEach(function (target, index) {
                     var options = {};
+
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
                         options.deltaPositions = getAccessorData(accessor, bufferViews, buffers);
+
+                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
+                            var min = accessor.min;
+                            var max = accessor.max;
+                            options.aabb = new pc.BoundingBox(
+                                new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                                new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+                            );
+                        }
+
+                        // FIXME: assume that position, normal, tangent data all share the
+                        // same set of sparse indices
+                        if (accessor.sparse) {
+                            options.indices = getSparseAccessorIndices(accessor, bufferViews, buffers);
+                        }
                     }
+
                     if (target.hasOwnProperty('NORMAL')) {
                         accessor = accessors[target.NORMAL];
                         options.deltaNormals = getAccessorData(accessor, bufferViews, buffers);
                     }
-                    if (target.hasOwnProperty('TANGENT')) {
-                        accessor = accessors[target.TANGENT];
-                        options.deltaTangents = getAccessorData(accessor, bufferViews, buffers);
+
+                    if (meshData.hasOwnProperty('extras') &&
+                        meshData.extras.hasOwnProperty('targetNames')) {
+                        options.name = meshData.extras.targetNames[index];
                     }
 
                     targets.push(new pc.MorphTarget(options));

@@ -178,7 +178,6 @@ Object.assign(pc, function () {
     });
 
     Object.assign(Mesh.prototype, {
-
         /**
          * @function
          * @name pc.Mesh#destroy
@@ -630,6 +629,65 @@ Object.assign(pc, function () {
                 // remove data
                 this._geometryData.indices = null;
             }
+        },
+
+        generateWireframe: function () {
+            var typedArray = function (indexBuffer) {
+                switch (indexBuffer.format) {
+                    case pc.INDEXFORMAT_UINT8:
+                        return new Uint8Array(indexBuffer.storage);
+                    case pc.INDEXFORMAT_UINT16:
+                        return new Uint16Array(indexBuffer.storage);
+                    case pc.INDEXFORMAT_UINT32:
+                        return new Uint32Array(indexBuffer.storage);
+                    default:
+                        return null;
+                }
+            };
+
+            var lines = [];
+            var format;
+            if (this.indexBuffer[0]) {
+                var offsets = [[0, 1], [1, 2], [2, 0]];
+
+                var base = this.primitive[pc.RENDERSTYLE_SOLID].base;
+                var count = this.primitive[pc.RENDERSTYLE_SOLID].count;
+                var indexBuffer = this.indexBuffer[pc.RENDERSTYLE_SOLID];
+                var srcIndices = typedArray(indexBuffer);
+
+                var uniqueLineIndices = {};
+
+                for (var j = base; j < base + count; j += 3) {
+                    for (var k = 0; k < 3; k++) {
+                        var i1 = srcIndices[j + offsets[k][0]];
+                        var i2 = srcIndices[j + offsets[k][1]];
+                        var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
+                        if (uniqueLineIndices[line] === undefined) {
+                            uniqueLineIndices[line] = 0;
+                            lines.push(i1, i2);
+                        }
+                    }
+                }
+                format = indexBuffer.format;
+            } else {
+                for (var i = 0; i < this.vertexBuffer.numVertices; i += 3) {
+                    lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
+                }
+                format = lines.length > 65535 ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
+            }
+
+            var wireBuffer = new pc.IndexBuffer(this.vertexBuffer.device, format, lines.length);
+            var dstIndices = typedArray(wireBuffer);
+            dstIndices.set(lines);
+            wireBuffer.unlock();
+
+            this.primitive[pc.RENDERSTYLE_WIREFRAME] = {
+                type: pc.PRIMITIVE_LINES,
+                base: 0,
+                count: lines.length,
+                indexed: true
+            };
+            this.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
         }
     });
 

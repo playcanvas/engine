@@ -211,10 +211,8 @@ Object.assign(pc, function () {
          * }
          */
         generateWireframe: function () {
-            var i, j, k;
-            var i1, i2;
-            var mesh, base, count, indexBuffer, wireBuffer;
-            var srcIndices, dstIndices;
+            var i;
+            var mesh;
 
             // Build an array of unique meshes in this model
             var meshes = [];
@@ -225,43 +223,11 @@ Object.assign(pc, function () {
                 }
             }
 
-            var offsets = [[0, 1], [1, 2], [2, 0]];
-            for (i = 0; i < meshes.length; i++) {
+            for (i = 0; i < meshes.length; ++i) {
                 mesh = meshes[i];
-                base = mesh.primitive[pc.RENDERSTYLE_SOLID].base;
-                count = mesh.primitive[pc.RENDERSTYLE_SOLID].count;
-                indexBuffer = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
-
-                srcIndices = new Uint16Array(indexBuffer.lock());
-
-                var uniqueLineIndices = {};
-                var lines = [];
-                for (j = base; j < base + count; j += 3) {
-                    for (k = 0; k < 3; k++) {
-                        i1 = srcIndices[j + offsets[k][0]];
-                        i2 = srcIndices[j + offsets[k][1]];
-                        var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
-                        if (uniqueLineIndices[line] === undefined) {
-                            uniqueLineIndices[line] = 0;
-                            lines.push(i1, i2);
-                        }
-                    }
+                if (!mesh.primitive[pc.RENDERSTYLE_WIREFRAME]) {
+                    mesh.generateWireframe();
                 }
-
-                indexBuffer.unlock();
-
-                wireBuffer = new pc.IndexBuffer(indexBuffer.device, pc.INDEXFORMAT_UINT16, lines.length);
-                dstIndices = new Uint16Array(wireBuffer.lock());
-                dstIndices.set(lines);
-                wireBuffer.unlock();
-
-                mesh.primitive[pc.RENDERSTYLE_WIREFRAME] = {
-                    type: pc.PRIMITIVE_LINES,
-                    base: 0,
-                    count: lines.length,
-                    indexed: true
-                };
-                mesh.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
             }
         }
     });
