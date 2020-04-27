@@ -1,6 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
+    // map of engine pc.TYPE_*** enums to their corresponding typed array constructors
+    var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
+
     /**
      * @class
      * @name pc.VertexIteratorAccessor
@@ -53,7 +56,6 @@ Object.assign(pc, function () {
         this.numComponents = vertexElement.numComponents;
 
         // create the typed array based on the element data type
-        var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
         if (vertexFormat.interleaved) {
             this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset);
         } else {
@@ -357,7 +359,7 @@ Object.assign(pc, function () {
                         offset += element.stride;
                     }
                 } else {
-                    if (ArrayBuffer.isView(data.buffer)) {
+                    if (ArrayBuffer.isView(data)) {
                         // destination data is typed array
                         data.set(element.array);
                     } else {
