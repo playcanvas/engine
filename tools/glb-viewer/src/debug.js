@@ -44,7 +44,6 @@ var DebugLines = function (app, camera) {
 
     // construct the material
     var material = new pc.BasicMaterial();
-    material.blend = false;
     material.blendType = pc.BLEND_NORMAL;
     material.update();
 
