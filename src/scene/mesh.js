@@ -545,7 +545,7 @@ Object.assign(pc, function () {
                 // set up primitive parameters
                 this.primitive[0].type = (primitiveType === undefined ? pc.PRIMITIVE_TRIANGLES : primitiveType);
 
-                if (this.indexBuffer && this.indexBuffer[0]) {      // indexed
+                if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {      // indexed
                     if (this._geometryData.indexStreamUpdated) {
                         this.primitive[0].count = this._geometryData.indexCount;
                         this.primitive[0].indexed = true;
@@ -647,7 +647,7 @@ Object.assign(pc, function () {
 
             var lines = [];
             var format;
-            if (this.indexBuffer[0]) {
+            if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
                 var offsets = [[0, 1], [1, 2], [2, 0]];
 
                 var base = this.primitive[pc.RENDERSTYLE_SOLID].base;
