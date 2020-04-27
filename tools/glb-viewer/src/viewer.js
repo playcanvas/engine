@@ -110,13 +110,7 @@ var Viewer = function (canvas) {
 
     var graph = new Graph(app, 128);
     app.on('prerender', this._onPrerender, this);
-    app.on('postrender', function () {
-        if (this.refocusCamera) {
-            this.focusCamera();
-            this.refocusCamera = false;
-            this.renderNextFrame();
-        }
-    }, this);
+    app.on('frameend', this._onFrameend, this);
 
     // store app things
     this.app = app;
@@ -126,7 +120,7 @@ var Viewer = function (canvas) {
     this.asset = null;
     this.graph = graph;
     this.meshInstances = [];
-    this.refocusCamera = false;
+    this.firstFrame = false;
 
     this.showGraphs = false;
 
@@ -447,8 +441,10 @@ Object.assign(Viewer.prototype, {
                         })
                         .flat());
 
-            //
-            this.refocusCamera = true;
+            // we can't refocus the camera here because the scene hierarchy only gets updated
+            // during render. we must instead set a flag, wait for a render to take place and
+            // then focus the camera.
+            this.firstFrame = true;
             this.renderNextFrame();
         }
     },
@@ -462,7 +458,8 @@ Object.assign(Viewer.prototype, {
 
         if (this.entity &&
             this.entity.model &&
-            this.entity.model.model) {
+            this.entity.model.model &&
+            !this.firstFrame) {             // don't update on the first frame
 
             var i;
             var meshInstance;
@@ -514,15 +511,21 @@ Object.assign(Viewer.prototype, {
                 this.debugNormals.clear();
 
                 if (this.normalLength > 0) {
-                    var vertexBuffer;
-                    var skinMatrices;
                     for (i = 0; i < this.meshInstances.length; ++i) {
                         meshInstance = this.meshInstances[i];
-                        vertexBuffer = meshInstance.morphInstance ?
+                        var vertexBuffer = meshInstance.morphInstance ?
                             meshInstance.morphInstance._vertexBuffer : meshInstance.mesh.vertexBuffer;
-                        skinMatrices = meshInstance.skinInstance ?
-                            meshInstance.skinInstance.matrices : null;
+
                         if (vertexBuffer) {
+                            var skinMatrices = meshInstance.skinInstance ?
+                                meshInstance.skinInstance.matrices : null;
+
+                            // if there is skinning we need to manually update matrices here otherwise
+                            // our normals are always a frame behind
+                            if (skinMatrices) {
+                                meshInstance.skinInstance.updateMatrices(meshInstance.node);
+                            }
+
                             this.debugNormals.generateNormals(vertexBuffer,
                                                               meshInstance.node.getWorldTransform(),
                                                               this.normalLength,
@@ -532,6 +535,17 @@ Object.assign(Viewer.prototype, {
                 }
                 this.debugNormals.update();
             }
+        }
+    },
+
+    _onFrameend: function () {
+        if (this.firstFrame) {
+            this.firstFrame = false;
+
+            // focus camera after first frame otherwise skinned model bounding
+            // boxes are incorrect
+            this.focusCamera();
+            this.renderNextFrame();
         }
     }
 });

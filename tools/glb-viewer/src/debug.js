@@ -65,11 +65,10 @@ var DebugLines = function (app, camera) {
 };
 
 DebugLines._matrixMad = function (result, mat, factor) {
-    if (factor <= 0) {
-        return;
-    }
-    for (var i = 0; i < 16; ++i) {
-        result.data[i] += mat.data[i] * factor;
+    if (factor > 0) {
+        for (var i = 0; i < 16; ++i) {
+            result.data[i] += mat.data[i] * factor;
+        }
     }
 };
 
