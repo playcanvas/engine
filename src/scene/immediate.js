@@ -53,7 +53,7 @@ Object.assign(pc.Application.prototype, function () {
         init: function (device, vertexFormat, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
-                this.mesh = new pc.Mesh();
+                this.mesh = new pc.Mesh(device);
                 this.mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 this.mesh.primitive[0].base = 0;
                 this.mesh.primitive[0].indexed = false;
@@ -453,7 +453,7 @@ Object.assign(pc.Application.prototype, function () {
             iterator.next();
             iterator.element[pc.SEMANTIC_POSITION].set(0.5, 0.5, 0);
             iterator.end();
-            this._immediateData.quadMesh = new pc.Mesh();
+            this._immediateData.quadMesh = new pc.Mesh(this.graphicsDevice);
             this._immediateData.quadMesh.vertexBuffer = quadVb;
             this._immediateData.quadMesh.primitive[0].type = pc.PRIMITIVE_TRISTRIP;
             this._immediateData.quadMesh.primitive[0].base = 0;

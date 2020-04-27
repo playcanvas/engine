@@ -165,8 +165,7 @@ Object.assign(pc, function () {
          */
         destroy: function () {
             var meshInstances = this.meshInstances;
-            var meshInstance, mesh, skin, morph, ib, boneTex, j;
-            var device;
+            var meshInstance, mesh, skin, morph, boneTex;
             for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
 
@@ -174,20 +173,10 @@ Object.assign(pc, function () {
                 if (mesh) {
                     mesh._refCount--;
                     if (mesh._refCount < 1) {
-                        if (mesh.vertexBuffer) {
-                            device = device || mesh.vertexBuffer.device;
-                            mesh.vertexBuffer.destroy();
-                            mesh.vertexBuffer = null;
-                        }
-                        for (j = 0; j < mesh.indexBuffer.length; j++) {
-                            device = device || mesh.indexBuffer.device;
-                            ib = mesh.indexBuffer[j];
-                            if (!ib) continue;
-                            ib.destroy();
-                        }
-                        mesh.indexBuffer.length = 0;
+                        mesh.destroy();
                     }
                 }
+                meshInstance.mesh = null;
 
                 skin = meshInstance.skinInstance;
                 if (skin) {

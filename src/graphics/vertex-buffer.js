@@ -19,8 +19,8 @@ Object.assign(pc, function () {
         this.format = format;
         this.numVertices = numVertices;
 
-        // Calculate the size
-        this.numBytes = format.size * numVertices;
+        // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
+        this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
         graphicsDevice._vram.vb += this.numBytes;
 
         // Create the WebGL vertex buffer object
