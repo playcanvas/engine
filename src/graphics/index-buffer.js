@@ -199,7 +199,7 @@ Object.assign(pc, function () {
             var indices = this._lockTypedArray();
             var count = this.numIndices;
 
-            if (ArrayBuffer.isView(data)) {
+            if (ArrayBuffer.isView(data.buffer)) {
                 // destination data is typed array
                 data.set(indices);
             } else {
