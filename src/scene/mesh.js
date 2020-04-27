@@ -459,7 +459,7 @@ Object.assign(pc, function () {
                 var streamIndices = this._geometryData.indices;
                 count = this._geometryData.indexCount;
 
-                if (ArrayBuffer.isView(data)) {
+                if (ArrayBuffer.isView(indices)) {
                     // destination data is typed array
                     indices.set(streamIndices);
                 } else {
