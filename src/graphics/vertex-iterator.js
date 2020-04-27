@@ -56,7 +56,6 @@ Object.assign(pc, function () {
         this.numComponents = vertexElement.numComponents;
 
         // create the typed array based on the element data type
-        var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
         if (vertexFormat.interleaved) {
             this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset);
         } else {
