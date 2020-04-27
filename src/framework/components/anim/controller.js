@@ -1,10 +1,10 @@
 Object.assign(pc, function () {
 
     var ANIM_INTERRUPTION_SOURCE_NONE = 0;
-    var ANIM_INTERRUPTION_SOURCE_CURRENT_STATE = 1;
+    var ANIM_INTERRUPTION_SOURCE_PREV_STATE = 1;
     var ANIM_INTERRUPTION_SOURCE_NEXT_STATE = 2;
-    var ANIM_INTERRUPTION_SOURCE_CURRENT_STATE_NEXT_STATE = 3;
-    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_CURRENT_STATE = 4;
+    var ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE = 3;
+    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE = 4;
 
     var ANIM_TRANSITION_PREDICATE_GREATER_THAN = 0;
     var ANIM_TRANSITION_PREDICATE_LESS_THAN = 1;
@@ -107,10 +107,23 @@ Object.assign(pc, function () {
     var AnimController = function (animEvaluator, states, transitions, parameters, activate) {
         this.animEvaluator = animEvaluator;
         this.states = states.map(function(state) {
-            return new AnimState(state.name, state.speed);
+            return new AnimState(
+                state.name,
+                state.speed
+            );
         });
         this.transitions = transitions.map((function(transition) {
-            return new AnimTransition(this, transition.from, transition.to, transition.time, transition.priority, transition.conditions, transition.exitTime, transition.transitionOffset);
+            return new AnimTransition(
+                this,
+                transition.from,
+                transition.to,
+                transition.time,
+                transition.priority,
+                transition.conditions,
+                transition.exitTime,
+                transition.transitionOffset,
+                transition.interruptionSource
+            );
         }).bind(this));
         this.parameters = parameters;
         this.initialParameters = JSON.parse(JSON.stringify(parameters));
@@ -122,6 +135,8 @@ Object.assign(pc, function () {
         this.currTransitionTime = 1.0;
         this.totalTransitionTime = 1.0;
         this.isTransitioning = false;
+        this.transitionInterruptionSource = ANIM_INTERRUPTION_SOURCE_NONE;
+        this.transitionPreviousStates = [];
 
         this.timeInState = 0;
         this.timeInStateBefore = 0;
@@ -161,17 +176,60 @@ Object.assign(pc, function () {
             return this.previousStateName = stateName;
         },
 
-        _findTransition: function(from, to) {
-            if (this.isTransitioning) {
-                return false;
-            }
+        _findTransitionsFromState: function(stateName) {
             var transitions = this.transitions.filter((function(transition) {
-                if (to && from) {
-                    return transition.from === from && transition.to === to;
-                } else {
-                    return transition.from === this.activeStateName;
-                }
+                return transition.from === stateName && transition.to !== this.activeStateName;
             }).bind(this));
+
+            // sort transitions in priority order
+            transitions.sort(function(a, b) {
+                return a.priority < b.priority;
+            });
+
+            return transitions;
+        },
+
+        _findTransitionsBetweenStates: function(sourceStateName, destinationStateName) {
+            var transitions = this.transitions.filter((function(transition) {
+                return transition.from === sourceStateName && transition.to === destinationStateName;
+            }).bind(this));
+
+            // sort transitions in priority order
+            transitions.sort(function(a, b) {
+                return a.priority < b.priority;
+            });
+
+            return transitions;
+        },
+
+        _findTransition: function(from, to) {
+            var transitions = [];
+
+            // find transitions that include the required source and destination states
+            if (from && to) {
+                transitions.concat(this._findTransitionsBetweenStates(this.activeStateName));
+            } else {
+                if (!this.isTransitioning) {
+                    transitions = transitions.concat(this._findTransitionsFromState(this.activeStateName));
+                } else {
+                    switch(this.transitionInterruptionSource) {
+                        case ANIM_INTERRUPTION_SOURCE_PREV_STATE:
+                            transitions = transitions.concat(this._findTransitionsFromState(this.previousStateName));
+                        case ANIM_INTERRUPTION_SOURCE_NEXT_STATE:
+                            transitions = transitions.concat(this._findTransitionsFromState(this.activeStateName));
+                        case ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE:
+                            transitions = transitions.concat(this._findTransitionsFromState(this.previousStateName));
+                            transitions = transitions.concat(this._findTransitionsFromState(this.activeStateName));
+                        case ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE:
+                            transitions = transitions.concat(this._findTransitionsFromState(this.activeStateName));
+                            transitions = transitions.concat(this._findTransitionsFromState(this.previousStateName));
+                        case ANIM_INTERRUPTION_SOURCE_NONE:
+                        default:
+                    }
+                }
+            }
+
+            // filter out transitions that don't have their conditions met
             transitions = transitions.filter((function(transition) {
                 // when an exit time is present, we should only exit if it falls within the current frame delta time
                 if (transition.hasExitTime()) {
@@ -184,14 +242,12 @@ Object.assign(pc, function () {
                     }
                     // return false if exit time isn't within the frames delta time
                     if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
-                        return false;
+                        return null;
                     }
                 }
                 return transition.hasConditionsMet();
             }).bind(this));
-            transitions.sort(function(a, b) {
-                return a.priority < b.priority;
-            });
+
             if (transitions.length > 0) {
                 return transitions[0];
             } else {
@@ -211,10 +267,32 @@ Object.assign(pc, function () {
                 this.resetTrigger(triggers[i].parameterName);
             }
 
+            if (this.isTransitioning) {
+                var interpolatedTime = this.currTransitionTime / this.totalTransitionTime;
+                for (var i = 0; i < this.transitionPreviousStates.length; i++) {
+                    this.transitionPreviousStates[i].weight = this.transitionPreviousStates[i].weight * (1.0 - interpolatedTime);
+                    var state = this._getState(this.transitionPreviousStates[i].name);
+                    for (var j = 0; j < state.animations.length; j++) {
+                        var animation = state.animations[j];
+                        this.animEvaluator.findClip(animation.name).pause();
+                    }
+                }
+                this.transitionPreviousStates.push({
+                    name: this.previousStateName,
+                    weight: interpolatedTime 
+                });
+            } else {
+                this.transitionPreviousStates.push({
+                    name: this.previousStateName,
+                    weight: 1.0
+                });
+            }
+
             if (transition.time > 0) {
                 this.isTransitioning = true;
                 this.totalTransitionTime = transition.time;
                 this.currTransitionTime = 0;
+                this.transitionInterruptionSource = transition.interruptionSource;
             }
 
             var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
@@ -263,19 +341,6 @@ Object.assign(pc, function () {
             if (!transition) {
                 this.animEvaluator.removeClips();
                 transition = new AnimTransition(this, this.activeStateName, newStateName, 0, 0);
-            }
-            this._updateStateFromTransition(transition);
-        },
-
-        _transitionToNextState: function() {
-            var transition = this._findTransition();
-            if (!transition) {
-                return;
-            }
-            if (transition.to === ANIM_STATE_END)
-            {
-                this._setActiveState(ANIM_STATE_START);
-                transition = this._findTransition();
             }
             this._updateStateFromTransition(transition);
         },
@@ -354,12 +419,17 @@ Object.assign(pc, function () {
                     if (this.currTransitionTime >= this.totalTransitionTime) {
                         this.isTransitioning = false;
 
-                        var previousState = this._getPreviousState();
-                        for (var i = 0; i < previousState.animations.length; i++) {
-                            var animation = previousState.animations[i];
-                            this.animEvaluator.findClip(animation.name).pause();
-                            this.animEvaluator.findClip(animation.name).blendWeight = 0;
+                        for (var i = 0; i < this.transitionPreviousStates.length; i++) {
+                            var state = this._getState(this.transitionPreviousStates[i].name);
+                            for (var j = 0; j < state.animations.length; j++) {
+                                var animation = state.animations[j];
+                                var clip = this.animEvaluator.findClip(animation.name);
+                                clip.pause();
+                                clip.blendWeight = 0;
+                            }
                         }
+
+                        this.transitionPreviousStates = [];
 
                         var activeState = this._getActiveState();
                         for (var i = 0; i < activeState.animations.length; i++) {
@@ -369,10 +439,13 @@ Object.assign(pc, function () {
                     } else {
                         var interpolatedTime = this.currTransitionTime / this.totalTransitionTime;
 
-                        var previousState = this._getPreviousState();
-                        for (var i = 0; i < previousState.animations.length; i++) {
-                            var animation = previousState.animations[i];
-                            this.animEvaluator.findClip(animation.name).blendWeight = (1.0 - interpolatedTime) * animation.weight / previousState.getTotalWeight();
+                        for (var i = 0; i < this.transitionPreviousStates.length; i++) {
+                            var state = this._getState(this.transitionPreviousStates[i].name);
+                            var stateWeight = this.transitionPreviousStates[i].weight;
+                            for (var j = 0; j < state.animations.length; j++) {
+                                var animation = state.animations[j];
+                                this.animEvaluator.findClip(animation.name).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.getTotalWeight() * stateWeight;
+                            }
                         }
                         var activeState = this._getActiveState();
                         for (var i = 0; i < activeState.animations.length; i++) {
