@@ -1,6 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
+    // map of engine pc.TYPE_*** enums to their corresponding typed array constructors
+    var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
+
     /**
      * @class
      * @name pc.VertexIteratorAccessor
