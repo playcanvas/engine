@@ -631,7 +631,6 @@ Object.assign(pc, function () {
             }
         },
 
-        
         generateWireframe: function () {
             var typedArray = function (indexBuffer) {
                 switch (indexBuffer.format) {
