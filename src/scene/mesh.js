@@ -178,171 +178,6 @@ Object.assign(pc, function () {
     });
 
     Object.assign(Mesh.prototype, {
-<<<<<<< HEAD
-        generateWireframe: function () {
-
-            var typedArray = function (indexBuffer) {
-                switch (indexBuffer.format) {
-                    case pc.INDEXFORMAT_UINT8:
-                        return new Uint8Array(indexBuffer.storage);
-                    case pc.INDEXFORMAT_UINT16:
-                        return new Uint16Array(indexBuffer.storage);
-                    case pc.INDEXFORMAT_UINT32:
-                        return new Uint32Array(indexBuffer.storage);
-                    default:
-                        return null;
-                }
-            };
-
-            var lines = [];
-            var format;
-            if (this.indexBuffer[0]) {
-                var offsets = [[0, 1], [1, 2], [2, 0]];
-
-                var base = this.primitive[pc.RENDERSTYLE_SOLID].base;
-                var count = this.primitive[pc.RENDERSTYLE_SOLID].count;
-                var indexBuffer = this.indexBuffer[pc.RENDERSTYLE_SOLID];
-                var srcIndices = typedArray(indexBuffer);
-
-                var uniqueLineIndices = {};
-
-                for (var j = base; j < base + count; j += 3) {
-                    for (var k = 0; k < 3; k++) {
-                        var i1 = srcIndices[j + offsets[k][0]];
-                        var i2 = srcIndices[j + offsets[k][1]];
-                        var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
-                        if (uniqueLineIndices[line] === undefined) {
-                            uniqueLineIndices[line] = 0;
-                            lines.push(i1, i2);
-                        }
-                    }
-                }
-                format = indexBuffer.format;
-            } else {
-                for (var i = 0; i < this.vertexBuffer.numVertices; i += 3) {
-                    lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
-                }
-                format = lines.length > 65535 ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
-            }
-
-            var wireBuffer = new pc.IndexBuffer(this.vertexBuffer.device, format, lines.length);
-            var dstIndices = typedArray(wireBuffer);
-            dstIndices.set(lines);
-            wireBuffer.unlock();
-
-            this.primitive[pc.RENDERSTYLE_WIREFRAME] = {
-                type: pc.PRIMITIVE_LINES,
-                base: 0,
-                count: lines.length,
-                indexed: true
-            };
-            this.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
-        }
-    });
-
-    /**
-     * @class
-     * @name pc.MeshInstance
-     * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
-     * mesh instances that can have different transforms and materials.
-     * @description Create a new mesh instance.
-     * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
-     * @param {pc.Mesh} mesh - The graphics mesh being instanced.
-     * @param {pc.Material} material - The material used to render this instance.
-     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
-     * mesh instance.
-     * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
-     * Defaults to false.
-     * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
-     * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {pc.GraphNode} node The graph node defining the transform for this instance.
-     * @property {pc.Mesh} mesh The graphics mesh being instanced.
-     * @property {pc.Material} material The material used by this mesh instance.
-     * @property {number} renderStyle The render style of the mesh instance. Can be:
-     *
-     * * {@link pc.RENDERSTYLE_SOLID}
-     * * {@link pc.RENDERSTYLE_WIREFRAME}
-     * * {@link pc.RENDERSTYLE_POINTS}
-     *
-     * Defaults to pc.RENDERSTYLE_SOLID.
-     * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
-     * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
-     * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
-     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
-     * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
-     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
-     * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
-     * @example
-     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.StandardMaterial();
-     * var node = new pc.GraphNode();
-     * var meshInstance = new pc.MeshInstance(node, mesh, material);
-     */
-    var MeshInstance = function MeshInstance(node, mesh, material) {
-        this._key = [0, 0];
-        this._shader = [null, null, null];
-
-        this.isStatic = false;
-        this._staticLightList = null;
-        this._staticSource = null;
-
-        this.node = node;           // The node that defines the transform of the mesh instance
-        this._mesh = mesh;           // The mesh that this instance renders
-        mesh._refCount++;
-        this.material = material;   // The material with which to render this instance
-
-        this._shaderDefs = pc.MASK_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_DYNAMIC
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? pc.SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? pc.SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? pc.SHADERDEF_VCOLOR : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? pc.SHADERDEF_TANGENTS : 0;
-
-        this._lightHash = 0;
-
-        // Render options
-        this.visible = true;
-        this.layer = pc.LAYER_WORLD; // legacy
-        this.renderStyle = pc.RENDERSTYLE_SOLID;
-        this.castShadow = false;
-        this._receiveShadow = true;
-        this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
-        this.cull = true;
-        this.pick = true;
-        this._updateAabb = true;
-        this._updateAabbFunc = null;
-        this._calculateSortDistance = null;
-
-        // 64-bit integer key that defines render order of this mesh instance
-        this.updateKey();
-
-        this._skinInstance = null;
-        this.morphInstance = null;
-        this.instancingData = null;
-
-        // World space AABB
-        this.aabb = new pc.BoundingBox();
-
-        this._boneAabb = null;
-        this._aabbVer = -1;
-
-        this.drawOrder = 0;
-        this.visibleThisFrame = 0;
-
-        // custom function used to customize culling (e.g. for 2D UI elements)
-        this.isVisibleFunc = null;
-
-        this.parameters = {};
-
-        this.stencilFront = null;
-        this.stencilBack = null;
-        // Negative scale batching support
-        this.flipFaces = false;
-    };
-=======
->>>>>>> master
-
         /**
          * @function
          * @name pc.Mesh#destroy
@@ -794,6 +629,66 @@ Object.assign(pc, function () {
                 // remove data
                 this._geometryData.indices = null;
             }
+        },
+
+        
+        generateWireframe: function () {
+            var typedArray = function (indexBuffer) {
+                switch (indexBuffer.format) {
+                    case pc.INDEXFORMAT_UINT8:
+                        return new Uint8Array(indexBuffer.storage);
+                    case pc.INDEXFORMAT_UINT16:
+                        return new Uint16Array(indexBuffer.storage);
+                    case pc.INDEXFORMAT_UINT32:
+                        return new Uint32Array(indexBuffer.storage);
+                    default:
+                        return null;
+                }
+            };
+
+            var lines = [];
+            var format;
+            if (this.indexBuffer[0]) {
+                var offsets = [[0, 1], [1, 2], [2, 0]];
+
+                var base = this.primitive[pc.RENDERSTYLE_SOLID].base;
+                var count = this.primitive[pc.RENDERSTYLE_SOLID].count;
+                var indexBuffer = this.indexBuffer[pc.RENDERSTYLE_SOLID];
+                var srcIndices = typedArray(indexBuffer);
+
+                var uniqueLineIndices = {};
+
+                for (var j = base; j < base + count; j += 3) {
+                    for (var k = 0; k < 3; k++) {
+                        var i1 = srcIndices[j + offsets[k][0]];
+                        var i2 = srcIndices[j + offsets[k][1]];
+                        var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
+                        if (uniqueLineIndices[line] === undefined) {
+                            uniqueLineIndices[line] = 0;
+                            lines.push(i1, i2);
+                        }
+                    }
+                }
+                format = indexBuffer.format;
+            } else {
+                for (var i = 0; i < this.vertexBuffer.numVertices; i += 3) {
+                    lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
+                }
+                format = lines.length > 65535 ? pc.INDEXFORMAT_UINT32 : pc.INDEXFORMAT_UINT16;
+            }
+
+            var wireBuffer = new pc.IndexBuffer(this.vertexBuffer.device, format, lines.length);
+            var dstIndices = typedArray(wireBuffer);
+            dstIndices.set(lines);
+            wireBuffer.unlock();
+
+            this.primitive[pc.RENDERSTYLE_WIREFRAME] = {
+                type: pc.PRIMITIVE_LINES,
+                base: 0,
+                count: lines.length,
+                indexed: true
+            };
+            this.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
         }
     });
 
