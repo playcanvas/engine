@@ -18,6 +18,13 @@ Object.assign(pc, function () {
     var ANIM_PARAMETER_BOOLEAN = 2;
     var ANIM_PARAMETER_TRIGGER = 3;
 
+    var ANIM_PARAMETER_TYPE_NAMES = {
+        ANIM_PARAMETER_INTEGER: 'Integer',
+        ANIM_PARAMETER_FLOAT: 'Float',
+        ANIM_PARAMETER_BOOLEAN: 'Boolean',
+        ANIM_PARAMETER_TRIGGER: 'Trigger',
+    };
+
     var ANIM_STATE_START = 'ANIM_STATE_START';
     var ANIM_STATE_END = 'ANIM_STATE_END';
 
@@ -73,7 +80,7 @@ Object.assign(pc, function () {
             var conditionsMet = true;
             for (var i = 0; i < this.conditions.length; i++) {
                 var condition = this.conditions[i];
-                var parameter = this.controller.getParameter(condition.parameterName);
+                var parameter = this.controller._getParameter(condition.parameterName);
                 switch(condition.predicate) {
                     case ANIM_TRANSITION_PREDICATE_GREATER_THAN:
                         conditionsMet = conditionsMet && parameter.value > condition.value;
@@ -263,11 +270,11 @@ Object.assign(pc, function () {
             this._setActiveState(transition.to);
 
             var triggers = transition.conditions.filter((function(condition) {
-                var parameter = this.getParameter(condition.parameterName);
+                var parameter = this._getParameter(condition.parameterName);
                 return parameter.type === ANIM_PARAMETER_TRIGGER;
             }).bind(this));
             for (var i = 0; i < triggers.length; i++) {
-                this.resetTrigger(triggers[i].parameterName);
+                this.setParameterValue(triggers[i].parameterName, ANIM_PARAMETER_TRIGGER, false);
             }
 
             if (this.isTransitioning) {
@@ -480,66 +487,30 @@ Object.assign(pc, function () {
             return this._getState(this.activeStateName).name;
         },
 
-        getFloat: function(name) {
-            return this.parameters[name].value;
-        },
-
-        setFloat: function(name, value) {
-            if (Number(value) === value && value % 1 === 0) {
-                var param = this.parameters[name];
-                if (param && param.type === ANIM_PARAMETER_FLOAT) {
-                    param.value = value;
-                } else {
-                    // #ifdef DEBUG
-                    console.error('No float parameter named "' + name + '" found in anim controller');
-                    // #endif
-                }
-            } else {
-                // #ifdef DEBUG
-                console.error('Cannot assign non float value to float anim controller parameter');
-                // #endif
-            }
-        },
-
-        getInteger: function(name) {
-            return this.parameters[name].value;
-        },
-
-        setInteger: function(name, value) {
-            var integer = this.parameters[name];
-            if (integer && integer.type === ANIM_PARAMETER_INTEGER)
-                integer.value = value;
-        },
-
-        getBoolean: function(name) {
-            return this.parameters[name].value;
-        },
-
-        setBoolean: function(name, value) {
-            var boolean = this.parameters[name];
-            if (boolean && boolean.type === ANIM_PARAMETER_BOOLEAN)
-                boolean.value = value;
-        },
-
-        getTrigger: function(name) {
-            return this.parameters[name].value;
-        },
-
-        setTrigger: function(name) {
-            var trigger = this.parameters[name];
-            if (trigger && trigger.type === ANIM_PARAMETER_TRIGGER)
-                trigger.value = true;
-        },
-
-        resetTrigger: function(name) {
-            var trigger = this.parameters[name];
-            if (trigger && trigger.type === ANIM_PARAMETER_TRIGGER)
-                trigger.value = false;
-        },
-
-        getParameter: function(name) {
+        _getParameter: function(name) {
             return this.parameters[name];
-        }
+        },
+
+        getParameterValue: function(name, type) {
+            var param = this._getParameter(name);
+            if (param && param.type === type) {
+                return param.value;
+            }
+            // #ifdef DEBUG
+            console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + ANIM_PARAMETER_TYPE_NAMES[type] + '"');
+            // #endif
+        },
+
+        setParameterValue: function(name, type, value) {
+            var param = this._getParameter(name);
+            if (param && param.type === type) {
+                param.value = value;
+                return;
+            }
+            // #ifdef DEBUG
+            console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + ANIM_PARAMETER_TYPE_NAMES[type] + '"');
+            // #endif
+        },
     });
 
     return {
@@ -556,6 +527,7 @@ Object.assign(pc, function () {
         ANIM_TRANSITION_PREDICATE_EQUAL_TO: ANIM_TRANSITION_PREDICATE_EQUAL_TO,
         ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO: ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO,
 
+        ANIM_PARAMETER_TYPE_NAMES: ANIM_PARAMETER_TYPE_NAMES,
         ANIM_PARAMETER_INTEGER: ANIM_PARAMETER_INTEGER,
         ANIM_PARAMETER_FLOAT: ANIM_PARAMETER_FLOAT,
         ANIM_PARAMETER_BOOLEAN: ANIM_PARAMETER_BOOLEAN,

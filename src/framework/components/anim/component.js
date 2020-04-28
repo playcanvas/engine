@@ -62,55 +62,55 @@ Object.assign(pc, function () {
 
         getFloat: function(name) {
             if (this.data.animController) {
-                return this.data.animController.getFloat(name);
+                return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_FLOAT);
             }
         },
 
         setFloat: function(name, value) {
             if (this.data.animController) {
-                this.data.animController.setFloat(name, value);
+                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_FLOAT, value);
             }
         },
 
         getInteger: function(name) {
             if (this.data.animController) {
-                return this.data.animController.getInteger(name);
+                return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_INTEGER);
             }
         },
 
         setInteger: function(name, value) {
             if (this.data.animController) {
-                this.data.animController.setInteger(name, value);
+                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, value);
             }
         },
 
         getBoolean: function(name) {
             if (this.data.animController) {
-                return this.data.animController.getBoolean(name);
+                return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN);
             }
         },
 
         setBoolean: function(name, value) {
             if (this.data.animController) {
-                this.data.animController.setBoolean(name, value);
+                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN, value);
             }
         },
 
         getTrigger: function(name) {
             if (this.data.animController) {
-                return this.data.animController.getTrigger(name);
+                return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_TRIGGER);
             }
         },
 
         setTrigger: function(name) {
             if (this.data.animController) {
-                this.data.animController.setTrigger(name);
+                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, true);
             }
         },
 
         resetTrigger: function(name) {
             if (this.data.animController) {
-                this.data.animController.resetTrigger(name);
+                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, false);
             }
         },
 
