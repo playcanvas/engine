@@ -880,7 +880,7 @@ pc.programlib.standard = {
         code = "";
 
         if (options.clearCoat > 0) {
-            code += '#define CLEARCOAT 1\n';
+            code += '#define CLEARCOAT\n';
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
