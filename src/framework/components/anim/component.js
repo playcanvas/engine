@@ -46,12 +46,16 @@ Object.assign(pc, function () {
 
         linkAnimAssetToState: function(stateName, asset) {
             if (!this.data.animController)
+                // #ifdef DEBUG
                 console.error('linkAnimAssetToState: Trying to link an anim asset to non existing state graph. Have you called loadStateMachineAsset?');
+                // #endif
 
             var animTrack = asset.resource;
 
             if(!animTrack)
+                // #ifdef DEBUG
                 console.error('linkAnimAssetToState: No animation found for given assetName');
+                // #endif
 
             this.data.animController.linkAnimationToState(stateName, animTrack);
         },
@@ -123,7 +127,9 @@ Object.assign(pc, function () {
             }
 
             if (!this.data.animController) {
+                // #ifdef DEBUG
                 console.error('Trying to play an animation when no animation state machine has been loaded. Have you called loadStateMachineAsset?');
+                // #endif
                 return;
             }
 

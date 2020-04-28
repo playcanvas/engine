@@ -348,7 +348,9 @@ Object.assign(pc, function () {
         linkAnimationToState: function(stateName, animTrack) {
             var state = this._getState(stateName);
             if (!state) {
+                // #ifdef DEBUG
                 console.error('Linking animation asset to animation state that does not exist');
+                // #endif
                 return;
             }
 
@@ -481,9 +483,20 @@ Object.assign(pc, function () {
         },
 
         setFloat: function(name, value) {
-            var float = this.parameters[name];
-            if (float && float.type === ANIM_PARAMETER_FLOAT)
-                float.value = value;
+            if (Number(value) === value && value % 1 === 0) {
+                var param = this.parameters[name];
+                if (param && param.type === ANIM_PARAMETER_FLOAT) {
+                    param.value = value;
+                } else {
+                    // #ifdef DEBUG
+                    console.error('No float parameter named "' + name + '" found in anim controller');
+                    // #endif
+                }
+            } else {
+                // #ifdef DEBUG
+                console.error('Cannot assign non float value to float anim controller parameter');
+                // #endif
+            }
         },
 
         getInteger: function(name) {
