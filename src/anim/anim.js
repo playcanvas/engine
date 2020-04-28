@@ -563,16 +563,19 @@ Object.assign(pc, function () {
      */
     var AnimBinder = function () { };
 
-    // join a list of path segments into a path string
-    AnimBinder.joinPath = function (pathSegments) {
+    // join a list of path segments into a path string using the full stop character. If another character is supplied,
+    // it will join using that character instead
+    AnimBinder.joinPath = function (pathSegments, character) {
+        character = character || '.';
         var escape = function (string) {
-            return string.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+            return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character)
         };
-        return pathSegments.map(escape).join('.');
+        return pathSegments.map(escape).join(character);
     };
 
     // split a path string into its segments and resolve character escaping
-    AnimBinder.splitPath = function (path) {
+    AnimBinder.splitPath = function (path, character) {
+        character = character || '.';
         var result = [];
         var curr = "";
         var i = 0;
@@ -581,12 +584,12 @@ Object.assign(pc, function () {
 
             if (c === '\\' && i < path.length) {
                 c = path[i++];
-                if (c === '\\' || c === '.') {
+                if (c === '\\' || c === character) {
                     curr += c;
                 } else {
                     curr += '\\' + c;
                 }
-            } else if (c === '.') {
+            } else if (c === character) {
                 result.push(curr);
                 curr = '';
             } else {
