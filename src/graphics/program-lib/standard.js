@@ -1077,7 +1077,9 @@ pc.programlib.standard = {
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-            code += chunks.reflectionPS;
+            if (options.clearCoat > 0){
+                code += chunks.reflectionCCPS;
+            }
             if (options.refraction){
                 code += chunks.refractionPS;
             }
@@ -1299,6 +1301,9 @@ pc.programlib.standard = {
 
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+                if (options.clearCoat > 0){
+                    code += "   addReflectionCC();\n";
+                }
                 code += "   addReflection();\n";
             }
 
