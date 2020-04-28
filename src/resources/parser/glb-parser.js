@@ -575,12 +575,8 @@ Object.assign(pc, function () {
                         options.deltaPositions = getAccessorData(accessor, bufferViews, buffers);
 
                         if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
-                            var min = accessor.min;
-                            var max = accessor.max;
-                            options.aabb = new pc.BoundingBox(
-                                new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                                new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-                            );
+                            options.aabb = new pc.BoundingBox();
+                            options.aabb.setMinMax(new pc.Vec3(accessor.min), new pc.Vec3(accessor.max));
                         }
 
                         // FIXME: assume that position, normal, tangent data all share the
