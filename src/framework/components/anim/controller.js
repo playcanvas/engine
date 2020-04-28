@@ -106,12 +106,13 @@ Object.assign(pc, function () {
 
     var AnimController = function (animEvaluator, states, transitions, parameters, activate) {
         this.animEvaluator = animEvaluator;
-        this.states = states.map(function(state) {
-            return new AnimState(
-                state.name,
-                state.speed
+        this.states = {};
+        for (var i = 0; i < states.length; i++) {
+            this.states[states[i].name] = new AnimState(
+                states[i].name,
+                states[i].speed
             );
-        });
+        }
         this.transitions = transitions.map((function(transition) {
             return new AnimTransition(
                 this,
@@ -125,6 +126,8 @@ Object.assign(pc, function () {
                 transition.interruptionSource
             );
         }).bind(this));
+        this.findTransitionsFromStateCache = {};
+        this.findTransitionsBetweenStatesCache = {};
         this.parameters = parameters;
         this.initialParameters = Object.assign({}, parameters);
         this.previousStateName = null;
@@ -144,20 +147,11 @@ Object.assign(pc, function () {
 
     Object.assign(AnimController.prototype, {
         _getState: function(stateName) {
-            for (var i = 0; i < this.states.length; i++) {
-                if (this.states[i].name === stateName) {
-                    return this.states[i];
-                }
-            }
-            return null;
+            return this.states[stateName];
         },
 
         _setState: function(stateName, state) {
-            for (var i = 0; i < this.states.length; i++) {
-                if (this.states[i].name === stateName) {
-                    this.states[i] = state;
-                }
-            }
+            this.states[stateName] = state;
         },
 
         _getActiveState: function() {
@@ -177,27 +171,36 @@ Object.assign(pc, function () {
         },
 
         _findTransitionsFromState: function(stateName) {
-            var transitions = this.transitions.filter((function(transition) {
-                return transition.from === stateName && transition.to !== this.activeStateName;
-            }).bind(this));
+            var transitions = this.findTransitionsFromStateCache[stateName];
+            if (!transitions) {
+                transitions = this.transitions.filter((function(transition) {
+                    return transition.from === stateName;
+                }).bind(this));
 
-            // sort transitions in priority order
-            transitions.sort(function(a, b) {
-                return a.priority < b.priority;
-            });
-
+                // sort transitions in priority order
+                transitions.sort(function(a, b) {
+                    return a.priority < b.priority;
+                });
+                
+                this.findTransitionsFromStateCache[stateName] = transitions;
+            }
             return transitions;
         },
 
         _findTransitionsBetweenStates: function(sourceStateName, destinationStateName) {
-            var transitions = this.transitions.filter((function(transition) {
-                return transition.from === sourceStateName && transition.to === destinationStateName;
-            }).bind(this));
+            var transitions = this.findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
+            if (!transitions) {
+                transitions = this.transitions.filter((function(transition) {
+                    return transition.from === sourceStateName && transition.to === destinationStateName;
+                }).bind(this));
 
-            // sort transitions in priority order
-            transitions.sort(function(a, b) {
-                return a.priority < b.priority;
-            });
+                // sort transitions in priority order
+                transitions.sort(function(a, b) {
+                    return a.priority < b.priority;
+                });
+
+                this.findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName] = transitions;
+            }
 
             return transitions;
         },
