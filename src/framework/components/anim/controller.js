@@ -126,7 +126,7 @@ Object.assign(pc, function () {
             );
         }).bind(this));
         this.parameters = parameters;
-        this.initialParameters = JSON.parse(JSON.stringify(parameters));
+        this.initialParameters = Object.assign({}, parameters);
         this.previousStateName = null;
         this.activeStateName = ANIM_STATE_START;
         this.playing = false;
@@ -404,8 +404,7 @@ Object.assign(pc, function () {
 
             this.animEvaluator.removeClips();
 
-            this.parameters = JSON.parse(JSON.stringify(this.initialParameters));
-
+            this.parameters = Object.assign({}, this.initialParameters);
         },
         
         update: function(dt) {
