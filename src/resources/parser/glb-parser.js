@@ -598,6 +598,8 @@ Object.assign(pc, function () {
                     if (meshData.hasOwnProperty('extras') &&
                         meshData.extras.hasOwnProperty('targetNames')) {
                         options.name = meshData.extras.targetNames[index];
+                    } else {
+                        options.name = targets.length.toString(10);
                     }
 
                     targets.push(new pc.MorphTarget(options));
