@@ -173,7 +173,7 @@ Object.assign(pc, function () {
                 if (mesh) {
                     meshInstance.mesh = null;   // this calls decReference on mesh
                     if (mesh.refCount < 1) {
-                         mesh.destroy();
+                        mesh.destroy();
                     }
                 }
 
