@@ -177,7 +177,22 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(Mesh.prototype, 'refCount', {
+        get: function () {
+            return this._refCount;
+        }
+    });
+
     Object.assign(Mesh.prototype, {
+
+        incReference: function () {
+            this._refCount++;
+        },
+
+        decReference: function () {
+            this._refCount--;
+        },
+
         /**
          * @function
          * @name pc.Mesh#destroy
