@@ -171,12 +171,11 @@ Object.assign(pc, function () {
 
                 mesh = meshInstance.mesh;
                 if (mesh) {
-                    mesh._refCount--;
-                    if (mesh._refCount < 1) {
-                        mesh.destroy();
+                    meshInstance.mesh = null;   // this calls decReference on mesh
+                    if (mesh.refCount < 1) {
+                         mesh.destroy();
                     }
                 }
-                meshInstance.mesh = null;
 
                 skin = meshInstance.skinInstance;
                 if (skin) {
