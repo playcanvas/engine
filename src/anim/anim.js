@@ -741,21 +741,19 @@ Object.assign(pc, function () {
 
         unresolve: function (path) {
             var parts = this._getParts(path);
-            if (!parts) {
-                return null;
-            }
+            if (parts) {
+                var node = this.nodes[parts[0]];
 
-            var node = this.nodes[parts[0]];
-
-            node.count--;
-            if (node.count === 0) {
-                var activeNodes = this.activeNodes;
-                var i = activeNodes.indexOf(node.node);  // :(
-                var len = activeNodes.length;
-                if (i < len - 1) {
-                    activeNodes[i] = activeNodes[len - 1];
+                node.count--;
+                if (node.count === 0) {
+                    var activeNodes = this.activeNodes;
+                    var i = activeNodes.indexOf(node.node);  // :(
+                    var len = activeNodes.length;
+                    if (i < len - 1) {
+                        activeNodes[i] = activeNodes[len - 1];
+                    }
+                    activeNodes.pop();
                 }
-                activeNodes.pop();
             }
         },
 
