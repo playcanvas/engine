@@ -374,11 +374,11 @@ Object.assign(pc, function () {
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
 
+            if (! failed) self.fire('end');
+
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
             self.app.tick();
-
-            if (! failed) self.fire('end');
         };
 
         session.addEventListener('end', onEnd);
