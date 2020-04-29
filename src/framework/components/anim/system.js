@@ -1,17 +1,8 @@
 Object.assign(pc, function () {
     var _schema = [
         'enabled',
-        'assets',
         'speed',
-        'loop',
         'activate',
-        'animations',
-        'model',
-        'prevAnim',
-        'currAnim',
-        'blending',
-        'blendTimeRemaining',
-        'playing'
     ];
 
     /**
@@ -26,7 +17,7 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'anim';
-        this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
+        this.description = "State based animation system that can animate the models and component properties of this entity and its children";
 
         this.ComponentType = pc.AnimComponent;
         this.DataType = pc.AnimComponentData;
@@ -54,7 +45,6 @@ Object.assign(pc, function () {
             this.addComponent(clone, {});
 
             clone.animation.data.speed = entity.animation.speed;
-            clone.animation.data.loop = entity.animation.loop;
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
