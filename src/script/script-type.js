@@ -91,6 +91,20 @@ Object.assign(pc, function () {
      * @field
      * @static
      * @readonly
+     * @name pc.ScriptType.scriptName
+     * @type {string|null}
+     * @description Name of a Script Type
+     */
+    Object.defineProperty(ScriptType, 'scriptName', {
+        get: function () {
+            return this.__name;
+        }
+    });
+
+    /**
+     * @field
+     * @static
+     * @readonly
      * @name pc.ScriptType.attributes
      * @type {pc.ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
