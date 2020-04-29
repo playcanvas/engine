@@ -101,6 +101,10 @@ Object.assign(pc, function () {
         this.loaded = false;
         this.loading = false;
 
+        this._xhr = null;
+        this.bytesLoaded = 0;
+        this.bytesTotal = 0;
+
         this.registry = null;
 
         if (file) this.file = file;
@@ -330,6 +334,11 @@ Object.assign(pc, function () {
                 // remove resource from loader cache
                 this.registry._loader.clearCache(this.getFileUrl(), this.type);
             }
+        },
+
+        onProgressEvent: function (progressEvent) {
+            this.bytesLoaded = progressEvent.bytesLoaded;
+            this.bytesTotal = progressEvent.bytesTotal;
         }
     });
 

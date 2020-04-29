@@ -112,7 +112,7 @@ Object.assign(pc, function () {
                         return;
                     }
 
-                    handler.load(urlObj, function (err, data, extra) {
+                    var xhr = handler.load(urlObj, function (err, data, extra) {
                         // make sure key exists because loader
                         // might have been destroyed by now
                         if (!self._requests[key]) {
@@ -130,6 +130,14 @@ Object.assign(pc, function () {
                             self._onFailure(key, e);
                         }
                     }, asset);
+
+                    asset._xhr = xhr;
+
+                    if (xhr) {
+                        xhr.onprogress = function(progressEvent) {
+                            asset.onProgressEvent(progressEvent);
+                        };
+                    }
                 };
 
                 var normalizedUrl = url.split('?')[0];

@@ -279,6 +279,8 @@ Object.assign(pc, function () {
 
     Object.assign(TextureHandler.prototype, {
         load: function (url, callback, asset) {
+            var xhr;
+
             if (typeof url === 'string') {
                 url = {
                     load: url,
@@ -305,7 +307,7 @@ Object.assign(pc, function () {
                     responseType: "arraybuffer",
                     retry: this.retryRequests
                 };
-                pc.http.get(
+                xhr = pc.http.get(
                     url.load,
                     options,
                     function (err, result) {
@@ -351,6 +353,8 @@ Object.assign(pc, function () {
                     }, 0);
                 }
             }
+
+            return xhr;
         },
 
         _loadImage: function (url, originalUrl, crossOrigin, callback) {
