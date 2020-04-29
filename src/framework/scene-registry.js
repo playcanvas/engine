@@ -154,6 +154,7 @@ Object.assign(pc, function () {
         }
 
         var handle = handler.load(url, function (err, data) {
+            handle.loaded = true;
             if (err) {
                 if (callback) callback(err);
                 return;

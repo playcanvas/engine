@@ -4,12 +4,21 @@ Object.assign(pc, function () {
     var ResourceLoadHandle = function (url, xhr) {
         this._url = url;
         this.xhr = xhr;
+        this.loaded = false;
         this.requestFinished = false;
+        this.bytesLoaded = 0;
+        this.bytesTotal = 0;
+
+        var self = this;
+        xhr.onprogress = function(progressEvent) {
+            self.onProgressEvent(progressEvent);
+        }
     };
 
-    Object.assign(ResourceLoadHandle.prototype, {
-
-    });
+    ResourceLoadHandle.prototype.onProgressEvent = function (progressEvent) {
+        this.bytesLoaded = progressEvent.loaded;
+        this.bytesTotal = progressEvent.total;
+    };
 
     return {
         ResourceLoadHandle: ResourceLoadHandle
