@@ -286,7 +286,6 @@ Object.assign(pc, function () {
         end: function () {
             // Unlock the vertex buffer
             this.vertexBuffer.unlock();
-            this.vertexBuffer = null;
         },
 
         // Copies data for specified semantic into vertex buffer.
