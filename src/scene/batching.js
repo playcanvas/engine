@@ -1020,7 +1020,7 @@ Object.assign(pc, function () {
         indexBuffer.unlock();
 
         // Create mesh
-        mesh = new pc.Mesh();
+        mesh = new pc.Mesh(this.device);
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer[0] = indexBuffer;
         mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES; // Doesn't support any other primitive types batch.origMeshInstances[0].mesh.primitive[0].type;

@@ -36,6 +36,7 @@ Object.assign(pc, function () {
             case 5121: return pc.TYPE_UINT8;
             case 5122: return pc.TYPE_INT16;
             case 5123: return pc.TYPE_UINT16;
+            case 5124: return pc.TYPE_INT32;
             case 5125: return pc.TYPE_UINT32;
             case 5126: return pc.TYPE_FLOAT32;
             default: return 0;
@@ -48,6 +49,7 @@ Object.assign(pc, function () {
             case 5121: return 1;    // uint8
             case 5122: return 2;    // int16
             case 5123: return 2;    // uint16
+            case 5124: return 4;    // int32
             case 5125: return 4;    // uint32
             case 5126: return 4;    // float32
             default: return 0;
@@ -55,18 +57,48 @@ Object.assign(pc, function () {
     };
 
     var getAccessorData = function (accessor, bufferViews, buffers) {
-        var bufferView = bufferViews[accessor.bufferView];
+        var bufferViewIdx;
+        var count;
+        if (accessor.hasOwnProperty("sparse")) {
+            bufferViewIdx = accessor.sparse.values.bufferView;
+            count = accessor.sparse.count;
+        } else {
+            bufferViewIdx = accessor.bufferView;
+            count = accessor.count;
+        }
+
+        var bufferView = bufferViews[bufferViewIdx];
         var typedArray = buffers[bufferView.buffer];
         var accessorByteOffset = accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0;
         var bufferViewByteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
         var byteOffset = typedArray.byteOffset + accessorByteOffset + bufferViewByteOffset;
-        var length = accessor.count * getNumComponents(accessor.type);
+        var length = count * getNumComponents(accessor.type);
 
         switch (accessor.componentType) {
             case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
             case 5121: return new Uint8Array(typedArray.buffer, byteOffset, length);
             case 5122: return new Int16Array(typedArray.buffer, byteOffset, length);
             case 5123: return new Uint16Array(typedArray.buffer, byteOffset, length);
+            case 5124: return new Int32Array(typedArray.buffer, byteOffset, length);
+            case 5125: return new Uint32Array(typedArray.buffer, byteOffset, length);
+            case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
+            default: return null;
+        }
+    };
+
+    var getSparseAccessorIndices = function (accessor, bufferViews, buffers) {
+        var bufferView = bufferViews[accessor.sparse.indices.bufferView];
+        var typedArray = buffers[bufferView.buffer];
+        var bufferViewByteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
+        var byteOffset = typedArray.byteOffset + bufferViewByteOffset;
+        var length = accessor.sparse.count;
+
+        switch (accessor.sparse.indices.componentType) {
+            case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
+            case 5121: return new Uint8Array(typedArray.buffer, byteOffset, length);
+            case 5122: return new Int16Array(typedArray.buffer, byteOffset, length);
+            case 5123: return new Uint16Array(typedArray.buffer, byteOffset, length);
+            case 5124: return new Int32Array(typedArray.buffer, byteOffset, length);
             case 5125: return new Uint32Array(typedArray.buffer, byteOffset, length);
             case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
             default: return null;
@@ -258,38 +290,38 @@ Object.assign(pc, function () {
         var numPoints = outputGeometry.num_points();
 
         // helper function to decode data stream with id to TypedArray of appropriate type
-        var extractDracoAttributeInfo = function (uniqueId, storageType, componentSizeInBytes, normalize) {
+        var extractDracoAttributeInfo = function (uniqueId) {
             var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
             var numValues = numPoints * attribute.num_components();
-            componentSizeInBytes = normalize ? 4 : componentSizeInBytes;   // if normalized, always decompress to float32 buffer
-            var dataSize = numValues * componentSizeInBytes;
-            var ptr = decoderModule._malloc( dataSize );
-            var values, k;
+            var dracoFormat = attribute.data_type();
+            var ptr, values, componentSizeInBytes, storageType;
 
-            switch (storageType) {
-                case pc.TYPE_FLOAT32:
-                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
-                    values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
+            // storage format is based on draco attribute data type
+            switch (dracoFormat) {
+
+                case decoderModule.DT_UINT8:
+                    storageType = pc.TYPE_UINT8;
+                    componentSizeInBytes = 1;
+                    ptr = decoderModule._malloc(numValues * componentSizeInBytes);
+                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, numValues * componentSizeInBytes, ptr);
+                    values = new Uint8Array(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
                     break;
 
-                case pc.TYPE_UINT8:
-                    if (normalize) {
-                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, dataSize, ptr);
-                        valuesFloat32 = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
-
-                        values = new Uint8ClampedArray(numValues);
-                        for (k = 0; k < numValues; k++)
-                            values[k] = valuesFloat32[k] * 255;
-                    } else {
-                        decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, dataSize, ptr);
-                        values = new Uint8Array(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
-                    }
+                case decoderModule.DT_UINT16:
+                    storageType = pc.TYPE_UINT16;
+                    componentSizeInBytes = 2;
+                    ptr = decoderModule._malloc(numValues * componentSizeInBytes);
+                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT16, numValues * componentSizeInBytes, ptr);
+                    values = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numValues).slice();
                     break;
 
+                case decoderModule.DT_FLOAT32:
                 default:
-                    // #ifdef DEBUG
-                    console.error("Element type not implemented: " + storageType);
-                    // #endif
+                    storageType = pc.TYPE_FLOAT32;
+                    componentSizeInBytes = 4;
+                    ptr = decoderModule._malloc(numValues * componentSizeInBytes);
+                    decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, numValues * componentSizeInBytes, ptr);
+                    values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
                     break;
             }
 
@@ -297,7 +329,9 @@ Object.assign(pc, function () {
 
             return {
                 values: values,
-                numComponents: attribute.num_components()
+                numComponents: attribute.num_components(),
+                componentSizeInBytes: componentSizeInBytes,
+                storageType: storageType
             };
         };
 
@@ -309,20 +343,17 @@ Object.assign(pc, function () {
             if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
                 var semanticInfo = semanticMap[attrib];
                 var semantic = semanticInfo.semantic;
-                var storageType = semanticInfo.storageType;
-                var componentSizeInBytes = semanticInfo.byteSize;
-                var normalize = semanticMap[attrib].normalize;
-                var attributeInfo = extractDracoAttributeInfo(attributes[attrib], storageType, componentSizeInBytes, normalize);
+                var attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
 
                 vertexDesc.push({
                     semantic: semantic,
                     components: attributeInfo.numComponents,
-                    type: storageType,
+                    type: attributeInfo.storageType,
                     normalize: semanticMap[attrib].normalize
                 });
 
                 // store the info we'll need to copy this data into the vertex buffer
-                var size = attributeInfo.numComponents * componentSizeInBytes;
+                var size = attributeInfo.numComponents * attributeInfo.componentSizeInBytes;
                 sourceDesc[semantic] = {
                     values: attributeInfo.values,
                     buffer: attributeInfo.values.buffer,
@@ -396,22 +427,22 @@ Object.assign(pc, function () {
         var meshes = [];
 
         var semanticMap = {
-            'POSITION': { semantic: pc.SEMANTIC_POSITION,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'NORMAL': { semantic: pc.SEMANTIC_NORMAL,           storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'TANGENT': { semantic: pc.SEMANTIC_TANGENT,         storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'BINORMAL': { semantic: pc.SEMANTIC_BINORMAL,       storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'COLOR_0': { semantic: pc.SEMANTIC_COLOR,           storageType: pc.TYPE_UINT8,   byteSize: 1,  normalize: true },
-            'JOINTS_0': { semantic: pc.SEMANTIC_BLENDINDICES,   storageType: pc.TYPE_UINT8,   byteSize: 1 },
-            'WEIGHTS_0': { semantic: pc.SEMANTIC_BLENDWEIGHT,   storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'TEXCOORD_0': { semantic: pc.SEMANTIC_TEXCOORD0,    storageType: pc.TYPE_FLOAT32, byteSize: 4 },
-            'TEXCOORD_1': { semantic: pc.SEMANTIC_TEXCOORD1,    storageType: pc.TYPE_FLOAT32, byteSize: 4 }
+            'POSITION': { semantic: pc.SEMANTIC_POSITION },
+            'NORMAL': { semantic: pc.SEMANTIC_NORMAL },
+            'TANGENT': { semantic: pc.SEMANTIC_TANGENT },
+            'BINORMAL': { semantic: pc.SEMANTIC_BINORMAL },
+            'COLOR_0': { semantic: pc.SEMANTIC_COLOR },
+            'JOINTS_0': { semantic: pc.SEMANTIC_BLENDINDICES },
+            'WEIGHTS_0': { semantic: pc.SEMANTIC_BLENDWEIGHT },
+            'TEXCOORD_0': { semantic: pc.SEMANTIC_TEXCOORD0 },
+            'TEXCOORD_1': { semantic: pc.SEMANTIC_TEXCOORD1 }
         };
 
         meshData.primitives.forEach(function (primitive) {
 
             var primitiveType, vertexBuffer, numIndices;
             var indices = null;
-            var mesh = new pc.Mesh();
+            var mesh = new pc.Mesh(device);
 
             // try and get draco compressed data first
             if (primitive.hasOwnProperty('extensions')) {
@@ -536,19 +567,35 @@ Object.assign(pc, function () {
             if (primitive.hasOwnProperty('targets')) {
                 var targets = [];
 
-                primitive.targets.forEach(function (target) {
+                primitive.targets.forEach(function (target, index) {
                     var options = {};
+
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
                         options.deltaPositions = getAccessorData(accessor, bufferViews, buffers);
+
+                        if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
+                            options.aabb = new pc.BoundingBox();
+                            options.aabb.setMinMax(new pc.Vec3(accessor.min), new pc.Vec3(accessor.max));
+                        }
+
+                        // FIXME: assume that position, normal, tangent data all share the
+                        // same set of sparse indices
+                        if (accessor.sparse) {
+                            options.indices = getSparseAccessorIndices(accessor, bufferViews, buffers);
+                        }
                     }
+
                     if (target.hasOwnProperty('NORMAL')) {
                         accessor = accessors[target.NORMAL];
                         options.deltaNormals = getAccessorData(accessor, bufferViews, buffers);
                     }
-                    if (target.hasOwnProperty('TANGENT')) {
-                        accessor = accessors[target.TANGENT];
-                        options.deltaTangents = getAccessorData(accessor, bufferViews, buffers);
+
+                    if (meshData.hasOwnProperty('extras') &&
+                        meshData.extras.hasOwnProperty('targetNames')) {
+                        options.name = meshData.extras.targetNames[index];
+                    } else {
+                        options.name = targets.length.toString(10);
                     }
 
                     targets.push(new pc.MorphTarget(options));

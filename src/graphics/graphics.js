@@ -763,6 +763,10 @@
          * @description Vertex attribute to be treated as a color.
          */
         SEMANTIC_COLOR: "COLOR",
+
+        // private semantic used for programatic construction of individual texcoord semantics
+        SEMANTIC_TEXCOORD: "TEXCOORD",
+
         /**
          * @constant
          * @name pc.SEMANTIC_TEXCOORD0
