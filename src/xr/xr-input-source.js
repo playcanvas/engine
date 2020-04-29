@@ -224,6 +224,9 @@ Object.assign(pc, function () {
     XrInputSource.prototype._updateTransforms = function () {
         var dirty;
 
+        if (! this._manager.active)
+            return;
+
         if (this._dirtyLocal) {
             dirty = true;
             this._dirtyLocal = false;
@@ -241,13 +244,14 @@ Object.assign(pc, function () {
         } else {
             this._worldTransform.copy(this._localTransform);
         }
-
-        return dirty;
     };
 
     XrInputSource.prototype._updateRayTransforms = function () {
         var dirty = this._dirtyRay;
         this._dirtyRay = false;
+
+        if (! this._manager.active)
+            return;
 
         var parent = this._manager.camera.parent;
         if (parent) {
@@ -267,8 +271,6 @@ Object.assign(pc, function () {
             this._ray.origin.copy(this._rayLocal.origin);
             this._ray.direction.copy(this._rayLocal.direction);
         }
-
-        return dirty;
     };
 
     /**
