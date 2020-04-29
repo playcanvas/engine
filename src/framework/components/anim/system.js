@@ -45,7 +45,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'enabled', 'loop', 'speed'];
+            properties = ['activate', 'enabled', 'speed'];
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
