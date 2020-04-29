@@ -121,7 +121,7 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#getSpeed
          * @description Returns the current speed of the animation component system.
          */
-        getSpeed() {
+        getSpeed: function() {
             return this.data.speed;
         },
 
@@ -131,7 +131,7 @@ Object.assign(pc, function () {
          * @description Sets the current speed of the animation component system. All animations indivudual speeds will be multiplied by this value.
          * @param {number} value - The speed value to multiply all animation playbacks by.
          */
-        setSpeed(value) {
+        setSpeed: function(value) {
             if (typeof value === "number") {
                 this.data.speed = value;
                 return;

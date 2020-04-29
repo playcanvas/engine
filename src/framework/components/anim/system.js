@@ -41,30 +41,11 @@ Object.assign(pc, function () {
         },
 
         cloneComponent: function (entity, clone) {
-            var key;
             this.addComponent(clone, {});
 
-            clone.animation.data.speed = entity.animation.speed;
-            clone.animation.data.activate = entity.animation.activate;
-            clone.animation.data.enabled = entity.animation.enabled;
-
-            var clonedAnims = { };
-            var animations = entity.animation.animations;
-            for (key in animations) {
-                if (animations.hasOwnProperty(key)) {
-                    clonedAnims[key] = animations[key];
-                }
-            }
-            clone.animation.animations = clonedAnims;
-
-            var clonedAnimsIndex = { };
-            var animationsIndex = entity.animation.animationsIndex;
-            for (key in animationsIndex) {
-                if (animationsIndex.hasOwnProperty(key)) {
-                    clonedAnimsIndex[key] = animationsIndex[key];
-                }
-            }
-            clone.animation.animationsIndex = clonedAnimsIndex;
+            clone.anim.data.speed = entity.anim.speed;
+            clone.anim.data.activate = entity.anim.activate;
+            clone.anim.data.enabled = entity.anim.enabled;
         },
 
         onBeforeRemove: function (entity, component) {
