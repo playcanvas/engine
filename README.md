@@ -122,7 +122,7 @@ Now you can run various build options:
 | `npm run build:prf` | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
 | `npm run build:dbg` | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
 | `npm run tsd`       | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
-| `npm run doc`       | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
+| `npm run docs`      | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
 
 Pre-built versions of the engine are also available.
 
@@ -148,6 +148,8 @@ To build the source map to allow for easier engine debugging, you can add `-- -m
     npm run build -- -m
 
 This will output to `build/output/playcanvas.js.map`
+
+Note: The preprocessor is ignored when when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
 
 ## How to run tests
 

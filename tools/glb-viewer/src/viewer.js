@@ -249,6 +249,7 @@ Object.assign(Viewer.prototype, {
     // play the animation
     play: function (animationName) {
         if (this.entity && this.entity.animation) {
+            this.entity.animation.enabled = true;
             if (animationName) {
                 this.entity.animation.play(this.animationMap[animationName], 1);
             } else {
@@ -260,6 +261,7 @@ Object.assign(Viewer.prototype, {
     // stop playing animations
     stop: function () {
         if (this.entity && this.entity.animation) {
+            this.entity.animation.enabled = false;
             this.entity.animation.playing = false;
         }
     },
