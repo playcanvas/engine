@@ -122,7 +122,7 @@ Now you can run various build options:
 | `npm run build:prf` | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
 | `npm run build:dbg` | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
 | `npm run tsd`       | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
-| `npm run docs`       | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
+| `npm run docs`      | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
 
 Pre-built versions of the engine are also available.
 
