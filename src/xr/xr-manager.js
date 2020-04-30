@@ -444,7 +444,7 @@ Object.assign(pc, function () {
             this.app.graphicsDevice.setResolution(width, height);
         }
 
-        var pose = frame.getViewerPose(this._referenceSpace);;
+        var pose = frame.getViewerPose(this._referenceSpace);
         lengthNew = pose ? pose.views.length : 0;
 
         if (lengthNew > this.views.length) {
