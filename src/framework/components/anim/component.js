@@ -253,22 +253,6 @@ Object.assign(pc, function () {
                 }
             }
         }
-
-        // speed: {
-        //     get: function () {
-        //         return this.data.speed;
-        //     },
-        //     set: function (value) {
-        //         console.log('hello');
-        //         if (typeof value === "number") {
-        //             this.data.speed = value;
-        //             return;
-        //         }
-        //         // #ifdef DEBUG
-        //         console.error('Anim component speed attribute must be a numeric value');
-        //         // #endif
-        //     }
-        // }
     });
 
     return {
