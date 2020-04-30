@@ -100,24 +100,6 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.AnimComponent#getActiveStateName
-         * @description Returns the currently active state name.
-         */
-        getActiveStateName: function () {
-            return this.data.animController ? this.data.animController.getActiveStateName() : null;
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponent#getActiveStateProgress
-         * @description Returns the currently active states progress as a value normalised by the states animation duration.
-         */
-        getActiveStateProgress: function () {
-            return this.data.animController ? this.data.animController.getActiveStateProgress() : null;
-        },
-
-        /**
-         * @function
          * @name pc.AnimComponent#getFloat
          * @description Returns a float parameter value by name.
          * @param {string} name - The name of the float to return the value of.
