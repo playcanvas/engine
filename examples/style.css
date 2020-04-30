@@ -92,6 +92,20 @@ p {
   color: #ffffff;
 }
 
+/* Go to GitHub source button area */
+.sourcenav {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+}
+
+.sourcenav .btn {
+  padding: 15px;
+  background-color: #f60;
+  color: #ffffff;
+  cursor: pointer;
+}
+
 #example,
 iframe {
   position: fixed;
