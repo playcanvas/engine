@@ -118,31 +118,6 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.AnimComponent#getSpeed
-         * @description Returns the current speed of the animation component system.
-         */
-        getSpeed: function() {
-            return this.data.speed;
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponent#getSpeed
-         * @description Sets the current speed of the animation component system. All animations indivudual speeds will be multiplied by this value.
-         * @param {number} value - The speed value to multiply all animation playbacks by.
-         */
-        setSpeed: function(value) {
-            if (typeof value === "number") {
-                this.data.speed = value;
-                return;
-            }
-            // #ifdef DEBUG
-            console.error('Anim component speed attribute must be a numeric value');
-            // #endif
-        },
-
-        /**
-         * @function
          * @name pc.AnimComponent#getFloat
          * @description Returns a float parameter value by name.
          * @param {string} name - The name of the float to return the value of.
@@ -251,6 +226,49 @@ Object.assign(pc, function () {
                 return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, false);
             }
         },
+    });
+
+    Object.defineProperties(AnimComponent.prototype, {
+        /**
+         * @property
+         * @name pc.AnimComponent#activeState
+         * @description Returns the currently active state name.
+         */
+        activeState: {
+            get: function() {
+                if (this.data.animController) {
+                    return this.data.animController.getActiveStateName();
+                }
+            }
+        },
+        /**
+         * @property
+         * @name pc.AnimComponent#activeStateProgress
+         * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+         */
+        activeStateProgress: {
+            get: function() {
+                if (this.data.animController) {
+                    return this.data.animController.getActiveStateProgress();
+                }
+            }
+        }
+
+        // speed: {
+        //     get: function () {
+        //         return this.data.speed;
+        //     },
+        //     set: function (value) {
+        //         console.log('hello');
+        //         if (typeof value === "number") {
+        //             this.data.speed = value;
+        //             return;
+        //         }
+        //         // #ifdef DEBUG
+        //         console.error('Anim component speed attribute must be a numeric value');
+        //         // #endif
+        //     }
+        // }
     });
 
     return {
