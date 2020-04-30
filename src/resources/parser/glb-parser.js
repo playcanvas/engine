@@ -1072,6 +1072,11 @@ Object.assign(pc, function () {
             // quaternion-specific processing on it.
             if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
                 quatArrays.push(curve.output);
+            } else if (target.path.startsWith('weights')) {
+                // it's a bit strange, but morph target animations implicitly assume there are n output
+                // values when there are n morph targets. here we set the number of components explicitly
+                // on the output curve data.
+                outputs[curve.output]._components = outputs[curve.output].data.length / inputs[curve.input].data.length;
             }
         }
 
@@ -1231,7 +1236,6 @@ Object.assign(pc, function () {
         }
 
         return nodes;
-
     };
 
     // create engine resources from the downloaded GLB data
