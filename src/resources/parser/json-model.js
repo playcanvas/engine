@@ -630,7 +630,7 @@ Object.assign(pc, function () {
                 );
 
                 var indexed = (meshData.indices !== undefined);
-                var mesh = new pc.Mesh();
+                var mesh = new pc.Mesh(this._device);
                 mesh.vertexBuffer = vertexBuffers[meshData.vertices];
                 mesh.indexBuffer[0] = indexed ? indexBuffer : null;
                 mesh.primitive[0].type = JSON_PRIMITIVE_TYPE[meshData.type];
