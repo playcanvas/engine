@@ -360,6 +360,68 @@ Object.assign(pc, function () {
         return sub;
     }
 
+    // Test for IE11
+    var quantizeCache = new Map();
+    var quantizeSetCache = new Map();
+    var quantizeSetClamp01Cache = new Map();
+    var divGraphCache = new Map();
+    var divMaxCache = new Map();
+
+    function getQuantizeFromCache(graph, precision) {
+        var hash = pc.hashCurve(graph);
+        var outGraph = quantizeCache.get(hash);
+        if (!outGraph) {
+            outGraph = graph.quantize(precision);
+            quantizeCache.set(hash, outGraph);
+        }
+
+        return outGraph;    
+    }
+
+    function getQuantizeSetFromCache(graph, precision) {
+        var hash = pc.hashCurveSet(graph);
+        var outGraph = quantizeSetCache.get(hash);
+        if (!outGraph) {
+            outGraph = graph.quantize(precision);
+            quantizeSetCache.set(hash, outGraph);
+        }
+
+        return outGraph;    
+    }
+
+    function getQuantizeSetClamp01FromCache(graph, precision) {
+        var hash = pc.hashCurveSet(graph);
+        var outGraph = quantizeSetClamp01Cache.get(hash);
+        if (!outGraph) {
+            outGraph = graph.quantizeClamped(precision, 0, 1);
+            quantizeSetClamp01Cache.set(hash, outGraph);
+        }
+
+        return outGraph;    
+    }
+
+    function getDivGraphFromCache(graph1, graph2, outMax) {
+        var hash = pc.hash2Float32Arrays(graph1, graph2);
+        var divGraph = divGraphCache.get(hash);
+        var divMax;
+        if (divGraph) {
+            divMax = divMaxCache.get(hash);
+
+        } else {
+            divMax = new Float32Array(outMax.length);
+            divGraph = divGraphFrom2Curves(graph1, graph2, divMax);
+            divGraphCache.set(hash, divGraph);
+            divMaxCache.set(hash, divMax);
+        }
+
+        for(var i = 0; i < divMax.length; ++i) {
+            outMax[i] = divMax[i];
+        }
+        
+        return divGraph;   
+    }
+
+
     Object.assign(ParticleEmitter.prototype, {
 
         onChangeCamera: function () {
@@ -689,22 +751,22 @@ Object.assign(pc, function () {
             var precision = this.precision;
             var gd = this.graphicsDevice;
             var i;
+            
+            this.qLocalVelocity = getQuantizeSetFromCache(this.localVelocityGraph, precision);
+            this.qVelocity =      getQuantizeSetFromCache(this.velocityGraph, precision);
+            this.qColor =         getQuantizeSetClamp01FromCache(this.colorGraph, precision);
+            this.qRotSpeed =      getQuantizeFromCache(this.rotationSpeedGraph, precision);
+            this.qScale =         getQuantizeFromCache(this.scaleGraph, precision);
+            this.qAlpha =         getQuantizeFromCache(this.alphaGraph, precision);
+            this.qRadialSpeed =   getQuantizeFromCache(this.radialSpeedGraph, precision);
 
-            this.qLocalVelocity = this.localVelocityGraph.quantize(precision);
-            this.qVelocity = this.velocityGraph.quantize(precision);
-            this.qColor =         this.colorGraph.quantizeClamped(precision, 0, 1);
-            this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision);
-            this.qScale =         this.scaleGraph.quantize(precision);
-            this.qAlpha =         this.alphaGraph.quantize(precision);
-            this.qRadialSpeed =   this.radialSpeedGraph.quantize(precision);
-
-            this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision);
-            this.qVelocity2 =      this.velocityGraph2.quantize(precision);
-            this.qColor2 =         this.colorGraph2.quantizeClamped(precision, 0, 1);
-            this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision);
-            this.qScale2 =         this.scaleGraph2.quantize(precision);
-            this.qAlpha2 =         this.alphaGraph2.quantize(precision);
-            this.qRadialSpeed2 =   this.radialSpeedGraph2.quantize(precision);
+            this.qLocalVelocity2 = getQuantizeSetFromCache(this.localVelocityGraph2, precision);
+            this.qVelocity2 =      getQuantizeSetFromCache(this.velocityGraph2, precision);
+            this.qColor2 =         getQuantizeSetClamp01FromCache(this.colorGraph2, precision);
+            this.qRotSpeed2 =      getQuantizeFromCache(this.rotationSpeedGraph2, precision);
+            this.qScale2 =         getQuantizeFromCache(this.scaleGraph2, precision);
+            this.qAlpha2 =         getQuantizeFromCache(this.alphaGraph2, precision);
+            this.qRadialSpeed2 =   getQuantizeFromCache(this.radialSpeedGraph2, precision);
 
             for (i = 0; i < precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
@@ -718,13 +780,22 @@ Object.assign(pc, function () {
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
             this.radialSpeedUMax = [0];
-            this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
-            this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax);
-            this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax);
-            this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
-            this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
-            this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
-            this.qRadialSpeedDiv =   divGraphFrom2Curves(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
+
+            this.qLocalVelocityDiv = getDivGraphFromCache(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
+            this.qVelocityDiv =      getDivGraphFromCache(this.qVelocity, this.qVelocity2, this.velocityUMax);
+            this.qColorDiv =         getDivGraphFromCache(this.qColor, this.qColor2, this.colorUMax);
+            this.qRotSpeedDiv =      getDivGraphFromCache(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
+            this.qScaleDiv =         getDivGraphFromCache(this.qScale, this.qScale2, this.scaleUMax);
+            this.qAlphaDiv =         getDivGraphFromCache(this.qAlpha, this.qAlpha2, this.alphaUMax);
+            this.qRadialSpeedDiv =   getDivGraphFromCache(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
+
+            // this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
+            // this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax);
+            // this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax);
+            // this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
+            // this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
+            // this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
+            // this.qRadialSpeedDiv =   divGraphFrom2Curves(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
 
             if (this.pack8) {
                 var umax = [0, 0, 0];
