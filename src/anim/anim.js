@@ -568,7 +568,7 @@ Object.assign(pc, function () {
     AnimBinder.joinPath = function (pathSegments, character) {
         character = character || '.';
         var escape = function (string) {
-            return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character)
+            return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character);
         };
         return pathSegments.map(escape).join(character);
     };
@@ -758,7 +758,6 @@ Object.assign(pc, function () {
                 }
                 activeNodes.pop();
             }
-            activeNodes.pop();
         },
 
         // flag animating nodes as dirty

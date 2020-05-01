@@ -41,15 +41,15 @@ Object.assign(pc, function () {
         open: function (url, data) {
             var name = data.name;
             var duration = data.duration;
-            var inputs = data.inputs.map(function(input) {
+            var inputs = data.inputs.map(function (input) {
                 return new pc.AnimData(1, input);
             });
-            var outputs = data.outputs.map(function(output) {
+            var outputs = data.outputs.map(function (output) {
                 return new pc.AnimData(1, output);
             });
-            var curves = data.curves.map(function(curve) {
+            var curves = data.curves.map(function (curve) {
                 return new pc.AnimCurve(
-                    [ curve.path ],
+                    [curve.path],
                     curve.inputIndex,
                     curve.outputIndex,
                     curve.interpolation
@@ -62,7 +62,7 @@ Object.assign(pc, function () {
                 outputs,
                 curves
             );
-        },
+        }
     });
 
     return {

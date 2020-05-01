@@ -40,7 +40,7 @@ Object.assign(pc, function () {
 
         open: function (url, data) {
             return data;
-        },
+        }
     });
 
     return {

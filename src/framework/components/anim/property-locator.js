@@ -12,13 +12,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimPropertyLocator#encode
          * @description Converts a locator array into its string version
-         * @param {array} locator - The property location in the scene defined as an array
-         * @returns {string}
+         * @param {Array} locator - The property location in the scene defined as an array
+         * @returns {string} The locator encoded as a string
          * @example
          * // returns 'spotLight/light/color.r'
-         * encode([['spotLight'], 'light', ['color','r']]) 
+         * encode([['spotLight'], 'light', ['color', 'r']]);
          */
-        encode: function(locator) {
+        encode: function (locator) {
             return pc.AnimBinder.joinPath([
                 pc.AnimBinder.joinPath(locator[0]),
                 locator[1],
@@ -29,13 +29,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimPropertyLocator#decode
          * @description Converts a locator string into its array version
-         * @param {array} locator - The property location in the scene defined as a string
-         * @returns {array}
+         * @param {Array} locator - The property location in the scene defined as a string
+         * @returns {Array} - The locator decoded into an array
          * @example
          * // returns [['spotLight'], 'light', ['color','r']]
-         * encode('spotLight/light/color.r') 
+         * encode('spotLight/light/color.r');
          */
-        decode: function(locator) {
+        decode: function (locator) {
             var locatorSections = pc.AnimBinder.splitPath(locator, '/');
             return [
                 pc.AnimBinder.splitPath(locatorSections[0]),
@@ -46,5 +46,5 @@ Object.assign(pc, function () {
     });
     return {
         AnimPropertyLocator: AnimPropertyLocator
-    }
+    };
 }());

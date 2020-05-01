@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'speed',
-        'activate',
+        'activate'
     ];
 
     /**

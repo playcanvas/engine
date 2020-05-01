@@ -25,7 +25,7 @@ Object.assign(pc, function () {
          * @description Loads a state graph asset resource into the component. Then initialises the components animation controller.
          * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
          */
-        loadStateGraph: function(stateGraph) {
+        loadStateGraph: function (stateGraph) {
             var data = this.data;
 
             var graph;
@@ -56,7 +56,7 @@ Object.assign(pc, function () {
          * @param {string} stateName - The name of the state that this animation should be associated with.
          * @param {object} animTrack - The animation that will linked to this state and played whenever this state is active.
          */
-        linkAnimationToState: function(stateName, animTrack) {
+        linkAnimationToState: function (stateName, animTrack) {
             if (!this.data.animController) {
                 // #ifdef DEBUG
                 console.error('linkAnimationToState: Trying to link an anim track before the state graph has been loaded. Have you called loadStateGraph?');
@@ -92,7 +92,7 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#reset
          * @description Reset the animation component to it's initial state, including all parameters. The system will be paused.
          */
-        reset: function() {
+        reset: function () {
             if (this.data.animController) {
                 this.data.animController.reset();
             }
@@ -103,8 +103,9 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#getFloat
          * @description Returns a float parameter value by name.
          * @param {string} name - The name of the float to return the value of.
+         * @returns {number} A float
          */
-        getFloat: function(name) {
+        getFloat: function (name) {
             if (this.data.animController) {
                 return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_FLOAT);
             }
@@ -117,9 +118,9 @@ Object.assign(pc, function () {
          * @param {string} name - The name of the parameter to set.
          * @param {number} value - The new float value to set this parameter to.
          */
-        setFloat: function(name, value) {
+        setFloat: function (name, value) {
             if (this.data.animController) {
-                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_FLOAT, value);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_FLOAT, value);
             }
         },
 
@@ -128,8 +129,9 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#getInteger
          * @description Returns an integer parameter value by name.
          * @param {string} name - The name of the integer to return the value of.
+         * @returns {number} An integer
          */
-        getInteger: function(name) {
+        getInteger: function (name) {
             if (this.data.animController) {
                 return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_INTEGER);
             }
@@ -142,9 +144,9 @@ Object.assign(pc, function () {
          * @param {string} name - The name of the parameter to set.
          * @param {number} value - The new integer value to set this parameter to.
          */
-        setInteger: function(name, value) {
+        setInteger: function (name, value) {
             if (this.data.animController) {
-                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, value);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, value);
             }
         },
 
@@ -153,8 +155,9 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#getBoolean
          * @description Returns a boolean parameter value by name.
          * @param {string} name - The name of the boolean to return the value of.
+         * @returns {boolean} A boolean
          */
-        getBoolean: function(name) {
+        getBoolean: function (name) {
             if (this.data.animController) {
                 return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN);
             }
@@ -167,9 +170,9 @@ Object.assign(pc, function () {
          * @param {string} name - The name of the parameter to set.
          * @param {boolean} value - The new boolean value to set this parameter to.
          */
-        setBoolean: function(name, value) {
+        setBoolean: function (name, value) {
             if (this.data.animController) {
-                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN, value);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN, value);
             }
         },
 
@@ -178,8 +181,9 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#getTrigger
          * @description Returns a trigger parameter value by name.
          * @param {string} name - The name of the trigger to return the value of.
+         * @returns {boolean} A boolean
          */
-        getTrigger: function(name) {
+        getTrigger: function (name) {
             if (this.data.animController) {
                 return this.data.animController.getParameterValue(name, pc.ANIM_PARAMETER_TRIGGER);
             }
@@ -191,9 +195,9 @@ Object.assign(pc, function () {
          * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
          * @param {string} name - The name of the parameter to set.
          */
-        setTrigger: function(name) {
+        setTrigger: function (name) {
             if (this.data.animController) {
-                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, true);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, true);
             }
         },
 
@@ -203,36 +207,36 @@ Object.assign(pc, function () {
          * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
          * @param {string} name - The name of the parameter to set.
          */
-        resetTrigger: function(name) {
+        resetTrigger: function (name) {
             if (this.data.animController) {
-                return this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, false);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_TRIGGER, false);
             }
-        },
+        }
     });
 
     Object.defineProperties(AnimComponent.prototype, {
         /**
-         * @property {string} activeState
          * @name pc.AnimComponent#activeState
-         * @description Returns the currently active state name.
+         * @property {string} activeState - Returns the currently active state name.
          */
         activeState: {
-            get: function() {
+            get: function () {
                 if (this.data.animController) {
                     return this.data.animController.getActiveStateName();
                 }
+                return null;
             }
         },
         /**
-         * @property {number} activeStateProgress
          * @name pc.AnimComponent#activeStateProgress
-         * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+         * @property {number} activeStateProgress - Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
          */
         activeStateProgress: {
-            get: function() {
+            get: function () {
                 if (this.data.animController) {
                     return this.data.animController.getActiveStateProgress();
                 }
+                return null;
             }
         }
     });
