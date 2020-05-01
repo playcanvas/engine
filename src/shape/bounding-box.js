@@ -318,25 +318,28 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#compute
          * @description Compute the size of the AABB to encapsulate all specified vertices.
          * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
+         * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
          */
-        compute: function (vertices) {
-            var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
-            var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
-            var numVerts = vertices.length / 3;
+        compute: function (vertices, numVerts) {
+            numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
+            if (numVerts > 0) {
+                var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
+                var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
 
-            for (var i = 1; i < numVerts; i++) {
-                var x = vertices[i * 3 + 0];
-                var y = vertices[i * 3 + 1];
-                var z = vertices[i * 3 + 2];
-                if (x < min.x) min.x = x;
-                if (y < min.y) min.y = y;
-                if (z < min.z) min.z = z;
-                if (x > max.x) max.x = x;
-                if (y > max.y) max.y = y;
-                if (z > max.z) max.z = z;
+                for (var i = 1; i < numVerts; i++) {
+                    var x = vertices[i * 3 + 0];
+                    var y = vertices[i * 3 + 1];
+                    var z = vertices[i * 3 + 2];
+                    if (x < min.x) min.x = x;
+                    if (y < min.y) min.y = y;
+                    if (z < min.z) min.z = z;
+                    if (x > max.x) max.x = x;
+                    if (y > max.y) max.y = y;
+                    if (z > max.z) max.z = z;
+                }
+
+                this.setMinMax(min, max);
             }
-
-            this.setMinMax(min, max);
         },
 
         /**

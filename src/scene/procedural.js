@@ -308,7 +308,7 @@ pc.createMesh = function (device, positions, opts) {
     var aabb = new pc.BoundingBox();
     aabb.compute(positions);
 
-    var mesh = new pc.Mesh();
+    var mesh = new pc.Mesh(device);
     mesh.vertexBuffer = vertexBuffer;
     mesh.indexBuffer[0] = indexBuffer;
     mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;

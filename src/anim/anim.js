@@ -664,21 +664,50 @@ Object.assign(pc, function () {
 
         this.nodes = nodes;                 // map of node name -> { node, count }
         this.activeNodes = [];              // list of active nodes
-        this.schema = {
-            'translation': {
-                components: 3,
-                target: 'localPosition',
-                type: 'vector'
+        this.handlers = {
+            'translation': function (node) {
+                var object = node.localPosition;
+                var func = function (value) {
+                    object.set.apply(object, value);
+                };
+                return new pc.AnimTarget(func, 'vector', 3);
             },
-            'rotation': {
-                components: 4,
-                target: 'localRotation',
-                type: 'quaternion'
+
+            'rotation': function (node) {
+                var object = node.localRotation;
+                var func = function (value) {
+                    object.set.apply(object, value);
+                };
+                return new pc.AnimTarget(func, 'quaternion', 4);
             },
-            'scale': {
-                components: 3,
-                target: 'localScale',
-                type: 'vector'
+
+            'scale': function (node) {
+                var object = node.localScale;
+                var func = function (value) {
+                    object.set.apply(object, value);
+                };
+                return new pc.AnimTarget(func, 'vector', 3);
+            },
+
+            'weights': function (node) {
+                var object = node;
+                while (object && object.constructor !== pc.Entity) {
+                    object = object.parent;
+                }
+                if (!object ||
+                    !object.model ||
+                    !object.model.model ||
+                    !object.model.model.morphInstances ||
+                    !object.model.model.morphInstances[0]) {
+                    return null;
+                }
+                object = object.model.model.morphInstances[0];
+                var func = function (value) {
+                    for (var i = 0; i < value.length; ++i) {
+                        object.setWeight(i, value[i]);
+                    }
+                };
+                return new pc.AnimTarget(func, 'vector', object.morph._targets.length);
             }
         };
 
@@ -690,14 +719,26 @@ Object.assign(pc, function () {
             var pathSections = this.propertyLocator.decode(path);
 
             var node = this.nodes[pathSections[0][0]];
-            var prop = this.schema[pathSections[2][0]];
+            if (!node) {
+                return null;
+            }
+
+            var handler = this.handlers[pathSections[2][0]];
+            if (!handler) {
+                return null;
+            }
+
+            var target = handler(node.node);
+            if (!target) {
+                return null;
+            }
 
             if (node.count === 0) {
                 this.activeNodes.push(node.node);
             }
             node.count++;
 
-            return new pc.AnimTarget(this._createSetter(node.node[prop.target]), prop.type, prop.components);
+            return target;
         },
 
         unresolve: function (path) {
@@ -714,32 +755,26 @@ Object.assign(pc, function () {
                 }
                 activeNodes.pop();
             }
+            activeNodes.pop();
         },
 
+        // flag animating nodes as dirty
         update: function (deltaTime) {
-            // flag active nodes as dirty
             var activeNodes = this.activeNodes;
             for (var i = 0; i < activeNodes.length; ++i) {
                 activeNodes[i]._dirtifyLocal();
             }
         },
 
-        // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
+        // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale|weights]
         _getParts: function (path) {
             var parts = AnimBinder.splitPath(path);
             if (parts.length !== 2 ||
                 !this.nodes.hasOwnProperty(parts[0]) ||
-                !this.schema.hasOwnProperty(parts[1])) {
+                !this.handlers.hasOwnProperty(parts[1])) {
                 return null;
             }
             return parts;
-        },
-
-        // create a setter function (works for pc.Vec* and pc.Quaternion) which have a 'set' function.
-        _createSetter: function (target) {
-            return function (value) {
-                target.set.apply(target, value);
-            };
         }
     });
 
