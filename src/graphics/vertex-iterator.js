@@ -346,7 +346,9 @@ Object.assign(pc, function () {
                 if (this.vertexBuffer.getFormat().interleaved) {
 
                     // extract data from interleaved buffer by looping over vertices and copying them manually
-                    data.length = 0;
+                    if  (Array.isArray(data))
+                        data.length = 0;
+                        
                     element.index = 0;
                     var offset = 0;
                     for (i = 0; i < count; i++) {
