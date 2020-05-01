@@ -1066,6 +1066,7 @@ Object.assign(pc, function () {
             'translation': 'localPosition',
             'rotation': 'localRotation',
             'scale': 'localScale',
+            'weights': 'weights'
         };
 
         // convert anim channels

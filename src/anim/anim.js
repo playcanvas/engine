@@ -743,6 +743,9 @@ Object.assign(pc, function () {
 
         unresolve: function (path) {
             var pathSections = this.propertyLocator.decode(path);
+            if (pathSections[1] !== 'graph')
+                return;
+
             var node = this.nodes[pathSections[0][0]];
 
             node.count--;

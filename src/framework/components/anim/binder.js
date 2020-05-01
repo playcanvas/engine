@@ -2,27 +2,16 @@ Object.assign(pc, function () {
 
     var AnimComponentBinder = function (animComponent, graph) {
         this.animComponent = animComponent;
-        this.propertyLocator = new pc.AnimPropertyLocator();
 
         if (graph) {
-            var nodes = { };
-
-            // cache node names so we can quickly resolve animation paths
-            var flatten = function (node) {
-                nodes[node.name] = {
-                    node: node,
-                    count: 0
-                };
-                for (var i = 0; i < node.children.length; ++i) {
-                    flatten(node.children[i]);
-                }
-            };
-            flatten(graph);
-
-            this.nodes = nodes;                 // map of node name -> { node, count }
-            this.activeNodes = [];              // list of active nodes
+            pc.DefaultAnimBinder.call(this, graph);
+        } else {
+            this.propertyLocator = new pc.AnimPropertyLocator();
         }
     };
+
+    AnimComponentBinder.prototype = Object.create(pc.DefaultAnimBinder.prototype);
+    AnimComponentBinder.prototype.constructor = AnimComponentBinder;
 
     Object.assign(AnimComponentBinder.prototype, {
         resolve: function(path) {
@@ -47,32 +36,12 @@ Object.assign(pc, function () {
                     propertyComponent = this.nodes[entityHierarchy[0]].node;
                     break;
                 default:
-                    entity.findComponent(component);
+                    propertyComponent = entity.findComponent(component);
                     if (!propertyComponent)
                         return null;
             }
 
             return this._createAnimTargetForProperty(propertyComponent, propertyHierarchy);
-        },
-
-        unresolve: function (path) {
-            var pathSections = this.propertyLocator.decode(path);
-            if (pathSections[1] !== 'graph')
-                return;
-
-            // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale]
-            var node = pathSections[0][0];
-
-            node.count--;
-            if (node.count === 0) {
-                var activeNodes = this.activeNodes;
-                var i = activeNodes.indexOf(node.node);  // :(
-                var len = activeNodes.length;
-                if (i < len - 1) {
-                    activeNodes[i] = activeNodes[len - 1];
-                }
-                activeNodes.pop();
-            }
         },
 
         update: function (deltaTime) {
@@ -182,6 +151,10 @@ Object.assign(pc, function () {
         },
 
         _createAnimTargetForProperty: function(propertyComponent, propertyHierarchy) {
+
+            if (this.handlers && this.handlers[propertyHierarchy[0]]) {
+                return this.handlers[propertyHierarchy[0]](propertyComponent);
+            }
 
             var property = this._getProperty(propertyComponent, propertyHierarchy);
 
