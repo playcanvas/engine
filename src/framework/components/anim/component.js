@@ -54,7 +54,7 @@ Object.assign(pc, function () {
          * @name pc.AnimComponent#linkAnimationToState
          * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
          * @param {string} stateName - The name of the state that this animation should be associated with.
-         * @param {pc.AnimTrack} animTrack - The animation that will linked to this state and played whenever this state is active.
+         * @param {object} animTrack - The animation that will linked to this state and played whenever this state is active.
          */
         linkAnimationToState: function(stateName, animTrack) {
             if (!this.data.animController) {
@@ -212,7 +212,7 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimComponent.prototype, {
         /**
-         * @property
+         * @property {string} activeState
          * @name pc.AnimComponent#activeState
          * @description Returns the currently active state name.
          */
@@ -224,7 +224,7 @@ Object.assign(pc, function () {
             }
         },
         /**
-         * @property
+         * @property {number} activeStateProgress
          * @name pc.AnimComponent#activeStateProgress
          * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
          */
