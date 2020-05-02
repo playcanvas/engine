@@ -195,7 +195,7 @@ Object.assign(pc, function () {
             this._vertexBuffer = new pc.VertexBuffer(this.morph._baseBuffer.device, this.morph._baseBuffer.format,
                                                      this.morph._baseBuffer.numVertices, pc.BUFFER_DYNAMIC, this.morph._baseBuffer.storage.slice(0));
             this._vertexData = new Float32Array(this._vertexBuffer.storage);
-            this._weights = morph._targets.map(function (t) {
+            this._weights = this.morph._targets.map(function (t) {
                 return t.defaultWeight;
             });
             this._dirty = true;
