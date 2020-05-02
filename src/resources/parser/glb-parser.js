@@ -602,6 +602,13 @@ Object.assign(pc, function () {
                 });
 
                 mesh.morph = new pc.Morph(targets);
+
+                // set default morph target weights if they're specified
+                if (meshData.hasOwnProperty('weights')) {
+                    for (var i = 0; i < meshData.weights.length; ++i) {
+                        targets[i].defaultWeight = meshData.weights[i];
+                    }
+                }
             }
 
             meshes.push(mesh);
