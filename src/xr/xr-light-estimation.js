@@ -130,10 +130,10 @@ Object.assign(pc, function () {
 
     /**
      * @function
-     * @name pc.XrLightEstimation#stop
-     * @description Stop estimation of illimunation data.
+     * @name pc.XrLightEstimation#end
+     * @description End estimation of illimunation data.
      */
-    XrLightEstimation.prototype.stop = function () {
+    XrLightEstimation.prototype.end = function () {
         this._lightProbeRequested = false;
         this._lightProbe = null;
         this._available = false;
