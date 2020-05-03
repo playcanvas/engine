@@ -18,9 +18,9 @@ Object.assign(pc, function () {
      * And the most simple level of light estimation is a most prominent directional light, its rotation, intensity and a color.
      * @param {pc.XrManager} manager - WebXR Manager.
      * @property {boolean} supported True if Light Estimation is supported, this information is available only during active AR session.
-     * @property {number} intensity Intensity of estimated most prominent directional light.
-     * @property {pc.Color} color Color of estimated most prominent directional light.
-     * @property {pc.Quat} rotation Rotation of estimated most prominent directional light.
+     * @property {number|null} intensity Intensity of estimated most prominent directional light. Or null if data is not available.
+     * @property {pc.Color|null} color Color of estimated most prominent directional light. Or null if data is not available.
+     * @property {pc.Quat|null} rotation Rotation of estimated most prominent directional light. Or null if data is not available.
      */
     var XrLightEstimation = function (manager) {
         pc.EventHandler.call(this);
@@ -43,12 +43,27 @@ Object.assign(pc, function () {
     XrLightEstimation.prototype = Object.create(pc.EventHandler.prototype);
     XrLightEstimation.prototype.constructor = XrLightEstimation;
 
+    /**
+     * @event
+     * @name pc.XrLightEstimation#available
+     * @description Fired when light estimation data becomes available.
+     */
+
+    /**
+     * @event
+     * @name pc.XrLightEstimation#error
+     * @param {Error} error - Error object related to failure of light estimation start.
+     * @description Fired when light estimation has failed to start.
+     * @example
+     * app.xr.lightEstimation.on('error', function (ex) {
+     *     // has failed to start
+     * });
+     */
+
     XrLightEstimation.prototype._onSessionStart = function () {
         var supported = !! this._manager.session.requestLightProbe;
         if (! supported) return;
-
         this._supported = true;
-        this.fire('supported');
     };
 
     XrLightEstimation.prototype._onSessionEnd = function () {
@@ -57,10 +72,6 @@ Object.assign(pc, function () {
 
         this._lightProbeRequested = false;
         this._lightProbe = null;
-
-        this._intensity = 1;
-        this._rotation.set(0, 0, 0, 1);
-        this._color.set(1, 1, 1);
     };
 
     /**
@@ -101,10 +112,13 @@ Object.assign(pc, function () {
 
         this._manager.session.requestLightProbe(
         ).then(function (lightProbe) {
+            var wasRequested = self._lightProbeRequested;
             self._lightProbeRequested = false;
 
             if (self._manager.active) {
-                self._lightProbe = lightProbe;
+                if (wasRequested) {
+                    self._lightProbe = lightProbe;
+                }
             } else {
                 self.fire('error', new Error('XR session is not active'));
             }
@@ -112,6 +126,17 @@ Object.assign(pc, function () {
             self._lightProbeRequested = false;
             self.fire('error', ex);
         });
+    };
+
+    /**
+     * @function
+     * @name pc.XrLightEstimation#stop
+     * @description Stop estimation of illimunation data.
+     */
+    XrLightEstimation.prototype.stop = function () {
+        this._lightProbeRequested = false;
+        this._lightProbe = null;
+        this._available = false;
     };
 
     XrLightEstimation.prototype.update = function (frame) {
@@ -164,19 +189,19 @@ Object.assign(pc, function () {
 
     Object.defineProperty(XrLightEstimation.prototype, 'intensity', {
         get: function () {
-            return this._intensity;
+            return this._available ? this._intensity : null;
         }
     });
 
     Object.defineProperty(XrLightEstimation.prototype, 'color', {
         get: function () {
-            return this._color;
+            return this._available ? this._color : null;
         }
     });
 
     Object.defineProperty(XrLightEstimation.prototype, 'rotation', {
         get: function () {
-            return this._rotation;
+            return this._available ? this._rotation : null;
         }
     });
 
