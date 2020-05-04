@@ -177,6 +177,8 @@ Object.assign(pc, function () {
         if (vertexCount) {
             this.verticesByteSize = offset;
         }
+
+        this.batchingHash = this._evaluateBatchingHash();
     };
 
     VertexFormat.init = function (graphicsDevice) {
@@ -204,6 +206,32 @@ Object.assign(pc, function () {
                 return this._defaultInstancingFormat;
             };
         }())
+    });
+
+    Object.assign(VertexFormat.prototype, {
+
+        // evaluates hash value for the format allowing fast compare of batching compatibility
+        _evaluateBatchingHash: function () {
+
+            // create string description of each element that is relevant for batching
+            var stringElement, stringElements = [];
+            var i, len = this.elements.length, element;
+            for (i = 0; i < len; i++) {
+                element = this.elements[i];
+
+                stringElement = element.name;
+                stringElement += element.dataType;
+                stringElement += element.numComponents;
+                stringElement += element.normalize;
+
+                stringElements.push(stringElement);
+            }
+
+            // sort them alphabetically to make hash order independent
+            stringElements.sort();
+
+            return pc.hashCode(stringElements.join());
+        }
     });
 
     return {

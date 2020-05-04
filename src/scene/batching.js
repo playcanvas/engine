@@ -581,14 +581,18 @@ Object.assign(pc, function () {
         var halfMaxAabbSize = maxAabbSize * 0.5;
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
-        var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign, drawOrder;
+        // maximum number of vertices that can be used in batch depends on 32bit index buffer support (do this for non-indexed as well,
+        // as in some cases (UI elements) non-indexed geometry gets batched into indexed)
+        var maxNumVertices = this.device.extUintElement ? 0xffffffff : 0xffff;
+
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign, drawOrder, indexed, vertexFormatBatchingHash;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
         var skipTranslucentAabb = null;
+        var mi, sf;
 
         var lists = [];
-        var j = 0;
+        var i, j = 0;
         if (translucent) {
             meshInstances.sort(function (a, b) {
                 return a.drawOrder - b.drawOrder;
@@ -608,8 +612,6 @@ Object.assign(pc, function () {
             meshInstancesLeftB.push(mi);
         };
 
-        var mi, sf;
-
         while (meshInstancesLeftA.length > 0) {
             lists[j] = [meshInstancesLeftA[0]];
             meshInstancesLeftB = [];
@@ -623,16 +625,9 @@ Object.assign(pc, function () {
             drawOrder = meshInstancesLeftA[0].drawOrder;
             aabb.copy(meshInstancesLeftA[0].aabb);
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
+            vertexFormatBatchingHash = meshInstancesLeftA[0].mesh.vertexBuffer.format.batchingHash;
+            indexed = meshInstancesLeftA[0].mesh.primitive[0].indexed;
             skipTranslucentAabb = null;
-
-            // maximum number of vertices that can be used for batch based on index buffer format (no limit without index buffer)
-            var maxNumVertices = 0xffffffff;
-            var indexFormat = -1;
-            var ib0 = meshInstancesLeftA[0].mesh.indexBuffer;
-            if (ib0 && ib0.length > 0 && ib0[0]) {
-                indexFormat = ib0[0].getFormat();
-                maxNumVertices = 0xffffffff >>> (32 - (8 * ib0[0].bytesPerIndex));
-            }
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
@@ -643,9 +638,11 @@ Object.assign(pc, function () {
                     break;
                 }
 
-                // Split by material, layer (legacy), shader defines, static source, vert count, overlaping UI
+                // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlaping UI
                 if ((material !== mi.material) ||
                     (layer !== mi.layer) ||
+                    (vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash) ||
+                    (indexed !== mi.mesh.primitive[0].indexed) ||
                     (defs !== mi._shaderDefs) ||
                     (vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVertices)) {
                     skipMesh(mi);
@@ -669,16 +666,6 @@ Object.assign(pc, function () {
                 }
                 // Split by negative scale
                 if (scaleSign != getScaleSign(mi)) {
-                    skipMesh(mi);
-                    continue;
-                }
-
-                // split by matching index buffer format
-                var currentIndexFormat = -1;
-                ib0 = mi.mesh.indexBuffer;
-                if (ib0 && ib0.length > 0 && ib0[0])
-                    currentIndexFormat = ib0[0].getFormat();
-                if (currentIndexFormat != indexFormat) {
                     skipMesh(mi);
                     continue;
                 }
@@ -742,339 +729,214 @@ Object.assign(pc, function () {
         }
 
         var i, j;
-
-        // Check which vertex format and buffer size are needed, find out material
+        var streams = null, stream;
+        var semantic;
         var material = null;
-        var mesh, elems, numVerts, vertSize;
-        var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
+        var mesh, elems, numVerts;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
-        var visibleMeshInstanceCount = 0;
-        var indexBufferFormat = 0;
-        for (i = 0; i < meshInstances.length; i++) {
-            if (!meshInstances[i].visible)
-                continue;
-
-            visibleMeshInstanceCount++;
-
-            if (!material) {
-                material = meshInstances[i].material;
-            } else {
-                if (material !== meshInstances[i].material) {
-                    // #ifdef DEBUG
-                    console.error("BatchManager.create: multiple materials");
-                    // #endif
-                    return;
-                }
-            }
-            mesh = meshInstances[i].mesh;
-            if (mesh.indexBuffer && mesh.indexBuffer.length > 0 && mesh.indexBuffer[0])
-                indexBufferFormat = mesh.indexBuffer[0].getFormat();
-            elems = mesh.vertexBuffer.format.elements;
-            numVerts = mesh.vertexBuffer.numVertices;
-            batchNumVerts += numVerts;
-            for (j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
-                    hasPos = true;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
-                    hasNormal = true;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD0) {
-                    hasUv = true;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD1) {
-                    hasUv2 = true;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
-                    hasTangent = true;
-                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
-                    hasColor = true;
-                }
-            }
-            batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
-                (mesh.primitive[0].count === 4 ? 6 : 0);
-        }
-
-        if (!visibleMeshInstanceCount) {
-            return;
-        }
-
-        if (!hasPos) {
-            // #ifdef DEBUG
-            console.error("BatchManager.create: no position");
-            // #endif
-            return;
-        }
-
-        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
-        this._batchList.push(batch);
-
-        // Create buffers
-        var entityIndexSizeF = dynamic ? 1 : 0;
-        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + entityIndexSizeF;
-        var batchOffsetNF = 3;
-        var batchOffsetUF = hasNormal ? 3 * 2 : 3;
-        var batchOffsetU2F = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0);
-        var batchOffsetTF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
-        var batchOffsetCF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
-        var batchOffsetEF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
-
-        var arrayBuffer = new ArrayBuffer(batchNumVerts * batchVertSizeF * 4);
-        var batchData = new Float32Array(arrayBuffer);
-        var batchData8 = new Uint8Array(arrayBuffer);
-
-        // create index buffer and access array in correct format
-        var indexBuffer = new pc.IndexBuffer(this.device, indexBufferFormat, batchNumIndices, pc.BUFFER_STATIC);
-        var batchIndexData = null;
-        if (indexBufferFormat == pc.INDEXFORMAT_UINT8)
-            batchIndexData = new Uint8Array(indexBuffer.lock());
-        if (indexBufferFormat == pc.INDEXFORMAT_UINT16)
-            batchIndexData = new Uint16Array(indexBuffer.lock());
-        if (indexBufferFormat == pc.INDEXFORMAT_UINT32)
-            batchIndexData = new Uint32Array(indexBuffer.lock());
-
-        // Fill vertex/index/matrix buffers
-        var vertSizeF;
-        var data, data8, indexBase, numIndices, indexData;
-        var verticesOffset = 0;
-        var indexOffset = 0;
-        var vbOffset = 0;
-        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
-        var transform, vec =  new pc.Vec3();
+        var batch = null;
 
         for (i = 0; i < meshInstances.length; i++) {
-            if (!meshInstances[i].visible)
-                continue;
+            if (meshInstances[i].visible) {
 
-            mesh = meshInstances[i].mesh;
+                // vertex counts
+                mesh = meshInstances[i].mesh;
+                numVerts = mesh.vertexBuffer.numVertices;
+                batchNumVerts += numVerts;
 
-            elems = mesh.vertexBuffer.format.elements;
-            numVerts = mesh.vertexBuffer.numVertices;
-            vertSize = mesh.vertexBuffer.format.size;
-            vertSizeF = vertSize / 4;
-            for (j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
-                    offsetPF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
-                    offsetNF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD0) {
-                    offsetUF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD1) {
-                    offsetU2F = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
-                    offsetTF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
-                    offsetCF = elems[j].offset / 4;
+                // index counts (handles special case of TRI-FAN-type non-indexed primitive used by UI)
+                batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
+                    (mesh.primitive[0].type == pc.PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
+
+                // if first mesh
+                if (!streams) {
+
+                    // material
+                    material = meshInstances[i].material;
+
+                    // collect used vertex buffer semantic information from first mesh (they all match)
+                    streams = {};
+                    elems = mesh.vertexBuffer.format.elements;
+                    for (j = 0; j < elems.length; j++) {
+                        semantic = elems[j].name;
+                        streams[semantic] = {
+                            numComponents: elems[j].numComponents,
+                            dataType: elems[j].dataType,
+                            normalize: elems[j].normalize,
+                            count: 0
+                        };
+                    }
+
+                    // for dynamic meshes we need bone indices
+                    if (dynamic) {
+                        streams[pc.SEMANTIC_BLENDINDICES] = {
+                            numComponents: 1,
+                            dataType: pc.ELEMENTTYPE_FLOAT32,
+                            normalize: false,
+                            count: 0
+                        };
+                    }
                 }
             }
-            data = new Float32Array(mesh.vertexBuffer.storage);
-            data8 = new Uint8Array(mesh.vertexBuffer.storage);
-
-            // Static: pre-transform vertices
-            transform = meshInstances[i].node.getWorldTransform();
-
-            for (j = 0; j < numVerts; j++) {
-                vec.set(data[j * vertSizeF + offsetPF],
-                        data[j * vertSizeF + offsetPF + 1],
-                        data[j * vertSizeF + offsetPF + 2]);
-                if (!dynamic)
-                    transform.transformPoint(vec, vec);
-                batchData[j * batchVertSizeF + vbOffset] =     vec.x;
-                batchData[j * batchVertSizeF + vbOffset + 1] = vec.y;
-                batchData[j * batchVertSizeF + vbOffset + 2] = vec.z;
-                if (hasNormal) {
-                    vec.set(data[j * vertSizeF + offsetNF],
-                            data[j * vertSizeF + offsetNF + 1],
-                            data[j * vertSizeF + offsetNF + 2]);
-                    if (!dynamic)
-                        transform.transformVector(vec, vec);
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vec.x;
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vec.y;
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vec.z;
-                }
-                if (hasUv) {
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
-                }
-                if (hasUv2) {
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
-                }
-                if (hasTangent) {
-                    vec.set(data[j * vertSizeF + offsetTF],
-                            data[j * vertSizeF + offsetTF + 1],
-                            data[j * vertSizeF + offsetTF + 2]);
-                    if (!dynamic)
-                        transform.transformVector(vec, vec);
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vec.x;
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vec.y;
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vec.z;
-                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
-                }
-                if (hasColor) {
-                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
-                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
-                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
-                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
-                }
-                if (dynamic)
-                    batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
-            }
-
-            // index buffer
-            indexBase = mesh.primitive[0].base;
-            numIndices = mesh.primitive[0].count;
-            if (mesh.primitive[0].indexed) {
-                // source index buffer data mapped to its format
-                var srcFormat = mesh.indexBuffer[0].getFormat();
-                if (srcFormat == pc.INDEXFORMAT_UINT8)
-                    indexData = new Uint8Array(mesh.indexBuffer[0].storage);
-                if (srcFormat == pc.INDEXFORMAT_UINT16)
-                    indexData = new Uint16Array(mesh.indexBuffer[0].storage);
-                if (srcFormat == pc.INDEXFORMAT_UINT32)
-                    indexData = new Uint32Array(mesh.indexBuffer[0].storage);
-            } else if (numIndices === 4) {
-                // Special case for UI image elements (pc.PRIMITIVE_TRIFAN)
-                indexBase = 0;
-                numIndices = 6;
-                indexData = [0, 1, 3, 2, 3, 1];
-            } else {
-                numIndices = 0;
-                continue;
-            }
-            for (j = 0; j < numIndices; j++) {
-                batchIndexData[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
-            }
-            indexOffset += numIndices;
-            verticesOffset += numVerts;
-            vbOffset = verticesOffset * batchVertSizeF;
         }
 
-        // Create the vertex format
-        var vertexFormatId = 0;
-        if (hasNormal)  vertexFormatId |= 1 << 1;
-        if (hasUv)      vertexFormatId |= 1 << 2;
-        if (hasUv2)     vertexFormatId |= 1 << 3;
-        if (hasTangent) vertexFormatId |= 1 << 4;
-        if (hasColor)   vertexFormatId |= 1 << 5;
-        if (dynamic)    vertexFormatId |= 1 << 6;
-        var vertexFormat = this.vertexFormats[vertexFormatId];
-        if (!vertexFormat) {
-            var formatDesc = [];
-            formatDesc.push({
-                semantic: pc.SEMANTIC_POSITION,
-                components: 3,
-                type: pc.ELEMENTTYPE_FLOAT32,
-                normalize: false
-            });
-            if (hasNormal) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_NORMAL,
-                    components: 3,
-                    type: pc.ELEMENTTYPE_FLOAT32,
-                    normalize: false
-                });
-            }
-            if (hasUv) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_TEXCOORD0,
-                    components: 2,
-                    type: pc.ELEMENTTYPE_FLOAT32,
-                    normalize: false
-                });
-            }
-            if (hasUv2) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_TEXCOORD1,
-                    components: 2,
-                    type: pc.ELEMENTTYPE_FLOAT32,
-                    normalize: false
-                });
-            }
-            if (hasTangent) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_TANGENT,
-                    components: 4,
-                    type: pc.ELEMENTTYPE_FLOAT32,
-                    normalize: false
-                });
-            }
-            if (hasColor) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_COLOR,
-                    components: 4,
-                    type: pc.ELEMENTTYPE_UINT8,
-                    normalize: true
-                });
-            }
-            if (dynamic) {
-                formatDesc.push({
-                    semantic: pc.SEMANTIC_BLENDINDICES,
-                    components: 1,
-                    type: pc.ELEMENTTYPE_FLOAT32,
-                    normalize: false
-                });
-            }
-            vertexFormat = this.vertexFormats[vertexFormatId] = new pc.VertexFormat(this.device, formatDesc);
-        }
+        // if anything to batch
+        if (streams) {
 
-        // Upload data to GPU
-        var vertexBuffer = new pc.VertexBuffer(this.device, vertexFormat, batchNumVerts, pc.BUFFER_STATIC, batchData.buffer);
-        indexBuffer.unlock();
+            batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
+            this._batchList.push(batch);
 
-        // Create mesh
-        mesh = new pc.Mesh(this.device);
-        mesh.vertexBuffer = vertexBuffer;
-        mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES; // Doesn't support any other primitive types batch.origMeshInstances[0].mesh.primitive[0].type;
-        mesh.primitive[0].base = 0;
-        mesh.primitive[0].count = batchNumIndices;
-        mesh.primitive[0].indexed = true;
-        mesh.cull = false;
+            var indexBase, numIndices, indexData;
+            var verticesOffset = 0;
+            var indexOffset = 0;
+            var transform, vec = new pc.Vec3();
 
-        if (dynamic) {
+            // allocate indices
+            var indexArrayType = batchNumVerts <= 0xffff ? Uint16Array : Uint32Array;
+            var indices = new indexArrayType(batchNumIndices);
+
+            // allocate typed arrays to store final vertex stream data
+            for (semantic in streams) {
+                stream = streams[semantic];
+                stream.typeArrayType = pc.typedArrayTypes[stream.dataType];
+                stream.elementByteSize = pc.typedArrayTypesByteSize[stream.dataType];
+                stream.buffer = new stream.typeArrayType(batchNumVerts * stream.numComponents);
+            }
+
+            // build vertex and index data for final mesh
+            for (i = 0; i < meshInstances.length; i++) {
+                if (!meshInstances[i].visible)
+                    continue;
+
+                mesh = meshInstances[i].mesh;
+                numVerts = mesh.vertexBuffer.numVertices;
+
+                // matrix to transform vertices to world space for static batching
+                if (!dynamic) {
+                    transform = meshInstances[i].node.getWorldTransform();
+                }
+
+                for (semantic in streams) {
+                    if (semantic !== pc.SEMANTIC_BLENDINDICES) {
+                        stream = streams[semantic];
+
+                        // get vertex stream to typed view subarray
+                        var subarray = new stream.typeArrayType(stream.buffer.buffer, stream.elementByteSize * stream.count);
+                        var totalComponents = mesh.getVertexStream(semantic, subarray) * stream.numComponents;
+                        stream.count += totalComponents;
+
+                        // transform position, normal and tangent to world space
+                        if (!dynamic && stream.numComponents >= 3) {
+                            if (semantic == pc.SEMANTIC_POSITION || semantic == pc.SEMANTIC_NORMAL || semantic == pc.SEMANTIC_TANGENT) {
+                                transform.transformFunction = semantic == pc.SEMANTIC_POSITION ? pc.Mat4.prototype.transformPoint : pc.Mat4.prototype.transformVector;
+
+                                for (j = 0; j < totalComponents; j += stream.numComponents) {
+                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
+                                    transform.transformFunction(vec, vec);
+                                    subarray[j] = vec.x;
+                                    subarray[j + 1] = vec.y;
+                                    subarray[j + 2] = vec.z;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // bone index is mesh index
+                if (dynamic) {
+                    stream = streams[pc.SEMANTIC_BLENDINDICES];
+                    for (j = 0; j < numVerts; j++)
+                        stream.buffer[stream.count++] = i;
+                }
+
+                // index buffer
+                if (mesh.primitive[0].indexed) {
+                    indexBase = mesh.primitive[0].base;
+                    numIndices = mesh.primitive[0].count;
+
+                    // source index buffer data mapped to its format
+                    var srcFormat = mesh.indexBuffer[0].getFormat();
+                    indexData = new pc.typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
+                } else if (mesh.primitive[0].type == pc.PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
+                    // Special case for UI image elements
+                    indexBase = 0;
+                    numIndices = 6;
+                    indexData = [0, 1, 3, 2, 3, 1];
+                } else {
+                    numIndices = 0;
+                    continue;
+                }
+
+                for (j = 0; j < numIndices; j++) {
+                    indices[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
+                }
+
+                indexOffset += numIndices;
+                verticesOffset += numVerts;
+            }
+
+            // Create mesh
+            mesh = new pc.Mesh(this.device);
+            for (semantic in streams) {
+                stream = streams[semantic];
+                mesh.setVertexStream(semantic, stream.buffer, stream.numComponents, undefined, stream.dataType, stream.normalize);
+            }
+
+            if (indices.length > 0)
+                mesh.setIndices(indices);
+
+            mesh.update(pc.PRIMITIVE_TRIANGLES, false);
+
             // Patch the material
-            material = material.clone();
-            material.chunks.transformVS = this.transformVS;
-            material.chunks.skinTexVS = this.skinTexVS;
-            material.chunks.skinConstVS = this.skinConstVS;
-            material.update();
-        }
-
-        // Create meshInstance
-        var meshInstance = new pc.MeshInstance(this.rootNode, mesh, material);
-        meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
-        meshInstance.parameters = batch.origMeshInstances[0].parameters;
-        meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
-        meshInstance.layer = batch.origMeshInstances[0].layer;
-        meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
-        meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
-
-        // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
-        meshInstance.cull = batch.origMeshInstances[0].cull;
-        var batchGroup = this._batchGroups[batchGroupId];
-        if (batchGroup && batchGroup._ui)
-            meshInstance.cull = false;
-
-        if (dynamic) {
-            // Create skinInstance
-            var nodes = [];
-            for (i = 0; i < batch.origMeshInstances.length; i++) {
-                nodes.push(batch.origMeshInstances[i].node);
+            if (dynamic) {
+                material = material.clone();
+                material.chunks.transformVS = this.transformVS;
+                material.chunks.skinTexVS = this.skinTexVS;
+                material.chunks.skinConstVS = this.skinConstVS;
+                material.update();
             }
-            meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+
+            // Create meshInstance
+            var meshInstance = new pc.MeshInstance(this.rootNode, mesh, material);
+            meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
+            meshInstance.parameters = batch.origMeshInstances[0].parameters;
+            meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
+            meshInstance.layer = batch.origMeshInstances[0].layer;
+            meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
+            meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
+
+            // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
+            meshInstance.cull = batch.origMeshInstances[0].cull;
+            var batchGroup = this._batchGroups[batchGroupId];
+            if (batchGroup && batchGroup._ui)
+                meshInstance.cull = false;
+
+            if (dynamic) {
+                // Create skinInstance
+                var nodes = [];
+                for (i = 0; i < batch.origMeshInstances.length; i++) {
+                    nodes.push(batch.origMeshInstances[i].node);
+                }
+                meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+            }
+
+            // disable aabb update, gets updated manually by batcher
+            meshInstance._updateAabb = false;
+
+            meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
+            meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
+            meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
+            meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
+            batch.meshInstance = meshInstance;
+            this.update(batch);
+
+            var newModel = new pc.Model();
+            newModel.meshInstances = [batch.meshInstance];
+            newModel.castShadows = batch.origMeshInstances[0].castShadows;
+
+            batch.model = newModel;
         }
-
-        meshInstance._updateAabb = false;
-        meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
-        meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
-        meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
-        meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
-        batch.meshInstance = meshInstance;
-        this.update(batch);
-
-        var newModel = new pc.Model();
-
-        newModel.meshInstances = [batch.meshInstance];
-        newModel.castShadows = batch.origMeshInstances[0].castShadows;
-        batch.model = newModel;
 
         // #ifdef PROFILER
         this._stats.createTime += pc.now() - time;
