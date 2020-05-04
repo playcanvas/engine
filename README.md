@@ -7,9 +7,9 @@
 PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
 
 [![NPM version][npm-badge]][npm-url]
+[![Minzipped size][minzip-badge]][minzip-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
-[![Minzipped size][minzip-badge]][minzip-url]
 [![Twitter][twitter-badge]][twitter-url]
 
 ## Project Showcase
