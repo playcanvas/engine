@@ -27,6 +27,12 @@
         diffuseMapUv: 'number',
         diffuseMapTiling: 'vec2',
         diffuseMapOffset: 'vec2',
+        diffuseDetailMap: 'texture',
+        diffuseDetailMapChannel: 'string',
+        diffuseDetailMapUv: 'number',
+        diffuseDetailMapTiling: 'vec2',
+        diffuseDetailMapOffset: 'vec2',
+        diffuseDetailMode: 'string',
 
         specular: 'rgb',
         specularTint: 'boolean',
@@ -84,6 +90,11 @@
         normalMapUv: 'number',
         bumpiness: 'number',
         // normalMapFactor: 'number', // TODO rename bumpiness to normalMapFactor
+        normalDetailMap: 'texture',
+        normalDetailMapTiling: 'vec2',
+        normalDetailMapOffset: 'vec2',
+        normalDetailMapUv: 'number',
+        normalDetailMapBumpiness: 'number',
 
         heightMap: 'texture',
         heightMapChannel: 'string',

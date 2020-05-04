@@ -293,10 +293,12 @@ pc.programlib.standard = {
         var vertexColorChannelPropName = propName + "VertexColorChannel";
         var tintPropName = propName + "Tint";
         var vertexColorPropName = propName + "VertexColor";
+        var detailModePropName = propName + "Mode";
 
         var tintOption = options[tintPropName];
         var vertexColorOption = options[vertexColorPropName];
         var textureOption = options[mapPropName];
+        var detailModeOption = options[detailModePropName];
 
         var subCode = chunks[chunkName];
 
@@ -313,6 +315,10 @@ pc.programlib.standard = {
 
         if (vertexColorOption) {
             subCode = subCode.replace(/\$VC/g, options[vertexColorChannelPropName]);
+        }
+
+        if (detailModeOption) {
+            subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
         }
 
         var isFloatTint = (tintOption === 1);
@@ -866,11 +872,15 @@ pc.programlib.standard = {
         // code += chunks.basePS;
         code = this._fsAddBaseCode(code, device, chunks, options);
 
+        if (options.detailModes) {
+            code += chunks.detailModesPS;
+        }
+
         var codeBegin = code;
         code = "";
 
         if (options.clearCoat > 0) {
-            code += '#define CLEARCOAT 1\n';
+            code += '#define CLEARCOAT\n';
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -952,6 +962,10 @@ pc.programlib.standard = {
             if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
+                if (options.normalDetail) {
+                    code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
+                }
+
                 var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.normalizeNormalMap) {
                     code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
@@ -983,7 +997,12 @@ pc.programlib.standard = {
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
+        if (options.diffuseDetail) {
+            code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, chunks);
+        }
+
         code += this._addMap("diffuse", "diffusePS", options, chunks);
+
         if (options.blendType !== pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
             code += this._addMap("opacity", "opacityPS", options, chunks);
         }
@@ -1058,7 +1077,9 @@ pc.programlib.standard = {
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-            code += chunks.reflectionPS;
+            if (options.clearCoat > 0){
+                code += chunks.reflectionCCPS;
+            }
             if (options.refraction){
                 code += chunks.refractionPS;
             }
@@ -1280,6 +1301,9 @@ pc.programlib.standard = {
 
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
+                if (options.clearCoat > 0){
+                    code += "   addReflectionCC();\n";
+                }
                 code += "   addReflection();\n";
             }
 

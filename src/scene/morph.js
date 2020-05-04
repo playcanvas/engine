@@ -16,6 +16,7 @@ Object.assign(pc, function () {
      * as other arrays.
      * @param {string} [options.name] - Name.
      * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
+     * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
      */
     var MorphTarget = function (options) {
         if (options.indices) {
@@ -33,6 +34,7 @@ Object.assign(pc, function () {
         this.deltaTangents = options.deltaTangents;
         this.name = options.name;
         this.aabb = options.aabb;
+        this.defaultWeight = options.defaultWeight || 0;
     };
 
     /**
@@ -95,12 +97,8 @@ Object.assign(pc, function () {
             this.aabb.copy(this._baseAabb);
 
             var numIndices;
-            var i, j, target, index, id;
+            var i, j, target;
             var x, y, z;
-
-            var vertSizeF = this._vertSizeF;
-            var offsetPF = this._offsetPF;
-            var baseData = this._baseData;
 
             for (i = 0; i < this._targets.length; i++) {
                 target = this._targets[i];
@@ -112,12 +110,9 @@ Object.assign(pc, function () {
 
                     numIndices = target.indices.length;
                     for (j = 0; j < numIndices; j++) {
-                        index = target.indices[j];
-                        id = index * vertSizeF + offsetPF;
-
-                        x = baseData[id] + target.deltaPositions[j * 3];
-                        y = baseData[id + 1] + target.deltaPositions[j * 3 + 1];
-                        z = baseData[id + 2] + target.deltaPositions[j * 3 + 2];
+                        x = target.deltaPositions[j * 3];
+                        y = target.deltaPositions[j * 3 + 1];
+                        z = target.deltaPositions[j * 3 + 2];
 
                         if (_morphMin.x > x) _morphMin.x = x;
                         if (_morphMin.y > y) _morphMin.y = y;
@@ -129,7 +124,13 @@ Object.assign(pc, function () {
                     }
                     target.aabb.setMinMax(_morphMin, _morphMax);
                 }
-                if (target.aabb) this.aabb.add(target.aabb);
+                if (target.aabb) {
+                    var newMin = new pc.Vec3();
+                    var newMax = new pc.Vec3();
+                    newMin.add2(this.aabb.getMin(), target.aabb.getMin());
+                    newMax.add2(this.aabb.getMax(), target.aabb.getMax());
+                    this.aabb.setMinMax(newMin, newMax);
+                }
             }
             this._aabbDirty = false;
         },
@@ -194,11 +195,9 @@ Object.assign(pc, function () {
             this._vertexBuffer = new pc.VertexBuffer(this.morph._baseBuffer.device, this.morph._baseBuffer.format,
                                                      this.morph._baseBuffer.numVertices, pc.BUFFER_DYNAMIC, this.morph._baseBuffer.storage.slice(0));
             this._vertexData = new Float32Array(this._vertexBuffer.storage);
-            this._weights = [];
-            this._weights.length = this.morph._targets.length;
-            for (var i = 0; i < this.morph._targets.length; i++) {
-                this._weights[i] = 0;
-            }
+            this._weights = this.morph._targets.map(function (t) {
+                return t.defaultWeight;
+            });
             this._dirty = true;
         },
 

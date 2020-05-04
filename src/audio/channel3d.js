@@ -6,7 +6,7 @@ Object.assign(pc, function () {
 
     var Channel3d;
 
-    if (pc.AudioManager.hasAudioContext()) {
+    if (pc.SoundManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
             pc.Channel.call(this, manager, sound, options);
 
@@ -93,7 +93,7 @@ Object.assign(pc, function () {
                 }
             }
         });
-    } else if (pc.AudioManager.hasAudio()) {
+    } else if (pc.SoundManager.hasAudio()) {
         // temp vector storage
         var offset = new pc.Vec3();
 

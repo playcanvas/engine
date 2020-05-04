@@ -410,7 +410,7 @@ Object.assign(pc, function () {
             var vertexFormat = new pc.VertexFormat(device, vertexDesc);
             var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, 4, pc.BUFFER_STATIC, vertexData);
 
-            var mesh = new pc.Mesh();
+            var mesh = new pc.Mesh(device);
             mesh.vertexBuffer = vertexBuffer;
             mesh.primitive[0].type = pc.PRIMITIVE_TRIFAN;
             mesh.primitive[0].base = 0;
