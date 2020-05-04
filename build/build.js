@@ -168,7 +168,8 @@ var preprocess = function (dependencies) {
         else 
             src = pp.process({
                 PROFILER: profiler || debug,
-                DEBUG: debug
+                DEBUG: debug,
+                RELEASE_BUILD: compilerLevel != COMPILER_LEVEL[0]
             });
         var dir = path.dirname(_out);
         fse.ensureDirSync(dir);

@@ -1,3 +1,5 @@
+// #ifndef RELEASE_BUILD
+
 Object.assign(pc, function () {
     'use strict';
 
@@ -67,3 +69,5 @@ Object.assign(pc, function () {
         CpuTimer: CpuTimer
     };
 }());
+
+// #endif

@@ -295,7 +295,9 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
+        // #ifndef RELEASE_BUILD
         this.miniStats = options.miniStats ? new pc.MiniStats(this) : null;
+        // #endif
 
         // stores all entities that have been created
         // for this app by guid
