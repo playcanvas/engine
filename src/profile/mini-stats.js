@@ -259,7 +259,7 @@ Object.assign(pc, function () {
         this.slivver = null;
         this.cursor = 0;
 
-        app.on('framestart', this.update.bind(this));
+        app.on('frameupdate', this.update.bind(this));
     };
 
     Object.assign(Graph.prototype, {
@@ -354,7 +354,7 @@ Object.assign(pc, function () {
 
         var self = this;
 
-        app.on('framestart', function (ms) {
+        app.on('frameupdate', function (ms) {
             self.ms = ms;
         });
     };

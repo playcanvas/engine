@@ -1926,7 +1926,7 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
-            app.fire("framestart", ms);
+            app.fire("frameupdate", ms);
 
             if (frame) {
                 app.xr.update(frame);

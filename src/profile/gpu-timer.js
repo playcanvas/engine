@@ -12,7 +12,7 @@ Object.assign(pc, function () {
         this._timings = [];
         this._prevTimings = [];
 
-        app.on('framestart', this.begin.bind(this, 'update'));
+        app.on('frameupdate', this.begin.bind(this, 'update'));
         app.on('framerender', this.mark.bind(this, 'render'));
         app.on('frameend', this.end.bind(this));
     };
