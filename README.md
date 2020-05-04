@@ -9,6 +9,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 [![NPM version][npm-badge]][npm-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
+[![Minzipped size][minzip-badge]][minzip-url]
 [![Twitter][twitter-badge]][twitter-url]
 
 ## Project Showcase
@@ -190,5 +191,7 @@ The PlayCanvas Engine is released under the [MIT](https://opensource.org/license
 [resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine
+[minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
+[minzip-url]: https://bundlephobia.com/result?p=playcanvas
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
