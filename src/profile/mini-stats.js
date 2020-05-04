@@ -15,12 +15,12 @@ Object.assign(pc, function () {
             '}';
 
         var fragmentShader =
-            'varying vec2 uv0;' +
-            'uniform sampler2D source;' +
-            'uniform vec4 clr;' +
-            'void main (void) {' +
-            '    gl_FragColor = texture2D(source, uv0) * clr;' +
-            '}';
+            'varying vec2 uv0;\n' +
+            'uniform sampler2D source;\n' +
+            'uniform vec4 clr;\n' +
+            'void main (void) {\n' +
+            '    gl_FragColor = texture2D(source, uv0) * clr;\n' +
+            '}\n';
 
         var format = new pc.VertexFormat(device, [{
             semantic: pc.SEMANTIC_POSITION,
@@ -73,8 +73,8 @@ Object.assign(pc, function () {
             }
 
             // update vertex data
-            var sw = this.device.width;
-            var sh = this.device.height;
+            var sw = this.device.width / window.devicePixelRatio;
+            var sh = this.device.height / window.devicePixelRatio;
             var tw = texture.width;
             var th = texture.height;
 
@@ -110,7 +110,11 @@ Object.assign(pc, function () {
             device.setDepthWrite(false);
             device.setCullMode(pc.CULLFACE_NONE);
             device.setBlending(true);
-            device.setBlendFunction(pc.BLENDMODE_SRC_ALPHA, pc.BLENDMODE_ONE_MINUS_SRC_ALPHA);
+            device.setBlendFunctionSeparate(pc.BLENDMODE_SRC_ALPHA,
+                                            pc.BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                            pc.BLENDMODE_ONE,
+                                            pc.BLENDMODE_ONE);
+            device.setBlendEquationSeparate(pc.BLENDEQUATION_ADD, pc.BLENDEQUATION_ADD);
             device.setVertexBuffer(buffer, 0);
             device.setShader(this.shader);
 
@@ -134,18 +138,13 @@ Object.assign(pc, function () {
 
     // Word atlas
 
-    var WordAtlas = function (device, words) {
+    var WordAtlas = function (words) {
         var canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 32;
-
-        var context = canvas.getContext('2d', { alpha: true });
-
-        context.fillStyle = "rgb(0, 0, 0, 0)";
-        context.rect(0, 0, context.width, context.height);
-        context.fill();
+        canvas.width = 90;
+        canvas.height = 64;
 
         // configure the context
+        var context = canvas.getContext('2d', { alpha: true });
         context.font = '10px "Lucida Console", Monaco, monospace';
         context.textAlign = "left";
         context.textBaseline = "alphabetic";
@@ -153,70 +152,89 @@ Object.assign(pc, function () {
 
         var padding = 5;
         var x = padding;
-        var y = 32 - padding;
+        var y = padding;
         var placements = [];
         var i;
 
         for (i = 0; i < words.length; ++i) {
-            // render the word
-            context.fillText(words[i], x, y);
-
-            // store measurements
+            // measurement word
             var measurement = context.measureText(words[i]);
 
+            var l = Math.ceil(-measurement.actualBoundingBoxLeft);
+            var r = Math.ceil(measurement.actualBoundingBoxRight);
+            var a = Math.ceil(measurement.actualBoundingBoxAscent);
+            var d = Math.ceil(measurement.actualBoundingBoxDescent);
+
+            var w = l + r;
+            var h = a + d;
+
+            // wrap text
+            if (x + w >= canvas.width) {
+                x = padding;
+                y += 16;
+            }
+
+            // render the word
+            context.fillText(words[i], x - l, y + a);
+
             var placement = {
-                x: Math.floor(x + measurement.actualBoundingBoxLeft),
-                y: Math.floor(32 - (y - measurement.actualBoundingBoxDescent)),
-                w: Math.ceil(measurement.width),
-                h: Math.ceil(measurement.actualBoundingBoxAscent + measurement.actualBoundingBoxDescent)
+                l: l,
+                r: r,
+                a: a,
+                d: d,
+                x: x,
+                y: y,
+                w: w,
+                h: h
             };
 
             x += placement.w + padding;
             placements.push(placement);
         }
 
-        // copy context to texture, but make sure entire colour channel is white
-        var source = context.getImageData(0, 0, canvas.width, canvas.height).data;
-
-        var texture = new pc.Texture(device, {
-            name: 'mini-map-words',
-            width: canvas.width,
-            height: canvas.height,
-            mipmaps: false
-        });
-
-        // copy context alpha channel into texture
-        var data = texture.lock();
-        for (y = 0; y < canvas.height; ++y) {
-            for (x = 0; x < canvas.width; ++x) {
-                var offset = (x + y * canvas.width) * 4;
-                data[offset] = 255;
-                data[offset + 1] = 255;
-                data[offset + 2] = 255;
-                data[offset + 3] = source[(x + (canvas.height - 1 - y) * canvas.width) * 4 + 3];
-            }
-        }
-        texture.unlock();
-        texture.upload();
-
         var wordMap = { };
         words.forEach(function (w, i) {
             wordMap[w] = i;
         });
 
-        this.device = device;
-        this.texture = texture;
-        this.placements = placements;
-        this.shader = this.device.getCopyShader();
+        this.source = context.getImageData(0, 0, canvas.width, canvas.height);
+        this.words = words;
         this.wordMap = wordMap;
+        this.placements = placements;
+        this.texture = null;
     };
 
     Object.assign(WordAtlas.prototype, {
+        init: function (texture) {
+            // copy context alpha channel into texture
+            var source = this.source;
+            var dest = texture.lock();
+            for (var y = 0; y < source.height; ++y) {
+                for (var x = 0; x < source.width; ++x) {
+                    var offset = (x + y * texture.width) * 4;
+                    dest[offset] = 255;
+                    dest[offset + 1] = 255;
+                    dest[offset + 2] = 255;
+                    dest[offset + 3] = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
+                }
+            }
+            this.texture = texture;
+        },
+
         render: function (render2d, word, x, y) {
-            var placement = this.placements[this.wordMap[word]];
-            if (placement) {
-                render2d.quad(this.texture, x, y, placement.w, placement.h, placement.x, placement.y);
-                return placement.w;
+            if (this.texture) {
+                var p = this.placements[this.wordMap[word]];
+                var padding = 1;
+                if (p) {
+                    render2d.quad(this.texture,
+                                  x + p.l - padding,
+                                  y - p.d + padding,
+                                  p.w + padding * 2,
+                                  p.h + padding * 2,
+                                  p.x - padding,
+                                  64 - p.y - p.h - padding);
+                    return p.w;
+                }
             }
             return 0;
         }
@@ -224,7 +242,7 @@ Object.assign(pc, function () {
 
     // Realtime performance graph
 
-    var Graph = function (app, timer, width, height) {
+    var Graph = function (app, timer) {
         this.device = app.graphicsDevice;
         this.timer = timer;
         this.enabled = false;
@@ -235,38 +253,30 @@ Object.assign(pc, function () {
         this.timingText = "";
 
         this.texture = null;
+        this.width = 0;
+        this.height = 0;
+        this.yOffset = 0;
         this.slivver = null;
         this.cursor = 0;
-
-        this.init(width, height);
 
         app.on('framestart', this.update.bind(this));
     };
 
     Object.assign(Graph.prototype, {
-        init: function (width, height) {
-            var texture = new pc.Texture(this.device, {
-                name: 'mini-stats',
-                width: width,
-                height: height,
-                mipmaps: false
-            });
-            var source = texture.lock();
-            for (var i = 0; i < source.length / 4; ++i) {
-                source[i * 4] = 0;
-                source[i * 4 + 1] = 0;
-                source[i * 4 + 2] = 0;
-                source[i * 4 + 3] = 255;
-            }
-            texture.unlock();
-            texture.upload();
-
+        init: function (texture, width, height, yOffset) {
             this.texture = texture;
+            this.width = width;
+            this.height = height;
+            this.yOffset = yOffset;
             this.slivver = new Uint8Array(height * 4);
             this.cursor = 0;
         },
 
         update: function (ms) {
+            if (!this.texture) {
+                return;
+            }
+
             var timings = this.timer.timings;
 
             // calculate stacked total
@@ -296,10 +306,9 @@ Object.assign(pc, function () {
                 var black = [0, 0, 0, 255];
 
                 // update texture with new timings
-                var texture = this.texture;
                 var slivver = this.slivver;
-                var w = texture.width;
-                var h = texture.height;
+                var w = this.width;
+                var h = this.height;
                 var y = 0;
                 var index = 0;
                 for (var i = 0; i < timings.length; ++i) {
@@ -318,10 +327,10 @@ Object.assign(pc, function () {
                     y++;
                 }
 
-                // update the texture
+                // write slivver to the texture
                 var gl = this.device.gl;
                 this.device.bindTexture(this.texture);
-                gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, 0, 1, h, gl.RGBA, gl.UNSIGNED_BYTE, this.slivver, 0);
+                gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, this.yOffset, 1, h, gl.RGBA, gl.UNSIGNED_BYTE, this.slivver);
 
                 this.cursor++;
                 if (this.cursor === w) {
@@ -332,7 +341,9 @@ Object.assign(pc, function () {
 
         render: function (render2d, x, y) {
             var texture = this.texture;
-            render2d.quad(texture, x, y, texture.width, texture.height, this.cursor, 0);
+            if (texture) {
+                render2d.quad(texture, x, y, this.width, this.height, this.cursor, this.yOffset);
+            }
         }
     });
 
@@ -359,38 +370,65 @@ Object.assign(pc, function () {
     var MiniStats = function (app) {
         var device = app.graphicsDevice;
 
-        var sizes = [
-            [90, 16],
-            [128, 32],
-            [256, 64]
-        ];
-        var size = 0;
-        var gw = sizes[size][0];
-        var gh = sizes[size][1];
-
+        var render2d = new Render2d(device);
+        var wordAtlas = new WordAtlas(["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]);
         var graphs = [];
         graphs.push({
             name: 'Frame',
-            graph: new Graph(app, new FrameTimer(app), gw, gh)
+            graph: new Graph(app, new FrameTimer(app))
         });
         graphs.push({
             name: 'CPU',
-            graph: new Graph(app, new pc.CpuTimer(app), gw, gh)
+            graph: new Graph(app, new pc.CpuTimer(app))
         });
         if (device.extDisjointTimerQuery) {
             graphs.push({
                 name: 'GPU',
-                graph: new Graph(app, new pc.GpuTimer(app), gw, gh)
+                graph: new Graph(app, new pc.GpuTimer(app))
             });
         }
 
-        var render2d = new Render2d(device);
-        var wordAtlas = new WordAtlas(device, ["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]);
+        // initialize the graphs to the specified size
+        var init = function (size) {
+            var i;
+
+            // create a texture to store the graphs and word atlas
+            var texture = new pc.Texture(device, {
+                name: 'mini-stats',
+                width: size.width,
+                height: 64 + size.height * graphs.length,
+                mipmaps: false
+            });
+
+            var source = texture.lock();
+            for (i = 0; i < source.length / 4; ++i) {
+                source[i * 4] = 0;
+                source[i * 4 + 1] = 0;
+                source[i * 4 + 2] = 0;
+                source[i * 4 + 3] = 255;
+            }
+
+            // word atlas uses top 64 rows of pixels
+            wordAtlas.init(texture);
+
+            var yOffset = 64;
+            for (i = 0; i < graphs.length; ++i) {
+                graphs[i].graph.init(texture, size.width, size.height, yOffset);
+                graphs[i].graph.enabled = size.graphs;
+                yOffset += size.height;
+            }
+
+            texture.unlock();
+            // wrap u for graphs, but not v because otherwise words atlas interferes
+            texture.addressU = pc.ADDRESS_REPEAT;
+            texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            device.setTexture(texture, 0);
+        };
 
         var gspacing = 2;
-        var clr = [1, 1, 1, 0.6];
+        var clr = [1, 1, 1, 0.5];
 
-        app.on('frameend', function () {
+        var render = function (render2d, size) {
             var i, j, gx, gy, graph;
 
             // render graphs
@@ -398,15 +436,15 @@ Object.assign(pc, function () {
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
                 graph.graph.render(render2d, gx, gy);
-                gy += gh + gspacing;
+                gy += size.height + gspacing;
             }
 
             // render text
             gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
-                var x = gx;
-                var y = gy + gh - 12;
+                var x = gx + 1;
+                var y = gy + size.height - 13;
 
                 // name
                 x += wordAtlas.render(render2d, graph.name, x, y);
@@ -423,21 +461,34 @@ Object.assign(pc, function () {
                 // ms
                 wordAtlas.render(render2d, 'ms', x, y);
 
-                gy += gh + gspacing;
+                gy += size.height + gspacing;
             }
 
             render2d.render(clr);
-        });
-
-        // calculate height of all graphs
-        var overallHeight = function () {
-            return gh * graphs.length + gspacing * (graphs.length - 1);
         };
+
+        // possible graph sizes
+        var sizes = [
+            { width: 100, height: 16, graphs: false },
+            { width: 128, height: 32, graphs: true },
+            { width: 256, height: 64, graphs: true }
+        ];
+
+        // the currently selected graph size
+        var size = sizes[0];
 
         // create click region so we can resize
         var div = document.createElement('div');
-        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;width:' + gw + 'px;height:' + overallHeight() + 'px';
+        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
+
+        var resize = function (size) {
+            init(size);
+            div.style.width = size.width + "px";
+            div.style.height = size.height * graphs.length + gspacing * (graphs.length - 1) + "px";
+        };
+
+        resize(size);
 
         div.addEventListener('mouseenter', function (event) {
             clr[3] = 1.0;
@@ -449,17 +500,18 @@ Object.assign(pc, function () {
 
         div.addEventListener('click', function (event) {
             event.preventDefault();
+            size = sizes[(sizes.indexOf(size) + 1) % sizes.length];
+            resize(size);
+        });
 
-            size = (size + 1) % sizes.length;
-            gw = sizes[size][0];
-            gh = sizes[size][1];
-            for (var i = 0; i < graphs.length; ++i) {
-                graphs[i].graph.init(gw, gh);
-                graphs[i].graph.enabled = size != 0;
-            }
+        device.on("resizecanvas", function () {
+            var rect = device.canvas.getBoundingClientRect();
+            div.style.left = rect.left + "px";
+            div.style.bottom = (window.innerHeight - rect.bottom) + "px";
+        });
 
-            div.style.width = gw + "px";
-            div.style.height = overallHeight() + "px";
+        app.on('postrender', function () {
+            render(render2d, size);
         });
     };
 
