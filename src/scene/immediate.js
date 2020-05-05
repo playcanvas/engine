@@ -266,8 +266,10 @@ Object.assign(pc.Application.prototype, function () {
         } else if (arg3) {
             // options passed in
             options = arg3;
-        } else {
-            // no arg3, use default options
+        }
+
+        // use default options
+        if (!options) {
             options = {
                 layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                 depthTest: true
