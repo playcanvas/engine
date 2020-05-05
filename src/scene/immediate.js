@@ -135,7 +135,7 @@ Object.assign(pc.Application.prototype, function () {
 
     function _addLines(position, color, options) {
         var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
-        var depthTest = (options && options.depthTest) ? options.depthTest : true;
+        var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
         var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
