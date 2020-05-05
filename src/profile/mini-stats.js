@@ -1,4 +1,4 @@
-// #ifndef RELEASE_BUILD
+// #ifndef RELEASE
 
 Object.assign(pc, function () {
     'use strict';

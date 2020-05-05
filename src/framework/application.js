@@ -295,7 +295,7 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
-        // #ifndef RELEASE_BUILD
+        // #ifndef RELEASE
         this.miniStats = options.miniStats ? new pc.MiniStats(this) : null;
         // #endif
 
