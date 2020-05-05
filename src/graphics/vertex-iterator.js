@@ -1,9 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    // map of engine pc.TYPE_*** enums to their corresponding typed array constructors
-    var typesMap = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
-
     /**
      * @class
      * @name pc.VertexIteratorAccessor
@@ -57,9 +54,9 @@ Object.assign(pc, function () {
 
         // create the typed array based on the element data type
         if (vertexFormat.interleaved) {
-            this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset);
+            this.array = new pc.typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset);
         } else {
-            this.array = new typesMap[vertexElement.dataType](buffer, vertexElement.offset, vertexFormat.vertexCount * vertexElement.numComponents);
+            this.array = new pc.typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset, vertexFormat.vertexCount * vertexElement.numComponents);
         }
 
         // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox, but just the constructor for Opera
@@ -344,13 +341,14 @@ Object.assign(pc, function () {
             var count = 0;
             if (element) {
                 count = this.vertexBuffer.numVertices;
-                var i;
+                var i, numComponents = element.numComponents;
 
                 if (this.vertexBuffer.getFormat().interleaved) {
 
                     // extract data from interleaved buffer by looping over vertices and copying them manually
-                    var numComponents = element.numComponents;
-                    data.length = 0;
+                    if  (Array.isArray(data))
+                        data.length = 0;
+
                     element.index = 0;
                     var offset = 0;
                     for (i = 0; i < count; i++) {
@@ -364,7 +362,8 @@ Object.assign(pc, function () {
                     } else {
                         // destination data is array
                         data.length = 0;
-                        for (i = 0; i < count; i++)
+                        var copyCount = count * numComponents;
+                        for (i = 0; i < copyCount; i++)
                             data[i] = element.array[i];
                     }
                 }
