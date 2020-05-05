@@ -254,7 +254,8 @@ Object.assign(pc, function () {
                     vertexDesc.push({
                         semantic: semantic,
                         components: getNumComponents(accessor.type),
-                        type: getComponentType(accessor.componentType)
+                        type: getComponentType(accessor.componentType),
+                        normalize: accessor.normalized
                     });
                     // store the info we'll need to copy this data into the vertex buffer
                     var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
