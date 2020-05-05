@@ -1,17 +1,17 @@
 Object.assign(pc, function () {
 
-    var ANIM_INTERRUPTION_SOURCE_NONE = 0;
-    var ANIM_INTERRUPTION_SOURCE_PREV_STATE = 1;
-    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE = 2;
-    var ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE = 3;
-    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE = 4;
+    var ANIM_INTERRUPTION_SOURCE_NONE = 'NONE';
+    var ANIM_INTERRUPTION_SOURCE_PREV_STATE = 'PREV_STATE';
+    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE = 'NEXT_STATE';
+    var ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE = 'PREV_STATE_NEXT_STATE';
+    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE = 'NEXT_STATE_PREV_STATE';
 
-    var ANIM_TRANSITION_PREDICATE_GREATER_THAN = 0;
-    var ANIM_TRANSITION_PREDICATE_LESS_THAN = 1;
-    var ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO = 2;
-    var ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO = 3;
-    var ANIM_TRANSITION_PREDICATE_EQUAL_TO = 4;
-    var ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO = 5;
+    var ANIM_TRANSITION_PREDICATE_GREATER_THAN = 'GREATER_THAN';
+    var ANIM_TRANSITION_PREDICATE_LESS_THAN = 'LESS_THAN';
+    var ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO = 'GREATER_THAN_EQUAL_TO';
+    var ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO = 'LESS_THAN_EQUAL_TO';
+    var ANIM_TRANSITION_PREDICATE_EQUAL_TO = 'EQUAL_TO';
+    var ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
 
     var ANIM_PARAMETER_INTEGER = 0;
     var ANIM_PARAMETER_FLOAT = 1;
@@ -365,7 +365,7 @@ Object.assign(pc, function () {
             this._updateStateFromTransition(transition);
         },
 
-        linkAnimationToState: function (stateName, animTrack) {
+        assignAnimation: function (stateName, animTrack) {
             var state = this._getState(stateName);
             if (!state) {
                 // #ifdef DEBUG
@@ -409,6 +409,10 @@ Object.assign(pc, function () {
                 this._transitionToState(stateName);
             }
             this.playing = true;
+        },
+
+        pause: function () {
+            this.playing = false;
         },
 
         reset: function () {

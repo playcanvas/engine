@@ -51,26 +51,26 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.AnimComponent#linkAnimationToState
+         * @name pc.AnimComponent#assignAnimation
          * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
          * @param {string} stateName - The name of the state that this animation should be associated with.
          * @param {object} animTrack - The animation that will linked to this state and played whenever this state is active.
          */
-        linkAnimationToState: function (stateName, animTrack) {
+        assignAnimation: function (stateName, animTrack) {
             if (!this.data.animController) {
                 // #ifdef DEBUG
-                console.error('linkAnimationToState: Trying to link an anim track before the state graph has been loaded. Have you called loadStateGraph?');
+                console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
                 // #endif
                 return;
             }
-            this.data.animController.linkAnimationToState(stateName, animTrack);
+            this.data.animController.assignAnimation(stateName, animTrack);
         },
 
         /**
          * @function
          * @name pc.AnimComponent#play
          * @description Start playing the animation in the current state.
-         * @param {string} name - The name of the animation asset to begin playing.
+         * @param {string} name - If provided, will begin playing from the start of the state with this name.
          */
         play: function (name) {
             if (!this.enabled || !this.entity.enabled) {
@@ -79,12 +79,32 @@ Object.assign(pc, function () {
 
             if (!this.data.animController) {
                 // #ifdef DEBUG
-                console.error('Trying to play an animation when no animation state machine has been loaded. Have you called loadStateMachineAsset?');
+                console.error('Trying to play an animation when no animation state machine has been loaded. Have you called loadStateGraph?');
                 // #endif
                 return;
             }
 
             this.data.animController.play(name);
+        },
+
+        /**
+         * @function
+         * @name pc.AnimComponent#pause
+         * @description Start playing the animation in the current state.
+         */
+        pause: function () {
+            if (!this.enabled || !this.entity.enabled) {
+                return;
+            }
+
+            if (!this.data.animController) {
+                // #ifdef DEBUG
+                console.error('Trying to pause the anim component when no animation graph has been loaded. Have you called loadStateGraph?');
+                // #endif
+                return;
+            }
+
+            this.data.animController.pause();
         },
 
         /**
