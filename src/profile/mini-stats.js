@@ -9,34 +9,68 @@ Object.assign(pc, function () {
         maxQuads = maxQuads || 128;
 
         var vertexShader =
-            'attribute vec4 vertex_position;' +
-            'varying vec2 uv0;' +
-            'void main(void) {' +
-            '    gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);' +
-            '    uv0 = vertex_position.zw;' +
-            '}';
+            'attribute vec4 vertex_position;\n' +       // unnormalized quad position in xy and vertex offset in zw
+            'attribute vec2 vertex_texCoord0;\n' +      // unnormalized texture uv
+            'uniform vec4 screenAndTextureSize;\n' +    // xy: screen size, zw: texture size
+            'varying vec4 uv0;\n' +
+            'void main(void) {\n' +
+            '    vec2 pos = (vertex_position.xy + vertex_position.zw) / screenAndTextureSize.xy;\n' +
+            '    gl_Position = vec4(pos * 2.0 - 1.0, 0.5, 1.0);\n' +
+            '    uv0 = vec4(vertex_texCoord0 / screenAndTextureSize.zw, vertex_position.zw / 255.0);\n' +
+            '}\n';
 
+        // this fragment shader renders the bits required for text and graphs. The text is identified
+        // in the texture by it's white color channel. The graph data is specified as a single row of
+        // pixels where the R channel denotes the height of the 1st graph and the G channel the height
+        // of the second graph (the B channel could also be used, but is currently not).
         var fragmentShader =
-            'varying vec2 uv0;\n' +
-            'uniform sampler2D source;\n' +
+            'varying vec4 uv0;\n' +
             'uniform vec4 clr;\n' +
+            'uniform sampler2D source;\n' +
             'void main (void) {\n' +
-            '    gl_FragColor = texture2D(source, uv0) * clr;\n' +
+            '    vec4 tex = texture2D(source, uv0.xy);\n' +
+            '    if (tex.rgb != vec3(1, 1, 1)) {\n' +
+            '       if (uv0.w < tex.r)\n' +
+            '           tex = vec4(1.0, 0.3, 0.3, 1.0);\n' +
+            '       else if (uv0.w < tex.g)\n' +
+            '           tex = vec4(0.3, 1.0, 0.3, 1.0);\n' +
+            '       else\n' +
+            '           tex = vec4(0.0, 0.0, 0.0, 1.0);\n' +
+            '    }\n' +
+            '    gl_FragColor = tex * clr;\n' +
             '}\n';
 
         var format = new pc.VertexFormat(device, [{
             semantic: pc.SEMANTIC_POSITION,
             components: 4,
             type: pc.TYPE_FLOAT32
+        }, {
+            semantic: pc.SEMANTIC_TEXCOORD0,
+            components: 2,
+            type: pc.TYPE_FLOAT32
         }]);
+
+        // generate quad indices
+        var indices = new Uint32Array(maxQuads * 6);
+        for (var i = 0; i < maxQuads; ++i) {
+            indices[i * 6 + 0] = i * 4;
+            indices[i * 6 + 1] = i * 4 + 1;
+            indices[i * 6 + 2] = i * 4 + 2;
+            indices[i * 6 + 3] = i * 4;
+            indices[i * 6 + 4] = i * 4 + 2;
+            indices[i * 6 + 5] = i * 4 + 3;
+        }
 
         this.device = device;
         this.shader = pc.shaderChunks.createShaderFromCode(device,
                                                            vertexShader,
                                                            fragmentShader,
                                                            "mini-stats");
-        this.buffer = new pc.VertexBuffer(device, format, maxQuads * 6, pc.BUFFER_STREAM);
-        this.data = new Float32Array(maxQuads * 6 * 4);
+        this.buffer = new pc.VertexBuffer(device, format, maxQuads * 4, pc.BUFFER_STREAM);
+        this.data = new Float32Array(this.buffer.numBytes / 4);
+
+        this.indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT32, maxQuads * 6, pc.BUFFER_STATIC, indices);
+
         this.prims = [];
         this.prim = null;
         this.primIndex = -1;
@@ -44,10 +78,13 @@ Object.assign(pc, function () {
 
         this.clrId = device.scope.resolve('clr');
         this.clr = new Float32Array(4);
+
+        this.screenTextureSizeId = device.scope.resolve('screenAndTextureSize');
+        this.screenTextureSize = new Float32Array(4);
     };
 
     Object.assign(Render2d.prototype, {
-        quad: function (texture, x, y, w, h, u, v) {
+        quad: function (texture, x, y, w, h, u, v, uw, uh) {
             var quad = this.quads++;
 
             // update primitive
@@ -59,7 +96,7 @@ Object.assign(pc, function () {
                 if (this.primIndex === this.prims.length) {
                     prim = {
                         type: pc.PRIMITIVE_TRIANGLES,
-                        indexed: false,
+                        indexed: true,
                         base: quad * 6,
                         count: 6,
                         texture: texture
@@ -74,30 +111,17 @@ Object.assign(pc, function () {
                 this.prim = prim;
             }
 
-            // update vertex data
-            var sw = this.device.width / window.devicePixelRatio;
-            var sh = this.device.height / window.devicePixelRatio;
-            var tw = texture.width;
-            var th = texture.height;
-
-            var x0 = x / sw;
-            var y0 = y / sh;
-            var u0 = u / tw;
-            var v0 = v / th;
-
-            var x1 = (x + w) / sw;
-            var y1 = (y + h) / sh;
-            var u1 = (u + w) / tw;
-            var v1 = (v + h) / th;
+            var u0 = u;
+            var v0 = v;
+            var u1 = u + (uw === undefined ? w : uw);
+            var v1 = v + (uh === undefined ? h : uh);
 
             this.data.set([
-                x0, y0, u0, v0,
-                x1, y0, u1, v0,
-                x1, y1, u1, v1,
-                x0, y0, u0, v0,
-                x1, y1, u1, v1,
-                x0, y1, u0, v1
-            ], 6 * 4 * quad);
+                x, y, 0, 0, u0, v0,
+                x, y, w, 0, u1, v0,
+                x, y, w, h, u1, v1,
+                x, y, 0, h, u0, v1
+            ], 4 * 6 * quad);
         },
 
         render: function (clr) {
@@ -118,13 +142,20 @@ Object.assign(pc, function () {
                                             pc.BLENDMODE_ONE);
             device.setBlendEquationSeparate(pc.BLENDEQUATION_ADD, pc.BLENDEQUATION_ADD);
             device.setVertexBuffer(buffer, 0);
+            device.setIndexBuffer(this.indexBuffer);
             device.setShader(this.shader);
 
+            // set shader uniforms
             this.clr.set(clr, 0);
-            this.clrId.setValue(clr);
+            this.clrId.setValue(this.clr);
+            this.screenTextureSize[0] = this.device.width / window.devicePixelRatio;
+            this.screenTextureSize[1] = this.device.height / window.devicePixelRatio;
 
             for (var i = 0; i <= this.primIndex; ++i) {
                 var prim = this.prims[i];
+                this.screenTextureSize[2] = prim.texture.width;
+                this.screenTextureSize[3] = prim.texture.height;
+                this.screenTextureSizeId.setValue(this.screenTextureSize);
                 device.constantTexSource.setValue(prim.texture);
                 device.draw(prim);
             }
@@ -258,8 +289,8 @@ Object.assign(pc, function () {
         this.width = 0;
         this.height = 0;
         this.yOffset = 0;
-        this.slivver = null;
         this.cursor = 0;
+        this.sample = new Uint8Array(4);
 
         app.on('frameupdate', this.update.bind(this));
     };
@@ -270,7 +301,6 @@ Object.assign(pc, function () {
             this.width = width;
             this.height = height;
             this.yOffset = yOffset;
-            this.slivver = new Uint8Array(height * 4);
             this.cursor = 0;
         },
 
@@ -298,44 +328,25 @@ Object.assign(pc, function () {
             }
 
             if (this.enabled) {
-                var timingColors = [
-                    [255, 96, 96, 255],
-                    [96, 255, 96, 255],
-                    [96, 96, 255, 255],
-                    [196, 196, 196, 255]
-                ];
+                // update sample with timings
+                var value = 0;
 
-                var black = [0, 0, 0, 255];
-
-                // update texture with new timings
-                var slivver = this.slivver;
-                var w = this.width;
-                var h = this.height;
-                var y = 0;
-                var index = 0;
                 for (var i = 0; i < timings.length; ++i) {
-                    var pixels = Math.min(h - y, Math.floor(timings[i] * (h / 48.0)));
-                    var color = timingColors[i % timingColors.length];
-                    for (var j = 0; j < pixels; ++j) {
-                        slivver.set(color, index);
-                        index += 4;
-                        y++;
-                    }
+                    value = Math.min(255, value + Math.floor(timings[i] * (this.height / 48.0)));
+                    this.sample[i] = value;
                 }
 
-                while (y < h) {
-                    slivver.set(black, index);
-                    index += 4;
-                    y++;
+                for (var j = timings.length; j < 4; ++j) {
+                    this.sample[j] = 0;
                 }
 
-                // write slivver to the texture
+                // write latest sample to the texture
                 var gl = this.device.gl;
                 this.device.bindTexture(this.texture);
-                gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, this.yOffset, 1, h, gl.RGBA, gl.UNSIGNED_BYTE, this.slivver);
+                gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, this.yOffset, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.sample);
 
                 this.cursor++;
-                if (this.cursor === w) {
+                if (this.cursor === this.width) {
                     this.cursor = 0;
                 }
             }
@@ -344,7 +355,7 @@ Object.assign(pc, function () {
         render: function (render2d, x, y) {
             var texture = this.texture;
             if (texture) {
-                render2d.quad(texture, x, y, this.width, this.height, this.cursor, this.yOffset);
+                render2d.quad(texture, x, y, this.width, this.height, this.cursor, this.yOffset, this.width, 0);
             }
         }
     });
@@ -398,32 +409,23 @@ Object.assign(pc, function () {
             var texture = new pc.Texture(device, {
                 name: 'mini-stats',
                 width: size.width,
-                height: 64 + size.height * graphs.length,
+                height: 64 + graphs.length,
                 mipmaps: false
             });
-
-            var source = texture.lock();
-            for (i = 0; i < source.length / 4; ++i) {
-                source[i * 4] = 0;
-                source[i * 4 + 1] = 0;
-                source[i * 4 + 2] = 0;
-                source[i * 4 + 3] = 255;
-            }
 
             // word atlas uses top 64 rows of pixels
             wordAtlas.init(texture);
 
-            var yOffset = 64;
             for (i = 0; i < graphs.length; ++i) {
-                graphs[i].graph.init(texture, size.width, size.height, yOffset);
+                graphs[i].graph.init(texture, size.width, size.height, 64 + i);
                 graphs[i].graph.enabled = size.graphs;
-                yOffset += size.height;
             }
 
             texture.unlock();
             // wrap u for graphs, but not v because otherwise words atlas interferes
             texture.addressU = pc.ADDRESS_REPEAT;
             texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            texture.magFilter = pc.FILTER_NEAREST;
             device.setTexture(texture, 0);
         };
 
