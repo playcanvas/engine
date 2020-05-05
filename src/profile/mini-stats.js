@@ -20,7 +20,7 @@ Object.assign(pc, function () {
             '}\n';
 
         // this fragment shader renders the bits required for text and graphs. The text is identified
-        // in the texture by it's white color channel. The graph data is specified as a single row of
+        // in the texture by its white color channel. The graph data is specified as a single row of
         // pixels where the R channel denotes the height of the 1st graph and the G channel the height
         // of the second graph (the B channel could also be used, but is currently not).
         var fragmentShader =
