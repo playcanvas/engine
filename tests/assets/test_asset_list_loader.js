@@ -6,20 +6,20 @@ describe('pc.AssetListLoader', function () {
         app = new pc.Application(document.createElement('canvas'));
 
         assetList = [
-            new pc.Asset('statue.json', 'model', {
-                url: 'base/examples/assets/models/statue/statue.json'
+            new pc.Asset('statue.glb', 'container', {
+                url: 'base/examples/assets/models/statue.glb'
             }),
-            new pc.Asset('stone.json', 'material', {
-                url: 'base/examples/assets/models/statue/26109516/stone.json'
+            new pc.Asset('playcanvas-cube.glb', 'container', {
+                url: 'base/examples/assets/models/playcanvas-cube.glb'
             }),
-            new pc.Asset('statue-diffuse.jpg', 'texture', {
-                url: 'base/examples/assets/models/statue/26111213/statue-diffuse.jpg'
+            new pc.Asset('clouds.jpg', 'texture', {
+                url: 'base/examples/assets/textures/clouds.jpg'
             }),
-            new pc.Asset('statue-normal.jpg', 'texture', {
-                url: 'base/examples/assets/models/statue/26111212/statue-normal.jpg'
+            new pc.Asset('heart.png', 'texture', {
+                url: 'base/examples/assets/textures/heart.png'
             }),
-            new pc.Asset('statue-specular.jpg', 'texture', {
-                url: 'base/examples/assets/models/statue/26111214/statue-specular.jpg'
+            new pc.Asset('snowflake.png', 'texture', {
+                url: 'base/examples/assets/textures/snowflake.png'
             })
         ];
 

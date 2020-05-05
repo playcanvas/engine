@@ -1,8 +1,8 @@
 describe('pc.AssetReference', function () {
     var app;
     var parent;
-    var load
-    var remove
+    var load;
+    var remove;
     var add;
 
     beforeEach(function () {
@@ -26,7 +26,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/tests/test-assets/sprite/red-atlas.png'
+            url: 'base/examples/assets/textures/heart.png'
         });
 
         reg.id = asset.id;
@@ -50,7 +50,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/tests/test-assets/sprite/red-atlas.png'
+            url: 'base/examples/assets/textures/heart.png'
         });
 
         reg.id = asset.id;
@@ -75,7 +75,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/tests/test-assets/sprite/red-atlas.png'
+            url: 'base/examples/assets/textures/heart.png'
         });
 
         reg.id = asset.id;
