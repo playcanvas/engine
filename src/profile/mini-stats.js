@@ -190,7 +190,7 @@ Object.assign(pc, function () {
         var i;
 
         for (i = 0; i < words.length; ++i) {
-            // measurement word
+            // measure the word
             var measurement = context.measureText(words[i]);
 
             var l = Math.ceil(-measurement.actualBoundingBoxLeft);
@@ -210,19 +210,12 @@ Object.assign(pc, function () {
             // render the word
             context.fillText(words[i], x - l, y + a);
 
-            var placement = {
-                l: l,
-                r: r,
-                a: a,
-                d: d,
-                x: x,
-                y: y,
-                w: w,
-                h: h
-            };
+            placements.push({
+                l: l, r: r, a: a, d: d,
+                x: x, y: y, w: w, h: h
+            });
 
-            x += placement.w + padding;
-            placements.push(placement);
+            x += w + padding;
         }
 
         var wordMap = { };
@@ -294,10 +287,6 @@ Object.assign(pc, function () {
 
     Object.assign(Graph.prototype, {
         update: function (ms) {
-            if (!this.texture) {
-                return;
-            }
-
             var timings = this.timer.timings;
 
             // calculate stacked total
@@ -317,7 +306,7 @@ Object.assign(pc, function () {
             }
 
             if (this.enabled) {
-                // update timing sample
+                // update timings
                 var value = 0;
                 for (var i = 0; i < timings.length; ++i) {
                     value = Math.min(255, value + Math.floor(timings[i] * (255.0 / 48.0))); // full graph height represents 48ms
@@ -416,12 +405,12 @@ Object.assign(pc, function () {
         ];
         var size = 0;
 
+        var self = this;
+
         // create click region so we can resize
         var div = document.createElement('div');
         div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
-
-        var self = this;
 
         div.addEventListener('mouseenter', function (event) {
             self.opacity = 1.0;
@@ -475,6 +464,13 @@ Object.assign(pc, function () {
             set: function (value) {
                 this.clr[3] = value;
             }
+        },
+
+        overallHeight: {
+            get: function () {
+                var graphs = this.graphs;
+                return this.height * graphs.length + this.gspacing * (graphs.length - 1);
+            }
         }
     });
 
@@ -487,28 +483,22 @@ Object.assign(pc, function () {
             var height = this.height;
             var gspacing = this.gspacing;
 
-            var i, j, gx, gy, graph;
+            var i, j, x, y, graph;
 
-            // render graphs
-            gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
-                graph.render(render2d, gx, gy, width, height);
-                gy += height + gspacing;
-            }
 
-            // render text
-            gx = gy = 0;
-            for (i = 0; i < graphs.length; ++i) {
-                graph = graphs[i];
-                var x = gx + 1;
-                var y = gy + height - 13;
+                y = i * (height + gspacing);
 
-                // name
-                x += wordAtlas.render(render2d, graph.name, x, y);
+                // render the graph
+                graph.render(render2d, 0, y, width, height);
 
-                // space
-                x += 10;
+                // render the text
+                x = 1;
+                y += height - 13;
+
+                // name + space
+                x += wordAtlas.render(render2d, graph.name, x, y) + 10;
 
                 // timing
                 var timingText = graph.timingText;
@@ -518,8 +508,6 @@ Object.assign(pc, function () {
 
                 // ms
                 wordAtlas.render(render2d, 'ms', x, y);
-
-                gy += height + gspacing;
             }
 
             render2d.render(this.clr);
@@ -531,12 +519,11 @@ Object.assign(pc, function () {
                 graphs[i].enabled = showGraphs;
             }
 
-            var div = this.div;
-            div.style.width = width + "px";
-            div.style.height = height * graphs.length + this.gspacing * (graphs.length - 1) + "px";
-
             this.width = width;
             this.height = height;
+
+            this.div.style.width = this.width + "px";
+            this.div.style.height = this.overallHeight + "px";
         }
     });
 
