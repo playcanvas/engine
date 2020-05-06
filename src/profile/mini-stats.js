@@ -9,14 +9,14 @@ Object.assign(pc, function () {
         maxQuads = maxQuads || 128;
 
         var vertexShader =
-            'attribute vec4 vertex_position;\n' +       // unnormalized quad position in xy and vertex offset in zw
-            'attribute vec2 vertex_texCoord0;\n' +      // unnormalized texture uv
+            'attribute vec2 vertex_position;\n' +       // unnormalized
+            'attribute vec4 vertex_texCoord0;\n' +      // unnormalized texture space uv, normalized uv
             'uniform vec4 screenAndTextureSize;\n' +    // xy: screen size, zw: texture size
             'varying vec4 uv0;\n' +
             'void main(void) {\n' +
-            '    vec2 pos = (vertex_position.xy + vertex_position.zw) / screenAndTextureSize.xy;\n' +
+            '    vec2 pos = vertex_position.xy / screenAndTextureSize.xy;\n' +
             '    gl_Position = vec4(pos * 2.0 - 1.0, 0.5, 1.0);\n' +
-            '    uv0 = vec4(vertex_texCoord0 / screenAndTextureSize.zw, vertex_position.zw / 255.0);\n' +
+            '    uv0 = vec4(vertex_texCoord0.xy / screenAndTextureSize.zw, vertex_texCoord0.zw);\n' +
             '}\n';
 
         // this fragment shader renders the bits required for text and graphs. The text is identified
@@ -42,11 +42,11 @@ Object.assign(pc, function () {
 
         var format = new pc.VertexFormat(device, [{
             semantic: pc.SEMANTIC_POSITION,
-            components: 4,
+            components: 2,
             type: pc.TYPE_FLOAT32
         }, {
             semantic: pc.SEMANTIC_TEXCOORD0,
-            components: 2,
+            components: 4,
             type: pc.TYPE_FLOAT32
         }]);
 
@@ -111,16 +111,16 @@ Object.assign(pc, function () {
                 this.prim = prim;
             }
 
-            var u0 = u;
-            var v0 = v;
+            var x1 = x + w;
+            var y1 = y + h;
             var u1 = u + (uw === undefined ? w : uw);
             var v1 = v + (uh === undefined ? h : uh);
 
             this.data.set([
-                x, y, 0, 0, u0, v0,
-                x, y, w, 0, u1, v0,
-                x, y, w, h, u1, v1,
-                x, y, 0, h, u0, v1
+                x,  y,  u,  v,  0, 0,
+                x1, y,  u1, v,  1, 0,
+                x1, y1, u1, v1, 1, 1,
+                x,  y1, u,  v1, 0, 1
             ], 4 * 6 * quad);
         },
 
@@ -171,10 +171,10 @@ Object.assign(pc, function () {
 
     // Word atlas
 
-    var WordAtlas = function (words) {
+    var WordAtlas = function (texture, words) {
         var canvas = document.createElement('canvas');
-        canvas.width = 90;
-        canvas.height = 64;
+        canvas.width = texture.width;
+        canvas.height = texture.height;
 
         // configure the context
         var context = canvas.getContext('2d', { alpha: true });
@@ -230,30 +230,26 @@ Object.assign(pc, function () {
             wordMap[w] = i;
         });
 
-        this.source = context.getImageData(0, 0, canvas.width, canvas.height);
         this.words = words;
         this.wordMap = wordMap;
         this.placements = placements;
-        this.texture = null;
+        this.texture = texture;
+
+        // copy pixel data to target
+        var source = context.getImageData(0, 0, canvas.width, canvas.height);
+        var dest = texture.lock();
+        for (y = 0; y < source.height; ++y) {
+            for (x = 0; x < source.width; ++x) {
+                var offset = (x + y * texture.width) * 4;
+                dest[offset] = 255;
+                dest[offset + 1] = 255;
+                dest[offset + 2] = 255;
+                dest[offset + 3] = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
+            }
+        }
     };
 
     Object.assign(WordAtlas.prototype, {
-        init: function (texture) {
-            // copy context alpha channel into texture
-            var source = this.source;
-            var dest = texture.lock();
-            for (var y = 0; y < source.height; ++y) {
-                for (var x = 0; x < source.width; ++x) {
-                    var offset = (x + y * texture.width) * 4;
-                    dest[offset] = 255;
-                    dest[offset + 1] = 255;
-                    dest[offset + 2] = 255;
-                    dest[offset + 3] = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
-                }
-            }
-            this.texture = texture;
-        },
-
         render: function (render2d, word, x, y) {
             if (this.texture) {
                 var p = this.placements[this.wordMap[word]];
@@ -273,9 +269,10 @@ Object.assign(pc, function () {
         }
     });
 
-    // Realtime performance graph
+    // Realtime performance graph visual
 
-    var Graph = function (app, timer) {
+    var Graph = function (name, app, timer, texture, yOffset) {
+        this.name = name;
         this.device = app.graphicsDevice;
         this.timer = timer;
         this.enabled = false;
@@ -285,25 +282,19 @@ Object.assign(pc, function () {
         this.avgCount = 0;
         this.timingText = "";
 
-        this.texture = null;
-        this.width = 0;
-        this.height = 0;
-        this.yOffset = 0;
+        this.texture = texture;
+        this.yOffset = yOffset;
         this.cursor = 0;
         this.sample = new Uint8Array(4);
 
+        this.sample.set([0, 0, 0, 255]);
+
         app.on('frameupdate', this.update.bind(this));
+
+        this.counter = 0;
     };
 
     Object.assign(Graph.prototype, {
-        init: function (texture, width, height, yOffset) {
-            this.texture = texture;
-            this.width = width;
-            this.height = height;
-            this.yOffset = yOffset;
-            this.cursor = 0;
-        },
-
         update: function (ms) {
             if (!this.texture) {
                 return;
@@ -328,35 +319,43 @@ Object.assign(pc, function () {
             }
 
             if (this.enabled) {
-                // update sample with timings
+                // update timing sample
                 var value = 0;
-
                 for (var i = 0; i < timings.length; ++i) {
-                    value = Math.min(255, value + Math.floor(timings[i] * (this.height / 48.0)));
+                    value = Math.min(255, value + Math.floor(timings[i] * (255.0 / 48.0))); // full graph height represents 48ms
                     this.sample[i] = value;
-                }
-
-                for (var j = timings.length; j < 4; ++j) {
-                    this.sample[j] = 0;
                 }
 
                 // write latest sample to the texture
                 var gl = this.device.gl;
                 this.device.bindTexture(this.texture);
-                gl.texSubImage2D(gl.TEXTURE_2D, 0, this.cursor, this.yOffset, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.sample);
+                gl.texSubImage2D(gl.TEXTURE_2D,
+                                 0,
+                                 this.cursor,
+                                 this.yOffset,
+                                 1,
+                                 1,
+                                 gl.RGBA,
+                                 gl.UNSIGNED_BYTE,
+                                 this.sample);
 
+                // update cursor position
                 this.cursor++;
-                if (this.cursor === this.width) {
+                if (this.cursor === this.texture.width) {
                     this.cursor = 0;
                 }
             }
         },
 
-        render: function (render2d, x, y) {
-            var texture = this.texture;
-            if (texture) {
-                render2d.quad(texture, x, y, this.width, this.height, this.cursor, this.yOffset, this.width, 0);
-            }
+        render: function (render2d, x, y, w, h) {
+            render2d.quad(this.texture,
+                          x + w,
+                          y,
+                          -w,
+                          h,
+                          this.cursor,
+                          0.5 + (this.enabled ? this.yOffset : 0),
+                          -w, 0);
         }
     });
 
@@ -364,9 +363,7 @@ Object.assign(pc, function () {
 
     var FrameTimer = function (app) {
         this.ms = 0;
-
         var self = this;
-
         app.on('frameupdate', function (ms) {
             self.ms = ms;
         });
@@ -383,50 +380,47 @@ Object.assign(pc, function () {
     var MiniStats = function (app) {
         var device = app.graphicsDevice;
 
+        // create the texture for storing word atlas and graph data
+        var texture = new pc.Texture(device, {
+            name: 'mini-stats',
+            width: 256,
+            height: 32,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+
+        var wordAtlas = new WordAtlas(
+            texture,
+            ["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
+        );
+
+        // initialize data bottom 4 rows with black
+        var dest = texture.lock();
+        for (var i = 0; i < texture.width * 4; ++i) {
+            dest.set([0, 0, 0, 255], i * 4);
+        }
+
+        texture.unlock();
+        texture.dirtyAll();
+
         var render2d = new Render2d(device);
-        var wordAtlas = new WordAtlas(["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]);
-        var graphs = [];
-        graphs.push({
-            name: 'Frame',
-            graph: new Graph(app, new FrameTimer(app))
-        });
-        graphs.push({
-            name: 'CPU',
-            graph: new Graph(app, new pc.CpuTimer(app))
-        });
+
+        // create graphs
+        var graphs = [
+            new Graph('Frame', app, new FrameTimer(app), texture, 1),
+            new Graph('CPU', app, new pc.CpuTimer(app), texture, 2)
+        ];
         if (device.extDisjointTimerQuery) {
-            graphs.push({
-                name: 'GPU',
-                graph: new Graph(app, new pc.GpuTimer(app))
-            });
+            graphs.push(new Graph('GPU', app, new pc.GpuTimer(app), texture, 3));
         }
 
         // initialize the graphs to the specified size
         var init = function (size) {
-            var i;
-
-            // create a texture to store the graphs and word atlas
-            var texture = new pc.Texture(device, {
-                name: 'mini-stats',
-                width: size.width,
-                height: 64 + graphs.length,
-                mipmaps: false
-            });
-
-            // word atlas uses top 64 rows of pixels
-            wordAtlas.init(texture);
-
-            for (i = 0; i < graphs.length; ++i) {
-                graphs[i].graph.init(texture, size.width, size.height, 64 + i);
-                graphs[i].graph.enabled = size.graphs;
+            // each graph stores timings in a single row
+            for (var i = 0; i < graphs.length; ++i) {
+                graphs[i].enabled = size.graphs;
             }
-
-            texture.unlock();
-            // wrap u for graphs, but not v because otherwise words atlas interferes
-            texture.addressU = pc.ADDRESS_REPEAT;
-            texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-            texture.magFilter = pc.FILTER_NEAREST;
-            device.setTexture(texture, 0);
         };
 
         var gspacing = 2;
@@ -439,7 +433,7 @@ Object.assign(pc, function () {
             gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
-                graph.graph.render(render2d, gx, gy);
+                graph.render(render2d, gx, gy, size.width, size.height);
                 gy += size.height + gspacing;
             }
 
@@ -457,7 +451,7 @@ Object.assign(pc, function () {
                 x += 10;
 
                 // timing
-                var timingText = graph.graph.timingText;
+                var timingText = graph.timingText;
                 for (j = 0; j < timingText.length; ++j) {
                     x += wordAtlas.render(render2d, timingText[j], x, y);
                 }
