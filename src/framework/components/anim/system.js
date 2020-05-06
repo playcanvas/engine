@@ -54,7 +54,7 @@ Object.assign(pc, function () {
 
                     if (componentData.enabled && component.entity.enabled) {
                         if (componentData.animController) {
-                            componentData.animController.update(dt);
+                            componentData.animController.update(dt * componentData.speed);
                         }
                     }
                 }

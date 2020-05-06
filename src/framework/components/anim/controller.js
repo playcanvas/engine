@@ -194,7 +194,7 @@ Object.assign(pc, function () {
         }
     });
 
-    var AnimController = function (animEvaluator, states, transitions, parameters, activate, speed) {
+    var AnimController = function (animEvaluator, states, transitions, parameters, activate) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         var i;
@@ -225,7 +225,6 @@ Object.assign(pc, function () {
         this._activeStateName = ANIM_STATE_START;
         this._playing = false;
         this._activate = activate;
-        this._speed = speed;
 
         this._currTransitionTime = 1.0;
         this._totalTransitionTime = 1.0;
@@ -527,61 +526,62 @@ Object.assign(pc, function () {
         },
 
         update: function (dt) {
-            if (this._playing) {
-                var i;
-                var j;
-                var state;
-                var animation;
-                this._timeInStateBefore = this._timeInState;
-                this._timeInState += dt;
-
-                var transition = this._findTransition(this._activeStateName);
-                if (transition)
-                    this._updateStateFromTransition(transition);
-
-                if (this._isTransitioning) {
-                    if (this._currTransitionTime >= this._totalTransitionTime) {
-                        this._isTransitioning = false;
-
-                        for (i = 0; i < this._transitionPreviousStates.length; i++) {
-                            state = this._findState(this._transitionPreviousStates[i].name);
-                            for (j = 0; j < state.animations.length; j++) {
-                                animation = state.animations[j];
-                                var clip = this._animEvaluator.findClip(animation.name);
-                                clip.pause();
-                                clip.blendWeight = 0;
-                            }
-                        }
-
-                        this._transitionPreviousStates = [];
-
-                        state = this.activeState;
-                        for (i = 0; i < state.animations.length; i++) {
-                            animation = state.animations[i];
-                            this._animEvaluator.findClip(animation.name).blendWeight = animation.weight / state.totalWeight;
-                        }
-                    } else {
-                        var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
-
-                        for (i = 0; i < this._transitionPreviousStates.length; i++) {
-                            state = this._findState(this._transitionPreviousStates[i].name);
-                            var stateWeight = this._transitionPreviousStates[i].weight;
-                            for (j = 0; j < state.animations.length; j++) {
-                                animation = state.animations[j];
-                                this._animEvaluator.findClip(animation.name).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
-                            }
-                        }
-                        state = this.activeState;
-                        for (i = 0; i < state.animations.length; i++) {
-                            animation = state.animations[i];
-                            this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.weight / state.totalWeight;
-                        }
-
-                    }
-                    this._currTransitionTime += dt;
-                }
-                this._animEvaluator.update(dt);
+            if (!this._playing) {
+                return;
             }
+            var i;
+            var j;
+            var state;
+            var animation;
+            this._timeInStateBefore = this._timeInState;
+            this._timeInState += dt;
+
+            var transition = this._findTransition(this._activeStateName);
+            if (transition)
+                this._updateStateFromTransition(transition);
+
+            if (this._isTransitioning) {
+                if (this._currTransitionTime >= this._totalTransitionTime) {
+                    this._isTransitioning = false;
+
+                    for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                        state = this._findState(this._transitionPreviousStates[i].name);
+                        for (j = 0; j < state.animations.length; j++) {
+                            animation = state.animations[j];
+                            var clip = this._animEvaluator.findClip(animation.name);
+                            clip.pause();
+                            clip.blendWeight = 0;
+                        }
+                    }
+
+                    this._transitionPreviousStates = [];
+
+                    state = this.activeState;
+                    for (i = 0; i < state.animations.length; i++) {
+                        animation = state.animations[i];
+                        this._animEvaluator.findClip(animation.name).blendWeight = animation.weight / state.totalWeight;
+                    }
+                } else {
+                    var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+
+                    for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                        state = this._findState(this._transitionPreviousStates[i].name);
+                        var stateWeight = this._transitionPreviousStates[i].weight;
+                        for (j = 0; j < state.animations.length; j++) {
+                            animation = state.animations[j];
+                            this._animEvaluator.findClip(animation.name).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                        }
+                    }
+                    state = this.activeState;
+                    for (i = 0; i < state.animations.length; i++) {
+                        animation = state.animations[i];
+                        this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.weight / state.totalWeight;
+                    }
+
+                }
+                this._currTransitionTime += dt;
+            }
+            this._animEvaluator.update(dt);
         },
 
         findParameter: function (name) {
