@@ -400,9 +400,7 @@ Object.assign(pc, function () {
         for (var i = 0; i < texture.width * 4; ++i) {
             dest.set([0, 0, 0, 255], i * 4);
         }
-
         texture.unlock();
-        texture.dirtyAll();
 
         var render2d = new Render2d(device);
 
