@@ -40,14 +40,6 @@ Object.assign(pc, function () {
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
-        cloneComponent: function (entity, clone) {
-            this.addComponent(clone, {});
-
-            clone.anim.data.speed = entity.anim.speed;
-            clone.anim.data.activate = entity.anim.activate;
-            clone.anim.data.enabled = entity.anim.enabled;
-        },
-
         onBeforeRemove: function (entity, component) {
             component.onBeforeRemove();
         },
@@ -62,7 +54,7 @@ Object.assign(pc, function () {
 
                     if (componentData.enabled && component.entity.enabled) {
                         if (componentData.animController) {
-                            componentData.animController.update(dt * componentData.speed);
+                            componentData.animController.update(dt);
                         }
                     }
                 }

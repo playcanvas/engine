@@ -242,7 +242,7 @@ Object.assign(pc, function () {
         activeState: {
             get: function () {
                 if (this.data.animController) {
-                    return this.data.animController.getActiveStateName();
+                    return this.data.animController.activeStateName;
                 }
                 return null;
             }
@@ -254,7 +254,7 @@ Object.assign(pc, function () {
         activeStateProgress: {
             get: function () {
                 if (this.data.animController) {
-                    return this.data.animController.getActiveStateProgress();
+                    return this.data.animController.activeStateProgress;
                 }
                 return null;
             }
