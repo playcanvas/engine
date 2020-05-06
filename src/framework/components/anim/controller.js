@@ -13,22 +13,16 @@ Object.assign(pc, function () {
     var ANIM_TRANSITION_PREDICATE_EQUAL_TO = 'EQUAL_TO';
     var ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
 
-    var ANIM_PARAMETER_INTEGER = 1;
-    var ANIM_PARAMETER_FLOAT = 2;
-    var ANIM_PARAMETER_BOOLEAN = 3;
-    var ANIM_PARAMETER_TRIGGER = 4;
-
-    var ANIM_PARAMETER_TYPE_NAMES = {
-        ANIM_PARAMETER_INTEGER: 'Integer',
-        ANIM_PARAMETER_FLOAT: 'Float',
-        ANIM_PARAMETER_BOOLEAN: 'Boolean',
-        ANIM_PARAMETER_TRIGGER: 'Trigger'
-    };
+    var ANIM_PARAMETER_INTEGER = 'INTEGER';
+    var ANIM_PARAMETER_FLOAT = 'FLOAT';
+    var ANIM_PARAMETER_BOOLEAN = 'BOOLEAN';
+    var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
 
     var ANIM_STATE_START = 'ANIM_STATE_START';
     var ANIM_STATE_END = 'ANIM_STATE_END';
 
-    var AnimState = function (name, speed) {
+    var AnimState = function (controller, name, speed) {
+        this._controller = controller;
         this._name = name;
         this._animations = [];
         this._speed = speed || 1.0;
@@ -60,8 +54,8 @@ Object.assign(pc, function () {
 
     Object.defineProperty(AnimState.prototype, 'looping', {
         get: function () {
-            var trackClipName = this.name + '.' + this.animatons[0].animTrack.name;
-            var trackClip = this._controller.animEvaluator.getClip(trackClipName);
+            var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+            var trackClip = this._controller.animEvaluator.findClip(trackClipName);
             if (trackClip) {
                 return trackClip.loop;
             }
@@ -200,6 +194,7 @@ Object.assign(pc, function () {
         var i;
         for (i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
+                this,
                 states[i].name,
                 states[i].speed
             );
@@ -235,6 +230,12 @@ Object.assign(pc, function () {
         this._timeInState = 0;
         this._timeInStateBefore = 0;
     };
+
+    Object.defineProperty(AnimController.prototype, 'animEvaluator', {
+        get: function () {
+            return this._animEvaluator;
+        }
+    });
 
     Object.defineProperty(AnimController.prototype, 'activeState', {
         get: function () {
@@ -359,9 +360,9 @@ Object.assign(pc, function () {
             // filter out transitions that don't have their conditions met
             transitions = transitions.filter(function (transition) {
                 // when an exit time is present, we should only exit if it falls within the current frame delta time
-                if (transition.hasExitTime()) {
+                if (transition.hasExitTime) {
                     var progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
-                    var progress = this.getActiveStateProgressForTime(this._timeInState);
+                    var progress = this._getActiveStateProgressForTime(this._timeInState);
                     // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
                     if (transition.exitTime < 1.0 && this.activeState.looping) {
                         progressBefore -= Math.floor(progressBefore);
@@ -372,7 +373,7 @@ Object.assign(pc, function () {
                         return null;
                     }
                 }
-                return transition.hasConditionsMet();
+                return transition.hasConditionsMet;
             }.bind(this));
 
             if (transitions.length > 0) {
@@ -594,7 +595,7 @@ Object.assign(pc, function () {
                 return param.value;
             }
             // #ifdef DEBUG
-            console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + ANIM_PARAMETER_TYPE_NAMES[type] + '"');
+            console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
             // #endif
         },
 
@@ -605,7 +606,7 @@ Object.assign(pc, function () {
                 return;
             }
             // #ifdef DEBUG
-            console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + ANIM_PARAMETER_TYPE_NAMES[type] + '"');
+            console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
             // #endif
         }
     });
@@ -624,7 +625,6 @@ Object.assign(pc, function () {
         ANIM_TRANSITION_PREDICATE_EQUAL_TO: ANIM_TRANSITION_PREDICATE_EQUAL_TO,
         ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO: ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO,
 
-        ANIM_PARAMETER_TYPE_NAMES: ANIM_PARAMETER_TYPE_NAMES,
         ANIM_PARAMETER_INTEGER: ANIM_PARAMETER_INTEGER,
         ANIM_PARAMETER_FLOAT: ANIM_PARAMETER_FLOAT,
         ANIM_PARAMETER_BOOLEAN: ANIM_PARAMETER_BOOLEAN,
