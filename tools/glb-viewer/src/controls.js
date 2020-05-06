@@ -70,21 +70,22 @@ var onMorphTargetsLoaded = function (morphList) {
 
     var theviewer = viewer;
     for (var i = 0; i < morphList.length; ++i) {
+        var morph = morphList[i];
         var label = document.createElement('label');
-        label.innerHTML += morphList[i];
+        label.innerHTML += morph.name;
 
         var input = document.createElement('input');
         input.class = 'setting';
+        input.step = 'any';
         input.type = 'range';
         input.min = 0;
         input.max = 1;
-        input.value = 0;
-        input.step = 'any';
+        input.value = morph.weight.toString();
         input.oninput = (function (morph) {
             return function () {
                 theviewer.setMorphWeight(morph, this.value);
             };
-        })(morphList[i]);
+        })(morph.name);
 
         var div = document.createElement('div');
         div.appendChild(label);

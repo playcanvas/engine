@@ -134,12 +134,12 @@ Object.assign(pc.Application.prototype, function () {
     }
 
     function _addLines(position, color, options) {
-        if (options.layer === undefined) options.layer = this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
-        if (options.depthTest === undefined) options.depthTest = true;
+        var layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
+        var depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
+        var mask = (options && options.mask) ? options.mask : undefined;
 
         this._initImmediate();
 
-        var layer = options.layer;
         this._immediateData.addLayer(layer);
 
         var idx = this._immediateData.getLayerIdx(layer);
@@ -147,16 +147,16 @@ Object.assign(pc.Application.prototype, function () {
             // Init used batch once
             var batch = new LineBatch();
             batch.init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            batch.material.depthTest = options.depthTest;
-            if (options.mask) batch.meshInstance.mask = options.mask;
+            batch.material.depthTest = depthTest;
+            if (mask) batch.meshInstance.mask = mask;
 
             idx = this._immediateData.lineBatches.push(batch) - 1; // push into list and get index
             this._immediateData.addLayerIdx(idx, layer);
         } else {
             // Possibly reallocate buffer if it's small
             this._immediateData.lineBatches[idx].init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            this._immediateData.lineBatches[idx].material.depthTest = options.depthTest;
-            if (options.mask) this._immediateData.lineBatches[idx].meshInstance.mask = options.mask;
+            this._immediateData.lineBatches[idx].material.depthTest = depthTest;
+            if (mask) this._immediateData.lineBatches[idx].meshInstance.mask = mask;
         }
         // Append
         this._immediateData.lineBatches[idx].addLines(position, color);
@@ -266,12 +266,6 @@ Object.assign(pc.Application.prototype, function () {
         } else if (arg3) {
             // options passed in
             options = arg3;
-        } else {
-            // no arg3, use default options
-            options = {
-                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
-                depthTest: true
-            };
         }
 
         this._addLines([start, end], [color, endColor], options);

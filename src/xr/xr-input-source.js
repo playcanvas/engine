@@ -241,8 +241,6 @@ Object.assign(pc, function () {
         } else {
             this._worldTransform.copy(this._localTransform);
         }
-
-        return dirty;
     };
 
     XrInputSource.prototype._updateRayTransforms = function () {
@@ -267,8 +265,6 @@ Object.assign(pc, function () {
             this._ray.origin.copy(this._rayLocal.origin);
             this._ray.direction.copy(this._rayLocal.direction);
         }
-
-        return dirty;
     };
 
     /**
