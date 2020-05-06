@@ -251,19 +251,17 @@ Object.assign(pc, function () {
 
     Object.assign(WordAtlas.prototype, {
         render: function (render2d, word, x, y) {
-            if (this.texture) {
-                var p = this.placements[this.wordMap[word]];
+            var p = this.placements[this.wordMap[word]];
+            if (p) {
                 var padding = 1;
-                if (p) {
-                    render2d.quad(this.texture,
-                                  x + p.l - padding,
-                                  y - p.d + padding,
-                                  p.w + padding * 2,
-                                  p.h + padding * 2,
-                                  p.x - padding,
-                                  64 - p.y - p.h - padding);
-                    return p.w;
-                }
+                render2d.quad(this.texture,
+                              x + p.l - padding,
+                              y - p.d + padding,
+                              p.w + padding * 2,
+                              p.h + padding * 2,
+                              p.x - padding,
+                              64 - p.y - p.h - padding);
+                return p.w;
             }
             return 0;
         }
@@ -402,8 +400,6 @@ Object.assign(pc, function () {
         }
         texture.unlock();
 
-        var render2d = new Render2d(device);
-
         // create graphs
         var graphs = [
             new Graph('Frame', app, new FrameTimer(app), texture, 1),
@@ -413,26 +409,92 @@ Object.assign(pc, function () {
             graphs.push(new Graph('GPU', app, new pc.GpuTimer(app), texture, 3));
         }
 
-        // initialize the graphs to the specified size
-        var init = function (size) {
-            // each graph stores timings in a single row
-            for (var i = 0; i < graphs.length; ++i) {
-                graphs[i].enabled = size.graphs;
+        var sizes = [
+            { width: 100, height: 16, graphs: false },
+            { width: 128, height: 32, graphs: true },
+            { width: 256, height: 64, graphs: true }
+        ];
+        var size = 0;
+
+        // create click region so we can resize
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
+        document.body.appendChild(div);
+
+        var self = this;
+
+        div.addEventListener('mouseenter', function (event) {
+            self.opacity = 1.0;
+        });
+
+        div.addEventListener('mouseleave', function (event) {
+            self.opacity = 0.5;
+        });
+
+        div.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (self.enabled) {
+                size = (size + 1) % sizes.length;
+                self.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
             }
-        };
+        });
 
-        var gspacing = 2;
-        var clr = [1, 1, 1, 0.5];
+        device.on("resizecanvas", function () {
+            var rect = device.canvas.getBoundingClientRect();
+            div.style.left = rect.left + "px";
+            div.style.bottom = (window.innerHeight - rect.bottom) + "px";
+        });
 
-        var render = function (render2d, size) {
+        app.on('postrender', function () {
+            if (self.enabled) {
+                self.render();
+            }
+        });
+
+        this.texture = texture;
+        this.wordAtlas = wordAtlas;
+        this.render2d = new Render2d(device);
+        this.graphs = graphs;
+        this.div = div;
+
+        this.width = 0;
+        this.height = 0;
+        this.gspacing = 2;
+        this.clr = [1, 1, 1, 0.5];
+
+        this.enabled = true;
+
+        this.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
+    };
+
+    Object.defineProperties(MiniStats.prototype, {
+        opacity: {
+            get: function () {
+                return this.clr[3];
+            },
+            set: function (value) {
+                this.clr[3] = value;
+            }
+        }
+    });
+
+    Object.assign(MiniStats.prototype, {
+        render: function () {
+            var graphs = this.graphs;
+            var wordAtlas = this.wordAtlas;
+            var render2d = this.render2d;
+            var width = this.width;
+            var height = this.height;
+            var gspacing = this.gspacing;
+
             var i, j, gx, gy, graph;
 
             // render graphs
             gx = gy = 0;
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
-                graph.render(render2d, gx, gy, size.width, size.height);
-                gy += size.height + gspacing;
+                graph.render(render2d, gx, gy, width, height);
+                gy += height + gspacing;
             }
 
             // render text
@@ -440,7 +502,7 @@ Object.assign(pc, function () {
             for (i = 0; i < graphs.length; ++i) {
                 graph = graphs[i];
                 var x = gx + 1;
-                var y = gy + size.height - 13;
+                var y = gy + height - 13;
 
                 // name
                 x += wordAtlas.render(render2d, graph.name, x, y);
@@ -457,59 +519,26 @@ Object.assign(pc, function () {
                 // ms
                 wordAtlas.render(render2d, 'ms', x, y);
 
-                gy += size.height + gspacing;
+                gy += height + gspacing;
             }
 
-            render2d.render(clr);
-        };
+            render2d.render(this.clr);
+        },
 
-        // possible graph sizes
-        var sizes = [
-            { width: 100, height: 16, graphs: false },
-            { width: 128, height: 32, graphs: true },
-            { width: 256, height: 64, graphs: true }
-        ];
+        resize: function (width, height, showGraphs) {
+            var graphs = this.graphs;
+            for (var i = 0; i < graphs.length; ++i) {
+                graphs[i].enabled = showGraphs;
+            }
 
-        // the currently selected graph size
-        var size = sizes[0];
+            var div = this.div;
+            div.style.width = width + "px";
+            div.style.height = height * graphs.length + this.gspacing * (graphs.length - 1) + "px";
 
-        // create click region so we can resize
-        var div = document.createElement('div');
-        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
-        document.body.appendChild(div);
-
-        var resize = function (size) {
-            init(size);
-            div.style.width = size.width + "px";
-            div.style.height = size.height * graphs.length + gspacing * (graphs.length - 1) + "px";
-        };
-
-        resize(size);
-
-        div.addEventListener('mouseenter', function (event) {
-            clr[3] = 1.0;
-        });
-
-        div.addEventListener('mouseleave', function (event) {
-            clr[3] = 0.5;
-        });
-
-        div.addEventListener('click', function (event) {
-            event.preventDefault();
-            size = sizes[(sizes.indexOf(size) + 1) % sizes.length];
-            resize(size);
-        });
-
-        device.on("resizecanvas", function () {
-            var rect = device.canvas.getBoundingClientRect();
-            div.style.left = rect.left + "px";
-            div.style.bottom = (window.innerHeight - rect.bottom) + "px";
-        });
-
-        app.on('postrender', function () {
-            render(render2d, size);
-        });
-    };
+            this.width = width;
+            this.height = height;
+        }
+    });
 
     return {
         MiniStats: MiniStats
