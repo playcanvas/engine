@@ -166,7 +166,13 @@ Object.assign(pc, function () {
          */
         setInteger: function (name, value) {
             if (this.data.animController) {
-                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, value);
+                if (typeof value === 'number' && value % 1 === 0) {
+                    this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, Math.floor(value));
+                } else {
+                    // #ifdef DEBUG
+                    console.error('Attempting to assign non integer value to integer parameter');
+                    // #endif
+                }
             }
         },
 
@@ -192,7 +198,7 @@ Object.assign(pc, function () {
          */
         setBoolean: function (name, value) {
             if (this.data.animController) {
-                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN, value);
+                this.data.animController.setParameterValue(name, pc.ANIM_PARAMETER_BOOLEAN, !!value);
             }
         },
 
