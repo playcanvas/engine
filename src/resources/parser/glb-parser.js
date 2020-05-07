@@ -254,7 +254,8 @@ Object.assign(pc, function () {
                     vertexDesc.push({
                         semantic: semantic,
                         components: getNumComponents(accessor.type),
-                        type: getComponentType(accessor.componentType)
+                        type: getComponentType(accessor.componentType),
+                        normalize: accessor.normalized
                     });
                     // store the info we'll need to copy this data into the vertex buffer
                     var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
@@ -331,7 +332,8 @@ Object.assign(pc, function () {
                 values: values,
                 numComponents: attribute.num_components(),
                 componentSizeInBytes: componentSizeInBytes,
-                storageType: storageType
+                storageType: storageType,
+                normalized: attribute.normalized()
             };
         };
 
@@ -349,7 +351,7 @@ Object.assign(pc, function () {
                     semantic: semantic,
                     components: attributeInfo.numComponents,
                     type: attributeInfo.storageType,
-                    normalize: semanticMap[attrib].normalize
+                    normalize: attributeInfo.normalized
                 });
 
                 // store the info we'll need to copy this data into the vertex buffer
