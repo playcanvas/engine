@@ -143,11 +143,13 @@ Object.assign(pc, function () {
             device.setIndexBuffer(this.indexBuffer);
             device.setShader(this.shader);
 
+            var pr = Math.min(device.maxPixelRatio, window.devicePixelRatio);
+
             // set shader uniforms
             this.clr.set(clr, 0);
             this.clrId.setValue(this.clr);
-            this.screenTextureSize[0] = this.device.width / window.devicePixelRatio;
-            this.screenTextureSize[1] = this.device.height / window.devicePixelRatio;
+            this.screenTextureSize[0] = device.width / pr;
+            this.screenTextureSize[1] = device.height / pr;
 
             for (var i = 0; i <= this.primIndex; ++i) {
                 var prim = this.prims[i];
