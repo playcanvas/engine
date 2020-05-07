@@ -294,10 +294,8 @@ Object.assign(pc, function () {
         this._soundManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader(this);
 
-        // profiling
-        // #ifndef RELEASE
-        this.miniStats = options.miniStats ? new pc.MiniStats(this) : null;
-        // #endif
+        // construct ministats if it's present
+        this.miniStats = pc.MiniStats ? new pc.MiniStats(this) : null;
 
         // stores all entities that have been created
         // for this app by guid

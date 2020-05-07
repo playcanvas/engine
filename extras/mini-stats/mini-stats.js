@@ -1,5 +1,3 @@
-// #ifndef RELEASE
-
 Object.assign(pc, function () {
     'use strict';
 
@@ -531,5 +529,3 @@ Object.assign(pc, function () {
         MiniStats: MiniStats
     };
 }());
-
-// #endif

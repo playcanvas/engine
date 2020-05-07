@@ -64,9 +64,6 @@
 ../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/skybox.js
 ../src/graphics/post-effect.js
-../src/profile/cpu-timer.js
-../src/profile/gpu-timer.js
-../src/profile/mini-stats.js
 ../src/scene/scene.js
 ../src/scene/forward-renderer.js
 ../src/scene/graph-node.js
