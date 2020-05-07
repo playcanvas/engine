@@ -1,4 +1,5 @@
 Object.assign(pc, function () {
+
     /**
      * @class
      * @name pc.Application
@@ -1920,6 +1921,8 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
+            app.fire("frameupdate", ms);
+
             if (frame) {
                 app.xr.update(frame);
                 app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
@@ -1928,6 +1931,8 @@ Object.assign(pc, function () {
             }
 
             app.update(dt);
+
+            app.fire("framerender");
 
             if (app.autoRender || app.renderNextFrame) {
                 app.render();
