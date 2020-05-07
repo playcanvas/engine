@@ -1,25 +1,25 @@
 Object.assign(pc, function () {
 
-    var ANIM_INTERRUPTION_SOURCE_NONE = 'NONE';
-    var ANIM_INTERRUPTION_SOURCE_PREV_STATE = 'PREV_STATE';
-    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE = 'NEXT_STATE';
-    var ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE = 'PREV_STATE_NEXT_STATE';
-    var ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE = 'NEXT_STATE_PREV_STATE';
+    var ANIM_INTERRUPTION_NONE = 'NONE';
+    var ANIM_INTERRUPTION_PREV = 'PREV_STATE';
+    var ANIM_INTERRUPTION_NEXT = 'NEXT_STATE';
+    var ANIM_INTERRUPTION_PREV_NEXT = 'PREV_STATE_NEXT_STATE';
+    var ANIM_INTERRUPTION_NEXT_PREV = 'NEXT_STATE_PREV_STATE';
 
-    var ANIM_TRANSITION_PREDICATE_GREATER_THAN = 'GREATER_THAN';
-    var ANIM_TRANSITION_PREDICATE_LESS_THAN = 'LESS_THAN';
-    var ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO = 'GREATER_THAN_EQUAL_TO';
-    var ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO = 'LESS_THAN_EQUAL_TO';
-    var ANIM_TRANSITION_PREDICATE_EQUAL_TO = 'EQUAL_TO';
-    var ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
+    var ANIM_GREATER_THAN = 'GREATER_THAN';
+    var ANIM_LESS_THAN = 'LESS_THAN';
+    var ANIM_GREATER_THAN_EQUAL_TO = 'GREATER_THAN_EQUAL_TO';
+    var ANIM_LESS_THAN_EQUAL_TO = 'LESS_THAN_EQUAL_TO';
+    var ANIM_EQUAL_TO = 'EQUAL_TO';
+    var ANIM_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
 
     var ANIM_PARAMETER_INTEGER = 'INTEGER';
     var ANIM_PARAMETER_FLOAT = 'FLOAT';
     var ANIM_PARAMETER_BOOLEAN = 'BOOLEAN';
     var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
 
-    var ANIM_STATE_START = 'ANIM_STATE_START';
-    var ANIM_STATE_END = 'ANIM_STATE_END';
+    var ANIM_STATE_START = 'START';
+    var ANIM_STATE_END = 'END';
 
     var AnimState = function (controller, name, speed) {
         this._controller = controller;
@@ -28,63 +28,59 @@ Object.assign(pc, function () {
         this._speed = speed || 1.0;
     };
 
-    Object.defineProperty(AnimState.prototype, 'name', {
-        get: function () {
-            return this._name;
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'animations', {
-        get: function () {
-            return this._animations;
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'speed', {
-        get: function () {
-            return this._speed;
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'playable', {
-        get: function () {
-            return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'looping', {
-        get: function () {
-            var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
-            var trackClip = this._controller.animEvaluator.findClip(trackClipName);
-            if (trackClip) {
-                return trackClip.loop;
+    Object.defineProperties(AnimState.prototype, {
+        name: {
+            get: function () {
+                return this._name;
             }
-            return false;
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'totalWeight', {
-        get: function () {
-            var sum = 0;
-            var i;
-            for (i = 0; i < this.animations.length; i++) {
-                sum += this.animations[i].weight;
+        },
+        animations: {
+            get: function () {
+                return this._animations;
             }
-            return sum;
-        }
-    });
-
-    Object.defineProperty(AnimState.prototype, 'timelineDuration', {
-        get: function () {
-            var duration = 0;
-            var i;
-            for (i = 0; i < this.animations.length; i++) {
-                var animation = this.animations[i];
-                if (animation.animTrack.duration > duration) {
-                    duration = animation.animTrack.duration > duration;
+        },
+        speed: {
+            get: function () {
+                return this._speed;
+            }
+        },
+        playable: {
+            get: function () {
+                return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
+            }
+        },
+        looping: {
+            get: function () {
+                var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+                var trackClip = this._controller.animEvaluator.findClip(trackClipName);
+                if (trackClip) {
+                    return trackClip.loop;
                 }
+                return false;
             }
-            return duration;
+        },
+        totalWeight: {
+            get: function () {
+                var sum = 0;
+                var i;
+                for (i = 0; i < this.animations.length; i++) {
+                    sum += this.animations[i].weight;
+                }
+                return sum;
+            }
+        },
+        timelineDuration: {
+            get: function () {
+                var duration = 0;
+                var i;
+                for (i = 0; i < this.animations.length; i++) {
+                    var animation = this.animations[i];
+                    if (animation.animTrack.duration > duration) {
+                        duration = animation.animTrack.duration > duration;
+                    }
+                }
+                return duration;
+            }
         }
     });
 
@@ -100,91 +96,84 @@ Object.assign(pc, function () {
         this._interruptionSource = interruptionSource || ANIM_INTERRUPTION_SOURCE_NONE;
     };
 
-    Object.defineProperty(AnimTransition.prototype, 'from', {
-        get: function () {
-            return this._from;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'to', {
-        get: function () {
-            return this._to;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'time', {
-        get: function () {
-            return this._time;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'priority', {
-        get: function () {
-            return this._priority;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'conditions', {
-        get: function () {
-            return this._conditions;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'exitTime', {
-        get: function () {
-            return this._exitTime;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'transitionOffset', {
-        get: function () {
-            return this._transitionOffset;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'interruptionSource', {
-        get: function () {
-            return this._interruptionSource;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'hasExitTime', {
-        get: function () {
-            return !!this.exitTime;
-        }
-    });
-
-    Object.defineProperty(AnimTransition.prototype, 'hasConditionsMet', {
-        get: function () {
-            var conditionsMet = true;
-            var i;
-            for (i = 0; i < this.conditions.length; i++) {
-                var condition = this.conditions[i];
-                var parameter = this._controller.findParameter(condition.parameterName);
-                switch (condition.predicate) {
-                    case ANIM_TRANSITION_PREDICATE_GREATER_THAN:
-                        conditionsMet = conditionsMet && parameter.value > condition.value;
-                        break;
-                    case ANIM_TRANSITION_PREDICATE_LESS_THAN:
-                        conditionsMet = conditionsMet && parameter.value < condition.value;
-                        break;
-                    case ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value >= condition.value;
-                        break;
-                    case ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value <= condition.value;
-                        break;
-                    case ANIM_TRANSITION_PREDICATE_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value === condition.value;
-                        break;
-                    case ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value !== condition.value;
-                        break;
-                }
-                if (!conditionsMet)
-                    return conditionsMet;
+    Object.defineProperties(AnimTransition.prototype, {
+        from: {
+            get: function () {
+                return this._from;
             }
-            return conditionsMet;
+        },
+        to: {
+            get: function () {
+                return this._to;
+            }
+        },
+        time: {
+            get: function () {
+                return this._time;
+            }
+        },
+        priority: {
+            get: function () {
+                return this._priority;
+            }
+        },
+        conditions: {
+            get: function () {
+                return this._conditions;
+            }
+        },
+        exitTime: {
+            get: function () {
+                return this._exitTime;
+            }
+        },
+        transitionOffset: {
+            get: function () {
+                return this._transitionOffset;
+            }
+        },
+        interruptionSource: {
+            get: function () {
+                return this._interruptionSource;
+            }
+        },
+        hasExitTime: {
+            get: function () {
+                return !!this.exitTime;
+            }
+        },
+        hasConditionsMet: {
+            get: function () {
+                var conditionsMet = true;
+                var i;
+                for (i = 0; i < this.conditions.length; i++) {
+                    var condition = this.conditions[i];
+                    var parameter = this._controller.findParameter(condition.parameterName);
+                    switch (condition.predicate) {
+                        case ANIM_GREATER_THAN:
+                            conditionsMet = conditionsMet && parameter.value > condition.value;
+                            break;
+                        case ANIM_LESS_THAN:
+                            conditionsMet = conditionsMet && parameter.value < condition.value;
+                            break;
+                        case ANIM_GREATER_THAN_EQUAL_TO:
+                            conditionsMet = conditionsMet && parameter.value >= condition.value;
+                            break;
+                        case ANIM_LESS_THAN_EQUAL_TO:
+                            conditionsMet = conditionsMet && parameter.value <= condition.value;
+                            break;
+                        case ANIM_EQUAL_TO:
+                            conditionsMet = conditionsMet && parameter.value === condition.value;
+                            break;
+                        case ANIM_NOT_EQUAL_TO:
+                            conditionsMet = conditionsMet && parameter.value !== condition.value;
+                            break;
+                    }
+                    if (!conditionsMet)
+                        return conditionsMet;
+                }
+                return conditionsMet;
+            }
         }
     });
 
@@ -224,53 +213,51 @@ Object.assign(pc, function () {
         this._currTransitionTime = 1.0;
         this._totalTransitionTime = 1.0;
         this._isTransitioning = false;
-        this._transitionInterruptionSource = ANIM_INTERRUPTION_SOURCE_NONE;
+        this._transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
         this._transitionPreviousStates = [];
 
         this._timeInState = 0;
         this._timeInStateBefore = 0;
     };
 
-    Object.defineProperty(AnimController.prototype, 'animEvaluator', {
-        get: function () {
-            return this._animEvaluator;
-        }
-    });
-
-    Object.defineProperty(AnimController.prototype, 'activeState', {
-        get: function () {
-            return this._findState(this._activeStateName);
-        },
-        set: function (stateName) {
-            this._activeStateName = stateName;
-        }
-    });
-
-    Object.defineProperty(AnimController.prototype, 'previousState', {
-        get: function () {
-            return this._findState(this._previousStateName);
-        },
-        set: function (stateName) {
-            this._previousStateName = stateName;
-        }
-    });
-
-    Object.defineProperty(AnimController.prototype, 'playable', {
-        get: function () {
-            var playable = true;
-            var i;
-            for (i = 0; i < this._states.length; i++) {
-                if (!this._states[i].playable) {
-                    playable = false;
-                }
+    Object.defineProperties(AnimState.prototype, {
+        animEvaluator: {
+            get: function () {
+                return this._animEvaluator;
             }
-            return playable;
-        }
-    });
-
-    Object.defineProperty(AnimController.prototype, 'activeStateProgress', {
-        get: function () {
-            return this._getActiveStateProgressForTime(this._timeInState);
+        },
+        activeState: {
+            get: function () {
+                return this._findState(this._activeStateName);
+            },
+            set: function (stateName) {
+                this._activeStateName = stateName;
+            }
+        },
+        previousState: {
+            get: function () {
+                return this._findState(this._previousStateName);
+            },
+            set: function (stateName) {
+                this._previousStateName = stateName;
+            }
+        },
+        playable: {
+            get: function () {
+                var playable = true;
+                var i;
+                for (i = 0; i < this._states.length; i++) {
+                    if (!this._states[i].playable) {
+                        playable = false;
+                    }
+                }
+                return playable;
+            }
+        },
+        activeStateProgress: {
+            get: function () {
+                return this._getActiveStateProgressForTime(this._timeInState);
+            }
         }
     });
 
@@ -337,21 +324,21 @@ Object.assign(pc, function () {
                     transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                 } else {
                     switch (this._transitionInterruptionSource) {
-                        case ANIM_INTERRUPTION_SOURCE_PREV_STATE:
+                        case ANIM_INTERRUPTION_PREV:
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             break;
-                        case ANIM_INTERRUPTION_SOURCE_NEXT_STATE:
+                        case ANIM_INTERRUPTION_NEXT:
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             break;
-                        case ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE:
+                        case ANIM_INTERRUPTION_PREV_NEXT:
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             break;
-                        case ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE:
+                        case ANIM_INTERRUPTION_NEXT_PREV:
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             break;
-                        case ANIM_INTERRUPTION_SOURCE_NONE:
+                        case ANIM_INTERRUPTION_NONE:
                         default:
                     }
                 }
@@ -436,7 +423,7 @@ Object.assign(pc, function () {
                     this._animEvaluator.addClip(clip);
                 }
                 if (transition.time > 0) {
-                    clip.blendWeight = 0.0 / activeState.totalWeight;
+                    clip.blendWeight = 0.0;
                 } else {
                     clip.blendWeight = 1.0 / activeState.totalWeight;
                 }
@@ -612,18 +599,18 @@ Object.assign(pc, function () {
     });
 
     return {
-        ANIM_INTERRUPTION_SOURCE_NONE: ANIM_INTERRUPTION_SOURCE_NONE,
-        ANIM_INTERRUPTION_SOURCE_PREV_STATE: ANIM_INTERRUPTION_SOURCE_PREV_STATE,
-        ANIM_INTERRUPTION_SOURCE_NEXT_STATE: ANIM_INTERRUPTION_SOURCE_NEXT_STATE,
-        ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE: ANIM_INTERRUPTION_SOURCE_PREV_STATE_NEXT_STATE,
-        ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE: ANIM_INTERRUPTION_SOURCE_NEXT_STATE_PREV_STATE,
+        ANIM_INTERRUPTION_NONE: ANIM_INTERRUPTION_NONE,
+        ANIM_INTERRUPTION_PREV: ANIM_INTERRUPTION_PREV,
+        ANIM_INTERRUPTION_NEXT: ANIM_INTERRUPTION_NEXT,
+        ANIM_INTERRUPTION_PREV_NEXT: ANIM_INTERRUPTION_PREV_NEXT,
+        ANIM_INTERRUPTION_NEXT_PREV: ANIM_INTERRUPTION_NEXT_PREV,
 
-        ANIM_TRANSITION_PREDICATE_GREATER_THAN: ANIM_TRANSITION_PREDICATE_GREATER_THAN,
-        ANIM_TRANSITION_PREDICATE_LESS_THAN: ANIM_TRANSITION_PREDICATE_LESS_THAN,
-        ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO: ANIM_TRANSITION_PREDICATE_GREATER_THAN_EQUAL_TO,
-        ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO: ANIM_TRANSITION_PREDICATE_LESS_THAN_EQUAL_TO,
-        ANIM_TRANSITION_PREDICATE_EQUAL_TO: ANIM_TRANSITION_PREDICATE_EQUAL_TO,
-        ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO: ANIM_TRANSITION_PREDICATE_NOT_EQUAL_TO,
+        ANIM_GREATER_THAN: ANIM_GREATER_THAN,
+        ANIM_LESS_THAN: ANIM_LESS_THAN,
+        ANIM_GREATER_THAN_EQUAL_TO: ANIM_GREATER_THAN_EQUAL_TO,
+        ANIM_LESS_THAN_EQUAL_TO: ANIM_LESS_THAN_EQUAL_TO,
+        ANIM_EQUAL_TO: ANIM_EQUAL_TO,
+        ANIM_NOT_EQUAL_TO: ANIM_NOT_EQUAL_TO,
 
         ANIM_PARAMETER_INTEGER: ANIM_PARAMETER_INTEGER,
         ANIM_PARAMETER_FLOAT: ANIM_PARAMETER_FLOAT,
