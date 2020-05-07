@@ -302,9 +302,6 @@ Object.assign(pc, function () {
                         new pc.Vec3(normal.x(), normal.y(), normal.z())
                     );
 
-                    Ammo.destroy(point);
-                    Ammo.destroy(normal);
-
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
                         var callback = arguments[2];
@@ -366,9 +363,6 @@ Object.assign(pc, function () {
                         results.push(result);
                     }
                 }
-
-                Ammo.destroy(points);
-                Ammo.destroy(normals);
             }
 
             Ammo.destroy(rayCallback);

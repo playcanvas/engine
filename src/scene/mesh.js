@@ -35,16 +35,23 @@ Object.assign(pc, function () {
             this.indices = null;
         },
 
+        _validateVertexCount: function (count, semantic) {
+
+            // #ifdef DEBUG
+            if (this.vertexCount !== count) {
+                console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+            }
+            // #endif
+        },
+
         // function called when vertex stream is requested to be updated, and validates / updates currently used vertex count
         _changeVertexCount: function (count, semantic) {
 
             // update vertex count and validate it with existing streams
             if (!this.vertexCount) {
                 this.vertexCount = count;
-            } else if (this.vertexCount !== count) {
-                // #ifdef DEBUG
-                console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
-                // #endif
+            } else {
+                this._validateVertexCount(count, semantic);
             }
         }
     });
@@ -101,6 +108,11 @@ Object.assign(pc, function () {
      * mesh.setIndices(indices);
      * mesh.update();
      * ~~~
+     *
+     * This example demonstrated that vertex attributes such as position and normals, and also indices can be provided using Arrays ([]) and also Typed Arrays
+     * (Float32Array and similar). Note that typed arrays have higher performance, and are generaly recommended for per-frame operations or larger meshes,
+     * but their construction using new operator is costly operation. If you only need to operate on small number of vertices or indices, consider using the
+     * Arrays instead to avoid Type Array allocation overhead.
      *
      * Follow these links for more complex examples showing the functionality.
      * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
