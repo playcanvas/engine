@@ -400,7 +400,7 @@ var arguments = function () {
     });
 
     outputPath = outputPath || target.defaultOutputPath;
-    sourcePath = outputPath || target.defaultSourcePath;
+    sourcePath = sourcePath || target.defaultSourcePath;
 };
 
 // only run from build directory
