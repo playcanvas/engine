@@ -427,9 +427,7 @@ Object.assign(pc, function () {
         });
 
         device.on("resizecanvas", function () {
-            var rect = device.canvas.getBoundingClientRect();
-            div.style.left = rect.left + "px";
-            div.style.bottom = (window.innerHeight - rect.bottom) + "px";
+            self.updateDiv();
         });
 
         app.on('postrender', function () {
@@ -438,6 +436,7 @@ Object.assign(pc, function () {
             }
         });
 
+        this.device = device;
         this.texture = texture;
         this.wordAtlas = wordAtlas;
         this.render2d = new Render2d(device);
@@ -520,6 +519,13 @@ Object.assign(pc, function () {
             this.width = width;
             this.height = height;
 
+            this.updateDiv();
+        },
+
+        updateDiv: function () {
+            var rect = this.device.canvas.getBoundingClientRect();
+            this.div.style.left = rect.left + "px";
+            this.div.style.bottom = (window.innerHeight - rect.bottom) + "px";
             this.div.style.width = this.width + "px";
             this.div.style.height = this.overallHeight + "px";
         }
