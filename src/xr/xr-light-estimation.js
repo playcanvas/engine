@@ -8,19 +8,16 @@ Object.assign(pc, function () {
      * @class
      * @name pc.XrLightEstimation
      * @augments pc.EventHandler
-     * @classdesc Light Estimation provides illimunation data from real world, which is estimated by underlying AR systems.
-     * It provides reflection Cube Map, that represents reflection estimation from viewer position.
-     * More simplified approximation of light is provided by L2 Spherical Harminics data.
-     * And the most simple level of light estimation is a most prominent directional light, its rotation, intensity and a color.
-     * @description Light Estimation provides illimunation data from real world, which is estimated by underlying AR systems.
-     * It provides reflection Cube Map, that represents reflection estimation from viewer position.
-     * More simplified approximation of light is provided by L2 Spherical Harminics data.
-     * And the most simple level of light estimation is a most prominent directional light, its rotation, intensity and a color.
+     * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
+     * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
+     * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
+     * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
+     * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link pc.XrManager}.
      * @param {pc.XrManager} manager - WebXR Manager.
-     * @property {boolean} supported True if Light Estimation is supported, this information is available only during active AR session.
-     * @property {number|null} intensity Intensity of estimated most prominent directional light. Or null if data is not available.
-     * @property {pc.Color|null} color Color of estimated most prominent directional light. Or null if data is not available.
-     * @property {pc.Quat|null} rotation Rotation of estimated most prominent directional light. Or null if data is not available.
+     * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
+     * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
+     * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
+     * @property {pc.Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
      */
     var XrLightEstimation = function (manager) {
         pc.EventHandler.call(this);
@@ -80,8 +77,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrLightEstimation#start
      * @description Start estimation of illimunation data.
-     * Availability of such data will come later, and `available` event will be fired.
-     * If it failed to start estimation, `error` event will be fired.
+     * Availability of such data will come later and an `available` event will be fired.
+     * If it failed to start estimation, an `error` event will be fired.
      * @example
      * app.xr.on('start', function () {
      *     if (app.xr.lightEstimation.supported) {
@@ -133,7 +130,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.XrLightEstimation#end
-     * @description End estimation of illimunation data.
+     * @description End estimation of illumination data.
      */
     XrLightEstimation.prototype.end = function () {
         this._lightProbeRequested = false;
@@ -153,10 +150,11 @@ Object.assign(pc, function () {
         }
 
         // intensity
-        this._intensity = Math.max(1.0, Math.max(lightEstimate.primaryLightIntensity.x, Math.max(lightEstimate.primaryLightIntensity.y, lightEstimate.primaryLightIntensity.z)));
+        var pli = lightEstimate.primaryLightIntensity;
+        this._intensity = Math.max(1.0, Math.max(pli.x, Math.max(pli.y, pli.z)));
 
         // color
-        vec3A.copy(lightEstimate.primaryLightIntensity).scale(1 / this._intensity);
+        vec3A.copy(pli).scale(1 / this._intensity);
         this._color.set(vec3A.x, vec3A.y, vec3A.z);
 
         // rotation
