@@ -7,8 +7,7 @@ var Viewer = function (canvas) {
     // create the application
     var app = new pc.Application(canvas, {
         mouse: new pc.Mouse(canvas),
-        touch: new pc.TouchDevice(canvas),
-        miniStats: true
+        touch: new pc.TouchDevice(canvas)
     });
 
     var getCanvasSize = function () {
