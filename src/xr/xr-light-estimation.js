@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this._rotation = new pc.Quat();
         this._color = new pc.Color();
 
+        this._sphericalHarmonics = new Float32Array(27);
+
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
     };
@@ -164,6 +166,9 @@ Object.assign(pc, function () {
         mat4B.setFromAxisAngle(pc.Vec3.RIGHT, 90); // direcitonal light is looking down
         mat4A.mul(mat4B);
         this._rotation.setFromMat4(mat4A);
+
+        // spherical harmonics
+        this._sphericalHarmonics.set(lightEstimate.sphericalHarmonicsCoefficients);
     };
 
     Object.defineProperty(XrLightEstimation.prototype, 'supported', {
@@ -202,6 +207,12 @@ Object.assign(pc, function () {
     Object.defineProperty(XrLightEstimation.prototype, 'rotation', {
         get: function () {
             return this._available ? this._rotation : null;
+        }
+    });
+
+    Object.defineProperty(XrLightEstimation.prototype, 'sphericalHarmonics', {
+        get: function () {
+            return this._available ? this._sphericalHarmonics : null;
         }
     });
 
