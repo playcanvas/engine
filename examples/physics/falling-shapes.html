@@ -60,18 +60,16 @@
         }
 
         // create a few materials for our objects
-        var red = createMaterial(new pc.Color(1, 0, 0));
-        var grey = createMaterial(new pc.Color(0.5, 0.5, 0.5));
+        var red = createMaterial(new pc.Color(1, 0.3, 0.3));
+        var gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
         // ***********    Create our floor   *******************
 
         var floor = new pc.Entity();
         floor.addComponent("model", {
-            type: "box"
+            type: "box",
+            material: gray
         });
-
-        // make the floor white
-        floor.model.material = grey;
 
         // scale it
         floor.setLocalScale(10, 1, 10);
@@ -135,7 +133,7 @@
         boxTemplate.addComponent("model", {
             type: "box",
             castShadows: true,
-            material: grey
+            material: gray
         });
 
          // ...a rigidbody component of type 'dynamic' so that it is simulated
@@ -159,7 +157,7 @@
         sphereTemplate.addComponent("model", {
             type: "sphere",
             castShadows: true,
-            material: grey
+            material: gray
         });
 
         sphereTemplate.addComponent("rigidbody", {
@@ -173,16 +171,12 @@
             radius: 0.5
         });
 
-
-        // make the sphere grey
-        sphereTemplate.model.material = grey;
-
         // A capsule...
         var capsuleTemplate = new pc.Entity();
         capsuleTemplate.addComponent("model", {
             type: "capsule",
             castShadows: true,
-            material: grey
+            material: gray
         });
 
         capsuleTemplate.addComponent("rigidbody", {
@@ -202,7 +196,7 @@
         cylinderTemplate.addComponent("model", {
             type: "cylinder",
             castShadows: true,
-            material: grey
+            material: gray
         });
 
         cylinderTemplate.addComponent("rigidbody", {
@@ -254,9 +248,9 @@
                 }
             }
 
-            // Show active bodies in red and frozen bodies in grey
+            // Show active bodies in red and frozen bodies in gray
             app.root.findComponents('rigidbody').forEach(function (body) {
-                body.entity.model.material = body.isActive() ? red : grey;
+                body.entity.model.material = body.isActive() ? red : gray;
             });
         });
     }
