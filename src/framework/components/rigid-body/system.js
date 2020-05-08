@@ -255,8 +255,6 @@ Object.assign(pc, function () {
             } else {
                 this.dynamicsWorld.addRigidBody(body);
             }
-
-            return body;
         },
 
         removeBody: function (body) {
@@ -265,7 +263,6 @@ Object.assign(pc, function () {
 
         addConstraint: function (constraint) {
             this.dynamicsWorld.addConstraint(constraint);
-            return constraint;
         },
 
         removeConstraint: function (constraint) {

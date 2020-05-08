@@ -60,11 +60,8 @@
         }
 
         // create a few materials for our objects
-        var white = createMaterial(new pc.Color(1, 1, 1));
         var red = createMaterial(new pc.Color(1, 0, 0));
-        var green = createMaterial(new pc.Color(0, 1, 0));
-        var blue = createMaterial(new pc.Color(0, 0, 1));
-        var yellow = createMaterial(new pc.Color(1, 1, 0));
+        var grey = createMaterial(new pc.Color(0.5, 0.5, 0.5));
 
         // ***********    Create our floor   *******************
 
@@ -74,7 +71,7 @@
         });
 
         // make the floor white
-        floor.model.material = white;
+        floor.model.material = grey;
 
         // scale it
         floor.setLocalScale(10, 1, 10);
@@ -137,7 +134,8 @@
         var boxTemplate = new pc.Entity();
         boxTemplate.addComponent("model", {
             type: "box",
-            castShadows: true
+            castShadows: true,
+            material: grey
         });
 
          // ...a rigidbody component of type 'dynamic' so that it is simulated
@@ -154,16 +152,14 @@
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
 
-        // make the box red
-        boxTemplate.model.material = red;
-
         // Create other shapes too for variety...
 
         // A sphere...
         var sphereTemplate = new pc.Entity();
         sphereTemplate.addComponent("model", {
             type: "sphere",
-            castShadows: true
+            castShadows: true,
+            material: grey
         });
 
         sphereTemplate.addComponent("rigidbody", {
@@ -178,14 +174,15 @@
         });
 
 
-        // make the sphere green
-        sphereTemplate.model.material = green;
+        // make the sphere grey
+        sphereTemplate.model.material = grey;
 
         // A capsule...
         var capsuleTemplate = new pc.Entity();
         capsuleTemplate.addComponent("model", {
             type: "capsule",
-            castShadows: true
+            castShadows: true,
+            material: grey
         });
 
         capsuleTemplate.addComponent("rigidbody", {
@@ -200,15 +197,12 @@
             height: 2
         });
 
-
-        // make the capsule blue
-        capsuleTemplate.model.material = blue;
-
         // A cylinder...
         var cylinderTemplate = new pc.Entity();
         cylinderTemplate.addComponent("model", {
             type: "cylinder",
-            castShadows: true
+            castShadows: true,
+            material: grey
         });
 
         cylinderTemplate.addComponent("rigidbody", {
@@ -222,10 +216,6 @@
             radius: 0.5,
             height: 1
         });
-
-
-        // make the cylinder yellow
-        cylinderTemplate.model.material = yellow;
 
         // add all the templates to an array so that
         // we can randomly spawn them
@@ -263,6 +253,11 @@
                     clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
                 }
             }
+
+            // Show active bodies in red and frozen bodies in grey
+            app.root.findComponents('rigidbody').forEach(function (body) {
+                body.entity.model.material = body.isActive() ? red : grey;
+            });
         });
     }
     </script>

@@ -185,11 +185,10 @@ Object.assign(pc, function () {
                 if (this.body)
                     this.system.onRemove(this.entity, this);
 
-                var isStaticOrKinematic = this.isStaticOrKinematic();
-                var mass = isStaticOrKinematic ? 0 : this.mass;
+                var mass = this.type === pc.BODYTYPE_DYNAMIC ? this.mass : 0;
 
                 var localInertia = new Ammo.btVector3(0, 0, 0);
-                if (!isStaticOrKinematic) {
+                if (this.type === pc.BODYTYPE_DYNAMIC) {
                     shape.calculateLocalInertia(mass, localInertia);
                 }
 
@@ -217,20 +216,20 @@ Object.assign(pc, function () {
                 body.setFriction(this.friction);
                 body.setDamping(this.linearDamping, this.angularDamping);
 
-                var v;
-                v = this.linearFactor;
-                ammoVec1.setValue(v.x, v.y, v.z);
-                body.setLinearFactor(ammoVec1);
-                v = this.angularFactor;
-                ammoVec1.setValue(v.x, v.y, v.z);
-                body.setAngularFactor(ammoVec1);
+                if (this.type === pc.BODYTYPE_DYNAMIC) {
+                    var linearFactor = this.linearFactor;
+                    ammoVec1.setValue(linearFactor.x, linearFactor.y, linearFactor.z);
+                    body.setLinearFactor(ammoVec1);
 
-                body.entity = entity;
-
-                if (this.isKinematic()) {
+                    var angularFactor = this.angularFactor;
+                    ammoVec1.setValue(angularFactor.x, angularFactor.y, angularFactor.z);
+                    body.setAngularFactor(ammoVec1);
+                } else if (this.type === pc.BODYTYPE_KINEMATIC) {
                     body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_KINEMATIC_OBJECT);
                     body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
                 }
+
+                body.entity = entity;
 
                 entity.rigidbody.body = body;
 
@@ -268,8 +267,6 @@ Object.assign(pc, function () {
             if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
                 var body = this.body;
                 if (body) {
-                    this.system.addBody(body, this.group, this.mask);
-
                     switch (this.type) {
                         case pc.BODYTYPE_DYNAMIC:
                             this.system._dynamic.push(this);
@@ -279,12 +276,14 @@ Object.assign(pc, function () {
                         case pc.BODYTYPE_KINEMATIC:
                             this.system._kinematic.push(this);
                             body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
-                            body.activate();
                             break;
                         case pc.BODYTYPE_STATIC:
-                            this.syncEntityToBody();
+                            body.setActivationState(pc.BODYFLAG_ACTIVE_TAG);
                             break;
                     }
+
+                    this.system.addBody(body, this.group, this.mask);
+                    body.activate();
 
                     this.data.simulationEnabled = true;
                 }
@@ -759,21 +758,19 @@ Object.assign(pc, function () {
 
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
-                var isEnabled = this.enabled && this.entity.enabled;
-                if (isEnabled) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var enabled = this.enabled && this.entity.enabled;
+                if (enabled) {
                     this.disableSimulation();
                 }
 
-                var mass = newValue;
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                body.getCollisionShape().calculateLocalInertia(mass, localInertia);
-                body.setMassProps(mass, localInertia);
+                // calculateLocalInertia writes local inertia to ammoVec1 here...
+                body.getCollisionShape().calculateLocalInertia(newValue, ammoVec1);
+                // ...and then writes the calculated local inertia to the body
+                body.setMassProps(newValue, ammoVec1);
                 body.updateInertiaTensor();
 
-                Ammo.destroy(localInertia);
-
-                if (isEnabled) {
+                if (enabled) {
                     this.enableSimulation();
                 }
             }
@@ -795,7 +792,7 @@ Object.assign(pc, function () {
 
         onSetLinearFactor: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setLinearFactor(ammoVec1);
             }
@@ -803,7 +800,7 @@ Object.assign(pc, function () {
 
         onSetAngularFactor: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setAngularFactor(ammoVec1);
             }
