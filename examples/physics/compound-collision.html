@@ -55,10 +55,12 @@
             return material;
         }
 
-        // create a few materials for our objects
+        // Create a couple of materials for our objects
         var red = createMaterial(new pc.Color(1, 0.3, 0.3));
         var gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
+        // Define a scene hierarchy in JSON format. This is loaded/parsed in
+        // the parseScene function below
         var scene = [
             {
                 // The Chair entity has a collision component of type 'compound' and a
@@ -109,7 +111,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }, {
                         name: 'Seat Back',
@@ -136,7 +138,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }, {
                         name: 'Leg 1',
@@ -164,7 +166,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }, {
                         name: 'Leg 2',
@@ -192,7 +194,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }, {
                         name: 'Leg 3',
@@ -220,7 +222,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }, {
                         name: 'Leg 4',
@@ -248,7 +250,7 @@
                                         }
                                     }
                                 ]
-                            }                        
+                            }
                         ]
                     }
                 ]
@@ -283,7 +285,7 @@
                                 }
                             }
                         ]
-                    }                        
+                    }
                 ]
             }, {
                 name: 'Directional Light',
