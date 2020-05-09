@@ -60,6 +60,7 @@ var categories = [
     }, {
         name: "physics",
         examples: [
+            "compound-collision",
             "falling-shapes",
             "raycast"
         ]
