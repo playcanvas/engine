@@ -47,11 +47,11 @@
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        function createMaterial (color) {
+        function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
-            // we need to call material.update when we change its properties
             material.update()
+
             return material;
         }
 
@@ -61,6 +61,11 @@
 
         var scene = [
             {
+                // The Chair entity has a collision component of type 'compound' and a
+                // rigidbody component. This means that any descendent entity with a
+                // collision component is added to a compound collision shape on the
+                // Chair entity. You can use compound collision shapes to define
+                // complex, rigid shapes.
                 name: 'Chair',
                 pos: [0, 1, 0],
                 components: [
@@ -290,7 +295,7 @@
                             type: 'directional',
                             castShadows: true,
                             shadowDistance: 8,
-                            shadowBias: 0.05,
+                            shadowBias: 0.1,
                             normalOffsetBias: 0.05
                         }
                     }
@@ -310,6 +315,7 @@
             }
         ];
 
+        // Convert an entity definition in the structure above to a pc.Entity object
         function parseEntity(e) {
             var entity = new pc.Entity(e.name);
 
@@ -338,6 +344,7 @@
             return entity;
         }
 
+        // Parse the scene data above into entities and add them to the scene's root entity
         function parseScene(s) {
             s.forEach(function (e) {
                 app.root.addChild(parseEntity(e));
@@ -348,6 +355,7 @@
 
         var numChairs = 0;
 
+        // Clone the chair entity hierarchy and add it to the scene root
         function spawnChair() {
             var chair = app.root.findByName('Chair');
             var clone = chair.clone();
@@ -359,6 +367,7 @@
         // Set an update function on the application's update event
         var time = 0;
         app.on("update", function (dt) {
+            // Add a new chair every 250 ms
             time += dt;
             if (time > 0.25 && numChairs < 100) {
                 spawnChair();
