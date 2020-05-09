@@ -62,6 +62,7 @@
         var scene = [
             {
                 name: 'Chair',
+                pos: [0, 1, 0],
                 components: [
                     {
                         type: 'collision',
@@ -81,7 +82,6 @@
                 children: [
                     {
                         name: 'Seat',
-                        pos: [ 0, 0.5, 0 ],
                         components: [
                             {
                                 type: 'collision',
@@ -108,7 +108,7 @@
                         ]
                     }, {
                         name: 'Seat Back',
-                        pos: [ 0, 0.8, -0.2 ],
+                        pos: [ 0, 0.3, -0.2 ],
                         components: [
                             {
                                 type: 'collision',
@@ -135,7 +135,7 @@
                         ]
                     }, {
                         name: 'Leg 1',
-                        pos: [ 0.2, 0.25, 0.2 ],
+                        pos: [ 0.2, -0.25, 0.2 ],
                         components: [
                             {
                                 type: 'collision',
@@ -163,7 +163,7 @@
                         ]
                     }, {
                         name: 'Leg 2',
-                        pos: [ -0.2, 0.25, 0.2 ],
+                        pos: [ -0.2, -0.25, 0.2 ],
                         components: [
                             {
                                 type: 'collision',
@@ -191,7 +191,7 @@
                         ]
                     }, {
                         name: 'Leg 3',
-                        pos: [ 0.2, 0.5, -0.2 ],
+                        pos: [ 0.2, 0, -0.2 ],
                         components: [
                             {
                                 type: 'collision',
@@ -219,7 +219,7 @@
                         ]
                     }, {
                         name: 'Leg 4',
-                        pos: [ -0.2, 0.5, -0.2 ],
+                        pos: [ -0.2, 0, -0.2 ],
                         components: [
                             {
                                 type: 'collision',
@@ -346,36 +346,25 @@
 
         parseScene(scene);
 
-        var chair = app.root.findByName('Chair');
         var numChairs = 0;
 
-        var interval = setInterval(function () {
+        function spawnChair() {
+            var chair = app.root.findByName('Chair');
             var clone = chair.clone();
-            clone.setLocalPosition(Math.random() * 4 - 2, Math.random() * 4, Math.random() * 4 - 2)
+            clone.setLocalPosition(Math.random() * 5 - 2.5, Math.random() * 2 + 1, Math.random() * 5 - 2.5)
             app.root.addChild(clone);
-
             numChairs++;
-            if (numChairs >= 100) {
-                clearInterval(interval);
-            }
-        }, 250);
-
-        function createMaterial(color) {
-            var material = new pc.StandardMaterial();
-            material.diffuse = color;
-            material.update()
-
-            return material;
         }
-
-        // Create a couple of materials
-        var red = createMaterial(new pc.Color(1, 0, 0));
-        var green = createMaterial(new pc.Color(0, 1, 0));
-
 
         // Set an update function on the application's update event
         var time = 0;
         app.on("update", function (dt) {
+            time += dt;
+            if (time > 0.25 && numChairs < 100) {
+                spawnChair();
+                time = 0;
+            }
+
             // Show active bodies in red and frozen bodies in gray
             app.root.findComponents('rigidbody').forEach(function (body) {
                 body.entity.findComponents('model').forEach(function (model) {
