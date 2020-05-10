@@ -268,14 +268,6 @@ Object.assign(pc, function () {
             this.dynamicsWorld.removeRigidBody(body);
         },
 
-        addConstraint: function (constraint) {
-            this.dynamicsWorld.addConstraint(constraint);
-        },
-
-        removeConstraint: function (constraint) {
-            this.dynamicsWorld.removeConstraint(constraint);
-        },
-
         /**
          * @function
          * @name pc.RigidBodyComponentSystem#raycastFirst
