@@ -71,8 +71,6 @@ Object.assign(pc, function () {
 
         this.on('set_body', this.onSetBody, this);
 
-        // For kinematic
-        this._displacement = new pc.Vec3(0, 0, 0);
         this._linearVelocity = new pc.Vec3(0, 0, 0);
         this._angularVelocity = new pc.Vec3(0, 0, 0);
     };
