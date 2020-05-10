@@ -237,9 +237,16 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (data.body) {
-                this.removeBody(data.body);
-                Ammo.destroy(data.body);
+            var body = data.body;
+            if (body) {
+                this.removeBody(body);
+
+                // The motion state needs to be destroyed explicitly (if present)
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    Ammo.destroy(motionState);
+                }
+                Ammo.destroy(body);
 
                 data.body = null;
             }
