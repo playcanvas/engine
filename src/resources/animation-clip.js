@@ -45,7 +45,7 @@ Object.assign(pc, function () {
                 return new pc.AnimData(1, input);
             });
             var outputs = data.outputs.map(function (output) {
-                return new pc.AnimData(1, output);
+                return new pc.AnimData(output.components, output.data);
             });
             var curves = data.curves.map(function (curve) {
                 return new pc.AnimCurve(

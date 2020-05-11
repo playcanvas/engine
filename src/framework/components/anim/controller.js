@@ -93,7 +93,7 @@ Object.assign(pc, function () {
         this._conditions = conditions || [];
         this._exitTime = exitTime || null;
         this._transitionOffset = transitionOffset || null;
-        this._interruptionSource = interruptionSource || ANIM_INTERRUPTION_SOURCE_NONE;
+        this._interruptionSource = interruptionSource || ANIM_INTERRUPTION_NONE;
     };
 
     Object.defineProperties(AnimTransition.prototype, {
@@ -220,7 +220,7 @@ Object.assign(pc, function () {
         this._timeInStateBefore = 0;
     };
 
-    Object.defineProperties(AnimState.prototype, {
+    Object.defineProperties(AnimController.prototype, {
         animEvaluator: {
             get: function () {
                 return this._animEvaluator;
