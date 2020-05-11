@@ -46,7 +46,11 @@ Object.assign(pc, function () {
             };
 
             if (url.load.startsWith('blob:')) {
-                options.responseType = pc.Http.ResponseType.JSON;
+                if (pc.path.getExtension(url.original).toLowerCase() === '.glb') {
+                    options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+                } else {
+                    options.responseType = pc.Http.ResponseType.JSON;
+                }
             }
 
             pc.http.get(url.load, options, function (err, response) {

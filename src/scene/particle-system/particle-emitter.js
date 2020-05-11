@@ -384,15 +384,18 @@ Object.assign(pc, function () {
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            var recalculateLocalBounds = false;
-            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                recalculateLocalBounds = !this.emitterExtents.equals(this.prevEmitterExtents);
-            } else {
-                recalculateLocalBounds = !(this.emitterRadius === this.prevEmitterRadius);
+            if (!this.useCpu) {
+                var recalculateLocalBounds = false;
+                if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                    recalculateLocalBounds = !this.emitterExtents.equals(this.prevEmitterExtents);
+                } else {
+                    recalculateLocalBounds = !(this.emitterRadius === this.prevEmitterRadius);
+                }
+                if (recalculateLocalBounds) {
+                    this.calculateLocalBounds();
+                }
             }
-            if (recalculateLocalBounds) {
-                this.calculateLocalBounds();
-            }
+
 
             var nodeWT = this.node.getWorldTransform();
             if (this.localSpace) {
@@ -636,7 +639,7 @@ Object.assign(pc, function () {
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
             this._allocate(this.numParticles);
 
-            var mesh = new pc.Mesh();
+            var mesh = new pc.Mesh(gd);
             mesh.vertexBuffer = this.vertexBuffer;
             mesh.indexBuffer[0] = this.indexBuffer;
             mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
@@ -1088,9 +1091,7 @@ Object.assign(pc, function () {
 
             this.simTimeTotal += delta;
 
-            if (!this.useCpu) {
-                this.calculateWorldBounds();
-            }
+            this.calculateWorldBounds();
 
             if (this._isAnimated()) {
                 var tilesParams = this.animTilesParams;

@@ -26,7 +26,11 @@ Object.assign(pc, function () {
             };
 
             if (url.load.startsWith('blob:')) {
-                options.responseType = pc.Http.ResponseType.JSON;
+                if (pc.path.getExtension(url.original).toLowerCase() === '.glb') {
+                    options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+                } else {
+                    options.responseType = pc.Http.ResponseType.JSON;
+                }
             }
 
             pc.http.get(url.load, options, function (err, response) {
@@ -39,7 +43,7 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
-            if (pc.path.getExtension(url) === '.glb') {
+            if (pc.path.getExtension(url).toLowerCase() === '.glb') {
                 var glb = pc.GlbParser.parse("filename.glb", data, null);
                 if (!glb) {
                     return null;

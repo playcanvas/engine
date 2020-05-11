@@ -16,3 +16,6 @@ var WebAssembly = {};
 var XRWebGLLayer = {};
 var XRRay = {};
 var DOMPoint = {};
+
+// extras requires this
+var pc = {};

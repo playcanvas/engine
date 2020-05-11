@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Glb Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <link rel="stylesheet" href="style.css">
+    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/output/playcanvas-extras.js"></script>
+</head>
+
+<body onload="main()">
+    <div id="flex-container">
+        <div id="panel">
+            <h3>SHOW</h3>
+            <div class="controls">
+                <div><label>Wframe</label><input id="wireframe" type="checkbox"></input></div>
+                <div><label>Bounds</label><input id="bounds" type="checkbox"></input></div>
+                <div><label>Skeleton</label><input id="skeleton" type="checkbox"></input></div>
+                <div><label>Normals</label><input id="normals" type="range" min="0" max="1" value="0" step="any"></input></div>
+            </div>
+            <h3>LIGHTING</h3>
+            <div class="controls">
+                <div><label>Direct</label><input id="directl" type="range" min="0" max="2" value="1" step="any"></input></div>
+                <div><label>Env</label><input id="envl" type="range" min="0" max="2" value="1" step="any"></input></div>
+            </div>
+            <h3>ANIMATION</h3>
+            <div class="controls">
+                <div id="scrub-container">
+                    <input id="play" type='button' value="&#x25b6;" />
+                    <input id="stop" type='button' value="&#x25fc;" />
+                </div>
+                <div><label>Speed</label><input id="speed" type="range" min="0" max="2" value="1" step="any"></input></div>
+                <div><label>Graphs</label><input id="graphs" type="checkbox"></input></div>
+                <ul id="anim-list"></ul>
+            </div>
+            <h3>MORPH TARGETS</h3>
+            <div class="controls">
+                <ul id="morph-targets"></ul>
+            </div>
+        </div>
+        <!-- The canvas element -->
+        <canvas id="application-canvas"></canvas>
+    </div>
+    <script src="../../examples/wasm-loader.js"></script>
+    <script src="./src/viewer.js"></script>
+    <script src="./src/controls.js"></script>
+    <script src="./src/graph.js"></script>
+    <script src="./src/debug.js"></script>
+</body>
+</html>

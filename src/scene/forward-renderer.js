@@ -2113,7 +2113,7 @@ Object.assign(pc, function () {
                             var chunkAabb = new pc.BoundingBox();
                             chunkAabb.setMinMax(minVec, maxVec);
 
-                            var mesh2 = new pc.Mesh();
+                            var mesh2 = new pc.Mesh(device);
                             mesh2.vertexBuffer = vertexBuffer;
                             mesh2.indexBuffer[0] = ib;
                             mesh2.primitive[0].type = pc.PRIMITIVE_TRIANGLES;

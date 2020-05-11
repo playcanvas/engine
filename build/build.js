@@ -36,9 +36,7 @@ try {
     process.exit(1);
 }
 
-var DEFAULT_OUTPUT = "output/playcanvas.js";
 var DEFAULT_TEMP = "_tmp";
-var DEFAULT_SOURCE = "../src";
 var SRC_DIR = "../";
 
 var COMPILER_LEVEL = [
@@ -47,38 +45,56 @@ var COMPILER_LEVEL = [
     'ADVANCED'
 ];
 
+// configs for the builds we support
+var targets = {
+    engine: {
+        defaultOutputPath: "output/playcanvas.js",
+        defaultSourcePath: "../src",
+        depsFile: './dependencies.txt',
+        desc: "Playcanvas Engine"
+    },
+    extras: {   // or ministats
+        defaultOutputPath: "output/playcanvas-extras.js",
+        defaultSourcePath: "../extras",
+        depsFile: './extras_dependencies.txt',
+        desc: "Playcanvas Extras"
+    }
+};
+
 var debug = false;
 var profiler = false;
 var sourceMap = false;
-var outputPath = DEFAULT_OUTPUT;
-var sourcePath = DEFAULT_SOURCE;
+var outputPath;
+var sourcePath;
 var tempPath = DEFAULT_TEMP;
 var compilerLevel = COMPILER_LEVEL[0];
-var formattingLevel = undefined;
+
+// by default build the engine
+var target = targets.engine;
 
 // LIB FUNCTIONS
 if (!String.prototype.endsWith) {
-  String.prototype.endsWith = function(searchString, position) {
-      var subjectString = this.toString();
-      if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-        position = subjectString.length;
-      }
-      position -= searchString.length;
-      var lastIndex = subjectString.indexOf(searchString, position);
-      return lastIndex !== -1 && lastIndex === position;
-  };
+    String.prototype.endsWith = function (searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
 }
 
 function directoryExists(path) {
-  try {
-    return fs.statSync(path).isDirectory();
-  }
-  catch (err) {
-    return false;
-  }
+    try {
+        return fs.statSync(path).isDirectory();
+    }
+    catch (err) {
+        return false;
+    }
 }
 
-var replaceAll = function(target, search, replacement) {
+var replaceAll = function (target, search, replacement) {
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 // END LIB FUNCTIONS
@@ -163,12 +179,13 @@ var preprocess = function (dependencies) {
         var pp = new Preprocessor(buffer.toString());
         var src;
         // TODO: source mapped build doesn't support preprocessor yet
-        if(this.sourceMap)
+        if(sourceMap)
             src = buffer;
         else 
             src = pp.process({
                 PROFILER: profiler || debug,
-                DEBUG: debug
+                DEBUG: debug,
+                RELEASE: compilerLevel != COMPILER_LEVEL[0]
             });
         var dir = path.dirname(_out);
         fse.ensureDirSync(dir);
@@ -192,7 +209,7 @@ var getCopyrightNotice = function (ver, rev) {
     }
     return [
         "/*",
-        " * PlayCanvas Engine v" + ver + " revision " + rev + buildOptions,
+        " * " + target.desc + " v" + ver + " revision " + rev + buildOptions,
         " * Copyright 2011-" + new Date().getFullYear() + " PlayCanvas Ltd. All rights reserved.",
         " */",
         ""
@@ -210,7 +227,14 @@ var insertVersions = function (filepath, callback) {
 
                 var content = buffer.toString();
 
-                content = getCopyrightNotice(ver, rev) + content;
+                // Add the copyright notice to the end if we are creating sourcemaps
+                // otherwise we offset the mappings
+                if (sourceMap) {
+                    content = content + "\n" + getCopyrightNotice(ver, rev);
+                } else {
+                    content = getCopyrightNotice(ver, rev) + content;
+                }
+
                 content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
                 content = replaceAll(content, "__REVISION__", rev);
 
@@ -234,34 +258,34 @@ var run = function () {
 
     // build shader file
     concatentateShaders(function (err) {
-        loadDependencies("./dependencies.txt", function (lines) {
+        loadDependencies(target.depsFile, function (lines) {
             // preprocess and get new dependency list
             var files = preprocess(lines);
 
             // set compiler options
             var options = {
-              js: files,
-              compilation_level: compilerLevel,
-              language_in: "ECMASCRIPT5",
-              js_output_file: outputPath,
-              output_wrapper_file: "./umd-wrapper.js",
-              manage_closure_dependencies: true,
-              jscomp_off: [
-                  "nonStandardJsDocs",  // docs warnings
-                  "checkTypes", // array types and other missing types
-                  "misplacedTypeAnnotation", // temp: hide docs using @type on defineProperty
-                  "globalThis", // temp: remove this again
-                  "suspiciousCode" // temp: remove this again
-              ],
-              externs: "externs.js",
-              warning_level: "VERBOSE"
+                js: files,
+                compilation_level: compilerLevel,
+                language_in: "ECMASCRIPT5",
+                js_output_file: outputPath,
+                output_wrapper_file: "./umd-wrapper.js",
+                manage_closure_dependencies: true,
+                jscomp_off: [
+                    "nonStandardJsDocs",  // docs warnings
+                    "checkTypes", // array types and other missing types
+                    "misplacedTypeAnnotation", // temp: hide docs using @type on defineProperty
+                    "globalThis", // temp: remove this again
+                    "suspiciousCode" // temp: remove this again
+                ],
+                externs: "externs.js",
+                warning_level: "VERBOSE"
             };
 
             if (compilerLevel === "WHITESPACE_ONLY") {
                 options.formatting = "pretty_print";
             }
 
-            if(sourceMap) {
+            if (sourceMap) {
                 var outputfilename = path.basename(outputPath);
 
                 var wrapperContent = fs.readFileSync("./umd-wrapper.js");
@@ -282,7 +306,7 @@ var run = function () {
             var closureCompiler = new ClosureCompiler(options);
 
             // compile
-            var compilerProcess = closureCompiler.run(function(exitCode, stdOut, stdErr) {
+            var compilerProcess = closureCompiler.run(function (exitCode, stdOut, stdErr) {
 
                 if (exitCode) {
                     console.error(stdErr);
@@ -331,6 +355,7 @@ var arguments = function () {
             console.log("-d: build debug engine configuration");
             console.log("-p: build profiler engine configuration");
             console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
+            console.log("-t target to build, either engine or extas. default is engine");
             process.exit();
         }
 
@@ -362,8 +387,20 @@ var arguments = function () {
         if (_last === '-m' && !arg.startsWith('-')) {
             sourcePath = arg;
         }
+
+        if (_last === '-t') {
+            if (!targets.hasOwnProperty(arg)) {
+                console.error("Invalid target should be: engine or extras");
+                process.exit(1);
+            }
+            target = targets[arg];
+        }
+
         _last = arg;
     });
+
+    outputPath = outputPath || target.defaultOutputPath;
+    sourcePath = sourcePath || target.defaultSourcePath;
 };
 
 // only run from build directory

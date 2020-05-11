@@ -763,6 +763,10 @@
          * @description Vertex attribute to be treated as a color.
          */
         SEMANTIC_COLOR: "COLOR",
+
+        // private semantic used for programatic construction of individual texcoord semantics
+        SEMANTIC_TEXCOORD: "TEXCOORD",
+
         /**
          * @constant
          * @name pc.SEMANTIC_TEXCOORD0
@@ -1035,6 +1039,14 @@
     };
 
     Object.assign(pc, enums);
+
+    // map of engine pc.TYPE_*** enums to their corresponding typed array constructors and byte sizes
+    pc.typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
+    pc.typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
+
+    // map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
+    pc.typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
+    pc.typedArrayIndexFormatsByteSize = [1, 2, 4];
 
     // For backwards compatibility
     pc.gfx = {};

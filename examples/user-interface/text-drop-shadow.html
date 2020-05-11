@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/output/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -33,6 +34,8 @@
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
+
+        var miniStats = new pc.MiniStats(app);
 
         // Create a camera
         var camera = new pc.Entity();
