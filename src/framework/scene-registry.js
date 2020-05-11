@@ -132,8 +132,8 @@ Object.assign(pc, function () {
      * @param {Function} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
      * @example
      *
-     * var url = app.getSceneUrl("Scene Name");
-     * app.loadSceneHierarchy(url, function (err, entity) {
+     * var url = app.scenes.getSceneUrl("Scene Name");
+     * app.scenes.loadSceneHierarchy(url, function (err, entity) {
      *     if (!err) {
      *         var e = app.root.find("My New Entity");
      *     } else {
