@@ -275,7 +275,7 @@ describe("pc.ScriptComponent", function () {
                 console.error(err);
             }
 
-            app.loadScene('base/tests/framework/components/script/scene1.json', function () {
+            app.scenes.loadScene('base/tests/framework/components/script/scene1.json', function () {
                 app.start();
                 done();
             });
