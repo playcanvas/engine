@@ -265,15 +265,15 @@ Object.assign(pc, function () {
                     switch (this.type) {
                         case pc.BODYTYPE_DYNAMIC:
                             this.system._dynamic.push(this);
-                            body.setActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
                             this.syncEntityToBody();
                             break;
                         case pc.BODYTYPE_KINEMATIC:
                             this.system._kinematic.push(this);
-                            body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
+                            body.forceActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
                             break;
                         case pc.BODYTYPE_STATIC:
-                            body.setActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
                             break;
                     }
 
@@ -309,7 +309,7 @@ Object.assign(pc, function () {
 
                 // set activation state to disable simulation to avoid body.isActive() to return
                 // true even if it's not in the dynamics world
-                body.setActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
+                body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
 
                 this.data.simulationEnabled = false;
             }
