@@ -43,20 +43,17 @@ Object.assign(pc, function () {
 
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
+
+                ammoVec1.setValue(pos.x, pos.y, pos.z);
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
 
-                var startTransform = new Ammo.btTransform();
-                startTransform.setIdentity();
-                var origin = startTransform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
-                startTransform.setRotation(ammoQuat);
+                ammoTransform.setOrigin(ammoVec1);
+                ammoTransform.setRotation(ammoQuat);
 
-                var motionState = new Ammo.btDefaultMotionState(startTransform);
+                var motionState = new Ammo.btDefaultMotionState(ammoTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                 Ammo.destroy(localInertia);
-                Ammo.destroy(origin);
-                Ammo.destroy(startTransform);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
                 this.body = body;
