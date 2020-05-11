@@ -677,14 +677,21 @@ Object.assign(pc, function () {
          */
         _updateDynamic: function () {
             var body = this.data.body;
-            var motionState = body.getMotionState();
-            if (motionState) {
-                motionState.getWorldTransform(ammoTransform);
 
-                var p = ammoTransform.getOrigin();
-                var q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+            // If a dynamic body is frozen, we can assume it's motion state transform is
+            // the same is the entity world transform
+            if (body.isActive()) {
+                // Update the motion state. Note that the test for the presence of the motion
+                // state is technically redundant since the engine creates one for all bodies.
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    motionState.getWorldTransform(ammoTransform);
+
+                    var p = ammoTransform.getOrigin();
+                    var q = ammoTransform.getRotation();
+                    this.entity.setPosition(p.x(), p.y(), p.z());
+                    this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                }
             }
         },
 
