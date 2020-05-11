@@ -678,7 +678,7 @@ Object.assign(pc, function () {
         _updateDynamic: function () {
             var body = this.data.body;
 
-            // If a dynamic body is frozen, we can assume it's motion state transform is
+            // If a dynamic body is frozen, we can assume its motion state transform is
             // the same is the entity world transform
             if (body.isActive()) {
                 // Update the motion state. Note that the test for the presence of the motion
