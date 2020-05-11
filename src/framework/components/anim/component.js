@@ -254,6 +254,18 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @name pc.AnimComponent#previousState
+         * @property {string} previousState - Returns the previously active state name.
+         */
+        previousState: {
+            get: function () {
+                if (this.data.animController) {
+                    return this.data.animController.previousStateName;
+                }
+                return null;
+            }
+        },
+        /**
          * @name pc.AnimComponent#activeStateProgress
          * @property {number} activeStateProgress - Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
          */
@@ -261,6 +273,30 @@ Object.assign(pc, function () {
             get: function () {
                 if (this.data.animController) {
                     return this.data.animController.activeStateProgress;
+                }
+                return null;
+            }
+        },
+        /**
+         * @name pc.AnimComponent#transitioning
+         * @property {number} transitioning - Returns whether the anim component is currently transitioning between states.
+         */
+        transitioning: {
+            get: function () {
+                if (this.data.animController) {
+                    return this.data.animController.transitioning;
+                }
+                return null;
+            }
+        },
+        /**
+         * @name pc.AnimComponent#transitionProgress
+         * @property {number} transitionProgress - If the anim component is currently transitioning between states, returns the progress. Otherwise returns null.
+         */
+        transitionProgress: {
+            get: function () {
+                if (this.data.animController && this.transitioning) {
+                    return this.data.animController.transitionProgress;
                 }
                 return null;
             }

@@ -234,12 +234,22 @@ Object.assign(pc, function () {
                 this._activeStateName = stateName;
             }
         },
+        activeStateName: {
+            get: function () {
+                return this._activeStateName;
+            }
+        },
         previousState: {
             get: function () {
                 return this._findState(this._previousStateName);
             },
             set: function (stateName) {
                 this._previousStateName = stateName;
+            }
+        },
+        previousStateName: {
+            get: function () {
+                return this._previousStateName;
             }
         },
         playable: {
@@ -257,6 +267,16 @@ Object.assign(pc, function () {
         activeStateProgress: {
             get: function () {
                 return this._getActiveStateProgressForTime(this._timeInState);
+            }
+        },
+        transitioning: {
+            get: function () {
+                return this._isTransitioning;
+            }
+        },
+        transitionProgress: {
+            get: function () {
+                return this._currTransitionTime / this._totalTransitionTime;
             }
         }
     });
