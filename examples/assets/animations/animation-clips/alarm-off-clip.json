@@ -1,0 +1,49 @@
+{
+    "name": "normalClip",
+    "duration": 1.0,
+    "inputs": [
+        [
+            0.0
+        ]
+    ],
+    "outputs": [
+        {
+            "components": 4,
+            "data": [
+                1.0, 1.0, 1.0, 1.0
+            ]
+        },
+        {
+            "components": 4,
+            "data": [
+                0.0, 0.0, 0.0, 0.0
+            ]
+        }
+    ],
+    "curves": [
+        {
+            "path": "lights.spotLight1/light/color",
+            "inputIndex": 0,
+            "outputIndex": 0,
+            "interpolation": 1
+        },
+        {
+            "path": "lights.spotLight2/light/color",
+            "inputIndex": 0,
+            "outputIndex": 0,
+            "interpolation": 1
+        },
+        {
+            "path": "lights.spotLight2/entity/localEulerAngles",
+            "inputIndex": 0,
+            "outputIndex": 1,
+            "interpolation": 1
+        },
+        {
+            "path": "lights.spotLight1/entity/localEulerAngles",
+            "inputIndex": 0,
+            "outputIndex": 1,
+            "interpolation": 1
+        }
+    ]
+}
