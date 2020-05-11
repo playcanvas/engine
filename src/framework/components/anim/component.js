@@ -279,7 +279,7 @@ Object.assign(pc, function () {
         },
         /**
          * @name pc.AnimComponent#transitioning
-         * @property {number} transitioning - Returns whether the anim component is currently transitioning between states.
+         * @property {boolean} transitioning - Returns whether the anim component is currently transitioning between states.
          */
         transitioning: {
             get: function () {
