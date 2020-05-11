@@ -224,7 +224,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used by the pc.Application.
