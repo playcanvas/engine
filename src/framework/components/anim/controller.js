@@ -366,6 +366,10 @@ Object.assign(pc, function () {
 
             // filter out transitions that don't have their conditions met
             transitions = transitions.filter(function (transition) {
+                // if the transition is moving to the already active state, ignore it
+                if (transition.to === this.activeStateName) {
+                    return false;
+                }
                 // when an exit time is present, we should only exit if it falls within the current frame delta time
                 if (transition.hasExitTime) {
                     var progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
@@ -393,6 +397,9 @@ Object.assign(pc, function () {
         _updateStateFromTransition: function (transition) {
             var i;
             var j;
+            var state;
+            var animation;
+            var clip;
             this.previousState = this._activeStateName;
             this.activeState = transition.to;
 
@@ -404,25 +411,34 @@ Object.assign(pc, function () {
                 this.setParameterValue(triggers[i].parameterName, ANIM_PARAMETER_TRIGGER, false);
             }
 
-            if (this._isTransitioning) {
-                var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
-                for (i = 0; i < this._transitionPreviousStates.length; i++) {
+            if (!this._isTransitioning) {
+                this._transitionPreviousStates = [];
+            }
+
+            this._transitionPreviousStates.push({
+                name: this._previousStateName,
+                weight: 1
+            });
+
+            var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+            for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                if (i !== this._transitionPreviousStates.length - 1) {
                     this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
-                    var state = this._findState(this._transitionPreviousStates[i].name);
-                    for (j = 0; j < state.animations.length; j++) {
-                        var animation = state.animations[j];
-                        this._animEvaluator.findClip(animation.name).pause();
+                } else {
+                    this._transitionPreviousStates[i].weight = interpolatedTime;
+                }
+                state = this._findState(this._transitionPreviousStates[i].name);
+                for (j = 0; j < state.animations.length; j++) {
+                    animation = state.animations[j];
+                    clip = this._animEvaluator.findClip(animation.name + '.previous');
+                    if (!clip) {
+                        clip = this._animEvaluator.findClip(animation.name);
+                        clip.name = animation.name + '.previous';
+                    }
+                    if (i !== this._transitionPreviousStates.length - 1) {
+                        clip.pause();
                     }
                 }
-                this._transitionPreviousStates.push({
-                    name: this._previousStateName,
-                    weight: interpolatedTime
-                });
-            } else {
-                this._transitionPreviousStates.push({
-                    name: this._previousStateName,
-                    weight: 1.0
-                });
             }
 
             if (transition.time > 0) {
@@ -436,7 +452,7 @@ Object.assign(pc, function () {
 
             var activeState = this.activeState;
             for (i = 0; i < activeState.animations.length; i++) {
-                var clip = this._animEvaluator.findClip(activeState.animations[i].name);
+                clip = this._animEvaluator.findClip(activeState.animations[i].name);
                 if (!clip) {
                     clip = new pc.AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, true);
                     clip.name = activeState.animations[i].name;
@@ -556,9 +572,7 @@ Object.assign(pc, function () {
                         state = this._findState(this._transitionPreviousStates[i].name);
                         for (j = 0; j < state.animations.length; j++) {
                             animation = state.animations[j];
-                            var clip = this._animEvaluator.findClip(animation.name);
-                            clip.pause();
-                            clip.blendWeight = 0;
+                            this._animEvaluator.removeClipByName(animation.name + '.previous');
                         }
                     }
 
@@ -577,7 +591,7 @@ Object.assign(pc, function () {
                         var stateWeight = this._transitionPreviousStates[i].weight;
                         for (j = 0; j < state.animations.length; j++) {
                             animation = state.animations[j];
-                            this._animEvaluator.findClip(animation.name).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                            this._animEvaluator.findClip(animation.name + '.previous').blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
                         }
                     }
                     state = this.activeState;

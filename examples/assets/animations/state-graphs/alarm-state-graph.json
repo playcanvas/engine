@@ -24,6 +24,7 @@
             "from": "Normal",
             "to": "Alarm",
             "time": 0.1,
+            "interruptionSource": "NEXT_STATE",
             "conditions": [
                 {
                     "parameterName": "alarm",
@@ -36,6 +37,7 @@
             "from": "Alarm",
             "to": "Normal",
             "time": 1.5,
+            "interruptionSource": "NEXT_STATE",
             "conditions": [
                 {
                     "parameterName": "alarm",

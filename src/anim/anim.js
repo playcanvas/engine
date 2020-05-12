@@ -996,6 +996,22 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
+         * @name pc.AnimEvaluator#removeClipByName
+         * @description Remove a clip from the controller by name.
+         * @param {number} name - name of the clip to remove.
+         */
+        removeClipByName: function (name) {
+            for (var i = 0; i < this._clips.length; i++) {
+                if (this.clips[i].name === name) {
+                    this.removeClip(i);
+                    return;
+                }
+            }
+        },
+
+        /**
+         * @private
+         * @function
          * @name pc.AnimEvaluator#removeClips
          * @description Remove all clips from the controller.
          */
