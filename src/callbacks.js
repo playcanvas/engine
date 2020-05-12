@@ -70,7 +70,6 @@
  * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
-
 /**
  * @callback pc.callbacks.CalculateMatrix
  * @description Callback used by {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}.
