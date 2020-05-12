@@ -11,7 +11,7 @@ Object.assign(pc, function () {
      * @property {pc.Texture} texture The outline texture to use.
      * @property {pc.Color} color The outline color.
      */
-    var OutlineEffect = function (graphicsDevice) {
+    var OutlineEffect = function (graphicsDevice, thickness) {
         pc.PostEffect.call(this, graphicsDevice);
 
         this.shader = new pc.Shader(graphicsDevice, {
@@ -32,6 +32,7 @@ Object.assign(pc, function () {
             fshader: [
                 "precision " + graphicsDevice.precision + " float;",
                 "",
+                "#define THICKNESS " + (thickness ? thickness.toFixed(0) : 1),
                 "uniform float uWidth;",
                 "uniform float uHeight;",
                 "uniform vec4 uOutlineCol;",
@@ -47,9 +48,9 @@ Object.assign(pc, function () {
                 "    float outline = 0.0;",
                 "    if (sample0==0.0)",
                 "    {",
-                "        for (int x=-2;x<=2;x++)",
+                "        for (int x=-THICKNESS;x<=THICKNESS;x++)",
                 "        {",
-                "            for (int y=-2;y<=2;y++)",
+                "            for (int y=-THICKNESS;y<=THICKNESS;y++)",
                 "            {    ",
                 "                float sample=texture2D(uOutlineTex, vUv0+vec2(float(x)/uWidth, float(y)/uHeight)).a;",
                 "                if (sample>0.0)",
@@ -59,7 +60,7 @@ Object.assign(pc, function () {
                 "            }",
                 "        } ",
                 "    }",
-                "    gl_FragColor = mix(texel1, uOutlineCol, outline);",
+                "    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);",
                 "}"
             ].join("\n")
         });
@@ -101,6 +102,16 @@ Outline.attributes.add('color', {
     title: 'Color'
 });
 
+Outline.attributes.add("thickness", {
+    type: "number",
+    default: 1.0,
+    min: 1.0,
+    max: 10,
+    precision: 0,
+    title: "Thickness",
+    description: "Note: Changing the thickness requires reloading the effect."
+});
+
 Outline.attributes.add('texture', {
     type: 'asset',
     assetType: 'texture',
@@ -108,7 +119,7 @@ Outline.attributes.add('texture', {
 });
 
 Outline.prototype.initialize = function () {
-    this.effect = new pc.OutlineEffect(this.app.graphicsDevice);
+    this.effect = new pc.OutlineEffect(this.app.graphicsDevice, this.thickness);
     this.effect.color = this.color;
     this.effect.texture = this.texture.resource;
 

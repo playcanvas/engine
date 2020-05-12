@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>PlayCanvas Model Outline</title>
     <meta charset="utf-8">
@@ -7,7 +8,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/output/playcanvas.js"></script>
     <style>
-        body { 
+        body {
             margin: 0;
             overflow-y: hidden;
         }
@@ -49,7 +50,7 @@
             var primitive = new pc.Entity();
             primitive.addComponent('model', {
                 type: primitiveType,
-                layers : layer
+                layers: layer
             });
             primitive.model.material = material;
 
@@ -105,8 +106,8 @@
         });
         app.root.addChild(outlineCamera);
 
-        var outline = new pc.OutlineEffect(app.graphicsDevice);
-        outline.color = new pc.Color(0, 0, 1, 1);
+        var outline = new pc.OutlineEffect(app.graphicsDevice, 3);
+        outline.color = new pc.Color(0, 0.5, 1, 1);
         outline.texture = texture;
         camera.camera.postEffects.addEffect(outline);
 
@@ -118,7 +119,7 @@
             type: "point",
             color: new pc.Color(1, 1, 1),
             range: 200,
-            castShadows : true,
+            castShadows: true,
             layers: [worldLayer.id]
         });
         light.translate(0, 2, 5);
@@ -164,4 +165,5 @@
         });
     </script>
 </body>
+
 </html>
