@@ -129,7 +129,7 @@ Object.assign(pc, function () {
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
-     * @param {pc.SceneRegistry#loadSceneHierarchy} callback - The function to call after loading,
+     * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
      *
@@ -189,7 +189,7 @@ Object.assign(pc, function () {
      * @name pc.SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
      * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
-     * @param {pc.SceneRegistry#loadSceneSettings} callback - The function called after the settings
+     * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      *
@@ -231,7 +231,7 @@ Object.assign(pc, function () {
      * @description Load the scene hierarchy and scene settings. This is an internal method used
      * by the pc.Application.
      * @param {string} url - The URL of the scene file.
-     * @param {pc.SceneRegistry#loadScene} callback - The function called after the settings are
+     * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
      * {@link pc.Scene}.
      */
