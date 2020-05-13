@@ -430,10 +430,10 @@ Object.assign(pc, function () {
                 state = this._findState(this._transitionPreviousStates[i].name);
                 for (j = 0; j < state.animations.length; j++) {
                     animation = state.animations[j];
-                    clip = this._animEvaluator.findClip(animation.name + '.previous');
+                    clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
                     if (!clip) {
                         clip = this._animEvaluator.findClip(animation.name);
-                        clip.name = animation.name + '.previous';
+                        clip.name = animation.name + '.previous.' + i;
                     }
                     if (i !== this._transitionPreviousStates.length - 1) {
                         clip.pause();
@@ -572,7 +572,7 @@ Object.assign(pc, function () {
                         state = this._findState(this._transitionPreviousStates[i].name);
                         for (j = 0; j < state.animations.length; j++) {
                             animation = state.animations[j];
-                            this._animEvaluator.removeClipByName(animation.name + '.previous');
+                            this._animEvaluator.removeClipByName(animation.name + '.previous.' + i);
                         }
                     }
 
@@ -591,7 +591,7 @@ Object.assign(pc, function () {
                         var stateWeight = this._transitionPreviousStates[i].weight;
                         for (j = 0; j < state.animations.length; j++) {
                             animation = state.animations[j];
-                            this._animEvaluator.findClip(animation.name + '.previous').blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                            this._animEvaluator.findClip(animation.name + '.previous.' + i).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
                         }
                     }
                     state = this.activeState;
