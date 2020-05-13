@@ -299,6 +299,7 @@ Object.assign(pc, function () {
             return null;
         },
 
+        // return all the transitions that have the given stateName as their source state
         _findTransitionsFromState: function (stateName) {
             var transitions = this._findTransitionsFromStateCache[stateName];
             if (!transitions) {
@@ -316,6 +317,7 @@ Object.assign(pc, function () {
             return transitions;
         },
 
+        // return all the transitions that contain the given source and destination states
         _findTransitionsBetweenStates: function (sourceStateName, destinationStateName) {
             var transitions = this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
             if (!transitions) {
@@ -336,10 +338,11 @@ Object.assign(pc, function () {
         _findTransition: function (from, to) {
             var transitions = [];
 
-            // find transitions that include the required source and destination states
             if (from && to) {
+                // find transitions that include the required source and destination states if from and to is supplied
                 transitions.concat(this._findTransitionsBetweenStates(this._activeStateName));
             } else {
+                // otherwise look for transitions from the previous and active states based on the current interruption source
                 if (!this._isTransitioning) {
                     transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                 } else {
@@ -384,9 +387,11 @@ Object.assign(pc, function () {
                         return null;
                     }
                 }
+                // if the exitTime condition has been met or is not present, check condition parameters
                 return transition.hasConditionsMet;
             }.bind(this));
 
+            // return the highest priority transition to use
             if (transitions.length > 0) {
                 return transitions[0];
             }
@@ -403,6 +408,7 @@ Object.assign(pc, function () {
             this.previousState = this._activeStateName;
             this.activeState = transition.to;
 
+            // turn off any triggers which were required to activate this transition
             var triggers = transition.conditions.filter(function (condition) {
                 var parameter = this.findParameter(condition.parameterName);
                 return parameter.type === ANIM_PARAMETER_TRIGGER;
@@ -415,19 +421,25 @@ Object.assign(pc, function () {
                 this._transitionPreviousStates = [];
             }
 
+            // record the transition source state in the previous states array
             this._transitionPreviousStates.push({
                 name: this._previousStateName,
                 weight: 1
             });
 
+            // if this new transition was activated during another transition, update the previous transition state weights based
+            // on the progress through the previous transition.
             var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
             for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (i !== this._transitionPreviousStates.length - 1) {
                     this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
                 } else {
                     this._transitionPreviousStates[i].weight = interpolatedTime;
                 }
                 state = this._findState(this._transitionPreviousStates[i].name);
+                // update the animations of previous states, set their name to include their position in the previous state array
+                // to uniquely identify animations from the same state that were added during different transitions
                 for (j = 0; j < state.animations.length; j++) {
                     animation = state.animations[j];
                     clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
@@ -435,12 +447,14 @@ Object.assign(pc, function () {
                         clip = this._animEvaluator.findClip(animation.name);
                         clip.name = animation.name + '.previous.' + i;
                     }
+                    // pause previous animation clips to reduce their impact on performance
                     if (i !== this._transitionPreviousStates.length - 1) {
                         clip.pause();
                     }
                 }
             }
 
+            // start a new transition based on the current transitions information
             if (transition.time > 0) {
                 this._isTransitioning = true;
                 this._totalTransitionTime = transition.time;
@@ -449,8 +463,8 @@ Object.assign(pc, function () {
             }
 
             var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
-
             var activeState = this.activeState;
+            // Add clips to the evaluator for each animation in the new state.
             for (i = 0; i < activeState.animations.length; i++) {
                 clip = this._animEvaluator.findClip(activeState.animations[i].name);
                 if (!clip) {
@@ -470,6 +484,7 @@ Object.assign(pc, function () {
                 clip.play();
             }
 
+            // set the time in the new state to 0 or to a value based on transitionOffset if one was given
             var timeInState = 0;
             var timeInStateBefore = 0;
             if (hasTransitionOffset) {
@@ -490,6 +505,7 @@ Object.assign(pc, function () {
                 return;
             }
 
+            // move to the given state, if a transition is present in the state graph use it. Otherwise move instantly to it.
             var transition = this._findTransition(this._activeStateName, newStateName);
             if (!transition) {
                 this._animEvaluator.removeClips();
@@ -560,32 +576,15 @@ Object.assign(pc, function () {
             this._timeInStateBefore = this._timeInState;
             this._timeInState += dt;
 
+            // transition between states if a transition is available from the active state
             var transition = this._findTransition(this._activeStateName);
             if (transition)
                 this._updateStateFromTransition(transition);
 
             if (this._isTransitioning) {
-                if (this._currTransitionTime >= this._totalTransitionTime) {
-                    this._isTransitioning = false;
-
-                    for (i = 0; i < this._transitionPreviousStates.length; i++) {
-                        state = this._findState(this._transitionPreviousStates[i].name);
-                        for (j = 0; j < state.animations.length; j++) {
-                            animation = state.animations[j];
-                            this._animEvaluator.removeClipByName(animation.name + '.previous.' + i);
-                        }
-                    }
-
-                    this._transitionPreviousStates = [];
-
-                    state = this.activeState;
-                    for (i = 0; i < state.animations.length; i++) {
-                        animation = state.animations[i];
-                        this._animEvaluator.findClip(animation.name).blendWeight = animation.weight / state.totalWeight;
-                    }
-                } else {
+                if (this._currTransitionTime < this._totalTransitionTime) {
                     var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
-
+                    // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                     for (i = 0; i < this._transitionPreviousStates.length; i++) {
                         state = this._findState(this._transitionPreviousStates[i].name);
                         var stateWeight = this._transitionPreviousStates[i].weight;
@@ -594,12 +593,27 @@ Object.assign(pc, function () {
                             this._animEvaluator.findClip(animation.name + '.previous.' + i).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
                         }
                     }
+                    // while transitioning, set active state animations to be weighted by (interpolationTime).
                     state = this.activeState;
                     for (i = 0; i < state.animations.length; i++) {
                         animation = state.animations[i];
                         this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.weight / state.totalWeight;
                     }
-
+                } else {
+                    this._isTransitioning = false;
+                    // when a transition ends, remove all previous state clips from the evaluator
+                    var activeClips = this.activeState.animations.length;
+                    var totalClips = this._animEvaluator.clips.length;
+                    for (i = 0; i < totalClips - activeClips; i++) {
+                        this._animEvaluator.removeClip(0);
+                    }
+                    this._transitionPreviousStates = [];
+                    // when a transition ends, set the active state clip weights so they sum to 1
+                    state = this.activeState;
+                    for (i = 0; i < state.animations.length; i++) {
+                        animation = state.animations[i];
+                        this._animEvaluator.findClip(animation.name).blendWeight = animation.weight / state.totalWeight;
+                    }
                 }
                 this._currTransitionTime += dt;
             }
