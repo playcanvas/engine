@@ -541,7 +541,7 @@ Object.assign(pc, function () {
             frameCollisions = {};
 
             // loop through the all contacts and fire events
-            for (i = 0; i < numManifolds; i++) {
+            for (var i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
 
                 var body0 = manifold.getBody0();
@@ -617,7 +617,7 @@ Object.assign(pc, function () {
                         var globalEvents = this.hasEvent("contact");
 
                         if (globalEvents || e0Events || e1Events) {
-                            for (j = 0; j < numContacts; j++) {
+                            for (var j = 0; j < numContacts; j++) {
                                 var btContactPoint = manifold.getContactPoint(j);
 
                                 var contactPoint = this._createContactPointFromAmmo(btContactPoint);
@@ -687,7 +687,7 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function (dt) {
-            var i, j, len;
+            var i, len;
 
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
