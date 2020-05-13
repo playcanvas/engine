@@ -185,7 +185,9 @@ Object.assign(pc, function () {
                     var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                     this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
                 } else {
+                    // #ifdef DEBUG
                     console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
+                    // #endif
                 }
 
                 // Lazily create temp vars
@@ -534,8 +536,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.RigidBodyComponentSystem#_checkForCollisions
          * @description Checks for collisions and fires collision events
-         * @param {pc.Entity} dynamicsWorld - The pointer to the dynamics world that invoked this callback.
-         * @param {pc.Entity} timeStep - The amount of simulation time processed in the last simulation tick.
+         * @param {object | number} dynamicsWorld - Either The integer pointer to the dynamics world that invoked this callback or the underlying world.
+         * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
          * @returns {void}
          */
         _checkForCollisions: function (dynamicsWorld, timeStep) {
@@ -725,7 +727,7 @@ Object.assign(pc, function () {
             }
 
             if (!this.dynamicsWorld.setInternalTickCallback)
-                this._checkForCollisions();
+                this._checkForCollisions(this.dynamicsWorld, dt);
 
             // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
