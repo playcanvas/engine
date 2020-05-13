@@ -185,6 +185,15 @@ Object.assign(pc, function () {
                 var solver = new Ammo.btSequentialImpulseConstraintSolver();
                 this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
+                if (this.dynamicsWorld.setInternalTickCallback) {
+                    var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
+                    this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
+                } else {
+                    // #ifdef DEBUG
+                    console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
+                    // #endif
+                }
+
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
@@ -515,35 +524,16 @@ Object.assign(pc, function () {
             return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
         },
 
-        onUpdate: function (dt) {
-            var i, j, len;
-
-            // #ifdef PROFILER
-            this._stats.physicsStart = pc.now();
-            // #endif
-
-            // Check to see whether we need to update gravity on the dynamics world
-            var gravity = this.dynamicsWorld.getGravity();
-            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
-                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
-                this.dynamicsWorld.setGravity(gravity);
-            }
-
-            // Update all kinematic bodies based on their current entity transform
-            var kinematic = this._kinematic;
-            for (i = 0, len = kinematic.length; i < len; i++) {
-                kinematic[i]._updateKinematic();
-            }
-
-            // Step the physics simulation
-            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
-
-            // Update the transforms of all entities referencing a dynamic body
-            var dynamic = this._dynamic;
-            for (i = 0, len = dynamic.length; i < len; i++) {
-                dynamic[i]._updateDynamic();
-            }
-
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponentSystem#_checkForCollisions
+         * @description Checks for collisions and fires collision events
+         * @param {object | number} dynamicsWorld - Either The integer pointer to the dynamics world that invoked this callback or the underlying world.
+         * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
+         * @returns {void}
+         */
+        _checkForCollisions: function (dynamicsWorld, timeStep) {
             // Check for collisions and fire callbacks
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
@@ -694,6 +684,39 @@ Object.assign(pc, function () {
             this.contactPointPool.freeAll();
             this.contactResultPool.freeAll();
             this.singleContactResultPool.freeAll();
+        },
+
+        onUpdate: function (dt) {
+            var i, j, len;
+
+            // #ifdef PROFILER
+            this._stats.physicsStart = pc.now();
+            // #endif
+
+            // Check to see whether we need to update gravity on the dynamics world
+            var gravity = this.dynamicsWorld.getGravity();
+            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
+                this.dynamicsWorld.setGravity(gravity);
+            }
+
+            // Update all kinematic bodies based on their current entity transform
+            var kinematic = this._kinematic;
+            for (i = 0, len = kinematic.length; i < len; i++) {
+                kinematic[i]._updateKinematic();
+            }
+
+            // Step the physics simulation
+            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+
+            // Update the transforms of all entities referencing a dynamic body
+            var dynamic = this._dynamic;
+            for (i = 0, len = dynamic.length; i < len; i++) {
+                dynamic[i]._updateDynamic();
+            }
+
+            if (!this.dynamicsWorld.setInternalTickCallback)
+                this._checkForCollisions(this.dynamicsWorld, dt);
 
             // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
