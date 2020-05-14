@@ -175,11 +175,11 @@ Object.assign(pc, function () {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
             if (typeof Ammo !== 'undefined') {
-                var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-                var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-                var overlappingPairCache = new Ammo.btDbvtBroadphase();
-                var solver = new Ammo.btSequentialImpulseConstraintSolver();
-                this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+                this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+                this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
+                this.overlappingPairCache = new Ammo.btDbvtBroadphase();
+                this.solver = new Ammo.btSequentialImpulseConstraintSolver();
+                this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
 
                 if (this.dynamicsWorld.setInternalTickCallback) {
                     var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
@@ -732,6 +732,21 @@ Object.assign(pc, function () {
             // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
             // #endif
+        },
+
+        destroy: function () {
+            if (typeof Ammo !== 'undefined') {
+                Ammo.destroy(this.dynamicsWorld);
+                Ammo.destroy(this.solver);
+                Ammo.destroy(this.overlappingPairCache);
+                Ammo.destroy(this.dispatcher);
+                Ammo.destroy(this.collisionConfiguration);
+                this.dynamicsWorld = null;
+                this.solver = null;
+                this.overlappingPairCache = null;
+                this.dispatcher = null;
+                this.collisionConfiguration = null;
+            }
         }
     });
 
