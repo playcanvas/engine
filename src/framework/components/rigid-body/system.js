@@ -735,7 +735,7 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (Ammo) {
+            if (typeof Ammo !== 'undefined') {
                 Ammo.destroy(this.dynamicsWorld);
                 Ammo.destroy(this.solver);
                 Ammo.destroy(this.overlappingPairCache);
