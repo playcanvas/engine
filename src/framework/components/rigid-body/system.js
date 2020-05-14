@@ -735,16 +735,18 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            Ammo.destroy(this.dynamicsWorld);
-            Ammo.destroy(this.solver);
-            Ammo.destroy(this.overlappingPairCache);
-            Ammo.destroy(this.dispatcher);
-            Ammo.destroy(this.collisionConfiguration);
-            this.dynamicsWorld = null;
-            this.solver = null;
-            this.overlappingPairCache = null;
-            this.dispatcher = null;
-            this.collisionConfiguration = null;
+            if (Ammo) {
+                Ammo.destroy(this.dynamicsWorld);
+                Ammo.destroy(this.solver);
+                Ammo.destroy(this.overlappingPairCache);
+                Ammo.destroy(this.dispatcher);
+                Ammo.destroy(this.collisionConfiguration);
+                this.dynamicsWorld = null;
+                this.solver = null;
+                this.overlappingPairCache = null;
+                this.dispatcher = null;
+                this.collisionConfiguration = null;
+            }
         }
     });
 
