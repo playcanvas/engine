@@ -560,9 +560,9 @@ Object.assign(pc, function () {
         onSetComplexProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
-                this.reset();
                 this.emitter.resetMaterial();
                 this.rebuild();
+                this.reset();
             }
         },
 
