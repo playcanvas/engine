@@ -24,7 +24,7 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
     return uv;
 }
 
-vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectivity) {
+vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 reflDir = normalize(cubeMapProject(tReflDirW));
 
     // Convert vector to DP coords
@@ -48,10 +48,10 @@ vec4 calcReflection(vec3 tReflDirW, float tGlossiness, float tmaterial_reflectiv
     tex1 = mix(tex1, tex2, fract(bias));
     tex1 = processEnvironment(tex1);
 
-    return vec4(tex1, tmaterial_reflectivity);
+    return tex1;
 }
 
 uniform float material_reflectivity;
 void addReflection() {   
-    dReflection += calcReflection(dReflDirW, dGlossiness, material_reflectivity);
+    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
