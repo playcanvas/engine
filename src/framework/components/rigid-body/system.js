@@ -215,7 +215,7 @@ Object.assign(pc, function () {
             if (_data.bodyType) {
                 data.type = _data.bodyType;
                 // #ifdef DEBUG
-                console.warn('DEPRECATED: pc.RigidBodyComponentSystem#bodyType is deprecated. Use pc.RigidBodyComponentSystem#type instead.');
+                console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
                 // #endif
             }
 
