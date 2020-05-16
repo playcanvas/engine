@@ -514,6 +514,13 @@ Object.defineProperty(pc.RigidBodyComponent.prototype, "bodyType", {
     }
 });
 
+pc.RigidBodyComponent.prototype.syncBodyToEntity = function () {
+    // #ifdef DEBUG
+    console.warn('pc.RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+    // #endif
+    this._updateDynamic();
+};
+
 pc.RigidBodyComponentSystem.prototype.setGravity = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');

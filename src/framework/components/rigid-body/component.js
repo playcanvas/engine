@@ -632,28 +632,6 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.RigidBodyComponent#syncBodyToEntity
-         * @description Update the Entity transform from the rigid body.
-         * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
-         */
-        syncBodyToEntity: function () {
-            var body = this.data.body;
-            if (body) {
-                var motionState = body.getMotionState();
-                if (motionState) {
-                    motionState.getWorldTransform(ammoTransform);
-
-                    var p = ammoTransform.getOrigin();
-                    var q = ammoTransform.getRotation();
-                    this.entity.setPosition(p.x(), p.y(), p.z());
-                    this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
-                }
-            }
-        },
-
-        /**
-         * @private
-         * @function
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Writes the entity's world transformation matrix into the motion state
          * of a kinematic body.
