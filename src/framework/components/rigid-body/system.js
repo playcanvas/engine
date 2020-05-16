@@ -525,13 +525,14 @@ Object.assign(pc, function () {
          * @function
          * @name pc.RigidBodyComponentSystem#_checkForCollisions
          * @description Checks for collisions and fires collision events
-         * @param {object | number} dynamicsWorld - Either The integer pointer to the dynamics world that invoked this callback or the underlying world.
+         * @param {number} world - The pointer to the dynamics world that invoked this callback.
          * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
-         * @returns {void}
          */
-        _checkForCollisions: function (dynamicsWorld, timeStep) {
+        _checkForCollisions: function (world, timeStep) {
+            var dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);
+
             // Check for collisions and fire callbacks
-            var dispatcher = this.dynamicsWorld.getDispatcher();
+            var dispatcher = dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
 
             frameCollisions = {};
@@ -712,7 +713,7 @@ Object.assign(pc, function () {
             }
 
             if (!this.dynamicsWorld.setInternalTickCallback)
-                this._checkForCollisions(this.dynamicsWorld, dt);
+                this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
 
             // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
