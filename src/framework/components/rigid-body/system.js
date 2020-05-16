@@ -214,7 +214,9 @@ Object.assign(pc, function () {
             // backwards compatibility
             if (_data.bodyType) {
                 data.type = _data.bodyType;
-                console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
+                // #ifdef DEBUG
+                console.warn('DEPRECATED: pc.RigidBodyComponentSystem#bodyType is deprecated. Use pc.RigidBodyComponentSystem#type instead.');
+                // #endif
             }
 
             if (data.linearFactor && pc.type(data.linearFactor) === 'array') {
