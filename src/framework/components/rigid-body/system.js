@@ -4,9 +4,6 @@ Object.assign(pc, function () {
     var collisions = {};
     var frameCollisions = {};
 
-    // DEPRECATED WARNINGS
-    var WARNED_RAYCAST_CALLBACK = false;
-
     /**
      * @class
      * @name pc.RaycastResult
@@ -309,13 +306,12 @@ Object.assign(pc, function () {
 
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
+                        // #ifdef DEBUG
+                        console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                        // #endif
+
                         var callback = arguments[2];
                         callback(result);
-
-                        if (!WARNED_RAYCAST_CALLBACK) {
-                            console.warn('[DEPRECATED]: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-                            WARNED_RAYCAST_CALLBACK = true;
-                        }
                     }
                 }
             }
