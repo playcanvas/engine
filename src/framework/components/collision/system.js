@@ -404,8 +404,7 @@ Object.assign(pc, function () {
 
                 var entityTransform = entity.getWorldTransform();
                 var scale = entityTransform.getScale();
-                var vec = new Ammo.btVector3();
-                vec.setValue(scale.x, scale.y, scale.z);
+                var vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
                 Ammo.destroy(vec);
 
