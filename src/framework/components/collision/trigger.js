@@ -47,7 +47,7 @@ Object.assign(pc, function () {
                 ammoTransform.setOrigin(ammoVec1);
                 ammoTransform.setRotation(ammoQuat);
 
-                var body = this.system.createBody(mass, shape, ammoTransform);
+                var body = this.app.systems.rigidbody.createBody(mass, shape, ammoTransform);
 
                 body.setRestitution(0);
                 body.setFriction(0);
