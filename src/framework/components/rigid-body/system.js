@@ -252,13 +252,7 @@ Object.assign(pc, function () {
             var body = data.body;
             if (body) {
                 this.removeBody(body);
-
-                // The motion state needs to be destroyed explicitly (if present)
-                var motionState = body.getMotionState();
-                if (motionState) {
-                    Ammo.destroy(motionState);
-                }
-                Ammo.destroy(body);
+                this.destroyBody(body);
 
                 data.body = null;
             }
@@ -274,6 +268,30 @@ Object.assign(pc, function () {
 
         removeBody: function (body) {
             this.dynamicsWorld.removeRigidBody(body);
+        },
+
+        createBody: function (mass, shape, transform) {
+            var localInertia = new Ammo.btVector3(0, 0, 0);
+            if (mass !== 0) {
+                shape.calculateLocalInertia(mass, localInertia);
+            }
+
+            var motionState = new Ammo.btDefaultMotionState(transform);
+            var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
+            var body = new Ammo.btRigidBody(bodyInfo);
+            Ammo.destroy(bodyInfo);
+            Ammo.destroy(localInertia);
+
+            return body;
+        },
+
+        destroyBody: function (body) {
+            // The motion state needs to be destroyed explicitly (if present)
+            var motionState = body.getMotionState();
+            if (motionState) {
+                Ammo.destroy(motionState);
+            }
+            Ammo.destroy(body);
         },
 
         /**

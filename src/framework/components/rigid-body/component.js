@@ -185,11 +185,6 @@ Object.assign(pc, function () {
 
                 var mass = this.type === pc.BODYTYPE_DYNAMIC ? this.mass : 0;
 
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                if (this.type === pc.BODYTYPE_DYNAMIC) {
-                    shape.calculateLocalInertia(mass, localInertia);
-                }
-
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
 
@@ -199,13 +194,7 @@ Object.assign(pc, function () {
                 ammoTransform.setOrigin(ammoVec1);
                 ammoTransform.setRotation(ammoQuat);
 
-                var motionState = new Ammo.btDefaultMotionState(ammoTransform);
-                var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-
-                Ammo.destroy(localInertia);
-
-                var body = new Ammo.btRigidBody(bodyInfo);
-                Ammo.destroy(bodyInfo);
+                var body = this.system.createBody(mass, shape, ammoTransform);
 
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);

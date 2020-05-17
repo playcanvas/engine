@@ -38,9 +38,6 @@ Object.assign(pc, function () {
 
                 var mass = 1;
 
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                shape.calculateLocalInertia(mass, localInertia);
-
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
 
@@ -50,14 +47,7 @@ Object.assign(pc, function () {
                 ammoTransform.setOrigin(ammoVec1);
                 ammoTransform.setRotation(ammoQuat);
 
-                var motionState = new Ammo.btDefaultMotionState(ammoTransform);
-                var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-
-                Ammo.destroy(localInertia);
-
-                var body = new Ammo.btRigidBody(bodyInfo);
-                this.body = body;
-                Ammo.destroy(bodyInfo);
+                var body = this.system.createBody(mass, shape, ammoTransform);
 
                 body.setRestitution(0);
                 body.setFriction(0);
@@ -68,6 +58,8 @@ Object.assign(pc, function () {
 
                 body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_NORESPONSE_OBJECT);
                 body.entity = entity;
+
+                this.body = body;
 
                 if (this.component.enabled && entity.enabled) {
                     this.enable();
@@ -81,7 +73,7 @@ Object.assign(pc, function () {
 
             this.disable();
 
-            Ammo.destroy(body);
+            this.app.systems.rigidbody.destroyBody(body);
         },
 
         syncEntityToBody: function () {
