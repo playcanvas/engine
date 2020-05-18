@@ -189,15 +189,24 @@ Object.assign(pc, function () {
                     assets.load(asset);
                 };
 
-                var asset = assets.get(id);
-                if (asset) {
-                    asset.ready(assetReady);
-                    assets.load(asset);
-                } else if (id) {
-                    assets.once("load:" + id, assetReady);
-                    assets.once("add:" + id, assetAdded);
+                var asset;
+                if (parseInt(id, 10) === id) {
+                    asset = assets.get(id);
+                    if (asset) {
+                        asset.ready(assetReady);
+                        assets.load(asset);
+                    } else if (id) {
+                        assets.once("load:" + id, assetReady);
+                        assets.once("add:" + id, assetAdded);
+                    } else {
+                        assetReady(null);
+                    }
                 } else {
-                    assetReady(null);
+                    asset = new pc.Asset(assetCubeMap.name + "_face_" + index, "texture", { url: id });
+                    assets.add(asset);
+                    assets.load(asset);
+                    assets.once("load:" + asset.id, assetReady);
+                    assets.once("add:" + asset.id, assetAdded);
                 }
             });
         }
