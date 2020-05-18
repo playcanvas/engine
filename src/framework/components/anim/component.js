@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
      * @description Create a new AnimComponentLayer.
      * @param {string} name - The name of the layer.
-     * @param {pc.AnimController} controller - The controller to manage this layers animations.
+     * @param {object} controller - The controller to manage this layers animations.
      * @param {pc.AnimComponent} component - The component that this layer is a member of.
      */
     var AnimComponentLayer = function (name, controller, component) {
