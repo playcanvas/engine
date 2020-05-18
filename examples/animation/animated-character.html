@@ -168,10 +168,11 @@
 
                                     // add jump interactivity to the character
                                     document.querySelector('#jump').addEventListener('click', () => {
+                                        var animLayer = modelEntity.anim.findAnimationLayer('DEFAULT_LAYER');
                                         var shouldTriggerJump = false;
-                                        var isJumping = modelEntity.anim.activeStateName === 'Jump';
+                                        var isJumping = animLayer.activeState === 'Jump';
                                         if (isJumping) {
-                                            var stateProgress = modelEntity.anim.activeStateProgress;
+                                            var stateProgress = animLayer.activeStateProgress;
                                             if (stateProgress > 0.6) {
                                                 shouldTriggerJump = true;
                                             }
@@ -220,10 +221,11 @@
                                         return speed;
                                     }
                                     MoveBox.prototype.update = function (dt) {
-                                        var speed = getSpeedFromState(modelEntity.anim.activeState);
-                                        if (modelEntity.anim.transitioning) {
-                                            var prevStateSpeed = getSpeedFromState(modelEntity.anim.previousState);
-                                            speed = ((prevStateSpeed * (1.0 - modelEntity.anim.transitionProgress)) + (speed * modelEntity.anim.transitionProgress));
+                                        var animLayer = modelEntity.anim.findAnimationLayer('DEFAULT_LAYER');
+                                        var speed = getSpeedFromState(animLayer.activeState);
+                                        if (animLayer.transitioning) {
+                                            var prevStateSpeed = getSpeedFromState(animLayer.previousState);
+                                            speed = ((prevStateSpeed * (1.0 - animLayer.transitionProgress)) + (speed * animLayer.transitionProgress));
                                         }
 
                                         var zPos = this.entity.localPosition.z - speed * 0.66 * dt;
