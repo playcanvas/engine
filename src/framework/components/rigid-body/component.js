@@ -266,6 +266,10 @@ Object.assign(pc, function () {
                             break;
                     }
 
+                    if (this.entity.collision.type === 'compound') {
+                        this.system._compounds.push(this.entity.collision);
+                    }
+
                     this.system.addBody(body, this.group, this.mask);
                     body.activate();
 
@@ -279,19 +283,19 @@ Object.assign(pc, function () {
             if (body && this.data.simulationEnabled) {
                 var idx;
 
-                switch (this.type) {
-                    case pc.BODYTYPE_DYNAMIC:
-                        idx = this.system._dynamic.indexOf(this);
-                        if (idx > -1) {
-                            this.system._dynamic.splice(idx, 1);
-                        }
-                        break;
-                    case pc.BODYTYPE_KINEMATIC:
-                        idx = this.system._kinematic.indexOf(this);
-                        if (idx > -1) {
-                            this.system._kinematic.splice(idx, 1);
-                        }
-                        break;
+                idx = this.system._compounds.indexOf(this.entity.collision);
+                if (idx > -1) {
+                    this.system._compounds.splice(idx, 1);
+                }
+
+                idx = this.system._dynamic.indexOf(this);
+                if (idx > -1) {
+                    this.system._dynamic.splice(idx, 1);
+                }
+
+                idx = this.system._kinematic.indexOf(this);
+                if (idx > -1) {
+                    this.system._kinematic.splice(idx, 1);
                 }
 
                 this.system.removeBody(body);

@@ -164,6 +164,8 @@ Object.assign(pc, function () {
         // Arrays of pc.RigidBodyComponents filtered on body type
         this._dynamic = [];
         this._kinematic = [];
+        this._triggers = [];
+        this._compounds = [];
 
         this.on('remove', this.onRemove, this);
     };
@@ -715,6 +717,16 @@ Object.assign(pc, function () {
             if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
                 gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
                 this.dynamicsWorld.setGravity(gravity);
+            }
+
+            var triggers = this._triggers;
+            for (i = 0, len = triggers.length; i < len; i++) {
+                triggers[i].updateTransform();
+            }
+
+            var compounds = this._compounds;
+            for (i = 0, len = compounds.length; i < len; i++) {
+                compounds[i]._updateCompound();
             }
 
             // Update all kinematic bodies based on their current entity transform

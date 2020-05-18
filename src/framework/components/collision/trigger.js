@@ -76,7 +76,7 @@ Object.assign(pc, function () {
             this.app.systems.rigidbody.destroyBody(body);
         },
 
-        syncEntityToBody: function () {
+        updateTransform: function () {
             var wtm = this.entity.getWorldTransform();
             ammoTransform.setFromOpenGLMatrix(wtm.data);
 
@@ -91,13 +91,13 @@ Object.assign(pc, function () {
 
             var systems = this.app.systems;
             systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
-            systems.collision._triggers.push(this.component);
+            systems.rigidbody._triggers.push(this);
 
             // set the body's activation state to active so that it is
             // simulated properly again
             body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
-            this.syncEntityToBody();
+            this.updateTransform();
         },
 
         disable: function () {
@@ -105,9 +105,9 @@ Object.assign(pc, function () {
             if (!body) return;
 
             var systems = this.app.systems;
-            var idx = systems.collision._triggers.indexOf(this.component);
+            var idx = systems.rigidbody._triggers.indexOf(this);
             if (idx > -1) {
-                systems.collision._triggers.splice(idx, 1);
+                systems.rigidbody._triggers.splice(idx, 1);
             }
             systems.rigidbody.removeBody(body);
 

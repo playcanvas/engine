@@ -256,10 +256,6 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateTrigger: function () {
-            this.entity.trigger.syncEntityToBody();
-        },
-
         onEnable: function () {
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);

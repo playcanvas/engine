@@ -129,7 +129,7 @@ Object.assign(pc, function () {
 
         updateTransform: function (component, position, rotation, scale) {
             if (component.entity.trigger) {
-                component.entity.trigger.syncEntityToBody();
+                component.entity.trigger.updateTransform();
             }
         },
 
@@ -584,13 +584,8 @@ Object.assign(pc, function () {
 
         this._triMeshCache = { };
 
-        this._compounds = [];
-        this._triggers = [];
-
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
-
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     CollisionComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     CollisionComponentSystem.prototype.constructor = CollisionComponentSystem;
@@ -598,15 +593,6 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
 
     Object.assign(CollisionComponentSystem.prototype, {
-        onLibraryLoaded: function () {
-            if (typeof Ammo !== 'undefined') {
-                //
-            } else {
-                // Unbind the update function if we haven't loaded Ammo by now
-                pc.ComponentSystem.unbind('update', this.onUpdate, this);
-            }
-        },
-
         initializeComponentData: function (component, _data, properties) {
             properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
 
@@ -704,20 +690,6 @@ Object.assign(pc, function () {
 
         onRemove: function (entity, data) {
             this.implementations[data.type].remove(entity, data);
-        },
-
-        onUpdate: function (dt) {
-            var i, len;
-
-            var compounds = this._compounds;
-            for (i = 0, len = compounds.length; i < len; i++) {
-                compounds[i]._updateCompound();
-            }
-
-            var triggers = this._triggers;
-            for (i = 0, len = triggers.length; i < len; i++) {
-                triggers[i]._updateTrigger();
-            }
         },
 
         updateCompoundChildTransform: function (entity) {
