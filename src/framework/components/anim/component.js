@@ -223,7 +223,7 @@ Object.assign(pc, function () {
             }
 
             if (stateGraph.layers) {
-                for (var i = 0; i < stateGraph.layers; i++) {
+                for (var i = 0; i < stateGraph.layers.length; i++) {
                     var layer = stateGraph.layers[i];
                     addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
                 }
