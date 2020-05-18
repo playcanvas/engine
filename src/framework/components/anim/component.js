@@ -1,9 +1,17 @@
 Object.assign(pc, function () {
 
-    var AnimComponentLayer = function (name, controller, order, component) {
+    /**
+     * @class
+     * @name pc.AnimComponentLayer
+     * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
+     * @description Create a new AnimComponentLayer.
+     * @param {string} name - The name of the layer.
+     * @param {pc.AnimController} controller - The controller to manage this layers animations.
+     * @param {pc.AnimComponent} component - The component that this layer is a member of.
+     */
+    var AnimComponentLayer = function (name, controller, component) {
         this._name = name;
         this._controller = controller;
-        this._order = order;
         this._component = component;
     };
 
@@ -165,7 +173,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.AnimComponent
      * @augments pc.Component
-     * @classdesc The Anim Component allows an Entity to playback animations on models.
+     * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
      * @description Create a new AnimComponent.
      * @param {pc.AnimComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
@@ -210,7 +218,7 @@ Object.assign(pc, function () {
                     data.parameters,
                     data.activate
                 );
-                data.layers.push(new AnimComponentLayer(name, controller, order, this));
+                data.layers.push(new AnimComponentLayer(name, controller, this));
                 data.layerIndicies[name] = order;
             }
 
@@ -427,6 +435,7 @@ Object.assign(pc, function () {
     });
 
     return {
+        AnimComponentLayer: AnimComponentLayer,
         AnimComponent: AnimComponent
     };
 }());
