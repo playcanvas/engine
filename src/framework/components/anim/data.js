@@ -4,11 +4,13 @@ Object.assign(pc, function () {
         this.speed = 1.0;
         this.activate = true;
         this.enabled = true;
+        this.playing = false;
 
         // Non-serialized
-        this.animController = null;
+        this.layers = [];
+        this.layerIndicies = {};
+        this.parameters = {};
         this.model = null;
-        this.playing = false;
     };
 
     return {

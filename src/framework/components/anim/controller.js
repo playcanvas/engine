@@ -204,7 +204,6 @@ Object.assign(pc, function () {
         this._findTransitionsFromStateCache = {};
         this._findTransitionsBetweenStatesCache = {};
         this._parameters = parameters;
-        this._initialParameters = Object.assign({}, parameters);
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
         this._playing = false;
@@ -414,7 +413,7 @@ Object.assign(pc, function () {
                 return parameter.type === ANIM_PARAMETER_TRIGGER;
             }.bind(this));
             for (i = 0; i < triggers.length; i++) {
-                this.setParameterValue(triggers[i].parameterName, ANIM_PARAMETER_TRIGGER, false);
+                this.findParameter(triggers[i].parameterName).value = false;
             }
 
             if (!this._isTransitioning) {
@@ -518,7 +517,7 @@ Object.assign(pc, function () {
             var state = this._findState(stateName);
             if (!state) {
                 // #ifdef DEBUG
-                console.error('Linking animation asset to animation state that does not exist');
+                console.error('Attempting to assign an animation track to an animation state that does not exist.');
                 // #endif
                 return;
             }
@@ -541,6 +540,18 @@ Object.assign(pc, function () {
             }
         },
 
+        removeStateAnimations: function (stateName) {
+            var state = this._findState(stateName);
+            if (!state) {
+                // #ifdef DEBUG
+                console.error('Attempting to unassign animation tracks from a state that does not exist.');
+                // #endif
+                return;
+            }
+
+            state.animations = [];
+        },
+
         play: function (stateName) {
             if (stateName) {
                 this._transitionToState(stateName);
@@ -561,7 +572,6 @@ Object.assign(pc, function () {
             this._isTransitioning = false;
             this._timeInState = 0;
             this._timeInStateBefore = 0;
-            this._parameters = Object.assign({}, this._initialParameters);
             this._animEvaluator.removeClips();
         },
 
@@ -622,27 +632,6 @@ Object.assign(pc, function () {
 
         findParameter: function (name) {
             return this._parameters[name];
-        },
-
-        getParameterValue: function (name, type) {
-            var param = this.findParameter(name);
-            if (param && param.type === type) {
-                return param.value;
-            }
-            // #ifdef DEBUG
-            console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
-            // #endif
-        },
-
-        setParameterValue: function (name, type, value) {
-            var param = this.findParameter(name);
-            if (param && param.type === type) {
-                param.value = value;
-                return;
-            }
-            // #ifdef DEBUG
-            console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
-            // #endif
         }
     });
 

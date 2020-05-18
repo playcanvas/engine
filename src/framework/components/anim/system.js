@@ -2,7 +2,8 @@ Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'speed',
-        'activate'
+        'activate',
+        'playing'
     ];
 
     /**
@@ -36,7 +37,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'enabled', 'speed'];
+            properties = ['activate', 'enabled', 'speed', 'playing'];
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -52,9 +53,9 @@ Object.assign(pc, function () {
                     var component = components[id];
                     var componentData = component.data;
 
-                    if (componentData.enabled && component.entity.enabled) {
-                        if (componentData.animController) {
-                            componentData.animController.update(dt * componentData.speed);
+                    if (componentData.enabled && component.entity.enabled && componentData.playing) {
+                        for (var i = 0; i < componentData.layers.length; i++) {
+                            componentData.layers[i].update(dt * componentData.speed);
                         }
                     }
                 }
