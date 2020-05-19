@@ -149,9 +149,9 @@
             time += dt;
 
             // modify weights of all 3 morph targets along some sin curve with different frequency
-            self.meshInstance.morphInstance.setWeight(0, Math.abs(Math.sin(time)));
-            self.meshInstance.morphInstance.setWeight(1, Math.abs(Math.sin(time * 0.3)));
-            self.meshInstance.morphInstance.setWeight(2, Math.abs(Math.sin(time * 0.7)));
+            morphInstance.setWeight(0, Math.abs(Math.sin(time)));
+            morphInstance.setWeight(1, Math.abs(Math.sin(time * 0.3)));
+            morphInstance.setWeight(2, Math.abs(Math.sin(time * 0.7)));
 
             // orbit camera around
             camera.setLocalPosition(6 * Math.sin(time * 0.2), 4, 6 * Math.cos(time * 0.2));
