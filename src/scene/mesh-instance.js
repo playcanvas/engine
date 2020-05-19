@@ -125,7 +125,7 @@ Object.assign(pc, function () {
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
-            var aabb, i;
+            var i;
 
             if (!this._updateAabb) {
                 return this._aabb;

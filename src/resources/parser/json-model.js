@@ -144,7 +144,7 @@ Object.assign(pc, function () {
 
                 if (meshData.morph === morphIndex) {
                     var vertexBuffer = vertexBuffers[meshData.vertices];
-                    return vertexBuffer.numVertices
+                    return vertexBuffer.numVertices;
                 }
             }
             return undefined;
@@ -198,8 +198,7 @@ Object.assign(pc, function () {
                             deltaNormals = sparseToFull(deltaNormals, indices, vertexCount);
                         }
 
-                        morphTarget = new pc.MorphTarget(this._device, {
-                            deltaPositions: deltaPositions,
+                        morphTarget = new pc.MorphTarget(this._device, { deltaPositions: deltaPositions,
                             deltaNormals: deltaNormals,
                             name: targets[j].name,
                             aabb: aabb });
