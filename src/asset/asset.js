@@ -224,13 +224,16 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
-         * @param {string} path - The path
-         * @returns {string} Absolute URL of the path relative to this asset
+         * @name pcAsset#getAbsoluteUrl
+         * @description Construct an asset URL from this asset's location and a relative path
+         * @param {string} relativePath - The relative path to be concatenated to this asset's base url
+         * @returns {string} Resulting URL of the asset
          */
-        getAbsoluteUrl: function (path) {
+        getAbsoluteUrl: function (relativePath) {
             var base = pc.path.getDirectory(this.file.url);
-            return pc.path.join(base, path);
+            return pc.path.join(base, relativePath);
         },
 
         /**
