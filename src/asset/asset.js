@@ -224,6 +224,16 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @function
+         * @param {string} path - The path
+         * @returns {string} Absolute URL of the path relative to this asset
+         */
+        getAbsoluteUrl: function (path) {
+            var base = pc.path.getDirectory(this.file.url);
+            return pc.path.join(base, path);
+        },
+
+        /**
          * @private
          * @function
          * @name pc.Asset#getLocalizedAssetId
@@ -314,16 +324,20 @@ Object.assign(pc, function () {
          * // asset.resource is null
          */
         unload: function () {
-            if (!this.loaded && !this.resource)
+            if (!this.loaded && this._resources.length === 0)
                 return;
 
             this.fire('unload', this);
             this.registry.fire('unload:' + this.id, this);
 
-            if (this.resource && this.resource.destroy)
-                this.resource.destroy();
+            for (var i = 0; i < this._resources.length; ++i) {
+                var resource = this._resources[i];
+                if (resource && resource.destroy) {
+                    resource.destroy();
+                }
+            }
 
-            this.resource = null;
+            this.resources = [];
             this.loaded = false;
 
             if (this.file) {

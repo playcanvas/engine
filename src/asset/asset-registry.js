@@ -339,9 +339,25 @@ Object.assign(pc, function () {
                 return;
             }
 
-            var load = !!asset.file;
-
             var file = asset.getPreferredFile();
+            var load = !!file;
+
+            // open has completed on the resource
+            var _opened = function (resource) {
+                if (resource instanceof Array) {
+                    asset.resources = resource;
+                } else {
+                    asset.resource = resource;
+                }
+
+                self._loader.patch(asset, self);
+
+                self.fire("load", asset);
+                self.fire("load:" + asset.id, asset);
+                if (file && file.url)
+                    self.fire("load:url:" + file.url, asset);
+                asset.fire("load", asset);
+            };
 
             var _load = function () {
                 var url = asset.getFileUrl();
@@ -358,11 +374,6 @@ Object.assign(pc, function () {
                         asset.fire("error", err, asset);
                         return;
                     }
-                    if (resource instanceof Array) {
-                        asset.resources = resource;
-                    } else {
-                        asset.resource = resource;
-                    }
 
                     if (!pc.script.legacy && asset.type === 'script') {
                         var loader = self._loader.getHandler('script');
@@ -375,32 +386,14 @@ Object.assign(pc, function () {
                         loader._cache[asset.id] = extra;
                     }
 
-                    self._loader.patch(asset, self);
-
-                    self.fire("load", asset);
-                    self.fire("load:" + asset.id, asset);
-                    if (file && file.url)
-                        self.fire("load:url:" + file.url, asset);
-                    asset.fire("load", asset);
+                    _opened(resource);
                 }, asset);
             };
 
             var _open = function () {
                 var resource = self._loader.open(asset.type, asset.data);
-                if (resource instanceof Array) {
-                    asset.resources = resource;
-                } else {
-                    asset.resource = resource;
-                }
                 asset.loaded = true;
-
-                self._loader.patch(asset, self);
-
-                self.fire("load", asset);
-                self.fire("load:" + asset.id, asset);
-                if (file && file.url)
-                    self.fire("load:url:" + file.url, asset);
-                asset.fire("load", asset);
+                _opened(resource);
             };
 
             // check for special case for cubemaps
@@ -434,7 +427,6 @@ Object.assign(pc, function () {
             } else if (load) {
                 this.fire("load:start", asset);
                 this.fire("load:" + asset.id + ":start", asset);
-
                 _load();
             }
         },
@@ -480,184 +472,127 @@ Object.assign(pc, function () {
                 filename: filename || name,
                 url: url
             };
-            var data = {};
 
             var asset = self.getByUrl(url);
             if (!asset) {
-                asset = new pc.Asset(name, type, file, data);
+                asset = new pc.Asset(name, type, file, {});
                 self.add(asset);
             }
 
-            var onLoadAsset = function (loadedAsset) {
-                if (type === 'material') {
-                    self._loadTextures([loadedAsset], function (err, textures) {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            callback(null, loadedAsset);
-                        }
-                    });
-                } else {
-                    callback(null, loadedAsset);
-                }
-            };
-
-            if (asset.resource) {
-                onLoadAsset(asset);
-                return;
-            }
-
-            if (type === 'model') {
-                self._loadModel(asset, callback);
-                return;
-            }
-
-            asset.once("load", onLoadAsset);
-            asset.once("error", function (err) {
-                callback(err);
-            });
-            self.load(asset);
-        },
-
-        // private method used for engine-only loading of model data
-        _loadModel: function (asset, callback) {
-            var self = this;
-
-            var url = asset.getFileUrl();
-            var dir = pc.path.getDirectory(url);
-            var basename = pc.path.getBasename(url);
-            var ext = pc.path.getExtension(url);
-
-            var _loadAsset = function (assetToLoad) {
+            var startLoad = function (asset) {
                 asset.once("load", function (loadedAsset) {
                     callback(null, loadedAsset);
                 });
                 asset.once("error", function (err) {
                     callback(err);
                 });
-                self.load(assetToLoad);
+                self.load(asset);
             };
 
+            if (asset.resource) {
+                callback(null, asset);
+            } else if (type === 'model') {
+                self._loadModel(asset, startLoad);
+            } else {
+                startLoad(asset);
+            }
+        },
+
+        // private method used for engine-only loading of model data
+        _loadModel: function (modelAsset, continuation) {
+            var self = this;
+
+            var url = modelAsset.getFileUrl();
+            var ext = pc.path.getExtension(url);
+
             if (ext === '.json' || ext === '.glb') {
+                var dir = pc.path.getDirectory(url);
+                var basename = pc.path.getBasename(url);
+
                 // playcanvas model format supports material mapping file
                 var mappingUrl = pc.path.join(dir, basename.replace(ext, ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
-                        asset.data = { mapping: [] };
-                        _loadAsset(asset);
-                        return;
+                        modelAsset.data = { mapping: [] };
+                        continuation(modelAsset);
+                    } else {
+                        self._loadMaterials(modelAsset, data, function (e, materials) {
+                            modelAsset.data = data;
+                            continuation(modelAsset);
+                        });
                     }
-
-                    self._loadMaterials(dir, data, function (e, materials) {
-                        asset.data = data;
-                        _loadAsset(asset);
-                    });
                 });
             } else {
                 // other model format (e.g. obj)
-                _loadAsset(asset);
+                continuation(modelAsset);
             }
         },
 
-        // private method used for engine-only loading of model data
-        _loadMaterials: function (dir, mapping, callback) {
-            if (dir) {
-                // dir is generated from a call to pc.path.getDirectory which never returns
-                // a path ending in a forward slash so add one here
-                dir += '/';
-                if (this.prefix && dir.startsWith(this.prefix)) {
-                    dir = dir.slice(this.prefix.length);
+        // private method used for engine-only loading of model materials
+        _loadMaterials: function (modelAsset, mapping, callback) {
+            var self = this;
+            var materials = [];
+            var count = 0;
+
+            var onMaterialLoaded = function (err, materialAsset) {
+                // load dependent textures
+                self._loadTextures(materialAsset, function (err, textures) {
+                    materials.push(materialAsset);
+                    if (materials.length === count) {
+                        callback(null, materials);
+                    }
+                });
+            };
+
+            for (var i = 0; i < mapping.mapping.length; i++) {
+                var path = mapping.mapping[i].path;
+                if (path) {
+                    count++;
+                    self.loadFromUrl(modelAsset.getAbsoluteUrl(path), "material", onMaterialLoaded);
                 }
             }
-
-            var self = this;
-            var i;
-            var count = mapping.mapping.length;
-            var materials = [];
 
             if (count === 0) {
                 callback(null, materials);
             }
-
-            var onLoadAsset = function (err, asset) {
-                materials.push(asset);
-                count--;
-                if (count === 0)
-                    callback(null, materials);
-            };
-
-            for (i = 0; i < mapping.mapping.length; i++) {
-                var path = mapping.mapping[i].path;
-                if (path) {
-                    path = pc.path.join(dir, path);
-                    self.loadFromUrl(path, "material", onLoadAsset);
-                } else {
-                    count--;
-                }
-            }
         },
 
-        // private method used for engine-only loading of model data
-        _loadTextures: function (materialAssets, callback) {
+        // private method used for engine-only loading of the textures referenced by
+        // the material asset
+        _loadTextures: function (materialAsset, callback) {
             var self = this;
-            var i;
-            var used = {}; // prevent duplicate urls
-            var urls = [];
             var textures = [];
             var count = 0;
-            for (i = 0; i < materialAssets.length; i++) {
-                var materialData = materialAssets[i].data;
 
-                if (materialData.mappingFormat !== 'path') {
-                    console.warn('Skipping: ' + materialAssets[i].name + ', material files must be mappingFormat: "path" to be loaded from URL');
-                    continue;
-                }
-
-                var url = materialAssets[i].getFileUrl();
-                var dir = pc.path.getDirectory(url);
-                if (dir) {
-                    // pc.path.getDirectory never returns a path ending in a forward slash so add one
-                    dir += '/';
-
-                    if (this.prefix && dir.startsWith(this.prefix)) {
-                        dir = dir.slice(this.prefix.length);
-                    }
-                }
-
-                var textureUrl;
-
-                for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
-                    var paramName = pc.StandardMaterial.TEXTURE_PARAMETERS[pi];
-
-                    if (materialData[paramName] && typeof(materialData[paramName]) === 'string') {
-                        var texturePath = materialData[paramName];
-                        textureUrl = pc.path.join(dir, texturePath);
-                        if (!used[textureUrl]) {
-                            used[textureUrl] = true;
-                            urls.push(textureUrl);
-                            count++;
-                        }
-                    }
-                }
-            }
-
-            if (!count) {
+            var data = materialAsset.data;
+            if (data.mappingFormat !== 'path') {
+                // #ifdef DEBUG
+                console.warn('Skipping: ' + materialAsset.name + ', material files must be mappingFormat: "path" to be loaded from URL');
+                // #endif
                 callback(null, textures);
                 return;
             }
 
-            var onLoadAsset = function (err, texture) {
-                textures.push(texture);
-                count--;
-
+            var onTextureLoaded = function (err, texture) {
                 if (err) console.error(err);
-
-                if (count === 0)
+                textures.push(texture);
+                if (textures.length === count) {
                     callback(null, textures);
+                }
             };
 
-            for (i = 0; i < urls.length; i++)
-                self.loadFromUrl(urls[i], "texture", onLoadAsset);
+            var texParams = pc.StandardMaterial.TEXTURE_PARAMETERS;
+            for (var i = 0; i < texParams.length; i++) {
+                var path = data[texParams[i]];
+                if (path && typeof(path) === 'string') {
+                    count++;
+                    self.loadFromUrl(materialAsset.getAbsoluteUrl(path), "texture", onTextureLoaded);
+                }
+            }
+
+            if (count === 0) {
+                callback(null, textures);
+            }
         },
 
         /**
