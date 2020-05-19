@@ -1514,7 +1514,6 @@ Object.assign(pc, function () {
         onLibrariesLoaded: function () {
             this._librariesLoaded = true;
             this.systems.rigidbody.onLibraryLoaded();
-            this.systems.collision.onLibraryLoaded();
         },
 
         /**
