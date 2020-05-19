@@ -2,6 +2,11 @@
     uniform vec4 uScreenSize;
 #endif
 
+#ifdef MORPHING
+    uniform vec4 morpth_weights_a;
+    uniform vec4 morpth_weights_b;
+#endif
+
 mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH
         return getBoneMatrix(vertex_boneIndices);
@@ -35,6 +40,21 @@ vec4 getPosition() {
 
         localPos.xz *= -0.5; // move from -1;1 to -0.5;0.5
         localPos = localPos.xzy;
+    #endif
+
+    #ifdef MORPHING
+        #ifdef MORPHING_POS03
+            localPos.xyz += morpth_weights_a[0] * morph_pos0;
+            localPos.xyz += morpth_weights_a[1] * morph_pos1;
+            localPos.xyz += morpth_weights_a[2] * morph_pos2;
+            localPos.xyz += morpth_weights_a[3] * morph_pos3;
+        #endif
+        #ifdef MORPHING_POS47
+            localPos.xyz += morpth_weights_b[0] * morph_pos4;
+            localPos.xyz += morpth_weights_b[1] * morph_pos5;
+            localPos.xyz += morpth_weights_b[2] * morph_pos6;
+            localPos.xyz += morpth_weights_b[3] * morph_pos7;
+        #endif
     #endif
 
     vec4 posW = dModelMatrix * vec4(localPos, 1.0);

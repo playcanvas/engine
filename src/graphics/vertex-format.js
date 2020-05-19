@@ -1,15 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var _typeSize = [];
-    _typeSize[pc.TYPE_INT8] = 1;
-    _typeSize[pc.TYPE_UINT8] = 1;
-    _typeSize[pc.TYPE_INT16] = 2;
-    _typeSize[pc.TYPE_UINT16] = 2;
-    _typeSize[pc.TYPE_INT32] = 4;
-    _typeSize[pc.TYPE_UINT32] = 4;
-    _typeSize[pc.TYPE_FLOAT32] = 4;
-
     /**
      * @class
      * @name pc.VertexFormat
@@ -124,7 +115,7 @@ Object.assign(pc, function () {
 
         // calculate total size of the vertex
         this.size = description.reduce(function (total, desc) {
-            return total + Math.ceil(desc.components * _typeSize[desc.type] / 4) * 4;
+            return total + Math.ceil(desc.components * pc.typedArrayTypesByteSize[desc.type] / 4) * 4;
         }, 0);
 
         var offset = 0, elementSize;
@@ -132,7 +123,7 @@ Object.assign(pc, function () {
             var elementDesc = description[i];
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
-            elementSize = elementDesc.components * _typeSize[elementDesc.type];
+            elementSize = elementDesc.components * pc.typedArrayTypesByteSize[elementDesc.type];
             if (vertexCount) {
                 offset = pc.math.roundUp(offset, elementSize);
 

@@ -15,8 +15,8 @@ Object.assign(pc, function () {
      * @param {pc.Mat4} viewMatrix - The inverse of the world transformation matrix for the frustum.
      */
     var Frustum = function Frustum(projectionMatrix, viewMatrix) {
-        projectionMatrix = projectionMatrix || new pc.Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
-        viewMatrix = viewMatrix || new pc.Mat4();
+        projectionMatrix = projectionMatrix ? projectionMatrix.clone() : new pc.Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
+        viewMatrix = viewMatrix ? viewMatrix.clone() : new pc.Mat4();
 
         this.planes = [];
         for (var i = 0; i < 6; i++)
