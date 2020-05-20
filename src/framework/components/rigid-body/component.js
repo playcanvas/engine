@@ -594,7 +594,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.RigidBodyComponent#_getEntityTransform
          * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
-         * @param {Ammo.btTransform} transform - The ammo transform to write the entity transform to.
+         * @param {object} transform - The ammo transform to write the entity transform to.
          */
         _getEntityTransform: function (transform) {
             var pos = this.entity.getPosition();
