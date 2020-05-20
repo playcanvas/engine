@@ -78,7 +78,7 @@ Object.assign(pc, function () {
 
         _calculateAabb: function () {
 
-            this.aabb = new pc.BoundingBox(pc.Vec3.ZERO, pc.Vec3.ZERO);
+            this.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(0, 0, 0));
             var target;
 
             // calc bounding box of the relative change this morph can add
