@@ -205,11 +205,8 @@ Object.assign(pc, function () {
             if (!this.asset) return null;
 
             var modelAsset = this.system.app.assets.get(this.asset);
-            if (!modelAsset) return null;
 
-            var fileUrl = modelAsset.getFileUrl();
-            var dirUrl = pc.path.getDirectory(fileUrl);
-            return pc.path.join(dirUrl, path);
+            return modelAsset ? modelAsset.getAbsoluteUrl(path) : null;
         },
 
         _loadAndSetMeshInstanceMaterial: function (materialAsset, meshInstance, index) {

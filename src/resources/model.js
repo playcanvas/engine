@@ -131,9 +131,7 @@ Object.assign(pc, function () {
                         }
                     } else if (url) {
                         // url mapping
-                        var fileUrl = asset.getFileUrl();
-                        var dirUrl = pc.path.getDirectory(fileUrl);
-                        var path = pc.path.join(dirUrl, data.mapping[i].path);
+                        var path = asset.getAbsoluteUrl(data.mapping[i].path);
                         material = assets.getByUrl(path);
 
                         if (material) {
