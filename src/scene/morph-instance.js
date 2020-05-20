@@ -76,19 +76,26 @@ Object.assign(pc, function () {
 
             var targets = this.morph._targets;
 
-            // collect active targets
-            this._activeTargets.length = 0;
+            // collect active targets, reuse objects in _activeTargets array to avoid allocations
+            var activeCount = 0, activeTarget;
             var i, absWeight, epsilon = 0.00001;
             for (i = 0; i < targets.length; i++) {
                 absWeight = Math.abs(this.getWeight(i));
                 if (absWeight > epsilon) {
-                    this._activeTargets.push({
-                        absWeight: absWeight,
-                        weight: this.getWeight(i),
-                        target: targets[i]
-                    });
+
+                    // create new object if needed
+                    if (this._activeTargets.length <= activeCount) {
+                        this._activeTargets[activeCount] = {};
+                    }
+
+                    activeTarget = this._activeTargets[activeCount++];
+                    activeTarget.absWeight = absWeight;
+                    activeTarget.weight = this.getWeight(i);
+                    activeTarget.target = targets[i];
                 }
             }
+            this._activeTargets.length = activeCount;
+
 
             // if there's more active targets then rendering supports
             var maxActiveTargets = this.morph.maxActiveTargets;
