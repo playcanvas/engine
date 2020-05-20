@@ -10,14 +10,14 @@ Object.assign(pc, function () {
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
      * @classdesc Axis-Aligned Bounding Box.
-     * @param {pc.Vec3} [center] - Center of box. The constructor takes a copy of this parameter.
-     * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a copy of this parameter.
+     * @param {pc.Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
+     * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      * @property {pc.Vec3} center Center of box.
      * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
-        this.center = center ? center.clone() : new pc.Vec3(0, 0, 0);
-        this.halfExtents = halfExtents ? halfExtents.clone() : new pc.Vec3(0.5, 0.5, 0.5);
+        this.center = center || new pc.Vec3(0, 0, 0);
+        this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
     };

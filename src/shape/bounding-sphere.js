@@ -12,11 +12,11 @@ Object.assign(pc, function () {
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
      * var sphere = new pc.BoundingSphere();
-     * @param {pc.Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a copy of this parameter.
+     * @param {pc.Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
      * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
      */
     function BoundingSphere(center, radius) {
-        this.center = center ? center.clone() : new pc.Vec3(0, 0, 0);
+        this.center = center || new pc.Vec3(0, 0, 0);
         this.radius = radius === undefined ? 0.5 : radius;
     }
 

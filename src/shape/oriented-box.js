@@ -11,12 +11,12 @@ Object.assign(pc, function () {
      * @classdesc Oriented Box.
      * @property {pc.Mat4} [worldTransform] The world transform of the OBB.
      * @param {pc.Mat4} [worldTransform] - Transform that has the orientation and position of the box. Scale is assumed to be one.
-     * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a copy of this parameter.
+     * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
      */
     var OrientedBox = function OrientedBox(worldTransform, halfExtents) {
-        this.halfExtents = halfExtents ? halfExtents.clone() : new pc.Vec3(0.5, 0.5, 0.5);
+        this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
 
-        worldTransform = worldTransform ? worldTransform.clone() : tmpMat4.setIdentity();
+        worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
 
         this._worldTransform = worldTransform.clone(); // temp - currently only used in the worldTransform accessor, see future PR for more use
