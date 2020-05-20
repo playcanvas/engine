@@ -394,8 +394,8 @@ Object.assign(pc, function () {
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
 
-        this.morphWeightsA = scope.resolve('morpth_weights_a');
-        this.morphWeightsB = scope.resolve('morpth_weights_b');
+        this.morphWeightsA = scope.resolve('morph_weights_a');
+        this.morphWeightsB = scope.resolve('morph_weights_b');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');

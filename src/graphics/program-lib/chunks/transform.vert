@@ -3,8 +3,8 @@
 #endif
 
 #ifdef MORPHING
-    uniform vec4 morpth_weights_a;
-    uniform vec4 morpth_weights_b;
+    uniform vec4 morph_weights_a;
+    uniform vec4 morph_weights_b;
 #endif
 
 mat4 getModelMatrix() {
@@ -44,16 +44,16 @@ vec4 getPosition() {
 
     #ifdef MORPHING
         #ifdef MORPHING_POS03
-            localPos.xyz += morpth_weights_a[0] * morph_pos0;
-            localPos.xyz += morpth_weights_a[1] * morph_pos1;
-            localPos.xyz += morpth_weights_a[2] * morph_pos2;
-            localPos.xyz += morpth_weights_a[3] * morph_pos3;
+            localPos.xyz += morph_weights_a[0] * morph_pos0;
+            localPos.xyz += morph_weights_a[1] * morph_pos1;
+            localPos.xyz += morph_weights_a[2] * morph_pos2;
+            localPos.xyz += morph_weights_a[3] * morph_pos3;
         #endif
         #ifdef MORPHING_POS47
-            localPos.xyz += morpth_weights_b[0] * morph_pos4;
-            localPos.xyz += morpth_weights_b[1] * morph_pos5;
-            localPos.xyz += morpth_weights_b[2] * morph_pos6;
-            localPos.xyz += morpth_weights_b[3] * morph_pos7;
+            localPos.xyz += morph_weights_b[0] * morph_pos4;
+            localPos.xyz += morph_weights_b[1] * morph_pos5;
+            localPos.xyz += morph_weights_b[2] * morph_pos6;
+            localPos.xyz += morph_weights_b[3] * morph_pos7;
         #endif
     #endif
 
