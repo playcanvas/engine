@@ -386,6 +386,12 @@ Object.assign(pc, function () {
             }
 
             return sq;
+        },
+
+        _expand: function (expandMin, expandMax) {
+            tmpVecA.add2(this.getMin(), expandMin);
+            tmpVecB.add2(this.getMax(), expandMax);
+            this.setMinMax(tmpVecA, tmpVecB);
         }
     });
 

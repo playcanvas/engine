@@ -26,6 +26,7 @@ var categories = [
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
+            "mesh-morph",
             "model-asset",
             "model-box",
             "model-outline",

@@ -533,6 +533,7 @@
          */
         SPECOCC_GLOSSDEPENDENT: 2,
 
+        // 16 bits for shader defs
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
         SHADERDEF_UV0: 4,
@@ -543,6 +544,8 @@
         SHADERDEF_DIRLM: 128,
         SHADERDEF_SCREENSPACE: 256,
         SHADERDEF_TANGENTS: 512,
+        SHADERDEF_MORPH_POSITION: 1024,
+        SHADERDEF_MORPH_NORMAL: 2048,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,

@@ -2058,38 +2058,46 @@ Object.assign(pc, function () {
                     if (element !== null) {
                         // Retrieve the vertex buffer that contains this element
                         vertexBuffer = this.vertexBuffers[element.stream];
-                        vbOffset = this.vbOffsets[element.stream] || 0;
+                        if (vertexBuffer) {
+                            vbOffset = this.vbOffsets[element.stream] || 0;
 
-                        // Set the active vertex buffer object
-                        bufferId = vertexBuffer.bufferId;
-                        if (this.boundBuffer !== bufferId) {
-                            gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-                            this.boundBuffer = bufferId;
-                        }
-
-                        // Hook the vertex buffer to the shader program
-                        locationId = attribute.locationId;
-                        if (!this.enabledAttributes[locationId]) {
-                            gl.enableVertexAttribArray(locationId);
-                            this.enabledAttributes[locationId] = true;
-                        }
-                        gl.vertexAttribPointer(
-                            locationId,
-                            element.numComponents,
-                            this.glType[element.dataType],
-                            element.normalize,
-                            element.stride,
-                            element.offset + vbOffset
-                        );
-
-                        if (element.stream === 1 && numInstances > 0) {
-                            if (!this.instancedAttribs[locationId]) {
-                                gl.vertexAttribDivisor(locationId, 1);
-                                this.instancedAttribs[locationId] = true;
+                            // Set the active vertex buffer object
+                            bufferId = vertexBuffer.bufferId;
+                            if (this.boundBuffer !== bufferId) {
+                                gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+                                this.boundBuffer = bufferId;
                             }
-                        } else if (this.instancedAttribs[locationId]) {
-                            gl.vertexAttribDivisor(locationId, 0);
-                            this.instancedAttribs[locationId] = false;
+
+                            // Hook the vertex buffer to the shader program
+                            locationId = attribute.locationId;
+                            if (!this.enabledAttributes[locationId]) {
+                                gl.enableVertexAttribArray(locationId);
+                                this.enabledAttributes[locationId] = true;
+                            }
+                            gl.vertexAttribPointer(
+                                locationId,
+                                element.numComponents,
+                                this.glType[element.dataType],
+                                element.normalize,
+                                element.stride,
+                                element.offset + vbOffset
+                            );
+
+                            if (element.stream === 1 && numInstances > 0) {
+                                if (!this.instancedAttribs[locationId]) {
+                                    gl.vertexAttribDivisor(locationId, 1);
+                                    this.instancedAttribs[locationId] = true;
+                                }
+                            } else if (this.instancedAttribs[locationId]) {
+                                gl.vertexAttribDivisor(locationId, 0);
+                                this.instancedAttribs[locationId] = false;
+                            }
+                        }
+                    } else {
+                        // disable the attribute (shader will get default value 0, 0, 0, 1)
+                        if (this.enabledAttributes[attribute.locationId]) {
+                            gl.disableVertexAttribArray(attribute.locationId);
+                            this.enabledAttributes[attribute.locationId] = false;
                         }
                     }
                 }
@@ -2972,17 +2980,33 @@ Object.assign(pc, function () {
                 this.vbOffsets[stream] = vbOffset;
 
                 // Push each vertex element in scope
-                var vertexFormat = vertexBuffer.getFormat();
-                var i = 0;
-                var elements = vertexFormat.elements;
-                var numElements = elements.length;
-                while (i < numElements) {
-                    var vertexElement = elements[i++];
-                    vertexElement.stream = stream;
-                    vertexElement.scopeId.setValue(vertexElement);
+                if (vertexBuffer) {
+                    var vertexFormat = vertexBuffer.getFormat();
+                    var i = 0;
+                    var elements = vertexFormat.elements;
+                    var numElements = elements.length;
+                    while (i < numElements) {
+                        var vertexElement = elements[i++];
+                        vertexElement.stream = stream;
+                        vertexElement.scopeId.setValue(vertexElement);
+                    }
                 }
 
                 this.attributesInvalidated = true;
+            }
+        },
+
+        // Function to disable vertex elements coming from vertex buffer and using constant default value instead (0,0,0,1)
+        // this is similar to setVertexBuffer with null vertex buffer, where access to vertexFormat is replaced by providing list of element semantics
+        disableVertexBufferElements: function (elementNames) {
+
+            for (var i = 0; i < elementNames.length; i++) {
+                // Resolve the ScopeId for the attribute name
+                var scopeId = this.scope.resolve(elementNames[i]);
+                if (scopeId.value) {
+                    this.attributesInvalidated = true;
+                    scopeId.setValue(null);
+                }
             }
         },
 
