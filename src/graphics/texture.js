@@ -49,6 +49,7 @@ Object.assign(pc, function () {
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
      * @param {boolean} [options.rgbm] - Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {boolean} [options.rgbe] - Specifies whther the texture contains RGBE-encoded HDR data. Defaults to false.
      * @param {boolean} [options.swizzleGGGR] - Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
      * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
      * is compressed. Defaults to false.
@@ -100,8 +101,7 @@ Object.assign(pc, function () {
         this._depth = 1;
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
-        this.rgbm = false;
-        this.swizzleGGGR = false;
+        this.encoding = pc.TEXTUREENCODING_NONE;
 
         this._cubemap = false;
         this._volume = false;
@@ -133,8 +133,14 @@ Object.assign(pc, function () {
             this._height = (options.height !== undefined) ? options.height : this._height;
 
             this._format = (options.format !== undefined) ? options.format : this._format;
-            this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
-            this.swizzleGGGR = (options.swizzleGGGR !== undefined) ? options.swizzleGGGR : this.swizzleGGGR;
+
+            if (options.rgbm !== undefined) {
+                this.rgbm = options.rgbm;
+            } else if (options.rgbe !== undefined) {
+                this.rgbe = options.rgbe;
+            } else if (options.swizzleGGGR !== undefined) {
+                this.swizzleGGGR = options.swizzleGGGR;
+            }
 
             if (options.mipmaps !== undefined) {
                 this._mipmaps = options.mipmaps;
@@ -542,6 +548,33 @@ Object.assign(pc, function () {
     Object.defineProperty(Texture.prototype, 'pot',  {
         get: function () {
             return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        }
+    });
+
+    Object.defineProperty(Texture.prototype, 'rgbm', {
+        get: function () {
+            return this.encoding === pc.TEXTUREENCODING_RGBM;
+        },
+        set: function (rgbm) {
+            this.encoding = rgbm ? pc.TEXTUREENCODING_RGBM : pc.TEXTUREENCODING_NONE;
+        }
+    });
+
+    Object.defineProperty(Texture.prototype, 'rgbe', {
+        get: function () {
+            return this.encoding === pc.TEXTUREENCODING_RGBE;
+        },
+        set: function (rgbe) {
+            this.encoding = rgbe ? pc.TEXTUREENCODING_RGBE : pc.TEXTUREENCODING_NONE;
+        }
+    });
+
+    Object.defineProperty(Texture.prototype, 'swizzleGGGR', {
+        get: function () {
+            return this.encoding === pc.TEXTUREENCODING_SWIZZLEGGGR;
+        },
+        set: function (swizzleGGGR) {
+            this.encoding = swizzleGGGR ? pc.TEXTUREENCODING_SWIZZLEGGGR : pc.TEXTUREENCODING_NONE;
         }
     });
 

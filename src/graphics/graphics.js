@@ -1010,6 +1010,14 @@
          */
         TEXTURELOCK_WRITE: 2,
 
+        /**
+         * @constant
+         */
+        TEXTUREENCODING_NONE: 1,
+        TEXTUREENCODING_RGBM: 2,
+        TEXTUREENCODING_RGBE: 3,
+        TEXTUREENCODING_SWIZZLEGGGR: 4,
+
         TEXHINT_NONE: 0,
         TEXHINT_SHADOWMAP: 1,
         TEXHINT_ASSET: 2,
