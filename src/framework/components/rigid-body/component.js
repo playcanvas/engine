@@ -185,14 +185,7 @@ Object.assign(pc, function () {
 
                 var mass = this.type === pc.BODYTYPE_DYNAMIC ? this.mass : 0;
 
-                var pos = entity.getPosition();
-                var rot = entity.getRotation();
-
-                ammoVec1.setValue(pos.x, pos.y, pos.z);
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-
-                ammoTransform.setOrigin(ammoVec1);
-                ammoTransform.setRotation(ammoQuat);
+                this._getEntityTransform(ammoTransform);
 
                 var body = this.system.createBody(mass, shape, ammoTransform);
 
@@ -251,6 +244,8 @@ Object.assign(pc, function () {
             if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
                 var body = this.body;
                 if (body) {
+                    this.system.addBody(body, this.group, this.mask);
+
                     switch (this.type) {
                         case pc.BODYTYPE_DYNAMIC:
                             this.system._dynamic.push(this);
@@ -270,7 +265,6 @@ Object.assign(pc, function () {
                         this.system._compounds.push(this.entity.collision);
                     }
 
-                    this.system.addBody(body, this.group, this.mask);
                     body.activate();
 
                     this.data.simulationEnabled = true;
@@ -595,6 +589,23 @@ Object.assign(pc, function () {
             return (this.type === pc.BODYTYPE_KINEMATIC);
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponent#_getEntityTransform
+         * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
+         * @param {object} transform - The ammo transform to write the entity transform to.
+         */
+        _getEntityTransform: function (transform) {
+            var pos = this.entity.getPosition();
+            var rot = this.entity.getRotation();
+
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+
+            transform.setOrigin(ammoVec1);
+            transform.setRotation(ammoQuat);
+        },
 
         /**
          * @private
@@ -607,8 +618,7 @@ Object.assign(pc, function () {
         syncEntityToBody: function () {
             var body = this.data.body;
             if (body) {
-                var wtm = this.entity.getWorldTransform();
-                ammoTransform.setFromOpenGLMatrix(wtm.data);
+                this._getEntityTransform(ammoTransform);
 
                 body.setWorldTransform(ammoTransform);
 
@@ -660,8 +670,7 @@ Object.assign(pc, function () {
             var body = this.data.body;
             var motionState = body.getMotionState();
             if (motionState) {
-                var wtm = this.entity.getWorldTransform();
-                ammoTransform.setFromOpenGLMatrix(wtm.data);
+                this._getEntityTransform(ammoTransform);
                 motionState.setWorldTransform(ammoTransform);
             }
         },
