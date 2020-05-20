@@ -475,7 +475,7 @@ Object.assign(pc, function () {
 
             var asset = self.getByUrl(url);
             if (!asset) {
-                asset = new pc.Asset(name, type, file, {});
+                asset = new pc.Asset(name, type, file);
                 self.add(asset);
             }
 
