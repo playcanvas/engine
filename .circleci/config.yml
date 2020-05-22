@@ -12,8 +12,7 @@ jobs:
     steps:
       - checkout
 
-      - node_version:
-          name: node-version
+      - run:
           command: 'node --version'
 
       - run:
