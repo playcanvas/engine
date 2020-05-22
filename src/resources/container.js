@@ -127,8 +127,33 @@ Object.assign(pc, function () {
             var data = container.data;
             var i;
 
+            /**
+             * TODO:
+             * - data.nodes should have all nodes as pc.Entity
+             * - data.models should have all models as pc.Model + metadata to know which node they are assigned to
+             * - same as above for animations
+             * - create assets for all models, animations etc
+             * - assign model/animation components to root entity
+             *
+             * nodes: pc.Entity[]
+             * models: {model: pc.Model, node: number}[]
+             * animations: {animation: pc.AnimComponent, node: number}[]
+             * scene: {node: number}
+             * scenes: {node: number}[]
+             */
+
+            console.log(data.nodes);
+
             // create model asset
             var model = createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
+
+            var entity = new pc.Entity();
+            entity.addComponent('model', {
+                type: "asset",
+                asset: model
+            });
+
+            var entityAsset = createAsset('entity', entity, 0);
 
             // create material assets
             var materials = [];
@@ -149,7 +174,7 @@ Object.assign(pc, function () {
             }
 
             container.data = null;              // since assets are created, release GLB data
-            container.model = model;
+            container.model = entityAsset;
             container.materials = materials;
             container.textures = textures;
             container.animations = animations;
