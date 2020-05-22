@@ -60,8 +60,8 @@
     "build:extras": "cd build && node build.js -l 1 -t extras",
     "build:all": "npm run build && npm run build:debug && npm run build:profiler && npm run build:min && npm run build:extras",
     "docs": "jsdoc -c conf-api.json",
-    "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000",
-    "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",
+    "serve": "http-server build/output -a localhost -p 51000",
+    "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas.js --js_output_file build/output/playcanvas.min.js",
     "uglify": "uglifyjs build/output/playcanvas.js --compress --mangle --output build/output/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz",
     "test": "karma start tests/karma.conf.js -- --single-run",
@@ -70,7 +70,7 @@
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
     "tsd": "jsdoc -c conf-tsd.json",
-    "lint": "eslint src examples/assets/scripts tools"
+    "lint": "eslint examples/assets/scripts extras src tools"
   },
   "engines": {
     "node": ">= 0.6.12"
