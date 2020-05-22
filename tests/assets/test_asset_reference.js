@@ -26,7 +26,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/examples/assets/textures/heart.png'
+            url: 'base/tests/test-assets/sprite/red-atlas.png'
         });
 
         reg.id = asset.id;
@@ -50,7 +50,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/examples/assets/textures/heart.png'
+            url: 'base/tests/test-assets/sprite/red-atlas.png'
         });
 
         reg.id = asset.id;
@@ -62,6 +62,7 @@ describe('pc.AssetReference', function () {
                 expect(this.add.args[0][1]).to.equal(this.parent);
                 expect(this.add.args[0][2].id).to.equal(asset.id);
 
+            console.log('BLAH1');
                 done();
             }.bind(this), 0);
         }, this);
@@ -75,7 +76,7 @@ describe('pc.AssetReference', function () {
         });
 
         var asset = new pc.Asset("Reference Test", "texture", {
-            url: 'base/examples/assets/textures/heart.png'
+            url: 'base/tests/test-assets/sprite/red-atlas.png'
         });
 
         reg.id = asset.id;
