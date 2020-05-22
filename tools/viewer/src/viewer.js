@@ -139,6 +139,8 @@ var Viewer = function (canvas) {
     this.debugSkeleton = new DebugLines(app, camera);
     this.debugNormals = new DebugLines(app, camera);
 
+    this.miniStats = new pc.MiniStats(app);
+
     function getUrlVars() {
         var vars = {};
         window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
@@ -418,10 +420,12 @@ Object.assign(Viewer.prototype, {
                 var morphInstances = entity.model.model.morphInstances;
                 // make a list of all the morph instance target names
                 var morphMap = { };
+                var morphs = [];
                 morphInstances.forEach(function (morphInstance) {
                     morphInstance.morph._targets.forEach(function (target, targetIndex) {
                         if (!morphMap.hasOwnProperty(target.name)) {
                             morphMap[target.name] = [{ instance: morphInstance, targetIndex: targetIndex }];
+                            morphs.push({ name: target.name, weight: target.defaultWeight });
                         } else {
                             morphMap[target.name].push({ instance: morphInstance, targetIndex: targetIndex });
                         }
@@ -429,7 +433,7 @@ Object.assign(Viewer.prototype, {
                 });
 
                 this.morphMap = morphMap;
-                onMorphTargetsLoaded(Object.keys(morphMap));
+                onMorphTargetsLoaded(morphs);
             }
 
             this.app.root.addChild(entity);

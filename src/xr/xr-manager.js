@@ -123,9 +123,9 @@ Object.assign(pc, function () {
 
         this.input = new pc.XrInput(this);
         this.hitTest = new pc.XrHitTest(this);
+        this.lightEstimation = new pc.XrLightEstimation(this);
 
         this._camera = null;
-        this._pose = null;
         this.views = [];
         this.viewsPool = [];
         this._localPosition = new pc.Vec3();
@@ -259,8 +259,14 @@ Object.assign(pc, function () {
         // 3. probably immersive-vr will fail to be created
         // 4. call makeXRCompatible, very likely will lead to context loss
 
+        var optionalFeatures = [];
+
+        if (type === pc.XRTYPE_AR)
+            optionalFeatures.push('light-estimation');
+
         navigator.xr.requestSession(type, {
-            requiredFeatures: [spaceType]
+            requiredFeatures: [spaceType],
+            optionalFeatures: optionalFeatures
         }).then(function (session) {
             self._onSessionStart(session, spaceType, callback);
         }).catch(function (ex) {
@@ -356,7 +362,6 @@ Object.assign(pc, function () {
         var onEnd = function () {
             self._session = null;
             self._referenceSpace = null;
-            self._pose = null;
             self.views = [];
             self._width = 0;
             self._height = 0;
@@ -374,11 +379,11 @@ Object.assign(pc, function () {
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
 
+            if (! failed) self.fire('end');
+
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
             self.app.tick();
-
-            if (! failed) self.fire('end');
         };
 
         session.addEventListener('end', onEnd);
@@ -446,8 +451,8 @@ Object.assign(pc, function () {
             this.app.graphicsDevice.setResolution(width, height);
         }
 
-        this._pose = frame.getViewerPose(this._referenceSpace);
-        lengthNew = this._pose ? this._pose.views.length : 0;
+        var pose = frame.getViewerPose(this._referenceSpace);
+        lengthNew = pose ? pose.views.length : 0;
 
         if (lengthNew > this.views.length) {
             // add new views into list
@@ -477,18 +482,18 @@ Object.assign(pc, function () {
             }
         }
 
-        if (this._pose) {
+        if (pose) {
             // reset position
-            var posePosition = this._pose.transform.position;
-            var poseOrientation = this._pose.transform.orientation;
+            var posePosition = pose.transform.position;
+            var poseOrientation = pose.transform.orientation;
             this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
             this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
             layer = frame.session.renderState.baseLayer;
 
-            for (i = 0; i < this._pose.views.length; i++) {
+            for (i = 0; i < pose.views.length; i++) {
                 // for each view, calculate matrices
-                viewRaw = this._pose.views[i];
+                viewRaw = pose.views[i];
                 view = this.views[i];
                 viewport = layer.getViewport(viewRaw);
 
@@ -509,8 +514,14 @@ Object.assign(pc, function () {
 
         this.input.update(frame);
 
-        if (this._type === pc.XRTYPE_AR && this.hitTest.supported)
-            this.hitTest.update(frame);
+        if (this._type === pc.XRTYPE_AR) {
+            if (this.hitTest.supported) {
+                this.hitTest.update(frame);
+            }
+            if (this.lightEstimation.supported) {
+                this.lightEstimation.update(frame);
+            }
+        }
 
         this.fire('update');
     };

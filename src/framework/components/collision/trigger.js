@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
 
-    var ammoVec1, ammoQuat;
+    var ammoVec1, ammoQuat, ammoTransform;
 
     /**
      * @private
@@ -20,6 +20,7 @@ Object.assign(pc, function () {
         if (typeof Ammo !== 'undefined' && ! ammoVec1) {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
+            ammoTransform = new Ammo.btTransform();
         }
 
         this.initialize(data);
@@ -37,29 +38,16 @@ Object.assign(pc, function () {
 
                 var mass = 1;
 
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                shape.calculateLocalInertia(mass, localInertia);
-
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
+
+                ammoVec1.setValue(pos.x, pos.y, pos.z);
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
 
-                var startTransform = new Ammo.btTransform();
-                startTransform.setIdentity();
-                var origin = startTransform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
-                startTransform.setRotation(ammoQuat);
+                ammoTransform.setOrigin(ammoVec1);
+                ammoTransform.setRotation(ammoQuat);
 
-                var motionState = new Ammo.btDefaultMotionState(startTransform);
-                var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-
-                Ammo.destroy(localInertia);
-                Ammo.destroy(origin);
-                Ammo.destroy(startTransform);
-
-                var body = new Ammo.btRigidBody(bodyInfo);
-                this.body = body;
-                Ammo.destroy(bodyInfo);
+                var body = this.app.systems.rigidbody.createBody(mass, shape, ammoTransform);
 
                 body.setRestitution(0);
                 body.setFriction(0);
@@ -71,6 +59,8 @@ Object.assign(pc, function () {
                 body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_NORESPONSE_OBJECT);
                 body.entity = entity;
 
+                this.body = body;
+
                 if (this.component.enabled && entity.enabled) {
                     this.enable();
                 }
@@ -78,51 +68,48 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (this.body) {
-                this.app.systems.rigidbody.removeBody(this.body);
-                Ammo.destroy(this.body);
-            }
+            var body = this.body;
+            if (!body) return;
+
+            this.disable();
+
+            this.app.systems.rigidbody.destroyBody(body);
         },
 
-        syncEntityToBody: function () {
+        updateTransform: function () {
+            var wtm = this.entity.getWorldTransform();
+            ammoTransform.setFromOpenGLMatrix(wtm.data);
+
             var body = this.body;
-            if (body) {
-                var position = this.entity.getPosition();
-                var rotation = this.entity.getRotation();
-
-                var transform = body.getWorldTransform();
-                var origin = transform.getOrigin();
-                origin.setValue(position.x, position.y, position.z);
-
-                ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
-                transform.setRotation(ammoQuat);
-                body.activate();
-
-                Ammo.destroy(origin);
-                Ammo.destroy(transform);
-            }
+            body.setWorldTransform(ammoTransform);
+            body.activate();
         },
 
         enable: function () {
             var body = this.body;
             if (!body) return;
 
-            this.app.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
+            var systems = this.app.systems;
+            systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
+            systems.rigidbody._triggers.push(this);
 
             // set the body's activation state to active so that it is
             // simulated properly again
             body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
-            body.activate();
-
-            this.syncEntityToBody();
+            this.updateTransform();
         },
 
         disable: function () {
             var body = this.body;
             if (!body) return;
 
-            this.app.systems.rigidbody.removeBody(body);
+            var systems = this.app.systems;
+            var idx = systems.rigidbody._triggers.indexOf(this);
+            if (idx > -1) {
+                systems.rigidbody._triggers.splice(idx, 1);
+            }
+            systems.rigidbody.removeBody(body);
 
             // set the body's activation state to disable simulation so
             // that it properly deactivates after we remove it from the physics world

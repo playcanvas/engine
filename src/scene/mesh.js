@@ -35,16 +35,23 @@ Object.assign(pc, function () {
             this.indices = null;
         },
 
+        _validateVertexCount: function (count, semantic) {
+
+            // #ifdef DEBUG
+            if (this.vertexCount !== count) {
+                console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
+            }
+            // #endif
+        },
+
         // function called when vertex stream is requested to be updated, and validates / updates currently used vertex count
         _changeVertexCount: function (count, semantic) {
 
             // update vertex count and validate it with existing streams
             if (!this.vertexCount) {
                 this.vertexCount = count;
-            } else if (this.vertexCount !== count) {
-                // #ifdef DEBUG
-                console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
-                // #endif
+            } else {
+                this._validateVertexCount(count, semantic);
             }
         }
     });
@@ -101,6 +108,11 @@ Object.assign(pc, function () {
      * mesh.setIndices(indices);
      * mesh.update();
      * ~~~
+     *
+     * This example demonstrated that vertex attributes such as position and normals, and also indices can be provided using Arrays ([]) and also Typed Arrays
+     * (Float32Array and similar). Note that typed arrays have higher performance, and are generaly recommended for per-frame operations or larger meshes,
+     * but their construction using new operator is costly operation. If you only need to operate on small number of vertices or indices, consider using the
+     * Arrays instead to avoid Type Array allocation overhead.
      *
      * Follow these links for more complex examples showing the functionality.
      * * {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
@@ -163,23 +175,21 @@ Object.assign(pc, function () {
         this.boneAabb = null;
     };
 
-    Object.defineProperty(Mesh.prototype, 'aabb', {
-        get: function () {
-            return this.morph ? this.morph.aabb : this._aabb;
-        },
-        set: function (aabb) {
-            if (this.morph) {
-                this._aabb = this.morph._baseAabb = aabb;
-                this.morph._calculateAabb();
-            } else {
+
+    Object.defineProperties(Mesh.prototype, {
+        'aabb': {
+            get: function () {
+                return this._aabb;
+            },
+            set: function (aabb) {
                 this._aabb = aabb;
             }
-        }
-    });
+        },
 
-    Object.defineProperty(Mesh.prototype, 'refCount', {
-        get: function () {
-            return this._refCount;
+        'refCount': {
+            get: function () {
+                return this._refCount;
+            }
         }
     });
 
@@ -215,6 +225,119 @@ Object.assign(pc, function () {
 
             this.indexBuffer.length = 0;
             this._geometryData = null;
+        },
+
+        // initializes local bounding boxes for each bone based on vertices affected by the bone
+        // if morph targets are provided, it also adjusts local bone bounding boxes by maximum morph displacement
+        _initBoneAabbs: function (morphTargets) {
+
+            this.boneAabb = [];
+            this.boneUsed = [];
+            var numVerts = this.vertexBuffer.numVertices;
+            var i, j, k, l;
+            var x, y, z;
+            var bMax, bMin;
+            var boneMin = [];
+            var boneMax = [];
+            var boneUsed = this.boneUsed;
+            var numBones = this.skin.boneNames.length;
+            var aabb;
+            var boneWeight, boneIndex;
+            var minMorphX, minMorphY, minMorphZ;
+            var maxMorphX, maxMorphY, maxMorphZ;
+            var dx, dy, dz;
+            var target;
+
+            // start with empty bone bounds
+            for (i = 0; i < numBones; i++) {
+                boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+                boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            }
+
+            // access to mesh from vertex buffer
+            var iterator = new pc.VertexIterator(this.vertexBuffer);
+            var posElement = iterator.element[pc.SEMANTIC_POSITION];
+            var weightsElement = iterator.element[pc.SEMANTIC_BLENDWEIGHT];
+            var indicesElement = iterator.element[pc.SEMANTIC_BLENDINDICES];
+
+
+            // Find bone AABBs of attached vertices
+            for (j = 0; j < numVerts; j++) {
+                for (k = 0; k < 4; k++) {
+                    boneWeight = weightsElement.array[weightsElement.index + k];
+                    if (boneWeight > 0) {
+                        boneIndex = indicesElement.array[indicesElement.index + k];
+                        boneUsed[boneIndex] = true;
+
+                        x = posElement.array[posElement.index];
+                        y = posElement.array[posElement.index + 1];
+                        z = posElement.array[posElement.index + 2];
+
+                        // adjust bounds of a bone by the vertex
+                        bMax = boneMax[boneIndex];
+                        bMin = boneMin[boneIndex];
+
+                        if (bMin.x > x) bMin.x = x;
+                        if (bMin.y > y) bMin.y = y;
+                        if (bMin.z > z) bMin.z = z;
+
+                        if (bMax.x < x) bMax.x = x;
+                        if (bMax.y < y) bMax.y = y;
+                        if (bMax.z < z) bMax.z = z;
+
+                        if (morphTargets) {
+
+                            // find maximum displacement of the vertex by all targets
+                            minMorphX = maxMorphX = x;
+                            minMorphY = maxMorphY = y;
+                            minMorphZ = maxMorphZ = z;
+
+                            // morph this vertex by all morph targets
+                            for (l = 0; l < morphTargets.length; l++) {
+                                target = morphTargets[l];
+
+                                dx = target.deltaPositions[j * 3];
+                                dy = target.deltaPositions[j * 3 + 1];
+                                dz = target.deltaPositions[j * 3 + 2];
+
+                                if (dx < 0) {
+                                    minMorphX += dx;
+                                } else {
+                                    maxMorphX += dx;
+                                }
+
+                                if (dy < 0) {
+                                    minMorphY += dy;
+                                } else {
+                                    maxMorphY += dy;
+                                }
+
+                                if (dz < 0) {
+                                    minMorphZ += dz;
+                                } else {
+                                    maxMorphZ += dz;
+                                }
+                            }
+
+                            if (bMin.x > minMorphX) bMin.x = minMorphX;
+                            if (bMin.y > minMorphY) bMin.y = minMorphY;
+                            if (bMin.z > minMorphZ) bMin.z = minMorphZ;
+
+                            if (bMax.x < maxMorphX) bMax.x = maxMorphX;
+                            if (bMax.y < maxMorphY) bMax.y = maxMorphY;
+                            if (bMax.z < maxMorphZ) bMax.z = maxMorphZ;
+                        }
+                    }
+                }
+                iterator.next();
+            }
+
+            // store bone bounding boxes
+            for (i = 0; i < numBones; i++) {
+                aabb = new pc.BoundingBox();
+                aabb.setMinMax(boneMin[i], boneMax[i]);
+                this.boneAabb.push(aabb);
+            }
         },
 
         // when mesh API to modify vertex / index data are used, this allocates structure to store the data

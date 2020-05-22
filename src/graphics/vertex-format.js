@@ -1,15 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var _typeSize = [];
-    _typeSize[pc.TYPE_INT8] = 1;
-    _typeSize[pc.TYPE_UINT8] = 1;
-    _typeSize[pc.TYPE_INT16] = 2;
-    _typeSize[pc.TYPE_UINT16] = 2;
-    _typeSize[pc.TYPE_INT32] = 4;
-    _typeSize[pc.TYPE_UINT32] = 4;
-    _typeSize[pc.TYPE_FLOAT32] = 4;
-
     /**
      * @class
      * @name pc.VertexFormat
@@ -124,7 +115,7 @@ Object.assign(pc, function () {
 
         // calculate total size of the vertex
         this.size = description.reduce(function (total, desc) {
-            return total + Math.ceil(desc.components * _typeSize[desc.type] / 4) * 4;
+            return total + Math.ceil(desc.components * pc.typedArrayTypesByteSize[desc.type] / 4) * 4;
         }, 0);
 
         var offset = 0, elementSize;
@@ -132,7 +123,7 @@ Object.assign(pc, function () {
             var elementDesc = description[i];
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
-            elementSize = elementDesc.components * _typeSize[elementDesc.type];
+            elementSize = elementDesc.components * pc.typedArrayTypesByteSize[elementDesc.type];
             if (vertexCount) {
                 offset = pc.math.roundUp(offset, elementSize);
 
@@ -177,6 +168,8 @@ Object.assign(pc, function () {
         if (vertexCount) {
             this.verticesByteSize = offset;
         }
+
+        this.batchingHash = this._evaluateBatchingHash();
     };
 
     VertexFormat.init = function (graphicsDevice) {
@@ -204,6 +197,32 @@ Object.assign(pc, function () {
                 return this._defaultInstancingFormat;
             };
         }())
+    });
+
+    Object.assign(VertexFormat.prototype, {
+
+        // evaluates hash value for the format allowing fast compare of batching compatibility
+        _evaluateBatchingHash: function () {
+
+            // create string description of each element that is relevant for batching
+            var stringElement, stringElements = [];
+            var i, len = this.elements.length, element;
+            for (i = 0; i < len; i++) {
+                element = this.elements[i];
+
+                stringElement = element.name;
+                stringElement += element.dataType;
+                stringElement += element.numComponents;
+                stringElement += element.normalize;
+
+                stringElements.push(stringElement);
+            }
+
+            // sort them alphabetically to make hash order independent
+            stringElements.sort();
+
+            return pc.hashCode(stringElements.join());
+        }
     });
 
     return {

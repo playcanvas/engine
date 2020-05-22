@@ -275,7 +275,7 @@ describe("pc.ScriptComponent", function () {
                 console.error(err);
             }
 
-            app.loadScene('base/tests/framework/components/script/scene1.json', function () {
+            app.scenes.loadScene('base/tests/framework/components/script/scene1.json', function () {
                 app.start();
                 done();
             });
@@ -1878,7 +1878,7 @@ describe("pc.ScriptComponent", function () {
         app.root.children[0].destroy();
 
         window.initializeCalls.length = 0;
-        app.loadScene('base/tests/framework/components/script/scene2.json', function () {
+        app.scenes.loadScene('base/tests/framework/components/script/scene2.json', function () {
             var e = app.root.findByName('A');
             var other = app.root.findByName('B');
 

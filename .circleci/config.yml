@@ -1,7 +1,4 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -13,8 +10,10 @@ jobs:
       - checkout
 
       - run:
-          name: update-npm
-          command: 'sudo npm install -g npm@latest'
+          name: "Update Node.js and npm"
+          command: |
+            curl -sSL "https://nodejs.org/dist/v11.10.0/node-v11.10.0-linux-x64.tar.xz" | sudo tar --strip-components=2 -xJ -C /usr/local/bin/ node-v11.10.0-linux-x64/bin/node
+            curl https://www.npmjs.com/install.sh | sudo bash
 
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}

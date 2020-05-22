@@ -46,7 +46,11 @@ Object.assign(pc, function () {
             };
 
             if (url.load.startsWith('blob:')) {
-                options.responseType = pc.Http.ResponseType.JSON;
+                if (pc.path.getExtension(url.original).toLowerCase() === '.glb') {
+                    options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+                } else {
+                    options.responseType = pc.Http.ResponseType.JSON;
+                }
             }
 
             pc.http.get(url.load, options, function (err, response) {
@@ -127,9 +131,7 @@ Object.assign(pc, function () {
                         }
                     } else if (url) {
                         // url mapping
-                        var fileUrl = asset.getFileUrl();
-                        var dirUrl = pc.path.getDirectory(fileUrl);
-                        var path = pc.path.join(dirUrl, data.mapping[i].path);
+                        var path = asset.getAbsoluteUrl(data.mapping[i].path);
                         material = assets.getByUrl(path);
 
                         if (material) {

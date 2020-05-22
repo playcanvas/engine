@@ -476,6 +476,11 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            // Reset input state
+            this._isHovering = false;
+            this._hoveringCounter = 0;
+            this._isPressed = false;
+
             this._imageReference.onParentComponentEnable();
             this._toggleHitElementListeners('on');
             this._forceReapplyVisualState();
