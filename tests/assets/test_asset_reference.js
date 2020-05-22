@@ -62,7 +62,6 @@ describe('pc.AssetReference', function () {
                 expect(this.add.args[0][1]).to.equal(this.parent);
                 expect(this.add.args[0][2].id).to.equal(asset.id);
 
-            console.log('BLAH1');
                 done();
             }.bind(this), 0);
         }, this);
