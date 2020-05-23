@@ -6,11 +6,11 @@ describe('pc.AssetListLoader', function () {
         app = new pc.Application(document.createElement('canvas'));
 
         assetList = [
-            new pc.Asset('statue.glb', 'container', {
-                url: 'base/examples/assets/models/statue.glb'
+            new pc.Asset('box.json', 'model', {
+                url: 'base/tests/test-assets/box/box.json'
             }),
-            new pc.Asset('playcanvas-cube.glb', 'container', {
-                url: 'base/examples/assets/models/playcanvas-cube.glb'
+            new pc.Asset('Box Material.json', 'material', {
+                url: 'base/tests/test-assets/box/1/Box Material.json'
             }),
             new pc.Asset('clouds.jpg', 'texture', {
                 url: 'base/examples/assets/textures/clouds.jpg'

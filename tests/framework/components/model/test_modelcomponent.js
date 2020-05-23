@@ -33,13 +33,17 @@ describe("pc.ModelComponent", function () {
 
     var loadAssets = function (cb) {
         var assetlist = [
-            new pc.Asset('statue.glb', 'container', {
-                url: 'base/examples/assets/models/statue.glb'
+            new pc.Asset('plane.json', 'model', {
+                url: 'base/tests/test-assets/plane/plane.json'
+            }),
+            new pc.Asset('lambert1.json', 'material', {
+                url: 'base/tests/test-assets/plane/31208636/lambert1.json'
             })
         ];
 
         loadAssetList(assetlist, function () {
-            assets.model = assetlist[0].resource.model;
+            assets.model = assetlist[0];
+            assets.material = assetlist[1];
             cb();
         });
     };
