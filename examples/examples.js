@@ -19,7 +19,6 @@ var categories = [
             "layers",
             "lights",
             "lights-baked",
-            "loader-obj",
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",
@@ -45,6 +44,12 @@ var categories = [
             "shader-toon",
             "shader-wobble",
             "texture-basis"
+        ]
+    }, {
+        name: "loaders",
+        examples: [
+            "loader-glb",
+            "loader-obj"
         ]
     }, {
         name: "input",
