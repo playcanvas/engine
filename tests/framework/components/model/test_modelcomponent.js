@@ -367,8 +367,8 @@ describe("pc.ModelComponent", function () {
     });
 
     it("Asset materials unbound on destroy", function (done) {
-        var modelAsset = new pc.Asset('statue.json', 'model', {
-            url: 'base/examples/assets/models/statue/statue.json'
+        var modelAsset = new pc.Asset('box.json', 'model', {
+            url: "base/tests/test-assets/box/box.json"
         }, {
             mapping: [{
                 material: assets.material.id
@@ -395,20 +395,19 @@ describe("pc.ModelComponent", function () {
     });
 
     it("Asset materials unbound on change model", function (done) {
-        var modelAsset = new pc.Asset('statue.json', 'model', {
-            url: 'base/examples/assets/models/statue/statue.json'
+        var modelAsset = new pc.Asset('plane.json', 'model', {
+            url: 'base/tests/test-assets/plane/plane.json'
         }, {
             mapping: [{
                 material: assets.material.id
             }]
         });
 
-        var materialAsset2 = new pc.Asset('stone2.json', 'material', {
-            url: 'base/examples/assets/models/statue/26109516/stone.json?t=1'
+        var materialAsset2 = new pc.Asset('lambert2.json', 'material',  {
+            url: 'base/tests/test-assets/plane/31208636/lambert1.json?t=1'
         });
-
-        var modelAsset2 = new pc.Asset('statue2.json', 'model', {
-            url: 'base/examples/assets/models/statue/statue.json?t=1'
+        var modelAsset2 = new pc.Asset('plane2.json', 'model', {
+            url: 'base/tests/test-assets/plane/plane.json?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id
