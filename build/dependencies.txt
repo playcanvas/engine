@@ -179,6 +179,9 @@
 ../src/framework/components/collision/component.js
 ../src/framework/components/collision/system.js
 ../src/framework/components/collision/data.js
+../src/framework/components/joint/component.js
+../src/framework/components/joint/system.js
+../src/framework/components/joint/data.js
 ../src/framework/components/particle-system/component.js
 ../src/framework/components/particle-system/system.js
 ../src/framework/components/particle-system/data.js

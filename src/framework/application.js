@@ -606,6 +606,7 @@ Object.assign(pc, function () {
         this.systems = new pc.ComponentSystemRegistry();
         this.systems.add(new pc.RigidBodyComponentSystem(this));
         this.systems.add(new pc.CollisionComponentSystem(this));
+        this.systems.add(new pc.JointComponentSystem(this));
         this.systems.add(new pc.AnimationComponentSystem(this));
         this.systems.add(new pc.ModelComponentSystem(this));
         this.systems.add(new pc.CameraComponentSystem(this));
