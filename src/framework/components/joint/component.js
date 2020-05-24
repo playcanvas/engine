@@ -12,11 +12,11 @@ Object.assign(pc, function () {
     var JointComponent = function JointComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
-        //#ifdef DEBUG
+        // #ifdef DEBUG
         if (typeof Ammo === 'undefined') {
             console.error('ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
         }
-        //#endif
+        // #endif
 
         this._breakForce = 3.4e+38;
         this._entityA = null;
@@ -88,6 +88,7 @@ Object.assign(pc, function () {
                 var mat = new pc.Mat4();
 
                 var bodyA = this._entityA.rigidbody.body;
+                var bodyB;
                 var frameA = new Ammo.btTransform();
 
                 var jointWtm = this.entity.getWorldTransform();
@@ -99,7 +100,7 @@ Object.assign(pc, function () {
                 this._convertTransform(mat, frameA);
 
                 if (this._entityB && this._entityB.rigidbody) {
-                    var bodyB = this._entityB.rigidbody.body;
+                    bodyB = this._entityB.rigidbody.body;
                     var frameB = new Ammo.btTransform();
 
                     entityWtm = this._entityB.getWorldTransform();
