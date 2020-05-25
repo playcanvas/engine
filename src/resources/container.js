@@ -129,55 +129,67 @@ Object.assign(pc, function () {
 
             /**
              * TODO:
-             * - data.nodes should have all nodes as pc.Entity
-             * - data.models should have all models as pc.Model + metadata to know which node they are assigned to
-             * - same as above for animations
-             * - create assets for all models, animations etc
-             * - assign model/animation components to root entity
-             *
-             * nodes: pc.Entity[]
-             * models: {model: pc.Model, node: number}[]
-             * animations: {animation: pc.AnimComponent, node: number}[]
-             * scene: {node: number}
-             * scenes: {node: number}[]
+             * - use data.gltf.nodes to add model components to entities
              */
 
-            console.log(data.nodes);
+            console.log("data", data);
 
-            // create model asset
-            var model = createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
-
-            var entity = new pc.Entity();
-            entity.addComponent('model', {
-                type: "asset",
-                asset: model
-            });
-
-            var entityAsset = createAsset('entity', entity, 0);
+            // create model assets
+            var modelAssets = [];
+            for (i = 0; i < data.models.length; ++i) {
+                var model = data.models[i];
+                if (model !== null) {
+                    var modelAsset = createAsset('model', data.models[i], i);
+                    data.nodes[i].addComponent('model', {
+                        type: 'asset',
+                        asset: modelAsset
+                    });
+                    modelAssets.push(modelAsset);
+                }
+            }
 
             // create material assets
-            var materials = [];
+            var materialAssets = [];
             for (i = 0; i < data.materials.length; ++i) {
-                materials.push(createAsset('material', data.materials[i], i));
+                materialAssets.push(createAsset('material', data.materials[i], i));
             }
 
             // create texture assets
-            var textures = [];
+            var textureAssets = [];
             for (i = 0; i < data.textures.length; ++i) {
-                textures.push(createAsset('texture', data.textures[i], i));
+                textureAssets.push(createAsset('texture', data.textures[i], i));
             }
 
             // create animation assets
-            var animations = [];
+            var animationAssets = [];
             for (i = 0; i < data.animations.length; ++i) {
-                animations.push(createAsset('animation', data.animations[i], i));
+                animationAssets.push(createAsset('animation', data.animations[i], i));
             }
 
-            container.data = null;              // since assets are created, release GLB data
-            container.model = entityAsset;
-            container.materials = materials;
-            container.textures = textures;
-            container.animations = animations;
+            var rootNodes = [];
+            for (i = 0; i < data.nodes.length; i++) {
+                var node = data.nodes[i];
+                if (node.parent === null) {
+                    rootNodes.push(node);
+                }
+            }
+
+            var rootNode;
+            if (rootNodes.length === 1) {
+                rootNode = rootNodes[0];
+            } else {
+                rootNode = new pc.GraphNode('Root');
+                for (i = 0; i < rootNodes.length; ++i) {
+                    rootNode.addChild(rootNodes[i]);
+                }
+            }
+
+            container.data = null; // since assets are created, release GLB data
+            container.scene = rootNode;
+            container.materials = materialAssets;
+            container.textures = textureAssets;
+            container.animations = animationAssets;
+            container.models = modelAssets;
             container.registry = assets;
         }
     });

@@ -430,7 +430,7 @@ Object.assign(pc, function () {
     var tempMat = new pc.Mat4();
     var tempVec = new pc.Vec3();
 
-    var createMesh = function (device, meshData, accessors, bufferViews, buffers, callback) {
+    var createMeshGroup = function (device, meshData, accessors, bufferViews, buffers, callback) {
         var meshes = [];
 
         var semanticMap = {
@@ -1172,7 +1172,7 @@ Object.assign(pc, function () {
     };
 
     var createNode = function (nodeData, nodeIndex) {
-        var entity = new pc.GraphNode();
+        var entity = new pc.Entity();
 
         if (nodeData.hasOwnProperty('name')) {
             entity.name = nodeData.name;
@@ -1209,6 +1209,49 @@ Object.assign(pc, function () {
         return entity;
     };
 
+    var createModel = function (meshGroup, skin, materials) {
+        var model = new pc.Model();
+        model.graph = new pc.GraphNode();
+
+        // TODO: Get defaultMaterial from scene
+        var defaultMaterial = new pc.StandardMaterial();
+        defaultMaterial.name = "Default Material";
+        defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
+
+        meshGroup.forEach(function (mesh) {
+            var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            var meshNode = new pc.GraphNode();
+            var meshInstance = new pc.MeshInstance(meshNode, mesh, material);
+
+            if (mesh.morph) {
+                var morphInstance = new pc.MorphInstance(mesh.morph);
+                if (mesh.weights) {
+                    for (var wi = 0; wi < mesh.weights.length; wi++) {
+                        morphInstance.setWeight(wi, mesh.weights[wi]);
+                    }
+                }
+
+                meshInstance.morphInstance = morphInstance;
+                model.morphInstances.push(morphInstance);
+            }
+
+            if (skin !== null) {
+                mesh.skin = skin;
+
+                var skinInstance = new pc.SkinInstance(skin);
+                skinInstance.bones = skin.bones;
+
+                meshInstance.skinInstance = skinInstance;
+                model.skinInstances.push(skinInstance);
+            }
+
+            model.graph.addChild(meshNode);
+            model.meshInstances.push(meshInstance);
+        });
+
+        return model;
+    };
+
     var createSkins = function (device, gltf, nodes, buffers) {
         if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
             return [];
@@ -1219,14 +1262,14 @@ Object.assign(pc, function () {
 
     };
 
-    var createMeshes = function (device, gltf, buffers, callback) {
+    var createMeshGroups = function (device, gltf, buffers, callback) {
         if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
             !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
             !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
             return [];
         }
         return gltf.meshes.map(function (meshData) {
-            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers, callback);
+            return createMeshGroup(device, meshData, gltf.accessors, gltf.bufferViews, buffers, callback);
         });
 
     };
@@ -1283,14 +1326,29 @@ Object.assign(pc, function () {
         return nodes;
     };
 
+    var createModels = function (gltf, meshGroups, skins, materials) {
+        if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
+            return [];
+        }
+        return gltf.nodes.map(function (nodeData) {
+            if (!nodeData.hasOwnProperty('mesh')) {
+                return null;
+            }
+            var meshGroup = meshGroups[nodeData.mesh];
+            var skin = nodeData.hasOwnProperty('skin') ? skins[nodeData.skin] : null;
+            return createModel(meshGroup, skin, materials);
+        });
+    };
+
     // create engine resources from the downloaded GLB data
     var createResources = function (device, gltf, buffers, images, callback) {
         var nodes = createNodes(gltf);
         var animations = createAnimations(gltf, nodes, buffers);
         var textures = createTextures(device, gltf, images);
         var materials = createMaterials(gltf, textures);
-        var meshes = createMeshes(device, gltf, buffers, callback);
+        var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
+        var models = createModels(gltf, meshGroups, skins, materials);
 
         callback(null, {
             'gltf': gltf,
@@ -1298,8 +1356,9 @@ Object.assign(pc, function () {
             'animations': animations,
             'textures': textures,
             'materials': materials,
-            'meshes': meshes,
-            'skins': skins
+            'meshes': meshGroups,
+            'skins': skins,
+            'models': models
         });
     };
 
