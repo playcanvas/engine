@@ -125,12 +125,8 @@ Object.assign(pc, function () {
 
             var container = asset.resource;
             var data = container.data;
+            var gltf = data.gltf;
             var i;
-
-            /**
-             * TODO:
-             * - use data.gltf.nodes to add model components to entities
-             */
 
             console.log("data", data);
 
@@ -166,26 +162,9 @@ Object.assign(pc, function () {
                 animationAssets.push(createAsset('animation', data.animations[i], i));
             }
 
-            var rootNodes = [];
-            for (i = 0; i < data.nodes.length; i++) {
-                var node = data.nodes[i];
-                if (node.parent === null) {
-                    rootNodes.push(node);
-                }
-            }
-
-            var rootNode;
-            if (rootNodes.length === 1) {
-                rootNode = rootNodes[0];
-            } else {
-                rootNode = new pc.GraphNode('Root');
-                for (i = 0; i < rootNodes.length; ++i) {
-                    rootNode.addChild(rootNodes[i]);
-                }
-            }
-
             container.data = null; // since assets are created, release GLB data
-            container.scene = rootNode;
+            container.scene = data.scene;
+            container.scenes = data.scenes;
             container.materials = materialAssets;
             container.textures = textureAssets;
             container.animations = animationAssets;

@@ -1209,6 +1209,25 @@ Object.assign(pc, function () {
         return entity;
     };
 
+    var createScene = function (sceneData, sceneIndex, nodes) {
+        var sceneRoot = new pc.Entity();
+
+        if (sceneData.hasOwnProperty('name')) {
+            sceneRoot.name = sceneData.name;
+        } else {
+            sceneRoot.name = "scene_" + sceneIndex;
+        }
+
+        sceneData.nodes.forEach(function (nodeIndex) {
+            var node = nodes[nodeIndex];
+            if (node !== undefined) {
+                sceneRoot.addChild(node);
+            }
+        });
+
+        return sceneRoot;
+    };
+
     var createModel = function (meshGroup, skin, materials) {
         var model = new pc.Model();
         model.graph = new pc.GraphNode();
@@ -1326,6 +1345,27 @@ Object.assign(pc, function () {
         return nodes;
     };
 
+    var createScenes = function (gltf, nodes) {
+        if (!gltf.hasOwnProperty('scenes') || gltf.scenes.length === 0) {
+            return [];
+        }
+
+        return gltf.scenes.map(function (sceneData, sceneIndex) {
+            return createScene(sceneData, sceneIndex, nodes);
+        });
+    };
+
+    var getDefaultScene = function (gltf, scenes) {
+        if (!gltf.hasOwnProperty('scene')) {
+            if (scenes.length === 0) {
+                return undefined;
+            }
+            return scenes[0];
+        }
+
+        return scenes[gltf.scene];
+    };
+
     var createModels = function (gltf, meshGroups, skins, materials) {
         if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
             return [];
@@ -1343,6 +1383,8 @@ Object.assign(pc, function () {
     // create engine resources from the downloaded GLB data
     var createResources = function (device, gltf, buffers, images, callback) {
         var nodes = createNodes(gltf);
+        var scenes = createScenes(gltf, nodes);
+        var scene = getDefaultScene(gltf, scenes);
         var animations = createAnimations(gltf, nodes, buffers);
         var textures = createTextures(device, gltf, images);
         var materials = createMaterials(gltf, textures);
@@ -1350,15 +1392,18 @@ Object.assign(pc, function () {
         var skins = createSkins(device, gltf, nodes, buffers);
         var models = createModels(gltf, meshGroups, skins, materials);
 
+
         callback(null, {
             'gltf': gltf,
             'nodes': nodes,
+            'models': models,
+            'scenes': scenes,
+            'scene': scene,
             'animations': animations,
             'textures': textures,
             'materials': materials,
             'meshes': meshGroups,
-            'skins': skins,
-            'models': models
+            'skins': skins
         });
     };
 
