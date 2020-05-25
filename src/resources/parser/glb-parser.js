@@ -1392,7 +1392,6 @@ Object.assign(pc, function () {
         var skins = createSkins(device, gltf, nodes, buffers);
         var models = createModels(gltf, meshGroups, skins, materials);
 
-
         callback(null, {
             'gltf': gltf,
             'nodes': nodes,

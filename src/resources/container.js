@@ -125,7 +125,6 @@ Object.assign(pc, function () {
 
             var container = asset.resource;
             var data = container.data;
-            var gltf = data.gltf;
             var i;
 
             console.log("data", data);
