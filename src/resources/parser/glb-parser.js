@@ -1111,7 +1111,7 @@ Object.assign(pc, function () {
             var channel = animationData.channels[i];
             var target = channel.target;
             var curve = curves[channel.sampler];
-            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+            curve._paths.push(pc.AnimBinder.joinPath(["model_" + nodes[target.node].name, target.path]));
 
             // if this target is a set of quaternion keys, make note of its index so we can perform
             // quaternion-specific processing on it.
@@ -1228,9 +1228,11 @@ Object.assign(pc, function () {
         return sceneRoot;
     };
 
-    var createModel = function (meshGroup, skin, materials) {
+    var createModel = function (node, meshGroup, skin, materials) {
         var model = new pc.Model();
-        model.graph = new pc.GraphNode();
+        // TODO: Node name is used as path for animations. Is this sufficient?
+        // This prefix is added in createAnimation as well.
+        model.graph = new pc.GraphNode("model_" + node.name);
 
         // TODO: Get defaultMaterial from scene
         var defaultMaterial = new pc.StandardMaterial();
@@ -1366,17 +1368,18 @@ Object.assign(pc, function () {
         return scenes[gltf.scene];
     };
 
-    var createModels = function (gltf, meshGroups, skins, materials) {
+    var createModels = function (gltf, nodes, meshGroups, skins, materials) {
         if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
             return [];
         }
-        return gltf.nodes.map(function (nodeData) {
+        return gltf.nodes.map(function (nodeData, nodeIndex) {
             if (!nodeData.hasOwnProperty('mesh')) {
                 return null;
             }
+            var node = nodes[nodeIndex];
             var meshGroup = meshGroups[nodeData.mesh];
             var skin = nodeData.hasOwnProperty('skin') ? skins[nodeData.skin] : null;
-            return createModel(meshGroup, skin, materials);
+            return createModel(node, meshGroup, skin, materials);
         });
     };
 
@@ -1390,7 +1393,7 @@ Object.assign(pc, function () {
         var materials = createMaterials(gltf, textures);
         var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
-        var models = createModels(gltf, meshGroups, skins, materials);
+        var models = createModels(gltf, nodes, meshGroups, skins, materials);
 
         callback(null, {
             'gltf': gltf,
