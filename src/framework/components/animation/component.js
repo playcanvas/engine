@@ -61,7 +61,7 @@ Object.assign(pc, function () {
             data.prevAnim = data.currAnim;
             data.currAnim = name;
 
-            if (data.model) {
+            if (true) {
 
                 if (!data.skeleton && !data.animController) {
                     this._createAnimationController();
@@ -166,7 +166,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            var graph = model.getGraph();
+            var graph = model ? model.getGraph() : this.entity;
             if (hasJson) {
                 data.fromSkel = new pc.Skeleton(graph);
                 data.toSkel = new pc.Skeleton(graph);
