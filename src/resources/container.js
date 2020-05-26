@@ -127,20 +127,10 @@ Object.assign(pc, function () {
             var data = container.data;
             var i;
 
-            console.log("data", data);
-
             // create model assets
             var modelAssets = [];
             for (i = 0; i < data.models.length; ++i) {
-                var model = data.models[i];
-                if (model !== null) {
-                    var modelAsset = createAsset('model', data.models[i], i);
-                    data.nodes[i].addComponent('model', {
-                        type: 'asset',
-                        asset: modelAsset
-                    });
-                    modelAssets.push(modelAsset);
-                }
+                modelAssets.push(createAsset('model', data.models[i], i));
             }
 
             // create material assets
@@ -161,13 +151,47 @@ Object.assign(pc, function () {
                 animationAssets.push(createAsset('animation', data.animations[i], i));
             }
 
-            container.data = null; // since assets are created, release GLB data
+            var animationComponents = data.animations.map(function () {
+                return [];
+            });
+
+            // add components to nodes
+            data.nodes.forEach(function (node, nodeIndex) {
+                var components = data.nodeComponents[nodeIndex];
+
+                if (components.model !== null) {
+                    node.addComponent('model', {
+                        type: 'asset',
+                        asset: modelAssets[components.model]
+                    });
+                }
+
+                if (components.animations.length > 0) {
+                    var animations = components.animations;
+                    var animationIds = animations.map(function (animationIndex) {
+                        return animationAssets[animationIndex].id;
+                    });
+
+                    var animationComponent = node.addComponent('animation', {
+                        assets: animationIds,
+                        enabled: false
+                    });
+
+                    animations.forEach(function (animationIndex) {
+                        animationComponents[animationIndex].push(animationComponent);
+                    });
+                }
+            });
+
+            // since assets are created, release GLB data
+            container.data = null;
+
             container.scene = data.scene;
             container.scenes = data.scenes;
             container.materials = materialAssets;
             container.textures = textureAssets;
             container.animations = animationAssets;
-            container.models = modelAssets;
+            container.animationComponents = animationComponents;
             container.registry = assets;
         }
     });
