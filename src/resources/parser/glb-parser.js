@@ -1111,7 +1111,7 @@ Object.assign(pc, function () {
             var channel = animationData.channels[i];
             var target = channel.target;
             var curve = curves[channel.sampler];
-            curve._paths.push(pc.AnimBinder.joinPath(["model_" + nodes[target.node].name, target.path]));
+            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
 
             // if this target is a set of quaternion keys, make note of its index so we can perform
             // quaternion-specific processing on it.
@@ -1231,8 +1231,7 @@ Object.assign(pc, function () {
     var createModel = function (node, meshGroup, skin, materials) {
         var model = new pc.Model();
         // TODO: Node name is used as path for animations. Is this sufficient?
-        // This prefix is added in createAnimation as well.
-        model.graph = new pc.GraphNode("model_" + node.name);
+        model.graph = new pc.GraphNode(node.name);
 
         // TODO: Get defaultMaterial from scene
         var defaultMaterial = new pc.StandardMaterial();
