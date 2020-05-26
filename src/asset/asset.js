@@ -18,6 +18,9 @@ Object.assign(pc, function () {
 
             // Data URL (RFC 2397), simplified
             'data:' +
+
+            // Blob data
+            '|blob:' +
         ')',
         'i' // non case-sensitive flag
     );
