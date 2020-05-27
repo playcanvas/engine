@@ -23,6 +23,7 @@ DebugPhysics.attributes.add('castShadows', {
 
 // initialize code called once per entity
 DebugPhysics.prototype.initialize = function () {
+    // Handle attribute change events
     this.on('attr:castShadows', function (value, prev) {
         this.debugRoot.children.forEach(function (child) {
             child.model.castShadows = value;
@@ -30,15 +31,18 @@ DebugPhysics.prototype.initialize = function () {
     }, this);
     this.on('attr:opacity', function (value, prev) {
         this.debugRoot.children.forEach(function (child) {
-            var material = child.model.material;
-            material.opacity = value;
-            material.update();
+            child.model.meshInstances.forEach(function (meshInstance) {
+                var material = meshInstance.material;
+                material.opacity = value;
+                material.update();
+            });
         }, this);
     }, this);
 
     this.debugRoot = new pc.Entity('Physics Debug Root');
     this.app.root.addChild(this.debugRoot);
 
+    // Handle script enable/disable events
     this.on('enable', function () {
         this.debugRoot = new pc.Entity('Physics Debug Root');
         this.app.root.addChild(this.debugRoot);
