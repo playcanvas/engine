@@ -110,7 +110,9 @@ Object.assign(pc, function () {
                 var bones = [];
                 for (j = 0; j < skin.boneNames.length; j++) {
                     var boneName = skin.boneNames[j];
-                    var bone = cloneGraph.findByName(boneName);
+                    var boneFromCloneGraph = cloneGraph.findByName(boneName);
+                    // Keep reference to bones that exist outside the models internal graph
+                    var bone = boneFromCloneGraph === null ? this.skinInstances[i].bones[j] : boneFromCloneGraph;
                     bones.push(bone);
                 }
                 cloneSkinInstance.bones = bones;
