@@ -60,7 +60,7 @@ DebugPhysics.prototype.createModel = function (mesh, material) {
     var meshInstance = new pc.MeshInstance(node, mesh, material);
     var model = new pc.Model();
     model.graph = node;
-    model.meshInstances = [ meshInstance ];
+    model.meshInstances = [meshInstance];
     return model;
 };
 
@@ -78,33 +78,35 @@ DebugPhysics.prototype.postUpdate = function (dt) {
             if (collision.enabled && collision.entity.enabled) {
                 var debugShape = collision._debugShape;
 
-                var destroyDebugShape = function () {
-                    delete collision._debugShape;
-                    debugShape.destroy();
-                    dubugShape = null;
-                };
-
                 // If the type or shape of the collision components has changed, recreate the visuals
                 if (debugShape) {
                     if (debugShape._collisionType !== collision.type) {
-                        destroyDebugShape();
+                        delete collision._debugShape;
+                        debugShape.destroy();
+                        dubugShape = null;
                     } else {
                         switch (collision.type) {
                             case 'box':
                                 if (!debugShape._halfExents.equals(collision.halfExtents)) {
-                                    destroyDebugShape();
+                                    delete collision._debugShape;
+                                    debugShape.destroy();
+                                    dubugShape = null;
                                 }
                                 break;
                             case 'cone':
                             case 'cylinder':
                             case 'capsule':
                                 if (debugShape._height !== collision.height || debugShape._radius !== collision.radius) {
-                                    destroyDebugShape();
+                                    delete collision._debugShape;
+                                    debugShape.destroy();
+                                    dubugShape = null;
                                 }
                                 break;
                             case 'sphere':
                                 if (debugShape._radius !== collision.radius) {
-                                    destroyDebugShape();
+                                    delete collision._debugShape;
+                                    debugShape.destroy();
+                                    dubugShape = null;
                                 }
                                 break;
                         }
@@ -120,7 +122,7 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                     material.update();
 
                     debugShape = new pc.Entity();
-                    
+
                     var mesh;
                     switch (collision.type) {
                         case 'box':
@@ -168,7 +170,7 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                         });
                         debugShape.model.model = this.createModel(mesh, material);
                     }
-                    
+
                     this.debugRoot.addChild(debugShape);
 
                     // Cache collision component
