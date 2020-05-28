@@ -1228,15 +1228,10 @@ Object.assign(pc, function () {
         return sceneRoot;
     };
 
-    var createModel = function (node, meshGroup, skin, materials) {
+    var createModel = function (node, meshGroup, skin, materials, defaultMaterial) {
         var model = new pc.Model();
         // TODO: Node name is used as path for animations. Is this sufficient?
         model.graph = new pc.GraphNode(node.name);
-
-        // TODO: Get defaultMaterial from scene
-        var defaultMaterial = new pc.StandardMaterial();
-        defaultMaterial.name = "Default Material";
-        defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
 
         meshGroup.forEach(function (mesh) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
@@ -1376,7 +1371,7 @@ Object.assign(pc, function () {
         return scenes[gltf.scene] || null;
     };
 
-    var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials) {
+    var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial) {
         if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
             return [];
         }
@@ -1390,7 +1385,7 @@ Object.assign(pc, function () {
             var node = nodes[nodeIndex];
             var meshGroup = meshGroups[nodeData.mesh];
             var skin = nodeData.hasOwnProperty('skin') ? skins[nodeData.skin] : null;
-            var model = createModel(node, meshGroup, skin, materials);
+            var model = createModel(node, meshGroup, skin, materials, defaultMaterial);
             var modelIndex = models.push(model) - 1;
             nodeComponents[nodeIndex].model = modelIndex;
         });
@@ -1399,7 +1394,7 @@ Object.assign(pc, function () {
     };
 
     // create engine resources from the downloaded GLB data
-    var createResources = function (device, gltf, buffers, images, callback) {
+    var createResources = function (device, gltf, buffers, images, defaultMaterial, callback) {
         var nodes = createNodes(gltf);
         var nodeComponents = nodes.map(function () {
             return {
@@ -1414,7 +1409,7 @@ Object.assign(pc, function () {
         var materials = createMaterials(gltf, textures);
         var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
-        var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials);
+        var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
         var animations = createAnimations(gltf, nodes, nodeComponents, buffers);
 
         callback(null, {
@@ -1690,7 +1685,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, urlBase, data, device, callback) {
+    GlbParser.parseAsync = function (filename, urlBase, data, device, defaultMaterial, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1719,7 +1714,7 @@ Object.assign(pc, function () {
                             return;
                         }
 
-                        createResources(device, gltf, buffers, images, callback);
+                        createResources(device, gltf, buffers, images, defaultMaterial, callback);
                     });
                 });
             });
@@ -1727,7 +1722,7 @@ Object.assign(pc, function () {
     };
 
     // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    GlbParser.parse = function (filename, data, device) {
+    GlbParser.parse = function (filename, data, device, defaultMaterial) {
         var result = null;
 
         // parse the data
@@ -1744,7 +1739,7 @@ Object.assign(pc, function () {
                         var images = [];
 
                         // create resources
-                        createResources(device, gltf, buffers, images, function (err, result_) {
+                        createResources(device, gltf, buffers, images, defaultMaterial, function (err, result_) {
                             if (err) {
                                 console.error(err);
                             } else {

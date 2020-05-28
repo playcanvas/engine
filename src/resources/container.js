@@ -104,7 +104,7 @@ Object.assign(pc, function () {
 
                 if (!err) {
                     var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
-                    pc.GlbParser.parseAsync(filename, pc.path.extractPath(url.original), response, self._device, function (err, result) {
+                    pc.GlbParser.parseAsync(filename, pc.path.extractPath(url.original), response, self._device, self._defaultMaterial, function (err, result) {
                         if (err) {
                             callback(err);
                         } else {
