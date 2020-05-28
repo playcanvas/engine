@@ -136,31 +136,26 @@ Object.assign(pc, function () {
 
             var container = asset.resource;
             var data = container.data;
-            var i;
 
             // create model assets
-            var modelAssets = [];
-            for (i = 0; i < data.models.length; ++i) {
-                modelAssets.push(createAsset('model', data.models[i], i));
-            }
+            var modelAssets = data.models.map(function (model, index) {
+                return createAsset('model', model, index);
+            });
 
             // create material assets
-            var materialAssets = [];
-            for (i = 0; i < data.materials.length; ++i) {
-                materialAssets.push(createAsset('material', data.materials[i], i));
-            }
+            var materialAssets = data.materials.map(function (material, index) {
+                return createAsset('material', material, index);
+            });
 
             // create texture assets
-            var textureAssets = [];
-            for (i = 0; i < data.textures.length; ++i) {
-                textureAssets.push(createAsset('texture', data.textures[i], i));
-            }
+            var textureAssets = data.textures.map(function (texture, index) {
+                return createAsset('texture', texture, index);
+            });
 
             // create animation assets
-            var animationAssets = [];
-            for (i = 0; i < data.animations.length; ++i) {
-                animationAssets.push(createAsset('animation', data.animations[i], i));
-            }
+            var animationAssets = data.animations.map(function (animation, index) {
+                return createAsset('animation', animation, index);
+            });
 
             // add components to nodes
             data.nodes.forEach(function (node, nodeIndex) {
