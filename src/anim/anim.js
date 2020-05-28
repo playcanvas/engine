@@ -697,10 +697,11 @@ Object.assign(pc, function () {
                     !object.model.model.morphInstances) {
                     return null;
                 }
+                var meshInstances = object.model.model.meshInstances;
                 var morphInstance;
-                for (var i = 0; i < object.model.model.meshInstances.length; i++) {
-                    if (object.model.model.meshInstances[i].node.name === node.name) {
-                        morphInstance = object.model.model.meshInstances[i].morphInstance;
+                for (var i = 0; i < meshInstances.length; ++i) {
+                    if (meshInstances[i].node.name === node.name) {
+                        morphInstance = meshInstances[i].morphInstance;
                         break;
                     }
                 }
