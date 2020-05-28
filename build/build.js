@@ -132,7 +132,7 @@ var loadDependencies = function (fullpath, callback) {
 };
 
 // load shader chunks and combine into single javascript file
-var concatentateShaders = function (callback) {
+var concatenateShaders = function (callback) {
     output = '../src/graphics/program-lib/chunks/generated-shader-chunks.js';
     dir = '../src/graphics/program-lib/chunks/';
 
@@ -257,7 +257,7 @@ var run = function () {
     var start = new Date().getTime();
 
     // build shader file
-    concatentateShaders(function (err) {
+    concatenateShaders(function (err) {
         loadDependencies(target.depsFile, function (lines) {
             // preprocess and get new dependency list
             var files = preprocess(lines);
@@ -356,6 +356,7 @@ var arguments = function () {
             console.log("-p: build profiler engine configuration");
             console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
             console.log("-t target to build, either engine or extas. default is engine");
+            console.log("--concatenateShaders: Just generate src/graphics/program-lib/chunks/generated-shader-chunks.js");
             process.exit();
         }
 
@@ -365,6 +366,14 @@ var arguments = function () {
 
         if (arg === '-p') {
             profiler = true;
+        }
+
+        if (arg === '--concatenateShaders') {
+            run = function() {
+                concatenateShaders(function() {
+                    console.log("> concatenated shaders")
+                });
+            }
         }
 
         if (_last === '-l') {
