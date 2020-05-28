@@ -1,9 +1,12 @@
 // https://parceljs.org/api.html
 // Call like: node build\parcel.js
 
+const fs = require('fs');
+// Delete .cache folder, otherwise Parcel does nothing while developing this bundler
+fs.rmdirSync(".cache", { recursive: true });
+
 const Bundler = require('parcel-bundler');
 const Path = require('path');
-const fs = require('fs');
 
 // Slow, but useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
 var debug = true;
@@ -65,6 +68,7 @@ const options = {
 (async function() {
 	// Initializes a bundler using the entrypoint location and options provided
 	const bundler = new Bundler(entryFiles, options);
+	bundler.addAssetType('js', require.resolve('./JSAssetPlayCanvas'));
 
 	// `bundled` gets called once Parcel has successfully finished bundling, the main bundle instance gets passed to the callback
 	bundler.on('bundled', (bundle) => {
