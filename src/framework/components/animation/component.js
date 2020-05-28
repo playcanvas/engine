@@ -61,51 +61,48 @@ Object.assign(pc, function () {
             data.prevAnim = data.currAnim;
             data.currAnim = name;
 
-            if (true) {
+            if (!data.skeleton && !data.animController) {
+                this._createAnimationController();
+            }
 
-                if (!data.skeleton && !data.animController) {
-                    this._createAnimationController();
-                }
+            var prevAnim = data.animations[data.prevAnim];
+            var currAnim = data.animations[data.currAnim];
 
-                var prevAnim = data.animations[data.prevAnim];
-                var currAnim = data.animations[data.currAnim];
+            data.blending = blendTime > 0 && data.prevAnim;
+            if (data.blending) {
+                data.blend = 0;
+                data.blendSpeed = 1.0 / blendTime;
+            }
 
-                data.blending = blendTime > 0 && data.prevAnim;
+            if (data.skeleton) {
                 if (data.blending) {
-                    data.blend = 0;
-                    data.blendSpeed = 1.0 / blendTime;
+                    // Blend from the current time of the current animation to the start of
+                    // the newly specified animation over the specified blend time period.
+                    data.fromSkel.animation = prevAnim;
+                    data.fromSkel.addTime(data.skeleton._time);
+                    data.toSkel.animation = currAnim;
+                } else {
+                    data.skeleton.animation = currAnim;
                 }
+            }
 
-                if (data.skeleton) {
-                    if (data.blending) {
-                        // Blend from the current time of the current animation to the start of
-                        // the newly specified animation over the specified blend time period.
-                        data.fromSkel.animation = prevAnim;
-                        data.fromSkel.addTime(data.skeleton._time);
-                        data.toSkel.animation = currAnim;
-                    } else {
-                        data.skeleton.animation = currAnim;
+            if (data.animController) {
+                var animController = data.animController;
+
+                if (data.blending) {
+                    // remove all but the last clip
+                    while (animController.clips.length > 1) {
+                        animController.removeClip(0);
                     }
+                } else {
+                    data.animController.removeClips();
                 }
 
-                if (data.animController) {
-                    var animController = data.animController;
-
-                    if (data.blending) {
-                        // remove all but the last clip
-                        while (animController.clips.length > 1) {
-                            animController.removeClip(0);
-                        }
-                    } else {
-                        data.animController.removeClips();
-                    }
-
-                    var clip = new pc.AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
-                    clip.name = data.currAnim;
-                    clip.blendWeight = data.blending ? 0 : 1;
-                    clip.reset();
-                    data.animController.addClip(clip);
-                }
+                var clip = new pc.AnimClip(data.animations[data.currAnim], 0, 1.0, true, data.loop);
+                clip.name = data.currAnim;
+                clip.blendWeight = data.blending ? 0 : 1;
+                clip.reset();
+                data.animController.addClip(clip);
             }
 
             data.playing = true;
