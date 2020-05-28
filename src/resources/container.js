@@ -3,8 +3,17 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ContainerResource
-     * @classdesc Container for a list of animations, textures, materials and a model.
+     * @classdesc Container for a list of animations, textures, materials, models, scenes (as entities)
+     * and a default scene (as entity). Entities in scene hierarchies will have model and animation components
+     * attached to them.
      * @param {object} data - The loaded GLB data.
+     * @property {pc.Entity|null} scene The root entity of the default scene.
+     * @property {pc.Entity[]} scenes The root entities of all scenes.
+     * @property {pc.Asset[]} materials Material assets.
+     * @property {pc.Asset[]} textures Texture assets.
+     * @property {pc.Asset[]} animations Animation assets.
+     * @property {pc.Asset[]} models Model assets.
+     * @property {pc.AssetRegistry} registry The asset registry.
      */
     var ContainerResource = function (data) {
         this.data = data;
@@ -73,7 +82,7 @@ Object.assign(pc, function () {
      * @name pc.ContainerHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
-     * textures, models and animations.
+     * textures, scenes and animations.
      * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
      * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
      */
@@ -122,7 +131,7 @@ Object.assign(pc, function () {
             return data;
         },
 
-        // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
+        // Create assets to wrap the loaded engine resources - models, materials, textures and animations.
         patch: function (asset, assets) {
             var createAsset = function (type, resource, index) {
                 var subAsset = new pc.Asset(asset.name + '/' + type + '/' + index, type, {
