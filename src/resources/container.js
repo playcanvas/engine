@@ -8,10 +8,12 @@ Object.assign(pc, function () {
      */
     var ContainerResource = function (data) {
         this.data = data;
-        this.model = null;
+        this.scene = null;
+        this.scenes = [];
         this.materials = [];
         this.textures = [];
         this.animations = [];
+        this.models = [];
         this.registry = null;
     };
 
@@ -26,15 +28,29 @@ Object.assign(pc, function () {
             };
 
             var destroyAssets = function (assets) {
-                assets.forEach(function (asset) {
-                    destroyAsset(asset);
-                });
+                assets.forEach(destroyAsset);
             };
 
             // unload and destroy assets
+            if (this.scene) {
+                this.scene.destroy();
+                this.scene = null;
+            }
+
+            if (this.scenes) {
+                this.scenes.forEach(function (scene) {
+                    scene.destroy();
+                });
+            }
+
             if (this.animations) {
                 destroyAssets(this.animations);
                 this.animations = null;
+            }
+
+            if (this.models) {
+                destroyAssets(this.models);
+                this.models = null;
             }
 
             if (this.textures) {
@@ -45,11 +61,6 @@ Object.assign(pc, function () {
             if (this.materials) {
                 destroyAssets(this.materials);
                 this.materials = null;
-            }
-
-            if (this.model) {
-                destroyAsset(this.model);
-                this.model = null;
             }
 
             this.data = null;
