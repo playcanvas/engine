@@ -1230,7 +1230,7 @@ Object.assign(pc, function () {
 
     var createModel = function (node, meshGroup, skin, materials, defaultMaterial) {
         var model = new pc.Model();
-        // TODO: Node name is used as path for animations. Is this sufficient?
+        // Node name is used as path in animation curves
         model.graph = new pc.GraphNode(node.name);
 
         meshGroup.forEach(function (mesh) {
