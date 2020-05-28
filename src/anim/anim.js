@@ -694,17 +694,25 @@ Object.assign(pc, function () {
                 if (!object ||
                     !object.model ||
                     !object.model.model ||
-                    !object.model.model.morphInstances ||
-                    !object.model.model.morphInstances[0]) {
+                    !object.model.model.morphInstances) {
                     return null;
                 }
-                object = object.model.model.morphInstances[0];
+                var morphInstance;
+                for (var i = 0; i < object.model.model.meshInstances.length; i++) {
+                    if (object.model.model.meshInstances[0].node.name === node.name) {
+                        morphInstance = object.model.model.meshInstances[0].morphInstance;
+                        break;
+                    }
+                }
+                if (!morphInstance) {
+                    return null;
+                }
                 var func = function (value) {
                     for (var i = 0; i < value.length; ++i) {
-                        object.setWeight(i, value[i]);
+                        morphInstance.setWeight(i, value[i]);
                     }
                 };
-                return new pc.AnimTarget(func, 'vector', object.morph._targets.length);
+                return new pc.AnimTarget(func, 'vector', morphInstance.morph._targets.length);
             }
         };
     };
