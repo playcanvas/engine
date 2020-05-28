@@ -16,6 +16,29 @@ Object.assign(pc, function () {
     };
 }());
 
+// Alias old 'enum' names
+Object.assign(pc, {
+    ELEMENTTYPE_INT8: pc.TYPE_INT8,
+    ELEMENTTYPE_UINT8: pc.TYPE_UINT8,
+    ELEMENTTYPE_INT16: pc.TYPE_INT16,
+    ELEMENTTYPE_UINT16: pc.TYPE_UINT16,
+    ELEMENTTYPE_INT32: pc.TYPE_INT32,
+    ELEMENTTYPE_UINT32: pc.TYPE_UINT32,
+    ELEMENTTYPE_FLOAT32: pc.TYPE_FLOAT32,
+
+    RIGIDBODY_TYPE_STATIC: pc.BODYTYPE_STATIC,
+    RIGIDBODY_TYPE_DYNAMIC: pc.BODYTYPE_DYNAMIC,
+    RIGIDBODY_TYPE_KINEMATIC: pc.BODYTYPE_KINEMATIC,
+    RIGIDBODY_CF_STATIC_OBJECT: pc.BODYFLAG_STATIC_OBJECT,
+    RIGIDBODY_CF_KINEMATIC_OBJECT: pc.BODYFLAG_KINEMATIC_OBJECT,
+    RIGIDBODY_CF_NORESPONSE_OBJECT: pc.BODYFLAG_NORESPONSE_OBJECT,
+    RIGIDBODY_ACTIVE_TAG: pc.BODYSTATE_ACTIVE_TAG,
+    RIGIDBODY_ISLAND_SLEEPING: pc.BODYSTATE_ISLAND_SLEEPING,
+    RIGIDBODY_WANTS_DEACTIVATION: pc.BODYSTATE_WANTS_DEACTIVATION,
+    RIGIDBODY_DISABLE_DEACTIVATION: pc.BODYSTATE_DISABLE_DEACTIVATION,
+    RIGIDBODY_DISABLE_SIMULATION: pc.BODYSTATE_DISABLE_SIMULATION
+});
+
 // Continue to support the old engine namespaces
 pc.anim = {
     Animation: pc.Animation,
@@ -187,14 +210,6 @@ pc.time = {
 pc.PhongMaterial = pc.StandardMaterial;
 
 pc.BoundingSphere.prototype.intersectRay = pc.BoundingSphere.prototype.intersectsRay;
-
-pc.ELEMENTTYPE_INT8 = pc.TYPE_INT8;
-pc.ELEMENTTYPE_UINT8 = pc.TYPE_UINT8;
-pc.ELEMENTTYPE_INT16 = pc.TYPE_INT16;
-pc.ELEMENTTYPE_UINT16 = pc.TYPE_UINT16;
-pc.ELEMENTTYPE_INT32 = pc.TYPE_INT32;
-pc.ELEMENTTYPE_UINT32 = pc.TYPE_UINT32;
-pc.ELEMENTTYPE_FLOAT32 = pc.TYPE_FLOAT32;
 
 Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
     get: function () {
@@ -456,6 +471,21 @@ pc.GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
+Object.defineProperty(pc.LightComponent.prototype, "enable", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        // #endif
+        return this.enabled;
+    },
+    set: function (value) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        // #endif
+        this.enabled = value;
+    }
+});
+
 pc.Material.prototype.getName = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
@@ -482,6 +512,28 @@ pc.Material.prototype.setShader = function (shader) {
     console.warn('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
     // #endif
     this.shader = shader;
+};
+
+Object.defineProperty(pc.RigidBodyComponent.prototype, "bodyType", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        // #endif
+        return this.type;
+    },
+    set: function (type) {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+        // #endif
+        this.type = type;
+    }
+});
+
+pc.RigidBodyComponent.prototype.syncBodyToEntity = function () {
+    // #ifdef DEBUG
+    console.warn('pc.RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+    // #endif
+    this._updateDynamic();
 };
 
 pc.RigidBodyComponentSystem.prototype.setGravity = function () {

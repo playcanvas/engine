@@ -35,6 +35,7 @@ Object.assign(pc, function () {
      * @property {Element} element The target Element that the event was fired from.
      * @property {pc.Touch[]} touches A list of all touches currently in contact with the device.
      * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event.
+     * @property {TouchEvent} event - The original browser TouchEvent.
      */
     var TouchEvent = function (device, event) {
         this.element = event.target;

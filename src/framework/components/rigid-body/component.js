@@ -23,10 +23,10 @@ Object.assign(pc, function () {
      * Defaults to 0.
      * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
      * Defaults to 0.
-     * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis.
-     * Defaults to 1 in all axes.
-     * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis.
-     * Defaults to 1 in all axes.
+     * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
+     * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
+     * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
+     * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
      * @property {number} friction The friction value used when contacts occur between two bodies. A higher
      * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
      * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
@@ -41,7 +41,8 @@ Object.assign(pc, function () {
      *
      * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
      * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
-     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
+     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
+     * by setting their velocity or position.
      *
      * Defaults to pc.BODYTYPE_STATIC.
      */
@@ -70,8 +71,6 @@ Object.assign(pc, function () {
 
         this.on('set_body', this.onSetBody, this);
 
-        // For kinematic
-        this._displacement = new pc.Vec3(0, 0, 0);
         this._linearVelocity = new pc.Vec3(0, 0, 0);
         this._angularVelocity = new pc.Vec3(0, 0, 0);
     };
@@ -114,58 +113,47 @@ Object.assign(pc, function () {
      * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
      */
 
-    Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
-        get: function () {
-            console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
-            return this.type;
-        },
-        set: function (type) {
-            console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
-            this.type = type;
-        }
-    });
-
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
         get: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getLinearVelocity();
-                    this._linearVelocity.set(vel.x(), vel.y(), vel.z());
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var vel = body.getLinearVelocity();
+                this._linearVelocity.set(vel.x(), vel.y(), vel.z());
             }
             return this._linearVelocity;
         },
         set: function (lv) {
-            this.activate();
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    ammoVec1.setValue(lv.x, lv.y, lv.z);
-                    this.body.setLinearVelocity(ammoVec1);
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                body.activate();
+
+                ammoVec1.setValue(lv.x, lv.y, lv.z);
+                body.setLinearVelocity(ammoVec1);
+
+                this._linearVelocity.copy(lv);
             }
-            this._linearVelocity.copy(lv);
         }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
         get: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getAngularVelocity();
-                    this._angularVelocity.set(vel.x(), vel.y(), vel.z());
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var vel = body.getAngularVelocity();
+                this._angularVelocity.set(vel.x(), vel.y(), vel.z());
             }
             return this._angularVelocity;
         },
         set: function (av) {
-            this.activate();
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    ammoVec1.setValue(av.x, av.y, av.z);
-                    this.body.setAngularVelocity(ammoVec1);
-                }
+            var body = this.body;
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                body.activate();
+
+                ammoVec1.setValue(av.x, av.y, av.z);
+                body.setAngularVelocity(ammoVec1);
+
+                this._angularVelocity.copy(av);
             }
-            this._angularVelocity.copy(av);
         }
     });
 
@@ -195,52 +183,30 @@ Object.assign(pc, function () {
                 if (this.body)
                     this.system.onRemove(this.entity, this);
 
-                var isStaticOrKinematic = this.isStaticOrKinematic();
-                var mass = isStaticOrKinematic ? 0 : this.mass;
+                var mass = this.type === pc.BODYTYPE_DYNAMIC ? this.mass : 0;
 
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                if (!isStaticOrKinematic) {
-                    shape.calculateLocalInertia(mass, localInertia);
-                }
+                this._getEntityTransform(ammoTransform);
 
-                var pos = entity.getPosition();
-                var rot = entity.getRotation();
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-
-                var startTransform = new Ammo.btTransform();
-                startTransform.setIdentity();
-                var origin = startTransform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
-                startTransform.setRotation(ammoQuat);
-
-                var motionState = new Ammo.btDefaultMotionState(startTransform);
-                var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-
-                Ammo.destroy(localInertia);
-                Ammo.destroy(origin);
-                Ammo.destroy(startTransform);
-
-                var body = new Ammo.btRigidBody(bodyInfo);
-                Ammo.destroy(bodyInfo);
+                var body = this.system.createBody(mass, shape, ammoTransform);
 
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
                 body.setDamping(this.linearDamping, this.angularDamping);
 
-                var v;
-                v = this.linearFactor;
-                ammoVec1.setValue(v.x, v.y, v.z);
-                body.setLinearFactor(ammoVec1);
-                v = this.angularFactor;
-                ammoVec1.setValue(v.x, v.y, v.z);
-                body.setAngularFactor(ammoVec1);
+                if (this.type === pc.BODYTYPE_DYNAMIC) {
+                    var linearFactor = this.linearFactor;
+                    ammoVec1.setValue(linearFactor.x, linearFactor.y, linearFactor.z);
+                    body.setLinearFactor(ammoVec1);
 
-                body.entity = entity;
-
-                if (this.isKinematic()) {
+                    var angularFactor = this.angularFactor;
+                    ammoVec1.setValue(angularFactor.x, angularFactor.y, angularFactor.z);
+                    body.setAngularFactor(ammoVec1);
+                } else if (this.type === pc.BODYTYPE_KINEMATIC) {
                     body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_KINEMATIC_OBJECT);
                     body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
                 }
+
+                body.entity = entity;
 
                 entity.rigidbody.body = body;
 
@@ -257,21 +223,20 @@ Object.assign(pc, function () {
          * @returns {boolean} True if the body is active.
          */
         isActive: function () {
-            if (this.body) {
-                return this.body.isActive();
-            }
-
-            return false;
+            var body = this.body;
+            return body ? body.isActive() : false;
         },
 
         /**
          * @function
          * @name pc.RigidBodyComponent#activate
-         * @description Forcibly activate the rigid body simulation.
+         * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
+         * type pc.BODYTYPE_DYNAMIC.
          */
         activate: function () {
-            if (this.body) {
-                this.body.activate();
+            var body = this.body;
+            if (body) {
+                body.activate();
             }
         },
 
@@ -281,14 +246,26 @@ Object.assign(pc, function () {
                 if (body) {
                     this.system.addBody(body, this.group, this.mask);
 
-                    // set activation state so that the body goes back to normal simulation
-                    if (this.isKinematic()) {
-                        body.forceActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
-                        body.activate();
-                    } else {
-                        body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
-                        this.syncEntityToBody();
+                    switch (this.type) {
+                        case pc.BODYTYPE_DYNAMIC:
+                            this.system._dynamic.push(this);
+                            body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            this.syncEntityToBody();
+                            break;
+                        case pc.BODYTYPE_KINEMATIC:
+                            this.system._kinematic.push(this);
+                            body.forceActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
+                            break;
+                        case pc.BODYTYPE_STATIC:
+                            body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            break;
                     }
+
+                    if (this.entity.collision.type === 'compound') {
+                        this.system._compounds.push(this.entity.collision);
+                    }
+
+                    body.activate();
 
                     this.data.simulationEnabled = true;
                 }
@@ -298,7 +275,25 @@ Object.assign(pc, function () {
         disableSimulation: function () {
             var body = this.body;
             if (body && this.data.simulationEnabled) {
+                var idx;
+
+                idx = this.system._compounds.indexOf(this.entity.collision);
+                if (idx > -1) {
+                    this.system._compounds.splice(idx, 1);
+                }
+
+                idx = this.system._dynamic.indexOf(this);
+                if (idx > -1) {
+                    this.system._dynamic.splice(idx, 1);
+                }
+
+                idx = this.system._kinematic.indexOf(this);
+                if (idx > -1) {
+                    this.system._kinematic.splice(idx, 1);
+                }
+
                 this.system.removeBody(body);
+
                 // set activation state to disable simulation to avoid body.isActive() to return
                 // true even if it's not in the dynamics world
                 body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
@@ -594,6 +589,23 @@ Object.assign(pc, function () {
             return (this.type === pc.BODYTYPE_KINEMATIC);
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponent#_getEntityTransform
+         * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
+         * @param {object} transform - The ammo transform to write the entity transform to.
+         */
+        _getEntityTransform: function (transform) {
+            var pos = this.entity.getPosition();
+            var rot = this.entity.getRotation();
+
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+
+            transform.setOrigin(ammoVec1);
+            transform.setRotation(ammoQuat);
+        },
 
         /**
          * @private
@@ -604,28 +616,18 @@ Object.assign(pc, function () {
          * in order to update the rigid body to match the Entity.
          */
         syncEntityToBody: function () {
-            var body = this.body;
+            var body = this.data.body;
             if (body) {
-                var pos = this.entity.getPosition();
-                var rot = this.entity.getRotation();
+                this._getEntityTransform(ammoTransform);
 
-                var transform = body.getWorldTransform();
-                var origin = transform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
+                body.setWorldTransform(ammoTransform);
 
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                transform.setRotation(ammoQuat);
-
-                // update the motion state for kinematic bodies
-                if (this.isKinematic()) {
-                    var motionState = this.body.getMotionState();
+                if (this.type === pc.BODYTYPE_KINEMATIC) {
+                    var motionState = body.getMotionState();
                     if (motionState) {
-                        motionState.setWorldTransform(transform);
+                        motionState.setWorldTransform(ammoTransform);
                     }
                 }
-
-                Ammo.destroy(origin);
-                Ammo.destroy(transform);
                 body.activate();
             }
         },
@@ -633,13 +635,18 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.RigidBodyComponent#syncBodyToEntity
-         * @description Update the Entity transform from the rigid body.
-         * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
+         * @name pc.RigidBodyComponent#_updateDynamic
+         * @description Sets an entity's transform to match that of the world transformation
+         * matrix of a dynamic rigid body's motion state.
          */
-        syncBodyToEntity: function () {
-            var body = this.body;
+        _updateDynamic: function () {
+            var body = this.data.body;
+
+            // If a dynamic body is frozen, we can assume its motion state transform is
+            // the same is the entity world transform
             if (body.isActive()) {
+                // Update the motion state. Note that the test for the presence of the motion
+                // state is technically redundant since the engine creates one for all bodies.
                 var motionState = body.getMotionState();
                 if (motionState) {
                     motionState.getWorldTransform(ammoTransform);
@@ -649,6 +656,22 @@ Object.assign(pc, function () {
                     this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponent#_updateKinematic
+         * @description Writes the entity's world transformation matrix into the motion state
+         * of a kinematic body.
+         */
+        _updateKinematic: function () {
+            var body = this.data.body;
+            var motionState = body.getMotionState();
+            if (motionState) {
+                this._getEntityTransform(ammoTransform);
+                motionState.setWorldTransform(ammoTransform);
             }
         },
 
@@ -703,31 +726,6 @@ Object.assign(pc, function () {
             this.syncEntityToBody();
         },
 
-        /**
-         * @private
-         * @function
-         * @name pc.RigidBodyComponent#_updateKinematic
-         * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
-         * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-         * @param {number} dt - Delta time for the current frame.
-         */
-        _updateKinematic: function (dt) {
-            this._displacement.copy(this._linearVelocity).scale(dt);
-            this.entity.translate(this._displacement);
-
-            this._displacement.copy(this._angularVelocity).scale(dt);
-            this.entity.rotate(this._displacement.x, this._displacement.y, this._displacement.z);
-            if (this.body.getMotionState()) {
-                var pos = this.entity.getPosition();
-                var rot = this.entity.getRotation();
-
-                ammoTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
-                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                ammoTransform.setRotation(ammoQuat);
-                this.body.getMotionState().setWorldTransform(ammoTransform);
-            }
-        },
-
         onEnable: function () {
             if (!this.body) {
                 this.createBody();
@@ -742,21 +740,19 @@ Object.assign(pc, function () {
 
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
-                var isEnabled = this.enabled && this.entity.enabled;
-                if (isEnabled) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
+                var enabled = this.enabled && this.entity.enabled;
+                if (enabled) {
                     this.disableSimulation();
                 }
 
-                var mass = newValue;
-                var localInertia = new Ammo.btVector3(0, 0, 0);
-                body.getCollisionShape().calculateLocalInertia(mass, localInertia);
-                body.setMassProps(mass, localInertia);
+                // calculateLocalInertia writes local inertia to ammoVec1 here...
+                body.getCollisionShape().calculateLocalInertia(newValue, ammoVec1);
+                // ...and then writes the calculated local inertia to the body
+                body.setMassProps(newValue, ammoVec1);
                 body.updateInertiaTensor();
 
-                Ammo.destroy(localInertia);
-
-                if (isEnabled) {
+                if (enabled) {
                     this.enableSimulation();
                 }
             }
@@ -778,7 +774,7 @@ Object.assign(pc, function () {
 
         onSetLinearFactor: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setLinearFactor(ammoVec1);
             }
@@ -786,7 +782,7 @@ Object.assign(pc, function () {
 
         onSetAngularFactor: function (name, oldValue, newValue) {
             var body = this.data.body;
-            if (body) {
+            if (body && this.type === pc.BODYTYPE_DYNAMIC) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setAngularFactor(ammoVec1);
             }
