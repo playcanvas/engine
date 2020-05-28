@@ -1368,12 +1368,12 @@ Object.assign(pc, function () {
     var getDefaultScene = function (gltf, scenes) {
         if (!gltf.hasOwnProperty('scene')) {
             if (scenes.length === 0) {
-                return undefined;
+                return null;
             }
             return scenes[0];
         }
 
-        return scenes[gltf.scene];
+        return scenes[gltf.scene] || null;
     };
 
     var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials) {
