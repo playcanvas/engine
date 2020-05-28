@@ -50,7 +50,8 @@
     "sinon": "^9.0.2",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.3",
-    "uglify-js": "^3.9.3"
+    "uglify-js": "^3.9.3",
+    "parcel": "^1.12.4"
   },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas.js",
@@ -59,6 +60,8 @@
     "build:min": "cd build && node build.js -l 1 -o output/playcanvas.min.js",
     "build:extras": "cd build && node build.js -l 1 -t extras",
     "build:all": "npm run build && npm run build:debug && npm run build:profiler && npm run build:min && npm run build:extras",
+    "parcel:build": "parcel build ./src/playcanvas.js --out-dir build/output",
+    "parcel:watch": "parcel watch ./src/playcanvas.js --no-hmr --out-dir build/output",
     "docs": "jsdoc -c conf-api.json",
     "serve": "http-server build/output -a localhost -p 51000",
     "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas.js --js_output_file build/output/playcanvas.min.js",
