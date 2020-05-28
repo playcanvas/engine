@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @class
      * @name pc.AnimationStateGraphHandler
      * @implements {pc.ResourceHandler}
@@ -39,7 +40,7 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
-            return data;
+            return new pc.AnimStateGraph(data);
         }
     });
 
