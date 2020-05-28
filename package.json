@@ -51,7 +51,8 @@
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.3",
     "uglify-js": "^3.9.3",
-    "parcel": "^1.12.4"
+    "parcel": "^1.12.4",
+    "parcel-bundler": "^1.12.4"
   },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas.js",
