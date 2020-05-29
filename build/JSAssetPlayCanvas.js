@@ -47,7 +47,7 @@ function preprocess(contents, optionsPlayCanvas) {
 
 class JSAssetPlayCanvas extends JSAsset {
 	async pretransform() {
-		var optionsPlayCanvas = global.playcanvas;
+		var optionsPlayCanvas = global.optionsPlayCanvas;
 		// run the loader on the source
 		//this.contents = parse(this.contents, { ...process.env })
 		if (this.relativeName == "playcanvas.js") {

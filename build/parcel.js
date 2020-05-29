@@ -2,14 +2,27 @@
 // Call like: node build\parcel.js
 
 const fs = require('fs');
+var cp = require("child_process");
 // Delete .cache folder, otherwise Parcel does nothing while developing this bundler
 fs.rmdirSync(".cache", { recursive: true });
 
 const Bundler = require('parcel-bundler');
 const Path = require('path');
 
-// Slow, but useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
-var debug = true;
+// A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
+var debugParcel = true;
+
+var debug = false;
+var profiler = false;
+var sourceMap = false; // Not used yet
+var outputPath; // Not used yet
+var sourcePath; // Not used yet
+var COMPILER_LEVEL = [
+    'WHITESPACE_ONLY',
+    'SIMPLE',
+    'ADVANCED'
+];
+var compilerLevel = COMPILER_LEVEL[0];
 
 // https://stackoverflow.com/questions/11616630/how-can-i-print-a-circular-structure-in-a-json-like-format
 // safely handles circular references
@@ -27,6 +40,30 @@ JSON.safeStringify = (obj, indent = 2) => {
 	);
 	cache = null;
 	return retVal;
+};
+
+// get git revision
+var getRevision = function (callback) {
+    var command = "git rev-parse --short HEAD";
+
+    cp.exec(command, function (err, stdout, stderr) {
+        if (err) {
+            callback(err, '-');
+            return;
+        }
+        callback(null, stdout.trim());
+    });
+};
+
+// get version from VERSION file
+var getVersion = function (callback) {
+    //fs.readFile('../VERSION', function (err, buffer) {
+    fs.readFile('VERSION', function (err, buffer) {
+        if (err) {
+            callback(err, "__CURRENT_SDK_VERSION__");
+        }
+        callback(null, buffer.toString().trim());
+    });
 };
 
 // Single entrypoint file location:
@@ -65,7 +102,7 @@ var options = {
 	autoInstall: false, // Enable or disable auto install of missing dependencies found during bundling
 };
 
-global.playcanvas = {
+var optionsPlayCanvas = {
 	__CURRENT_SDK_VERSION__: "some ver",
 	__REVISION__: "some rev",
 	//PROFILER: profiler || debug,
@@ -76,7 +113,9 @@ global.playcanvas = {
 	RELEASE: true
 };
 
-(async function() {
+global.optionsPlayCanvas = optionsPlayCanvas;
+
+async function main() {
 	// Initializes a bundler using the entrypoint location and options provided
 	const bundler = new Bundler(entryFiles, options);
 	bundler.addAssetType('js', require.resolve('./JSAssetPlayCanvas'));
@@ -84,7 +123,7 @@ global.playcanvas = {
 	// `bundled` gets called once Parcel has successfully finished bundling, the main bundle instance gets passed to the callback
 	bundler.on('bundled', (bundle) => {
 		// bundler contains all assets and bundles, see documentation for details
-		if (debug) {
+		if (debugParcel) {
 			console.log("Event: bundled");
 			fs.writeFileSync("parcel_dump_bundled.json", JSON.safeStringify(bundle));
 		}
@@ -92,21 +131,21 @@ global.playcanvas = {
 
 	// `buildEnd` gets called after each build (aka including every rebuild), this also emits if an error occurred
 	bundler.on('buildEnd', () => {
-		if (debug) {
+		if (debugParcel) {
 			console.log("Event: buildEnd");
 		}
 	});
 
 	// `buildStart` gets called at the start of the first build, the entryFiles Array gets passed to the callback
 	bundler.on('buildStart', entryPoints => {
-		if (debug) {
+		if (debugParcel) {
 			console.log("Event: buildStart");
 			console.log("entryPoints", entryPoints);
 		}
 	});
 
 	bundler.on('buildError', error => {
-		if (debug) {
+		if (debugParcel) {
 			console.log("Event: buildError");
 			console.log("error", error);
 		}
@@ -115,4 +154,96 @@ global.playcanvas = {
 	// Run the bundler, this returns the main bundle
 	// Use the events if you're using watch mode as this promise will only trigger once and not for every rebuild
 	const bundle = await bundler.bundle();
-})();
+};
+
+// parse arguments
+var arguments = function () {
+    var _last = null;
+    var _arg = null;
+    process.argv.forEach(function (arg) {
+        if (arg === '-h') {
+            console.log("Build Script for PlayCanvas Engine\n");
+            console.log("Usage: node parcel.js -l [COMPILER_LEVEL] -o [OUTPUT_PATH] -m [SOURCE_PATH]\n");
+            console.log("Arguments:");
+            console.log("-h: show this help");
+            //console.log("-l COMPILER_LEVEL: Set compiler level");
+            //console.log("\t0: WHITESPACE_ONLY [default]");
+            //console.log("\t1: SIMPLE");
+            //console.log("\t2: ADVANCED OPTIMIZATIONS");
+            console.log("-o PATH: output file path [output/playcanvas.js]");
+            console.log("-d: build debug engine configuration");
+            console.log("-p: build profiler engine configuration");
+            console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
+            console.log("-t target to build, either engine or extas. default is engine");
+            //console.log("--concatenateShaders: Just generate src/graphics/program-lib/chunks/generated-shader-chunks.js");
+            process.exit();
+        }
+
+        if (arg === '-d') {
+            debug = true;
+        }
+
+        if (arg === '-p') {
+            profiler = true;
+        }
+
+        //if (arg === '--concatenateShaders') {
+        //    run = function() {
+        //        concatenateShaders(function() {
+        //            console.log("> concatenated shaders")
+        //        });
+        //    }
+        //}
+
+        if (_last === '-l') {
+            var level = parseInt(arg, 10);
+            if (!(level >= 0 && level <= 2)) {
+                console.error("Invalid compiler level (-l) should be: 0, 1 or 2.");
+                process.exit(1);
+            }
+            compilerLevel = COMPILER_LEVEL[level];
+        }
+
+        if (_last === '-o') {
+            outputPath = arg;
+        }
+
+        if (arg === '-m') {
+            sourceMap = true;
+        }
+
+        if (_last === '-m' && !arg.startsWith('-')) {
+            sourcePath = arg;
+        }
+
+        if (_last === '-t') {
+            if (!targets.hasOwnProperty(arg)) {
+                console.error("Invalid target should be: engine or extras");
+                process.exit(1);
+            }
+            target = targets[arg];
+        }
+
+        _last = arg;
+    });
+
+    //outputPath = outputPath || target.defaultOutputPath;
+    //sourcePath = sourcePath || target.defaultSourcePath;
+};
+
+var run = function() {
+	getRevision(function (err, rev) {
+		optionsPlayCanvas.__REVISION__ = rev;
+		getVersion(function (err, ver) {
+			optionsPlayCanvas.__CURRENT_SDK_VERSION__ = ver;
+			optionsPlayCanvas.PROFILER = profiler || debug;
+			optionsPlayCanvas.DEBUG = debug;
+			optionsPlayCanvas.RELEASE = compilerLevel != COMPILER_LEVEL[0];
+			console.log("optionsPlayCanvas", optionsPlayCanvas);
+			main();
+		});
+	});
+}
+
+arguments();
+run();
