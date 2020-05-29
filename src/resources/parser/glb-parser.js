@@ -17,11 +17,14 @@ Object.assign(pc, function () {
         return Math.pow(2, Math.round(Math.log(n) / Math.log(2)));
     };
 
-    function getNodeLocatorPath(graphNode) {
-        if (graphNode.parent) {
-            return getNodeLocatorPath(graphNode.parent).concat([graphNode.name]);
+    function getNodePath(targetNode, nodes) {
+        var parent = nodes.findIndex(function (node) {
+            return node.hasOwnProperty('children') ? node.children.includes(targetNode) : false;
+        });
+        if (parent !== -1) {
+            return getNodePath(parent, nodes).concat([targetNode]);
         }
-        return [graphNode.name];
+        return [targetNode];
     }
 
     var getNumComponents = function (accessorType) {
@@ -1057,7 +1060,7 @@ Object.assign(pc, function () {
     };
 
     // create the anim structure
-    var createAnimation = function (animationData, animationIndex, accessors, bufferViews, nodes, buffers) {
+    var createAnimation = function (animationData, animationIndex, accessors, bufferViews, nodes, nodeEntities, buffers) {
 
         // create animation data block for the accessor
         var createAnimData = function (accessor) {
@@ -1127,9 +1130,14 @@ Object.assign(pc, function () {
             var channel = animationData.channels[i];
             var target = channel.target;
             var curve = curves[channel.sampler];
-            var targetNodePath = getNodeLocatorPath(nodes[target.node]);
-            curve._paths.push(propertyLocator.encode([targetNodePath, 'entity', [transformSchema[target.path]]]));
+            // get node locator path relative to root node
+            var targetNodePath = getNodePath(target.node, nodes);
+            var targetNodePathNamed = targetNodePath.map(function (node) {
+                return nodeEntities[node].name;
+            });
+
             targetRootNodes.push(targetNodePath[0]);
+            curve._paths.push(propertyLocator.encode([targetNodePathNamed, 'entity', [transformSchema[target.path]]]));
 
             // if this target is a set of quaternion keys, make note of its index so we can perform
             // quaternion-specific processing on it.
@@ -1182,14 +1190,14 @@ Object.assign(pc, function () {
         }, 0);
 
         return {
-            animation: new pc.AnimTrack(
+            track: new pc.AnimTrack(
                 animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + animationIndex),
                 duration,
                 inputs,
                 outputs,
                 curves
             ),
-            // Return root nodes without duplicates
+            // return root nodes without duplicates
             targetRootNodes: targetRootNodes.filter(function (rootNode, index, rootNodes) {
                 return rootNodes.indexOf(rootNode) === index;
             })
@@ -1337,21 +1345,21 @@ Object.assign(pc, function () {
             return [];
         }
 
-        var animations = [];
+        var animTracks = [];
 
         gltf.animations.forEach(function (animationData, animationIndex) {
-            var animation = createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
-            animations.push(animation.animation);
+            var animation = createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, gltf.nodes, nodes, buffers);
+            animTracks.push(animation.track);
 
+            // animation components should be added to all root nodes targeted by an
+            // animation track since the locator path in animation curves is relative
+            // to its targets root node
             animation.targetRootNodes.forEach(function (rootNode) {
-                var rootNodeIndex = nodes.findIndex(function (node) {
-                    return node.name === rootNode;
-                });
-                nodeComponents[rootNodeIndex].animations.push(animationIndex);
+                nodeComponents[rootNode].animations.push(animationIndex);
             });
         });
 
-        return animations;
+        return animTracks;
     };
 
     var createNodes = function (gltf) {
@@ -1430,7 +1438,6 @@ Object.assign(pc, function () {
             };
         });
 
-        var animations = createAnimations(gltf, nodes, nodeComponents, buffers);
         var scenes = createScenes(gltf, nodes);
         var scene = getDefaultScene(gltf, scenes);
         var textures = createTextures(device, gltf, images);
@@ -1438,6 +1445,7 @@ Object.assign(pc, function () {
         var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
         var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
+        var animations = createAnimations(gltf, nodes, nodeComponents, buffers);
 
         callback(null, {
             'nodes': nodes,
