@@ -195,7 +195,7 @@ Object.assign(pc, function () {
                         assetCubeMap.resource = new pc.Texture(self._device, {
                             name: "cubemap-faces",
                             cubemap: true,
-                            rgbm: assetCubeMap.data.rgbm,        // take rgbm flag from asset data
+                            rgbm: sources[0].rgbm,
                             width: sources[0].width,
                             height: sources[0].height,
                             format: sources[0].format,
