@@ -180,9 +180,7 @@ Object.assign(pc, function () {
                 }
 
                 if (components.animations.length > 0) {
-                    var anim = node.addComponent('anim', {
-                        enabled: false
-                    });
+                    var anim = node.addComponent('anim');
 
                     var animLayers = components.animations.map(function (animationIndex) {
                         return {
@@ -204,7 +202,11 @@ Object.assign(pc, function () {
                             return;
                         }
                         layer.assignAnimation(ANIM_STATE_ACTIVE, animationAssets[animationIndex].resource);
+                        // This is currently the only way to set the current state of the layer.
+                        // By doing this the animation can be played by simply running layer.play()
+                        // in an application, since a GLB anim layer will never have more than one state.
                         layer.play(ANIM_STATE_ACTIVE);
+                        layer.pause();
                     });
                 }
             });
