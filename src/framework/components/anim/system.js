@@ -42,7 +42,6 @@ Object.assign(pc, function () {
         },
 
         onBeforeRemove: function (entity, component) {
-            component.onBeforeRemove();
         },
 
         onUpdate: function (dt) {
