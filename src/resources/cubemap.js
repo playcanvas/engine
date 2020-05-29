@@ -176,14 +176,25 @@ Object.assign(pc, function () {
 
                     // when all faces checked
                     if (count === 6 && levelsUpdated) {
-                        // set cubemap sources
-                        cubemap._width = sources[0].width;
-                        cubemap._height = sources[0].height;
-                        cubemap._format = sources[0].format;
-                        cubemap._levels[0] = sources.map(function (t) {
-                            return t._levels[0];
+
+                        // extract level data from source textures
+                        var levels = [];
+                        for (var mip = 0; mip < sources[0]._levels.length; ++mip) {
+                            levels.push(sources.map(function (s) {
+                                return s._levels[mip];
+                            }));
+                        }
+
+                        // reconstruct cubemap with new data
+                        assetCubeMap.resource = new pc.Texture(self._device, {
+                            name: "cubemap-faces",
+                            cubemap: true,
+                            rgbm: assetCubeMap.data.rgbm,        // take rgbm flag from asset data
+                            width: sources[0].width,
+                            height: sources[0].height,
+                            format: sources[0].format,
+                            levels: levels
                         });
-                        cubemap.dirtyAll();
 
                         // trigger load event (resource changed)
                         assets.fire('load', assetCubeMap);
