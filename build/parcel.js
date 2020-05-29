@@ -39,7 +39,7 @@ const entryFiles = './src/playcanvas.js';
 // const entryFiles = ['./src/index.html', './some/other/directory/scripts.js'];
 
 // Bundler options
-const options = {
+var options = {
 	outDir: './build/output', // The out directory to put the build files in, defaults to dist
 	outFile: 'playcanvasbundle.js', // The name of the outputFile
 	publicUrl: '/', // The url to serve on, defaults to '/'
@@ -63,6 +63,17 @@ const options = {
 	hmrHostname: '', // A hostname for hot module reload, default to ''
 	detailedReport: false, // Prints a detailed report of the bundles, assets, filesizes and times, defaults to false, reports are only printed if watch is disabled
 	autoInstall: false, // Enable or disable auto install of missing dependencies found during bundling
+};
+
+global.playcanvas = {
+	__CURRENT_SDK_VERSION__: "some ver",
+	__REVISION__: "some rev",
+	//PROFILER: profiler || debug,
+	//DEBUG: debug,
+	//RELEASE: compilerLevel != COMPILER_LEVEL[0]
+	PROFILER: false,
+	DEBUG: false,
+	RELEASE: true
 };
 
 (async function() {

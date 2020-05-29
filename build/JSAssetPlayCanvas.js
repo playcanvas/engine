@@ -1,3 +1,4 @@
+var Preprocessor = require("preprocessor");
 const JSAsset = require('parcel-bundler/src/assets/JSAsset')
 //const { parse } = require('ifdef-loader/preprocessor')
 
@@ -35,15 +36,29 @@ JSAssetPlayCanvas JSAssetPlayCanvas {
     throwErrors: true,
 */
 
+function preprocess(contents, optionsPlayCanvas) {
+	var pp = new Preprocessor(contents);
+    return pp.process({
+		PROFILER: optionsPlayCanvas.PROFILER,
+		DEBUG:    optionsPlayCanvas.DEBUG,
+		RELEASE:  optionsPlayCanvas.RELEASE
+	});
+}
+
 class JSAssetPlayCanvas extends JSAsset {
 	async pretransform() {
+		var optionsPlayCanvas = global.playcanvas;
 		// run the loader on the source
 		//this.contents = parse(this.contents, { ...process.env })
 		if (this.relativeName == "playcanvas.js") {
-			console.log("JSAssetPlayCanvas", this);
+			//console.log("JSAssetPlayCanvas", this);
 		} else {
-			this.contents = "// " + this.relativeName;
+			//this.contents = "// " + this.relativeName;
 		}
+		this.contents = preprocess(this.contents, optionsPlayCanvas);
+		this.contents = this.contents.replace("__CURRENT_SDK_VERSION__", optionsPlayCanvas.__CURRENT_SDK_VERSION__);
+		this.contents = this.contents.replace("__REVISION__"           , optionsPlayCanvas.__REVISION__);
+
 		// continue the normal flow
 		return await super.pretransform()
 	}
