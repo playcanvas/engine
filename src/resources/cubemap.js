@@ -156,7 +156,7 @@ Object.assign(pc, function () {
             assetCubeMap.data.textures.forEach(function (id, index) {
                 var assetReady = function (asset) {
                     count++;
-                    sources[index] = asset && asset.resource.getSource() || null;
+                    sources[index] = asset.resource;
 
                     // events of texture loads
                     var evtAsset = assetCubeMap._levelsEvents[index];
@@ -171,12 +171,20 @@ Object.assign(pc, function () {
                     }
 
                     // check if source is actually changed
-                    if (sources[index] !== cubemap._levels[0][index])
+                    if (sources[index]._levels[0] !== cubemap._levels[0][index])
                         levelsUpdated = true;
 
                     // when all faces checked
                     if (count === 6 && levelsUpdated) {
-                        cubemap.setSource(sources);
+                        // set cubemap sources
+                        cubemap._width = sources[0].width;
+                        cubemap._height = sources[0].height;
+                        cubemap._format = sources[0].format;
+                        cubemap._levels[0] = sources.map(function (t) {
+                            return t._levels[0];
+                        });
+                        cubemap.dirtyAll();
+
                         // trigger load event (resource changed)
                         assets.fire('load', assetCubeMap);
                         assets.fire('load:' + assetCubeMap.id, assetCubeMap);
