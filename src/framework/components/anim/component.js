@@ -20,7 +20,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimComponentLayer#play
          * @description Start playing the animation in the current state.
-         * @param {string} name - If provided, will begin playing from the start of the state with this name.
+         * @param {string} [name] - If provided, will begin playing from the start of the state with this name.
          */
         play: function (name) {
             this._controller.play(name);
@@ -89,8 +89,10 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimComponentLayer.prototype, {
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#name
-         * @property {string} name - Returns the name of the layer
+         * @type {string}
+         * @description Returns the name of the layer
          */
         name: {
             get: function () {
@@ -99,7 +101,8 @@ Object.assign(pc, function () {
         },
         /**
          * @name pc.AnimComponentLayer#playing
-         * @property {string} playing - Whether this layer is currently playing
+         * @type {boolean}
+         * @description Whether this layer is currently playing
          */
         playing: {
             get: function () {
@@ -110,8 +113,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#playable
-         * @property {string} playable - Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
+         * @type {boolean}
+         * @description Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
          */
         playable: {
             get: function () {
@@ -119,8 +124,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#activeState
-         * @property {string} activeState - Returns the currently active state name.
+         * @type {string}
+         * @description Returns the currently active state name.
          */
         activeState: {
             get: function () {
@@ -128,8 +135,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#previousState
-         * @property {string} previousState - Returns the previously active state name.
+         * @type {string}
+         * @description Returns the previously active state name.
          */
         previousState: {
             get: function () {
@@ -137,8 +146,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#activeStateProgress
-         * @property {number} activeStateProgress - Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+         * @type {number}
+         * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
          */
         activeStateProgress: {
             get: function () {
@@ -146,8 +157,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#transitioning
-         * @property {boolean} transitioning - Returns whether the anim component layer is currently transitioning between states.
+         * @type {boolean}
+         * @description Returns whether the anim component layer is currently transitioning between states.
          */
         transitioning: {
             get: function () {
@@ -155,8 +168,10 @@ Object.assign(pc, function () {
             }
         },
         /**
+         * @readonly
          * @name pc.AnimComponentLayer#transitionProgress
-         * @property {number} transitionProgress - If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
+         * @type {number}
+         * @description If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
          */
         transitionProgress: {
             get: function () {
@@ -179,6 +194,7 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
      * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
+     * @property {pc.AnimComponentData} data
      */
     var AnimComponent = function (system, entity) {
         pc.Component.call(this, system, entity);

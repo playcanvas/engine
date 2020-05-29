@@ -1,4 +1,15 @@
 Object.assign(pc, function () {
+    /**
+     * @class
+     * @name pc.AnimComponentData
+     * @property {number} speed
+     * @property {boolean} active
+     * @property {boolean} enabled
+     * @property {boolean} playing
+     * @property {pc.AnimComponentLayer[]} layers
+     * @property {object|undefined} parameters
+     * @property {pc.Model|null} model
+     */
     var AnimComponentData = function () {
         // Serialized
         this.speed = 1.0;
