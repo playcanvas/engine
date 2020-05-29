@@ -187,8 +187,9 @@ Object.assign(pc, function () {
                         var levels = [];
                         for (var mip = 0; mip < sources[0]._levels.length; ++mip) {
                             levels.push(sources.map(function (s) {
-                                return s._levels[mip];
-                            }));
+                                // use 'this' to overcome eslint no-loop-func when referencing mip in loop
+                                return s._levels[this];
+                            }, mip));
                         }
 
                         // reconstruct cubemap with new data
