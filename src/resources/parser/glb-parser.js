@@ -1355,6 +1355,12 @@ Object.assign(pc, function () {
             // animation track since the locator path in animation curves is relative
             // to its targets root node
             animation.targetRootNodes.forEach(function (rootNode) {
+                if (!nodeComponents[rootNode]) {
+                    nodeComponents[rootNode] = {};
+                }
+                if (!nodeComponents[rootNode].animations) {
+                    nodeComponents[rootNode].animations = [];
+                }
                 nodeComponents[rootNode].animations.push(animationIndex);
             });
         });
@@ -1417,11 +1423,16 @@ Object.assign(pc, function () {
             if (!nodeData.hasOwnProperty('mesh')) {
                 return;
             }
+
             var node = nodes[nodeIndex];
             var meshGroup = meshGroups[nodeData.mesh];
             var skin = nodeData.hasOwnProperty('skin') ? skins[nodeData.skin] : null;
             var model = createModel(node, meshGroup, skin, materials, defaultMaterial);
             var modelIndex = models.push(model) - 1;
+
+            if (!nodeComponents[nodeIndex]) {
+                nodeComponents[nodeIndex] = {};
+            }
             nodeComponents[nodeIndex].model = modelIndex;
         });
 
