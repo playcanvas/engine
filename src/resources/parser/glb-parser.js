@@ -17,6 +17,13 @@ Object.assign(pc, function () {
         return Math.pow(2, Math.round(Math.log(n) / Math.log(2)));
     };
 
+    function getNodeLocatorPath(graphNode) {
+        if (graphNode.parent) {
+            return getNodeLocatorPath(graphNode.parent).concat([graphNode.name]);
+        }
+        return [graphNode.name];
+    }
+
     var getNumComponents = function (accessorType) {
         switch (accessorType) {
             case 'SCALAR': return 1;
@@ -1072,6 +1079,7 @@ Object.assign(pc, function () {
         var outputs = [];
 
         var curves = [];
+        var targetRootNodes = [];
 
         var i;
 
@@ -1119,7 +1127,9 @@ Object.assign(pc, function () {
             var channel = animationData.channels[i];
             var target = channel.target;
             var curve = curves[channel.sampler];
-            curve._paths.push(propertyLocator.encode([[nodes[target.node].name], 'graph', [transformSchema[target.path]]]));
+            var targetNodePath = getNodeLocatorPath(nodes[target.node]);
+            curve._paths.push(propertyLocator.encode([targetNodePath, 'entity', [transformSchema[target.path]]]));
+            targetRootNodes.push(targetNodePath[0]);
 
             // if this target is a set of quaternion keys, make note of its index so we can perform
             // quaternion-specific processing on it.
@@ -1171,12 +1181,19 @@ Object.assign(pc, function () {
             return Math.max(value, data.length === 0 ? 0 : data[data.length - 1]);
         }, 0);
 
-        return new pc.AnimTrack(
-            animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + animationIndex),
-            duration,
-            inputs,
-            outputs,
-            curves);
+        return {
+            animation: new pc.AnimTrack(
+                animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + animationIndex),
+                duration,
+                inputs,
+                outputs,
+                curves
+            ),
+            // Return root nodes without duplicates
+            targetRootNodes: targetRootNodes.filter(function (rootNode, index, rootNodes) {
+                return rootNodes.indexOf(rootNode) === index;
+            })
+        };
     };
 
     var createNode = function (nodeData, nodeIndex) {
@@ -1238,8 +1255,7 @@ Object.assign(pc, function () {
 
     var createModel = function (node, meshGroup, skin, materials, defaultMaterial) {
         var model = new pc.Model();
-        // Node name is used as path in animation curves
-        model.graph = new pc.GraphNode(node.name);
+        model.graph = new pc.GraphNode("model_" + node.name);
 
         meshGroup.forEach(function (mesh) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
@@ -1325,10 +1341,13 @@ Object.assign(pc, function () {
 
         gltf.animations.forEach(function (animationData, animationIndex) {
             var animation = createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
-            animations.push(animation);
+            animations.push(animation.animation);
 
-            animationData.channels.forEach(function (channel) {
-                nodeComponents[channel.target.node].animations.push(animationIndex);
+            animation.targetRootNodes.forEach(function (rootNode) {
+                var rootNodeIndex = nodes.findIndex(function (node) {
+                    return node.name === rootNode;
+                });
+                nodeComponents[rootNodeIndex].animations.push(animationIndex);
             });
         });
 
@@ -1406,11 +1425,12 @@ Object.assign(pc, function () {
         var nodes = createNodes(gltf);
         var nodeComponents = nodes.map(function () {
             return {
-                animations: [],
-                model: null
+                model: null,
+                animations: []
             };
         });
 
+        var animations = createAnimations(gltf, nodes, nodeComponents, buffers);
         var scenes = createScenes(gltf, nodes);
         var scene = getDefaultScene(gltf, scenes);
         var textures = createTextures(device, gltf, images);
@@ -1418,7 +1438,6 @@ Object.assign(pc, function () {
         var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
         var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
-        var animations = createAnimations(gltf, nodes, nodeComponents, buffers);
 
         callback(null, {
             'nodes': nodes,

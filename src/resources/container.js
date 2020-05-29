@@ -178,12 +178,36 @@ Object.assign(pc, function () {
                 }
 
                 if (components.animations.length > 0) {
-                    node.addComponent('animation', {
-                        assets: components.animations.map(function (animationIndex) {
-                            return animationAssets[animationIndex].id;
-                        }),
+                    var anim = node.addComponent('anim', {
                         enabled: false
                     });
+
+                    var ANIM_STATE_ACTIVE = 'ACTIVE';
+
+                    var animLayers = components.animations.map(function (animationIndex) {
+                        return {
+                            name: animationAssets[animationIndex].resource.name,
+                            states: [
+                                { name: pc.ANIM_STATE_START },
+                                { name: ANIM_STATE_ACTIVE }
+                            ],
+                            transitions: [],
+                            parameters: {}
+                        };
+                    });
+
+                    anim.loadStateGraph({ layers: animLayers });
+
+                    components.animations.forEach(function (animationIndex) {
+                        var layer = anim.findAnimationLayer(animationAssets[animationIndex].resource.name);
+                        if (!layer) {
+                            return;
+                        }
+                        layer.assignAnimation(ANIM_STATE_ACTIVE, animationAssets[animationIndex].resource);
+                        layer.play(ANIM_STATE_ACTIVE);
+                    });
+
+                    console.log(anim);
                 }
             });
 
