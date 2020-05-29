@@ -186,11 +186,12 @@ Object.assign(pc, function () {
                         // build levels
                         var levels = [];
                         for (var mip = 0; mip < sources[0]._levels.length; ++mip) {
-                            levels.push(sources.map(function (s) {
-                                // use 'this' to overcome eslint no-loop-func when referencing mip in loop
-                                return s._levels[this];
-                            }, mip));
+                            levels.push(sources.map(function (s) {  // eslint-disable-line no-loop-func
+                                return s._levels[mip];
+                            }));
                         }
+
+                        var prevCubemap = assetCubeMap.resource;
 
                         // reconstruct cubemap with new data
                         assetCubeMap.resource = new pc.Texture(self._device, {
@@ -202,6 +203,11 @@ Object.assign(pc, function () {
                             format: sources[0].format,
                             levels: levels
                         });
+
+                        // destroy the replaced cubemap
+                        if (prevCubemap) {
+                            prevCubemap.destroy();
+                        }
 
                         // trigger load event (resource changed)
                         assets.fire('load', assetCubeMap);
