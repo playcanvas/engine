@@ -1,5 +1,7 @@
 Object.assign(pc, function () {
 
+    var ANIM_STATE_ACTIVE = 'ACTIVE';
+
     /**
      * @class
      * @name pc.ContainerResource
@@ -182,8 +184,6 @@ Object.assign(pc, function () {
                         enabled: false
                     });
 
-                    var ANIM_STATE_ACTIVE = 'ACTIVE';
-
                     var animLayers = components.animations.map(function (animationIndex) {
                         return {
                             name: animationAssets[animationIndex].resource.name,
@@ -206,8 +206,6 @@ Object.assign(pc, function () {
                         layer.assignAnimation(ANIM_STATE_ACTIVE, animationAssets[animationIndex].resource);
                         layer.play(ANIM_STATE_ACTIVE);
                     });
-
-                    console.log(anim);
                 }
             });
 
