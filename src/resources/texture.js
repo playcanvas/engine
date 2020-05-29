@@ -16,43 +16,172 @@ Object.assign(pc, function () {
         "linear_mip_linear": pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
-    /**
-     * @interface
-     * @name pc.TextureParser
-     * @description Interface to a texture parser. Implementations of this interface handle the loading
-     * and opening of texture assets.
-     */
-    var TextureParser = function () { };
-
-    Object.assign(TextureParser.prototype, {
-         /**
-         * @function
-         * @name pc.TextureParser#load
-         * @description Load the texture from the remote URL. When loaded (or failed),
-         * use the callback to return an the raw resource data (or error).
-         * @param {object} url - The URL of the resource to load.
-         * @param {string} url.load - The URL to use for loading the resource
-         * @param {string} url.original - The original URL useful for identifying the resource type
-         * @param {pc.callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
-         * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
-         */
-        load: function (url, callback, asset) {
-            throw new Error('not implemented');
-        },
-
-        /**
-         * @function
-         * @name pc.TextureParser#open
-         * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
-         * @param {string} url - The URL of the resource to open.
-         * @param {*} data - The raw resource data passed by callback from {@link pc.ResourceHandler#load}.
-         * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
-         * @returns {pc.Texture} The parsed resource data.
-         */
-        open: function (url, data, device) {
-            throw new Error('not implemented');
+    function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
+        var i;
+        var dst32Offset = dstByteOffset / 4;
+        var tail = (numBytes % 4);
+        var src32 = new Uint32Array(src.buffer, 0, (numBytes - tail) / 4);
+        var dst32 = new Uint32Array(dst.buffer);
+        for (i = 0; i < src32.length; i++) {
+            dst32[dst32Offset + i] = src32[i];
         }
-    });
+        for (i = numBytes - tail; i < numBytes; i++) {
+            dst[dstByteOffset + i] = src[i];
+        }
+    }
+
+    var _legacyDdsLoader = function (url, data, graphicsDevice) {
+
+        var ext = pc.path.getExtension(url).toLowerCase();
+
+        if (ext === ".crn") {
+            // Copy loaded file into Emscripten-managed memory
+            var srcSize = data.byteLength;
+            var bytes = new Uint8Array(data);
+            var src = Module._malloc(srcSize);
+            arrayBufferCopy(bytes, Module.HEAPU8, src, srcSize);
+
+            // Decompress CRN to DDS (minus the header)
+            var dst = Module._crn_decompress_get_data(src, srcSize);
+            var dstSize = Module._crn_decompress_get_size(src, srcSize);
+
+            data = Module.HEAPU8.buffer.slice(dst, dst + dstSize);
+        }
+
+        // DDS loading
+        var header = new Uint32Array(data, 0, 128 / 4);
+
+        var width = header[4];
+        var height = header[3];
+        var mips = Math.max(header[7], 1);
+        var isFourCc = header[20] === 4;
+        var fcc = header[21];
+        var bpp = header[22];
+        var isCubemap = header[28] === 65024; // TODO: check by bitflag
+
+        var FCC_DXT1 = 827611204; // DXT1
+        var FCC_DXT5 = 894720068; // DXT5
+        var FCC_FP32 = 116; // RGBA32f
+
+        // non standard
+        var FCC_ETC1 = 826496069;
+        var FCC_PVRTC_2BPP_RGB_1 = 825438800;
+        var FCC_PVRTC_2BPP_RGBA_1 = 825504336;
+        var FCC_PVRTC_4BPP_RGB_1 = 825439312;
+        var FCC_PVRTC_4BPP_RGBA_1 = 825504848;
+
+        var compressed = false;
+        var floating = false;
+        var etc1 = false;
+        var pvrtc2 = false;
+        var pvrtc4 = false;
+        var format = null;
+
+        var texture;
+
+        if (isFourCc) {
+            if (fcc === FCC_DXT1) {
+                format = pc.PIXELFORMAT_DXT1;
+                compressed = true;
+            } else if (fcc === FCC_DXT5) {
+                format = pc.PIXELFORMAT_DXT5;
+                compressed = true;
+            } else if (fcc === FCC_FP32) {
+                format = pc.PIXELFORMAT_RGBA32F;
+                floating = true;
+            } else if (fcc === FCC_ETC1) {
+                format = pc.PIXELFORMAT_ETC1;
+                compressed = true;
+                etc1 = true;
+            } else if (fcc === FCC_PVRTC_2BPP_RGB_1 || fcc === FCC_PVRTC_2BPP_RGBA_1) {
+                format = fcc === FCC_PVRTC_2BPP_RGB_1 ? pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 : pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1;
+                compressed = true;
+                pvrtc2 = true;
+            } else if (fcc === FCC_PVRTC_4BPP_RGB_1 || fcc === FCC_PVRTC_4BPP_RGBA_1) {
+                format = fcc === FCC_PVRTC_4BPP_RGB_1 ? pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 : pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
+                compressed = true;
+                pvrtc4 = true;
+            }
+        } else {
+            if (bpp === 32) {
+                format = pc.PIXELFORMAT_R8_G8_B8_A8;
+            }
+        }
+
+        if (!format) {
+            // #ifdef DEBUG
+            console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
+            // #endif
+            texture = new pc.Texture(graphicsDevice, {
+                width: 4,
+                height: 4,
+                format: pc.PIXELFORMAT_R8_G8_B8
+            });
+            texture.name = 'dds-legacy-empty';
+            return texture;
+        }
+
+        var texOptions = {
+            // #ifdef PROFILER
+            profilerHint: pc.TEXHINT_ASSET,
+            // #endif
+            width: width,
+            height: height,
+            format: format,
+            cubemap: isCubemap
+        };
+        texture = new pc.Texture(graphicsDevice, texOptions);
+        if (isCubemap) {
+            texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        }
+
+        var offset = 128;
+        var faces = isCubemap ? 6 : 1;
+        var mipSize;
+        var DXT_BLOCK_WIDTH = 4;
+        var DXT_BLOCK_HEIGHT = 4;
+        var blockSize = fcc === FCC_DXT1 ? 8 : 16;
+        var numBlocksAcross, numBlocksDown, numBlocks;
+        for (var face = 0; face < faces; face++) {
+            var mipWidth = width;
+            var mipHeight = height;
+            for (var i = 0; i < mips; i++) {
+                if (compressed) {
+                    if (etc1) {
+                        mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
+                    } else if (pvrtc2) {
+                        mipSize = Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
+                    } else if (pvrtc4) {
+                        mipSize = Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+                    } else {
+                        numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                        numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                        numBlocks = numBlocksAcross * numBlocksDown;
+                        mipSize = numBlocks * blockSize;
+                    }
+                } else {
+                    mipSize = mipWidth * mipHeight * 4;
+                }
+
+                var mipBuff = floating ? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
+                if (!isCubemap) {
+                    texture._levels[i] = mipBuff;
+                } else {
+                    if (!texture._levels[i]) texture._levels[i] = [];
+                    texture._levels[i][face] = mipBuff;
+                }
+                offset += floating ? mipSize * 4 : mipSize;
+                mipWidth = Math.max(mipWidth * 0.5, 1);
+                mipHeight = Math.max(mipHeight * 0.5, 1);
+            }
+        }
+
+        texture.name = url;
+        texture.upload();
+
+        return texture;
+    };
 
     // In the case where a texture has more than 1 level of mip data specified, but not the full
     // mip chain, we generate the missing levels here.
@@ -138,26 +267,17 @@ Object.assign(pc, function () {
         this._assets = assets;
         this._loader = loader;
 
-        var imgParser = new pc.ImgParser(assets, false);
+        // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
+        this.crossOrigin = undefined;
+        if (assets.prefix) {
+            // ensure we send cookies if we load images.
+            this.crossOrigin = 'anonymous';
+        }
 
-        this.parsers = {
-            dds: new pc.LegacyDdsParser(assets, false),
-            ktx: new pc.KtxParser(assets, false),
-            basis: new pc.BasisParser(assets, false),
-            jpg: imgParser,
-            jpeg: imgParser,
-            gif: imgParser,
-            png: imgParser,
-            blob: imgParser
-        };
+        this.retryRequests = false;
     };
 
     Object.assign(TextureHandler.prototype, {
-        _getParser: function (url) {
-            var ext = pc.path.getExtension(url).toLowerCase().replace('.', '');
-            return this.parsers[ext];
-        },
-
         load: function (url, callback, asset) {
             if (typeof url === 'string') {
                 url = {
@@ -166,50 +286,198 @@ Object.assign(pc, function () {
                 };
             }
 
-            var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
-            var parser = this._getParser(urlWithoutParams);
+            var self = this;
+            var options;
 
-            // if we can't find a parser by url extension, check if it's a blob url
-            if (!parser) {
+            var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
+
+            var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
+            if (ext === '.dds' || ext === '.ktx') {
+                options = {
+                    cache: true,
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
+                };
+                pc.http.get(url.load, options, callback);
+            } else if (ext === '.basis') {
+                options = {
+                    cache: true,
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
+                };
+                pc.http.get(
+                    url.load,
+                    options,
+                    function (err, result) {
+                        if (err) {
+                            callback(err, result);
+                        } else {
+                            // massive hack for pvr textures (i.e. apple devices)
+                            // the quality of GGGR normal maps under PVR compression is still terrible
+                            // so here we instruct the basis transcoder to unswizzle the normal map data
+                            // and pack to 565
+                            var unswizzleGGGR = pc.basisTargetFormat() === 'pvr' &&
+                                                asset && asset.file && asset.file.variants &&
+                                                asset.file.variants.basis &&
+                                                ((asset.file.variants.basis.opt & 8) !== 0);
+                            if (unswizzleGGGR) {
+                                // remove the swizzled flag from the asset
+                                asset.file.variants.basis.opt &= ~8;
+                            }
+                            pc.basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+                        }
+                    });
+            } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
+                var crossOrigin;
+                // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
+                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.original)) {
+                    crossOrigin = self.crossOrigin;
+                }
+
+                self._loadImage(url.load, url.original, crossOrigin, callback);
+            } else {
                 var blobStart = urlWithoutParams.indexOf("blob:");
                 if (blobStart >= 0) {
-                    url = urlWithoutParams.substr(blobStart);
-                    parser = this.parsers.img;
+                    urlWithoutParams = urlWithoutParams.substr(blobStart);
+                    url = urlWithoutParams;
+
+                    self._loadImage(url, url, null, callback);
+                } else {
+                    // Unsupported texture extension
+                    // Use timeout because asset events can be hooked up after load gets called in some
+                    // cases. For example, material loads a texture on 'add' event.
+                    setTimeout(function () {
+                        callback(pc.string.format("Error loading Texture: format not supported: '{0}'", ext));
+                    }, 0);
                 }
             }
+        },
 
-            if (parser) {
-                parser.load(url, callback, asset);
-            } else {
-                // Unsupported texture extension
-                // Use timeout because asset events can be hooked up after load gets called in some
-                // cases. For example, material loads a texture on 'add' event.
-                setTimeout(function () {
-                    callback(pc.string.format("Error loading Texture: format not supported: '{0}'", pc.path.getExtension(urlWithoutParams).toLowerCase()));
-                }, 0);
+        _loadImage: function (url, originalUrl, crossOrigin, callback) {
+            var image = new Image();
+            if (crossOrigin) {
+                image.crossOrigin = crossOrigin;
             }
+
+            var retries = 0;
+            var maxRetries = 5;
+            var retryTimeout;
+            var retryRequests = this.retryRequests;
+
+            // Call success callback after opening Texture
+            image.onload = function () {
+                callback(null, image);
+            };
+
+            image.onerror = function () {
+                // Retry a few times before failing
+                if (retryTimeout) return;
+
+                if (retryRequests && ++retries <= maxRetries) {
+                    var retryDelay = Math.pow(2, retries) * 100;
+                    console.log(pc.string.format("Error loading Texture from: '{0}' - Retrying in {1}ms...", originalUrl, retryDelay));
+
+                    var idx = url.indexOf('?');
+                    var separator = idx >= 0 ? '&' : '?';
+
+                    retryTimeout = setTimeout(function () {
+                        // we need to add a cache busting argument if we are trying to re-load an image element
+                        // with the same URL
+                        image.src = url + separator + 'retry=' + Date.now();
+                        retryTimeout = null;
+                    }, retryDelay);
+                } else {
+                    // Call error callback with details.
+                    callback(pc.string.format("Error loading Texture from: '{0}'", originalUrl));
+                }
+            };
+
+            image.src = url;
         },
 
         open: function (url, data) {
             if (!url)
                 return;
 
-            var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-            var parser = this._getParser(urlWithoutParams);
-            var texture = parser ? parser.open(url, data, this._device) : null;
+            var texture;
+            var ext = pc.path.getExtension(url).toLowerCase();
+            var format = null;
 
-            if (texture === null) {
+            // Every browser seems to pass data as an Image type. For some reason, the XDK
+            // passes an HTMLImageElement. TODO: figure out why!
+            // DDS textures are ArrayBuffers
+            if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
+                var img = data;
+
+                format = (ext === ".jpg" || ext === ".jpeg") ? pc.PIXELFORMAT_R8_G8_B8 : pc.PIXELFORMAT_R8_G8_B8_A8;
                 texture = new pc.Texture(this._device, {
-                    name: 'unsupported-empty',
-                    width: 4,
-                    height: 4,
-                    format: pc.PIXELFORMAT_R8_G8_B8
+                    // #ifdef PROFILER
+                    profilerHint: pc.TEXHINT_ASSET,
+                    // #endif
+                    width: img.width,
+                    height: img.height,
+                    format: format
                 });
-            } else {
-                // check if the texture has only a partial mipmap chain specified and generate the
-                // missing levels if possible.
-                _completePartialMipmapChain(texture);
+                texture.name = url;
+                texture.setSource(img);
+            } else { // Container format
+
+                if (ext === '.dds') {
+                    texture = _legacyDdsLoader(url, data, this._device);
+                } else {
+                    var textureData;
+
+                    if (ext === '.basis') {
+                        textureData = data;
+                        // console.log('transcode time=' + data.transcodeTime + ' url=' + data.url.split('#').shift().split('?').shift().split('/').pop());
+                    } else if (data instanceof ArrayBuffer) {
+                        switch (ext) {
+                            case '.dds':
+                                textureData = new pc.DdsParser(data);
+                                break;
+                            case '.ktx':
+                                textureData = new pc.KtxParser(data);
+                                break;
+                            case '.pvr':
+                                console.warn('PVR container not supported.');
+                                break;
+                        }
+                    }
+
+                    if (!textureData) {
+                        // #ifdef DEBUG
+                        console.warn("This DDS or KTX pixel format is currently unsupported. Empty texture will be created instead.");
+                        // #endif
+                        texture = new pc.Texture(this._device, {
+                            width: 4,
+                            height: 4,
+                            format: pc.PIXELFORMAT_R8_G8_B8
+                        });
+                        texture.name = 'unsupported-empty';
+                        return texture;
+                    }
+
+                    texture = new pc.Texture(this._device, {
+                        // #ifdef PROFILER
+                        profilerHint: pc.TEXHINT_ASSET,
+                        // #endif
+                        addressU: textureData.cubemap ? pc.ADDRESS_CLAMP_TO_EDGE : pc.ADDRESS_REPEAT,
+                        addressV: textureData.cubemap ? pc.ADDRESS_CLAMP_TO_EDGE : pc.ADDRESS_REPEAT,
+                        width: textureData.width,
+                        height: textureData.height,
+                        format: textureData.format,
+                        cubemap: textureData.cubemap,
+                        levels: textureData.levels
+                    });
+
+                    texture.name = url;
+                    texture.upload();
+                }
             }
+
+            // check if the texture has only a partial mipmap chain specified and generate the
+            // missing levels if possible.
+            _completePartialMipmapChain(texture);
 
             return texture;
         },
@@ -254,22 +522,10 @@ Object.assign(pc, function () {
                     }
                 }
             }
-        },
-
-        /**
-         * @function
-         * @name pc.TextureHandler#addParser
-         * @description Add a texture parsers 
-         * @param {string} extension - The file extension handled by this parser.
-         * @param {pc.TextureParser} parser - The texture parser.
-         */
-        addParser: function (extension, parser) {
-            this.parsers[extension] = parser;
         }
     });
 
     return {
-        TextureHandler: TextureHandler,
-        TextureParser: TextureParser
+        TextureHandler: TextureHandler
     };
 }());

@@ -144,10 +144,7 @@ Object.assign(pc, function () {
             if (!assetCubeMap.loadFaces && assetCubeMap.file)
                 return;
 
-            var cubemap = assetCubeMap.resource;
             var sources = [];
-            var count = 0;
-            var levelsUpdated = false;
             var self = this;
 
             if (!assetCubeMap._levelsEvents)
@@ -155,7 +152,7 @@ Object.assign(pc, function () {
 
             assetCubeMap.data.textures.forEach(function (id, index) {
                 var assetReady = function (asset) {
-                    count++;
+
                     sources[index] = asset.resource;
 
                     // events of texture loads
@@ -170,14 +167,23 @@ Object.assign(pc, function () {
                         assetCubeMap._levelsEvents[index] = asset || null;
                     }
 
-                    // check if source is actually changed
-                    if (sources[index]._levels[0] !== cubemap._levels[0][index])
-                        levelsUpdated = true;
+                    var cubemap = assetCubeMap.resource;
+
+                    var levelsUpdated = false;
+                    for (var i = 0; i < 6; ++i) {
+                        if (!sources[i]) {
+                            levelsUpdated = false;
+                            break;
+                        }
+                        if (sources[i]._levels[0] !== cubemap._levels[0][i]) {
+                            levelsUpdated = true;
+                        }
+                    }
 
                     // when all faces checked
-                    if (count === 6 && levelsUpdated) {
+                    if (levelsUpdated) {
 
-                        // extract level data from source textures
+                        // build levels
                         var levels = [];
                         for (var mip = 0; mip < sources[0]._levels.length; ++mip) {
                             levels.push(sources.map(function (s) {
