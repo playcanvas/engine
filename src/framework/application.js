@@ -581,6 +581,8 @@ Object.assign(pc, function () {
         }
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
+        this.loader.addHandler("animationclip", new pc.AnimationClipHandler());
+        this.loader.addHandler("animationstategraph", new pc.AnimationStateGraphHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
@@ -607,6 +609,7 @@ Object.assign(pc, function () {
         this.systems.add(new pc.RigidBodyComponentSystem(this));
         this.systems.add(new pc.CollisionComponentSystem(this));
         this.systems.add(new pc.AnimationComponentSystem(this));
+        this.systems.add(new pc.AnimComponentSystem(this));
         this.systems.add(new pc.ModelComponentSystem(this));
         this.systems.add(new pc.CameraComponentSystem(this));
         this.systems.add(new pc.LightComponentSystem(this));

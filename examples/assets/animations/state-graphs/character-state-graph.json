@@ -1,0 +1,188 @@
+{
+    "states": [
+        {
+            "name": "START"
+        },
+        {
+            "name": "Idle",
+            "speed": 1.0
+        },
+        {
+            "name": "Walk",
+            "speed": 1.0
+        },
+        {
+            "name": "WalkBackwards",
+            "speed": 1.0
+        },
+        {
+            "name": "Run",
+            "speed": 1.0
+        },
+        {
+            "name": "Jump",
+            "speed": 1.0
+        },
+        {
+            "name": "END"
+        }
+    ],
+    "transitions": [
+        {
+            "from": "START",
+            "to": "Idle",
+            "time": 0,
+            "priority": 0
+        },
+        {
+            "from": "Idle",
+            "to": "Walk",
+            "time": 0.4,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "GREATER_THAN",
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "from": "Idle",
+            "to": "WalkBackwards",
+            "time": 0.4,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "LESS_THAN",
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "from": "WalkBackwards",
+            "to": "Idle",
+            "time": 0.4,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "GREATER_THAN_EQUAL_TO",
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "from": "Idle",
+            "to": "Jump",
+            "time": 0.2,
+            "priority": 0,
+            "transitionOffset": 0.0,
+            "conditions": [
+                {
+                    "parameterName": "jump",
+                    "predicate": "EQUAL_TO",
+                    "value": true
+                }
+            ]
+        },
+        {
+            "from": "WalkBackwards",
+            "to": "Jump",
+            "time": 0.2,
+            "priority": 0,
+            "transitionOffset": 0.0,
+            "conditions": [
+                {
+                    "parameterName": "jump",
+                    "predicate": "EQUAL_TO",
+                    "value": true
+                }
+            ]
+        },
+        {
+            "from": "Walk",
+            "to": "Jump",
+            "time": 0.2,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "jump",
+                    "predicate": "EQUAL_TO",
+                    "value": true
+                }
+            ]
+        },
+        {
+            "from": "Run",
+            "to": "Jump",
+            "time": 0.2,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "jump",
+                    "predicate": "EQUAL_TO",
+                    "value": true
+                }
+            ]
+        },
+        {
+            "from": "Jump",
+            "to": "Idle",
+            "time": 0.5,
+            "priority": 0,
+            "exitTime": 0.75
+        },
+        {
+            "from": "Walk",
+            "to": "Run",
+            "time": 0.2,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "GREATER_THAN",
+                    "value": 1
+                }
+            ]
+        },
+        {
+            "from": "Walk",
+            "to": "Idle",
+            "time": 0.5,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "LESS_THAN_EQUAL_TO",
+                    "value": 0
+                }
+            ]
+        },
+        {
+            "from": "Run",
+            "to": "Walk",
+            "time": 0.2,
+            "exitTime": 0.8,
+            "priority": 0,
+            "conditions": [
+                {
+                    "parameterName": "speed",
+                    "predicate": "LESS_THAN_EQUAL_TO",
+                    "value": 1
+                }
+            ]
+        }
+    ],
+    "parameters": {
+        "speed": {
+            "type": "INTEGER",
+            "value": 0
+        },
+        "jump": {
+            "type": "TRIGGER",
+            "value": false
+        }
+    }
+}

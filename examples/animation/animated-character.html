@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Playcanvas Animation</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../playcanvas.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-y: hidden;
+            display: flex;
+        }
+
+        #interactivity {
+            font-family: verdana;
+            font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 14px;
+            position: absolute;
+            background-color: white;
+            left: 50%;
+            top: 80%;
+            transform: translateX(-50%);
+        }
+
+        #jump {
+            margin-bottom: 14px;
+        }
+
+        #jump,
+        #minus,
+        #plus {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='interactivity'>
+        <button id="jump">Jump</button>
+        <div>
+            <button id="minus">-</button> <button id="plus">+</button> Speed: <span id="speed">0</span>
+        </div>
+    </div>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity();
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0, 0, 0)
+        });
+        cameraEntity.translateLocal(2.5, 3.5, 2.5);
+        cameraEntity.lookAt(0, 0, 0);
+
+        // Create light in the scene
+        app.scene.ambientLight = new pc.Color(1.0, 1.0, 1.0);
+        var lightEntity = new pc.Entity();
+        lightEntity.name = 'light';
+        lightEntity.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1.0, 1.0, 1.0),
+            intensity: 0.5,
+            range: 20
+        });
+        lightEntity.setLocalEulerAngles(45, 0, -45);
+
+        // Create boxes which will signal character movement
+        var box1 = new pc.Entity();
+        box1.addComponent('model', {
+            type: 'box'
+        });
+        box1.setLocalPosition(1, 0.5, 0);
+        box1.setLocalScale(0.5, 0.5, 0.5);
+        var box2 = new pc.Entity();
+        box2.addComponent('model', {
+            type: 'box'
+        });
+        box2.setLocalPosition(-1, 0.25, -4);
+        box2.setLocalScale(0.25, 0.25, 0.25);
+
+        app.assets.loadFromUrl(
+            "../assets/textures/playcanvas-grey.png",
+            "texture",
+            function (err, asset) {
+                var material = new pc.StandardMaterial();
+                material.diffuseMap = asset.resource;
+                material.update();
+                box1.model.meshInstances[0].material = material;
+                box2.model.meshInstances[0].material = material;
+            }
+        );
+
+        // Create a plane for the character to walk on
+        var planeEntity = new pc.Entity();
+        planeEntity.addComponent("model", {
+            type: "plane"
+        });
+        planeEntity.setLocalScale(4, 1, 30);
+        planeEntity.setPosition(0, 0, 0);
+        var material = new pc.StandardMaterial();
+        material.diffuse = new pc.Color(0.15, 0.20, 0.3);
+        material.update();
+        planeEntity.model.meshInstances[0].material = material;
+
+        // Create the character model entity
+        var modelEntity = new pc.Entity();
+        modelEntity.name = 'model';
+
+        app.root.addChild(box1);
+        app.root.addChild(box2);
+        app.root.addChild(planeEntity);
+        app.root.addChild(cameraEntity);
+        app.root.addChild(lightEntity);
+        app.root.addChild(modelEntity);
+
+        app.assets.loadFromUrl('../assets/modelStateGraphLarge.json', 'animationstategraph', function (err, stateGraph) {
+            app.assets.loadFromUrl('../assets/models/bitmoji-character.glb', 'container', function (err, model) {
+                app.assets.loadFromUrl('../assets/animations/bitmoji/Idle.glb', 'container', function (err, idle) {
+                    app.assets.loadFromUrl('../assets/animations/bitmoji/Run.glb', 'container', function (err, run) {
+                        app.assets.loadFromUrl('../assets/animations/bitmoji/Walk.glb', 'container', function (err, walk) {
+                            app.assets.loadFromUrl('../assets/animations/bitmoji/WalkBackwards.glb', 'container', function (err, walkBackwards) {
+                                app.assets.loadFromUrl('../assets/animations/bitmoji/Jump.glb', 'container', function (err, jump) {
+
+                                    modelEntity.addComponent("model", {
+                                        type: "asset",
+                                        asset: model.resource.model,
+                                        castShadows: true
+                                    });
+
+                                    modelEntity.setPosition(0, 0, 0);
+                                    modelEntity.setLocalScale(0.005, 0.005, 0.005);
+
+                                    // add the anim component to the character
+                                    modelEntity.addComponent("anim", {
+                                        speed: 1.0,
+                                        activate: true
+                                    });
+
+                                    // load the state graph asset resource and assign the animation glb asset resources to the appropriate states
+                                    modelEntity.findComponent('anim').loadStateGraph(stateGraph.resource);
+                                    modelEntity.findComponent('anim').assignAnimation('Idle', idle.resource.animations[0].resource);
+                                    modelEntity.findComponent('anim').assignAnimation('Jump', jump.resource.animations[0].resource);
+                                    modelEntity.findComponent('anim').assignAnimation('Walk', walk.resource.animations[0].resource);
+                                    modelEntity.findComponent('anim').assignAnimation('WalkBackwards', walkBackwards.resource.animations[0].resource);
+                                    modelEntity.findComponent('anim').assignAnimation('Run', run.resource.animations[0].resource);
+
+                                    // add jump interactivity to the character
+                                    document.querySelector('#jump').addEventListener('click', () => {
+                                        var animLayer = modelEntity.anim.findAnimationLayer('DEFAULT_LAYER');
+                                        var shouldTriggerJump = false;
+                                        var isJumping = animLayer.activeState === 'Jump';
+                                        if (isJumping) {
+                                            var stateProgress = animLayer.activeStateProgress;
+                                            if (stateProgress > 0.6) {
+                                                shouldTriggerJump = true;
+                                            }
+                                        } else {
+                                            shouldTriggerJump = true;
+                                        }
+                                        if (shouldTriggerJump) {
+                                            modelEntity.anim.setTrigger('jump');
+                                        }
+                                    });
+
+                                    // add a button click event to increase the character speed
+                                    document.querySelector('#plus').addEventListener('click', () => {
+                                        if (modelEntity.anim.getInteger('speed') >= 2)
+                                            return;
+                                        modelEntity.anim.setInteger('speed', modelEntity.anim.getInteger('speed') + 1.0);
+                                        document.querySelector('#speed').textContent = modelEntity.anim.getInteger('speed');
+                                    });
+
+                                    // add a button click event to decrease the character speed
+                                    document.querySelector('#minus').addEventListener('click', () => {
+                                        if (modelEntity.anim.getInteger('speed') <= -1)
+                                            return;
+                                        modelEntity.anim.setInteger('speed', modelEntity.anim.getInteger('speed') - 1.0);
+                                        document.querySelector('#speed').textContent = modelEntity.anim.getInteger('speed');
+                                    });
+
+                                    // create a script which updates the position of boxes on screen based on the character movement speed
+                                    var MoveBox = pc.createScript('MoveBox');
+                                    function getSpeedFromState(state) {
+                                        var speed = 0;
+                                        switch (state) {
+                                            case 'Idle':
+                                                speed = 0;
+                                                break;
+                                            case 'Walk':
+                                                speed = 1;
+                                                break;
+                                            case 'Run':
+                                                speed = 2.4;
+                                                break;
+                                            case 'WalkBackwards':
+                                                speed = -1;
+                                                break;
+                                        }
+                                        return speed;
+                                    }
+                                    MoveBox.prototype.update = function (dt) {
+                                        var animLayer = modelEntity.anim.findAnimationLayer('DEFAULT_LAYER');
+                                        var speed = getSpeedFromState(animLayer.activeState);
+                                        if (animLayer.transitioning) {
+                                            var prevStateSpeed = getSpeedFromState(animLayer.previousState);
+                                            speed = ((prevStateSpeed * (1.0 - animLayer.transitionProgress)) + (speed * animLayer.transitionProgress));
+                                        }
+
+                                        var zPos = this.entity.localPosition.z - speed * 0.66 * dt;
+                                        if (this.entity.localPosition.z < -8) {
+                                            zPos = 2.9;
+                                        } else if (this.entity.localPosition.z > 3.0) {
+                                            zPos = -7.9;
+                                        }
+                                        this.entity.setLocalPosition(
+                                            this.entity.localPosition.x,
+                                            this.entity.localPosition.y,
+                                            zPos
+                                        );
+                                    };
+                                    box1.addComponent("script");
+                                    box1.script.create('MoveBox', {});
+                                    box2.addComponent("script");
+                                    box2.script.create('MoveBox', {});
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

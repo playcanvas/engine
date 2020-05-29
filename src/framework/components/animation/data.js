@@ -23,7 +23,7 @@ Object.assign(pc, function () {
         this.toSkel = null;
 
         // glb animation controller
-        this.animController = null;
+        this.animEvaluator = null;
     };
 
     return {

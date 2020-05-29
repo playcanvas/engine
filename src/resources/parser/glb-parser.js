@@ -1106,12 +1106,20 @@ Object.assign(pc, function () {
 
         var quatArrays = [];
 
+        var propertyLocator = new pc.AnimPropertyLocator();
+        var transformSchema = {
+            'translation': 'localPosition',
+            'rotation': 'localRotation',
+            'scale': 'localScale',
+            'weights': 'weights'
+        };
+
         // convert anim channels
         for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
             var curve = curves[channel.sampler];
-            curve._paths.push(pc.AnimBinder.joinPath([nodes[target.node].name, target.path]));
+            curve._paths.push(propertyLocator.encode([[nodes[target.node].name], 'graph', [transformSchema[target.path]]]));
 
             // if this target is a set of quaternion keys, make note of its index so we can perform
             // quaternion-specific processing on it.
