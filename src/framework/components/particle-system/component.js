@@ -574,6 +574,65 @@ Object.assign(pc, function () {
             }
         },
 
+        _update: function (dt) {
+            var emitter = this.emitter;
+            if (!emitter.meshInstance.visible) return;
+
+            var i, j, c;
+
+            // Bake ambient and directional lighting into one ambient cube
+            // TODO: only do if lighting changed
+            // TODO: don't do for every emitter
+            if (emitter.lighting) {
+                var layer, lightCube;
+                var layers = this.layers;
+                var ambient = this.system.app.scene.ambientLight;
+                for (i = 0; i < layers.length; i++) {
+                    layer = this.system.app.scene.layers.getLayerById(layers[i]);
+                    if (!layer) continue;
+
+                    if (!layer._lightCube) {
+                        layer._lightCube = new Float32Array(6 * 3);
+                    }
+                    lightCube = layer._lightCube;
+                    for (i = 0; i < 6; i++) {
+                        lightCube[i * 3] = ambient.r;
+                        lightCube[i * 3 + 1] = ambient.g;
+                        lightCube[i * 3 + 2] = ambient.b;
+                    }
+                    var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
+                    for (j = 0; j < dirs.length; j++) {
+                        for (c = 0; c < 6; c++) {
+                            var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
+                            lightCube[c * 3] += dirs[j]._color.r * weight;
+                            lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
+                            lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
+                        }
+                    }
+                }
+                emitter.constantLightCube.setValue(lightCube); // ?
+            }
+
+            if (!this.paused) {
+                var numSteps;
+                emitter.simTime += dt;
+                if (emitter.simTime > emitter.fixedTimeStep) {
+                    numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
+                    emitter.simTime -= numSteps * emitter.fixedTimeStep;
+                }
+                if (numSteps) {
+                    numSteps = Math.min(numSteps, emitter.maxSubSteps);
+                    for (i = 0; i < numSteps; i++) {
+                        emitter.addTime(emitter.fixedTimeStep, false);
+                    }
+                    var stats = this.system.app.stats.particles;
+                    stats._updatesPerFrame += numSteps;
+                    stats._frameTime += emitter._addTimeTime;
+                    emitter._addTimeTime = 0;
+                }
+                emitter.finishFrame();
+            }
+        },
 
         onEnable: function () {
             // get data store once
@@ -705,9 +764,16 @@ Object.assign(pc, function () {
             if (this.enabled && this.entity.enabled && data.depthSoftening) {
                 this._requestDepth();
             }
+
+            this.system._enabledParticleSystems.push(this);
         },
 
         onDisable: function () {
+            var idx = this.system._enabledParticleSystems.indexOf(this);
+            if (idx > -1) {
+                this.system._enabledParticleSystems.splice(idx, 1);
+            }
+
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
                 this.system.app.scene.layers.off("add", this.onLayerAdded, this);
@@ -819,6 +885,11 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
+            var idx = this.system._enabledParticleSystems.indexOf(this);
+            if (idx > -1) {
+                this.system._enabledParticleSystems.splice(idx, 1);
+            }
+
             var data = this.data;
             if (data.model) {
                 this.entity.removeChild(data.model.getGraph());

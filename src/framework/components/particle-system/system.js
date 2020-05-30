@@ -103,6 +103,8 @@ Object.assign(pc, function () {
             scaleGraph2: 'curve'
         };
 
+        this._enabledParticleSystems = [];
+
         this.on('beforeremove', this.onRemove, this);
         pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
@@ -190,71 +192,11 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function (dt) {
-            var components = this.store;
-            var numSteps, i, j, c;
-            var stats = this.app.stats.particles;
+            var i, len;
 
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    c = components[id];
-                    var entity = c.entity;
-                    var data = c.data;
-
-                    if (data.enabled && entity.enabled) {
-                        var emitter = data.model.emitter;
-                        if (!emitter.meshInstance.visible) continue;
-
-                        // Bake ambient and directional lighting into one ambient cube
-                        // TODO: only do if lighting changed
-                        // TODO: don't do for every emitter
-                        if (emitter.lighting) {
-                            var layer, lightCube;
-                            var layers = data.layers;
-                            for (i = 0; i < layers.length; i++) {
-                                layer = this.app.scene.layers.getLayerById(layers[i]);
-                                if (!layer) continue;
-
-                                if (!layer._lightCube) {
-                                    layer._lightCube = new Float32Array(6 * 3);
-                                }
-                                lightCube = layer._lightCube;
-                                for (i = 0; i < 6; i++) {
-                                    lightCube[i * 3] = this.app.scene.ambientLight.r;
-                                    lightCube[i * 3 + 1] = this.app.scene.ambientLight.g;
-                                    lightCube[i * 3 + 2] = this.app.scene.ambientLight.b;
-                                }
-                                var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
-                                for (j = 0; j < dirs.length; j++) {
-                                    for (c = 0; c < 6; c++) {
-                                        var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                        lightCube[c * 3] += dirs[j]._color.r * weight;
-                                        lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
-                                        lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
-                                    }
-                                }
-                            }
-                            emitter.constantLightCube.setValue(lightCube); // ?
-                        }
-
-                        if (!data.paused) {
-                            emitter.simTime += dt;
-                            if (emitter.simTime > emitter.fixedTimeStep) {
-                                numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
-                                emitter.simTime -= numSteps * emitter.fixedTimeStep;
-                            }
-                            if (numSteps) {
-                                numSteps = Math.min(numSteps, emitter.maxSubSteps);
-                                for (i = 0; i < numSteps; i++) {
-                                    emitter.addTime(emitter.fixedTimeStep, false);
-                                }
-                                stats._updatesPerFrame += numSteps;
-                                stats._frameTime += emitter._addTimeTime;
-                                emitter._addTimeTime = 0;
-                            }
-                            emitter.finishFrame();
-                        }
-                    }
-                }
+            var particleSystems = this._enabledParticleSystems;
+            for (i = 0, len = particleSystems.length; i < len; i++) {
+                particleSystems[i]._update(dt);
             }
         },
 
