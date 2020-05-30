@@ -635,8 +635,8 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            // get data store once
             var data = this.data;
+            var system = this.system;
 
             // load any assets that haven't been loaded yet
             for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
@@ -645,14 +645,14 @@ Object.assign(pc, function () {
                     if (!(asset instanceof pc.Asset)) {
                         var id = parseInt(asset, 10);
                         if (id >= 0) {
-                            asset = this.system.app.assets.get(asset);
+                            asset = system.app.assets.get(asset);
                         } else {
                             continue;
                         }
                     }
 
                     if (asset && !asset.resource) {
-                        this.system.app.assets.load(asset);
+                        system.app.assets.load(asset);
                     }
                 }
             }
@@ -665,7 +665,7 @@ Object.assign(pc, function () {
                 if (!(mesh instanceof pc.Mesh))
                     mesh = null;
 
-                this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
+                this.emitter = new pc.ParticleEmitter(system.app.graphicsDevice, {
                     numParticles: data.numParticles,
                     emitterExtents: data.emitterExtents,
                     emitterExtentsInner: data.emitterExtentsInner,
@@ -728,7 +728,7 @@ Object.assign(pc, function () {
                     halfLambert: data.halfLambert,
                     intensity: data.intensity,
                     depthSoftening: data.depthSoftening,
-                    scene: this.system.app.scene,
+                    scene: system.app.scene,
                     mesh: mesh,
                     depthWrite: data.depthWrite,
                     noFog: data.noFog,
@@ -755,34 +755,43 @@ Object.assign(pc, function () {
                 this.addModelToLayers();
             }
 
-            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            var scene = system.app.scene;
+            scene.on("set:layers", this.onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.on("add", this.onLayerAdded, this);
+                scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
             if (this.enabled && this.entity.enabled && data.depthSoftening) {
                 this._requestDepth();
             }
 
-            this.system._enabledParticleSystems.push(this);
+            // Add to list of enabled particle systems to easily update them
+            system._enabledParticleSystems.push(this);
         },
 
         onDisable: function () {
-            var idx = this.system._enabledParticleSystems.indexOf(this);
+            var data = this.data;
+            var system = this.system;
+
+            // Remove from enabled particle systems array
+            var idx = system._enabledParticleSystems.indexOf(this);
             if (idx > -1) {
-                this.system._enabledParticleSystems.splice(idx, 1);
+                system._enabledParticleSystems.splice(idx, 1);
             }
 
-            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            var scene = system.app.scene;
+            scene.off("set:layers", this.onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.off("add", this.onLayerAdded, this);
+                scene.layers.off("remove", this.onLayerRemoved, this);
             }
 
-            if (this.data.model) {
+            if (data.model) {
                 this.removeModelFromLayers();
-                if (this.data.depthSoftening) this._releaseDepth();
+                if (data.depthSoftening) {
+                    this._releaseDepth();
+                }
             }
 
             if (this.emitter) {
