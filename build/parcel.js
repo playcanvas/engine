@@ -1,17 +1,25 @@
 // https://parceljs.org/api.html
-// Call like: node build\parcel.js
 
-var fs = require('fs');
+// Call like:
+//     cd build
+//     node parcel.js
+//     node parcel.js -l 1 -o output/playcanvas.min.parcel.js
+// For comparison:
+//     node build.js -l 1 -o output/playcanvas.min.js
+
+var fs = require("fs");
 var path = require("path");
 var cp = require("child_process");
-var Bundler = require('parcel-bundler');
-var Path = require('path');
-
-// Delete .cache folder, otherwise Parcel does nothing while developing this bundler
-fs.rmdirSync(".cache", { recursive: true });
+var Bundler = require("parcel-bundler");
+var Path = require("path");
 
 // A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
 var debugParcel = true;
+
+if (debugParcel) {
+    // Delete .cache folder, otherwise Parcel does nothing while developing this bundler
+    fs.rmdirSync(".cache", { recursive: true });
+}
 
 var debug = false;
 var profiler = false;
@@ -19,25 +27,24 @@ var profiler = false;
 var outputPath;
 //var sourcePath;
 var COMPILER_LEVEL = [
-    'WHITESPACE_ONLY',
-    'SIMPLE',
-    'ADVANCED'
+    "WHITESPACE_ONLY",
+    "SIMPLE",
+    "ADVANCED"
 ];
 var compilerLevel = COMPILER_LEVEL[0];
-
 
 // configs for the builds we support
 var targets = {
     engine: {
         defaultOutputPath: "output/playcanvas_parcel.js",
         //defaultSourcePath: "../src",
-        depsFile: './dependencies.txt',
+        depsFile: "./dependencies.txt",
         desc: "Playcanvas Engine"
     },
     extras: {   // or ministats
         defaultOutputPath: "output/playcanvas-extras_parcel.js",
         //defaultSourcePath: "../extras",
-        depsFile: './extras_dependencies.txt',
+        depsFile: "./extras_dependencies.txt",
         desc: "Playcanvas Extras"
     }
 };
@@ -48,19 +55,19 @@ var target = targets.engine;
 // https://stackoverflow.com/questions/11616630/how-can-i-print-a-circular-structure-in-a-json-like-format
 // safely handles circular references
 JSON.safeStringify = (obj, indent = 2) => {
-	let cache = [];
-	const retVal = JSON.stringify(
-		obj,
-		(key, value) =>
-		typeof value === "object" && value !== null
-		? cache.includes(value)
-		? "circular..." // Duplicate reference found, discard key
-		: cache.push(value) && value // Store value in our collection
-		: value,
-		indent
-	);
-	cache = null;
-	return retVal;
+    let cache = [];
+    const retVal = JSON.stringify(
+        obj,
+        (key, value) =>
+        typeof value === "object" && value !== null
+        ? cache.includes(value)
+        ? "circular..." // Duplicate reference found, discard key
+        : cache.push(value) && value // Store value in our collection
+        : value,
+        indent
+    );
+    cache = null;
+    return retVal;
 };
 
 // get git revision
@@ -69,7 +76,7 @@ var getRevision = function (callback) {
 
     cp.exec(command, function (err, stdout, stderr) {
         if (err) {
-            callback(err, '-');
+            callback(err, "-");
             return;
         }
         callback(null, stdout.trim());
@@ -78,7 +85,7 @@ var getRevision = function (callback) {
 
 // get version from VERSION file
 var getVersion = function (callback) {
-    fs.readFile('../VERSION', function (err, buffer) {
+    fs.readFile("../VERSION", function (err, buffer) {
         if (err) {
             callback(err, "__CURRENT_SDK_VERSION__");
         }
@@ -87,96 +94,98 @@ var getVersion = function (callback) {
 };
 
 // Single entrypoint file location:
-//const entryFiles = Path.join(__dirname, './index.html');
-const entryFiles = '../src/playcanvas.js';
+//const entryFiles = Path.join(__dirname, "./index.html");
+const entryFiles = "../src/playcanvas.js";
 
 // OR: Multiple files with globbing (can also be .js)
-// const entryFiles = './src/*.js';
+// const entryFiles = "./src/*.js";
 // OR: Multiple files in an array
-// const entryFiles = ['./src/index.html', './some/other/directory/scripts.js'];
+// const entryFiles = ["./src/index.html", "./some/other/directory/scripts.js"];
 
 
 
 var optionsPlayCanvas = {
-	__CURRENT_SDK_VERSION__: "some ver",
-	__REVISION__: "some rev",
-	//PROFILER: profiler || debug,
-	//DEBUG: debug,
-	//RELEASE: compilerLevel != COMPILER_LEVEL[0]
-	PROFILER: false,
-	DEBUG: false,
-	RELEASE: true
+    __CURRENT_SDK_VERSION__: "some ver",
+    __REVISION__: "some rev",
+    //PROFILER: profiler || debug,
+    //DEBUG: debug,
+    //RELEASE: compilerLevel != COMPILER_LEVEL[0]
+    PROFILER: false,
+    DEBUG: false,
+    RELEASE: true
 };
 
 global.optionsPlayCanvas = optionsPlayCanvas;
 
 async function main() {
-	console.log("comlevel", compilerLevel)
-	// Bundler options
-	var options = {
-		outDir: path.dirname(outputPath), // The out directory to put the build files in, defaults to dist
-		outFile: path.basename(outputPath), // The name of the outputFile
-		publicUrl: '/', // The url to serve on, defaults to '/'
-		watch: false, // Whether to watch the files and rebuild them on change, defaults to process.env.NODE_ENV !== 'production'
-		cache: true, // Enabled or disables caching, defaults to true
-		cacheDir: '.cache', // The directory cache gets put in, defaults to .cache
-		contentHash: false, // Disable content hash from being included on the filename
-		global: 'moduleName', // Expose modules as UMD under this name, disabled by default
-		minify: compilerLevel == "SIMPLE", // Minify files, enabled if process.env.NODE_ENV === 'production'
-		scopeHoist: true, // Turn on experimental scope hoisting/tree shaking flag, for smaller production bundles
-		target: 'browser', // Browser/node/electron, defaults to browser
-		bundleNodeModules: false, // By default, package.json dependencies are not included when using 'node' or 'electron' with 'target' option above. Set to true to adds them to the bundle, false by default
-		//https: { // Define a custom {key, cert} pair, use true to generate one or false to use http
-		//	cert: './ssl/c.crt', // Path to custom certificate
-		//	key: './ssl/k.key' // Path to custom key
-		//},
-		logLevel: 3, // 5 = save everything to a file, 4 = like 3, but with timestamps and additionally log http requests to dev server, 3 = log info, warnings & errors, 2 = log warnings & errors, 1 = log errors, 0 = log nothing
-		hmr: false, // Enable or disable HMR while watching
-		hmrPort: 0, // The port the HMR socket runs on, defaults to a random free port (0 in node.js resolves to a random free port)
-		sourceMaps: true, // Enable or disable sourcemaps, defaults to enabled (minified builds currently always create sourcemaps)
-		hmrHostname: '', // A hostname for hot module reload, default to ''
-		detailedReport: false, // Prints a detailed report of the bundles, assets, filesizes and times, defaults to false, reports are only printed if watch is disabled
-		autoInstall: false, // Enable or disable auto install of missing dependencies found during bundling
-	};
 
-	// Initializes a bundler using the entrypoint location and options provided
-	const bundler = new Bundler(entryFiles, options);
-	bundler.addAssetType('js', require.resolve('./JSAssetPlayCanvas'));
+    // Bundler options
+    var options = {
+        outDir: path.dirname(outputPath), // The out directory to put the build files in, defaults to dist
+        outFile: path.basename(outputPath), // The name of the outputFile
+        publicUrl: "/", // The url to serve on, defaults to "/"
+        watch: false, // Whether to watch the files and rebuild them on change, defaults to process.env.NODE_ENV !== "production"
+        cache: true, // Enabled or disables caching, defaults to true
+        cacheDir: ".cache", // The directory cache gets put in, defaults to .cache
+        contentHash: false, // Disable content hash from being included on the filename
+        global: "moduleName", // Expose modules as UMD under this name, disabled by default
+        minify: compilerLevel == "SIMPLE", // Minify files, enabled if process.env.NODE_ENV === "production"
+        scopeHoist: compilerLevel == "SIMPLE", // Turn on experimental scope hoisting/tree shaking flag, for smaller production bundles
+        target: "browser", // Browser/node/electron, defaults to browser
+        bundleNodeModules: false, // By default, package.json dependencies are not included when using "node" or "electron" with "target" option above. Set to true to adds them to the bundle, false by default
+        //https: { // Define a custom {key, cert} pair, use true to generate one or false to use http
+        //    cert: "./ssl/c.crt", // Path to custom certificate
+        //    key: "./ssl/k.key" // Path to custom key
+        //},
+        logLevel: 3, // 5 = save everything to a file, 4 = like 3, but with timestamps and additionally log http requests to dev server, 3 = log info, warnings & errors, 2 = log warnings & errors, 1 = log errors, 0 = log nothing
+        hmr: false, // Enable or disable HMR while watching
+        hmrPort: 0, // The port the HMR socket runs on, defaults to a random free port (0 in node.js resolves to a random free port)
+        sourceMaps: true, // Enable or disable sourcemaps, defaults to enabled (minified builds currently always create sourcemaps)
+        hmrHostname: "", // A hostname for hot module reload, default to ""
+        detailedReport: false, // Prints a detailed report of the bundles, assets, filesizes and times, defaults to false, reports are only printed if watch is disabled
+        autoInstall: false, // Enable or disable auto install of missing dependencies found during bundling
+    };
+    if (debugParcel) {
+        console.log("options", options);
+    }
+    // Initializes a bundler using the entrypoint location and options provided
+    const bundler = new Bundler(entryFiles, options);
+    bundler.addAssetType("js", require.resolve("./JSAssetPlayCanvas"));
 
-	// `bundled` gets called once Parcel has successfully finished bundling, the main bundle instance gets passed to the callback
-	bundler.on('bundled', (bundle) => {
-		// bundler contains all assets and bundles, see documentation for details
-		if (debugParcel) {
-			console.log("Event: bundled");
-			fs.writeFileSync("parcel_dump_bundled.json", JSON.safeStringify(bundle));
-		}
-	});
+    // `bundled` gets called once Parcel has successfully finished bundling, the main bundle instance gets passed to the callback
+    bundler.on("bundled", (bundle) => {
+        // bundler contains all assets and bundles, see documentation for details
+        if (debugParcel) {
+            console.log("Event: bundled");
+            fs.writeFileSync("parcel_dump_bundled.json", JSON.safeStringify(bundle));
+        }
+    });
 
-	// `buildEnd` gets called after each build (aka including every rebuild), this also emits if an error occurred
-	bundler.on('buildEnd', () => {
-		if (debugParcel) {
-			console.log("Event: buildEnd");
-		}
-	});
+    // `buildEnd` gets called after each build (aka including every rebuild), this also emits if an error occurred
+    bundler.on("buildEnd", () => {
+        if (debugParcel) {
+            console.log("Event: buildEnd");
+        }
+    });
 
-	// `buildStart` gets called at the start of the first build, the entryFiles Array gets passed to the callback
-	bundler.on('buildStart', entryPoints => {
-		if (debugParcel) {
-			console.log("Event: buildStart");
-			console.log("entryPoints", entryPoints);
-		}
-	});
+    // `buildStart` gets called at the start of the first build, the entryFiles Array gets passed to the callback
+    bundler.on("buildStart", entryPoints => {
+        if (debugParcel) {
+            console.log("Event: buildStart");
+            console.log("entryPoints", entryPoints);
+        }
+    });
 
-	bundler.on('buildError', error => {
-		if (debugParcel) {
-			console.log("Event: buildError");
-			console.log("error", error);
-		}
-	});
+    bundler.on("buildError", error => {
+        if (debugParcel) {
+            console.log("Event: buildError");
+            console.log("error", error);
+        }
+    });
 
-	// Run the bundler, this returns the main bundle
-	// Use the events if you're using watch mode as this promise will only trigger once and not for every rebuild
-	const bundle = await bundler.bundle();
+    // Run the bundler, this returns the main bundle
+    // Use the events if you"re using watch mode as this promise will only trigger once and not for every rebuild
+    const bundle = await bundler.bundle();
 };
 
 // parse arguments
@@ -184,7 +193,7 @@ var arguments = function () {
     var _last = null;
     var _arg = null;
     process.argv.forEach(function (arg) {
-        if (arg === '-h') {
+        if (arg === "-h") {
             console.log("Build Script for PlayCanvas Engine\n");
             console.log("Usage: node parcel.js -l [COMPILER_LEVEL] -o [OUTPUT_PATH] -m [SOURCE_PATH]\n");
             console.log("Arguments:");
@@ -202,15 +211,15 @@ var arguments = function () {
             process.exit();
         }
 
-        if (arg === '-d') {
+        if (arg === "-d") {
             debug = true;
         }
 
-        if (arg === '-p') {
+        if (arg === "-p") {
             profiler = true;
         }
 
-        //if (arg === '--concatenateShaders') {
+        //if (arg === "--concatenateShaders") {
         //    run = function() {
         //        concatenateShaders(function() {
         //            console.log("> concatenated shaders")
@@ -218,7 +227,7 @@ var arguments = function () {
         //    }
         //}
 
-        if (_last === '-l') {
+        if (_last === "-l") {
             var level = parseInt(arg, 10);
             if (!(level >= 0 && level <= 2)) {
                 console.error("Invalid compiler level (-l) should be: 0, 1 or 2.");
@@ -227,19 +236,19 @@ var arguments = function () {
             compilerLevel = COMPILER_LEVEL[level];
         }
 
-        if (_last === '-o') {
+        if (_last === "-o") {
             outputPath = arg;
         }
 
-        if (arg === '-m') {
+        if (arg === "-m") {
             sourceMap = true;
         }
 
-        if (_last === '-m' && !arg.startsWith('-')) {
+        if (_last === "-m" && !arg.startsWith("-")) {
             sourcePath = arg;
         }
 
-        if (_last === '-t') {
+        if (_last === "-t") {
             if (!targets.hasOwnProperty(arg)) {
                 console.error("Invalid target should be: engine or extras");
                 process.exit(1);
@@ -255,17 +264,17 @@ var arguments = function () {
 };
 
 var run = function() {
-	getRevision(function (err, rev) {
-		optionsPlayCanvas.__REVISION__ = rev;
-		getVersion(function (err, ver) {
-			optionsPlayCanvas.__CURRENT_SDK_VERSION__ = ver;
-			optionsPlayCanvas.PROFILER = profiler || debug;
-			optionsPlayCanvas.DEBUG = debug;
-			optionsPlayCanvas.RELEASE = compilerLevel != COMPILER_LEVEL[0];
-			console.log("optionsPlayCanvas", optionsPlayCanvas);
-			main();
-		});
-	});
+    getRevision(function (err, rev) {
+        optionsPlayCanvas.__REVISION__ = rev;
+        getVersion(function (err, ver) {
+            optionsPlayCanvas.__CURRENT_SDK_VERSION__ = ver;
+            optionsPlayCanvas.PROFILER = profiler || debug;
+            optionsPlayCanvas.DEBUG = debug;
+            optionsPlayCanvas.RELEASE = compilerLevel != COMPILER_LEVEL[0];
+            console.log("optionsPlayCanvas", optionsPlayCanvas);
+            main();
+        });
+    });
 }
 
 arguments();
