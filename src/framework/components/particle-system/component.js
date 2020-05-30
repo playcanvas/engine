@@ -792,6 +792,35 @@ Object.assign(pc, function () {
             }
         },
 
+        onRemove: function () {
+            if (this.enabled) {
+                this.enabled = false;
+            }
+
+            var data = this.data;
+            if (data.model) {
+                this.entity.removeChild(data.model.getGraph());
+                data.model.destroy();
+                data.model = null;
+            }
+
+            if (this.emitter) {
+                this.emitter.destroy();
+                this.emitter = null;
+            }
+
+            // clear all asset properties to remove any event listeners
+            for (var i = 0; i < ASSET_PROPERTIES.length; i++) {
+                var prop = ASSET_PROPERTIES[i];
+
+                if (data[prop]) {
+                    this[prop] = null;
+                }
+            }
+
+            this.off();
+        },
+
         /**
          * @function
          * @name pc.ParticleSystemComponent#reset
@@ -882,36 +911,6 @@ Object.assign(pc, function () {
                 this.data.model.meshInstances = [this.emitter.meshInstance];
             }
             this.enabled = enabled;
-        },
-
-        onRemove: function () {
-            var idx = this.system._enabledParticleSystems.indexOf(this);
-            if (idx > -1) {
-                this.system._enabledParticleSystems.splice(idx, 1);
-            }
-
-            var data = this.data;
-            if (data.model) {
-                this.entity.removeChild(data.model.getGraph());
-                data.model.destroy();
-                data.model = null;
-            }
-
-            if (this.emitter) {
-                this.emitter.destroy();
-                this.emitter = null;
-            }
-
-            // clear all asset properties to remove any event listeners
-            for (var i = 0; i < ASSET_PROPERTIES.length; i++) {
-                var prop = ASSET_PROPERTIES[i];
-
-                if (data[prop]) {
-                    this[prop] = null;
-                }
-            }
-
-            this.off();
         }
     });
 
