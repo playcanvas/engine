@@ -26,7 +26,8 @@ jobs:
         java-version: 1.8
     - run: npm ci
     - run: npm run build
-    - run: npm run test
-    - run: npm run test:release
+    - run: sudo apt-get install xvfb
+    - run: xvfb-run --auto-servernum npm run test
+    - run: xvfb-run --auto-servernum npm run test:release
     - run: npm run test:tsd
     - run: npm run lint
