@@ -8,8 +8,6 @@ if (fs.existsSync(CONCAT_SRC_FILE)) {
     fs.unlinkSync(CONCAT_SRC_FILE);
 }
 
-console.log(argv.l);
-
 // Concatenate source files, read from "../build/dependencies.txt"
 fs.readFileSync("../build/dependencies.txt", "utf-8")
     .split("\n")
