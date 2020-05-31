@@ -7,7 +7,8 @@ var sourceFiles;
 if (release) {
     console.log('Testing release build');
     var outputPath = !process.argv.includes('--next') ? 'build' : 'build-next';
-    sourceFiles =  [path.resolve(outputPath + '/output/playcanvas.js')];
+    var min = process.argv.includes('--minify') ? '.min' : '';
+    sourceFiles =  [path.resolve(outputPath + '/output/playcanvas' + min + '.js')];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {

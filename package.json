@@ -68,7 +68,7 @@
     "unzipbundle": "gzip -x tests/assets/bundle.gz",
     "test": "karma start tests/karma.conf.js -- --single-run",
     "test:release": "karma start tests/karma.conf.js -- --single-run --release",
-    "test:release:next": "karma start tests/karma.conf.js -- --single-run --release --next",
+    "test:release:next": "karma start tests/karma.conf.js -- --single-run --release --next --minify",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
