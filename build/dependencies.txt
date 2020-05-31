@@ -60,6 +60,7 @@
 ../src/graphics/program-lib/chunks/generated-shader-chunks.js
 ../src/graphics/program-lib/program-lib.js
 ../src/graphics/program-lib/basic.js
+../src/graphics/program-lib/node.js
 ../src/graphics/program-lib/particle.js
 ../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/skybox.js
@@ -71,6 +72,7 @@
 ../src/scene/light.js
 ../src/scene/materials/material.js
 ../src/scene/materials/basic-material.js
+../src/scene/materials/node-material.js
 ../src/scene/materials/depth-material.js
 ../src/scene/materials/standard-material.js
 ../src/scene/materials/standard-material-parameters.js

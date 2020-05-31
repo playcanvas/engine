@@ -4,18 +4,12 @@ Object.assign(pc, function () {
      * @class
      * @name pc.NodeMaterial
      * @augments pc.Material
-     * @classdesc A Node material is for rendering unlit geometry, either using a constant color or a
-     * color map modulated with a color.
-     * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
-     * @property {pc.Texture|null} colorMap The color map of the material (default is null). If specified, the color map is
-     * modulated by the color property.
+     * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
+     * @property {pc.NodeInputs} nodeInputs
      * @example
      * // Create a new Node material
      * var material = new pc.NodeMaterial();
      *
-     * // Set the material to have a texture map that is multiplied by a red color
-     * material.color.set(1, 0, 0);
-     * material.colorMap = diffuseMap;
      *
      * // Notify the material that it has been modified
      * material.update();
@@ -23,14 +17,42 @@ Object.assign(pc, function () {
     var NodeMaterial = function () {
         pc.Material.call(this);
 
-        this.color = new pc.Color(1, 1, 1, 1);
-        this.colorUniform = new Float32Array(4);
+        this.nodeInputs = new NodeInputs();
 
-        this.colorMap = null;
-        this.vertexColors = false;
+      //  this.nodeInputs.params = [];
+        
+     //   this.nodeInputs.key = null;
+     //   this.nodeInputs.vertexPositionOffset = 'vec3 getVertexPositionOffset(){\n return vec3(0,0,0); \n};\n';
+     //   this.nodeInputs.emissiveColor = 'vec3 getEmissiveColor(){\n return vec3(0,0,0); \n};\n';
+//        this.nodeInputs.baseColor = 'vec3 getBaseColor(){\n return vec3(0,0,0); \n};\n';
+//        this.nodeInputs.opacity = 'float getOpacity(){\n return float(0); \n};\n';
+//        this.nodeInputs.normal = 'vec3 getNormal(){\n return vec3(0,0,0); \n};\n';
+//        this.nodeInputs.metallic = 'float getMetallic(){\n return float(0); \n};\n';
+//        this.nodeInputs.roughness = 'float getRoughness(){\n return float(0); \n};\n';
+
+        //no neeed? assume node input vector param values are Float32Arrays!
+//        this.tempVec2 = new Float32Array(2);
+//        this.tempVec3 = new Float32Array(3);
+//        this.tempVec4 = new Float32Array(4);
+
     };
     NodeMaterial.prototype = Object.create(pc.Material.prototype);
     NodeMaterial.prototype.constructor = NodeMaterial;
+
+    var NodeInputs = function () { };
+    NodeInputs.prototype.copy = function (from) {
+        for (var p in from) {
+            if (from.hasOwnProperty(p) && p !== 'copy')
+                this[p] = from[p];
+        }
+    };
+
+/*    var NodeParam = function (type, name, value) {
+        this.type = type;
+        this.name = name;
+        this.value = value;    
+      }
+      NodeParam.prototype.constructor = NodeParam;*/
 
     Object.assign(NodeMaterial.prototype, {
         /**
@@ -45,9 +67,7 @@ Object.assign(pc, function () {
 
             pc.Material.prototype._cloneInternal.call(this, clone);
 
-            clone.color.copy(this.color);
-            clone.colorMap = this.colorMap;
-            clone.vertexColors = this.vertexColors;
+            clone.nodeInputs.copy(this.nodeInputs);
 
             return clone;
         },
@@ -55,27 +75,40 @@ Object.assign(pc, function () {
         updateUniforms: function () {
             this.clearParameters();
 
-            this.colorUniform[0] = this.color.r;
-            this.colorUniform[1] = this.color.g;
-            this.colorUniform[2] = this.color.b;
-            this.colorUniform[3] = this.color.a;
-            this.setParameter('uColor', this.colorUniform);
-            if (this.colorMap) {
-                this.setParameter('texture_diffuseMap', this.colorMap);
+            for (var n=0;n<this.nodeInputs.params.length;n++)
+            {
+                switch(this.nodeInputs.params[n].type)
+                {
+                    case 'sampler2D':
+                    case 'samplerCube':
+                    case 'float':
+                    case 'vec2':
+                    case 'vec3':
+                    case 'vec4':
+                        this.setParameter(this.nodeInputs.params[n].name+'_'+this.nodeInputs.key, this.nodeInputs.params[n].value);
+                        break;
+                    default:
+                        //error
+                        break;    
+                }
             }
         },
 
-        updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-            var options = {
-                skin: !!this.meshInstances[0].skinInstance,
-                nodeInputs: this.nodeInputs,
-                pass: pass
-            };
-//            var library = device.getProgramLibrary();
-//            this.shader = library.getProgram('node', options);
+        //updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+        initShader: function (device) {
+            if (!this.shader)
+            {
+                var options = {
+                    skin: !!this.meshInstances[0].skinInstance,
+                    nodeInputs: this.nodeInputs,
+                    //pass: pass
+                };
+//              var library = device.getProgramLibrary();
+//              this.shader = library.getProgram('node', options);
 
-            var shaderDefinition = pc.programlib.node.createShaderDefinition(gd, options);
-            shader = new pc.Shader(gd, shaderDefinition);
+                var shaderDefinition = pc.programlib.node.createShaderDefinition(device, options);
+                this.shader = new pc.Shader(device, shaderDefinition);
+            }
         }
     });
 

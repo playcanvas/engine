@@ -1,27 +1,24 @@
 pc.programlib.node = {
     generateKey: function (options) {
-        var key = 'basic';
+        var key = 'node';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
         if (options.nodeInputs) key += options.nodeInputs.key;
-        key += '_' + options.pass;
+//        key += '_' + options.pass;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
         // GENERATE ATTRIBUTES
         var attributes = {
-            vertex_position: pc.SEMANTIC_POSITION
+            vertex_position: pc.SEMANTIC_POSITION,
+//            vertex_normal: pc.SEMANTIC_NORMAL,
+//            vertex_color: pc.SEMANTIC_COLOR,
+            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
         };
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
-        }
-        if (options.nodeInputs.vertexColor) {
-            attributes.vertex_color = pc.SEMANTIC_COLOR;
-        }
-        if (options.nodeInputs.textureMaps) {
-            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
         var chunks = pc.shaderChunks;
@@ -39,16 +36,22 @@ pc.programlib.node = {
             code += chunks.transformVS;
         }
 
-        if (options.nodeInputs.vertexColor) {
-            code += 'attribute vec4 vertex_color;\n';
-            code += 'varying vec4 vColor;\n';
-        }
-        if (options.nodeInputs.textureMaps) {
+        if (1)
+        {
+//            code += 'attribute vec3 vertex_position;\n';
+            code += 'varying vec3 vPosition;\n';
+
+            //code += 'attribute vec3 vertex_normal;\n';
+            //code += 'varying vec3 vNormal;\n';
+
+//            code += 'attribute vec4 vertex_color;\n';
+//            code += 'varying vec4 vColor;\n';
+
             code += 'attribute vec2 vertex_texCoord0;\n';
             code += 'varying vec2 vUv0;\n';
         }
 
-        if (options.pass === pc.SHADER_DEPTH) {
+     /*   if (options.pass === pc.SHADER_DEPTH) {
             code += 'varying float vDepth;\n';
             code += '#ifndef VIEWMATRIX\n';
             code += '#define VIEWMATRIX\n';
@@ -58,48 +61,38 @@ pc.programlib.node = {
             code += '#define CAMERAPLANES\n';
             code += 'uniform vec4 camera_params;\n\n';
             code += '#endif\n';
+        }*/
+
+        for (var n=0;n<options.nodeInputs.params.length;n++)
+        {
+            code += 'uniform '+options.nodeInputs.params[n].type+' '+options.nodeInputs.params[n].name+'_'+options.nodeInputs.key+';\n';
         }
 
-        for (var n=0;n<nodeInputs.textureParams.length;n++)
+        if (options.nodeInputs.vertexPositionOffset) 
         {
-            code += 'uniform sampler2D texture_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.floatParams.length;n++)
-        {
-            code += 'uniform float float_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec2Params.length;n++)
-        {
-            code += 'uniform vec2 vec2_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec3Params.length;n++)
-        {
-            code += 'uniform vec3 vec3_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec4Params.length;n++)
-        {
-            code += 'uniform vec4 vec4_param_'+n+'\n';
+            code += options.nodeInputs.vertexPositionOffset;
         }
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
-        if (options.nodeInputs.positionOffset) {
-            code += options.nodeInputs.positionOffset;
-            code += "   gl_Position = getPosition()+getPositionOffset();\n";
+        if (options.nodeInputs.vertexPositionOffset) {
+            code += "   vPosition = (getModelMatrix()*vec4(vertex_position, 1.0)).xyz+getVertexPositionOffset();\n";
+            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
         else {
-            code += "   gl_Position = getPosition();\n";
+            code += "   vPosition = (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;\n";
+            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
 
-        if (options.pass === pc.SHADER_DEPTH) {
+ /*       if (options.pass === pc.SHADER_DEPTH) {
             code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
-        }
+        }*/
 
-        if (options.nodeInputs.vertexColors) {
-            code += '    vColor = vertex_color;\n';
-        }
-        if (options.nodeInputs.textureMaps) {
+        if (1) 
+        {
+            //code += '    vNormal = getNormal(vertex_normal);\n';
+            //code += '    vColor = vertex_color;\n';
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
@@ -111,14 +104,11 @@ pc.programlib.node = {
         code = pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
-        if (options.nodeInputs.vertexColors) {
-            code += 'varying vec4 vColor;\n';
-        } else {
-            code += 'uniform vec4 uColor;\n';
-        }
-        if (options.nodeInputs.textureParams) {
+        if (1)
+        {
+            //code += 'varying vec3 vNormal;\n';
+            //code += 'varying vec4 vColor;\n';
             code += 'varying vec2 vUv0;\n';
-            code += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
             code += pc.programlib.fogCode(options.fog);
@@ -127,56 +117,42 @@ pc.programlib.node = {
             code += chunks.alphaTestPS;
         }
 
-        if (options.pass === pc.SHADER_DEPTH) {
+        /*if (options.pass === pc.SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += 'varying float vDepth;\n';
             code += chunks.packDepthPS;
-        }
+        }*/
 
-        for (var n=0;n<nodeInputs.textureParams.length;n++)
+        for (var n=0;n<options.nodeInputs.params.length;n++)
         {
-            code += 'uniform sampler2D texture_param_'+n+'\n';
+            code += 'uniform '+options.nodeInputs.params[n].type+' '+options.nodeInputs.params[n].name+'_'+options.nodeInputs.key+';\n';
         }
-        for (var n=0;n<nodeInputs.floatParams.length;n++)
-        {
-            code += 'uniform float float_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec2Params.length;n++)
-        {
-            code += 'uniform vec2 vec2_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec3Params.length;n++)
-        {
-            code += 'uniform vec3 vec3_param_'+n+'\n';
-        }
-        for (var n=0;n<nodeInputs.vec4Params.length;n++)
-        {
-            code += 'uniform vec4 vec4_param_'+n+'\n';
-        }
+        
+        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
+//        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
+//        if (options.nodeInputs.opacity) code += options.nodeInputs.opacity;
+//        if (options.nodeInputs.normal) code += options.nodeInputs.normal;
+//        if (options.nodeInputs.metallic) code += options.nodeInputs.metallic;
+//        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;    
 
         // FRAGMENT SHADER BODY
-        code += pc.programlib.begin();
+        code += pc.programlib.begin();            
 
-        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
-        if (options.nodeInputs.opacity) code += options.nodeInputs.opacity;
-        if (options.nodeInputs.normal) code += options.nodeInputs.normal;
-        if (options.nodeInputs.metallic) code += options.nodeInputs.metallic;
-        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;                
+        //code += pc.NodeMaterial.generateLightingCode(options);
 
-        code += pc.NodeMaterial.generateLightingCode(options);
-
-        code += '    gl_FragColor = lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
+        //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
+        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
 
         if (options.alphatest) {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        if (options.pass === pc.SHADER_PICK) {
+        /*if (options.pass === pc.SHADER_PICK) {
             // ##### PICK PASS #####
         } else if (options.pass === pc.SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += "    gl_FragColor = packFloat(vDepth);\n";
-        } else {
+        } else */{
             // ##### FORWARD PASS #####
             if (options.fog) {
                 code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
