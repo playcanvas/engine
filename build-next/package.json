@@ -1,0 +1,12 @@
+{
+  "name": "playcanvas-build-next",
+  "description": "Modern build process",
+  "version": "0.1.0",
+  "author": "PlayCanvas Contributors",
+  "license": "MIT",
+  "main": "build.js",
+  "devDependencies": {
+    "esbuild": "^0.4.3",
+    "yargs": "^15.3.1"
+  }
+}
