@@ -19,39 +19,6 @@
     <!-- The canvas element -->
     <canvas id="application-canvas"></canvas>
 
-    <!-- shaders -->
-    <!script id="vshader" type="x-shader/x-vertex">
-        attribute vec3 aPosition;
-        attribute vec2 aUv0;
-
-        uniform mat4 matrix_model;
-        uniform mat4 matrix_viewProjection;
-        uniform float uTime;
-
-        varying vec2 vUv0;
-
-        void main(void)
-        {
-            vec4 pos = matrix_model * vec4(aPosition, 1.0);
-            pos.x += sin(uTime + pos.y * 4.0) * 0.1;
-            vUv0 = aUv0;
-            gl_Position = matrix_viewProjection * pos;
-        }
-    <!/script>
-
-    <!script id="fshader" type="x-shader/x-fragment">
-        precision highp float;
-
-        uniform sampler2D uDiffuseMap;
-
-        varying vec2 vUv0;
-
-        void main(void)
-        {
-            gl_FragColor = texture2D(uDiffuseMap, vUv0);
-        }
-    <!/script>
-
     <!-- The script -->
     <script>
         var entity, light, camera;
@@ -109,34 +76,8 @@
 
             var gd = app.graphicsDevice;
 
- /*           var shaderDefinition = {
-                attributes: {
-                    aPosition: pc.SEMANTIC_POSITION,
-                    aUv0: pc.SEMANTIC_TEXCOORD0
-                },
-                vshader: document.getElementById("vshader").textContent,
-                fshader: document.getElementById("fshader").textContent
-            };
-
-            shader = new pc.Shader(gd, shaderDefinition);*/
-
             diffuseMap = model.getMaterials()[0].diffuseMap;
-/*
-            material = new pc.Material();
 
-            material.shader = this.shader;
-            material.setParameter('uTime', 0);
-            material.setParameter('uDiffuseMap', diffuseMap);
-
-            model.meshInstances.forEach(function (meshInstance) {
-                meshInstance.material = material;
-            });
-
-            app.on("update", function (dt) {
-                time += dt;
-                material.setParameter('uTime', time);
-            });
-*/
             function Param(type, name, value) {
                 this.type = type;
                 this.name = name;
@@ -145,20 +86,27 @@
 
             material = new pc.NodeMaterial();
             
-            nodeParamTex = new Param('sampler2D', 'uDiffuseMap', diffuseMap);
+            var texNodeParam = new Param('sampler2D', 'uDiffuseMap', diffuseMap);
+            var timeNodeParam = new Param('float', 'uTime', 0);
 
-            material.nodeInputs.key='nodeMat';
-            material.nodeInputs.params=[nodeParamTex];
+            material.nodeInputs.key='nodeMaterial';
+            material.nodeInputs.params=[texNodeParam, timeNodeParam];
             
 //            material.nodeInputs.emissiveColor='vec3 getEmissiveColor(){return vec3(1,0,1);}\n';
+//            material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(0,0,0);}\n';    
             material.nodeInputs.emissiveColor='vec3 getEmissiveColor(){return texture2D('+material.nodeInputs.params[0].name+'_'+material.nodeInputs.key+',vUv0).rgb;}\n';
-            material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(0,0,0);}\n';
-            
+            material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(sin(uTime_nodeMaterial + getWorldPositionNM().y * 4.0) * 0.1,0,0);}\n'
+
             model.meshInstances.forEach(function (meshInstance) {
                 meshInstance.material = material;
             });
 
-            material.initShader(this.app.graphicsDevice);
+            material.initShader(gd);
+
+            app.on("update", function (dt) {
+                time += dt;
+                material.setParameter('uTime_nodeMaterial', time);
+            });
 
             app.start();
         });

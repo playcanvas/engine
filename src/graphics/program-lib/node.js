@@ -68,6 +68,8 @@ pc.programlib.node = {
             code += 'uniform '+options.nodeInputs.params[n].type+' '+options.nodeInputs.params[n].name+'_'+options.nodeInputs.key+';\n';
         }
 
+        code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
+
         if (options.nodeInputs.vertexPositionOffset) 
         {
             code += options.nodeInputs.vertexPositionOffset;
@@ -77,11 +79,11 @@ pc.programlib.node = {
         code += pc.programlib.begin();
 
         if (options.nodeInputs.vertexPositionOffset) {
-            code += "   vPosition = (getModelMatrix()*vec4(vertex_position, 1.0)).xyz+getVertexPositionOffset();\n";
+            code += "   vPosition = getWorldPositionNM()+getVertexPositionOffset();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
         else {
-            code += "   vPosition = (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;\n";
+            code += "   vPosition = getWorldPositionNM();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
 
