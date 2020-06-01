@@ -1,7 +1,5 @@
 Object.assign(pc, function () {
 
-    var ANIM_STATE_ACTIVE = 'ACTIVE';
-
     /**
      * @class
      * @name pc.ContainerResource
@@ -182,30 +180,31 @@ Object.assign(pc, function () {
                 if (components.animations.length > 0) {
                     var anim = node.addComponent('anim');
 
-                    var animLayers = components.animations.map(function (animationIndex) {
-                        return {
-                            name: animationAssets[animationIndex].resource.name,
-                            states: [
-                                { name: pc.ANIM_STATE_START },
-                                { name: ANIM_STATE_ACTIVE }
-                            ],
-                            transitions: [],
-                            parameters: {}
-                        };
+                    // Create one layer per animation asset so that the animations can be played simultaneously
+                    anim.loadStateGraph({
+                        layers: components.animations.map(function (animationIndex) {
+                            return {
+                                name: animationAssets[animationIndex].resource.name,
+                                states: [
+                                    { name: pc.ANIM_STATE_START }, // Needed for pc.AnimComponentLayer not to crash
+                                    { name: "ACTIVE" }
+                                ],
+                                transitions: [],
+                                parameters: {}
+                            };
+                        })
                     });
-
-                    anim.loadStateGraph({ layers: animLayers });
 
                     components.animations.forEach(function (animationIndex) {
                         var layer = anim.findAnimationLayer(animationAssets[animationIndex].resource.name);
                         if (!layer) {
                             return;
                         }
-                        layer.assignAnimation(ANIM_STATE_ACTIVE, animationAssets[animationIndex].resource);
-                        // This is currently the only way to set the current state of the layer.
-                        // By doing this the animation can be played by simply running layer.play()
-                        // in an application, since a GLB anim layer will never have more than one state.
-                        layer.play(ANIM_STATE_ACTIVE);
+                        layer.assignAnimation(layer.states[1], animationAssets[animationIndex].resource);
+                        // This is currently the only public method to set the current state of a layer.
+                        // By doing this the animation of a layer can be played by simply running layer.play()
+                        // in an application.
+                        layer.play(layer.states[1]);
                         layer.pause();
                     });
                 }
