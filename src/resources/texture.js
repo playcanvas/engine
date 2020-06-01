@@ -395,7 +395,7 @@ Object.assign(pc, function () {
             image.src = url;
         },
 
-        open: function (url, data) {
+        open: function (url, data, asset) {
             if (!url)
                 return;
 
@@ -416,7 +416,8 @@ Object.assign(pc, function () {
                     // #endif
                     width: img.width,
                     height: img.height,
-                    format: format
+                    format: format,
+                    flipY: asset && asset.data.hasOwnProperty('flipY') ? !!asset.data.flipY : true
                 });
                 texture.name = url;
                 texture.setSource(img);

@@ -1313,7 +1313,7 @@ Object.assign(pc, function () {
             }
 
             // create and load the asset
-            var asset = new pc.Asset('texture_' + i, 'texture',  file);
+            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false });
             asset.on('load', onLoad.bind(null, i));
             registry.add(asset);
             registry.load(asset);
