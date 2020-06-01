@@ -1,4 +1,5 @@
 var Preprocessor = require("preprocessor");
+var fs = require("fs");
 var JSAsset = require("parcel-bundler/src/assets/JSAsset");
 
 function preprocess(contents, optionsPlayCanvas) {
@@ -10,8 +11,16 @@ function preprocess(contents, optionsPlayCanvas) {
     });
 }
 
+function ensurePlayCanvasOptions() {
+    if (global.optionsPlayCanvas === undefined) {
+        //console.log("Ensuring optionsPlayCanvas...");
+        global.optionsPlayCanvas = fs.readFileSync("output/options.json").toJSON();
+    }
+}
+
 class JSAssetPlayCanvas extends JSAsset {
     async pretransform() {
+        ensurePlayCanvasOptions();
         var optionsPlayCanvas = global.optionsPlayCanvas;
         this.contents = preprocess(this.contents, optionsPlayCanvas);
         this.contents = this.contents.replace("__CURRENT_SDK_VERSION__", optionsPlayCanvas.__CURRENT_SDK_VERSION__);

@@ -27,7 +27,7 @@ JSConcatPackager.prototype.start = async function() {
     // Pretty much ugly ES5 for:
     // await super.write(`// COPYRIGHT NOTICE\n`);
     await Packager.prototype.write.call(this, optionsPlayCanvas.copyrightNotice);
-    JSConcatPackager_start_original.call(this);
+    await JSConcatPackager_start_original.call(this);
 }
 var JSPackager_start_original = JSPackager.prototype.start;
 // Adding copyright notice for `-l 0` builds
@@ -40,7 +40,7 @@ JSPackager.prototype.start = async function() {
     if (debugParcel) {
         fs.writeFileSync("output/JSPackager_this.json", JSON.safeStringify(this));
     }
-    var n = optionsPlayCanvas.copyrightNotice.split("\n").length;
+    var n = optionsPlayCanvas.copyrightNotice.split("\n").length - 1;
     this.lineOffset += n; // Fix source maps
 }
 
@@ -327,6 +327,7 @@ var run = function() {
             if (debugParcel) {
                 console.log("optionsPlayCanvas", optionsPlayCanvas);
             }
+            fs.writeFileSync("output/options.json", JSON.stringify(optionsPlayCanvas, undefined, "    "));
             main();
         });
     });
