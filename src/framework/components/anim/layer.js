@@ -1,7 +1,6 @@
 Object.assign(pc, function () {
 
     /**
-     * @private
      * @class
      * @name pc.AnimComponentLayer
      * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -18,7 +17,6 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponentLayer.prototype, {
         /**
-         * @private
          * @function
          * @name pc.AnimComponentLayer#play
          * @description Start playing the animation in the current state.
@@ -29,7 +27,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.AnimComponentLayer#pause
          * @description Start playing the animation in the current state.
@@ -95,7 +92,6 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimComponentLayer.prototype, {
         /**
-         * @private
          * @readonly
          * @name pc.AnimComponentLayer#name
          * @type {string}
@@ -121,7 +117,6 @@ Object.assign(pc, function () {
             }
         },
         /**
-         * @private
          * @readonly
          * @name pc.AnimComponentLayer#playable
          * @type {string}

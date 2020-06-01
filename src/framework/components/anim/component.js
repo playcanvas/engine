@@ -1,7 +1,6 @@
 Object.assign(pc, function () {
 
     /**
-     * @private
      * @component Anim
      * @class
      * @name pc.AnimComponent
