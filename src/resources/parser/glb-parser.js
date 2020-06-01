@@ -6,19 +6,7 @@ Object.assign(pc, function () {
     };
 
     var getDataURIMimeType = function (uri) {
-        return uri.substring(uri.indexOf(":")+1, uri.indexOf(";"));
-    };
-
-    var isPower2 = function (n) {
-        return n && ((n & (n - 1)) === 0);
-    };
-
-    var isPower2d = function (w, h) {
-        return isPower2(w) && isPower2(h);
-    };
-
-    var nearestPow2 = function (n) {
-        return Math.pow(2, Math.round(Math.log(n) / Math.log(2)));
+        return uri.substring(uri.indexOf(":") + 1, uri.indexOf(";"));
     };
 
     var getNumComponents = function (accessorType) {
