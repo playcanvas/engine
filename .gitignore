@@ -10,4 +10,3 @@ npm-debug.log
 release.py
 dist
 .cache
-/parcel_dump_bundled.json

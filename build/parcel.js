@@ -36,7 +36,12 @@ JSPackager.prototype.start = async function() {
     // Pretty much ugly ES5 for:
     // await super.write(`// COPYRIGHT NOTICE\n`);
     await Packager.prototype.write.call(this, optionsPlayCanvas.copyrightNotice);
-    JSPackager_start_original.call(this);
+    await JSPackager_start_original.call(this);
+    if (debugParcel) {
+        fs.writeFileSync("output/JSPackager_this.json", JSON.safeStringify(this));
+    }
+    var n = optionsPlayCanvas.copyrightNotice.split("\n").length;
+    this.lineOffset += n; // Fix source maps
 }
 
 // A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
@@ -47,6 +52,7 @@ if (debugParcel) {
     fs.rmdirSync(".cache", { recursive: true });
 }
 
+var watch = false;
 var debug = false;
 var profiler = false;
 //var sourceMap = false;
@@ -62,13 +68,13 @@ var compilerLevel = COMPILER_LEVEL[0];
 // configs for the builds we support
 var targets = {
     engine: {
-        defaultOutputPath: "output/playcanvas_parcel.js",
+        defaultOutputPath: "output/playcanvas.js",
         //defaultSourcePath: "../src",
         depsFile: "./dependencies.txt",
         desc: "Playcanvas Engine"
     },
     extras: {   // or ministats
-        defaultOutputPath: "output/playcanvas-extras_parcel.js",
+        defaultOutputPath: "output/playcanvas-extras.js",
         //defaultSourcePath: "../extras",
         depsFile: "./extras_dependencies.txt",
         desc: "Playcanvas Extras"
@@ -140,13 +146,10 @@ var getCopyrightNotice = function (ver, rev) {
 // Single entrypoint file location:
 //const entryFiles = Path.join(__dirname, "./index.html");
 const entryFiles = "../src/playcanvas.js";
-
 // OR: Multiple files with globbing (can also be .js)
 // const entryFiles = "./src/*.js";
 // OR: Multiple files in an array
 // const entryFiles = ["./src/index.html", "./some/other/directory/scripts.js"];
-
-
 
 var optionsPlayCanvas = {
     __CURRENT_SDK_VERSION__: "some ver",
@@ -163,17 +166,16 @@ var optionsPlayCanvas = {
 global.optionsPlayCanvas = optionsPlayCanvas;
 
 async function main() {
-
     // Bundler options
     var options = {
         outDir: path.dirname(outputPath), // The out directory to put the build files in, defaults to dist
         outFile: path.basename(outputPath), // The name of the outputFile
-        publicUrl: "/", // The url to serve on, defaults to "/"
-        watch: false, // Whether to watch the files and rebuild them on change, defaults to process.env.NODE_ENV !== "production"
+        publicUrl: "./", // The url to serve on, defaults to "/"
+        watch: watch, // Whether to watch the files and rebuild them on change, defaults to process.env.NODE_ENV !== "production"
         cache: true, // Enabled or disables caching, defaults to true
         cacheDir: ".cache", // The directory cache gets put in, defaults to .cache
         contentHash: false, // Disable content hash from being included on the filename
-        global: "moduleName", // Expose modules as UMD under this name, disabled by default
+        //global: "moduleName", // Expose modules as UMD under this name, disabled by default
         minify: compilerLevel == "SIMPLE", // Minify files, enabled if process.env.NODE_ENV === "production"
         scopeHoist: compilerLevel == "SIMPLE", // Turn on experimental scope hoisting/tree shaking flag, for smaller production bundles
         target: "browser", // Browser/node/electron, defaults to browser
@@ -202,7 +204,7 @@ async function main() {
         // bundler contains all assets and bundles, see documentation for details
         if (debugParcel) {
             console.log("Event: bundled");
-            fs.writeFileSync("parcel_dump_bundled.json", JSON.safeStringify(bundle));
+            fs.writeFileSync("output/parcel_event_bundled.json", JSON.safeStringify(bundle));
         }
     });
 
@@ -252,6 +254,7 @@ var arguments = function () {
             console.log("-p: build profiler engine configuration");
             console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
             console.log("-t target to build, either engine or extas. default is engine");
+            console.log("--watch: Recompile observed file changes immediately");
             //console.log("--concatenateShaders: Just generate src/graphics/program-lib/chunks/generated-shader-chunks.js");
             process.exit();
         }
@@ -262,6 +265,10 @@ var arguments = function () {
 
         if (arg === "-p") {
             profiler = true;
+        }
+
+        if (arg === "--watch") {
+            watch = true;
         }
 
         //if (arg === "--concatenateShaders") {
@@ -317,7 +324,9 @@ var run = function() {
             optionsPlayCanvas.DEBUG = debug;
             optionsPlayCanvas.RELEASE = compilerLevel != COMPILER_LEVEL[0];
             optionsPlayCanvas.copyrightNotice = getCopyrightNotice(ver, rev);
-            console.log("optionsPlayCanvas", optionsPlayCanvas);
+            if (debugParcel) {
+                console.log("optionsPlayCanvas", optionsPlayCanvas);
+            }
             main();
         });
     });
