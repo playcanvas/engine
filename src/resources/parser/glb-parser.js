@@ -718,11 +718,6 @@ Object.assign(pc, function () {
             "}"
         ].join('\n');
 
-        var getTexture = function (index) {
-            var textureAsset = textures[index];
-            return textureAsset ? textureAsset.resource : null;
-        };
-
         var extractTextureTransform = function (source, material, maps) {
             var map;
 
@@ -785,7 +780,7 @@ Object.assign(pc, function () {
             }
             if (specData.hasOwnProperty('diffuseTexture')) {
                 var diffuseTexture = specData.diffuseTexture;
-                texture = getTexture(diffuseTexture.index);
+                texture = textures[diffuseTexture.index];
 
                 material.diffuseMap = texture;
                 material.diffuseMapChannel = 'rgb';
@@ -809,7 +804,7 @@ Object.assign(pc, function () {
             }
             if (specData.hasOwnProperty('specularGlossinessTexture')) {
                 var specularGlossinessTexture = specData.specularGlossinessTexture;
-                material.specularMap = material.glossMap = getTexture(specularGlossinessTexture.index);
+                material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
                 material.specularMapChannel = 'rgb';
 
                 extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
@@ -831,7 +826,7 @@ Object.assign(pc, function () {
             }
             if (pbrData.hasOwnProperty('baseColorTexture')) {
                 var baseColorTexture = pbrData.baseColorTexture;
-                texture = getTexture(baseColorTexture.index);
+                texture = textures[baseColorTexture.index];
 
                 material.diffuseMap = texture;
                 material.diffuseMapChannel = 'rgb';
@@ -853,7 +848,7 @@ Object.assign(pc, function () {
             }
             if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
                 var metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
-                material.metalnessMap = material.glossMap = getTexture(metallicRoughnessTexture.index);
+                material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
                 material.metalnessMapChannel = 'b';
                 material.glossMapChannel = 'g';
 
@@ -865,7 +860,7 @@ Object.assign(pc, function () {
 
         if (materialData.hasOwnProperty('normalTexture')) {
             var normalTexture = materialData.normalTexture;
-            material.normalMap = getTexture(normalTexture.index);
+            material.normalMap = textures[normalTexture.index];
 
             extractTextureTransform(normalTexture, material, ['normal']);
 
@@ -875,7 +870,7 @@ Object.assign(pc, function () {
         }
         if (materialData.hasOwnProperty('occlusionTexture')) {
             var occlusionTexture = materialData.occlusionTexture;
-            material.aoMap = getTexture(occlusionTexture.index);
+            material.aoMap = textures[occlusionTexture.index];
             material.aoMapChannel = 'r';
 
             extractTextureTransform(occlusionTexture, material, ['ao']);
@@ -892,7 +887,7 @@ Object.assign(pc, function () {
         }
         if (materialData.hasOwnProperty('emissiveTexture')) {
             var emissiveTexture = materialData.emissiveTexture;
-            material.emissiveMap = getTexture(emissiveTexture.index);
+            material.emissiveMap = textures[emissiveTexture.index];
 
             extractTextureTransform(emissiveTexture, material, ['emissive']);
         }
@@ -952,50 +947,6 @@ Object.assign(pc, function () {
         material.update();
 
         return material;
-    };
-
-    var defaultSampler = {
-        magFilter: 9729,
-        minFilter: 9987,
-        wrapS: 10497,
-        wrapT: 10497
-    };
-
-    var createTexture = function (device, textureData, samplers, images) {
-        var getFilter = function (filter) {
-            switch (filter) {
-                case 9728: return pc.FILTER_NEAREST;
-                case 9729: return pc.FILTER_LINEAR;
-                case 9984: return pc.FILTER_NEAREST_MIPMAP_NEAREST;
-                case 9985: return pc.FILTER_LINEAR_MIPMAP_NEAREST;
-                case 9986: return pc.FILTER_NEAREST_MIPMAP_LINEAR;
-                case 9987: return pc.FILTER_LINEAR_MIPMAP_LINEAR;
-                default:   return pc.FILTER_LINEAR;
-            }
-        };
-
-        var getWrap = function (wrap) {
-            switch (wrap) {
-                case 33071: return pc.ADDRESS_CLAMP_TO_EDGE;
-                case 33648: return pc.ADDRESS_MIRRORED_REPEAT;
-                case 10497: return pc.ADDRESS_REPEAT;
-                default:    return pc.ADDRESS_REPEAT;
-            }
-        };
-
-        var samplerData = samplers ? samplers[textureData.sampler] : defaultSampler;
-        var options = {
-            name: textureData.name,
-            minFilter: getFilter(samplerData.minFilter),
-            magFilter: getFilter(samplerData.magFilter),
-            addressU: getWrap(samplerData.wrapS),
-            addressV: getWrap(samplerData.wrapT),
-            flipY: false
-        };
-
-        var result = new pc.Texture(device, options);
-        result.setSource(images[textureData.source]);
-        return result;
     };
 
     // create the anim structure
@@ -1190,15 +1141,6 @@ Object.assign(pc, function () {
 
     };
 
-    var createTextures = function (device, gltf, images) {
-        if (!gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
-            return [];
-        }
-        return gltf.textures.map(function (textureData) {
-            return createTexture(device, textureData, gltf.samplers, images);
-        });
-    };
-
     var createAnimations = function (gltf, nodes, buffers) {
         if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
             return [];
@@ -1236,7 +1178,9 @@ Object.assign(pc, function () {
     var createResources = function (device, gltf, buffers, textures, callback) {
         var nodes = createNodes(gltf);
         var animations = createAnimations(gltf, nodes, buffers);
-        var materials = createMaterials(gltf, textures);
+        var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
+            return textures[t.source].resource;
+        }) : []);
         var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
 
@@ -1249,6 +1193,42 @@ Object.assign(pc, function () {
             'meshes': meshes,
             'skins': skins
         });
+    };
+
+    var applySampler = function (texture, samplerData) {
+        var defaultSampler = {
+            magFilter: 9729,
+            minFilter: 9987,
+            wrapS: 10497,
+            wrapT: 10497
+        };
+
+        var getFilter = function (filter) {
+            switch (filter) {
+                case 9728: return pc.FILTER_NEAREST;
+                case 9729: return pc.FILTER_LINEAR;
+                case 9984: return pc.FILTER_NEAREST_MIPMAP_NEAREST;
+                case 9985: return pc.FILTER_LINEAR_MIPMAP_NEAREST;
+                case 9986: return pc.FILTER_NEAREST_MIPMAP_LINEAR;
+                case 9987: return pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                default:   return pc.FILTER_LINEAR;
+            }
+        };
+
+        var getWrap = function (wrap) {
+            switch (wrap) {
+                case 33071: return pc.ADDRESS_CLAMP_TO_EDGE;
+                case 33648: return pc.ADDRESS_MIRRORED_REPEAT;
+                case 10497: return pc.ADDRESS_REPEAT;
+                default:    return pc.ADDRESS_REPEAT;
+            }
+        };
+
+        samplerData = samplerData || defaultSampler;
+        texture.minFilter = getFilter(samplerData.minFilter);
+        texture.magFilter = getFilter(samplerData.magFilter);
+        texture.addressU = getWrap(samplerData.wrapS);
+        texture.addressV = getWrap(samplerData.wrapT);
     };
 
     // load textures using the asset system
@@ -1265,6 +1245,12 @@ Object.assign(pc, function () {
         var onLoad = function (idx, img) {
             result[idx] = img;
             if (--remaining === 0) {
+                // apply samplers
+                for (var t = 0; t < gltf.textures.length; ++t) {
+                    var texture = gltf.textures[t];
+                    applySampler(result[texture.source], (gltf.samplers || [])[texture.sampler]);
+                }
+
                 callback(null, result);
             }
         };
