@@ -52,20 +52,20 @@
 
 /**
  * @callback pc.callbacks.LoadHierarchy
- * @description Callback used by {@link pc.Application#loadSceneHierarchy}.
+ * @description Callback used by {@link pc.SceneRegistry#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
  * @callback pc.callbacks.LoadSettings
- * @description Callback used by {@link pc.Application#loadSceneSettings}.
+ * @description Callback used by {@link pc.SceneRegistry#loadSceneSettings}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
  * @callback pc.callbacks.LoadScene
- * @description Callback used by {@link pc.Application#loadScene}.
+ * @description Callback used by {@link pc.SceneRegistry#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
  */

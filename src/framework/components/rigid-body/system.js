@@ -4,9 +4,6 @@ Object.assign(pc, function () {
     var collisions = {};
     var frameCollisions = {};
 
-    // DEPRECATED WARNINGS
-    var WARNED_RAYCAST_CALLBACK = false;
-
     /**
      * @class
      * @name pc.RaycastResult
@@ -164,6 +161,12 @@ Object.assign(pc, function () {
         this.fixedTimeStep = 1 / 60;
         this.gravity = new pc.Vec3(0, -9.81, 0);
 
+        // Arrays of pc.RigidBodyComponents filtered on body type
+        this._dynamic = [];
+        this._kinematic = [];
+        this._triggers = [];
+        this._compounds = [];
+
         this.on('remove', this.onRemove, this);
     };
     RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -175,11 +178,20 @@ Object.assign(pc, function () {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
             if (typeof Ammo !== 'undefined') {
-                var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-                var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-                var overlappingPairCache = new Ammo.btDbvtBroadphase();
-                var solver = new Ammo.btSequentialImpulseConstraintSolver();
-                this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+                this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+                this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
+                this.overlappingPairCache = new Ammo.btDbvtBroadphase();
+                this.solver = new Ammo.btSequentialImpulseConstraintSolver();
+                this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
+
+                if (this.dynamicsWorld.setInternalTickCallback) {
+                    var checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
+                    this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
+                } else {
+                    // #ifdef DEBUG
+                    console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
+                    // #endif
+                }
 
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
@@ -204,7 +216,9 @@ Object.assign(pc, function () {
             // backwards compatibility
             if (_data.bodyType) {
                 data.type = _data.bodyType;
-                console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
+                // #ifdef DEBUG
+                console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
+                // #endif
             }
 
             if (data.linearFactor && pc.type(data.linearFactor) === 'array') {
@@ -237,9 +251,10 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (data.body) {
-                this.removeBody(data.body);
-                Ammo.destroy(data.body);
+            var body = data.body;
+            if (body) {
+                this.removeBody(body);
+                this.destroyBody(body);
 
                 data.body = null;
             }
@@ -251,21 +266,34 @@ Object.assign(pc, function () {
             } else {
                 this.dynamicsWorld.addRigidBody(body);
             }
-
-            return body;
         },
 
         removeBody: function (body) {
             this.dynamicsWorld.removeRigidBody(body);
         },
 
-        addConstraint: function (constraint) {
-            this.dynamicsWorld.addConstraint(constraint);
-            return constraint;
+        createBody: function (mass, shape, transform) {
+            var localInertia = new Ammo.btVector3(0, 0, 0);
+            if (mass !== 0) {
+                shape.calculateLocalInertia(mass, localInertia);
+            }
+
+            var motionState = new Ammo.btDefaultMotionState(transform);
+            var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
+            var body = new Ammo.btRigidBody(bodyInfo);
+            Ammo.destroy(bodyInfo);
+            Ammo.destroy(localInertia);
+
+            return body;
         },
 
-        removeConstraint: function (constraint) {
-            this.dynamicsWorld.removeConstraint(constraint);
+        destroyBody: function (body) {
+            // The motion state needs to be destroyed explicitly (if present)
+            var motionState = body.getMotionState();
+            if (motionState) {
+                Ammo.destroy(motionState);
+            }
+            Ammo.destroy(body);
         },
 
         /**
@@ -300,13 +328,12 @@ Object.assign(pc, function () {
 
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
+                        // #ifdef DEBUG
+                        console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                        // #endif
+
                         var callback = arguments[2];
                         callback(result);
-
-                        if (!WARNED_RAYCAST_CALLBACK) {
-                            console.warn('[DEPRECATED]: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-                            WARNED_RAYCAST_CALLBACK = true;
-                        }
                     }
                 }
             }
@@ -515,47 +542,25 @@ Object.assign(pc, function () {
             return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
         },
 
-        onUpdate: function (dt) {
-            // #ifdef PROFILER
-            this._stats.physicsStart = pc.now();
-            // #endif
-
-            // Check to see whether we need to update gravity on the dynamics world
-            var gravity = this.dynamicsWorld.getGravity();
-            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
-                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
-                this.dynamicsWorld.setGravity(gravity);
-            }
-
-            // Update the transforms of all bodies
-            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
-
-            // Update the transforms of all entities referencing a body
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
-                        if (componentData.type === pc.BODYTYPE_DYNAMIC) {
-                            entity.rigidbody.syncBodyToEntity();
-                        } else if (componentData.type === pc.BODYTYPE_KINEMATIC) {
-                            entity.rigidbody._updateKinematic(dt);
-                        }
-                    }
-
-                }
-            }
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponentSystem#_checkForCollisions
+         * @description Checks for collisions and fires collision events
+         * @param {number} world - The pointer to the dynamics world that invoked this callback.
+         * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
+         */
+        _checkForCollisions: function (world, timeStep) {
+            var dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);
 
             // Check for collisions and fire callbacks
-            var dispatcher = this.dynamicsWorld.getDispatcher();
+            var dispatcher = dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
-            var i, j;
 
             frameCollisions = {};
 
             // loop through the all contacts and fire events
-            for (i = 0; i < numManifolds; i++) {
+            for (var i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
 
                 var body0 = manifold.getBody0();
@@ -631,7 +636,7 @@ Object.assign(pc, function () {
                         var globalEvents = this.hasEvent("contact");
 
                         if (globalEvents || e0Events || e1Events) {
-                            for (j = 0; j < numContacts; j++) {
+                            for (var j = 0; j < numContacts; j++) {
                                 var btContactPoint = manifold.getContactPoint(j);
 
                                 var contactPoint = this._createContactPointFromAmmo(btContactPoint);
@@ -698,27 +703,72 @@ Object.assign(pc, function () {
             this.contactPointPool.freeAll();
             this.contactResultPool.freeAll();
             this.singleContactResultPool.freeAll();
+        },
+
+        onUpdate: function (dt) {
+            var i, len;
+
+            // #ifdef PROFILER
+            this._stats.physicsStart = pc.now();
+            // #endif
+
+            // Check to see whether we need to update gravity on the dynamics world
+            var gravity = this.dynamicsWorld.getGravity();
+            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
+                this.dynamicsWorld.setGravity(gravity);
+            }
+
+            var triggers = this._triggers;
+            for (i = 0, len = triggers.length; i < len; i++) {
+                triggers[i].updateTransform();
+            }
+
+            var compounds = this._compounds;
+            for (i = 0, len = compounds.length; i < len; i++) {
+                compounds[i]._updateCompound();
+            }
+
+            // Update all kinematic bodies based on their current entity transform
+            var kinematic = this._kinematic;
+            for (i = 0, len = kinematic.length; i < len; i++) {
+                kinematic[i]._updateKinematic();
+            }
+
+            // Step the physics simulation
+            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+
+            // Update the transforms of all entities referencing a dynamic body
+            var dynamic = this._dynamic;
+            for (i = 0, len = dynamic.length; i < len; i++) {
+                dynamic[i]._updateDynamic();
+            }
+
+            if (!this.dynamicsWorld.setInternalTickCallback)
+                this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
 
             // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
             // #endif
+        },
+
+        destroy: function () {
+            if (typeof Ammo !== 'undefined') {
+                Ammo.destroy(this.dynamicsWorld);
+                Ammo.destroy(this.solver);
+                Ammo.destroy(this.overlappingPairCache);
+                Ammo.destroy(this.dispatcher);
+                Ammo.destroy(this.collisionConfiguration);
+                this.dynamicsWorld = null;
+                this.solver = null;
+                this.overlappingPairCache = null;
+                this.dispatcher = null;
+                this.collisionConfiguration = null;
+            }
         }
     });
 
     return {
-        // DEPRECATED ENUMS - see rigidbody_constants.js
-        RIGIDBODY_TYPE_STATIC: 'static',
-        RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
-        RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
-        RIGIDBODY_CF_STATIC_OBJECT: 1,
-        RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
-        RIGIDBODY_CF_NORESPONSE_OBJECT: 4,
-        RIGIDBODY_ACTIVE_TAG: 1,
-        RIGIDBODY_ISLAND_SLEEPING: 2,
-        RIGIDBODY_WANTS_DEACTIVATION: 3,
-        RIGIDBODY_DISABLE_DEACTIVATION: 4,
-        RIGIDBODY_DISABLE_SIMULATION: 5,
-
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());

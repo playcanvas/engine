@@ -56,6 +56,19 @@ Object.assign(pc, function () {
         }
     };
 
+    var getAccessorDataType = function (accessor) {
+        switch (accessor.componentType) {
+            case 5120: return Int8Array;
+            case 5121: return Uint8Array;
+            case 5122: return Int16Array;
+            case 5123: return Uint16Array;
+            case 5124: return Int32Array;
+            case 5125: return Uint32Array;
+            case 5126: return Float32Array;
+            default: return null;
+        }
+    };
+
     var getAccessorData = function (accessor, bufferViews, buffers) {
         var bufferViewIdx;
         var count;
@@ -74,16 +87,8 @@ Object.assign(pc, function () {
         var byteOffset = typedArray.byteOffset + accessorByteOffset + bufferViewByteOffset;
         var length = count * getNumComponents(accessor.type);
 
-        switch (accessor.componentType) {
-            case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
-            case 5121: return new Uint8Array(typedArray.buffer, byteOffset, length);
-            case 5122: return new Int16Array(typedArray.buffer, byteOffset, length);
-            case 5123: return new Uint16Array(typedArray.buffer, byteOffset, length);
-            case 5124: return new Int32Array(typedArray.buffer, byteOffset, length);
-            case 5125: return new Uint32Array(typedArray.buffer, byteOffset, length);
-            case 5126: return new Float32Array(typedArray.buffer, byteOffset, length);
-            default: return null;
-        }
+        var dataType = getAccessorDataType(accessor);
+        return dataType ? new dataType(typedArray.buffer, byteOffset, length) : null;
     };
 
     var getSparseAccessorIndices = function (accessor, bufferViews, buffers) {
@@ -445,6 +450,7 @@ Object.assign(pc, function () {
             var primitiveType, vertexBuffer, numIndices;
             var indices = null;
             var mesh = new pc.Mesh(device);
+            var canUseMorph = true;
 
             // try and get draco compressed data first
             if (primitive.hasOwnProperty('extensions')) {
@@ -514,6 +520,9 @@ Object.assign(pc, function () {
                             decoderModule.destroy(outputGeometry);
                             decoderModule.destroy(decoder);
                             decoderModule.destroy(buffer);
+
+                            // morph streams are not compatible with draco compression, disable morphing
+                            canUseMorph = false;
                         }
                     } else {
                         // #ifdef DEBUG
@@ -566,31 +575,58 @@ Object.assign(pc, function () {
             );
             mesh.aabb = aabb;
 
-            if (primitive.hasOwnProperty('targets')) {
+            // convert sparse morph target vertex data to full format
+            var sparseToFull = function (data, indices, dataType, totalCount) {
+                var full = new dataType(totalCount * 3);
+                for (var s = 0; s < indices.length; s++) {
+                    var dstIndex = indices[s] * 3;
+                    full[dstIndex] = data[s * 3];
+                    full[dstIndex + 1] = data[s * 3 + 1];
+                    full[dstIndex + 2] = data[s * 3 + 2];
+                }
+                return full;
+            };
+
+            // morph targets
+            if (canUseMorph && primitive.hasOwnProperty('targets')) {
                 var targets = [];
+                var dataType;
 
                 primitive.targets.forEach(function (target, index) {
                     var options = {};
 
                     if (target.hasOwnProperty('POSITION')) {
+
                         accessor = accessors[target.POSITION];
+                        dataType = getAccessorDataType(accessor);
+
                         options.deltaPositions = getAccessorData(accessor, bufferViews, buffers);
+                        options.deltaPositionsType = pc.typedArrayToType[dataType.name];
+
+                        if (accessor.sparse) {
+                            options.deltaPositions = sparseToFull(options.deltaPositions, getSparseAccessorIndices(accessor, bufferViews, buffers),
+                                                                  dataType, mesh.vertexBuffer.numVertices);
+
+                        }
 
                         if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
                             options.aabb = new pc.BoundingBox();
                             options.aabb.setMinMax(new pc.Vec3(accessor.min), new pc.Vec3(accessor.max));
                         }
-
-                        // FIXME: assume that position, normal, tangent data all share the
-                        // same set of sparse indices
-                        if (accessor.sparse) {
-                            options.indices = getSparseAccessorIndices(accessor, bufferViews, buffers);
-                        }
                     }
 
                     if (target.hasOwnProperty('NORMAL')) {
+
                         accessor = accessors[target.NORMAL];
+                        dataType = getAccessorDataType(accessor);
+
                         options.deltaNormals = getAccessorData(accessor, bufferViews, buffers);
+                        options.deltaNormalsType = pc.typedArrayToType[dataType.name];
+
+                        if (accessor.sparse) {
+                            options.deltaNormals = sparseToFull(options.deltaNormals, getSparseAccessorIndices(accessor, bufferViews, buffers),
+                                                                dataType, mesh.vertexBuffer.numVertices);
+                        }
                     }
 
                     if (meshData.hasOwnProperty('extras') &&
@@ -600,7 +636,7 @@ Object.assign(pc, function () {
                         options.name = targets.length.toString(10);
                     }
 
-                    targets.push(new pc.MorphTarget(options));
+                    targets.push(new pc.MorphTarget(device, options));
                 });
 
                 mesh.morph = new pc.Morph(targets);
@@ -1614,9 +1650,6 @@ Object.assign(pc, function () {
 
             if (mesh.morph) {
                 var morphInstance = new pc.MorphInstance(mesh.morph);
-                // HACK: need to force calculation of the morph's AABB due to a bug
-                // in the engine. This is a private function and will be removed!
-                morphInstance.updateBounds(meshInstance.mesh);
                 if (mesh.weights) {
                     for (var wi = 0; wi < mesh.weights.length; wi++) {
                         morphInstance.setWeight(wi, mesh.weights[wi]);

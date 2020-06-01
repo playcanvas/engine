@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/output/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -50,6 +51,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pc.MiniStats(app);
+
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
         // Generate some materials to assigm to scene objects
@@ -68,12 +71,12 @@
         var entity, light, camera;
 
         // Load a model file and create a Entity with a model component
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
             entity = new pc.Entity();
             entity.addComponent("model", {
                 type: "asset",
-                asset: asset,
+                asset: asset.resource.model,
                 castShadows: true
             });
             app.root.addChild(entity);

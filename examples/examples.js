@@ -19,31 +19,37 @@ var categories = [
             "layers",
             "lights",
             "lights-baked",
-            "loader-obj",
             "material-anisotropic",
+            "material-clear-coat",
+            "material-physical",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
-            "material-clear-coat",
-            "material-physical",
+            "mesh-morph",
             "model-asset",
             "model-box",
             "model-outline",
             "model-shapes",
             "model-textured-box",
-            "point-cloud",
-            "point-cloud-simulation",
-            "portal",
             "particles-anim-index",
             "particles-random-sprites",
             "particles-snow",
             "particles-sparks",
+            "point-cloud",
+            "point-cloud-simulation",
+            "portal",
             "post-effects",
             "render-to-texture",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
             "texture-basis"
+        ]
+    }, {
+        name: "loaders",
+        examples: [
+            "loader-glb",
+            "loader-obj"
         ]
     }, {
         name: "input",
@@ -60,6 +66,7 @@ var categories = [
     }, {
         name: "physics",
         examples: [
+            "compound-collision",
             "falling-shapes",
             "raycast"
         ]

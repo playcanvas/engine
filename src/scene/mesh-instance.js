@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     var _tmpAabb = new pc.BoundingBox();
+    var _tempBoneAabb = new pc.BoundingBox();
 
     /**
      * @class
@@ -90,13 +91,11 @@ Object.assign(pc, function () {
         this.updateKey();
 
         this._skinInstance = null;
-        this.morphInstance = null;
+        this._morphInstance = null;
         this.instancingData = null;
 
         // World space AABB
         this.aabb = new pc.BoundingBox();
-
-        this._boneAabb = null;
         this._aabbVer = -1;
 
         this.drawOrder = 0;
@@ -126,210 +125,67 @@ Object.assign(pc, function () {
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
-            var aabb;
+            var i;
 
-            if (!this._updateAabb) return this._aabb;
+            if (!this._updateAabb) {
+                return this._aabb;
+            }
+
             if (this._updateAabbFunc) {
                 return this._updateAabbFunc(this._aabb);
             }
 
             if (this.skinInstance) {
-                var numBones = this.mesh.skin.boneNames.length;
-                var boneUsed, i;
+
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
-
-                    this.mesh.boneAabb = [];
-                    this.mesh.boneUsed = [];
-                    var elems = this.mesh.vertexBuffer.format.elements;
-                    var numVerts = this.mesh.vertexBuffer.numVertices;
-                    var vertSize = this.mesh.vertexBuffer.format.size;
-                    var index;
-                    var offsetP, offsetI, offsetW;
-                    var j, k, l;
-                    for (i = 0; i < elems.length; i++) {
-                        if (elems[i].name === pc.SEMANTIC_POSITION) {
-                            offsetP = elems[i].offset;
-                        } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
-                            offsetI = elems[i].offset;
-                        } else if (elems[i].name === pc.SEMANTIC_BLENDWEIGHT) {
-                            offsetW = elems[i].offset;
-                        }
-                    }
-
-                    var data8 = new Uint8Array(this.mesh.vertexBuffer.storage);
-                    var dataF = new Float32Array(this.mesh.vertexBuffer.storage);
-                    var offsetPF = offsetP / 4;
-                    var offsetWF = offsetW / 4;
-                    var vertSizeF = vertSize / 4;
-
-                    var bMax, bMin;
-                    var x, y, z;
-                    var boneMin = [];
-                    var boneMax = [];
-                    boneUsed = this.mesh.boneUsed;
-
-                    for (i = 0; i < numBones; i++) {
-                        boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-                        boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-                    }
-
-                    // Find bone AABBs by attached vertices
-                    for (j = 0; j < numVerts; j++) {
-                        for (k = 0; k < 4; k++) {
-                            if (dataF[j * vertSizeF + offsetWF + k] > 0) {
-                                index = data8[j * vertSize + offsetI + k];
-                                // Vertex j is affected by bone index
-                                x = dataF[j * vertSizeF + offsetPF];
-                                y = dataF[j * vertSizeF + offsetPF + 1];
-                                z = dataF[j * vertSizeF + offsetPF + 2];
-
-                                bMax = boneMax[index];
-                                bMin = boneMin[index];
-
-                                if (bMin.x > x) bMin.x = x;
-                                if (bMin.y > y) bMin.y = y;
-                                if (bMin.z > z) bMin.z = z;
-
-                                if (bMax.x < x) bMax.x = x;
-                                if (bMax.y < y) bMax.y = y;
-                                if (bMax.z < z) bMax.z = z;
-
-                                boneUsed[index] = true;
-                            }
-                        }
-                    }
-
-                    // Apply morphing to bone AABBs
-                    if (this.morphInstance) {
-                        var vertIndex;
-                        var targets = this.morphInstance.morph._targets;
-
-                        // Find min/max morphed vertex positions
-                        var minMorphedPos = new Float32Array(numVerts * 3);
-                        var maxMorphedPos = new Float32Array(numVerts * 3);
-                        var m, dx, dy, dz;
-                        var target, mtIndices, mtIndicesLength, deltaPos;
-
-                        for (j = 0; j < numVerts; j++) {
-                            minMorphedPos[j * 3] = maxMorphedPos[j * 3] = dataF[j * vertSizeF + offsetPF];
-                            minMorphedPos[j * 3 + 1] = maxMorphedPos[j * 3 + 1] = dataF[j * vertSizeF + offsetPF + 1];
-                            minMorphedPos[j * 3 + 2] = maxMorphedPos[j * 3 + 2] = dataF[j * vertSizeF + offsetPF + 2];
-                        }
-
-                        for (l = 0; l < targets.length; l++) {
-                            target = targets[l];
-                            mtIndices = target.indices;
-                            mtIndicesLength = mtIndices.length;
-                            deltaPos = target.deltaPositions;
-                            for (k = 0; k < mtIndicesLength; k++) {
-                                vertIndex = mtIndices[k];
-
-                                dx = deltaPos[k * 3];
-                                dy = deltaPos[k * 3 + 1];
-                                dz = deltaPos[k * 3 + 2];
-
-                                if (dx < 0) {
-                                    minMorphedPos[vertIndex * 3] += dx;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3] += dx;
-                                }
-
-                                if (dy < 0) {
-                                    minMorphedPos[vertIndex * 3 + 1] += dy;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3 + 1] += dy;
-                                }
-
-                                if (dz < 0) {
-                                    minMorphedPos[vertIndex * 3 + 2] += dz;
-                                } else {
-                                    maxMorphedPos[vertIndex * 3 + 2] += dz;
-                                }
-                            }
-                        }
-
-                        // Re-evaluate bone AABBs against min/max morphed positions
-                        for (l = 0; l < targets.length; l++) {
-                            target = targets[l];
-                            mtIndices = target.indices;
-                            mtIndicesLength = mtIndices.length;
-                            deltaPos = target.deltaPositions;
-                            for (k = 0; k < mtIndicesLength; k++) {
-                                vertIndex = mtIndices[k];
-                                for (m = 0; m < 4; m++) {
-                                    if (dataF[vertIndex * vertSizeF + offsetWF + m] > 0) {
-                                        index = data8[vertIndex * vertSize + offsetI + m];
-                                        // Vertex vertIndex is affected by bone index
-                                        bMax = boneMax[index];
-                                        bMin = boneMin[index];
-
-                                        x = minMorphedPos[vertIndex * 3];
-                                        y = minMorphedPos[vertIndex * 3 + 1];
-                                        z = minMorphedPos[vertIndex * 3 + 2];
-                                        if (bMin.x > x) bMin.x = x;
-                                        if (bMin.y > y) bMin.y = y;
-                                        if (bMin.z > z) bMin.z = z;
-
-                                        x = maxMorphedPos[vertIndex * 3];
-                                        y = maxMorphedPos[vertIndex * 3 + 1];
-                                        z = maxMorphedPos[vertIndex * 3 + 2];
-                                        if (bMax.x < x) bMax.x = x;
-                                        if (bMax.y < y) bMax.y = y;
-                                        if (bMax.z < z) bMax.z = z;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    for (i = 0; i < numBones; i++) {
-                        aabb = new pc.BoundingBox();
-                        aabb.setMinMax(boneMin[i], boneMax[i]);
-                        this.mesh.boneAabb.push(aabb);
-                    }
+                    var morphTargets = this._morphInstance ? this._morphInstance.morph._targets : null;
+                    this.mesh._initBoneAabbs(morphTargets);
                 }
 
-                // Initialize per-instance AABBs if needed
-                if (!this._boneAabb) {
-                    this._boneAabb = [];
-                    for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                        this._boneAabb[i] = new pc.BoundingBox();
-                    }
-                }
-
-                boneUsed = this.mesh.boneUsed;
-
-                // Update per-instance bone AABBs
-                for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                    if (!boneUsed[i]) continue;
-                    this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
-                }
-
-                // Update full instance AABB
+                // evaluate world space bounds based on all active bones
+                var boneUsed = this.mesh.boneUsed;
                 var rootNodeTransform = this.node.getWorldTransform();
                 var first = true;
+
                 for (i = 0; i < this.mesh.boneAabb.length; i++) {
-                    if (!boneUsed[i]) continue;
-                    if (first) {
-                        _tmpAabb.center.copy(this._boneAabb[i].center);
-                        _tmpAabb.halfExtents.copy(this._boneAabb[i].halfExtents);
-                        first = false;
-                    } else {
-                        _tmpAabb.add(this._boneAabb[i]);
+                    if (boneUsed[i]) {
+
+                        // transform bone AABB by bone matrix
+                        _tempBoneAabb.setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+
+                        // add them up
+                        if (first) {
+                            first = false;
+                            _tmpAabb.center.copy(_tempBoneAabb.center);
+                            _tmpAabb.halfExtents.copy(_tempBoneAabb.halfExtents);
+                        } else {
+                            _tmpAabb.add(_tempBoneAabb);
+                        }
                     }
                 }
+
+                // store world space bounding box
                 this._aabb.setFromTransformedAabb(_tmpAabb, rootNodeTransform);
 
             } else if (this.node._aabbVer !== this._aabbVer) {
-                 // if there is no mesh then reset aabb
-                aabb = this.mesh ? this.mesh.aabb : this._aabb;
-                if (!this.mesh) {
-                    aabb.center.set(0, 0, 0);
-                    aabb.halfExtents.set(0, 0, 0);
+
+                // local space bounding box - either from mesh or empty
+                if (this.mesh) {
+                    _tmpAabb.center.copy(this.mesh.aabb.center);
+                    _tmpAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
+                } else {
+                    _tmpAabb.center.set(0, 0, 0);
+                    _tmpAabb.halfExtents.set(0, 0, 0);
                 }
 
-                this._aabb.setFromTransformedAabb(aabb, this.node.getWorldTransform());
+                // update local space bounding box by morph targets
+                if (this.mesh && this.mesh.morph) {
+                    _tmpAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
+                }
+
+                // store world space bounding box
+                this._aabb.setFromTransformedAabb(_tmpAabb, this.node.getWorldTransform());
                 this._aabbVer = this.node._aabbVer;
             }
             return this._aabb;
@@ -421,6 +277,21 @@ Object.assign(pc, function () {
         set: function (val) {
             this._skinInstance = val;
             this._shaderDefs = val ? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
+            for (var i = 0; i < this._shader.length; i++) {
+                this._shader[i] = null;
+            }
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'morphInstance', {
+        get: function () {
+            return this._morphInstance;
+        },
+        set: function (val) {
+            this._morphInstance = val;
+
+            this._shaderDefs = (val && val.morph.morphPositions) ? (this._shaderDefs | pc.SHADERDEF_MORPH_POSITION) : (this._shaderDefs & ~pc.SHADERDEF_MORPH_POSITION);
+            this._shaderDefs = (val && val.morph.morphNormals) ? (this._shaderDefs | pc.SHADERDEF_MORPH_NORMAL) : (this._shaderDefs & ~pc.SHADERDEF_MORPH_NORMAL);
             for (var i = 0; i < this._shader.length; i++) {
                 this._shader[i] = null;
             }

@@ -123,6 +123,7 @@ Object.assign(pc, function () {
 
         this.input = new pc.XrInput(this);
         this.hitTest = new pc.XrHitTest(this);
+        this.lightEstimation = new pc.XrLightEstimation(this);
 
         this._camera = null;
         this.views = [];
@@ -258,8 +259,14 @@ Object.assign(pc, function () {
         // 3. probably immersive-vr will fail to be created
         // 4. call makeXRCompatible, very likely will lead to context loss
 
+        var optionalFeatures = [];
+
+        if (type === pc.XRTYPE_AR)
+            optionalFeatures.push('light-estimation');
+
         navigator.xr.requestSession(type, {
-            requiredFeatures: [spaceType]
+            requiredFeatures: [spaceType],
+            optionalFeatures: optionalFeatures
         }).then(function (session) {
             self._onSessionStart(session, spaceType, callback);
         }).catch(function (ex) {
@@ -507,8 +514,14 @@ Object.assign(pc, function () {
 
         this.input.update(frame);
 
-        if (this._type === pc.XRTYPE_AR && this.hitTest.supported)
-            this.hitTest.update(frame);
+        if (this._type === pc.XRTYPE_AR) {
+            if (this.hitTest.supported) {
+                this.hitTest.update(frame);
+            }
+            if (this.lightEstimation.supported) {
+                this.lightEstimation.update(frame);
+            }
+        }
 
         this.fire('update');
     };

@@ -80,7 +80,9 @@
 ../src/scene/mesh-instance.js
 ../src/scene/skin.js
 ../src/scene/skin-partition.js
+../src/scene/morph-target.js
 ../src/scene/morph.js
+../src/scene/morph-instance.js
 ../src/scene/model.js
 ../src/scene/particle-system/particle-emitter.js
 ../src/scene/particle-system/cpu-updater.js
@@ -118,6 +120,7 @@
 ../src/xr/xr-input-source.js
 ../src/xr/xr-hit-test.js
 ../src/xr/xr-hit-test-source.js
+../src/xr/xr-light-estimation.js
 ../src/net/http.js
 ../src/script/script.js
 ../src/script/script-type.js

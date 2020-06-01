@@ -323,6 +323,8 @@ Object.assign(pc, function () {
         for (i = 0; i < callback.length; ++i) {
             (callback[i])(null, data);
         }
+
+        delete callbacks[url];
     };
 
     // post a transcode job to the web worker

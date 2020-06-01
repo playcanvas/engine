@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         options.screenSpace = objDefs && (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
         options.skin = objDefs && (objDefs & pc.SHADERDEF_SKIN) !== 0;
         options.useInstancing = objDefs && (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
+        options.useMorphPosition = objDefs && (objDefs & pc.SHADERDEF_MORPH_POSITION) !== 0;
+        options.useMorphNormal = objDefs && (objDefs & pc.SHADERDEF_MORPH_NORMAL) !== 0;
 
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
     };

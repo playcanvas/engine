@@ -823,6 +823,10 @@
          * @description Vertex attribute to be treated as a texture coordinate (set 7).
          */
         SEMANTIC_TEXCOORD7: "TEXCOORD7",
+
+        // private semantic used for programatic construction of individual attr semantics
+        SEMANTIC_ATTR: "ATTR",
+
         /**
          * @constant
          * @name pc.SEMANTIC_ATTR0
@@ -1043,6 +1047,17 @@
     // map of engine pc.TYPE_*** enums to their corresponding typed array constructors and byte sizes
     pc.typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
     pc.typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
+
+    // map of typed array to engine pc.TYPE_***
+    pc.typedArrayToType = {
+        "Int8Array": pc.TYPE_INT8,
+        "Uint8Array": pc.TYPE_UINT8,
+        "Int16Array": pc.TYPE_INT16,
+        "Uint16Array": pc.TYPE_UINT16,
+        "Int32Array": pc.TYPE_INT32,
+        "Uint32Array": pc.TYPE_UINT32,
+        "Float32Array": pc.TYPE_FLOAT32
+    };
 
     // map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
     pc.typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];

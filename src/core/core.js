@@ -30,16 +30,6 @@ var pc = {
     /**
      * @private
      * @function
-     * @name pc.unpack
-     * @description Copy a set of common PlayCanvas functions/classes/namespaces into the global namespace.
-     */
-    unpack: function () {
-        console.warn("pc.unpack has been deprecated and will be removed shortly. Please update your code.");
-    },
-
-    /**
-     * @private
-     * @function
      * @name pc.makeArray
      * @description Convert an array-like object into a normal array.
      * For example, this is useful for converting the arguments object into an array.
