@@ -718,6 +718,11 @@ Object.assign(pc, function () {
             "}"
         ].join('\n');
 
+        var getTexture = function (index) {
+            var textureAsset = textures[index];
+            return textureAsset ? textureAsset.resource : null;
+        };
+
         var extractTextureTransform = function (source, material, maps) {
             var map;
 
@@ -780,7 +785,7 @@ Object.assign(pc, function () {
             }
             if (specData.hasOwnProperty('diffuseTexture')) {
                 var diffuseTexture = specData.diffuseTexture;
-                texture = textures[diffuseTexture.index].resource;
+                texture = getTexture(diffuseTexture.index);
 
                 material.diffuseMap = texture;
                 material.diffuseMapChannel = 'rgb';
@@ -804,9 +809,8 @@ Object.assign(pc, function () {
             }
             if (specData.hasOwnProperty('specularGlossinessTexture')) {
                 var specularGlossinessTexture = specData.specularGlossinessTexture;
-                material.specularMap = textures[specularGlossinessTexture.index].resource;
+                material.specularMap = material.glossMap = getTexture(specularGlossinessTexture.index);
                 material.specularMapChannel = 'rgb';
-                material.glossMap = textures[specularGlossinessTexture.index].resource;
 
                 extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
             }
@@ -827,7 +831,7 @@ Object.assign(pc, function () {
             }
             if (pbrData.hasOwnProperty('baseColorTexture')) {
                 var baseColorTexture = pbrData.baseColorTexture;
-                texture = textures[baseColorTexture.index].resource;
+                texture = getTexture(baseColorTexture.index);
 
                 material.diffuseMap = texture;
                 material.diffuseMapChannel = 'rgb';
@@ -849,9 +853,8 @@ Object.assign(pc, function () {
             }
             if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
                 var metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
-                material.metalnessMap = textures[metallicRoughnessTexture.index].resource;
+                material.metalnessMap = material.glossMap = getTexture(metallicRoughnessTexture.index);
                 material.metalnessMapChannel = 'b';
-                material.glossMap = textures[metallicRoughnessTexture.index].resource;
                 material.glossMapChannel = 'g';
 
                 extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
@@ -862,7 +865,7 @@ Object.assign(pc, function () {
 
         if (materialData.hasOwnProperty('normalTexture')) {
             var normalTexture = materialData.normalTexture;
-            material.normalMap = textures[normalTexture.index].resource;
+            material.normalMap = getTexture(normalTexture.index);
 
             extractTextureTransform(normalTexture, material, ['normal']);
 
@@ -872,7 +875,7 @@ Object.assign(pc, function () {
         }
         if (materialData.hasOwnProperty('occlusionTexture')) {
             var occlusionTexture = materialData.occlusionTexture;
-            material.aoMap = textures[occlusionTexture.index].resource;
+            material.aoMap = getTexture(occlusionTexture.index);
             material.aoMapChannel = 'r';
 
             extractTextureTransform(occlusionTexture, material, ['ao']);
@@ -889,7 +892,7 @@ Object.assign(pc, function () {
         }
         if (materialData.hasOwnProperty('emissiveTexture')) {
             var emissiveTexture = materialData.emissiveTexture;
-            material.emissiveMap = textures[emissiveTexture.index].resource;
+            material.emissiveMap = getTexture(emissiveTexture.index);
 
             extractTextureTransform(emissiveTexture, material, ['emissive']);
         }
@@ -1300,7 +1303,8 @@ Object.assign(pc, function () {
                 'image/png': 'png',
                 'image/jpg': 'jpg',
                 'image/basis': 'basis',
-                'image/ktx': 'ktx'
+                'image/ktx': 'ktx',
+                'image/vnd-ms.dds': 'dds'
             };
 
             // construct the asset file
