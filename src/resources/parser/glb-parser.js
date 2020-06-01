@@ -806,6 +806,7 @@ Object.assign(pc, function () {
                 var specularGlossinessTexture = specData.specularGlossinessTexture;
                 material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
                 material.specularMapChannel = 'rgb';
+                material.glossMapChannel = 'a';
 
                 extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
             }
