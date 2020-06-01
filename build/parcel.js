@@ -45,7 +45,7 @@ JSPackager.prototype.start = async function() {
 }
 
 // A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
-var debugParcel = true;
+var debugParcel = false;
 
 if (debugParcel) {
     // Delete .cache folder, otherwise Parcel does nothing while developing this bundler

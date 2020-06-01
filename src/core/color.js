@@ -14,7 +14,6 @@ Object.assign(pc, (function () {
      * @property {number} a The alpha component of the color.
      */
     var Color = function (r, g, b, a) {
-        console.log("Color", arguments);
         var length = r && r.length;
         if (length === 3 || length === 4) {
             this.r = r[0];
