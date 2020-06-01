@@ -143,7 +143,10 @@ Object.assign(pc, function () {
                         handleLoad(err, { load: fileUrlFromBundle, original: asset && asset.file.filename || url });
                     });
                 } else {
-                    handleLoad(null, { load: url, original: asset && asset.file.filename || url });
+                    handleLoad(null, {
+                        load: url,
+                        original: asset && asset.getPreferredFile().filename || url
+                    });
                 }
             }
         },

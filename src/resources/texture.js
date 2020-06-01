@@ -282,7 +282,7 @@ Object.assign(pc, function () {
             if (typeof url === 'string') {
                 url = {
                     load: url,
-                    original: asset && asset.file.filename | url
+                    original: url
                 };
             }
 
