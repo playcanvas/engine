@@ -280,6 +280,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @private
+     * @name pc.AnimComponent#stateGraphAsset
+     * @type {string}
+     * @description The state graph asset this component should use to generate it's animation state graph
+     */
     Object.defineProperty(AnimComponent.prototype, "stateGraphAsset", {
         get: function () {
             return this.data.stateGraphAsset;

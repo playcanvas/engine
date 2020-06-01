@@ -22,7 +22,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimComponentLayer#play
          * @description Start playing the animation in the current state.
-         * @param {string} name - If provided, will begin playing from the start of the state with this name.
+         * @param {string} [name] - If provided, will begin playing from the start of the state with this name.
          */
         play: function (name) {
             this._controller.play(name);
@@ -56,12 +56,12 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimComponentLayer#assignAnimation
-         * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
-         * @param {string} stateName - The name of the state that this animation should be associated with.
+         * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
+         * @param {string} nodeName - The name of the node that this animation should be associated with.
          * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
          */
-        assignAnimation: function (stateName, animTrack) {
-            this._controller.assignAnimation(stateName, animTrack);
+        assignAnimation: function (nodeName, animTrack) {
+            this._controller.assignAnimation(nodeName, animTrack);
 
             if (this._component.activate) {
                 for (var i = 0; i < this._component.data.layers.length; i++) {
@@ -76,12 +76,12 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.AnimComponentLayer#removeStateAnimations
-         * @description Removes animations from a state in the loaded state graph.
-         * @param {string} stateName - The name of the state that should have its animation tracks removed.
+         * @name pc.AnimComponentLayer#removeNodeAnimations
+         * @description Removes animations from a node in the loaded state graph.
+         * @param {string} nodeName - The name of the node that should have its animation tracks removed.
          */
-        removeStateAnimations: function (stateName) {
-            this._controller.removeStateAnimations(stateName);
+        removeNodeAnimations: function (nodeName) {
+            this._controller.removeNodeAnimations(nodeName);
         },
 
         getParameterValue: function (name, type) {
@@ -96,8 +96,10 @@ Object.assign(pc, function () {
     Object.defineProperties(AnimComponentLayer.prototype, {
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#name
-         * @property {string} name - Returns the name of the layer
+         * @type {string}
+         * @description Returns the name of the layer
          */
         name: {
             get: function () {
@@ -107,7 +109,8 @@ Object.assign(pc, function () {
         /**
          * @private
          * @name pc.AnimComponentLayer#playing
-         * @property {string} playing - Whether this layer is currently playing
+         * @type {string}
+         * @description Whether this layer is currently playing
          */
         playing: {
             get: function () {
@@ -119,8 +122,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#playable
-         * @property {string} playable - Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
+         * @type {string}
+         * @description Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
          */
         playable: {
             get: function () {
@@ -129,8 +134,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#activeState
-         * @property {string} activeState - Returns the currently active state name.
+         * @type {string}
+         * @description Returns the currently active state name.
          */
         activeState: {
             get: function () {
@@ -139,8 +146,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#previousState
-         * @property {string} previousState - Returns the previously active state name.
+         * @type {string}
+         * @description Returns the previously active state name.
          */
         previousState: {
             get: function () {
@@ -149,8 +158,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#activeStateProgress
-         * @property {number} activeStateProgress - Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
+         * @type {number}
+         * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
          */
         activeStateProgress: {
             get: function () {
@@ -159,8 +170,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#transitioning
-         * @property {boolean} transitioning - Returns whether the anim component layer is currently transitioning between states.
+         * @type {boolean}
+         * @description Returns whether the anim component layer is currently transitioning between states.
          */
         transitioning: {
             get: function () {
@@ -169,8 +182,10 @@ Object.assign(pc, function () {
         },
         /**
          * @private
+         * @readonly
          * @name pc.AnimComponentLayer#transitionProgress
-         * @property {number} transitionProgress - If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
+         * @type {number}
+         * @description If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
          */
         transitionProgress: {
             get: function () {
@@ -178,6 +193,18 @@ Object.assign(pc, function () {
                     return this._controller.transitionProgress;
                 }
                 return null;
+            }
+        },
+        /**
+         * @private
+         * @readonly
+         * @name pc.AnimComponentLayer#states
+         * @type {string[]}
+         * @description Lists all available states in this layers state graph
+         */
+        states: {
+            get: function () {
+                return this._controller.states;
             }
         }
     });

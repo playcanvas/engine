@@ -27,9 +27,9 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('update', this.onUpdate, this);
+        this.on('animationUpdate', this.onAnimationUpdate, this);
 
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
     };
     AnimComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     AnimComponentSystem.prototype.constructor = AnimComponentSystem;
@@ -42,11 +42,7 @@ Object.assign(pc, function () {
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
-        onBeforeRemove: function (entity, component) {
-            component.onBeforeRemove();
-        },
-
-        onUpdate: function (dt) {
+        onAnimationUpdate: function (dt) {
             var components = this.store;
 
             for (var id in components) {

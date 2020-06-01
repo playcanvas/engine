@@ -180,6 +180,7 @@ Object.assign(pc, function () {
     var AnimController = function (animEvaluator, states, transitions, parameters, activate) {
         this._animEvaluator = animEvaluator;
         this._states = {};
+        this._stateNames = [];
         var i;
         for (i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
@@ -187,6 +188,7 @@ Object.assign(pc, function () {
                 states[i].name,
                 states[i].speed
             );
+            this._stateNames.push(states[i].name);
         }
         this._transitions = transitions.map(function (transition) {
             return new AnimTransition(
@@ -276,6 +278,11 @@ Object.assign(pc, function () {
         transitionProgress: {
             get: function () {
                 return this._currTransitionTime / this._totalTransitionTime;
+            }
+        },
+        states: {
+            get: function () {
+                return this._stateNames;
             }
         }
     });
@@ -540,8 +547,8 @@ Object.assign(pc, function () {
             }
         },
 
-        removeStateAnimations: function (stateName) {
-            var state = this._findState(stateName);
+        removeNodeAnimations: function (nodeName) {
+            var state = this._findState(nodeName);
             if (!state) {
                 // #ifdef DEBUG
                 console.error('Attempting to unassign animation tracks from a state that does not exist.');
