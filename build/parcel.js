@@ -10,34 +10,8 @@
 var fs = require("fs");
 var path = require("path");
 var cp = require("child_process");
-var Path = require("path");
 var Bundler = require("parcel-bundler");
-var JSConcatPackager = require("parcel-bundler/src/packagers/JSConcatPackager");
-var JSPackager = require("parcel-bundler/src/packagers/JSPackager");
-var Packager = require("parcel-bundler/src/packagers/Packager");
-
-/**
- * Update Parcel packagers to include a copyright notice at the very beginning
- */
-
-var JSConcatPackager_start_original = JSConcatPackager.prototype.start;
-// Adding copyright notice for `-l 1` builds
-JSConcatPackager.prototype.start = async function() {
-    var optionsPlayCanvas = global.optionsPlayCanvas;
-    // Pretty much ugly ES5 for:
-    // await super.write(`// COPYRIGHT NOTICE\n`);
-    await Packager.prototype.write.call(this, optionsPlayCanvas.copyrightNotice);
-    JSConcatPackager_start_original.call(this);
-}
-var JSPackager_start_original = JSPackager.prototype.start;
-// Adding copyright notice for `-l 0` builds
-JSPackager.prototype.start = async function() {
-    var optionsPlayCanvas = global.optionsPlayCanvas;
-    // Pretty much ugly ES5 for:
-    // await super.write(`// COPYRIGHT NOTICE\n`);
-    await Packager.prototype.write.call(this, optionsPlayCanvas.copyrightNotice);
-    JSPackager_start_original.call(this);
-}
+var Path = require("path");
 
 // A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
 var debugParcel = true;
@@ -119,24 +93,6 @@ var getVersion = function (callback) {
     });
 };
 
-var getCopyrightNotice = function (ver, rev) {
-    var buildOptions = "";
-    if (debug || profiler) {
-        if (profiler && !debug) {
-            buildOptions += " (PROFILER)";
-        } else if (debug) {
-            buildOptions += " (DEBUG PROFILER)";
-        }
-    }
-    return [
-        "/*",
-        " * " + target.desc + " v" + ver + " revision " + rev + buildOptions,
-        " * Copyright 2011-" + new Date().getFullYear() + " PlayCanvas Ltd. All rights reserved.",
-        " */",
-        ""
-    ].join("\n");
-};
-
 // Single entrypoint file location:
 //const entryFiles = Path.join(__dirname, "./index.html");
 const entryFiles = "../src/playcanvas.js";
@@ -156,8 +112,7 @@ var optionsPlayCanvas = {
     //RELEASE: compilerLevel != COMPILER_LEVEL[0]
     PROFILER: false,
     DEBUG: false,
-    RELEASE: true,
-    copyrightNotice: ""
+    RELEASE: true
 };
 
 global.optionsPlayCanvas = optionsPlayCanvas;
@@ -316,7 +271,6 @@ var run = function() {
             optionsPlayCanvas.PROFILER = profiler || debug;
             optionsPlayCanvas.DEBUG = debug;
             optionsPlayCanvas.RELEASE = compilerLevel != COMPILER_LEVEL[0];
-            optionsPlayCanvas.copyrightNotice = getCopyrightNotice(ver, rev);
             console.log("optionsPlayCanvas", optionsPlayCanvas);
             main();
         });
