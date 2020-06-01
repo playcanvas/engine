@@ -55,7 +55,7 @@ Object.assign(pc, function () {
                     // update asset data
                     var data = upgradeDataSchema(response);
                     if (!err) {
-                        self._loadTextures(url.original.replace('.json', '.png'), data, function (err, textures) {
+                        self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
                             callback(null, {
@@ -73,7 +73,7 @@ Object.assign(pc, function () {
                 if (asset && asset.data) {
                     asset.data = upgradeDataSchema(asset.data);
                 }
-                this._loadTextures(url.original, asset && asset.data, callback);
+                this._loadTextures(url.load, asset && asset.data, callback);
             }
         },
 
