@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     /**
+     * @private
      * @class
      * @name pc.AnimPropertyLocator
      * @classdesc The AnimProperyLocator encodes and decodes paths to properties in the scene hierarchy.
@@ -9,6 +10,7 @@ Object.assign(pc, function () {
     };
     Object.assign(AnimPropertyLocator.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AnimPropertyLocator#encode
          * @description Converts a locator array into its string version
@@ -26,6 +28,7 @@ Object.assign(pc, function () {
             ], '/');
         },
         /**
+         * @private
          * @function
          * @name pc.AnimPropertyLocator#decode
          * @description Converts a locator string into its array version

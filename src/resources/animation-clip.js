@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @class
      * @name pc.AnimationClipHandler
      * @implements {pc.ResourceHandler}

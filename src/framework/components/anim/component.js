@@ -1,189 +1,7 @@
 Object.assign(pc, function () {
 
     /**
-     * @class
-     * @name pc.AnimComponentLayer
-     * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
-     * @description Create a new AnimComponentLayer.
-     * @param {string} name - The name of the layer.
-     * @param {object} controller - The controller to manage this layers animations.
-     * @param {pc.AnimComponent} component - The component that this layer is a member of.
-     */
-    var AnimComponentLayer = function (name, controller, component) {
-        this._name = name;
-        this._controller = controller;
-        this._component = component;
-    };
-
-    Object.assign(AnimComponentLayer.prototype, {
-        /**
-         * @function
-         * @name pc.AnimComponentLayer#play
-         * @description Start playing the animation in the current state.
-         * @param {string} [name] - If provided, will begin playing from the start of the state with this name.
-         */
-        play: function (name) {
-            this._controller.play(name);
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponentLayer#pause
-         * @description Start playing the animation in the current state.
-         */
-        pause: function () {
-            this._controller.pause();
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponentLayer#reset
-         * @description Reset the animation component to it's initial state, including all parameters. The system will be paused.
-         */
-        reset: function () {
-            this._controller.reset();
-        },
-
-        update: function (dt) {
-            this._controller.update(dt);
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponentLayer#assignAnimation
-         * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
-         * @param {string} stateName - The name of the state that this animation should be associated with.
-         * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
-         */
-        assignAnimation: function (stateName, animTrack) {
-            this._controller.assignAnimation(stateName, animTrack);
-
-            if (this._component.activate) {
-                for (var i = 0; i < this._component.data.layers.length; i++) {
-                    if (!this._component.data.layers[i].playable) {
-                        return;
-                    }
-                    this._component.playing = true;
-                }
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.AnimComponentLayer#removeStateAnimations
-         * @description Removes animations from a state in the loaded state graph.
-         * @param {string} stateName - The name of the state that should have its animation tracks removed.
-         */
-        removeStateAnimations: function (stateName) {
-            this._controller.removeStateAnimations(stateName);
-        },
-
-        getParameterValue: function (name, type) {
-            this._controller.getParameterValue(name, type);
-        },
-
-        setParameterValue: function (name, type, value) {
-            this._controller.setParameterValue(name, type, value);
-        }
-    });
-
-    Object.defineProperties(AnimComponentLayer.prototype, {
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#name
-         * @type {string}
-         * @description Returns the name of the layer
-         */
-        name: {
-            get: function () {
-                return this._name;
-            }
-        },
-        /**
-         * @name pc.AnimComponentLayer#playing
-         * @type {boolean}
-         * @description Whether this layer is currently playing
-         */
-        playing: {
-            get: function () {
-                return this._controller.playing;
-            },
-            set: function (value) {
-                this._controller.playing = value;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#playable
-         * @type {boolean}
-         * @description Returns true if a state graph has been loaded and all states in the graph have been assigned animation tracks.
-         */
-        playable: {
-            get: function () {
-                return this._controller.playable;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#activeState
-         * @type {string}
-         * @description Returns the currently active state name.
-         */
-        activeState: {
-            get: function () {
-                return this._controller.activeStateName;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#previousState
-         * @type {string}
-         * @description Returns the previously active state name.
-         */
-        previousState: {
-            get: function () {
-                return this._controller.previousStateName;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#activeStateProgress
-         * @type {number}
-         * @description Returns the currently active states progress as a value normalised by the states animation duration. Looped animations will return values greater than 1.
-         */
-        activeStateProgress: {
-            get: function () {
-                return this._controller.activeStateProgress;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#transitioning
-         * @type {boolean}
-         * @description Returns whether the anim component layer is currently transitioning between states.
-         */
-        transitioning: {
-            get: function () {
-                return this._controller.transitioning;
-            }
-        },
-        /**
-         * @readonly
-         * @name pc.AnimComponentLayer#transitionProgress
-         * @type {number}
-         * @description If the anim component layer is currently transitioning between states, returns the progress. Otherwise returns null.
-         */
-        transitionProgress: {
-            get: function () {
-                if (this.transitioning) {
-                    return this._controller.transitionProgress;
-                }
-                return null;
-            }
-        }
-    });
-
-    /**
+     * @private
      * @component Anim
      * @class
      * @name pc.AnimComponent
@@ -204,12 +22,15 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponent.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#loadStateGraph
          * @description Initialises component animation controllers using the provided state graph.
          * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
          */
         loadStateGraph: function (stateGraph) {
+            this.data.stateGraph = stateGraph;
+
             var graph;
             var modelComponent = this.entity.model;
             if (modelComponent) {
@@ -222,7 +43,6 @@ Object.assign(pc, function () {
             var data = this.data;
 
             data.parameters = stateGraph.parameters;
-            data.initialParameters = Object.assign({}, stateGraph.parameters);
 
             function addLayer(name, states, transitions, order) {
                 var animBinder = new pc.AnimComponentBinder(this, graph);
@@ -234,39 +54,38 @@ Object.assign(pc, function () {
                     data.parameters,
                     data.activate
                 );
-                data.layers.push(new AnimComponentLayer(name, controller, this));
+                data.layers.push(new pc.AnimComponentLayer(name, controller, this));
                 data.layerIndicies[name] = order;
             }
 
-            if (stateGraph.layers) {
-                for (var i = 0; i < stateGraph.layers.length; i++) {
-                    var layer = stateGraph.layers[i];
-                    addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
-                }
-            } else {
-                addLayer.bind(this)('DEFAULT_LAYER', stateGraph.states, stateGraph.transitions, 0);
+            for (var i = 0; i < stateGraph.layers.length; i++) {
+                var layer = stateGraph.layers[i];
+                addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
             }
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#removeStateGraph
          * @description Removes all layers from the anim component.
          */
         removeStateGraph: function () {
+            this.data.stateGraph = null;
             this.data.layers = [];
             this.data.layerIndicies = {};
             this.data.parameters = {};
-            this.data.initialParameters = {};
+            this.data.playing = false;
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#reset
          * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
          */
         reset: function () {
-            this.data.parameters = Object.assign({}, this.data.initialParameters);
+            this.data.parameters = Object.assign({}, this.data.stateGraph.parameters);
             for (var i = 0; i < this.data.layers.length; i++) {
                 var layerPlaying = this.data.layers[i].playing;
                 this.data.layers[i].reset();
@@ -275,6 +94,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#findAnimationLayer
          * @description Finds a pc.AnimComponentLayer in this component.
@@ -287,6 +107,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#assignAnimation
          * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
@@ -307,6 +128,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#removeStateAnimations
          * @description Removes animations from a state in the loaded state graph.
@@ -347,6 +169,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#getFloat
          * @description Returns a float parameter value by name.
@@ -358,6 +181,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#setFloat
          * @description Sets the value of a float parameter that was defined in the animation components state graph.
@@ -369,6 +193,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#getInteger
          * @description Returns an integer parameter value by name.
@@ -380,6 +205,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#setInteger
          * @description Sets the value of an integer parameter that was defined in the animation components state graph.
@@ -397,6 +223,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#getBoolean
          * @description Returns a boolean parameter value by name.
@@ -408,6 +235,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#setBoolean
          * @description Sets the value of a boolean parameter that was defined in the animation components state graph.
@@ -419,6 +247,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#getTrigger
          * @description Returns a trigger parameter value by name.
@@ -430,6 +259,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#setTrigger
          * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
@@ -440,6 +270,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#setTrigger
          * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
@@ -450,8 +281,51 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @private
+     * @name pc.AnimComponent#stateGraphAsset
+     * @type {string}
+     * @description The state graph asset this component should use to generate it's animation state graph
+     */
+    Object.defineProperty(AnimComponent.prototype, "stateGraphAsset", {
+        get: function () {
+            return this.data.stateGraphAsset;
+        },
+
+        set: function (value) {
+            var _id;
+            var _asset;
+
+            if (value instanceof pc.Asset) {
+                _id = value.id;
+                _asset = this.system.app.assets.get(_id);
+                if (!_asset) {
+                    this.system.app.assets.add(value);
+                    _asset = this.system.app.assets.get(_id);
+                }
+            } else {
+                _id = value;
+                _asset = this.system.app.assets.get(_id);
+            }
+            if (!_asset || this.data.stateGraphAsset === _id) {
+                return;
+            }
+
+            if (_asset.resource) {
+                this.data.stateGraph = _asset.resource;
+            } else {
+                asset.on('load', function (asset) {
+                    this.data.stateGraph = asset.resource;
+                    this.loadStateGraph(this.data.stateGraph);
+                }.bind(this));
+                this.system.app.assets.load(asset);
+            }
+            this.data.stateGraphAsset = _id;
+        }
+    });
+
+
     return {
-        AnimComponentLayer: AnimComponentLayer,
         AnimComponent: AnimComponent
     };
 }());
