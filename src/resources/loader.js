@@ -140,10 +140,10 @@ Object.assign(pc, function () {
                     }
 
                     this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
-                        handleLoad(err, { load: fileUrlFromBundle, original: url });
+                        handleLoad(err, { load: fileUrlFromBundle, original: asset && asset.file.filename || url });
                     });
                 } else {
-                    handleLoad(null, { load: url, original: url });
+                    handleLoad(null, { load: url, original: asset && asset.file.filename || url });
                 }
             }
         },

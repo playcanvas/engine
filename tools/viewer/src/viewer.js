@@ -564,11 +564,23 @@ function startViewer() {
 }
 
 var main = function () {
-    if (wasmSupported()) {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
-    } else {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
-    }
+    pc.basisDownload(
+        '../../examples/lib/basis/basis.wasm.js',
+        '../../examples/lib/basis/basis.wasm.wasm',
+        '../../examples/lib/basis/basis.js',
+        function () {
+            if (wasmSupported()) {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.wasm.js',
+                                    '../../examples/lib/draco/draco.wasm.wasm',
+                                    startViewer);
+            } else {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.js',
+                                    '',
+                                    startViewer);
+            }
+        });
 };
 
 /* eslint-enable no-unused-vars */
