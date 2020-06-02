@@ -1,26 +1,5 @@
 Object.assign(pc, function () {
 
-    var ANIM_INTERRUPTION_NONE = 'NONE';
-    var ANIM_INTERRUPTION_PREV = 'PREV_STATE';
-    var ANIM_INTERRUPTION_NEXT = 'NEXT_STATE';
-    var ANIM_INTERRUPTION_PREV_NEXT = 'PREV_STATE_NEXT_STATE';
-    var ANIM_INTERRUPTION_NEXT_PREV = 'NEXT_STATE_PREV_STATE';
-
-    var ANIM_GREATER_THAN = 'GREATER_THAN';
-    var ANIM_LESS_THAN = 'LESS_THAN';
-    var ANIM_GREATER_THAN_EQUAL_TO = 'GREATER_THAN_EQUAL_TO';
-    var ANIM_LESS_THAN_EQUAL_TO = 'LESS_THAN_EQUAL_TO';
-    var ANIM_EQUAL_TO = 'EQUAL_TO';
-    var ANIM_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
-
-    var ANIM_PARAMETER_INTEGER = 'INTEGER';
-    var ANIM_PARAMETER_FLOAT = 'FLOAT';
-    var ANIM_PARAMETER_BOOLEAN = 'BOOLEAN';
-    var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
-
-    var ANIM_STATE_START = 'START';
-    var ANIM_STATE_END = 'END';
-
     var AnimState = function (controller, name, speed) {
         this._controller = controller;
         this._name = name;
@@ -46,7 +25,7 @@ Object.assign(pc, function () {
         },
         playable: {
             get: function () {
-                return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
+                return (this.animations.length > 0 || this.name === pc.ANIM_STATE_START || this.name === pc.ANIM_STATE_END);
             }
         },
         looping: {
@@ -95,7 +74,7 @@ Object.assign(pc, function () {
         this._conditions = conditions || [];
         this._exitTime = exitTime || null;
         this._transitionOffset = transitionOffset || null;
-        this._interruptionSource = interruptionSource || ANIM_INTERRUPTION_NONE;
+        this._interruptionSource = interruptionSource || pc.ANIM_INTERRUPTION_NONE;
     };
 
     Object.defineProperties(AnimTransition.prototype, {
@@ -152,22 +131,22 @@ Object.assign(pc, function () {
                     var condition = this.conditions[i];
                     var parameter = this._controller.findParameter(condition.parameterName);
                     switch (condition.predicate) {
-                        case ANIM_GREATER_THAN:
+                        case pc.ANIM_GREATER_THAN:
                             conditionsMet = conditionsMet && parameter.value > condition.value;
                             break;
-                        case ANIM_LESS_THAN:
+                        case pc.ANIM_LESS_THAN:
                             conditionsMet = conditionsMet && parameter.value < condition.value;
                             break;
-                        case ANIM_GREATER_THAN_EQUAL_TO:
+                        case pc.ANIM_GREATER_THAN_EQUAL_TO:
                             conditionsMet = conditionsMet && parameter.value >= condition.value;
                             break;
-                        case ANIM_LESS_THAN_EQUAL_TO:
+                        case pc.ANIM_LESS_THAN_EQUAL_TO:
                             conditionsMet = conditionsMet && parameter.value <= condition.value;
                             break;
-                        case ANIM_EQUAL_TO:
+                        case pc.ANIM_EQUAL_TO:
                             conditionsMet = conditionsMet && parameter.value === condition.value;
                             break;
-                        case ANIM_NOT_EQUAL_TO:
+                        case pc.ANIM_NOT_EQUAL_TO:
                             conditionsMet = conditionsMet && parameter.value !== condition.value;
                             break;
                     }
@@ -209,14 +188,14 @@ Object.assign(pc, function () {
         this._findTransitionsBetweenStatesCache = {};
         this._parameters = parameters;
         this._previousStateName = null;
-        this._activeStateName = ANIM_STATE_START;
+        this._activeStateName = pc.ANIM_STATE_START;
         this._playing = false;
         this._activate = activate;
 
         this._currTransitionTime = 1.0;
         this._totalTransitionTime = 1.0;
         this._isTransitioning = false;
-        this._transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
+        this._transitionInterruptionSource = pc.ANIM_INTERRUPTION_NONE;
         this._transitionPreviousStates = [];
 
         this._timeInState = 0;
@@ -296,7 +275,7 @@ Object.assign(pc, function () {
         },
 
         _getActiveStateProgressForTime: function (time) {
-            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+            if (this.activeStateName === pc.ANIM_STATE_START || this.activeStateName === pc.ANIM_STATE_END)
                 return 1.0;
 
             var activeClip = this._animEvaluator.findClip(this.activeState.animations[0].name);
@@ -355,21 +334,21 @@ Object.assign(pc, function () {
                     transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                 } else {
                     switch (this._transitionInterruptionSource) {
-                        case ANIM_INTERRUPTION_PREV:
+                        case pc.ANIM_INTERRUPTION_PREV:
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             break;
-                        case ANIM_INTERRUPTION_NEXT:
+                        case pc.ANIM_INTERRUPTION_NEXT:
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             break;
-                        case ANIM_INTERRUPTION_PREV_NEXT:
+                        case pc.ANIM_INTERRUPTION_PREV_NEXT:
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             break;
-                        case ANIM_INTERRUPTION_NEXT_PREV:
+                        case pc.ANIM_INTERRUPTION_NEXT_PREV:
                             transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                             transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                             break;
-                        case ANIM_INTERRUPTION_NONE:
+                        case pc.ANIM_INTERRUPTION_NONE:
                         default:
                     }
                 }
@@ -417,12 +396,12 @@ Object.assign(pc, function () {
             this.activeState = transition.to;
 
             // turn off any triggers which were required to activate this transition
-            var triggers = transition.conditions.filter(function (condition) {
+            for (i = 0; i < transition.conditions.length; i++) {
+                var condition = transition.conditions[i];
                 var parameter = this.findParameter(condition.parameterName);
-                return parameter.type === ANIM_PARAMETER_TRIGGER;
-            }.bind(this));
-            for (i = 0; i < triggers.length; i++) {
-                this.findParameter(triggers[i].parameterName).value = false;
+                if (parameter.type === pc.ANIM_PARAMETER_TRIGGER) {
+                    parameter.value = false;
+                }
             }
 
             if (this.previousState) {
@@ -576,7 +555,7 @@ Object.assign(pc, function () {
 
         reset: function () {
             this._previousStateName = null;
-            this._activeStateName = ANIM_STATE_START;
+            this._activeStateName = pc.ANIM_STATE_START;
             this._playing = false;
             this._currTransitionTime = 1.0;
             this._totalTransitionTime = 1.0;
@@ -647,27 +626,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        ANIM_INTERRUPTION_NONE: ANIM_INTERRUPTION_NONE,
-        ANIM_INTERRUPTION_PREV: ANIM_INTERRUPTION_PREV,
-        ANIM_INTERRUPTION_NEXT: ANIM_INTERRUPTION_NEXT,
-        ANIM_INTERRUPTION_PREV_NEXT: ANIM_INTERRUPTION_PREV_NEXT,
-        ANIM_INTERRUPTION_NEXT_PREV: ANIM_INTERRUPTION_NEXT_PREV,
-
-        ANIM_GREATER_THAN: ANIM_GREATER_THAN,
-        ANIM_LESS_THAN: ANIM_LESS_THAN,
-        ANIM_GREATER_THAN_EQUAL_TO: ANIM_GREATER_THAN_EQUAL_TO,
-        ANIM_LESS_THAN_EQUAL_TO: ANIM_LESS_THAN_EQUAL_TO,
-        ANIM_EQUAL_TO: ANIM_EQUAL_TO,
-        ANIM_NOT_EQUAL_TO: ANIM_NOT_EQUAL_TO,
-
-        ANIM_PARAMETER_INTEGER: ANIM_PARAMETER_INTEGER,
-        ANIM_PARAMETER_FLOAT: ANIM_PARAMETER_FLOAT,
-        ANIM_PARAMETER_BOOLEAN: ANIM_PARAMETER_BOOLEAN,
-        ANIM_PARAMETER_TRIGGER: ANIM_PARAMETER_TRIGGER,
-
-        ANIM_STATE_START: ANIM_STATE_START,
-        ANIM_STATE_END: ANIM_STATE_END,
-
         AnimController: AnimController
     };
 }());

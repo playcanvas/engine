@@ -110,20 +110,26 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimComponent#assignAnimation
          * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
-         * @param {string} stateName - The name of the state that this animation should be associated with.
+         * @param {string} nodeName - The name of the state node that this animation should be associated with.
          * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
          * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
          */
-        assignAnimation: function (stateName, animTrack, layerName) {
-            layerName = layerName || 'DEFAULT_LAYER';
-            var layer = this.findAnimationLayer(layerName);
-            if (!layer) {
+        assignAnimation: function (nodeName, animTrack, layerName) {
+            if (!this.data.stateGraph) {
                 // #ifdef DEBUG
                 console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
                 // #endif
                 return;
             }
-            layer.assignAnimation(stateName, animTrack);
+            layerName = layerName || 'DEFAULT_LAYER';
+            var layer = this.findAnimationLayer(layerName);
+            if (!layer) {
+                // #ifdef DEBUG
+                console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
+                // #endif
+                return;
+            }
+            layer.assignAnimation(nodeName, animTrack);
         },
 
         /**
@@ -131,10 +137,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimComponent#removeStateAnimations
          * @description Removes animations from a state in the loaded state graph.
-         * @param {string} stateName - The name of the state that should have its animation tracks removed.
+         * @param {string} nodeName - The name of the state node that should have its animation tracks removed.
          * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
          */
-        removeStateAnimations: function (stateName, layerName) {
+        removeNodeAnimations: function (nodeName, layerName) {
             layerName = layerName || 'DEFAULT_LAYER';
             var layer = this.findAnimationLayer(layerName);
             if (!layer) {
@@ -143,7 +149,7 @@ Object.assign(pc, function () {
                 // #endif
                 return;
             }
-            layer.removeStateAnimations(stateName);
+            layer.removeNodeAnimations(nodeName);
         },
 
         getParameterValue: function (name, type) {
@@ -213,7 +219,7 @@ Object.assign(pc, function () {
          */
         setInteger: function (name, value) {
             if (typeof value === 'number' && value % 1 === 0) {
-                this.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, Math.floor(value));
+                this.setParameterValue(name, pc.ANIM_PARAMETER_INTEGER, value);
             } else {
                 // #ifdef DEBUG
                 console.error('Attempting to assign non integer value to integer parameter');

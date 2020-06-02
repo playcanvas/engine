@@ -665,7 +665,7 @@ Object.assign(pc, function () {
         this.nodes = nodes;                 // map of node name -> { node, count }
         this.activeNodes = [];              // list of active nodes
         this.handlers = {
-            'translation': function (node) {
+            'localPosition': function (node) {
                 var object = node.localPosition;
                 var func = function (value) {
                     object.set.apply(object, value);
@@ -673,7 +673,7 @@ Object.assign(pc, function () {
                 return new pc.AnimTarget(func, 'vector', 3);
             },
 
-            'rotation': function (node) {
+            'localRotation': function (node) {
                 var object = node.localRotation;
                 var func = function (value) {
                     object.set.apply(object, value);
@@ -681,7 +681,7 @@ Object.assign(pc, function () {
                 return new pc.AnimTarget(func, 'quaternion', 4);
             },
 
-            'scale': function (node) {
+            'localScale': function (node) {
                 var object = node.localScale;
                 var func = function (value) {
                     object.set.apply(object, value);
@@ -785,7 +785,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.AnimEvaluator
      * @classdesc AnimContoller blends multiple sets of animation clips together.
-     * @description Create a new animation controller.
+     * @description Create a new animation evaluator.
      * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
      * @property {pc.AnimClip[]} clips - the list of animation clips
      */
@@ -902,8 +902,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimEvaluator#addClip
-         * @description Add a clip to the controller.
-         * @param {pc.AnimClip} clip - the clip to add to the controller.
+         * @description Add a clip to the evaluator.
+         * @param {pc.AnimClip} clip - the clip to add to the evaluator.
          */
         addClip: function (clip) {
             var targets = this._targets;
@@ -960,7 +960,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimEvaluator#removeClip
-         * @description Remove a clip from the controller.
+         * @description Remove a clip from the evaluator.
          * @param {number} index - index of the clip to remove.
          */
         removeClip: function (index) {
@@ -997,7 +997,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimEvaluator#removeClips
-         * @description Remove all clips from the controller.
+         * @description Remove all clips from the evaluator.
          */
         removeClips: function () {
             while (this._clips.length > 0) {

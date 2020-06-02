@@ -143,6 +143,7 @@
 ../src/framework/components/animation/component.js
 ../src/framework/components/animation/system.js
 ../src/framework/components/animation/data.js
+../src/framework/components/anim/constants.js
 ../src/framework/components/anim/binder.js
 ../src/framework/components/anim/controller.js
 ../src/framework/components/anim/component.js

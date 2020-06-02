@@ -63,8 +63,10 @@ Object.assign(pc, function () {
                 var entityChildren = currEntity.getChildren();
                 var child;
                 for (var j = 0; j < entityChildren.length; j++) {
-                    if (entityChildren[j].name === entityHierarchy[i + 1])
+                    if (entityChildren[j].name === entityHierarchy[i + 1]) {
                         child = entityChildren[j];
+                        break;
+                    }
                 }
                 if (child)
                     currEntity = child;
@@ -152,8 +154,8 @@ Object.assign(pc, function () {
 
         _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
 
-            if (this.handlers && this.handlers[propertyHierarchy[0]]) {
-                return this.handlers[propertyHierarchy[0]](propertyComponent);
+            if (this.handlers && propertyHierarchy[0] === 'weights') {
+                return this.handlers.weights(propertyComponent);
             }
 
             var property = this._getProperty(propertyComponent, propertyHierarchy);
