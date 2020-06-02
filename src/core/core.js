@@ -132,6 +132,10 @@ var pc = {
 if (typeof exports !== 'undefined')
     exports.pc = pc;
 
-// Parcel requirement, otherwise pc is undefined
+// Parcel requirement for browsers, otherwise pc is undefined
 if (typeof window !== 'undefined')
     window.pc = pc;
+
+// Parcel requirement for node, otherwise pc is undefined
+if (typeof global !== 'undefined')
+    global.pc = pc;

@@ -5,7 +5,7 @@ import "./polyfill/object-assign";
 import "./polyfill/pointer-lock";
 import "./polyfill/request-animation-frame";
 import "./polyfill/string";
-import "./core/core";
+import { pc } from "./core/core";
 import "./core/color";
 import "./core/guid";
 import "./core/time";
@@ -267,3 +267,5 @@ import "./backwards-compatibility";
 import "./scene/immediate";
 import "./scene/lightmapper";
 import "./scene/batching";
+
+module.exports = pc;
