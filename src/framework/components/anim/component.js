@@ -102,7 +102,7 @@ Object.assign(pc, function () {
          */
         findAnimationLayer: function (layerName) {
             var layerIndex = this.data.layerIndicies[layerName];
-            return this.data.layers[layerIndex];
+            return this.data.layers[layerIndex] || null;
         },
 
         /**
