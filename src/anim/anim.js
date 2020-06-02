@@ -784,7 +784,7 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.AnimEvaluator
-     * @classdesc AnimContoller blends multiple sets of animation clips together.
+     * @classdesc AnimEvaluator blends multiple sets of animation clips together.
      * @description Create a new animation evaluator.
      * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
      * @property {pc.AnimClip[]} clips - the list of animation clips
@@ -1028,7 +1028,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.AnimEvaluator#update
-         * @description Contoller frame update function. All the attached {@link pc.AnimClip}s are evaluated,
+         * @description Evaluator frame update function. All the attached {@link pc.AnimClip}s are evaluated,
          * blended and the results set on the {@link pc.AnimTarget}.
          * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.
          */
