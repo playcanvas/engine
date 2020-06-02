@@ -286,46 +286,64 @@ Object.assign(pc, function () {
         }
     });
 
-    /**
-     * @private
-     * @name pc.AnimComponent#stateGraphAsset
-     * @type {string}
-     * @description The state graph asset this component should use to generate it's animation state graph
-     */
-    Object.defineProperty(AnimComponent.prototype, "stateGraphAsset", {
-        get: function () {
-            return this.data.stateGraphAsset;
-        },
+    Object.defineProperties(AnimComponent.prototype, {
+        /**
+         * @private
+         * @name pc.AnimComponent#stateGraphAsset
+         * @type {number}
+         * @description The state graph asset this component should use to generate it's animation state graph
+         */
+        stateGraphAsset: {
+            get: function () {
+                return this.data.stateGraphAsset;
+            },
+            set: function (value) {
+                var _id;
+                var _asset;
 
-        set: function (value) {
-            var _id;
-            var _asset;
-
-            if (value instanceof pc.Asset) {
-                _id = value.id;
-                _asset = this.system.app.assets.get(_id);
-                if (!_asset) {
-                    this.system.app.assets.add(value);
+                if (value instanceof pc.Asset) {
+                    _id = value.id;
+                    _asset = this.system.app.assets.get(_id);
+                    if (!_asset) {
+                        this.system.app.assets.add(value);
+                        _asset = this.system.app.assets.get(_id);
+                    }
+                } else {
+                    _id = value;
                     _asset = this.system.app.assets.get(_id);
                 }
-            } else {
-                _id = value;
-                _asset = this.system.app.assets.get(_id);
-            }
-            if (!_asset || this.data.stateGraphAsset === _id) {
-                return;
-            }
+                if (!_asset || this.data.stateGraphAsset === _id) {
+                    return;
+                }
 
-            if (_asset.resource) {
-                this.data.stateGraph = _asset.resource;
-            } else {
-                asset.on('load', function (asset) {
-                    this.data.stateGraph = asset.resource;
-                    this.loadStateGraph(this.data.stateGraph);
-                }.bind(this));
-                this.system.app.assets.load(asset);
+                if (_asset.resource) {
+                    this.data.stateGraph = _asset.resource;
+                } else {
+                    asset.on('load', function (asset) {
+                        this.data.stateGraph = asset.resource;
+                        this.loadStateGraph(this.data.stateGraph);
+                    }.bind(this));
+                    this.system.app.assets.load(asset);
+                }
+                this.data.stateGraphAsset = _id;
             }
-            this.data.stateGraphAsset = _id;
+        },
+        /**
+         * @private
+         * @name pc.AnimComponent#playable
+         * @type {boolean}
+         * @readonly
+         * @description Returns whether all component layers are currently playable
+         */
+        playable: {
+            get: function () {
+                for (var i = 0; i < this.data.layers.length; i++) {
+                    if (!this.data.layers[i].playable) {
+                        return false;
+                    }
+                }
+                return true;
+            }
         }
     });
 
