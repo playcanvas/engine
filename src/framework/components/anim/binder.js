@@ -55,25 +55,38 @@ Object.assign(pc, function () {
         },
 
         _getEntityFromHierarchy: function (entityHierarchy) {
-            if (!this.animComponent.entity.name === entityHierarchy[0])
+            if (!this.animComponent.entity.name === entityHierarchy[0]) {
                 return null;
+            }
 
             var currEntity = this.animComponent.entity;
-            for (var i = 0; i < entityHierarchy.length - 1; i++) {
-                var entityChildren = currEntity.getChildren();
-                var child;
-                for (var j = 0; j < entityChildren.length; j++) {
-                    if (entityChildren[j].name === entityHierarchy[i + 1]) {
-                        child = entityChildren[j];
-                        break;
-                    }
-                }
-                if (child)
-                    currEntity = child;
-                else
-                    return null;
+
+            if (entityHierarchy.length === 1) {
+                return currEntity;
             }
-            return currEntity;
+            return currEntity._parent.findByPath(entityHierarchy.join('/'));
+
+            // if (entity)
+            // var nodeEntity = currEntity.findByPath(entityHierarchy.join('/'));
+            // if (!nodeEntity) {
+            // nodeEntity = currEntity.findByName(entityHierarchy.join('/'));
+            // }
+            // // return nodeEntity;
+            // for (var i = 0; i < entityHierarchy.length - 1; i++) {
+            //     var entityChildren = currEntity.getChildren();
+            //     var child;
+            //     for (var j = 0; j < entityChildren.length; j++) {
+            //         if (entityChildren[j].name === entityHierarchy[i + 1]) {
+            //             child = entityChildren[j];
+            //             break;
+            //         }
+            //     }
+            //     if (child)
+            //         currEntity = child;
+            //     else
+            //         return null;
+            // }
+            // return currEntity;
         },
 
         _floatSetter: function (propertyComponent, propertyHierarchy) {
