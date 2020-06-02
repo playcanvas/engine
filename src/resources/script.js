@@ -38,7 +38,7 @@ Object.assign(pc, function () {
             var self = this;
             pc.script.app = this._app;
 
-            this._loadScript(url.original, function (err, url, extra) {
+            this._loadScript(url.load, function (err, url, extra) {
                 if (!err) {
                     if (pc.script.legacy) {
                         var Type = null;

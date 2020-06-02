@@ -330,7 +330,7 @@ Object.assign(pc, function () {
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.original)) {
+                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.load)) {
                     crossOrigin = self.crossOrigin;
                 }
 
@@ -395,7 +395,7 @@ Object.assign(pc, function () {
             image.src = url;
         },
 
-        open: function (url, data) {
+        open: function (url, data, asset) {
             if (!url)
                 return;
 
@@ -416,7 +416,8 @@ Object.assign(pc, function () {
                     // #endif
                     width: img.width,
                     height: img.height,
-                    format: format
+                    format: format,
+                    flipY: asset && asset.data.hasOwnProperty('flipY') ? !!asset.data.flipY : true
                 });
                 texture.name = url;
                 texture.setSource(img);

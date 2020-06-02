@@ -140,10 +140,16 @@ Object.assign(pc, function () {
                     }
 
                     this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
-                        handleLoad(err, { load: fileUrlFromBundle, original: url });
+                        handleLoad(err, {
+                            load: fileUrlFromBundle,
+                            original: normalizedUrl
+                        });
                     });
                 } else {
-                    handleLoad(null, { load: url, original: url });
+                    handleLoad(null, {
+                        load: url,
+                        original: asset && asset.getPreferredFile().filename || url
+                    });
                 }
             }
         },
