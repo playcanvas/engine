@@ -22,16 +22,6 @@ Object.assign(pc, function () {
     };
 
     Object.assign(ModelHandler.prototype, {
-        /**
-         * @function
-         * @name pc.ModelHandler#load
-         * @description Fetch model data from a remote url.
-         * @param {string} url - The URL of the model data.
-         * @param {pc.callbacks.ResourceHandler} callback - Callback function called when the load completes. The
-         * callback is of the form fn(err, response), where err is a String error message in
-         * the case where the load fails, and response is the model data that has been
-         * successfully loaded.
-         */
         load: function (url, callback) {
             if (typeof url === 'string') {
                 url = {
@@ -65,14 +55,6 @@ Object.assign(pc, function () {
             });
         },
 
-        /**
-         * @function
-         * @name pc.ModelHandler#open
-         * @description Process data in deserialized format into a pc.Model object.
-         * @param {string} url - The URL of the model data.
-         * @param {object} data - The data from model file deserialized into a JavaScript Object.
-         * @returns {pc.Model} The loaded model.
-         */
         open: function (url, data) {
             for (var i = 0; i < this._parsers.length; i++) {
                 var p = this._parsers[i];
