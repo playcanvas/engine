@@ -51,10 +51,12 @@ Object.assign(pc, function () {
         },
         looping: {
             get: function () {
-                var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
-                var trackClip = this._controller.animEvaluator.findClip(trackClipName);
-                if (trackClip) {
-                    return trackClip.loop;
+                if (this.animations.length > 0) {
+                    var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+                    var trackClip = this._controller.animEvaluator.findClip(trackClipName);
+                    if (trackClip) {
+                        return trackClip.loop;
+                    }
                 }
                 return false;
             }
@@ -411,7 +413,7 @@ Object.assign(pc, function () {
             var state;
             var animation;
             var clip;
-            this.previousState = this._activeStateName;
+            this.previousState = transition.from;
             this.activeState = transition.to;
 
             // turn off any triggers which were required to activate this transition
@@ -423,39 +425,41 @@ Object.assign(pc, function () {
                 this.findParameter(triggers[i].parameterName).value = false;
             }
 
-            if (!this._isTransitioning) {
-                this._transitionPreviousStates = [];
-            }
-
-            // record the transition source state in the previous states array
-            this._transitionPreviousStates.push({
-                name: this._previousStateName,
-                weight: 1
-            });
-
-            // if this new transition was activated during another transition, update the previous transition state weights based
-            // on the progress through the previous transition.
-            var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
-            for (i = 0; i < this._transitionPreviousStates.length; i++) {
-                // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
-                if (i !== this._transitionPreviousStates.length - 1) {
-                    this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
-                } else {
-                    this._transitionPreviousStates[i].weight = interpolatedTime;
+            if (this.previousState) {
+                if (!this._isTransitioning) {
+                    this._transitionPreviousStates = [];
                 }
-                state = this._findState(this._transitionPreviousStates[i].name);
-                // update the animations of previous states, set their name to include their position in the previous state array
-                // to uniquely identify animations from the same state that were added during different transitions
-                for (j = 0; j < state.animations.length; j++) {
-                    animation = state.animations[j];
-                    clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
-                    if (!clip) {
-                        clip = this._animEvaluator.findClip(animation.name);
-                        clip.name = animation.name + '.previous.' + i;
-                    }
-                    // pause previous animation clips to reduce their impact on performance
+
+                // record the transition source state in the previous states array
+                this._transitionPreviousStates.push({
+                    name: this._previousStateName,
+                    weight: 1
+                });
+
+                // if this new transition was activated during another transition, update the previous transition state weights based
+                // on the progress through the previous transition.
+                var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+                for (i = 0; i < this._transitionPreviousStates.length; i++) {
+                    // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                     if (i !== this._transitionPreviousStates.length - 1) {
+                        this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
+                    } else {
+                        this._transitionPreviousStates[i].weight = interpolatedTime;
+                    }
+                    state = this._findState(this._transitionPreviousStates[i].name);
+                    // update the animations of previous states, set their name to include their position in the previous state array
+                    // to uniquely identify animations from the same state that were added during different transitions
+                    for (j = 0; j < state.animations.length; j++) {
+                        animation = state.animations[j];
+                        clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
+                        if (!clip) {
+                            clip = this._animEvaluator.findClip(animation.name);
+                            clip.name = animation.name + '.previous.' + i;
+                        }
+                        // // pause previous animation clips to reduce their impact on performance
+                        // if (i !== this._transitionPreviousStates.length - 1) {
                         clip.pause();
+                        // }
                     }
                 }
             }
@@ -515,7 +519,7 @@ Object.assign(pc, function () {
             var transition = this._findTransition(this._activeStateName, newStateName);
             if (!transition) {
                 this._animEvaluator.removeClips();
-                transition = new AnimTransition(this, this._activeStateName, newStateName, 0, 0);
+                transition = new AnimTransition(this, null, newStateName, 0, 0);
             }
             this._updateStateFromTransition(transition);
         },

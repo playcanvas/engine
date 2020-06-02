@@ -82,14 +82,6 @@ Object.assign(pc, function () {
          */
         removeNodeAnimations: function (nodeName) {
             this._controller.removeNodeAnimations(nodeName);
-        },
-
-        getParameterValue: function (name, type) {
-            this._controller.getParameterValue(name, type);
-        },
-
-        setParameterValue: function (name, type, value) {
-            this._controller.setParameterValue(name, type, value);
         }
     });
 
