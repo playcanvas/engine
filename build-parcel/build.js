@@ -7,10 +7,10 @@
 // For comparison:
 //     node build.js -l 1 -o output/playcanvas.min.js
 
+var cp = require("child_process");
 var fs = require("fs");
 var path = require("path");
-var cp = require("child_process");
-var Path = require("path");
+var util = require("util");
 var Bundler = require("parcel-bundler");
 var JSConcatPackager = require("parcel-bundler/src/packagers/JSConcatPackager");
 var JSPackager = require("parcel-bundler/src/packagers/JSPackager");
@@ -101,6 +101,33 @@ JSON.safeStringify = (obj, indent = 2) => {
     cache = null;
     return retVal;
 };
+
+// LIB FUNCTIONS
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function (searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+}
+
+function directoryExists(path) {
+    try {
+        return fs.statSync(path).isDirectory();
+    }
+    catch (err) {
+        return false;
+    }
+}
+
+var replaceAll = function (target, search, replacement) {
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+// END LIB FUNCTIONS
 
 // get git revision
 var getRevision = function (callback) {

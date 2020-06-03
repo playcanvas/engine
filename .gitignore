@@ -1,6 +1,8 @@
 *.DS_Store
 /build/output
 /build/_tmp
+/build-parcel/output
+/build-parcel/.cache
 /docs
 /src/graphics/program-lib/chunks/generated-shader-chunks.js
 node_modules/
@@ -8,6 +10,3 @@ node_modules/
 npm-debug.log
 .java-version
 release.py
-# Parcel
-/build-parcel/output
-/build-parcel/.cache
