@@ -581,8 +581,8 @@ Object.assign(pc, function () {
         }
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
-        this.loader.addHandler("animationclip", new pc.AnimationClipHandler());
-        this.loader.addHandler("animationstategraph", new pc.AnimationStateGraphHandler());
+        this.loader.addHandler("animclip", new pc.AnimClipHandler());
+        this.loader.addHandler("animstategraph", new pc.AnimStateGraphHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));

@@ -237,8 +237,8 @@
 ../src/resources/bundle.js
 ../src/resources/untar.js
 ../src/resources/animation.js
-../src/resources/animation-clip.js
-../src/resources/animation-state-graph.js
+../src/resources/anim-clip.js
+../src/resources/anim-state-graph.js
 ../src/resources/audio.js
 ../src/resources/cubemap.js
 ../src/resources/json.js

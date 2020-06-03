@@ -4,15 +4,15 @@ Object.assign(pc, function () {
     /**
      * @private
      * @class
-     * @name pc.AnimationStateGraphHandler
+     * @name pc.AnimStateGraphHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.AnimationStateGraph} resources.
+     * @classdesc Resource handler used for loading {@link pc.AnimStateGraph} resources.
      */
-    var AnimationStateGraphHandler = function () {
+    var AnimStateGraphHandler = function () {
         this.retryRequests = false;
     };
 
-    Object.assign(AnimationStateGraphHandler.prototype, {
+    Object.assign(AnimStateGraphHandler.prototype, {
         load: function (url, callback) {
             if (typeof url === 'string') {
                 url = {
@@ -45,6 +45,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        AnimationStateGraphHandler: AnimationStateGraphHandler
+        AnimStateGraphHandler: AnimStateGraphHandler
     };
 }());
