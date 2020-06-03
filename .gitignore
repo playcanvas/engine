@@ -1,5 +1,6 @@
 *.DS_Store
 /build/output
+/build-parcel/output
 /build/_tmp
 /docs
 /src/graphics/program-lib/chunks/generated-shader-chunks.js
