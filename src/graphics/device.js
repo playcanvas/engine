@@ -597,7 +597,7 @@ Object.assign(pc, function () {
             this.textureHalfFloatRenderable = false;
         }
 
-        this.supportsMorphTargetTextures = this.extTextureFloat && this.extFloatBlend && this.maxPrecision === "highp" &&
+        this.supportsMorphTargetTextures = this.extTextureFloat && this.maxPrecision === "highp" &&
             this.textureFloatRenderable && this.maxVertexTextures >= 2;
         this._textureFloatHighPrecision = undefined;
 
