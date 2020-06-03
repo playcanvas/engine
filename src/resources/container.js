@@ -93,14 +93,19 @@ Object.assign(pc, function () {
 
                 if (!err) {
                     var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
-                    pc.GlbParser.parseAsync(filename, pc.path.extractPath(url.original), response, self._device, function (err, result) {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            // return everything
-                            callback(null, new ContainerResource(result));
-                        }
-                    });
+                    pc.GlbParser.parseAsync(filename,
+                                            pc.path.extractPath(url.original),
+                                            response,
+                                            self._device,
+                                            asset.registry,
+                                            function (err, result) {
+                                                if (err) {
+                                                    callback(err);
+                                                } else {
+                                                    // return everything
+                                                    callback(null, new ContainerResource(result));
+                                                }
+                                            });
                 } else {
                     callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
                 }
@@ -136,12 +141,6 @@ Object.assign(pc, function () {
                 materials.push(createAsset('material', data.materials[i], i));
             }
 
-            // create texture assets
-            var textures = [];
-            for (i = 0; i < data.textures.length; ++i) {
-                textures.push(createAsset('texture', data.textures[i], i));
-            }
-
             // create animation assets
             var animations = [];
             for (i = 0; i < data.animations.length; ++i) {
@@ -151,7 +150,7 @@ Object.assign(pc, function () {
             container.data = null;              // since assets are created, release GLB data
             container.model = model;
             container.materials = materials;
-            container.textures = textures;
+            container.textures = data.textures; // texture assets are created directly
             container.animations = animations;
             container.registry = assets;
         }

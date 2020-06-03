@@ -1273,9 +1273,9 @@ Object.assign(pc, function () {
          * vector, or pass numbers to represent the vectors.
          * @param {pc.Vec3|number} x - If passing a 3D vector, this is the world-space coordinate to look at.
          * Otherwise, it is the x-component of the world-space coordinate to look at.
-         * @param {pc.Vec3|number} y - If passing a 3D vector, this is the world-space up vector for look at
+         * @param {pc.Vec3|number} [y] - If passing a 3D vector, this is the world-space up vector for look at
          * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
-         * @param {number} z - Z-component of the world-space coordinate to look at.
+         * @param {number} [z] - Z-component of the world-space coordinate to look at.
          * @param {number} [ux=0] - X-component of the up vector for the look at transform.
          * @param {number} [uy=1] - Y-component of the up vector for the look at transform.
          * @param {number} [uz=0] - Z-component of the up vector for the look at transform.
