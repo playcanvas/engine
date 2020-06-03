@@ -33,10 +33,10 @@
     "src/polyfill/*"
   ],
   "devDependencies": {
-    "@playcanvas/jsdoc-template": "^1.0.12",
     "@playcanvas/eslint-config": "^1.0.5",
+    "@playcanvas/jsdoc-template": "^1.0.12",
     "chai": "^4.2.0",
-    "eslint": "^7.0.0",
+    "eslint": "^7.1.0",
     "fs-extra": "^9.0.0",
     "google-closure-compiler": "20200517.0.0",
     "http-server": "^0.12.3",
@@ -45,14 +45,14 @@
     "karma-chrome-launcher": "^3.1.0",
     "karma-mocha": "^2.0.1",
     "karma-spec-reporter": "0.0.32",
-    "mocha": "^7.1.2",
+    "mocha": "^7.2.0",
+    "parcel": "^1.12.4",
+    "parcel-bundler": "^1.12.4",
     "preprocessor": "^1.4.0",
     "sinon": "^9.0.2",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.3",
-    "uglify-js": "^3.9.3",
-    "parcel": "^1.12.4",
-    "parcel-bundler": "^1.12.4"
+    "uglify-js": "^3.9.4"
   },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas.js",
