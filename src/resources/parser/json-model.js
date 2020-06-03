@@ -198,7 +198,7 @@ Object.assign(pc, function () {
                             deltaNormals = sparseToFull(deltaNormals, indices, vertexCount);
                         }
 
-                        morphTarget = new pc.MorphTarget(this._device, { deltaPositions: deltaPositions,
+                        morphTarget = new pc.MorphTarget({ deltaPositions: deltaPositions,
                             deltaNormals: deltaNormals,
                             name: targets[j].name,
                             aabb: aabb });
@@ -206,7 +206,7 @@ Object.assign(pc, function () {
                         morphTargetArray.push(morphTarget);
                     }
 
-                    var morph = new pc.Morph(morphTargetArray);
+                    var morph = new pc.Morph(this._device, morphTargetArray);
                     morphs.push(morph);
 
                     var morphInstance = new pc.MorphInstance(morph);

@@ -5,8 +5,6 @@ Object.assign(pc, function () {
      * @name pc.MorphTarget
      * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
-     * from the {@link pc.Application}.
      * @param {object} options - Object for passing optional arguments.
      * @param {ArrayBuffer} options.deltaPositions - An array of 3-dimensional vertex position offsets.
      * @param {number} options.deltaPositionsType - A format to store position offsets inside {@link pc.VertexBuffer}. Defaults to {@link pc.TYPE_FLOAT32} if not provided.
@@ -16,43 +14,57 @@ Object.assign(pc, function () {
      * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
      * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
      */
-    var MorphTarget = function (graphicsDevice, options) {
+    var MorphTarget = function (options) {
 
+        this.options = options;
         this.name = options.name;
         this.defaultWeight = options.defaultWeight || 0;
-
-        this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
-        this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
-
-        // access to positions stored inside vertex buffer
-        if (this._vertexBufferPositions) {
-            this.deltaPositions = this._vertexBufferPositions.lock();
-        }
 
         // bounds
         this.aabb = options.aabb;
         if (!this.aabb) {
             this.aabb = new pc.BoundingBox();
-            if (this.deltaPositions)
-                this.aabb.compute(this.deltaPositions);
+            if (options.deltaPositions)
+                this.aabb.compute(options.deltaPositions);
         }
+
+        // store delta positions, used by aabb evaluation
+        this.deltaPositions = options.deltaPositions;
     };
 
     Object.defineProperties(MorphTarget.prototype, {
         'morphPositions': {
             get: function () {
-                return !!this._vertexBufferPositions;
+                return !!this._vertexBufferPositions || !!this.texturePositions;
             }
         },
 
         'morphNormals': {
             get: function () {
-                return !!this._vertexBufferNormals;
+                return !!this._vertexBufferNormals || !!this.textureNormals;
             }
         }
     });
 
     Object.assign(MorphTarget.prototype, {
+
+        _postInit: function () {
+
+            // release original data
+            this.options = null;
+        },
+
+        _initVertexBuffers: function (graphicsDevice) {
+
+            var options = this.options;
+            this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
+            this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
+
+            // access positions from vertex buffer when needed
+            if (this._vertexBufferPositions) {
+                this.deltaPositions = this._vertexBufferPositions.lock();
+            }
+        },
 
         _createVertexBuffer: function (device, data, dataType) {
 
@@ -66,6 +78,10 @@ Object.assign(pc, function () {
             return null;
         },
 
+        _setTexture: function (name, texture) {
+            this[name] = texture;
+        },
+
         destroy: function () {
 
             if (this._vertexBufferPositions) {
@@ -76,6 +92,15 @@ Object.assign(pc, function () {
             if (this._vertexBufferNormals) {
                 this._vertexBufferNormals.destroy();
                 this._vertexBufferNormals = null;
+            }
+
+            if (this.texturePositions) {
+                this.texturePositions.destroy();
+                this.texturePositions = null;
+            }
+            if (this.textureNormals) {
+                this.textureNormals.destroy();
+                this.textureNormals = null;
             }
         }
     });

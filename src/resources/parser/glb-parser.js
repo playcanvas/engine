@@ -628,10 +628,10 @@ Object.assign(pc, function () {
                         options.name = targets.length.toString(10);
                     }
 
-                    targets.push(new pc.MorphTarget(device, options));
+                    targets.push(new pc.MorphTarget(options));
                 });
 
-                mesh.morph = new pc.Morph(targets);
+                mesh.morph = new pc.Morph(device, targets);
 
                 // set default morph target weights if they're specified
                 if (meshData.hasOwnProperty('weights')) {

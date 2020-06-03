@@ -1573,32 +1573,45 @@ Object.assign(pc, function () {
 
             // morphing vertex attributes
             if (morphInstance) {
-                this.tempSemanticArray.length = 0;
-                var tempVertexBuffer;
-                for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
 
-                    var semantic = pc.SEMANTIC_ATTR + t;
-                    tempVertexBuffer = morphInstance._activeVertexBuffers[t];
+                if (morphInstance.morph.useTextureMorph) {
 
-                    if (tempVertexBuffer) {
-                        // patch semantic for the buffer to current ATTR slot
-                        tempVertexBuffer.format.elements[0].name = semantic;
-                        tempVertexBuffer.format.elements[0].scopeId = device.scope.resolve(semantic);
+                    // vertex buffer with vertex ids
+                    device.setVertexBuffer(morphInstance.morph.vertexBufferIds, 1);
 
-                        device.setVertexBuffer(tempVertexBuffer, t + 1);
-                    } else {
-                        // for null morph buffers set attributes to default constant value
-                        device.setVertexBuffer(null, t + 1);
-                        this.tempSemanticArray.push(semantic);
+
+                    // texture
+
+
+                } else {    // vertex attributes based morphing
+
+                    this.tempSemanticArray.length = 0;
+                    var tempVertexBuffer;
+                    for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
+
+                        var semantic = pc.SEMANTIC_ATTR + t;
+                        tempVertexBuffer = morphInstance._activeVertexBuffers[t];
+
+                        if (tempVertexBuffer) {
+                            // patch semantic for the buffer to current ATTR slot
+                            tempVertexBuffer.format.elements[0].name = semantic;
+                            tempVertexBuffer.format.elements[0].scopeId = device.scope.resolve(semantic);
+
+                            device.setVertexBuffer(tempVertexBuffer, t + 1);
+                        } else {
+                            // for null morph buffers set attributes to default constant value
+                            device.setVertexBuffer(null, t + 1);
+                            this.tempSemanticArray.push(semantic);
+                        }
                     }
+
+                    if (this.tempSemanticArray.length)
+                        device.disableVertexBufferElements(this.tempSemanticArray);
+
+                    // set all 8 weights
+                    this.morphWeightsA.setValue(morphInstance._shaderMorphWeightsA);
+                    this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
                 }
-
-                if (this.tempSemanticArray.length)
-                    device.disableVertexBufferElements(this.tempSemanticArray);
-
-                // set all 8 weights
-                this.morphWeightsA.setValue(morphInstance._shaderMorphWeightsA);
-                this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
             }
 
             // main vertex buffer

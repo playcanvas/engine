@@ -546,6 +546,7 @@
         SHADERDEF_TANGENTS: 512,
         SHADERDEF_MORPH_POSITION: 1024,
         SHADERDEF_MORPH_NORMAL: 2048,
+        SHADERDEF_MORPH_TEXTURE_BASED: 4096,      // when set, morphing is texture based, otherwise vertex attribute based
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,

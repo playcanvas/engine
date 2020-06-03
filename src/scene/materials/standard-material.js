@@ -246,6 +246,7 @@ Object.assign(pc, function () {
      * * skyboxIntensity: if reflected skybox intensity should be modulated.
      * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
      * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
+     * * useMorphTextureBased: if morphing code should be generated to use texture based morphing. Otherwise vertex attribute based morphing is used.
      * * useMorphPosition: if morphing code should be generated to morph positions.
      * * useMorphNormal: if morphing code should be generated to morph normals.
      * @example

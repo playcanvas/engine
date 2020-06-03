@@ -597,6 +597,8 @@ Object.assign(pc, function () {
             this.textureHalfFloatRenderable = false;
         }
 
+        this.supportsMorphTargetTextures = this.extTextureFloat && this.extFloatBlend && this.maxPrecision === "highp" &&
+            this.textureFloatRenderable && this.maxVertexTextures >= 2;
         this._textureFloatHighPrecision = undefined;
 
         // #ifdef DEBUG
@@ -737,6 +739,7 @@ Object.assign(pc, function () {
 
             this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
             this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
+            this.extFloatBlend = getExtension("EXT_float_blend");
             this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
             this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
             this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
