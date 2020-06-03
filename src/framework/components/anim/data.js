@@ -10,7 +10,7 @@ Object.assign(pc, function () {
         // Non-serialized
         this.stateGraph = null;
         this.layers = [];
-        this.layerIndicies = {};
+        this.layerIndices = {};
         this.parameters = {};
     };
 

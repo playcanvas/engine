@@ -54,7 +54,7 @@ Object.assign(pc, function () {
                     data.activate
                 );
                 data.layers.push(new pc.AnimComponentLayer(name, controller, this));
-                data.layerIndicies[name] = order;
+                data.layerIndices[name] = order;
             }
 
             for (var i = 0; i < stateGraph.layers.length; i++) {
@@ -72,7 +72,7 @@ Object.assign(pc, function () {
         removeStateGraph: function () {
             this.data.stateGraph = null;
             this.data.layers = [];
-            this.data.layerIndicies = {};
+            this.data.layerIndices = {};
             this.data.parameters = {};
             this.data.playing = false;
         },
@@ -101,7 +101,7 @@ Object.assign(pc, function () {
          * @returns {pc.AnimComponentLayer} layer
          */
         findAnimationLayer: function (layerName) {
-            var layerIndex = this.data.layerIndicies[layerName];
+            var layerIndex = this.data.layerIndices[layerName];
             return this.data.layers[layerIndex] || null;
         },
 
