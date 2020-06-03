@@ -149,7 +149,7 @@ Object.assign(pc, function () {
             }
 
             for (i = 0; i < numTextures; i++) {
-                fragmentShader += 'uniform highp sampler2D morphBlendTex' + i + ';\n'
+                fragmentShader += 'uniform highp sampler2D morphBlendTex' + i + ';\n';
             }
 
             fragmentShader += 'void main (void) {\n' +
