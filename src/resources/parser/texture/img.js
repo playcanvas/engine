@@ -8,13 +8,19 @@ Object.assign(pc, function () {
      */
     var ImgParser = function (registry, retryRequests) {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
-        this.crossOrigin = registry.prefix ? 'anonymous' : undefined;
+        this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.retryRequests = !!retryRequests;
     };
 
     Object.assign(ImgParser.prototype, {
         load: function (url, callback, asset) {
-            this._loadImage(url.load, url.original, callback);
+            var crossOrigin;
+            if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
+                crossOrigin = asset.options.crossOrigin;
+            } else if (pc.ABSOLUTE_URL.test(url)) {
+                crossOrigin = this.crossOrigin;
+            }
+            this._loadImage(url.load, url.original, crossOrigin, callback);
         },
 
         open: function (url, data, device) {
@@ -33,10 +39,10 @@ Object.assign(pc, function () {
             return texture;
         },
 
-        _loadImage: function (url, originalUrl, callback) {
+        _loadImage: function (url, originalUrl, crossOrigin, callback) {
             var image = new Image();
-            if (pc.ABSOLUTE_URL.test(url)) {
-                image.crossOrigin = 'anonymous';
+            if (crossOrigin) {
+                image.crossOrigin = crossOrigin;
             }
 
             var retries = 0;
