@@ -1014,6 +1014,38 @@
          */
         TEXTURELOCK_WRITE: 2,
 
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_GENERAL
+         * @type {number}
+         * @description Texture is a general type.
+         */
+        TEXTURETYPE_GENERAL: 1,
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_RGBM
+         * @type {number}
+         * @description Texture stores high dynamic range data in RGBM format
+         */
+        TEXTURETYPE_RGBM: 2,
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_GENERAL
+         * @type {number}
+         * @description Texture stores high dynamic range data in RGBE format
+         */
+        TEXTURETYPE_RGBE: 3,
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_GENERAL
+         * @type {number}
+         * @description Texture stores normalmap data swizzled in GGGR format
+         */
+        TEXTURETYPE_SWIZZLEGGGR: 4,
+
         TEXHINT_NONE: 0,
         TEXHINT_SHADOWMAP: 1,
         TEXHINT_ASSET: 2,

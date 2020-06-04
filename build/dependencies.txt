@@ -261,6 +261,11 @@
 ../src/resources/font.js
 ../src/resources/texture-atlas.js
 ../src/resources/sprite.js
+../src/resources/parser/texture/basis.js
+../src/resources/parser/texture/dds.js
+../src/resources/parser/texture/img.js
+../src/resources/parser/texture/ktx.js
+../src/resources/parser/texture/legacy-dds.js
 ../src/resources/parser/json-model.js
 ../src/resources/parser/glb-parser.js
 ../src/resources/parser/glb-model.js
