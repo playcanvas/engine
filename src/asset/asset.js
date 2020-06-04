@@ -572,6 +572,13 @@ Object.assign(pc, function () {
          * @description Asset type name for script.
          */
         ASSET_SCRIPT: 'script',
+        /**
+         * @constant
+         * @type {string}
+         * @name pc.ASSET_CONTAINER
+         * @description Asset type name for a container.
+         */
+        ASSET_CONTAINER: 'container',
 
         ABSOLUTE_URL: ABSOLUTE_URL
     };
