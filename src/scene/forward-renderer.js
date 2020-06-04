@@ -1571,17 +1571,13 @@ Object.assign(pc, function () {
 
         setVertexBuffers: function (device, mesh, morphInstance) {
 
-            // morphing vertex attributes
+            // morphing
             if (morphInstance) {
 
                 if (morphInstance.morph.useTextureMorph) {
 
                     // vertex buffer with vertex ids
                     device.setVertexBuffer(morphInstance.morph.vertexBufferIds, 1);
-
-
-                    // texture
-
 
                 } else {    // vertex attributes based morphing
 
