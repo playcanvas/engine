@@ -48,7 +48,7 @@ Object.assign(pc, function () {
      * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {number} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_GENERAL}
+     * @param {number} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
      * @param {boolean} [options.rgbm] - Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {boolean} [options.rgbe] - Specifies whther the texture contains RGBE-encoded HDR data. Defaults to false.
      * @param {boolean} [options.swizzleGGGR] - Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
@@ -102,7 +102,7 @@ Object.assign(pc, function () {
         this._depth = 1;
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
-        this.type = pc.TEXTURETYPE_GENERAL;
+        this.type = pc.TEXTURETYPE_DEFAULT;
 
         this._cubemap = false;
         this._volume = false;
@@ -138,11 +138,11 @@ Object.assign(pc, function () {
             if (options.type !== undefined) {
                 this.type = options.type;
             } else if (options.rgbm !== undefined) {
-                this.type = !!options.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_GENERAL;
+                this.type = !!options.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
             } else if (options.rgbe !== undefined) {
-                this.type = !!options.rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_GENERAL;
+                this.type = !!options.rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_DEFAULT;
             } else if (options.swizzleGGGR !== undefined) {
-                this.type = !!options.swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_GENERAL;
+                this.type = !!options.swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
             }
 
             if (options.mipmaps !== undefined) {
@@ -562,7 +562,7 @@ Object.assign(pc, function () {
                 return this.type === pc.TEXTURETYPE_RGBM;
             },
             set: function (rgbm) {
-                this.type = rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_GENERAL;
+                this.type = rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
             }
         },
 
@@ -571,7 +571,7 @@ Object.assign(pc, function () {
                 return this.type === pc.TEXTURETYPE_RGBE;
             },
             set: function (rgbe) {
-                this.type = rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_GENERAL;
+                this.type = rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_DEFAULT;
             }
         },
 
@@ -580,7 +580,7 @@ Object.assign(pc, function () {
                 return this.type === pc.TEXTURETYPE_SWIZZLEGGGR;
             },
             set: function (swizzleGGGR) {
-                this.type = swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_GENERAL;
+                this.type = swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
             }
         }
     });

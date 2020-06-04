@@ -1016,11 +1016,11 @@
 
         /**
          * @constant
-         * @name pc.TEXTURETYPE_GENERAL
+         * @name pc.TEXTURETYPE_DEFAULT
          * @type {number}
-         * @description Texture is a general type.
+         * @description Texture is a default type.
          */
-        TEXTURETYPE_GENERAL: 1,
+        TEXTURETYPE_DEFAULT: 1,
 
         /**
          * @constant
