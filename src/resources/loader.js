@@ -36,6 +36,7 @@ Object.assign(pc, function () {
          * * {@link pc.ASSET_CSS}
          * * {@link pc.ASSET_HTML}
          * * {@link pc.ASSET_SCRIPT}
+         * * {@link pc.ASSET_CONTAINER}
          *
          * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
          * @example

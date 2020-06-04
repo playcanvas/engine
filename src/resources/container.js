@@ -72,6 +72,10 @@ Object.assign(pc, function () {
     };
 
     Object.assign(ContainerHandler.prototype, {
+        _getUrlWithoutParams: function (url) {
+            return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+        },
+
         load: function (url, callback, asset) {
             if (typeof url === 'string') {
                 url = {
@@ -92,8 +96,7 @@ Object.assign(pc, function () {
                     return;
 
                 if (!err) {
-                    var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
-                    pc.GlbParser.parseAsync(filename,
+                    pc.GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
                                             pc.path.extractPath(url.original),
                                             response,
                                             self._device,
