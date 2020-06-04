@@ -329,8 +329,10 @@ Object.assign(pc, function () {
                     });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
-                // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.load)) {
+                if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
+                    crossOrigin = asset.options.crossOrigin;
+                } else if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.load)) {
+                    // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
                     crossOrigin = self.crossOrigin;
                 }
 
