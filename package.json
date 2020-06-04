@@ -63,6 +63,7 @@
     "parcel:debug": "cd build-parcel && node build.js -d -o output/playcanvas.dbg.js",
     "parcel:profiler": "cd build-parcel && node build.js -p -o output/playcanvas.prf.js",
     "parcel:min": "cd build-parcel && node build.js -l 1 -o output/playcanvas.min.js",
+    "parcel:extras": "cd build-parcel && node build.js -l 1 -t extras",
     "parcel:watch": "cd build-parcel && node build.js --watch",
     "docs": "jsdoc -c conf-api.json",
     "serve": "http-server build/output -a localhost -p 51000",

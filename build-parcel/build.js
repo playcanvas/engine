@@ -44,20 +44,18 @@ JSPackager.prototype.start = async function() {
     this.lineOffset += n; // Fix source maps
 }
 
-// A bit slower, but quite useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
-var debugParcel = true;
+// Slower, but useful, dumps e.g. `parcel_dump_bundled.json` with complex structures etc. to analyze
+// And deletes the .cache folder, otherwise Parcel does nothing while developing this bundler
+var debugParcel = false;
 
 if (debugParcel) {
-    // Delete .cache folder, otherwise Parcel does nothing while developing this bundler
     fs.rmdirSync(".cache", { recursive: true });
 }
 
 var watch = false;
 var debug = false;
 var profiler = false;
-//var sourceMap = false;
 var outputPath;
-//var sourcePath;
 var COMPILER_LEVEL = [
     "WHITESPACE_ONLY",
     "SIMPLE",
@@ -68,16 +66,14 @@ var compilerLevel = COMPILER_LEVEL[0];
 // configs for the builds we support
 var targets = {
     engine: {
+        entryFile: "playcanvas.js",
         defaultOutputPath: "output/playcanvas.js",
-        //defaultSourcePath: "../src",
-        depsFile: "./dependencies.txt",
-        desc: "Playcanvas Engine"
+        //desc: "Playcanvas Engine"
     },
     extras: {   // or ministats
+        entryFile: "playcanvas-extras.js",
         defaultOutputPath: "output/playcanvas-extras.js",
-        //defaultSourcePath: "../extras",
-        depsFile: "./extras_dependencies.txt",
-        desc: "Playcanvas Extras"
+        //desc: "Playcanvas Extras"
     }
 };
 
@@ -197,23 +193,12 @@ var concatenateShaders = function (callback) {
     });
 };
 
-// Single entrypoint file location:
-//const entryFiles = Path.join(__dirname, "./index.html");
-const entryFiles = "../src/playcanvas.js";
-// OR: Multiple files with globbing (can also be .js)
-// const entryFiles = "./src/*.js";
-// OR: Multiple files in an array
-// const entryFiles = ["./src/index.html", "./some/other/directory/scripts.js"];
-
 var optionsPlayCanvas = {
-    __CURRENT_SDK_VERSION__: "some ver",
-    __REVISION__: "some rev",
-    //PROFILER: profiler || debug,
-    //DEBUG: debug,
-    //RELEASE: compilerLevel != COMPILER_LEVEL[0]
+    __CURRENT_SDK_VERSION__: "",
+    __REVISION__: "",
     PROFILER: false,
     DEBUG: false,
-    RELEASE: true,
+    RELEASE: false,
     copyrightNotice: ""
 };
 
@@ -250,6 +235,13 @@ async function main() {
         console.log("options", options);
     }
     // Initializes a bundler using the entrypoint location and options provided
+    // Single entrypoint file location:
+    //const entryFiles = Path.join(__dirname, "./index.html");
+    const entryFiles = target.entryFile;
+    // OR: Multiple files with globbing (can also be .js)
+    // const entryFiles = "./src/*.js";
+    // OR: Multiple files in an array
+    // const entryFiles = ["./src/index.html", "./some/other/directory/scripts.js"];    
     const bundler = new Bundler(entryFiles, options);
     bundler.addAssetType("js", require.resolve("./JSAssetPlayCanvas"));
 
@@ -309,7 +301,6 @@ var arguments = function () {
             console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");
             console.log("-t target to build, either engine or extas. default is engine");
             console.log("--watch: Recompile observed file changes immediately");
-            //console.log("--concatenateShaders: Just generate src/graphics/program-lib/chunks/generated-shader-chunks.js");
             process.exit();
         }
 
@@ -324,14 +315,6 @@ var arguments = function () {
         if (arg === "--watch") {
             watch = true;
         }
-
-        //if (arg === "--concatenateShaders") {
-        //    run = function() {
-        //        concatenateShaders(function() {
-        //            console.log("> concatenated shaders")
-        //        });
-        //    }
-        //}
 
         if (_last === "-l") {
             var level = parseInt(arg, 10);
@@ -366,7 +349,6 @@ var arguments = function () {
     });
 
     outputPath = outputPath || target.defaultOutputPath;
-    //sourcePath = sourcePath || target.defaultSourcePath;
 };
 
 var run = function() {
