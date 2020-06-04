@@ -1032,7 +1032,7 @@
 
         /**
          * @constant
-         * @name pc.TEXTURETYPE_GENERAL
+         * @name pc.TEXTURETYPE_RGBE
          * @type {number}
          * @description Texture stores high dynamic range data in RGBE format
          */
@@ -1040,7 +1040,7 @@
 
         /**
          * @constant
-         * @name pc.TEXTURETYPE_GENERAL
+         * @name pc.TEXTURETYPE_SWIZZLEGGGR
          * @type {number}
          * @description Texture stores normalmap data swizzled in GGGR format
          */
