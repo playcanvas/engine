@@ -319,11 +319,11 @@ Object.assign(pc, function () {
                 if (_asset.resource) {
                     this.data.stateGraph = _asset.resource;
                 } else {
-                    _asset.on('load', function (asset) {
+                    asset.on('load', function (asset) {
                         this.data.stateGraph = asset.resource;
                         this.loadStateGraph(this.data.stateGraph);
                     }.bind(this));
-                    this.system.app.assets.load(_asset);
+                    this.system.app.assets.load(asset);
                 }
                 this.data.stateGraphAsset = _id;
             }
