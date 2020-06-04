@@ -14,14 +14,7 @@ Object.assign(pc, function () {
 
     Object.assign(ImgParser.prototype, {
         load: function (url, callback, asset) {
-            var crossOrigin;
-
-            // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-            if (this.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.load)) {
-                crossOrigin = self.crossOrigin;
-            }
-
-            this._loadImage(url.load, url.original, crossOrigin, callback);
+            this._loadImage(url.load, url.original, callback);
         },
 
         open: function (url, data, device) {
@@ -40,10 +33,10 @@ Object.assign(pc, function () {
             return texture;
         },
 
-        _loadImage: function (url, originalUrl, crossOrigin, callback) {
+        _loadImage: function (url, originalUrl, callback) {
             var image = new Image();
-            if (crossOrigin) {
-                image.crossOrigin = crossOrigin;
+            if (pc.ABSOLUTE_URL.test(url)) {
+                image.crossOrigin = 'anonymous';
             }
 
             var retries = 0;
