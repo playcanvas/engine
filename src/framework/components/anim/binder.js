@@ -215,7 +215,13 @@ Object.assign(pc, function () {
                     propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
                 };
                 return new pc.AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
+            } else if (propertyHierarchy.indexOf('material') !== -1) {
+                return new pc.AnimTarget(function (values) {
+                    setter(values);
+                    propertyComponent.material.dirty = true;
+                }, animDataType, animDataComponents);
             }
+
             return new pc.AnimTarget(setter, animDataType, animDataComponents);
 
         }
