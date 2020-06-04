@@ -1284,7 +1284,7 @@ Object.assign(pc, function () {
 
             var mimeTypeFileExtensions = {
                 'image/png': 'png',
-                'image/jpg': 'jpg',
+                'image/jpeg': 'jpg',
                 'image/basis': 'basis',
                 'image/ktx': 'ktx',
                 'image/vnd-ms.dds': 'dds'

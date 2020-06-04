@@ -318,9 +318,14 @@ Object.assign(pc, function () {
 
                 if (_asset.resource) {
                     this.data.stateGraph = _asset.resource;
+<<<<<<< HEAD
                     this.loadStateGraph(this.data.stateGraph);
                 } else {
                     _asset.on('load', function (asset) {
+=======
+                } else {
+                    asset.on('load', function (asset) {
+>>>>>>> master
                         this.data.stateGraph = asset.resource;
                         this.loadStateGraph(this.data.stateGraph);
                     }.bind(this));
@@ -345,6 +350,7 @@ Object.assign(pc, function () {
                 }
                 return true;
             }
+<<<<<<< HEAD
         },
         /**
          * @private
@@ -360,6 +366,8 @@ Object.assign(pc, function () {
                 }
                 return null;
             }
+=======
+>>>>>>> master
         }
     });
 
