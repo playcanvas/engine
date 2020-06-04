@@ -42,6 +42,10 @@ Object.assign(pc, function () {
             this._helper(inTools ? this._toolsUpdate : this._update, dt);
         },
 
+        animationUpdate: function (dt, inTools) {
+            this._helper(this._animationUpdate, dt);
+        },
+
         // Update all ComponentSystems
         fixedUpdate: function (dt, inTools) {
             this._helper(this._fixedUpdate, dt);
@@ -56,6 +60,7 @@ Object.assign(pc, function () {
         _postInit: [],
         _toolsUpdate: [],
         _update: [],
+        _animationUpdate: [],
         _fixedUpdate: [],
         _postUpdate: [],
 
@@ -69,6 +74,9 @@ Object.assign(pc, function () {
                     break;
                 case 'update':
                     this._update.push({ f: func, s: scope });
+                    break;
+                case 'animationUpdate':
+                    this._animationUpdate.push({ f: func, s: scope });
                     break;
                 case 'postUpdate':
                     this._postUpdate.push({ f: func, s: scope });
@@ -102,6 +110,9 @@ Object.assign(pc, function () {
                     break;
                 case 'update':
                     this._erase(this._update, func, scope);
+                    break;
+                case 'animationUpdate':
+                    this._erase(this._animationUpdate, func, scope);
                     break;
                 case 'postUpdate':
                     this._erase(this._postUpdate, func, scope);
@@ -316,6 +327,7 @@ Object.assign(pc, function () {
         ComponentSystem.off('postInitialize');
         ComponentSystem.off('toolsUpdate');
         ComponentSystem.off('update');
+        ComponentSystem.off('animationUpdate');
         ComponentSystem.off('fixedUpdate');
         ComponentSystem.off('postUpdate');
     };
