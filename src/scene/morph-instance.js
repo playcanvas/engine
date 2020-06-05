@@ -55,10 +55,16 @@ Object.assign(pc, function () {
                 this.rtNormals = createRT("MorphRTNrm", "textureNormals");
             }
 
+            // texture params
+            this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight,
+                1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
+
             // resolve possible texture names
             for (var i = 0; i < this.maxSubmitCount; i++) {
                 this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
             }
+
+            this.morphFactor =  this.device.scope.resolve("morphFactor[0]");
 
         } else {    // vertex attribute based morphing
 
@@ -188,7 +194,6 @@ Object.assign(pc, function () {
             var submitBatch = function (usedCount, blending) {
 
                 // factors
-                this.morphFactor =  device.scope.resolve("morphFactor[0]");
                 this.morphFactor.setValue(this._shaderMorphWeights);
 
                 // alpha blending - first pass gets none, following passes are additive
@@ -254,18 +259,6 @@ Object.assign(pc, function () {
             // #ifdef DEBUG
             device.popMarker("");
             // #endif
-
-            // assign render target textures for sampling in the vertex shader
-            if (this.meshInstance) {
-
-                this.meshInstance.material.setParameter('morphPositionTex', this.texturePositions);
-                this.meshInstance.material.setParameter('morphNormalTex', this.textureNormals);
-
-                // texture size parameters
-                var width = this.texturePositions.width;
-                var height = this.texturePositions.height;
-                this.meshInstance.material.setParameter('morph_tex_params', [width, height, 1 / width, 1 / height]);
-            }
         },
 
         _updateVertexMorph: function () {

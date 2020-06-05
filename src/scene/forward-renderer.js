@@ -396,6 +396,9 @@ Object.assign(pc, function () {
 
         this.morphWeightsA = scope.resolve('morph_weights_a');
         this.morphWeightsB = scope.resolve('morph_weights_b');
+        this.morphPositionTex = scope.resolve('morphPositionTex');
+        this.morphNormalTex = scope.resolve('morphNormalTex');
+        this.morphTexParams = scope.resolve('morph_tex_params');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -1438,7 +1441,8 @@ Object.assign(pc, function () {
                             // set buffers
                             style = meshInstance.renderStyle;
 
-                            this.setVertexBuffers(device, mesh, meshInstance.morphInstance);
+                            this.setVertexBuffers(device, mesh);
+                            this.setMorphing(device, meshInstance.morphInstance);
 
                             device.setIndexBuffer(mesh.indexBuffer[style]);
                             // draw
@@ -1569,15 +1573,27 @@ Object.assign(pc, function () {
             this.device.setCullMode(mode);
         },
 
-        setVertexBuffers: function (device, mesh, morphInstance) {
+        setVertexBuffers: function (device, mesh) {
 
-            // morphing
+            // main vertex buffer
+            device.setVertexBuffer(mesh.vertexBuffer, 0);
+        },
+
+        setMorphing: function (device, morphInstance) {
+
             if (morphInstance) {
 
                 if (morphInstance.morph.useTextureMorph) {
 
                     // vertex buffer with vertex ids
                     device.setVertexBuffer(morphInstance.morph.vertexBufferIds, 1);
+
+                    // textures
+                    this.morphPositionTex.setValue(morphInstance.texturePositions);
+                    this.morphNormalTex.setValue(morphInstance.textureNormals);
+
+                    // texture params
+                    this.morphTexParams.setValue(morphInstance._textureParams);
 
                 } else {    // vertex attributes based morphing
 
@@ -1609,9 +1625,6 @@ Object.assign(pc, function () {
                     this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
                 }
             }
-
-            // main vertex buffer
-            device.setVertexBuffer(mesh.vertexBuffer, 0);
         },
 
         renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
@@ -1793,7 +1806,8 @@ Object.assign(pc, function () {
                         }
                     }
 
-                    this.setVertexBuffers(device, mesh, drawCall.morphInstance);
+                    this.setVertexBuffers(device, mesh);
+                    this.setMorphing(device, drawCall.morphInstance);
 
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
