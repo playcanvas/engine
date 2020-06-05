@@ -631,14 +631,14 @@ Object.assign(pc, function () {
                     targets.push(new pc.MorphTarget(options));
                 });
 
-                mesh.morph = new pc.Morph(device, targets);
-
                 // set default morph target weights if they're specified
                 if (meshData.hasOwnProperty('weights')) {
                     for (var i = 0; i < meshData.weights.length; ++i) {
                         targets[i].defaultWeight = meshData.weights[i];
                     }
                 }
+
+                mesh.morph = new pc.Morph(device, targets);
             }
 
             meshes.push(mesh);
