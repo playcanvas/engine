@@ -7,7 +7,6 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
      * @class
      * @name pc.AnimComponentSystem
      * @augments pc.ComponentSystem
