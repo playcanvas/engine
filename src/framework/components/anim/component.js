@@ -11,7 +11,7 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
      * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
-     * @property {pc.AnimComponentData} data
+     * @property {pc.AnimComponentData} data Animation component data
      */
     var AnimComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
