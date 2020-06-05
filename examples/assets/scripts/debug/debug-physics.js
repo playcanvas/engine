@@ -180,8 +180,21 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                     collision._debugShape = debugShape;
                 }
 
-                collision._debugShape.setPosition(collision.entity.getPosition());
-                collision._debugShape.setRotation(collision.entity.getRotation());
+                // Use the rigid body position if we have it
+                if (collision.entity.rigidbody) {
+                    var body = collision.entity.rigidbody.data.body;
+                    if (body) {
+                        var t = body.getWorldTransform();
+
+                        var p = t.getOrigin();
+                        var q = t.getRotation();
+                        collision._debugShape.setPosition(p.x(), p.y(), p.z());
+                        collision._debugShape.setRotation(q.x(), q.y(), q.z(), q.w());
+                    }
+                } else {
+                    collision._debugShape.setPosition(collision.entity.getPosition());
+                    collision._debugShape.setRotation(collision.entity.getRotation());
+                }
 
                 collision._debugShape.updated = true;
             }
