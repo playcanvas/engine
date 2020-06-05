@@ -144,7 +144,10 @@ Object.assign(pc, function () {
             if (!assetCubeMap.loadFaces && assetCubeMap.file)
                 return;
 
+            var cubemap = assetCubeMap.resource;
             var sources = [];
+            var count = 0;
+            var levelsUpdated = false;
             var self = this;
 
             if (!assetCubeMap._levelsEvents)
@@ -152,8 +155,8 @@ Object.assign(pc, function () {
 
             assetCubeMap.data.textures.forEach(function (id, index) {
                 var assetReady = function (asset) {
-
-                    sources[index] = asset.resource;
+                    count++;
+                    sources[index] = asset && asset.resource.getSource() || null;
 
                     // events of texture loads
                     var evtAsset = assetCubeMap._levelsEvents[index];
@@ -167,48 +170,13 @@ Object.assign(pc, function () {
                         assetCubeMap._levelsEvents[index] = asset || null;
                     }
 
-                    var cubemap = assetCubeMap.resource;
-
-                    var levelsUpdated = false;
-                    for (var i = 0; i < 6; ++i) {
-                        if (!sources[i]) {
-                            levelsUpdated = false;
-                            break;
-                        }
-                        if (sources[i]._levels[0] !== cubemap._levels[0][i]) {
-                            levelsUpdated = true;
-                        }
-                    }
+                    // check if source is actually changed
+                    if (sources[index] !== cubemap._levels[0][index])
+                        levelsUpdated = true;
 
                     // when all faces checked
-                    if (levelsUpdated) {
-
-                        // build levels
-                        var levels = [];
-                        for (var mip = 0; mip < sources[0]._levels.length; ++mip) {
-                            levels.push(sources.map(function (s) {  // eslint-disable-line no-loop-func
-                                return s._levels[mip];
-                            }));
-                        }
-
-                        var prevCubemap = assetCubeMap.resource;
-
-                        // reconstruct cubemap with new data
-                        assetCubeMap.resource = new pc.Texture(self._device, {
-                            name: "cubemap-faces",
-                            cubemap: true,
-                            rgbm: sources[0].rgbm,
-                            width: sources[0].width,
-                            height: sources[0].height,
-                            format: sources[0].format,
-                            levels: levels
-                        });
-
-                        // destroy the replaced cubemap
-                        if (prevCubemap) {
-                            prevCubemap.destroy();
-                        }
-
+                    if (count === 6 && levelsUpdated) {
+                        cubemap.setSource(sources);
                         // trigger load event (resource changed)
                         assets.fire('load', assetCubeMap);
                         assets.fire('load:' + assetCubeMap.id, assetCubeMap);
