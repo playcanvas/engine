@@ -98,49 +98,59 @@
             });
         };
 
-        // create the base mesh - a sphere, with higher amount of vertices / triangles
-        var mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
+        var createMorphInstance = function (x, y, z) {
+            // create the base mesh - a sphere, with higher amount of vertices / triangles
+            var mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
-        // obtain base mesh vertex / index data
-        var srcPositions = [], srcNormals = [], indices = [];
-        mesh.getPositions(srcPositions);
-        mesh.getNormals(srcNormals);
-        mesh.getIndices(indices);
+            // obtain base mesh vertex / index data
+            var srcPositions = [], srcNormals = [], indices = [];
+            mesh.getPositions(srcPositions);
+            mesh.getNormals(srcNormals);
+            mesh.getIndices(indices);
 
-        // build 3 targets by expanding a part of sphere along 3 planes, specified by the normal
-        var targets = [];
-        targets.push(createMorphTarget(srcPositions, srcNormals, indices, 1, 0, 0));
-        targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 1, 0));
-        targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 0, 1));
+            // build 3 targets by expanding a part of sphere along 3 planes, specified by the normal
+            var targets = [];
+            targets.push(createMorphTarget(srcPositions, srcNormals, indices, 1, 0, 0));
+            targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 1, 0));
+            targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 0, 1));
 
-        // create a morph using these 3 targets
-        mesh.morph = new pc.Morph(app.graphicsDevice, targets);
+            // create a morph using these 3 targets
+            mesh.morph = new pc.Morph(app.graphicsDevice, targets);
 
-        // Create the mesh instance
-        var node = new pc.GraphNode();
-        var material = new pc.StandardMaterial();
-        this.meshInstance = new pc.MeshInstance(node, mesh, material);
+            // Create the mesh instance
+            var node = new pc.GraphNode();
+            var material = new pc.StandardMaterial();
+            this.meshInstance = new pc.MeshInstance(node, mesh, material);
 
-        // Create a model and add the mesh instance to it
-        var model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [ this.meshInstance ];
+            // Create a model and add the mesh instance to it
+            var model = new pc.Model();
+            model.graph = node;
+            model.meshInstances = [ this.meshInstance ];
 
-        // add morph instance - this is where currently set weights are stored
-        var morphInstance = new pc.MorphInstance(mesh.morph);
-        meshInstance.morphInstance = morphInstance;
-        model.morphInstances.push(morphInstance);
+            // add morph instance - this is where currently set weights are stored
+            var morphInstance = new pc.MorphInstance(mesh.morph);
+            meshInstance.morphInstance = morphInstance;
+            model.morphInstances.push(morphInstance);
 
-        // Create Entity and add it to the scene
-        this.entity = new pc.Entity();
-        entity.setLocalPosition(0, 0, 0);
-        app.root.addChild(this.entity);
+            // Create Entity and add it to the scene
+            this.entity = new pc.Entity();
+            entity.setLocalPosition(x, y, z);
+            app.root.addChild(this.entity);
 
-        // Add a model compoonent
-        app.systems.model.addComponent(this.entity, {
-            type: 'asset'
-        });
-        this.entity.model.model = model;
+            // Add a model compoonent
+            app.systems.model.addComponent(this.entity, {
+                type: 'asset'
+            });
+            this.entity.model.model = model;
+
+            return morphInstance;
+        }
+
+        // create 3 morph instances
+        var morphInstances = [];
+        for (var k = 0; k < 3; k++) {
+            morphInstances.push(createMorphInstance(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3));
+        }
 
         // update function called once per frame
         var self = this;
@@ -148,13 +158,15 @@
         app.on("update", function (dt) {
             time += dt;
 
-            // modify weights of all 3 morph targets along some sin curve with different frequency
-            morphInstance.setWeight(0, Math.abs(Math.sin(time)));
-            morphInstance.setWeight(1, Math.abs(Math.sin(time * 0.3)));
-            morphInstance.setWeight(2, Math.abs(Math.sin(time * 0.7)));
+            for (var m = 0; m < morphInstances.length; m++) {
+                // modify weights of all 3 morph targets along some sin curve with different frequency
+                morphInstances[m].setWeight(0, Math.abs(Math.sin(time + m)));
+                morphInstances[m].setWeight(1, Math.abs(Math.sin(time * 0.3 + m)));
+                morphInstances[m].setWeight(2, Math.abs(Math.sin(time * 0.7 + m)));
+            }
 
             // orbit camera around
-            camera.setLocalPosition(6 * Math.sin(time * 0.2), 4, 6 * Math.cos(time * 0.2));
+            camera.setLocalPosition(16 * Math.sin(time * 0.2), 4, 16 * Math.cos(time * 0.2));
             camera.lookAt(pc.Vec3.ZERO);
         });
 
