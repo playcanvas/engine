@@ -258,6 +258,7 @@ Object.assign(pc, function () {
                             break;
                         case pc.BODYTYPE_STATIC:
                             body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
+                            this.syncEntityToBody();
                             break;
                     }
 
