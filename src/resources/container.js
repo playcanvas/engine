@@ -50,6 +50,7 @@ Object.assign(pc, function () {
                 this.scenes.forEach(function (scene) {
                     scene.destroy();
                 });
+                this.scenes = null;
             }
 
             if (this.animations) {
