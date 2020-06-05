@@ -1,8 +1,8 @@
 describe('pc.AssetReference', function () {
     var app;
     var parent;
-    var load
-    var remove
+    var load;
+    var remove;
     var add;
 
     beforeEach(function () {

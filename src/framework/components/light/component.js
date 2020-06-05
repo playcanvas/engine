@@ -304,17 +304,6 @@ Object.assign(pc, function () {
     _defineProps();
 
 
-    Object.defineProperty(LightComponent.prototype, "enable", {
-        get: function () {
-            console.warn("WARNING: enable: Property is deprecated. Query enabled property instead.");
-            return this.enabled;
-        },
-        set: function (value) {
-            console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
-            this.enabled = value;
-        }
-    });
-
     Object.assign(LightComponent.prototype, {
 
         addLightToLayers: function () {

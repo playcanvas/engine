@@ -42,8 +42,8 @@
         // A list of assets that need to be loaded
         var assetManifest = [
             {
-                type: "model",
-                url: "../assets/models/statue/statue.json"
+                type: "container",
+                url: "../assets/models/statue.glb"
             },
             {
                 type: "script",
@@ -70,7 +70,7 @@
             var model = new pc.Entity();
             model.addComponent("model", {
                 type: "asset",
-                asset: assetManifest[0].asset
+                asset: assetManifest[0].asset.resource.model
             });
             app.root.addChild(model);
 

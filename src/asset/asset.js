@@ -18,6 +18,9 @@ Object.assign(pc, function () {
 
             // Data URL (RFC 2397), simplified
             'data:' +
+
+            // Blob data
+            '|blob:' +
         ')',
         'i' // non case-sensitive flag
     );
@@ -58,6 +61,7 @@ Object.assign(pc, function () {
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
+     * @param {object} [options] - a JSON object containing load-time options specific to the asset.
      * @property {string} name The name of the asset
      * @property {number} id The asset id
      * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
@@ -75,7 +79,7 @@ Object.assign(pc, function () {
      * @property {boolean} loading True if the resource is currently being loaded
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
-    var Asset = function (name, type, file, data) {
+    var Asset = function (name, type, file, data, options) {
         pc.EventHandler.call(this);
 
         this._id = assetIdCounter--;
@@ -89,6 +93,7 @@ Object.assign(pc, function () {
 
         this._file = null;
         this._data = data || { };
+        this.options = options || { };
 
         // This is where the loaded resource(s) will be
         this._resources = [];
@@ -569,6 +574,13 @@ Object.assign(pc, function () {
          * @description Asset type name for script.
          */
         ASSET_SCRIPT: 'script',
+        /**
+         * @constant
+         * @type {string}
+         * @name pc.ASSET_CONTAINER
+         * @description Asset type name for a container.
+         */
+        ASSET_CONTAINER: 'container',
 
         ABSOLUTE_URL: ABSOLUTE_URL
     };
