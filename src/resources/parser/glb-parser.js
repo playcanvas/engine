@@ -1097,7 +1097,8 @@ Object.assign(pc, function () {
         var entity = new pc.Entity();
 
         if (nodeData.hasOwnProperty('name')) {
-            entity.name = nodeData.name;
+            // Remove slashes since they interfere with animation curve paths
+            entity.name = nodeData.name.replace(/\//g, '_');
         } else {
             entity.name = "node_" + nodeIndex;
         }
