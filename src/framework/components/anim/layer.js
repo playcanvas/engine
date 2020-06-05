@@ -60,13 +60,8 @@ Object.assign(pc, function () {
         assignAnimation: function (nodeName, animTrack) {
             this._controller.assignAnimation(nodeName, animTrack);
 
-            if (this._component.activate) {
-                for (var i = 0; i < this._component.data.layers.length; i++) {
-                    if (!this._component.data.layers[i].playable) {
-                        return;
-                    }
-                    this._component.playing = true;
-                }
+            if (this._component.activate && this._component.playable) {
+                this._component.playing = true;
             }
         },
 
@@ -79,14 +74,6 @@ Object.assign(pc, function () {
          */
         removeNodeAnimations: function (nodeName) {
             this._controller.removeNodeAnimations(nodeName);
-        },
-
-        getParameterValue: function (name, type) {
-            this._controller.getParameterValue(name, type);
-        },
-
-        setParameterValue: function (name, type, value) {
-            this._controller.setParameterValue(name, type, value);
         }
     });
 

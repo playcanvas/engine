@@ -471,6 +471,21 @@ pc.GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
+Object.defineProperty(pc.LightComponent.prototype, "enable", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        // #endif
+        return this.enabled;
+    },
+    set: function (value) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
+        // #endif
+        this.enabled = value;
+    }
+});
+
 pc.Material.prototype.getName = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');

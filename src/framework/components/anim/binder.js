@@ -55,23 +55,16 @@ Object.assign(pc, function () {
         },
 
         _getEntityFromHierarchy: function (entityHierarchy) {
-            if (!this.animComponent.entity.name === entityHierarchy[0])
+            if (!this.animComponent.entity.name === entityHierarchy[0]) {
                 return null;
+            }
 
             var currEntity = this.animComponent.entity;
-            for (var i = 0; i < entityHierarchy.length - 1; i++) {
-                var entityChildren = currEntity.getChildren();
-                var child;
-                for (var j = 0; j < entityChildren.length; j++) {
-                    if (entityChildren[j].name === entityHierarchy[i + 1])
-                        child = entityChildren[j];
-                }
-                if (child)
-                    currEntity = child;
-                else
-                    return null;
+
+            if (entityHierarchy.length === 1) {
+                return currEntity;
             }
-            return currEntity;
+            return currEntity._parent.findByPath(entityHierarchy.join('/'));
         },
 
         _floatSetter: function (propertyComponent, propertyHierarchy) {
@@ -152,8 +145,8 @@ Object.assign(pc, function () {
 
         _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
 
-            if (this.handlers && this.handlers[propertyHierarchy[0]]) {
-                return this.handlers[propertyHierarchy[0]](propertyComponent);
+            if (this.handlers && propertyHierarchy[0] === 'weights') {
+                return this.handlers.weights(propertyComponent);
             }
 
             var property = this._getProperty(propertyComponent, propertyHierarchy);
@@ -222,7 +215,13 @@ Object.assign(pc, function () {
                     propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
                 };
                 return new pc.AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
+            } else if (propertyHierarchy.indexOf('material') !== -1) {
+                return new pc.AnimTarget(function (values) {
+                    setter(values);
+                    propertyComponent.material.update();
+                }, animDataType, animDataComponents);
             }
+
             return new pc.AnimTarget(setter, animDataType, animDataComponents);
 
         }

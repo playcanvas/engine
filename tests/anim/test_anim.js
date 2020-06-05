@@ -4,7 +4,7 @@ describe("pc.AnimEvaluator", function () {
         // create curve
         var keys = new pc.AnimData(1, [0, 1, 2]);
         var translations = new pc.AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curve = new pc.AnimCurve(["child1/graph/translation"], 0, 0, pc.INTERPOLATION_LINEAR);
+        var curve = new pc.AnimCurve(["child1/graph/localPosition"], 0, 0, pc.INTERPOLATION_LINEAR);
 
         // construct the animation track
         var track = new pc.AnimTrack("test track", 2, [keys], [translations], [curve]);

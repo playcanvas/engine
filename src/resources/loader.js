@@ -36,6 +36,7 @@ Object.assign(pc, function () {
          * * {@link pc.ASSET_CSS}
          * * {@link pc.ASSET_HTML}
          * * {@link pc.ASSET_SCRIPT}
+         * * {@link pc.ASSET_CONTAINER}
          *
          * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
          * @example
@@ -140,10 +141,16 @@ Object.assign(pc, function () {
                     }
 
                     this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
-                        handleLoad(err, { load: fileUrlFromBundle, original: url });
+                        handleLoad(err, {
+                            load: fileUrlFromBundle,
+                            original: normalizedUrl
+                        });
                     });
                 } else {
-                    handleLoad(null, { load: url, original: url });
+                    handleLoad(null, {
+                        load: url,
+                        original: asset && asset.getPreferredFile().filename || url
+                    });
                 }
             }
         },

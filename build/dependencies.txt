@@ -143,6 +143,7 @@
 ../src/framework/components/animation/component.js
 ../src/framework/components/animation/system.js
 ../src/framework/components/animation/data.js
+../src/framework/components/anim/constants.js
 ../src/framework/components/anim/binder.js
 ../src/framework/components/anim/controller.js
 ../src/framework/components/anim/component.js
@@ -236,8 +237,8 @@
 ../src/resources/bundle.js
 ../src/resources/untar.js
 ../src/resources/animation.js
-../src/resources/animation-clip.js
-../src/resources/animation-state-graph.js
+../src/resources/anim-clip.js
+../src/resources/anim-state-graph.js
 ../src/resources/audio.js
 ../src/resources/cubemap.js
 ../src/resources/json.js

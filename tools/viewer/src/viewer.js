@@ -421,13 +421,19 @@ Object.assign(Viewer.prototype, {
                 // make a list of all the morph instance target names
                 var morphMap = { };
                 var morphs = [];
-                morphInstances.forEach(function (morphInstance) {
+                var targetName;
+                morphInstances.forEach(function (morphInstance, morphIndex) {
+
+                    // mesh name line
+                    morphs.push({ name: "Mesh " + morphIndex });
+
                     morphInstance.morph._targets.forEach(function (target, targetIndex) {
-                        if (!morphMap.hasOwnProperty(target.name)) {
-                            morphMap[target.name] = [{ instance: morphInstance, targetIndex: targetIndex }];
-                            morphs.push({ name: target.name, weight: target.defaultWeight });
+                        targetName = morphIndex + "-" + target.name;
+                        if (!morphMap.hasOwnProperty(targetName)) {
+                            morphMap[targetName] = [{ instance: morphInstance, targetIndex: targetIndex }];
+                            morphs.push({ name: targetName, weight: target.defaultWeight });
                         } else {
-                            morphMap[target.name].push({ instance: morphInstance, targetIndex: targetIndex });
+                            morphMap[targetName].push({ instance: morphInstance, targetIndex: targetIndex });
                         }
                     });
                 });
@@ -564,11 +570,23 @@ function startViewer() {
 }
 
 var main = function () {
-    if (wasmSupported()) {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
-    } else {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
-    }
+    pc.basisDownload(
+        '../../examples/lib/basis/basis.wasm.js',
+        '../../examples/lib/basis/basis.wasm.wasm',
+        '../../examples/lib/basis/basis.js',
+        function () {
+            if (wasmSupported()) {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.wasm.js',
+                                    '../../examples/lib/draco/draco.wasm.wasm',
+                                    startViewer);
+            } else {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.js',
+                                    '',
+                                    startViewer);
+            }
+        });
 };
 
 /* eslint-enable no-unused-vars */

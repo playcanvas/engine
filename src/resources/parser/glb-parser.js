@@ -5,16 +5,8 @@ Object.assign(pc, function () {
         return /^data:.*,.*$/i.test(uri);
     };
 
-    var isPower2 = function (n) {
-        return n && ((n & (n - 1)) === 0);
-    };
-
-    var isPower2d = function (w, h) {
-        return isPower2(w) && isPower2(h);
-    };
-
-    var nearestPow2 = function (n) {
-        return Math.pow(2, Math.round(Math.log(n) / Math.log(2)));
+    var getDataURIMimeType = function (uri) {
+        return uri.substring(uri.indexOf(":") + 1, uri.indexOf(";"));
     };
 
     function getNodePath(targetNode, nodes) {
@@ -724,6 +716,37 @@ Object.assign(pc, function () {
             "}"
         ].join('\n');
 
+        var extractTextureTransform = function (source, material, maps) {
+            var map;
+
+            var texCoord = source.texCoord;
+            if (texCoord) {
+                for (map = 0; map < maps.length; ++map) {
+                    material[maps[map] + 'MapUv'] = texCoord;
+                }
+            }
+
+            var extensions = source.extensions;
+            if (extensions) {
+                var textureTransformData = extensions.KHR_texture_transform;
+                if (textureTransformData) {
+                    var scale = textureTransformData.scale;
+                    if (scale) {
+                        for (map = 0; map < maps.length; ++map) {
+                            material[maps[map] + 'MapTiling'] = new pc.Vec2(scale[0], scale[1]);
+                        }
+                    }
+
+                    var offset = textureTransformData.offset;
+                    if (offset) {
+                        for (map = 0; map < maps.length; ++map) {
+                            material[maps[map] + 'MapOffset'] = new pc.Vec2(offset[0], offset[1]);
+                        }
+                    }
+                }
+            }
+        };
+
         var material = new pc.StandardMaterial();
 
         // glTF dooesn't define how to occlude specular
@@ -761,22 +784,8 @@ Object.assign(pc, function () {
                 material.diffuseMapChannel = 'rgb';
                 material.opacityMap = texture;
                 material.opacityMapChannel = 'a';
-                if (diffuseTexture.hasOwnProperty('texCoord')) {
-                    material.diffuseMapUv = diffuseTexture.texCoord;
-                    material.opacityMapUv = diffuseTexture.texCoord;
-                }
-                if (diffuseTexture.hasOwnProperty('extensions') &&
-                    diffuseTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                    var diffuseTransformData = diffuseTexture.extensions.KHR_texture_transform;
-                    if (diffuseTransformData.hasOwnProperty('scale')) {
-                        material.diffuseMapTiling = new pc.Vec2(diffuseTransformData.scale[0], diffuseTransformData.scale[1]);
-                        material.opacityMapTiling = new pc.Vec2(diffuseTransformData.scale[0], diffuseTransformData.scale[1]);
-                    }
-                    if (diffuseTransformData.hasOwnProperty('offset')) {
-                        material.diffuseMapOffset = new pc.Vec2(diffuseTransformData.offset[0], diffuseTransformData.offset[1]);
-                        material.opacityMapOffset = new pc.Vec2(diffuseTransformData.offset[0], diffuseTransformData.offset[1]);
-                    }
-                }
+
+                extractTextureTransform(diffuseTexture, material, ['diffuse', 'opacity']);
             }
             material.useMetalness = false;
             if (specData.hasOwnProperty('specularFactor')) {
@@ -793,26 +802,11 @@ Object.assign(pc, function () {
             }
             if (specData.hasOwnProperty('specularGlossinessTexture')) {
                 var specularGlossinessTexture = specData.specularGlossinessTexture;
-                material.specularMap = textures[specularGlossinessTexture.index];
+                material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
                 material.specularMapChannel = 'rgb';
-                material.glossMap = textures[specularGlossinessTexture.index];
                 material.glossMapChannel = 'a';
-                if (specularGlossinessTexture.hasOwnProperty('texCoord')) {
-                    material.glossMapUv = specularGlossinessTexture.texCoord;
-                    material.metalnessMapUv = specularGlossinessTexture.texCoord;
-                }
-                if (specularGlossinessTexture.hasOwnProperty('extensions') &&
-                    specularGlossinessTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                    var specGlossTransformData = specularGlossinessTexture.extensions.KHR_texture_transform;
-                    if (specGlossTransformData.hasOwnProperty('scale')) {
-                        material.glossMapTiling = new pc.Vec2(specGlossTransformData.scale[0], specGlossTransformData.scale[1]);
-                        material.metalnessMapTiling = new pc.Vec2(specGlossTransformData.scale[0], specGlossTransformData.scale[1]);
-                    }
-                    if (specGlossTransformData.hasOwnProperty('offset')) {
-                        material.glossMapOffset = new pc.Vec2(specGlossTransformData.offset[0], specGlossTransformData.offset[1]);
-                        material.metalnessMapOffset = new pc.Vec2(specGlossTransformData.offset[0], specGlossTransformData.offset[1]);
-                    }
-                }
+
+                extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
             }
 
             material.chunks.specularPS = specularChunk;
@@ -837,22 +831,8 @@ Object.assign(pc, function () {
                 material.diffuseMapChannel = 'rgb';
                 material.opacityMap = texture;
                 material.opacityMapChannel = 'a';
-                if (baseColorTexture.hasOwnProperty('texCoord')) {
-                    material.diffuseMapUv = baseColorTexture.texCoord;
-                    material.opacityMapUv = baseColorTexture.texCoord;
-                }
-                if (baseColorTexture.hasOwnProperty('extensions') &&
-                    baseColorTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                    var baseColorTransformData = baseColorTexture.extensions.KHR_texture_transform;
-                    if (baseColorTransformData.hasOwnProperty('scale')) {
-                        material.diffuseMapTiling = new pc.Vec2(baseColorTransformData.scale[0], baseColorTransformData.scale[1]);
-                        material.opacityMapTiling = new pc.Vec2(baseColorTransformData.scale[0], baseColorTransformData.scale[1]);
-                    }
-                    if (baseColorTransformData.hasOwnProperty('offset')) {
-                        material.diffuseMapOffset = new pc.Vec2(baseColorTransformData.offset[0], baseColorTransformData.offset[1]);
-                        material.opacityMapOffset = new pc.Vec2(baseColorTransformData.offset[0], baseColorTransformData.offset[1]);
-                    }
-                }
+
+                extractTextureTransform(baseColorTexture, material, ['diffuse', 'opacity']);
             }
             material.useMetalness = true;
             if (pbrData.hasOwnProperty('metallicFactor')) {
@@ -867,26 +847,11 @@ Object.assign(pc, function () {
             }
             if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
                 var metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
-                material.metalnessMap = textures[metallicRoughnessTexture.index];
+                material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
                 material.metalnessMapChannel = 'b';
-                material.glossMap = textures[metallicRoughnessTexture.index];
                 material.glossMapChannel = 'g';
-                if (metallicRoughnessTexture.hasOwnProperty('texCoord')) {
-                    material.glossMapUv = metallicRoughnessTexture.texCoord;
-                    material.metalnessMapUv = metallicRoughnessTexture.texCoord;
-                }
-                if (metallicRoughnessTexture.hasOwnProperty('extensions') &&
-                    metallicRoughnessTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                    var metallicTransformData = metallicRoughnessTexture.extensions.KHR_texture_transform;
-                    if (metallicTransformData.hasOwnProperty('scale')) {
-                        material.glossMapTiling = new pc.Vec2(metallicTransformData.scale[0], metallicTransformData.scale[1]);
-                        material.metalnessMapTiling = new pc.Vec2(metallicTransformData.scale[0], metallicTransformData.scale[1]);
-                    }
-                    if (metallicTransformData.hasOwnProperty('offset')) {
-                        material.glossMapOffset = new pc.Vec2(metallicTransformData.offset[0], metallicTransformData.offset[1]);
-                        material.metalnessMapOffset = new pc.Vec2(metallicTransformData.offset[0], metallicTransformData.offset[1]);
-                    }
-                }
+
+                extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
             }
 
             material.chunks.glossPS = glossChunk;
@@ -895,19 +860,9 @@ Object.assign(pc, function () {
         if (materialData.hasOwnProperty('normalTexture')) {
             var normalTexture = materialData.normalTexture;
             material.normalMap = textures[normalTexture.index];
-            if (normalTexture.hasOwnProperty('texCoord')) {
-                material.normalMapUv = normalTexture.texCoord;
-            }
-            if (normalTexture.hasOwnProperty('extensions') &&
-                normalTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                var normalTransformData = normalTexture.extensions.KHR_texture_transform;
-                if (normalTransformData.hasOwnProperty('scale')) {
-                    material.normalMapTiling = new pc.Vec2(normalTransformData.scale[0], normalTransformData.scale[1]);
-                }
-                if (normalTransformData.hasOwnProperty('offset')) {
-                    material.normalMapOffset = new pc.Vec2(normalTransformData.offset[0], normalTransformData.offset[1]);
-                }
-            }
+
+            extractTextureTransform(normalTexture, material, ['normal']);
+
             if (normalTexture.hasOwnProperty('scale')) {
                 material.bumpiness = normalTexture.scale;
             }
@@ -916,19 +871,8 @@ Object.assign(pc, function () {
             var occlusionTexture = materialData.occlusionTexture;
             material.aoMap = textures[occlusionTexture.index];
             material.aoMapChannel = 'r';
-            if (occlusionTexture.hasOwnProperty('texCoord')) {
-                material.aoMapUv = occlusionTexture.texCoord;
-            }
-            if (occlusionTexture.hasOwnProperty('extensions') &&
-                occlusionTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                var occlusionTransformData = occlusionTexture.extensions.KHR_texture_transform;
-                if (occlusionTransformData.hasOwnProperty('scale')) {
-                    material.aoMapTiling = new pc.Vec2(occlusionTransformData.scale[0], occlusionTransformData.scale[1]);
-                }
-                if (occlusionTransformData.hasOwnProperty('offset')) {
-                    material.aoMapOffset = new pc.Vec2(occlusionTransformData.offset[0], occlusionTransformData.offset[1]);
-                }
-            }
+
+            extractTextureTransform(occlusionTexture, material, ['ao']);
             // TODO: support 'strength'
         }
         if (materialData.hasOwnProperty('emissiveFactor')) {
@@ -943,19 +887,8 @@ Object.assign(pc, function () {
         if (materialData.hasOwnProperty('emissiveTexture')) {
             var emissiveTexture = materialData.emissiveTexture;
             material.emissiveMap = textures[emissiveTexture.index];
-            if (emissiveTexture.hasOwnProperty('texCoord')) {
-                material.emissiveMapUv = emissiveTexture.texCoord;
-            }
-            if (emissiveTexture.hasOwnProperty('extensions') &&
-                emissiveTexture.extensions.hasOwnProperty('KHR_texture_transform')) {
-                var emissiveTransformData = emissiveTexture.extensions.KHR_texture_transform;
-                if (emissiveTransformData.hasOwnProperty('scale')) {
-                    material.emissiveMapTiling = new pc.Vec2(emissiveTransformData.scale[0], emissiveTransformData.scale[1]);
-                }
-                if (emissiveTransformData.hasOwnProperty('offset')) {
-                    material.emissiveMapOffset = new pc.Vec2(emissiveTransformData.offset[0], emissiveTransformData.offset[1]);
-                }
-            }
+
+            extractTextureTransform(emissiveTexture, material, ['emissive']);
         }
         if (materialData.hasOwnProperty('alphaMode')) {
             switch (materialData.alphaMode) {
@@ -1013,50 +946,6 @@ Object.assign(pc, function () {
         material.update();
 
         return material;
-    };
-
-    var defaultSampler = {
-        magFilter: 9729,
-        minFilter: 9987,
-        wrapS: 10497,
-        wrapT: 10497
-    };
-
-    var createTexture = function (device, textureData, samplers, images) {
-        var getFilter = function (filter) {
-            switch (filter) {
-                case 9728: return pc.FILTER_NEAREST;
-                case 9729: return pc.FILTER_LINEAR;
-                case 9984: return pc.FILTER_NEAREST_MIPMAP_NEAREST;
-                case 9985: return pc.FILTER_LINEAR_MIPMAP_NEAREST;
-                case 9986: return pc.FILTER_NEAREST_MIPMAP_LINEAR;
-                case 9987: return pc.FILTER_LINEAR_MIPMAP_LINEAR;
-                default:   return pc.FILTER_LINEAR;
-            }
-        };
-
-        var getWrap = function (wrap) {
-            switch (wrap) {
-                case 33071: return pc.ADDRESS_CLAMP_TO_EDGE;
-                case 33648: return pc.ADDRESS_MIRRORED_REPEAT;
-                case 10497: return pc.ADDRESS_REPEAT;
-                default:    return pc.ADDRESS_REPEAT;
-            }
-        };
-
-        var samplerData = samplers ? samplers[textureData.sampler] : defaultSampler;
-        var options = {
-            name: textureData.name,
-            minFilter: getFilter(samplerData.minFilter),
-            magFilter: getFilter(samplerData.magFilter),
-            addressU: getWrap(samplerData.wrapS),
-            addressV: getWrap(samplerData.wrapT),
-            flipY: false
-        };
-
-        var result = new pc.Texture(device, options);
-        result.setSource(images[textureData.source]);
-        return result;
     };
 
     // create the anim structure
@@ -1331,15 +1220,6 @@ Object.assign(pc, function () {
 
     };
 
-    var createTextures = function (device, gltf, images) {
-        if (!gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
-            return [];
-        }
-        return gltf.textures.map(function (textureData) {
-            return createTexture(device, textureData, gltf.samplers, images);
-        });
-    };
-
     var createAnimations = function (gltf, nodes, nodeComponents, buffers) {
         if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
             return [];
@@ -1440,7 +1320,7 @@ Object.assign(pc, function () {
     };
 
     // create engine resources from the downloaded GLB data
-    var createResources = function (device, gltf, buffers, images, defaultMaterial, callback) {
+    var createResources = function (device, gltf, buffers, textures, defaultMaterial, callback) {
         var nodes = createNodes(gltf);
         var nodeComponents = nodes.map(function () {
             return {
@@ -1451,8 +1331,9 @@ Object.assign(pc, function () {
 
         var scenes = createScenes(gltf, nodes);
         var scene = getDefaultScene(gltf, scenes);
-        var textures = createTextures(device, gltf, images);
-        var materials = createMaterials(gltf, textures);
+        var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
+            return textures[t.source].resource;
+        }) : []);
         var meshGroups = createMeshGroups(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
         var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
@@ -1470,54 +1351,44 @@ Object.assign(pc, function () {
         });
     };
 
-    // test if the image at requires resizing
-    var imageRequiresResize = function (device, img, idx, textures, samplers) {
-        if (isPower2d(img.width, img.height) ||         // already pot
-            device.webgl2) {                            // webgl2 doesn't have POT restrictions
-            return false;
-        }
+    var applySampler = function (texture, samplerData) {
+        var defaultSampler = {
+            magFilter: 9729,
+            minFilter: 9987,
+            wrapS: 10497,
+            wrapT: 10497
+        };
 
-        for (var i = 0; i < textures.length; ++i) {
-            var texture = textures[i];
-            if (texture.hasOwnProperty('source') &&
-                texture.hasOwnProperty('sampler') &&
-                texture.source === idx) {
-                var wraps = [
-                    10497,  // REPEAT
-                    33648   // MIRRORED_REPEAT
-                ];
-                var minFilters = [
-                    9984,   // NEAREST_MIPMAP_NEAREST,
-                    9985,   // LINEAR_MIPMAP_NEAREST,
-                    9986,   // NEAREST_MIPMAP_LINEAR,
-                    9987    // LINEAR_MIPMAP_LINEAR
-                ];
-                var sampler = samplers ? samplers[texture.sampler] : defaultSampler;
-                if (wraps.indexOf(sampler.wrapS) !== -1 ||
-                    wraps.indexOf(sampler.wrapT) !== -1 ||
-                    minFilters.indexOf(sampler.minFilter) !== -1) {
-                    return true;
-                }
+        var getFilter = function (filter) {
+            switch (filter) {
+                case 9728: return pc.FILTER_NEAREST;
+                case 9729: return pc.FILTER_LINEAR;
+                case 9984: return pc.FILTER_NEAREST_MIPMAP_NEAREST;
+                case 9985: return pc.FILTER_LINEAR_MIPMAP_NEAREST;
+                case 9986: return pc.FILTER_NEAREST_MIPMAP_LINEAR;
+                case 9987: return pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                default:   return pc.FILTER_LINEAR;
             }
-        }
-        return false;
+        };
+
+        var getWrap = function (wrap) {
+            switch (wrap) {
+                case 33071: return pc.ADDRESS_CLAMP_TO_EDGE;
+                case 33648: return pc.ADDRESS_MIRRORED_REPEAT;
+                case 10497: return pc.ADDRESS_REPEAT;
+                default:    return pc.ADDRESS_REPEAT;
+            }
+        };
+
+        samplerData = samplerData || defaultSampler;
+        texture.minFilter = getFilter(samplerData.minFilter);
+        texture.magFilter = getFilter(samplerData.magFilter);
+        texture.addressU = getWrap(samplerData.wrapS);
+        texture.addressV = getWrap(samplerData.wrapT);
     };
 
-    // resample image to nearest power of two
-    var resampleImage = function (img) {
-        var canvas = document.createElement('canvas');
-        canvas.width = nearestPow2(img.width);
-        canvas.height = nearestPow2(img.height);
-
-        var context = canvas.getContext('2d');
-        context.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-
-        // set the new image src, this function will be invoked again
-        return canvas.toDataURL();
-    };
-
-    // load gltf images asynchronously, returning the images in callback
-    var loadImagesAsync = function (device, gltf, buffers, urlBase, callback) {
+    // load textures using the asset system
+    var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1527,31 +1398,33 @@ Object.assign(pc, function () {
         }
 
         var remaining = gltf.images.length;
-        var onLoad = function (img, idx) {
-            if (imageRequiresResize(device, img, idx, gltf.textures, gltf.samplers)) {
-                img.src = resampleImage(img);   // onLoad will get called again
-            } else {
-                img.removeEventListener('load', img.loadEvent, false);
-                result[idx] = img;
-                if (--remaining === 0) {
-                    callback(null, result);
+        var onLoad = function (idx, img) {
+            result[idx] = img;
+            if (--remaining === 0) {
+                // apply samplers
+                for (var t = 0; t < gltf.textures.length; ++t) {
+                    var texture = gltf.textures[t];
+                    applySampler(result[texture.source], (gltf.samplers || [])[texture.sampler]);
                 }
+
+                callback(null, result);
             }
         };
 
         for (var i = 0; i < gltf.images.length; ++i) {
-            var img = new Image();
-            img.loadEvent = onLoad.bind(null, img, i);
-            img.addEventListener('load', img.loadEvent, false);
-
             var imgData = gltf.images[i];
+
+            var url;
+            var mimeType;
+            var options = {};
             if (imgData.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(imgData.uri)) {
-                    img.src = imgData.uri;
+                    url = imgData.uri;
+                    mimeType = getDataURIMimeType(imgData.uri);
                 } else {
-                    img.crossOrigin = "anonymous";
-                    img.src = pc.path.join(urlBase, imgData.uri);
+                    url = pc.path.join(urlBase, imgData.uri);
+                    options.crossOrigin = "anonymous";
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1562,12 +1435,36 @@ Object.assign(pc, function () {
                 var buffer = buffers[bufferView.buffer];
                 var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
                 var blob = new Blob([imageBuffer], { type: imgData.mimeType });
-                img.src = URL.createObjectURL(blob);
+                url = URL.createObjectURL(blob);
+                mimeType = imgData.mimeType;
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
                 return;
             }
+
+            var mimeTypeFileExtensions = {
+                'image/png': 'png',
+                'image/jpeg': 'jpg',
+                'image/basis': 'basis',
+                'image/ktx': 'ktx',
+                'image/vnd-ms.dds': 'dds'
+            };
+
+            // construct the asset file
+            var file = { url: url };
+            if (mimeType) {
+                var extension = mimeTypeFileExtensions[mimeType];
+                if (extension) {
+                    file.filename = 'glb-texture-' + i + '.' + extension;
+                }
+            }
+
+            // create and load the asset
+            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false }, options);
+            asset.on('load', onLoad.bind(null, i));
+            registry.add(asset);
+            registry.load(asset);
         }
     };
 
@@ -1731,7 +1628,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, urlBase, data, device, defaultMaterial, callback) {
+    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, defaultMaterial, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1754,13 +1651,13 @@ Object.assign(pc, function () {
                     }
 
                     // async load images
-                    loadImagesAsync(device, gltf, buffers, urlBase, function (err, images) {
+                    loadTexturesAsync(device, gltf, buffers, urlBase, registry, function (err, textures) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        createResources(device, gltf, buffers, images, defaultMaterial, callback);
+                        createResources(device, gltf, buffers, textures, defaultMaterial, callback);
                     });
                 });
             });
@@ -1782,10 +1679,10 @@ Object.assign(pc, function () {
                         console.error(err);
                     } else {
                         var buffers = [chunks.binaryChunk];
-                        var images = [];
+                        var textures = [];
 
                         // create resources
-                        createResources(device, gltf, buffers, images, defaultMaterial, function (err, result_) {
+                        createResources(device, gltf, buffers, textures, defaultMaterial, function (err, result_) {
                             if (err) {
                                 console.error(err);
                             } else {

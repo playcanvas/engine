@@ -4,15 +4,15 @@ Object.assign(pc, function () {
     /**
      * @private
      * @class
-     * @name pc.AnimationClipHandler
+     * @name pc.AnimClipHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.AnimationClip} resources.
+     * @classdesc Resource handler used for loading {@link pc.AnimClip} resources.
      */
-    var AnimationClipHandler = function () {
+    var AnimClipHandler = function () {
         this.retryRequests = false;
     };
 
-    Object.assign(AnimationClipHandler.prototype, {
+    Object.assign(AnimClipHandler.prototype, {
         load: function (url, callback) {
             if (typeof url === 'string') {
                 url = {
@@ -67,6 +67,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        AnimationClipHandler: AnimationClipHandler
+        AnimClipHandler: AnimClipHandler
     };
 }());
