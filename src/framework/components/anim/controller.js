@@ -238,8 +238,8 @@ Object.assign(pc, function () {
             get: function () {
                 var playable = true;
                 var i;
-                for (i = 0; i < this._states.length; i++) {
-                    if (!this._states[i].playable) {
+                for (i = 0; i < this._stateNames.length; i++) {
+                    if (!this._states[this._stateNames[i]].playable) {
                         playable = false;
                     }
                 }
