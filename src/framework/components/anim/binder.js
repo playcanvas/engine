@@ -218,7 +218,7 @@ Object.assign(pc, function () {
             } else if (propertyHierarchy.indexOf('material') !== -1) {
                 return new pc.AnimTarget(function (values) {
                     setter(values);
-                    propertyComponent.material.dirty = true;
+                    propertyComponent.material.update();
                 }, animDataType, animDataComponents);
             }
 
