@@ -1423,7 +1423,7 @@ Object.assign(pc, function () {
                     url = imgData.uri;
                     mimeType = getDataURIMimeType(imgData.uri);
                 } else {
-                    url = pc.path.join(urlBase, imgData.uri);
+                    url = pc.path.join(urlBase, imgData.uri).replace(registry.prefix, "");
                     options.crossOrigin = "anonymous";
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
