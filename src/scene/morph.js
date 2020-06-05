@@ -19,10 +19,20 @@ Object.assign(pc, function () {
         // active morph targets they need
         this._useTextureMorph = targets.length >= 8 && this.device.supportsMorphTargetTextures;
 
+        if (this._useTextureMorph) {
+            // texture format - prefer half float if supported
+            this._textureFormat = (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) ? pc.Morph.FORMAT_HALF_FLOAT : pc.Morph.FORMAT_FLOAT;
+        }
+
         this._init();
         this._updateMorphFlags();
         this._calculateAabb();
     };
+
+    Object.defineProperties(Morph, {
+        FORMAT_FLOAT: { value: 0 },
+        FORMAT_HALF_FLOAT: { value: 1 }
+    });
 
     Object.defineProperties(Morph.prototype, {
         'morphPositions': {
@@ -141,22 +151,40 @@ Object.assign(pc, function () {
             this.morphTextureWidth = morphTextureWidth;
             this.morphTextureHeight = morphTextureHeight;
 
-            // build texture for each delta array, all are the same size
-            var packedDeltas = new Float32Array(freeIndex * 3);
+            // texture format based vars
+            var halfFloat = false;
+            var numComponents = 3;  // RGB32 is used
+            var float2Half = pc.math.float2Half;
+            if (this._textureFormat === pc.Morph.FORMAT_HALF_FLOAT) {
+                halfFloat = true;
+                numComponents = 4;  // RGBA16 is used, RGB16 does not work
+            }
+
+            // build texture for each delta array, all textures are the same size
+            var arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
+            var packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
             for (i = 0; i < deltaArrays.length; i++) {
                 data = deltaArrays[i];
 
-                // copy full arrays into sparse arrays (skip 0th pixel - used by non-morphed vertices)
+                // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
                 for (v = 0; v < usedDataIndices.length; v++) {
                     var index = usedDataIndices[v];
-                    packedDeltas[v * 3 + 3] = data[index * 3];
-                    packedDeltas[v * 3 + 4] = data[index * 3 + 1];
-                    packedDeltas[v * 3 + 5] = data[index * 3 + 2];
+
+                    if (halfFloat) {
+                        packedDeltas[v * numComponents + numComponents] = float2Half(data[index * 3]);
+                        packedDeltas[v * numComponents + numComponents + 1] = float2Half(data[index * 3 + 1]);
+                        packedDeltas[v * numComponents + numComponents + 2] = float2Half(data[index * 3 + 2]);
+                    } else {
+                        packedDeltas[v * numComponents + numComponents] = data[index * 3];
+                        packedDeltas[v * numComponents + numComponents + 1] = data[index * 3 + 1];
+                        packedDeltas[v * numComponents + numComponents + 2] = data[index * 3 + 2];
+                    }
                 }
 
                 // create texture and assign it to target
                 target = deltaInfos[i].target;
-                target._setTexture(deltaInfos[i].name, this._createTexture("MorphTarget", pc.PIXELFORMAT_RGB32F, packedDeltas));
+                var format = this._textureFormat === pc.Morph.FORMAT_FLOAT ? pc.PIXELFORMAT_RGB32F : pc.PIXELFORMAT_RGBA16F;
+                target._setTexture(deltaInfos[i].name, this._createTexture("MorphTarget", format, packedDeltas));
             }
 
             // create vertex stream with vertex_id used to map vertex to texture
