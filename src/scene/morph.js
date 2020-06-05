@@ -114,8 +114,6 @@ Object.assign(pc, function () {
                     }
                 }
 
-                vertexUsed = true;
-
                 if (vertexUsed) {
                     ids.push(freeIndex);
                     usedDataIndices.push(v / 3);
