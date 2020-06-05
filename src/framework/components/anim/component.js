@@ -324,7 +324,7 @@ Object.assign(pc, function () {
                         this.data.stateGraph = asset.resource;
                         this.loadStateGraph(this.data.stateGraph);
                     }.bind(this));
-                    this.system.app.assets.load(asset);
+                    this.system.app.assets.load(_asset);
                 }
                 this.data.stateGraphAsset = _id;
             }
