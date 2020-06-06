@@ -1257,6 +1257,7 @@ Object.assign(pc, function () {
 
             var url;
             var mimeType;
+            var options = {};
             if (imgData.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(imgData.uri)) {
@@ -1264,6 +1265,7 @@ Object.assign(pc, function () {
                     mimeType = getDataURIMimeType(imgData.uri);
                 } else {
                     url = pc.path.join(urlBase, imgData.uri);
+                    options.crossOrigin = "anonymous";
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1284,7 +1286,7 @@ Object.assign(pc, function () {
 
             var mimeTypeFileExtensions = {
                 'image/png': 'png',
-                'image/jpg': 'jpg',
+                'image/jpeg': 'jpg',
                 'image/basis': 'basis',
                 'image/ktx': 'ktx',
                 'image/vnd-ms.dds': 'dds'
@@ -1300,7 +1302,7 @@ Object.assign(pc, function () {
             }
 
             // create and load the asset
-            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false });
+            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false }, options);
             asset.on('load', onLoad.bind(null, i));
             registry.add(asset);
             registry.load(asset);

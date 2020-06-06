@@ -318,12 +318,13 @@ Object.assign(pc, function () {
 
                 if (_asset.resource) {
                     this.data.stateGraph = _asset.resource;
+                    this.loadStateGraph(this.data.stateGraph);
                 } else {
-                    asset.on('load', function (asset) {
+                    _asset.on('load', function (asset) {
                         this.data.stateGraph = asset.resource;
                         this.loadStateGraph(this.data.stateGraph);
                     }.bind(this));
-                    this.system.app.assets.load(asset);
+                    this.system.app.assets.load(_asset);
                 }
                 this.data.stateGraphAsset = _id;
             }
@@ -343,6 +344,21 @@ Object.assign(pc, function () {
                     }
                 }
                 return true;
+            }
+        },
+        /**
+         * @private
+         * @name pc.AnimComponent#baseLayer
+         * @type {pc.AnimComponentLayer}
+         * @readonly
+         * @description Returns the base layer of the state graph
+         */
+        baseLayer: {
+            get: function () {
+                if (this.data.layers.length > 0) {
+                    return this.data.layers[0];
+                }
+                return null;
             }
         }
     });
