@@ -1629,7 +1629,7 @@ Object.assign(pc, function () {
     var GlbParser = function () { };
 
     // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, defaultMaterial, callback) {
+    GlbParser.parseAsync = function (filename, urlBase, data, device, defaultMaterial, registry, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {

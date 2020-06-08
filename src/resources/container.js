@@ -121,8 +121,8 @@ Object.assign(pc, function () {
                                             pc.path.extractPath(url.load),
                                             response,
                                             self._device,
-                                            asset.registry,
                                             self._defaultMaterial,
+                                            asset.registry,
                                             function (err, result) {
                                                 if (err) {
                                                     callback(err);
