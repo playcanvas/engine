@@ -51,7 +51,7 @@
             intensity = smoothstep(0.9, 1.0, intensity);
 
             // point size depends on intensity
-            gl_PointSize = 12.0 * intensity;
+            gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
 
             // color mixes red and yellow based on intensity
             outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
