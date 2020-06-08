@@ -97,7 +97,7 @@ Object.assign(pc, function () {
 
                 if (!err) {
                     pc.GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                            pc.path.extractPath(url.original),
+                                            pc.path.extractPath(url.load),
                                             response,
                                             self._device,
                                             asset.registry,
