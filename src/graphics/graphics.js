@@ -1020,7 +1020,7 @@
          * @type {number}
          * @description Texture is a default type.
          */
-        TEXTURETYPE_DEFAULT: 1,
+        TEXTURETYPE_DEFAULT: 'default',
 
         /**
          * @constant
@@ -1028,7 +1028,7 @@
          * @type {number}
          * @description Texture stores high dynamic range data in RGBM format
          */
-        TEXTURETYPE_RGBM: 2,
+        TEXTURETYPE_RGBM: 'rgbm',
 
         /**
          * @constant
@@ -1036,7 +1036,7 @@
          * @type {number}
          * @description Texture stores high dynamic range data in RGBE format
          */
-        TEXTURETYPE_RGBE: 3,
+        TEXTURETYPE_RGBE: 'rgbe',
 
         /**
          * @constant
@@ -1046,7 +1046,7 @@
          * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality
          * when the texture data is compressed.
          */
-        TEXTURETYPE_SWIZZLEGGGR: 4,
+        TEXTURETYPE_SWIZZLEGGGR: 'swizzleGGGR',
 
         TEXHINT_NONE: 0,
         TEXHINT_SHADOWMAP: 1,
