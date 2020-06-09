@@ -2266,7 +2266,6 @@ Object.assign(pc, function () {
         },
 
         beginFrame: function (comp) {
-            var device = this.device;
             var scene = this.scene;
             var meshInstances = comp._meshInstances;
             var lights = comp._lights;
