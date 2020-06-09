@@ -11,13 +11,12 @@ Object.assign(pc, (function () {
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();
         var size = sourceCubemap.width;
-        var rgbmSource = sourceCubemap.rgbm;
         var format = sourceCubemap.format;
 
         size = Math.max(size, 8) * dpMult;
 
         var tex = new pc.Texture(device, {
-            rgbm: rgbmSource,
+            type: sourceCubemap.type,
             format: format,
             width: size * 2,
             height: size,
@@ -64,7 +63,7 @@ Object.assign(pc, (function () {
         var constantParams = device.scope.resolve("params");
 
         var tex = new pc.Texture(device, {
-            rgbm: sixCubemaps[0].rgbm,
+            type: sixCubemaps[0].type,
             format: sixCubemaps[0].format,
             width: size,
             height: size,

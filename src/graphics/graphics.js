@@ -1042,7 +1042,9 @@
          * @constant
          * @name pc.TEXTURETYPE_SWIZZLEGGGR
          * @type {number}
-         * @description Texture stores normalmap data swizzled in GGGR format
+         * @description Texture stores normalmap data swizzled in GGGR format. This is used for tangent space normal
+         * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality
+         * when the texture data is compressed.
          */
         TEXTURETYPE_SWIZZLEGGGR: 4,
 

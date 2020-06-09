@@ -86,7 +86,7 @@ Object.assign(pc, function () {
                         fixCubemapSeams: true,
                         mipmaps: true,
                         format: assetCubeMap._dds.format,
-                        rgbm: assetCubeMap._dds.rgbm,
+                        type: assetCubeMap._dds.type,
                         width: Math.pow(2, 7 - i),
                         height: Math.pow(2, 7 - i)
                     });
@@ -105,9 +105,12 @@ Object.assign(pc, function () {
             if (cubemap.name !== assetCubeMap.name)
                 cubemap.name = assetCubeMap.name;
 
-            var rgbm = !!assetCubeMap.data.rgbm;
-            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== rgbm)
-                cubemap.rgbm = rgbm;
+            if (assetCubeMap.data.hasOwnProperty('rgbm')) {
+                var type = assetCubeMap.data.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
+                if (cubemap.type !== type) {
+                    cubemap.type = type;
+                }
+            }
 
             cubemap.fixCubemapSeams = !!assetCubeMap._dds;
 

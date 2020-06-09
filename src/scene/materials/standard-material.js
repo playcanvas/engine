@@ -317,7 +317,7 @@ Object.assign(pc, function () {
                 var oldVal = this[privMap];
                 if (!!oldVal ^ !!value) this.dirtyShader = true;
                 if (oldVal && value) {
-                    if (oldVal.rgbm !== value.rgbm || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
+                    if (oldVal.type !== value.type || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
                         this.dirtyShader = true;
                     }
                 }

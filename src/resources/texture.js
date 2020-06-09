@@ -16,6 +16,13 @@ Object.assign(pc, function () {
         "linear_mip_linear": pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
+    var JSON_TEXTURE_TYPE = {
+        "default": pc.TEXTURETYPE_DEFAULT,
+        "rgbm": pc.TEXTURETYPE_RGBM,
+        "rgbe": pc.TEXTURETYPE_RGBE,
+        "swizzleGGGR": pc.TEXTURETYPE_SWIZZLEGGGR
+    };
+
     /**
      * @interface
      * @name pc.TextureParser
@@ -240,8 +247,8 @@ Object.assign(pc, function () {
 
             // extract asset type (this is bit of a mess)
             if (assetData.hasOwnProperty('type')) {
-                texture.type = assetData.type;
-            } else if (assetData.hasOwnProperty('rgbm') && !!assetData.rgbm) {
+                texture.type = JSON_TEXTURE_TYPE[assetData.type];
+            } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
                 texture.type = pc.TEXTURETYPE_RGBM;
             } else if (asset.file && asset.getPreferredFile) {
                 // basis normalmaps flag the variant as swizzled

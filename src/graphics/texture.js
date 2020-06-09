@@ -49,11 +49,6 @@ Object.assign(pc, function () {
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
      * @param {number} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
-     * @param {boolean} [options.rgbm] - Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
-     * @param {boolean} [options.rgbe] - Specifies whther the texture contains RGBE-encoded HDR data. Defaults to false.
-     * @param {boolean} [options.swizzleGGGR] - Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
-     * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
-     * is compressed. Defaults to false.
      * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
      * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
@@ -135,14 +130,18 @@ Object.assign(pc, function () {
 
             this._format = (options.format !== undefined) ? options.format : this._format;
 
-            if (options.type !== undefined) {
+            if (options.hasOwnProperty('type')) {
                 this.type = options.type;
-            } else if (options.rgbm !== undefined) {
-                this.type = !!options.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
-            } else if (options.rgbe !== undefined) {
-                this.type = !!options.rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_DEFAULT;
-            } else if (options.swizzleGGGR !== undefined) {
-                this.type = !!options.swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
+            } else if (options.hasOwnProperty('rgbm')) {
+                // #ifdef DEBUG
+                console.warning("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
+                // #endif
+                this.type = options.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
+            } else if (options.hasOwnProperty('swizzleGGGR')) {
+                // #ifdef DEBUG
+                console.warning("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
+                // #endif
+                this.type = options.swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
             }
 
             if (options.mipmaps !== undefined) {
@@ -554,33 +553,6 @@ Object.assign(pc, function () {
         pot: {
             get: function () {
                 return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
-            }
-        },
-
-        rgbm: {
-            get: function () {
-                return this.type === pc.TEXTURETYPE_RGBM;
-            },
-            set: function (rgbm) {
-                this.type = rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
-            }
-        },
-
-        rgbe: {
-            get: function () {
-                return this.type === pc.TEXTURETYPE_RGBE;
-            },
-            set: function (rgbe) {
-                this.type = rgbe ? pc.TEXTURETYPE_RGBE : pc.TEXTURETYPE_DEFAULT;
-            }
-        },
-
-        swizzleGGGR: {
-            get: function () {
-                return this.type === pc.TEXTURETYPE_SWIZZLEGGGR;
-            },
-            set: function (swizzleGGGR) {
-                this.type = swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
             }
         }
     });
