@@ -318,6 +318,7 @@ Object.assign(pc, function () {
 
                 if (_asset.resource) {
                     this.data.stateGraph = _asset.resource;
+                    this.loadStateGraph(this.data.stateGraph);
                 } else {
                     _asset.on('load', function (asset) {
                         this.data.stateGraph = asset.resource;
@@ -343,6 +344,21 @@ Object.assign(pc, function () {
                     }
                 }
                 return true;
+            }
+        },
+        /**
+         * @private
+         * @name pc.AnimComponent#baseLayer
+         * @type {pc.AnimComponentLayer}
+         * @readonly
+         * @description Returns the base layer of the state graph
+         */
+        baseLayer: {
+            get: function () {
+                if (this.data.layers.length > 0) {
+                    return this.data.layers[0];
+                }
+                return null;
             }
         }
     });

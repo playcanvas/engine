@@ -2266,15 +2266,9 @@ Object.assign(pc, function () {
         },
 
         beginFrame: function (comp) {
-            var device = this.device;
             var scene = this.scene;
             var meshInstances = comp._meshInstances;
             var lights = comp._lights;
-
-            if (scene.updateSkybox) {
-                scene._updateSkybox(device);
-                scene.updateSkybox = false;
-            }
 
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
@@ -2643,6 +2637,12 @@ Object.assign(pc, function () {
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
             var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+
+            // update the skybox, since this might change _meshInstances
+            if (this.scene.updateSkybox) {
+                this.scene._updateSkybox(device);
+                this.scene.updateSkybox = false;
+            }
 
             this.beginLayers(comp);
 

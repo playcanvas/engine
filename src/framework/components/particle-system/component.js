@@ -726,7 +726,7 @@ Object.assign(pc, function () {
             }
         },
 
-        onRemove: function () {
+        onBeforeRemove: function () {
             if (this.enabled) {
                 this.enabled = false;
             }

@@ -76,9 +76,19 @@ Object.assign(pc, function () {
             this.app.systems.rigidbody.destroyBody(body);
         },
 
+        _getEntityTransform: function (transform) {
+            var pos = this.entity.getPosition();
+            var rot = this.entity.getRotation();
+
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+
+            transform.setOrigin(ammoVec1);
+            transform.setRotation(ammoQuat);
+        },
+
         updateTransform: function () {
-            var wtm = this.entity.getWorldTransform();
-            ammoTransform.setFromOpenGLMatrix(wtm.data);
+            this._getEntityTransform(ammoTransform);
 
             var body = this.body;
             body.setWorldTransform(ammoTransform);
