@@ -1100,7 +1100,7 @@ Object.assign(pc, function () {
             material.updateShader = function (dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {
-                    type: scene._skyboxCubeMap.type,
+                    rgbm: scene._skyboxCubeMap.type === pc.TEXTURETYPE_RGBM,
                     hdr: (scene._skyboxCubeMap.type === pc.TEXTURETYPE_RGBM || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams ? scene.skyboxMip : 0,
