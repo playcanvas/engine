@@ -115,7 +115,7 @@
             targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 0, 1));
 
             // create a morph using these 3 targets
-            mesh.morph = new pc.Morph(app.graphicsDevice, targets);
+            mesh.morph = new pc.Morph(targets, app.graphicsDevice);
 
             // Create the mesh instance
             var node = new pc.GraphNode();

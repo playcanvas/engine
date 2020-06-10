@@ -638,7 +638,7 @@ Object.assign(pc, function () {
                     }
                 }
 
-                mesh.morph = new pc.Morph(device, targets);
+                mesh.morph = new pc.Morph(targets, device);
             }
 
             meshes.push(mesh);

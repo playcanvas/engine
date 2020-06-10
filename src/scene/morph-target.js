@@ -16,6 +16,13 @@ Object.assign(pc, function () {
      */
     var MorphTarget = function (options) {
 
+        if (arguments.length === 2) {
+            // #ifdef DEBUG
+            console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
+            // #endif
+            options = arguments[1];
+        }
+
         this.options = options;
         this.name = options.name;
         this.defaultWeight = options.defaultWeight || 0;

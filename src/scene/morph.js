@@ -4,24 +4,29 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined delta AABB and some associated data.
+     * @param {pc.MorphTarget[]} targets - A list of morph targets.
      * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
      * from the {@link pc.Application}.
-     * @param {pc.MorphTarget[]} targets - A list of morph targets.
      */
-    var Morph = function (graphicsDevice, targets) {
+    var Morph = function (targets, graphicsDevice) {
 
-        this.device = graphicsDevice;
+        this.device = graphicsDevice || pc.Application.getApplication().graphicsDevice;
         this._targets = targets;
 
-        // use texture based morphing when more targets than supported by attribute based morphing
-        // todo: when we implement glb loading user-callbacks, implement one for when Morph is created
-        // and let user decide which morph type (texture or attribute) is used by specifying how many
-        // active morph targets they need
-        this._useTextureMorph = targets.length >= 8 && this.device.supportsMorphTargetTextures;
+        // default to texture based morphing if available
+        if (this.device.supportsMorphTargetTextures) {
 
-        if (this._useTextureMorph) {
-            // texture format - prefer half float if supported
-            this._textureFormat = (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) ? pc.Morph.FORMAT_HALF_FLOAT : pc.Morph.FORMAT_FLOAT;
+            // prefer half float textures
+            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable && this.device.textureHalfFloatUpdatable) {
+
+                this._textureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+                this._useTextureMorph = true;
+            } else if (this.extTextureFloat && this.textureFloatRenderable) {
+
+                // fallback to float textures
+                this._textureFormat = pc.Morph.FORMAT_FLOAT;
+                this._useTextureMorph = true;
+            }
         }
 
         this._init();

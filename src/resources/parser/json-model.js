@@ -206,7 +206,7 @@ Object.assign(pc, function () {
                         morphTargetArray.push(morphTarget);
                     }
 
-                    var morph = new pc.Morph(this._device, morphTargetArray);
+                    var morph = new pc.Morph(morphTargetArray, this._device);
                     morphs.push(morph);
 
                     var morphInstance = new pc.MorphInstance(morph);

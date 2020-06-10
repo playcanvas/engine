@@ -127,7 +127,7 @@
         }
 
         // create a morph using these targets
-        mesh.morph = new pc.Morph(app.graphicsDevice, targets);
+        mesh.morph = new pc.Morph(targets, app.graphicsDevice);
 
         // Create the mesh instance
         var node = new pc.GraphNode();
