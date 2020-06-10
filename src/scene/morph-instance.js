@@ -42,7 +42,7 @@ Object.assign(pc, function () {
             var createRT = function (name, textureVar) {
 
                 // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-                var format = morph._textureFormat === pc.Morph.FORMAT_FLOAT ? pc.PIXELFORMAT_RGBA32F : pc.PIXELFORMAT_RGBA16F;
+                var format = morph._renderTextureFormat === pc.Morph.FORMAT_FLOAT ? pc.PIXELFORMAT_RGBA32F : pc.PIXELFORMAT_RGBA16F;
                 this[textureVar] = morph._createTexture(name, format);
                 return new pc.RenderTarget({
                     colorBuffer: this[textureVar],

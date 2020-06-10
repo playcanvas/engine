@@ -14,18 +14,36 @@ Object.assign(pc, function () {
         this._targets = targets;
 
         // default to texture based morphing if available
-        if (this.device.supportsMorphTargetTextures) {
+        if (this.device.supportsMorphTargetTexturesCore) {
 
-            // prefer half float textures
-            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable && this.device.textureHalfFloatUpdatable) {
+            // try half-floats
+            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
 
-                this._textureFormat = pc.Morph.FORMAT_HALF_FLOAT;
-                this._useTextureMorph = true;
-            } else if (this.extTextureFloat && this.textureFloatRenderable) {
+                // if we can cpu update half-float textures (iOS after Nov 2019)
+                if (this.device.textureHalfFloatUpdatable) {
 
-                // fallback to float textures
-                this._textureFormat = pc.Morph.FORMAT_FLOAT;
-                this._useTextureMorph = true;
+                    this._textureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+                    this._renderTextureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+                    this._useTextureMorph = true;
+
+                } else if (this.device.extTextureFloat) {
+
+                    // use half-float render targest, but float textures (iOS before Nov 2019)
+                    this._textureFormat = pc.Morph.FORMAT_FLOAT;
+                    this._renderTextureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+                    this._useTextureMorph = true;
+                }
+            }
+
+            // otherwise try float pipeline
+            if (!this._useTextureMorph) {
+
+                if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
+
+                    this._textureFormat = pc.Morph.FORMAT_FLOAT;
+                    this._renderTextureFormat = pc.Morph.FORMAT_FLOAT;
+                    this._useTextureMorph = true;
+                }
             }
         }
 
