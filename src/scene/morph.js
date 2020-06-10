@@ -16,34 +16,23 @@ Object.assign(pc, function () {
         // default to texture based morphing if available
         if (this.device.supportsMorphTargetTexturesCore) {
 
-            // try half-floats
+            // pick renderable format - prefer half-float
             if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
-
-                // if we can cpu update half-float textures (iOS after Nov 2019)
-                if (this.device.textureHalfFloatUpdatable) {
-
-                    this._textureFormat = pc.Morph.FORMAT_HALF_FLOAT;
-                    this._renderTextureFormat = pc.Morph.FORMAT_HALF_FLOAT;
-                    this._useTextureMorph = true;
-
-                } else if (this.device.extTextureFloat) {
-
-                    // use half-float render targest, but float textures (iOS before Nov 2019)
-                    this._textureFormat = pc.Morph.FORMAT_FLOAT;
-                    this._renderTextureFormat = pc.Morph.FORMAT_HALF_FLOAT;
-                    this._useTextureMorph = true;
-                }
+                this._renderTextureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+            } else if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
+                this._renderTextureFormat = pc.Morph.FORMAT_FLOAT;
             }
 
-            // otherwise try float pipeline
-            if (!this._useTextureMorph) {
+            // pick texture format - prefer half-float
+            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatUpdatable) {
+                this._textureFormat = pc.Morph.FORMAT_HALF_FLOAT;
+            } else  if (this.device.extTextureFloat) {
+                this._textureFormat = pc.Morph.FORMAT_FLOAT;
+            }
 
-                if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
-
-                    this._textureFormat = pc.Morph.FORMAT_FLOAT;
-                    this._renderTextureFormat = pc.Morph.FORMAT_FLOAT;
-                    this._useTextureMorph = true;
-                }
+            // if both available, enable texture morphing
+            if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
+                this._useTextureMorph = true;
             }
         }
 
