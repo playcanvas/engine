@@ -247,8 +247,6 @@
 ../src/resources/script.js
 ../src/resources/text.js
 ../src/resources/binary.js
-../src/resources/dds.js
-../src/resources/ktx.js
 ../src/resources/texture.js
 ../src/resources/html.js
 ../src/resources/css.js
