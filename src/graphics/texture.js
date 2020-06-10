@@ -48,7 +48,7 @@ Object.assign(pc, function () {
      * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {number} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
+     * @param {string} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
      * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
      * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
