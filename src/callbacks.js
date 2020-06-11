@@ -200,10 +200,3 @@
  * @param {object} extras - The extras object attached to the gltf material.
  */
 
-/**
- * @callback pc.callbacks.ProcessGlobalCallback
- * @description Callback used by the {@link pc.ContainerHandler} when loading gltf files contain an extras object
- * at the top level scope.
- * @param {pc.StandardMaterial} material - The material that was constructed.
- * @param {object} extras - The extras object attached to the gltf material.
- */
