@@ -199,4 +199,3 @@
  * @param {pc.StandardMaterial} material - The material that was constructed.
  * @param {object} extras - The extras object attached to the gltf material.
  */
-

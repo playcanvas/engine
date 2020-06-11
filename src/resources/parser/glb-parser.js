@@ -1483,15 +1483,16 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @typedef {object} pc.GlbParserResult
+     * @class
+     * @name pc.GlbParserResult
      * @description The engine resources returned from parsing a gltf.
-     * @property {object} data.gltf - The gltf object that was parsed.
-     * @property {pc.GraphNode[]} data.nodes - The list of nodes.
-     * @property {pc.AnimTrack[]} data.animations - The list of animations.
-     * @property {pc.Texture[]} data.textures - The list of textures.
-     * @property {pc.StandardMaterial[]} data.materials - The list of materials.
-     * @property {pc.Mesh[]} data.meshes - The list of meshes.
-     * @property {pc.Skin[]} data.skins - The list of skins.
+     * @property {object} gltf - The gltf object that was parsed.
+     * @property {pc.GraphNode[]} nodes - The list of nodes.
+     * @property {pc.AnimTrack[]} animations - The list of animations.
+     * @property {pc.Texture[]} textures - The list of textures.
+     * @property {pc.StandardMaterial[]} materials - The list of materials.
+     * @property {pc.Mesh[]} meshes - The list of meshes.
+     * @property {pc.Skin[]} skins - The list of skins.
      */
 
     /**
@@ -1515,7 +1516,7 @@ Object.assign(pc, function () {
      * @param {pc.AssetRegistry} registry - The asset registry to use for loading textures.
      * @param {pc.ContainerHandlerOptions} options - The asset handler options.
      * @param {pc.GlbParserCallback} callback - The callback which will be called with the parse results.
-    */
+     */
     GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
@@ -1563,7 +1564,7 @@ Object.assign(pc, function () {
      * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
      * @param {pc.ContainerHandlerOptions} options - The asset handler options.
      * @returns {pc.GlbParser.ResultData} The resulting parse data.
-    */
+     */
     GlbParser.parse = function (filename, data, device, options) {
         var result = null;
 
