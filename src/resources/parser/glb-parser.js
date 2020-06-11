@@ -1128,22 +1128,30 @@ Object.assign(pc, function () {
 
     };
 
-    var createMaterials = function (gltf, textures) {
+    var createMaterials = function (gltf, textures, callback) {
         if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
             return [];
         }
         return gltf.materials.map(function (materialData) {
-            return createMaterial(materialData, textures);
+            var material = createMaterial(materialData, textures);
+            if (callback && materialData.hasOwnProperty('extras')) {
+                callback(material, materialData.extras);
+            }
+            return material;
         });
 
     };
 
-    var createAnimations = function (gltf, nodes, buffers) {
+    var createAnimations = function (gltf, nodes, buffers, callback) {
         if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
             return [];
         }
         return gltf.animations.map(function (animationData, animationIndex) {
-            return createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
+            var animation = createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
+            if (callback && animationData.hasOwnProperty('extras')) {
+                callback(animation, animationData.extras);
+            }
+            return animation;
         });
 
     };
@@ -1172,12 +1180,12 @@ Object.assign(pc, function () {
     };
 
     // create engine resources from the downloaded GLB data
-    var createResources = function (device, gltf, buffers, textures, callback) {
+    var createResources = function (device, gltf, buffers, textures, options, callback) {
         var nodes = createNodes(gltf);
-        var animations = createAnimations(gltf, nodes, buffers);
+        var animations = createAnimations(gltf, nodes, buffers, options && options.processAnimation);
         var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
             return textures[t.source].resource;
-        }) : []);
+        }) : [], options && options.processMaterial);
         var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
 
@@ -1465,11 +1473,50 @@ Object.assign(pc, function () {
         }
     };
 
-    // -- GlbParser
+    /**
+     * @private
+     * @namespace
+     * @name pc.GlbParser
+     * @description Functions for parsing glb and gltf files.
+     */
     var GlbParser = function () { };
 
-    // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, callback) {
+    /**
+     * @private
+     * @typedef {object} pc.GlbParserResult
+     * @description The engine resources returned from parsing a gltf.
+     * @property {object} data.gltf - The gltf object that was parsed.
+     * @property {pc.GraphNode[]} data.nodes - The list of nodes.
+     * @property {pc.AnimTrack[]} data.animations - The list of animations.
+     * @property {pc.Texture[]} data.textures - The list of textures.
+     * @property {pc.StandardMaterial[]} data.materials - The list of materials.
+     * @property {pc.Mesh[]} data.meshes - The list of meshes.
+     * @property {pc.Skin[]} data.skins - The list of skins.
+     */
+
+    /**
+     * @private
+     * @callback pc.GlbParserCallback
+     * @description Callback used by {@link pc.GlbParser} to return parse results.
+     * @param {string|null} err - The error message if an error occurred otherwise null.
+     * @param {pc.GlbParserResult} data - The data containing the resources constructed from the glb.
+     */
+
+    /**
+     * @private
+     * @function
+     * @name pc.GlbParser.parseAsync
+     * @description Parse gltf or glb data asynchronously, loading external resources and return engine resources.
+     * @param {string} filename - Filename of the data being parsed. Used to determine the format of the data (either
+     * glb or gltf).
+     * @param {string} urlBase - The url base to append to internal urls.
+     * @param {ArrayBuffer} data - The file data.
+     * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
+     * @param {pc.AssetRegistry} registry - The asset registry to use for loading textures.
+     * @param {pc.ContainerHandlerOptions} options - The asset handler options.
+     * @param {pc.GlbParserCallback} callback - The callback which will be called with the parse results.
+    */
+    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1498,15 +1545,26 @@ Object.assign(pc, function () {
                             return;
                         }
 
-                        createResources(device, gltf, buffers, textures, callback);
+                        createResources(device, gltf, buffers, textures, options, callback);
                     });
                 });
             });
         });
     };
 
-    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    GlbParser.parse = function (filename, data, device) {
+    /**
+     * @private
+     * @function
+     * @name pc.GlbParser.parseAsync
+     * @description Parse gltf or glb data synchronously. External resources (buffers and images) are ignored.
+     * @param {string} filename - Filename of the file being loaded. Used to determine whether the data blob is in
+     * glb or gltf format.
+     * @param {ArrayBuffer} data - The file data.
+     * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
+     * @param {pc.ContainerHandlerOptions} options - The asset handler options.
+     * @returns {pc.GlbParser.ResultData} The resulting parse data.
+    */
+    GlbParser.parse = function (filename, data, device, options) {
         var result = null;
 
         // parse the data
@@ -1523,7 +1581,7 @@ Object.assign(pc, function () {
                         var textures = [];
 
                         // create resources
-                        createResources(device, gltf, buffers, textures, function (err, result_) {
+                        createResources(device, gltf, buffers, textures, options, function (err, result_) {
                             if (err) {
                                 console.error(err);
                             } else {

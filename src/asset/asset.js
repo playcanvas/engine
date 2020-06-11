@@ -61,7 +61,7 @@ Object.assign(pc, function () {
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
-     * @param {object} [options] - a JSON object containing load-time options specific to the asset.
+     * @param {(pc.TextureHandlerOptions|pc.ContainerHandlerOptions)} [options] - The asset handler options.
      * @property {string} name The name of the asset
      * @property {number} id The asset id
      * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
@@ -72,6 +72,7 @@ Object.assign(pc, function () {
      * @property {number} [file.size] The size of the resource file
      * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data field
      * @property {object} [data] Optional JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
+     * @property {(pc.TextureHandlerOptions|pc.ContainerHandlerOptions)} [options] - The asset handler options.
      * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
      * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.

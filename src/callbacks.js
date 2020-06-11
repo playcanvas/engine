@@ -183,3 +183,27 @@
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
  * @param {pc.XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
  */
+
+/**
+ * @callback pc.callbacks.ProcessAnimationCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading animations that contain an extras
+ * object.
+ * @param {pc.AnimTrack} animTrack - The animation track that was constructed
+ * @param {object} extras - The extras object attached to the gltf animation.
+ */
+
+/**
+ * @callback pc.callbacks.ProcessMaterialCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading materials that contain an extras
+ * object.
+ * @param {pc.StandardMaterial} material - The material that was constructed.
+ * @param {object} extras - The extras object attached to the gltf material.
+ */
+
+/**
+ * @callback pc.callbacks.ProcessGlobalCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading gltf files contain an extras object
+ * at the top level scope.
+ * @param {pc.StandardMaterial} material - The material that was constructed.
+ * @param {object} extras - The extras object attached to the gltf material.
+ */
