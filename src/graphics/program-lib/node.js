@@ -12,8 +12,8 @@ pc.programlib.node = {
         // GENERATE ATTRIBUTES
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION,
-//            vertex_normal: pc.SEMANTIC_NORMAL,
-//            vertex_color: pc.SEMANTIC_COLOR,
+            vertex_normal: pc.SEMANTIC_NORMAL,
+            vertex_color: pc.SEMANTIC_COLOR,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
         };
         if (options.skin) {
@@ -41,11 +41,11 @@ pc.programlib.node = {
 //            code += 'attribute vec3 vertex_position;\n';
             code += 'varying vec3 vPosition;\n';
 
-            //code += 'attribute vec3 vertex_normal;\n';
-            //code += 'varying vec3 vNormal;\n';
+            code += 'attribute vec3 vertex_normal;\n';
+            code += 'varying vec3 vNormal;\n';
 
-//            code += 'attribute vec4 vertex_color;\n';
-//            code += 'varying vec4 vColor;\n';
+            code += 'attribute vec4 vertex_color;\n';
+            code += 'varying vec4 vColor;\n';
 
             code += 'attribute vec2 vertex_texCoord0;\n';
             code += 'varying vec2 vUv0;\n';
@@ -69,6 +69,7 @@ pc.programlib.node = {
         }
 
         code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
+        code +='vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
         if (options.nodeInputs.vertexPositionOffset) 
         {
@@ -93,8 +94,9 @@ pc.programlib.node = {
 
         if (1) 
         {
-            //code += '    vNormal = getNormal(vertex_normal);\n';
-            //code += '    vColor = vertex_color;\n';
+//            code += '    vNormal = getNormal(vertex_normal);\n';
+            code += '    vNormal = getWorldNormalNM();\n';            
+            code += '    vColor = vertex_color;\n';
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
@@ -108,8 +110,8 @@ pc.programlib.node = {
         // FRAGMENT SHADER DECLARATIONS
         if (1)
         {
-            //code += 'varying vec3 vNormal;\n';
-            //code += 'varying vec4 vColor;\n';
+            code += 'varying vec3 vNormal;\n';
+            code += 'varying vec4 vColor;\n';
             code += 'varying vec2 vUv0;\n';
         }
         if (options.fog) {

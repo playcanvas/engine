@@ -93,7 +93,8 @@
             material.nodeInputs.params=[texNodeParam, timeNodeParam];
             
             material.nodeInputs.emissiveColor='vec3 getEmissiveColor(){return vec3(2.0)*texture2D('+material.nodeInputs.params[0].name+'_'+material.nodeInputs.key+',vUv0).rgb;}\n';
-            material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(sin('+material.nodeInputs.params[1].name+'_'+material.nodeInputs.key+'+getWorldPositionNM().y*4.0)*0.1,0,0);}\n'
+            //material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(sin('+material.nodeInputs.params[1].name+'_'+material.nodeInputs.key+'+getWorldPositionNM().y*4.0)*0.1,0,0);}\n'
+            material.nodeInputs.vertexPositionOffset='vec3 getVertexPositionOffset(){return vec3(sin('+material.nodeInputs.params[1].name+'_'+material.nodeInputs.key+'+dot(getWorldPositionNM().xy,vec2(1,1)))*0.3)*normalize(getWorldNormalNM());}\n'
 
             model.meshInstances.forEach(function (meshInstance) {
                 meshInstance.material = material;

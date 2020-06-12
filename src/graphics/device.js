@@ -2092,6 +2092,10 @@ Object.assign(pc, function () {
                             this.instancedAttribs[locationId] = false;
                         }
                     }
+                    else
+                    {
+                        gl.disableVertexAttribArray(attribute.locationId); //this allows for a single variant for NodeMaterials
+                    }
                 }
 
                 this.attributesInvalidated = false;
