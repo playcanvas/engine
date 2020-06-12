@@ -1,6 +1,6 @@
-attribute highp float vertex_boneIndices;
+attribute float vertex_boneIndices;
 uniform highp sampler2D texture_poseMap;
-uniform highp vec2 texture_poseMapSize;
+uniform vec2 texture_poseMapSize;
 mat4 getBoneMatrix(const in float i) {
     float j = i * 4.0;
     float x = mod(j, float(texture_poseMapSize.x));
