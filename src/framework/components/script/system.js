@@ -26,7 +26,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'script';
-        this.app = app;
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;

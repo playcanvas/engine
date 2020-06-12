@@ -19,7 +19,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'scrollbar';
-        this.app = app;
 
         this.ComponentType = pc.ScrollbarComponent;
         this.DataType = pc.ScrollbarComponentData;

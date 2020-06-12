@@ -12,7 +12,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'element';
-        this.app = app;
 
         this.ComponentType = pc.ElementComponent;
         this.DataType = pc.ElementComponentData;

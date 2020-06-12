@@ -243,6 +243,8 @@ Object.assign(pc, function () {
       */
 
     var Application = function (canvas, options) {
+        var start = performance.now();
+
         pc.EventHandler.call(this);
 
         options = options || {};
@@ -656,6 +658,12 @@ Object.assign(pc, function () {
 
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
+
+        var end = performance.now();
+
+        pc.debug.display({
+            time: end - start
+        });
     };
     Application.prototype = Object.create(pc.EventHandler.prototype);
     Application.prototype.constructor = Application;

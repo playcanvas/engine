@@ -13,7 +13,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'screen';
-        this.app = app;
 
         this.ComponentType = pc.ScreenComponent;
         this.DataType = pc.ScreenComponentData;
