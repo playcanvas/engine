@@ -58,7 +58,7 @@
         cubemapAsset.ready(function () {
             // Mark the cubemaps as RGBM format since it's an HDR cubemap
             cubemapAsset.resources.forEach(function (cubemap) {
-                cubemap.rgbm = true;
+                cubemap.type = pc.TEXTURETYPE_RGBM;
             });
             app.scene.setSkybox(cubemapAsset.resources);
         });

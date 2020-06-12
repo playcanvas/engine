@@ -607,3 +607,35 @@ Object.defineProperty(pc.XrInputSource.prototype, 'rotation', {
         return this._localRotation;
     }
 });
+
+Object.defineProperties(pc.Texture.prototype, {
+    rgbm: {
+        get: function () {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            return this.type === pc.TEXTURETYPE_RGBM;
+        },
+        set: function (rgbm) {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            this.type = rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
+        }
+    },
+
+    swizzleGGGR: {
+        get: function () {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            return this.type === pc.TEXTURETYPE_SWIZZLEGGGR;
+        },
+        set: function (swizzleGGGR) {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            this.type = swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
+        }
+    }
+});

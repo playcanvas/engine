@@ -167,6 +167,7 @@ Object.assign(pc, function () {
         this._triggers = [];
         this._compounds = [];
 
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
     };
     RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -196,6 +197,7 @@ Object.assign(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
+
                 pc.ComponentSystem.bind('update', this.onUpdate, this);
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
@@ -248,6 +250,12 @@ Object.assign(pc, function () {
             };
 
             this.addComponent(clone, data);
+        },
+
+        onBeforeRemove: function (entity, component) {
+            if (component.enabled) {
+                component.enabled = false;
+            }
         },
 
         onRemove: function (entity, data) {

@@ -123,9 +123,12 @@ Object.assign(pc, function () {
                 if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                     texture.anisotropy = asset.data.anisotropy;
 
-                var rgbm = !!asset.data.rgbm;
-                if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
-                    texture.rgbm = rgbm;
+                if (asset.data.hasOwnProperty('rgbm')) {
+                    var type = asset.data.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
+                    if (texture.type !== type) {
+                        texture.type = type;
+                    }
+                }
             }
 
             asset.resource.texture = texture;

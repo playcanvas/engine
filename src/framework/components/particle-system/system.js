@@ -103,7 +103,7 @@ Object.assign(pc, function () {
             scaleGraph2: 'curve'
         };
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
         pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ParticleSystemComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -258,8 +258,8 @@ Object.assign(pc, function () {
             }
         },
 
-        onRemove: function (entity, component) {
-            component.onRemove();
+        onBeforeRemove: function (entity, component) {
+            component.onBeforeRemove();
         }
     });
 

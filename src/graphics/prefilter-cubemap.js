@@ -33,7 +33,8 @@ Object.assign(pc, (function () {
         }
 
         var chunks = pc.shaderChunks;
-        var rgbmSource = sourceCubemap.rgbm;
+        var sourceType = sourceCubemap.type;
+        var rgbmSource = sourceType === pc.TEXTURETYPE_RGBM;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS
                 .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
@@ -65,7 +66,7 @@ Object.assign(pc, (function () {
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
             nextCubemap = new pc.Texture(device, {
                 cubemap: true,
-                rgbm: rgbmSource,
+                type: sourceType,
                 format: format,
                 width: size,
                 height: size,
@@ -98,7 +99,7 @@ Object.assign(pc, (function () {
                 var sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
                 nextCubemap = new pc.Texture(device, {
                     cubemap: true,
-                    rgbm: rgbmSource,
+                    type: sourceType,
                     format: format,
                     width: size,
                     height: size,
@@ -131,7 +132,7 @@ Object.assign(pc, (function () {
         if (!rgbmSource && options.filteredFixedRgbm) {
             nextCubemap = new pc.Texture(device, {
                 cubemap: true,
-                rgbm: true,
+                type: pc.TEXTURETYPE_RGBM,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: size,
                 height: size,
@@ -164,7 +165,7 @@ Object.assign(pc, (function () {
                 if (cmapsList[pass] != null) {
                     cmapsList[pass][i] = new pc.Texture(device, {
                         cubemap: true,
-                        rgbm: pass < 2 ? rgbmSource : true,
+                        type: pass < 2 ? sourceType : pc.TEXTURETYPE_RGBM,
                         format: pass < 2 ? format : pc.PIXELFORMAT_R8_G8_B8_A8,
                         fixCubemapSeams: pass === 1 || pass === 3,
                         width: mipSize[i],
@@ -217,7 +218,7 @@ Object.assign(pc, (function () {
             mips = [sourceCubemap].concat(options.filteredFixed);
             cubemap = new pc.Texture(device, {
                 cubemap: true,
-                rgbm: rgbmSource,
+                type: sourceType,
                 fixCubemapSeams: true,
                 format: format,
                 width: 128,
@@ -238,7 +239,7 @@ Object.assign(pc, (function () {
             mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
             cubemap = new pc.Texture(device, {
                 cubemap: true,
-                rgbm: true,
+                type: pc.TEXTURETYPE_RGBM,
                 fixCubemapSeams: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: 128,
@@ -316,7 +317,7 @@ Object.assign(pc, (function () {
 
                     var tex = new pc.Texture(device, {
                         cubemap: false,
-                        rgbm: false,
+                        type: pc.TEXTURETYPE_DEFAULT,
                         format: source.format,
                         width: cubeSize,
                         height: cubeSize,
@@ -328,7 +329,7 @@ Object.assign(pc, (function () {
 
                     var tex2 = new pc.Texture(device, {
                         cubemap: false,
-                        rgbm: false,
+                        type: pc.TEXTURETYPE_DEFAULT,
                         format: source.format,
                         width: cubeSize,
                         height: cubeSize,
@@ -432,7 +433,7 @@ Object.assign(pc, (function () {
 
                     for (c = 0; c < 3; c++) {
                         value =  source._levels[0][face][addr * 4 + c] / 255.0;
-                        if (source.rgbm) {
+                        if (source.type === pc.TEXTURETYPE_RGBM) {
                             value *= a * 8.0;
                             value *= value;
                         } else {
