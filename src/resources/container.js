@@ -59,14 +59,6 @@ Object.assign(pc, function () {
 
     /**
      * @class
-     * @name pc.ContainerHandlerOptions
-     * @description The supported {@link pc.Asset} options when loading container assets.
-     * @property {pc.callbacks.ProcessAnimationCallback} [processAnimation] - The callback for animations with extras.
-     * @property {pc.callbacks.ProcessMaterialCallback} [processMaterial] - The callback for materials with extras.
-     */
-
-    /**
-     * @class
      * @name pc.ContainerHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Loads files that contain in them multiple resources. For example glTF files can contain

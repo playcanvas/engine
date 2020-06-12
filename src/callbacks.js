@@ -188,7 +188,7 @@
  * @callback pc.callbacks.ProcessAnimationCallback
  * @description Callback used by the {@link pc.ContainerHandler} when loading animations that contain an extras
  * object.
- * @param {pc.AnimTrack} animTrack - The animation track that was constructed
+ * @param {*} animTrack - The animation track that was constructed
  * @param {object} extras - The extras object attached to the gltf animation.
  */
 

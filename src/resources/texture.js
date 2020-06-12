@@ -138,13 +138,6 @@ Object.assign(pc, function () {
 
     /**
      * @class
-     * @name pc.TextureHandlerOptions
-     * @description The supported {@link pc.Asset} options when loading texture assets.
-     * @property {boolean} [crossOrigin] - For browser-supported image formats only, enable cross origin.
-     */
-
-    /**
-     * @class
      * @name pc.TextureHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources.
