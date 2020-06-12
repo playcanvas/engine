@@ -275,7 +275,7 @@ Object.assign(pc, function () {
                 width: 4,
                 height: 4,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                rgbm: true
+                type: pc.TEXTURETYPE_RGBM
             });
             blackTex.name = 'lightmap';
             for (i = 0; i < nodes.length; i++) {
@@ -290,7 +290,7 @@ Object.assign(pc, function () {
                         height: size,
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
                         mipmaps: false,
-                        rgbm: (pass === PASS_COLOR),
+                        type: (pass === PASS_COLOR) ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT,
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
@@ -308,7 +308,7 @@ Object.assign(pc, function () {
                         height: size,
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
                         mipmaps: false,
-                        rgbm: true,
+                        type: pc.TEXTURETYPE_RGBM,
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });

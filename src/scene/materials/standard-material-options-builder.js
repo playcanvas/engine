@@ -88,7 +88,7 @@ Object.assign(pc, function () {
             emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
         }
 
-        var isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5 || stdMat.normalMap.swizzleGGGR) : false;
+        var isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5 || stdMat.normalMap.type === pc.TEXTURETYPE_SWIZZLEGGGR) : false;
 
         options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE) ? 1 : 0;
         options.blendMapsWithColors = true;
@@ -105,8 +105,8 @@ Object.assign(pc, function () {
         options.dpAtlas = !!stdMat.dpAtlas;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
-        options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
+        options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === pc.TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
+        options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === pc.TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.occludeSpecular = stdMat.occludeSpecular;
@@ -132,23 +132,23 @@ Object.assign(pc, function () {
     };
 
     StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {
-        var rgbmAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) ||
-            (stdMat.cubeMap ? stdMat.cubeMap.rgbm : false) ||
-            (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm : false);
+        var rgbmAmbient = (prefilteredCubeMap128 && prefilteredCubeMap128.type === pc.TEXTURETYPE_RGBM) ||
+            (stdMat.cubeMap && stdMat.cubeMap.type === pc.TEXTURETYPE_RGBM) ||
+            (stdMat.dpAtlas && stdMat.dpAtlas.type === pc.TEXTURETYPE_RGBM);
 
-        var hdrAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.cubeMap ? stdMat.cubeMap.rgbm || stdMat.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm || stdMat.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
+        var hdrAmbient = (prefilteredCubeMap128 && (prefilteredCubeMap128.type === pc.TEXTURETYPE_RGBM || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F)) ||
+            (stdMat.cubeMap && (stdMat.cubeMap.type === pc.TEXTURETYPE_RGBM || stdMat.cubeMap.format === pc.PIXELFORMAT_RGBA32F)) ||
+            (stdMat.dpAtlas && (stdMat.dpAtlas.type === pc.TEXTURETYPE_RGBM || stdMat.dpAtlas.format === pc.PIXELFORMAT_RGBA32F));
 
-        var rgbmReflection = ((prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas) ? prefilteredCubeMap128.rgbm : false) ||
-            (stdMat.cubeMap ? stdMat.cubeMap.rgbm : false) ||
-            (stdMat.sphereMap ? stdMat.sphereMap.rgbm : false) ||
-            (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm : false);
+        var rgbmReflection = (prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas && prefilteredCubeMap128.type === pc.TEXTURETYPE_RGBM) ||
+            (stdMat.cubeMap && stdMat.cubeMap.type === pc.TEXTURETYPE_RGBM) ||
+            (stdMat.sphereMap && stdMat.sphereMap.type === pc.TEXTURETYPE_RGBM) ||
+            (stdMat.dpAtlas && stdMat.dpAtlas.type === pc.TEXTURETYPE_RGBM);
 
-        var hdrReflection = ((prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas) ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.cubeMap ? stdMat.cubeMap.rgbm || stdMat.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.sphereMap ? stdMat.sphereMap.rgbm || stdMat.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-            (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm || stdMat.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
+        var hdrReflection = ((prefilteredCubeMap128 && !stdMat.cubeMap && !stdMat.sphereMap && !stdMat.dpAtlas) ? prefilteredCubeMap128.type === pc.TEXTURETYPE_RGBM || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
+            (stdMat.cubeMap && (stdMat.cubeMap.type === pc.TEXTURETYPE_RGBM || stdMat.cubeMap.format === pc.PIXELFORMAT_RGBA32F)) ||
+            (stdMat.sphereMap && (stdMat.sphereMap.type === pc.TEXTURETYPE_RGBM || stdMat.sphereMap.format === pc.PIXELFORMAT_RGBA32F)) ||
+            (stdMat.dpAtlas && (stdMat.dpAtlas.type === pc.TEXTURETYPE_RGBM || stdMat.dpAtlas.format === pc.PIXELFORMAT_RGBA32F));
 
         var globalSky128;
         if (stdMat.useSkybox && scene._skyboxPrefiltered)
@@ -161,7 +161,7 @@ Object.assign(pc, function () {
         options.hdrAmbient = hdrAmbient;
         options.rgbmReflection = rgbmReflection;
         options.hdrReflection = hdrReflection;
-        options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap ? stdMat.emissiveMap.rgbm : false) || (stdMat.lightMap ? stdMat.lightMap.rgbm : false);
+        options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap && stdMat.emissiveMap.type === pc.TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === pc.TEXTURETYPE_RGBM);
         options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
         options.prefilteredCubemap = !!prefilteredCubeMap128;
         options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);

@@ -117,13 +117,6 @@ Object.assign(pc, function () {
             }
         },
 
-        _getObjectPropertyType: function (property) {
-            if (!property.constructor)
-                return undefined;
-
-            return property.constructor.name;
-        },
-
         _getEntityProperty: function (propertyHierarchy) {
             var entityProperties = [
                 'localScale',
@@ -167,28 +160,28 @@ Object.assign(pc, function () {
                 animDataType = 'vector';
                 animDataComponents = 1;
             } else if (typeof property === 'object') {
-                switch (this._getObjectPropertyType(property)) {
-                    case 'Vec2':
+                switch (property.constructor) {
+                    case pc.Vec2:
                         setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 2;
                         break;
-                    case 'Vec3':
+                    case pc.Vec3:
                         setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 3;
                         break;
-                    case 'Vec4':
+                    case pc.Vec4:
                         setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 4;
                         break;
-                    case 'Color':
+                    case pc.Color:
                         setter = this._colorSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'vector';
                         animDataComponents = 4;
                         break;
-                    case 'Quat':
+                    case pc.Quat:
                         setter = this._vecSetter(propertyComponent, propertyHierarchy);
                         animDataType = 'quaternion';
                         animDataComponents = 4;

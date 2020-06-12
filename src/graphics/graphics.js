@@ -1014,6 +1014,40 @@
          */
         TEXTURELOCK_WRITE: 2,
 
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_DEFAULT
+         * @type {number}
+         * @description Texture is a default type.
+         */
+        TEXTURETYPE_DEFAULT: 'default',
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_RGBM
+         * @type {number}
+         * @description Texture stores high dynamic range data in RGBM format
+         */
+        TEXTURETYPE_RGBM: 'rgbm',
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_RGBE
+         * @type {number}
+         * @description Texture stores high dynamic range data in RGBE format
+         */
+        TEXTURETYPE_RGBE: 'rgbe',
+
+        /**
+         * @constant
+         * @name pc.TEXTURETYPE_SWIZZLEGGGR
+         * @type {number}
+         * @description Texture stores normalmap data swizzled in GGGR format. This is used for tangent space normal
+         * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality
+         * when the texture data is compressed.
+         */
+        TEXTURETYPE_SWIZZLEGGGR: 'swizzleGGGR',
+
         TEXHINT_NONE: 0,
         TEXHINT_SHADOWMAP: 1,
         TEXHINT_ASSET: 2,
