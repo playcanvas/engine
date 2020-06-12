@@ -1,5 +1,5 @@
 #ifdef MORPHING_TEXTURE_BASED_NORMAL
-    uniform sampler2D morphNormalTex;
+    uniform highp sampler2D morphNormalTex;
 #endif
 
 vec3 getNormal() {

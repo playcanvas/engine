@@ -25,7 +25,7 @@
 #endif
 
 #ifdef MORPHING_TEXTURE_BASED_POSITION
-    uniform sampler2D morphPositionTex;
+    uniform highp sampler2D morphPositionTex;
 #endif
 
 mat4 getModelMatrix() {
