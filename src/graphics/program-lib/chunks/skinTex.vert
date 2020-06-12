@@ -2,7 +2,7 @@ attribute highp vec4 vertex_boneWeights;
 attribute highp vec4 vertex_boneIndices;
 
 uniform highp sampler2D texture_poseMap;
-uniform highp  vec2 texture_poseMapSize;
+uniform highp vec2 texture_poseMapSize;
 
 mat4 getBoneMatrix(const in float i)
 {
