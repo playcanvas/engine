@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     var AnimComponentData = function () {
         // Serialized
         this.stateGraphAsset = null;
+        this.animationAssets = {};
         this.speed = 1.0;
         this.activate = true;
         this.enabled = true;

@@ -42,6 +42,7 @@ Object.assign(pc, function () {
             var data = this.data;
 
             data.parameters = stateGraph.parameters;
+            data.layers = [];
 
             function addLayer(name, states, transitions, order) {
                 var animBinder = new pc.AnimComponentBinder(this, graph);
@@ -61,6 +62,49 @@ Object.assign(pc, function () {
                 var layer = stateGraph.layers[i];
                 addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
             }
+            this.setAnimationAssets();
+        },
+
+        setAnimationAssets: function () {
+            var animationAssets = {};
+            for (var i = 0; i < this.data.layers.length; i++) {
+                var layer = this.data.layers[i];
+                var layerName = layer.name;
+                for (var j = 0; j < layer.states.length; j++) {
+                    var stateName = layer.states[j];
+                    if (stateName !== 'START' && stateName !== 'END') {
+                        animationAssets[layerName + ':' + stateName] = {
+                            asset: null
+                        };
+                    }
+                }
+            }
+            this.data.animationAssets = Object.assign(animationAssets, this.data.animationAssets);
+        },
+
+        loadAnimationAssets: function () {
+            for (var i = 0; i < this.data.layers.length; i++) {
+                var layer = this.data.layers[i];
+                for (var j = 0; j < layer.states.length; j++) {
+                    var stateName = layer.states[j];
+                    var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
+                    if (!animationAsset || !animationAsset.asset) {
+                        continue;
+                    }
+                    var assetId = animationAsset.asset;
+                    var asset = this.system.app.assets.get(assetId);
+                    if (asset.resource) {
+                        this.assignAnimation(stateName, asset.resource, layer.name);
+                    } else {
+                        asset.on('load', function (layerName, stateName) {
+                            return function (asset) {
+                                this.assignAnimation(stateName, asset.resource, layerName);
+                            }.bind(this);
+                        }.bind(this)(layer.name, stateName));
+                        this.system.app.assets.load(asset);
+                    }
+                }
+            }
         },
 
         /**
@@ -75,6 +119,16 @@ Object.assign(pc, function () {
             this.data.layerIndices = {};
             this.data.parameters = {};
             this.data.playing = false;
+        },
+
+        resetStateGraph: function () {
+            if (this.stateGraphAsset) {
+                var stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
+                this.loadStateGraph(stateGraph);
+                this.loadAnimationAssets();
+            } else {
+                this.removeStateGraph();
+            }
         },
 
         /**

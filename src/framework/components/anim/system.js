@@ -38,8 +38,12 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'enabled', 'speed', 'playing'];
+            properties = ['activate', 'enabled', 'speed', 'playing', 'stateGraphAsset'];
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+            if (data.animationAssets) {
+                component.data.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
+                component.loadAnimationAssets();
+            }
         },
 
         onAnimationUpdate: function (dt) {

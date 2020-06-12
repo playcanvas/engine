@@ -689,6 +689,10 @@ Object.assign(pc, function () {
                 if (this.entity.animation)
                     this.entity.animation.setModel(this._model);
 
+                // Update any animation component
+                if (this.entity.anim)
+                    this.entity.anim.restartStateGraph();
+
                 // trigger event handler to load mapping
                 // for new model
                 if (this.type === 'asset') {
