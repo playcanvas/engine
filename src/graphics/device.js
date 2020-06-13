@@ -703,7 +703,7 @@ Object.assign(pc, function () {
                 this.extUintElement = true;
                 this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2');
+                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
             } else {
                 this.extBlendMinmax = getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = getExtension('EXT_draw_buffers');
@@ -732,7 +732,7 @@ Object.assign(pc, function () {
                     gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
                 }
                 this.extColorBufferFloat = null;
-                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query');
+                this.extDisjointTimerQuery = null;
             }
 
             this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
