@@ -137,35 +137,59 @@ Object.assign(pc.input, {
 
 pc.log = {
     write: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.write is deprecated. Use console.log instead.");
+        // #endif
         console.log(text);
     },
 
     open: function () {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.open is deprecated. Use console.log instead.");
+        // #endif
         pc.log.write("Powered by PlayCanvas " + pc.version + " " + pc.revision);
     },
 
     info: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.info is deprecated. Use console.info instead.");
+        // #endif
         console.info("INFO:    " + text);
     },
 
     debug: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.debug is deprecated. Use console.debug instead.");
+        // #endif
         console.debug("DEBUG:   " + text);
     },
 
     error: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.error is deprecated. Use console.error instead.");
+        // #endif
         console.error("ERROR:   " + text);
     },
 
     warning: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.warning is deprecated. Use console.warn instead.");
+        // #endif
         console.warn("WARNING: " + text);
     },
 
     alert: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.alert is deprecated. Use alert instead.");
+        // #endif
         pc.log.write("ALERT:   " + text);
         alert(text); // eslint-disable-line no-alert
     },
 
     assert: function (condition, text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.assert is deprecated. Use a conditional plus console.log instead.");
+        // #endif
         if (condition === false) {
             pc.log.write("ASSERT:  " + text);
         }
