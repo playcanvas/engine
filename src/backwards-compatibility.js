@@ -135,6 +135,56 @@ Object.assign(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
+pc.log = {
+    write: function (text) {
+        console.log(text);
+    },
+
+    open: function () {
+        pc.log.write("Powered by PlayCanvas " + pc.version + " " + pc.revision);
+    },
+
+    info: function (text) {
+        console.info("INFO:    " + text);
+    },
+
+    debug: function (text) {
+        console.debug("DEBUG:   " + text);
+    },
+
+    error: function (text) {
+        console.error("ERROR:   " + text);
+    },
+
+    warning: function (text) {
+        console.warn("WARNING: " + text);
+    },
+
+    alert: function (text) {
+        pc.log.write("ALERT:   " + text);
+        alert(text); // eslint-disable-line no-alert
+    },
+
+    assert: function (condition, text) {
+        if (condition === false) {
+            pc.log.write("ASSERT:  " + text);
+        }
+    }
+};
+
+// Shortcuts to logging functions
+// ESLint disabled here because these vars may be accessed from other files
+// once all sources have been concatenated together and wrapped by the closure.
+/* eslint-disable no-unused-vars */
+var logINFO = pc.log.info;
+var logDEBUG = pc.log.debug;
+var logWARNING = pc.log.warning;
+var logERROR = pc.log.error;
+
+var logALERT = pc.log.alert;
+var logASSERT = pc.log.assert;
+/* eslint-enable no-unused-vars */
+
 pc.math.INV_LOG2 = Math.LOG2E;
 
 pc.math.intToBytes = pc.math.intToBytes32;
