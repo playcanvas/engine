@@ -35,7 +35,7 @@ Object.assign(pc, function () {
 
             pc.http.get(url.load, options, function (err, response) {
                 if (err) {
-                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url.original, err));
+                    callback("Error loading animation resource: " + url.original + " [" + err + "]");
                 } else {
                     callback(null, response);
                 }

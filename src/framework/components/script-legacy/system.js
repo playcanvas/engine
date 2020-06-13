@@ -277,7 +277,7 @@ Object.assign(pc, function () {
             if (entity.script) {
                 entity.script.data._instances = entity.script.data._instances || {};
                 if (entity.script.data._instances[name]) {
-                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
+                    throw Error("Script name collision '" + name + "'. Scripts from '" + url + "' and '" + entity.script.data._instances[name].url + "' {" + entity.getGuid() + "}");
                 }
                 entity.script.data._instances[name] = {
                     url: url,
@@ -322,7 +322,7 @@ Object.assign(pc, function () {
 
                         // Make instance accessible from the script component of the Entity
                         if (entity.script[instanceName]) {
-                            throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
+                            throw Error("Script with name '" + instanceName + "' is already attached to Script Component");
                         } else {
                             entity.script[instanceName] = instance;
                         }

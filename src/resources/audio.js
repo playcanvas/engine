@@ -80,7 +80,7 @@ Object.assign(pc, function () {
 
             if (this._createSound) {
                 if (!this._isSupported(url.original)) {
-                    error(pc.string.format('Audio format for {0} not supported', url.original));
+                    error("Audio format for " + url.original + " not supported");
                     return;
                 }
 

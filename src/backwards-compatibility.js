@@ -188,18 +188,36 @@ pc.shape = {
     Plane: pc.Plane
 };
 
-pc.string.startsWith = function (s, subs) {
-    // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
-    // #endif
-    return s.startsWith(subs);
-};
-
 pc.string.endsWith = function (s, subs) {
     // #ifdef DEBUG
     console.warn("DEPRECATED: pc.string.endsWith is deprecated. Use String#endsWith instead.");
     // #endif
     return s.endsWith(subs);
+};
+
+pc.string.format = function (s) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.format is deprecated. Use string concatenation operator + instead.");
+    // #endif
+    var i = 0,
+        regexp,
+        args = pc.makeArray(arguments);
+
+    // drop first argument
+    args.shift();
+
+    for (i = 0; i < args.length; i++) {
+        regexp = new RegExp('\\{' + i + '\\}', 'gi');
+        s = s.replace(regexp, args[i]);
+    }
+    return s;
+};
+
+pc.string.startsWith = function (s, subs) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
+    // #endif
+    return s.startsWith(subs);
 };
 
 pc.time = {

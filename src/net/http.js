@@ -490,7 +490,7 @@ Object.assign(pc, function () {
                     response = xhr.response;
                 } else {
                     if (contentType) {
-                        logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', xhr.responseType, contentType));
+                        console.warn("responseType: " + xhr.responseType + " being served with Content-Type: " + contentType);
                     }
 
                     if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
