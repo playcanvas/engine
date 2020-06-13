@@ -27,7 +27,7 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading JSON resource: {0} [{1}]", url.original, err));
+                    callback("Error loading JSON resource: " + url.original + " [" + err + "]");
                 }
             });
         },

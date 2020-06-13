@@ -50,7 +50,7 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
+                    callback("Error loading model: " + url.original + " [" + err + "]");
                 }
             });
         },
@@ -63,7 +63,9 @@ Object.assign(pc, function () {
                     return p.parser.parse(data);
                 }
             }
-            logWARNING(pc.string.format("No model parser found for: {0}", url));
+            // #ifdef DEBUG
+            console.warn("pc.ModelHandler#open: No model parser found for: " + url);
+            // #endif
             return null;
         },
 

@@ -11,7 +11,6 @@
 ../src/core/time.js
 ../src/core/hash.js
 ../src/core/uri.js
-../src/core/log.js
 ../src/core/path.js
 ../src/core/string.js
 ../src/core/debug.js

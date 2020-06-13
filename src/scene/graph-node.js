@@ -162,10 +162,9 @@ Object.assign(pc, function () {
             var parent = this._parent;
             if (parent) {
                 var path = this.name;
-                var format = "{0}/{1}";
 
                 while (parent && parent._parent) {
-                    path = pc.string.format(format, parent.name, path);
+                    path = parent.name + "/" + path;
                     parent = parent._parent;
                 }
 

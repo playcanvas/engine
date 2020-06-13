@@ -260,7 +260,9 @@ Object.assign(pc, function () {
         addSlot: function (name, options) {
             var slots = this.data.slots;
             if (slots[name]) {
-                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.path);
+                // #ifdef DEBUG
+                console.warn('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.path);
+                // #endif
                 return null;
             }
 
@@ -328,7 +330,9 @@ Object.assign(pc, function () {
 
             var slot = this.slots[name];
             if (!slot) {
-                logWARNING('Trying to play sound slot with name ' + name + ' which does not exist');
+                // #ifdef DEBUG
+                console.warn('Trying to play sound slot with name ' + name + ' which does not exist');
+                // #endif
                 return null;
             }
 
@@ -353,7 +357,9 @@ Object.assign(pc, function () {
             if (name) {
                 slot = slots[name];
                 if (!slot) {
-                    logWARNING('Trying to pause sound slot with name ' + name + ' which does not exist');
+                    // #ifdef DEBUG
+                    console.warn('Trying to pause sound slot with name ' + name + ' which does not exist');
+                    // #endif
                     return;
                 }
 
@@ -383,7 +389,9 @@ Object.assign(pc, function () {
             if (name) {
                 slot = slots[name];
                 if (!slot) {
-                    logWARNING('Trying to resume sound slot with name ' + name + ' which does not exist');
+                    // #ifdef DEBUG
+                    console.warn('Trying to resume sound slot with name ' + name + ' which does not exist');
+                    // #endif
                     return;
                 }
 
@@ -415,7 +423,9 @@ Object.assign(pc, function () {
             if (name) {
                 slot = slots[name];
                 if (!slot) {
-                    logWARNING('Trying to stop sound slot with name ' + name + ' which does not exist');
+                    // #ifdef DEBUG
+                    console.warn('Trying to stop sound slot with name ' + name + ' which does not exist');
+                    // #endif
                     return;
                 }
 

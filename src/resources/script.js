@@ -90,7 +90,7 @@ Object.assign(pc, function () {
             element.async = false;
 
             element.addEventListener('error', function (e) {
-                callback(pc.string.format("Script: {0} failed to load", e.target.src));
+                callback("Script: " + e.target.src + " failed to load");
             }, false);
 
             var done = false;

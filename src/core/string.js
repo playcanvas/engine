@@ -121,32 +121,6 @@ pc.string = function () {
 
         /**
          * @function
-         * @name pc.string.format
-         * @description Return a string with {n} replaced with the n-th argument.
-         * @param {string} s - The string to format.
-         * @param {object} [arguments] - All other arguments are substituted into the string.
-         * @returns {string} The formatted string.
-         * @example
-         * var s = pc.string.format("Hello {0}", "world");
-         * console.log(s); // Prints "Hello world"
-         */
-        format: function (s) {
-            var i = 0,
-                regexp,
-                args = pc.makeArray(arguments);
-
-            // drop first argument
-            args.shift();
-
-            for (i = 0; i < args.length; i++) {
-                regexp = new RegExp('\\{' + i + '\\}', 'gi');
-                s = s.replace(regexp, args[i]);
-            }
-            return s;
-        },
-
-        /**
-         * @function
          * @name pc.string.toBool
          * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
          * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
