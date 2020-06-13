@@ -39,25 +39,9 @@ Object.assign(pc, function () {
 
         var device = skin.device;
         if (device.supportsBoneTextures) {
-            // Calculate a square texture dimension to hold bone matrices
-            // where a matrix takes up 4 texels:
-            //   RGBA (Row 1), RGBA (Row 2), RGBA (Row 3), RGBA (Row 4)
-            // So:
-            //   8x8   holds: 64 / 4   = Up to 16 bones
-            //   16x16 holds: 256 / 4  = Up to 64 bones
-            //   32x32 holds: 1024 / 4 = Up to 256 bones
-            //   64x64 holds: 4096 / 4 = Up to 1024 bones
-            // Let's assume for now no one will create a hierarchy of more
-            // than 1024 bones!
-            var size;
-            if (numBones > 256)
-                size = 64;
-            else if (numBones > 64)
-                size = 32;
-            else if (numBones > 16)
-                size = 16;
-            else
-                size = 8;
+
+            // texture size - square texture with power of two side, large enough to fit 4 pixels per bone
+            var size = numBones > 16 ? pc.math.nextPowerOfTwo(Math.ceil(Math.sqrt(numBones * 4))) : 8;
 
             this.boneTexture = new pc.Texture(device, {
                 width: size,

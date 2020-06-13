@@ -21,7 +21,7 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading binary resource: {0} [{1}]", url.original, err));
+                    callback("Error loading binary resource: " + url.original + " [" + err + "]");
                 }
             });
         },

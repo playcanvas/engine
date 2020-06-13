@@ -199,11 +199,10 @@ Object.assign(pc, function () {
                     setter(values);
 
                     // create the function name of the entity properties setter
-                    var entityPropertySetterFunctionName = pc.string.format(
-                        'set{0}{1}',
-                        entityProperty.substring(0, 1).toUpperCase(),
-                        entityProperty.substring(1)
-                    );
+                    var entityPropertySetterFunctionName = "set" +
+                        entityProperty.substring(0, 1).toUpperCase() +
+                        entityProperty.substring(1);
+
                     // call the setter function for entities updated property using the newly set property value
                     propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
                 };
