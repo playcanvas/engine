@@ -703,7 +703,7 @@ Object.assign(pc, function () {
                 this.extUintElement = true;
                 this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than 
+                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
                 // EXT_disjoint_timer_query_webgl2
                 this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
             } else {
