@@ -1163,13 +1163,12 @@ Object.assign(pc, function () {
             var morphTime = pc.now();
             // #endif
 
-            var i, morph;
+            var i, morphInst;
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
-                morph = drawCalls[i].morphInstance;
-                if (morph && morph._dirty && drawCalls[i].visibleThisFrame) {
-                    morph.update();
-                    morph._dirty = false;
+                morphInst = drawCalls[i].morphInstance;
+                if (morphInst && morphInst._dirty && drawCalls[i].visibleThisFrame) {
+                    morphInst.update();
                 }
             }
             // #ifdef PROFILER

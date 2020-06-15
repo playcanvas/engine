@@ -22,7 +22,9 @@ Object.assign(pc, function () {
 
         // weights
         this._weights = [];
-        this._dirty = true;
+        for (var v = 0; v < morph._targets.length; v++) {
+            this.setWeight(v, morph._targets[v].defaultWeight);
+        }
 
         // temporary array of targets with non-zero weight
         this._activeTargets = [];
@@ -300,6 +302,7 @@ Object.assign(pc, function () {
          */
         update: function () {
 
+            this._dirty = false;
             var targets = this.morph._targets;
 
             // collect active targets, reuse objects in _activeTargets array to avoid allocations
