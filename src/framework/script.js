@@ -1,10 +1,16 @@
+import { events } from '../core/events.js';
+
+import { ScriptHandler } from '../resources/script.js';
+
+import { Application } from './application.js';
+
 /**
  * @name pc.script
  * @namespace
  * @description The pc.script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
  */
-pc.script = (function () {
+var script = (function () {
     var _legacy = false;
 
     // flag to avoid creating multiple loading screens e.g. when
@@ -45,13 +51,13 @@ pc.script = (function () {
                 return;
 
             // get the ScriptType from the callback
-            var ScriptType = callback(pc.script.app);
+            var ScriptType = callback(script.app);
 
             // store the script name
             ScriptType._pcScriptName = name;
 
             // Push this onto loading stack
-            pc.ScriptHandler._push(ScriptType);
+            ScriptHandler._push(ScriptType);
 
             this.fire("created", name, callback);
         },
@@ -132,7 +138,7 @@ pc.script = (function () {
 
             _createdLoadingScreen = true;
 
-            var app = pc.Application.getApplication();
+            var app = Application.getApplication();
             callback(app);
         }
     };
@@ -146,7 +152,9 @@ pc.script = (function () {
         }
     });
 
-    pc.events.attach(script);
+    events.attach(script);
 
     return script;
 }());
+
+export { script };

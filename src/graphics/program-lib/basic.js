@@ -1,4 +1,7 @@
-pc.programlib.basic = {
+import { programlib } from './program-lib.js';
+import { shaderChunks } from '../chunks.js';
+
+programlib.basic = {
     generateKey: function (options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
@@ -25,7 +28,7 @@ pc.programlib.basic = {
             attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
-        var chunks = pc.shaderChunks;
+        var chunks = shaderChunks;
 
         // GENERATE VERTEX SHADER
         var code = '';
@@ -34,7 +37,7 @@ pc.programlib.basic = {
         code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += pc.programlib.skinCode(device);
+            code += programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
         } else {
             code += chunks.transformVS;
@@ -62,7 +65,7 @@ pc.programlib.basic = {
         }
 
         // VERTEX SHADER BODY
-        code += pc.programlib.begin();
+        code += programlib.begin();
 
         code += "   gl_Position = getPosition();\n";
 
@@ -77,12 +80,12 @@ pc.programlib.basic = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += pc.programlib.end();
+        code += programlib.end();
 
         var vshader = code;
 
         // GENERATE FRAGMENT SHADER
-        code = pc.programlib.precisionCode(device);
+        code = programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -95,7 +98,7 @@ pc.programlib.basic = {
             code += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            code += pc.programlib.fogCode(options.fog);
+            code += programlib.fogCode(options.fog);
         }
         if (options.alphatest) {
             code += chunks.alphaTestPS;
@@ -108,7 +111,7 @@ pc.programlib.basic = {
         }
 
         // FRAGMENT SHADER BODY
-        code += pc.programlib.begin();
+        code += programlib.begin();
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
@@ -136,7 +139,7 @@ pc.programlib.basic = {
             }
         }
 
-        code += pc.programlib.end();
+        code += programlib.end();
 
         var fshader = code;
 

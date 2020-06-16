@@ -1,39 +1,35 @@
-Object.assign(pc, function () {
-    'use strict';
+import { http } from '../net/http.js';
 
-    var ShaderHandler = function () {
-        this.retryRequests = false;
-    };
+function ShaderHandler() {
+    this.retryRequests = false;
+}
 
-    Object.assign(ShaderHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
-
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback("Error loading shader resource: " + url.original + " [" + err + "]");
-                }
-            });
-        },
-
-        open: function (url, data) {
-            return data;
-        },
-
-        patch: function (asset, assets) {
+Object.assign(ShaderHandler.prototype, {
+    load: function (url, callback) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
+            };
         }
-    });
 
-    return {
-        ShaderHandler: ShaderHandler
-    };
-}());
+        http.get(url.load, {
+            retry: this.retryRequests
+        }, function (err, response) {
+            if (!err) {
+                callback(null, response);
+            } else {
+                callback("Error loading shader resource: " + url.original + " [" + err + "]");
+            }
+        });
+    },
+
+    open: function (url, data) {
+        return data;
+    },
+
+    patch: function (asset, assets) {
+    }
+});
+
+export { ShaderHandler };

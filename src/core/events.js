@@ -1,4 +1,6 @@
-pc.events = {
+import { EventHandler } from './event-handler.js';
+
+var events = {
     /**
      * @private
      * @function
@@ -12,7 +14,7 @@ pc.events = {
      * pc.events.attach(obj);
      */
     attach: function (target) {
-        var ev = pc.events;
+        var ev = events;
         target._addCallback = ev._addCallback;
         target.on = ev.on;
         target.off = ev.off;
@@ -24,10 +26,12 @@ pc.events = {
         return target;
     },
 
-    _addCallback: pc.EventHandler.prototype._addCallback,
-    on: pc.EventHandler.prototype.on,
-    off: pc.EventHandler.prototype.off,
-    fire: pc.EventHandler.prototype.fire,
-    once: pc.EventHandler.prototype.once,
-    hasEvent: pc.EventHandler.prototype.hasEvent
+    _addCallback: EventHandler.prototype._addCallback,
+    on: EventHandler.prototype.on,
+    off: EventHandler.prototype.off,
+    fire: EventHandler.prototype.fire,
+    once: EventHandler.prototype.once,
+    hasEvent: EventHandler.prototype.hasEvent
 };
+
+export { events };

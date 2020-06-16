@@ -3,7 +3,7 @@
  * @name pc.string
  * @description Extended String API.
  */
-pc.string = function () {
+var string = function () {
     var ASCII_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
     var ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     var ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
@@ -240,3 +240,5 @@ pc.string = function () {
         }
     };
 }();
+
+export { string };

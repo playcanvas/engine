@@ -1,27 +1,23 @@
-Object.assign(pc, function () {
-    'use strict';
+import { Version } from './version.js';
 
-    var idCounter = 0;
+var idCounter = 0;
 
-    var VersionedObject = function () {
-        // Increment the global object ID counter
-        idCounter++;
+function VersionedObject() {
+    // Increment the global object ID counter
+    idCounter++;
 
-        // Create a version for this object
-        this.version = new pc.Version();
+    // Create a version for this object
+    this.version = new Version();
 
-        // Set the unique object ID
-        this.version.globalId = idCounter;
-    };
+    // Set the unique object ID
+    this.version.globalId = idCounter;
+}
 
-    Object.assign(VersionedObject.prototype, {
-        increment: function () {
-            // Increment the revision number
-            this.version.revision++;
-        }
-    });
+Object.assign(VersionedObject.prototype, {
+    increment: function () {
+        // Increment the revision number
+        this.version.revision++;
+    }
+});
 
-    return {
-        VersionedObject: VersionedObject
-    };
-}());
+export { VersionedObject };

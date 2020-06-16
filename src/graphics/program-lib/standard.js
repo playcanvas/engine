@@ -1,3 +1,8 @@
+import { hashCode } from '../../core/hash.js';
+
+import { programlib } from './program-lib.js';
+import { shaderChunks } from '../chunks.js';
+
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
@@ -6,86 +11,86 @@ var _oldChunkWarn = function (oldName, newName) {
 
 var _oldChunkFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkColor = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTex = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTexColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+            "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTexFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+            "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkVert = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkVertColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+            "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkVertFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
-            "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+            "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformSkin = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef SKIN\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformDynbatch = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformInstanced = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformPixelSnap = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformScreenSpace = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
-            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 var _oldChunkTransformUv1 = function (s, o, p) {
     _oldChunkWarn(p, o);
-    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
 
-pc.programlib.standard = {
+programlib.standard = {
 
     _oldChunkToNew: {
         aoTexPS: { n: "aoPS", f: _oldChunkTex },
@@ -187,7 +192,7 @@ pc.programlib.standard = {
             }
         }
 
-        return pc.hashCode(key);
+        return hashCode(key);
     },
 
     _correctChannel: function (p, chan) {
@@ -448,7 +453,7 @@ pc.programlib.standard = {
 
         var varyings = ""; // additional varyings for map transforms
 
-        var chunks = pc.shaderChunks;
+        var chunks = shaderChunks;
 
         var lightType;
         var shadowCoordArgs;
@@ -700,7 +705,7 @@ pc.programlib.standard = {
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
-            code += pc.programlib.skinCode(device, chunks);
+            code += programlib.skinCode(device, chunks);
             code += "#define SKIN\n";
         } else if (options.useInstancing) {
             code += "#define INSTANCING\n";
@@ -741,7 +746,7 @@ pc.programlib.standard = {
 
         var startCode = "";
         if (device.webgl2) {
-            startCode = pc.programlib.versionCode(device);
+            startCode = programlib.versionCode(device);
             if (chunks.extensionVS) {
                 startCode += chunks.extensionVS + "\n";
             }
@@ -767,7 +772,7 @@ pc.programlib.standard = {
         code = '';
 
         if (device.webgl2) {
-            code += pc.programlib.versionCode(device);
+            code += programlib.versionCode(device);
         }
 
         if (device.extStandardDerivatives && !device.webgl2) {
@@ -781,7 +786,7 @@ pc.programlib.standard = {
             code += chunks.gles3PS;
         }
 
-        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : pc.programlib.precisionCode(device);
+        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : programlib.precisionCode(device);
 
         if (options.pass === pc.SHADER_PICK) {
             // ##### PICK PASS #####
@@ -792,13 +797,13 @@ pc.programlib.standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += pc.programlib.begin();
+            code += programlib.begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = uColor;\n";
-            code += pc.programlib.end();
+            code += programlib.end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -815,13 +820,13 @@ pc.programlib.standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += pc.programlib.begin();
+            code += programlib.begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = packFloat(vDepth);\n";
-            code += pc.programlib.end();
+            code += programlib.end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -872,7 +877,7 @@ pc.programlib.standard = {
                 code += "}\n\n";
             }
 
-            code += pc.programlib.begin();
+            code += programlib.begin();
 
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
@@ -903,7 +908,7 @@ pc.programlib.standard = {
                 code += chunks.storeEVSMPS;
             }
 
-            code += pc.programlib.end();
+            code += programlib.end();
 
             return {
                 attributes: attributes,
@@ -1040,9 +1045,9 @@ pc.programlib.standard = {
             }
         }
 
-        code += pc.programlib.gammaCode(options.gamma, chunks);
-        code += pc.programlib.tonemapCode(options.toneMap, chunks);
-        code += pc.programlib.fogCode(options.fog, chunks);
+        code += programlib.gammaCode(options.gamma, chunks);
+        code += programlib.tonemapCode(options.toneMap, chunks);
+        code += programlib.fogCode(options.fog, chunks);
 
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
@@ -1517,7 +1522,7 @@ pc.programlib.standard = {
         }
 
         code += "\n";
-        code += pc.programlib.end();
+        code += programlib.end();
 
         if (hasPointLights) {
             code = chunks.lightDirPointPS + code;
