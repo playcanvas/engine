@@ -1,6 +1,8 @@
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
+import { hasAudioContext } from '../audio/capabilities.js';
+
 import { SoundManager } from './manager.js';
 
 /**
@@ -15,7 +17,7 @@ function Listener(manager) {
     this.velocity = new Vec3();
     this.orientation = new Mat4();
 
-    if (SoundManager.hasAudioContext()) {
+    if (hasAudioContext()) {
         this.listener = manager.context.listener;
     }
 }

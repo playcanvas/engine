@@ -2,6 +2,8 @@ import { path } from '../core/path.js';
 
 import { http, Http } from '../net/http.js';
 
+import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+
 import { Sound } from '../sound/sound.js';
 import { SoundManager } from '../sound/manager.js';
 
@@ -99,7 +101,7 @@ Object.assign(AudioHandler.prototype, {
     }
 });
 
-if (SoundManager.hasAudioContext()) {
+if (hasAudioContext()) {
     /**
      * @private
      * @function
@@ -137,7 +139,7 @@ if (SoundManager.hasAudioContext()) {
         });
     };
 
-} else if (SoundManager.hasAudio()) {
+} else if (hasAudio()) {
     /**
      * @private
      * @function

@@ -3,32 +3,11 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
+import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
 
 import { Listener } from './listener.js';
-
-/**
- * @private
- * @function
- * @name pc.SoundManager.hasAudio
- * @description Reports whether this device supports the HTML5 Audio tag API.
- * @returns {boolean} True if HTML5 Audio tag API is supported and false otherwise.
- */
-function hasAudio() {
-    return (typeof Audio !== 'undefined');
-}
-
-/**
- * @private
- * @function
- * @name pc.SoundManager.hasAudioContext
- * @description Reports whether this device supports the Web Audio API.
- * @returns {boolean} True if Web Audio is supported and false otherwise.
- */
-function hasAudioContext() {
-    return !!(typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined');
-}
 
 /**
  * @class
@@ -97,9 +76,6 @@ function SoundManager(options) {
 }
 SoundManager.prototype = Object.create(EventHandler.prototype);
 SoundManager.prototype.constructor = SoundManager;
-
-SoundManager.hasAudio = hasAudio;
-SoundManager.hasAudioContext = hasAudioContext;
 
 Object.assign(SoundManager.prototype, {
     suspend: function  () {

@@ -1,9 +1,8 @@
 import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
-import { SoundManager } from '../sound/manager.js';
-
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from './constants.js';
+import { hasAudio, hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
 
 // default maxDistance, same as Web Audio API
@@ -11,7 +10,7 @@ var MAX_DISTANCE = 10000;
 
 var Channel3d;
 
-if (SoundManager.hasAudioContext()) {
+if (hasAudioContext()) {
     Channel3d = function (manager, sound, options) {
         Channel.call(this, manager, sound, options);
 
@@ -98,7 +97,7 @@ if (SoundManager.hasAudioContext()) {
             }
         }
     });
-} else if (SoundManager.hasAudio()) {
+} else if (hasAudio()) {
     // temp vector storage
     var offset = new Vec3();
 

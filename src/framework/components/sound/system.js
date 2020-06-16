@@ -1,3 +1,4 @@
+import { hasAudioContext } from '../../../audio/capabilities.js';
 import { SoundManager } from '../../../sound/manager.js';
 
 import { Component } from '../component.js';
@@ -147,7 +148,7 @@ Object.defineProperty(SoundComponentSystem.prototype, 'volume', {
 
 Object.defineProperty(SoundComponentSystem.prototype, 'context', {
     get: function () {
-        if (!SoundManager.hasAudioContext()) {
+        if (!hasAudioContext()) {
             console.warn('WARNING: Audio context is not supported on this browser');
             return null;
         }

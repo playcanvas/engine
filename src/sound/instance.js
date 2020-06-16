@@ -2,6 +2,8 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
+import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+
 import { SoundManager } from './manager.js';
 
 var SoundInstance;
@@ -16,7 +18,7 @@ var capTime = function (time, duration) {
     return (time % duration) || 0;
 };
 
-if (SoundManager.hasAudioContext()) {
+if (hasAudioContext()) {
     /**
      * @class
      * @name pc.SoundInstance
@@ -580,7 +582,7 @@ if (SoundManager.hasAudioContext()) {
         }
     });
 
-} else if (SoundManager.hasAudio()) {
+} else if (hasAudio()) {
     SoundInstance = function (manager, resource, options) {
         EventHandler.call(this);
 

@@ -1,10 +1,10 @@
 import { math } from '../math/math.js';
 
-import { SoundManager } from '../sound/manager.js';
+import { hasAudio, hasAudioContext } from './capabilities.js';
 
 var Channel;
 
-if (SoundManager.hasAudioContext()) {
+if (hasAudioContext()) {
     /**
      * @private
      * @class
@@ -197,7 +197,7 @@ if (SoundManager.hasAudioContext()) {
             }
         }
     });
-} else if (SoundManager.hasAudio()) {
+} else if (hasAudio()) {
     Channel = function (manager, sound, options) {
         this.volume = options.volume || 1;
         this.loop = options.loop || false;

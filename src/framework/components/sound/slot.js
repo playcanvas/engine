@@ -1,6 +1,7 @@
 import { EventHandler } from '../../../core/event-handler.js';
 
 import { math } from '../../../math/math.js';
+import { Vec3 } from '../../../math/vec3.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -15,7 +16,7 @@ var instanceOptions = {
     loop: false,
     startTime: 0,
     duration: 0,
-    position: new pc.Vec3(),
+    position: new Vec3(),
     maxDistance: 0,
     refDistance: 0,
     rollOffFactor: 0,

@@ -2,6 +2,7 @@ import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from '../audio/constants.js';
+import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
 
 import { SoundInstance } from './instance.js';
 import { SoundManager } from './manager.js';
@@ -11,7 +12,7 @@ var MAX_DISTANCE = 10000;
 
 var SoundInstance3d;
 
-if (SoundManager.hasAudioContext()) {
+if (hasAudioContext()) {
     /**
      * @class
      * @name pc.SoundInstance3d
@@ -138,7 +139,7 @@ if (SoundManager.hasAudioContext()) {
         }
     });
 
-} else if (SoundManager.hasAudio()) {
+} else if (hasAudio()) {
     // temp vector storage
     var offset = new Vec3();
 
