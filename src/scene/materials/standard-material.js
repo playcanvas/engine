@@ -6,7 +6,17 @@ import { Vec4 } from '../../math/vec4.js';
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
 import { programlib } from '../../graphics/program-lib/program-lib.js';
+import { _matTex2D } from '../../graphics/program-lib/standard.js';
 
+import {
+    CUBEPROJ_BOX, CUBEPROJ_NONE,
+    DETAILMODE_MUL,
+    FRESNEL_NONE,
+    SHADER_FORWARDHDR, SHADER_PICK,
+    SPECOCC_AO,
+    SPECULAR_BLINN, SPECULAR_PHONG,
+    SPRITE_RENDERMODE_SLICED
+} from '../constants.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
@@ -316,10 +326,9 @@ var _defineTex2D = function (obj, name, uv, channels, defChannel, vertexColor, d
        if (vertexColor) obj[privMapVertexColorChannel] = channel;
    }
    if (vertexColor) obj[privMapVertexColor] = false;
-   if (detailMode) obj[privMapDetailMode] = pc.DETAILMODE_MUL;
+   if (detailMode) obj[privMapDetailMode] = DETAILMODE_MUL;
 
-   if (!pc._matTex2D) pc._matTex2D = [];
-   pc._matTex2D[name] = channels;
+   _matTex2D[name] = channels;
 
    Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
        get: function () {
@@ -779,11 +788,11 @@ Object.assign(StandardMaterial.prototype, {
            this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
        }
 
-       if (this.cubeMapProjection === pc.CUBEPROJ_BOX) {
+       if (this.cubeMapProjection === CUBEPROJ_BOX) {
            this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
        }
 
-       for (var p in pc._matTex2D) {
+       for (var p in _matTex2D) {
            this._updateMap(p);
        }
 
@@ -962,7 +971,7 @@ Object.assign(StandardMaterial.prototype, {
 
        var generator = programlib.standard;
        // Minimal options for Depth and Shadow passes
-       var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
+       var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
        var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
 
        if (minimalOptions)
@@ -1003,7 +1012,7 @@ var _defineMaterialProps = function (obj) {
        // which is actually a 0-1 glosiness value.
        // Can be converted to specular power using exp2(shininess * 0.01 * 11)
        var value;
-       if (mat.shadingModel === pc.SPECULAR_PHONG) {
+       if (mat.shadingModel === SPECULAR_PHONG) {
            value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
        } else {
            value = shininess * 0.01; // correct
@@ -1060,10 +1069,10 @@ var _defineMaterialProps = function (obj) {
    _defineFlag(obj, "occludeDirect", false);
    _defineFlag(obj, "normalizeNormalMap", true);
    _defineFlag(obj, "conserveEnergy", true);
-   _defineFlag(obj, "occludeSpecular", pc.SPECOCC_AO);
-   _defineFlag(obj, "shadingModel", pc.SPECULAR_BLINN);
-   _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
-   _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
+   _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
+   _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
+   _defineFlag(obj, "fresnelModel", FRESNEL_NONE);
+   _defineFlag(obj, "cubeMapProjection", CUBEPROJ_NONE);
    _defineFlag(obj, "customFragmentShader", null);
    _defineFlag(obj, "forceFragmentPrecision", null);
    _defineFlag(obj, "useFog", true);
@@ -1073,7 +1082,7 @@ var _defineMaterialProps = function (obj) {
    _defineFlag(obj, "forceUv1", false);
    _defineFlag(obj, "pixelSnap", false);
    _defineFlag(obj, "twoSidedLighting", false);
-   _defineFlag(obj, "nineSlicedMode", pc.SPRITE_RENDERMODE_SLICED);
+   _defineFlag(obj, "nineSlicedMode", SPRITE_RENDERMODE_SLICED);
 
    _defineTex2D(obj, "diffuse", 0, 3, "", true);
    _defineTex2D(obj, "specular", 0, 3, "", true);

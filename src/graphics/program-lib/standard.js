@@ -89,6 +89,7 @@ var _oldChunkTransformUv1 = function (s, o, p) {
     return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 };
 
+var _matTex2D = [];
 
 programlib.standard = {
 
@@ -196,13 +197,13 @@ programlib.standard = {
     },
 
     _correctChannel: function (p, chan) {
-        if (pc._matTex2D[p] > 0) {
-            if (pc._matTex2D[p] < chan.length) {
-                return chan.substring(0, pc._matTex2D[p]);
-            } else if (pc._matTex2D[p] > chan.length) {
+        if (_matTex2D[p] > 0) {
+            if (_matTex2D[p] < chan.length) {
+                return chan.substring(0, _matTex2D[p]);
+            } else if (_matTex2D[p] > chan.length) {
                 var str = chan;
                 var chr = str.charAt(str.length - 1);
-                var addLen = pc._matTex2D[p] - str.length;
+                var addLen = _matTex2D[p] - str.length;
                 for (var i = 0; i < addLen; i++) str += chr;
                 return str;
             }
@@ -592,7 +593,7 @@ programlib.standard = {
         var maxUvSets = 2;
         var cname, mname, tname, uname;
 
-        for (p in pc._matTex2D) {
+        for (p in _matTex2D) {
             mname = p + "Map";
             if (options[p + "VertexColor"]) {
                 cname = p + "VertexColorChannel";
@@ -625,7 +626,7 @@ programlib.standard = {
 
         var codes = [code, varyings, codeBody, []];
 
-        for (p in pc._matTex2D) {
+        for (p in _matTex2D) {
             mname = p + "Map";
             if (options[mname]) {
                 tname = mname + "Transform";
@@ -1584,3 +1585,5 @@ programlib.standard = {
         };
     }
 };
+
+export { _matTex2D };

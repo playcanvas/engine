@@ -2003,13 +2003,13 @@ var makeTick = function (_app) {
         // have current application pointer in pc
         app = application;
 
-        var now = application._processTimestamp(timestamp) || now();
-        var ms = now - (application._time || now);
+        var currentTime = application._processTimestamp(timestamp) || now();
+        var ms = currentTime - (application._time || currentTime);
         var dt = ms / 1000.0;
         dt = math.clamp(dt, 0, application.maxDeltaTime);
         dt *= application.timeScale;
 
-        application._time = now;
+        application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
         if (application.vr && application.vr.display) {
@@ -2024,7 +2024,7 @@ var makeTick = function (_app) {
             return;
 
         // #ifdef PROFILER
-        application._fillFrameStats(now, dt, ms);
+        application._fillFrameStats(currentTime, dt, ms);
         // #endif
 
         application.fire("frameupdate", ms);
