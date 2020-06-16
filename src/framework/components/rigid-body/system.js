@@ -792,4 +792,4 @@ Object.assign(RigidBodyComponentSystem.prototype, {
     }
 });
 
-export { RigidBodyComponentSystem };
+export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };

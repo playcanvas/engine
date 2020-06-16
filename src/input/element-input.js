@@ -1036,4 +1036,4 @@ Object.defineProperty(ElementInput.prototype, 'app', {
     }
 });
 
-export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementTouchEvent };
+export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent };

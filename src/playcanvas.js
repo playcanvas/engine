@@ -7,6 +7,7 @@ export { now } from './core/time.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
+export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
 export { Tags } from './core/tags.js';
 
@@ -33,8 +34,11 @@ export { Plane } from './shape/plane.js';
 export { Ray } from './shape/ray.js';
 
 // GRAPHICS
+export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
+export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
+export { PostEffect, drawFullscreenQuad };
 export { RenderTarget } from './graphics/render-target.js';
 export { Shader } from './graphics/shader.js';
 export { Texture } from './graphics/texture.js';
@@ -44,7 +48,7 @@ export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
 // SCENE
-export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
+export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch, BatchGroup, BatchManager } from './scene/batching.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
@@ -92,6 +96,7 @@ export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFor
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
+export { AudioHandler } from './resources/audio.js';
 export { BinaryHandler } from './resources/binary.js';
 export { BundleHandler } from './resources/bundle.js';
 export { ContainerHandler, ContainerResource } from './resources/container.js';
@@ -117,6 +122,7 @@ export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 
 // ASSETS
 export { Asset } from './asset/asset.js';
+export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
 
 // LOCALIZATION
@@ -130,7 +136,7 @@ export { ScriptType } from './script/script-type.js';
 
 // INPUT
 export { Controller } from './input/controller.js';
-import { ElementInput, ElementInputEvent, ElementMouseEvent, ElementTouchEvent } from './input/element-input.js';
+export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './input/element-input.js';
 export { GamePads } from './input/game-pads.js';
 export { Keyboard, KeyboardEvent } from './input/keyboard.js';
 export { Mouse, MouseEvent } from './input/mouse.js';
@@ -172,7 +178,7 @@ export { ParticleSystemComponent } from './framework/components/particle-system/
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
-export { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry, SceneRegistryItem } from './framework/scene-registry.js';
 export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';

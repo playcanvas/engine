@@ -141,8 +141,4 @@ function drawTexture(device, texture, target, shader, rect, scissorRect, useBlen
     drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
 }
 
-export {
-    destroyPostEffectQuad,
-    drawQuadWithShader,
-    drawTexture
-};
+export { destroyPostEffectQuad, drawQuadWithShader, drawTexture };
