@@ -1,3 +1,12 @@
+// POLYFILLS
+import './polyfill/array-find.js';
+import './polyfill/math-log2.js';
+import './polyfill/math-sign.js';
+import './polyfill/object-assign.js';
+import './polyfill/pointer-lock.js';
+import './polyfill/request-animation-frame.js';
+import './polyfill/string.js';
+
 // CORE
 export { version, revision } from './core/core.js';
 export { debug } from './core/debug.js';
@@ -38,7 +47,7 @@ export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.j
 export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
-export { PostEffect, drawFullscreenQuad };
+export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { RenderTarget } from './graphics/render-target.js';
 export { Shader } from './graphics/shader.js';
 export { Texture } from './graphics/texture.js';
