@@ -212,14 +212,14 @@
  * @param {Uint8Array} buffer - The loaded buffer.
  */
 
- /**
+/**
  * @callback pc.callbacks.ProcessTextureUriCallback
  * @description Callback used by the {@link pc.ContainerHandler} when loading textures with uri references.
  * @param {string} uri - The texture uri to load.
  * @param {pc.callbacks.TextureCallback} callback - The continuation with which to pass back results.
  */
 
- /**
+/**
  * @callback pc.callbacks.ProcessBufferUriCallback
  * @description Callback used by the {@link pc.ContainerHandler} when loading buffers with uri references.
  * @param {string} uri - The buffer uri to load.

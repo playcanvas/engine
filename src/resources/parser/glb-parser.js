@@ -1275,7 +1275,6 @@ Object.assign(pc, function () {
                         options.processTextureUri(imgData.uri, function (index, err, texture) {
                             if (err) {
                                 callback(err);
-                                return;
                             } else {
                                 // nasty: wrap the texture in an asset
                                 var textureAsset = new pc.Asset(texture.name, 'texture');
@@ -1385,7 +1384,6 @@ Object.assign(pc, function () {
                         options.processBufferUri(buffer.uri, function (index, err, buffer) {
                             if (err) {
                                 callback(err);
-                                return;
                             } else {
                                 onLoad(index, buffer);
                             }
