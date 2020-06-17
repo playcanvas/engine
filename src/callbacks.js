@@ -201,15 +201,15 @@
  */
 
 /**
- * @callback pc.callbacks.TextureCalback
+ * @callback pc.callbacks.TextureCallback
  * @param {string|null} err - An error string if the operation failed otherwise null.
  * @param {pc.Texture} texture - The loaded texture.
  */
 
 /**
- * @callback pc.callbacks.BufferCalback
+ * @callback pc.callbacks.BufferCallback
  * @param {string|null} err - An error string if the operation failed otherwise null.
- * @param {pc.Texture} texture - The loaded buffer.
+ * @param {Uint8Array} buffer - The loaded buffer.
  */
 
  /**
