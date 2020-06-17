@@ -10,8 +10,7 @@ import {
     BLEND_MIN, BLEND_MAX,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
-import { Material } from './material.js';
-import { StandardMaterial } from './standard-material.js';
+import { standardMaterialParameterTypes } from './standard-material-parameter-types.js';
 
 function StandardMaterialValidator() {
     this.removeInvalid = true;
@@ -66,7 +65,7 @@ StandardMaterialValidator.prototype.validate = function (data) {
      // validate input data against defined standard-material properties and types\
      // if removeInvalid flag is set to true then remove invalid properties from data
 
-    var TYPES = StandardMaterial.PARAMETER_TYPES;
+    var TYPES = standardMaterialParameterTypes;
     var type;
     var i;
 

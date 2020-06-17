@@ -102,10 +102,10 @@ function extend(target, ex) {
 
     for (prop in ex) {
         copy = ex[prop];
-        if (pc.type(copy) == "object") {
-            target[prop] = pc.extend({}, copy);
-        } else if (pc.type(copy) == "array") {
-            target[prop] = pc.extend([], copy);
+        if (type(copy) == "object") {
+            target[prop] = extend({}, copy);
+        } else if (type(copy) == "array") {
+            target[prop] = extend([], copy);
         } else {
             target[prop] = copy;
         }

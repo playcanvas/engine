@@ -11,6 +11,7 @@ import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
 
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 import { StandardMaterialValidator } from '../../../scene/materials/standard-material-validator.js';
+import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameter-types.js';
 
 /**
  * @private
@@ -55,7 +56,7 @@ JsonStandardMaterialParser.prototype.initialize = function (material, data) {
 
     // initialize material values from the input data
     for (var key in data) {
-        var type = StandardMaterial.PARAMETER_TYPES[key];
+        var type = standardMaterialParameterTypes[key];
         var value = data[key];
 
         if (type === 'vec2') {

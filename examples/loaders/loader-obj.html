@@ -42,7 +42,7 @@
 
         // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
         // set up obj parser
-        app.loader.getHandler("model").addParser(new pc.ObjModelParser(app.graphicsDevice), function (url, data) {
+        app.loader.getHandler("model").addParser(new ObjModelParser(app.graphicsDevice), function (url, data) {
         	return (pc.path.getExtension(url) === '.obj');
         });
 

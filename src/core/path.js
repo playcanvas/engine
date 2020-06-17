@@ -1,3 +1,5 @@
+import { isDefined } from './core.js';
+
 /**
  * @namespace pc.path
  * @description File path API.
@@ -34,16 +36,16 @@ var path = {
         for (index = 0; index < num - 1; ++index) {
             var one = arguments[index];
             var two = arguments[index + 1];
-            if (!pc.isDefined(one) || !pc.isDefined(two)) {
+            if (!isDefined(one) || !isDefined(two)) {
                 throw new Error("undefined argument to pc.path.join");
             }
-            if (two[0] === pc.path.delimiter) {
+            if (two[0] === path.delimiter) {
                 result = two;
                 continue;
             }
 
-            if (one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
-                result += (pc.path.delimiter + two);
+            if (one && two && one[one.length - 1] !== path.delimiter && two[0] !== path.delimiter) {
+                result += (path.delimiter + two);
             } else {
                 result += (two);
             }
@@ -59,11 +61,11 @@ var path = {
      * @param  {string} path - The path to normalize.
      * @returns {string} The normalized path.
      */
-    normalize: function (path) {
-        var lead = path.startsWith(pc.path.delimiter);
-        var trail = path.endsWith(pc.path.delimiter);
+    normalize: function (pathname) {
+        var lead = pathname.startsWith(path.delimiter);
+        var trail = pathname.endsWith(path.delimiter);
 
-        var parts = path.split('/');
+        var parts = pathname.split('/');
 
         var result = '';
 
@@ -77,18 +79,18 @@ var path = {
                 continue;
             }
 
-            if (i > 0) cleaned.push(pc.path.delimiter);
+            if (i > 0) cleaned.push(path.delimiter);
             cleaned.push(parts[i]);
         }
 
 
         result = cleaned.join('');
-        if (!lead && result[0] === pc.path.delimiter) {
+        if (!lead && result[0] === path.delimiter) {
             result = result.slice(1);
         }
 
-        if (trail && result[result.length - 1] !== pc.path.delimiter) {
-            result += pc.path.delimiter;
+        if (trail && result[result.length - 1] !== path.delimiter) {
+            result += path.delimiter;
         }
 
         return result;
@@ -102,10 +104,10 @@ var path = {
      * @param {string} path - The path to split.
      * @returns {string[]} The split path which is an array of two strings, the path and the filename.
      */
-    split: function (path) {
-        var parts = path.split(pc.path.delimiter);
+    split: function (pathname) {
+        var parts = pathname.split(path.delimiter);
         var tail = parts.slice(parts.length - 1)[0];
-        var head = parts.slice(0, parts.length - 1).join(pc.path.delimiter);
+        var head = parts.slice(0, parts.length - 1).join(path.delimiter);
         return [head, tail];
     },
 
@@ -120,8 +122,8 @@ var path = {
      * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
      * pc.path.getBasename("/path/to/dir"); // returns "dir"
      */
-    getBasename: function (path) {
-        return pc.path.split(path)[1];
+    getBasename: function (pathname) {
+        return path.split(pathname)[1];
     },
 
     /**
@@ -131,9 +133,9 @@ var path = {
      * @param {string} path - The path to get the directory from.
      * @returns {string} The directory part of the path.
      */
-    getDirectory: function (path) {
-        var parts = path.split(pc.path.delimiter);
-        return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
+    getDirectory: function (pathname) {
+        var parts = pathname.split(path.delimiter);
+        return parts.slice(0, parts.length - 1).join(path.delimiter);
     },
     /**
      * @function
@@ -146,9 +148,9 @@ var path = {
      * pc.path.getExtension("/path/to/file.jpg"); // returns ".jpg"
      * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
      */
-    getExtension: function (path) {
-        var ext = path.split('?')[0].split('.').pop();
-        if (ext !== path) {
+    getExtension: function (pathname) {
+        var ext = pathname.split('?')[0].split('.').pop();
+        if (ext !== pathname) {
             return "." + ext;
         }
         return "";
@@ -185,34 +187,34 @@ var path = {
      * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
     extractPath: function (s) {
-        var path = "";
+        var pathname = "";
         var parts = s.split("/");
         var i = 0;
 
         if (parts.length > 1) {
-            if (pc.path.isRelativePath(s)) {
+            if (path.isRelativePath(s)) {
                 if (parts[0] === ".") {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        path += (i === 0) ? parts[i] : "/" + parts[i];
+                        pathname += (i === 0) ? parts[i] : "/" + parts[i];
 
                     }
                 } else if (parts[0] === "..") {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        path += (i === 0) ? parts[i] : "/" + parts[i];
+                        pathname += (i === 0) ? parts[i] : "/" + parts[i];
                     }
                 } else {
-                    path = ".";
+                    pathname = ".";
                     for (i = 0; i < parts.length - 1; ++i) {
-                        path += "/" + parts[i];
+                        pathname += "/" + parts[i];
                     }
                 }
             } else {
                 for (i = 0; i < parts.length - 1; ++i) {
-                    path += (i === 0) ? parts[i] : "/" + parts[i];
+                    pathname += (i === 0) ? parts[i] : "/" + parts[i];
                 }
             }
         }
-        return path;
+        return pathname;
     }
 };
 

@@ -5,6 +5,7 @@ import { Texture } from '../graphics/texture.js';
 
 import { SPECULAR_PHONG } from '../scene/constants.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameter-types.js';
 
 import { AssetReference } from '../asset/asset-reference.js';
 
@@ -220,7 +221,7 @@ Object.assign(MaterialHandler.prototype, {
 
         var pathMapping = (data.mappingFormat === "path");
 
-        var TEXTURES = StandardMaterial.TEXTURE_PARAMETERS;
+        var TEXTURES = standardMaterialTextureParameters;
 
         var i, name, assetReference;
         // iterate through all texture parameters
@@ -273,7 +274,7 @@ Object.assign(MaterialHandler.prototype, {
             }
         }
 
-        var CUBEMAPS = StandardMaterial.CUBEMAP_PARAMETERS;
+        var CUBEMAPS = standardMaterialCubemapParameters;
 
         // iterate through all cubemap parameters
         for (i = 0; i < CUBEMAPS.length; i++) {

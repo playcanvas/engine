@@ -3,6 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { TagsCache } from '../core/tags.js';
 
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { standardMaterialTextureParameters } from '../scene/materials/standard-material-parameter-types.js';
 
 import { script } from '../framework/script.js';
 
@@ -590,7 +591,7 @@ Object.assign(AssetRegistry.prototype, {
             }
         };
 
-        var texParams = StandardMaterial.TEXTURE_PARAMETERS;
+        var texParams = standardMaterialTextureParameters;
         for (var i = 0; i < texParams.length; i++) {
             var path = data[texParams[i]];
             if (path && typeof(path) === 'string') {
