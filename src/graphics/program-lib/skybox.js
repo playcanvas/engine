@@ -1,8 +1,9 @@
 import { SEMANTIC_POSITION } from '../graphics.js';
-import { programlib } from './program-lib.js';
 import { shaderChunks } from '../chunks.js';
 
-programlib.skybox = {
+import { programlib } from './program-lib.js';
+
+var skybox = {
     generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.mip;
@@ -27,3 +28,5 @@ programlib.skybox = {
         };
     }
 };
+
+export { skybox };

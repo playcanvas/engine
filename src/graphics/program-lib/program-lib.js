@@ -5,6 +5,11 @@ import {
 
 import { shaderChunks } from '../chunks.js';
 
+import { basic } from './basic.js';
+import { particle } from './particle.js';
+import { skybox } from './skybox.js';
+import { standard } from './standard.js';
+
 var programlib = {
     gammaCode: function (value, chunks) {
         if (!chunks) chunks = shaderChunks;
@@ -76,5 +81,10 @@ var programlib = {
         return '}\n';
     }
 };
+
+programlib.basic = basic;
+programlib.particle = particle;
+programlib.skybox = skybox;
+programlib.standard = standard;
 
 export { programlib };

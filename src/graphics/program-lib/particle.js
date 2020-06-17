@@ -1,8 +1,9 @@
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../graphics.js';
-import { programlib } from './program-lib.js';
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../scene/constants.js';
 import { shaderChunks } from '../chunks.js';
 
-programlib.particle = {
+import { programlib } from './program-lib.js';
+
+var particle = {
     generateKey: function (options) {
         var key = "particle";
         for (var prop in options) {
@@ -125,3 +126,5 @@ programlib.particle = {
         };
     }
 };
+
+export { particle };

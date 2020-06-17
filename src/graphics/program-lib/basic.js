@@ -9,7 +9,7 @@ import {
 
 import { programlib } from './program-lib.js';
 
-programlib.basic = {
+var basic = {
     generateKey: function (options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
@@ -158,3 +158,5 @@ programlib.basic = {
         };
     }
 };
+
+export { basic };

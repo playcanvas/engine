@@ -110,7 +110,7 @@ var _oldChunkTransformUv1 = function (s, o, p) {
 
 var _matTex2D = [];
 
-programlib.standard = {
+var standard = {
 
     _oldChunkToNew: {
         aoTexPS: { n: "aoPS", f: _oldChunkTex },
@@ -1599,4 +1599,4 @@ programlib.standard = {
     }
 };
 
-export { _matTex2D };
+export { _matTex2D, standard };
