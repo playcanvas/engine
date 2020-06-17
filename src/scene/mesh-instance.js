@@ -10,7 +10,6 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
     SORTKEY_FORWARD
 } from './constants.js';
-import { Material } from './materials/material.js';
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
@@ -397,12 +396,60 @@ Object.assign(MeshInstance.prototype, {
         }
     },
 
-    setParameter: Material.prototype.setParameter,
-    setParameters: Material.prototype.setParameters,
-    deleteParameter: Material.prototype.deleteParameter,
-    getParameter: Material.prototype.getParameter,
-    getParameters: Material.prototype.getParameters,
-    clearParameters: Material.prototype.clearParameters
+    // Parameter management
+    clearParameters: function () {
+        this.parameters = {};
+    },
+
+    getParameters: function () {
+        return this.parameters;
+    },
+
+    getParameter: function (name) {
+        return this.parameters[name];
+    },
+
+    setParameter: function (name, data, passFlags) {
+        if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
+
+        if (data === undefined && typeof name === 'object') {
+            var uniformObject = name;
+            if (uniformObject.length) {
+                for (var i = 0; i < uniformObject.length; i++) {
+                    this.setParameter(uniformObject[i]);
+                }
+                return;
+            }
+            name = uniformObject.name;
+            data = uniformObject.value;
+        }
+
+        var param = this.parameters[name];
+        if (param) {
+            param.data = data;
+            param.passFlags = passFlags;
+        } else {
+            this.parameters[name] = {
+                scopeId: null,
+                data: data,
+                passFlags: passFlags
+            };
+        }
+    },
+
+    deleteParameter: function (name) {
+        if (this.parameters[name]) {
+            delete this.parameters[name];
+        }
+    },
+
+    setParameters: function () {
+        // Push each shader parameter into scope
+        for (var paramName in this.parameters) {
+            var parameter = this.parameters[paramName];
+            parameter.scopeId.setValue(parameter.data);
+        }
+    }
 });
 
 function Command(layer, blendType, command) {
