@@ -1,5 +1,13 @@
-import { programlib } from './program-lib.js';
+import {
+    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0,
+} from '../graphics.js';
 import { shaderChunks } from '../chunks.js';
+
+import {
+    SHADER_DEPTH, SHADER_PICK
+} from '../../scene/constants.js';
+
+import { programlib } from './program-lib.js';
 
 programlib.basic = {
     generateKey: function (options) {
@@ -15,17 +23,17 @@ programlib.basic = {
     createShaderDefinition: function (device, options) {
         // GENERATE ATTRIBUTES
         var attributes = {
-            vertex_position: pc.SEMANTIC_POSITION
+            vertex_position: SEMANTIC_POSITION
         };
         if (options.skin) {
-            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
+            attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
         }
         if (options.vertexColors) {
-            attributes.vertex_color = pc.SEMANTIC_COLOR;
+            attributes.vertex_color = SEMANTIC_COLOR;
         }
         if (options.diffuseMap) {
-            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
+            attributes.vertex_texCoord0 = SEMANTIC_TEXCOORD0;
         }
 
         var chunks = shaderChunks;
@@ -52,7 +60,7 @@ programlib.basic = {
             code += 'varying vec2 vUv0;\n';
         }
 
-        if (options.pass === pc.SHADER_DEPTH) {
+        if (options.pass === SHADER_DEPTH) {
             code += 'varying float vDepth;\n';
             code += '#ifndef VIEWMATRIX\n';
             code += '#define VIEWMATRIX\n';
@@ -69,7 +77,7 @@ programlib.basic = {
 
         code += "   gl_Position = getPosition();\n";
 
-        if (options.pass === pc.SHADER_DEPTH) {
+        if (options.pass === SHADER_DEPTH) {
             code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
         }
 
@@ -104,7 +112,7 @@ programlib.basic = {
             code += chunks.alphaTestPS;
         }
 
-        if (options.pass === pc.SHADER_DEPTH) {
+        if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += 'varying float vDepth;\n';
             code += chunks.packDepthPS;
@@ -127,9 +135,9 @@ programlib.basic = {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        if (options.pass === pc.SHADER_PICK) {
+        if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
-        } else if (options.pass === pc.SHADER_DEPTH) {
+        } else if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += "    gl_FragColor = packFloat(vDepth);\n";
         } else {

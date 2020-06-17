@@ -69,7 +69,7 @@ function Camera() {
         color: [0.5, 0.5, 0.5, 1.0],
         depth: 1.0,
         stencil: 0,
-        flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_STENCIL
+        flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH | CLEARFLAG_STENCIL
     };
 
     this._node = null;

@@ -414,7 +414,7 @@ function createTorus(device, opts) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.createMesh(device, positions, options);
+    return createMesh(device, positions, options);
 }
 
 function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {

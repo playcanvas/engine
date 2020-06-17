@@ -1,11 +1,16 @@
+import {
+    GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
+    TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
+} from '../../scene/constants.js';
+
 import { shaderChunks } from '../chunks.js';
 
 var programlib = {
     gammaCode: function (value, chunks) {
         if (!chunks) chunks = shaderChunks;
-        if (value === pc.GAMMA_SRGB || value === pc.GAMMA_SRGBFAST) {
+        if (value === GAMMA_SRGB || value === GAMMA_SRGBFAST) {
             return chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS;
-        } else if (value === pc.GAMMA_SRGBHDR) {
+        } else if (value === GAMMA_SRGBHDR) {
             return "#define HDR\n" + (chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS);
         }
         return chunks.gamma1_0PS ? chunks.gamma1_0PS : shaderChunks.gamma1_0PS;
@@ -13,15 +18,15 @@ var programlib = {
 
     tonemapCode: function (value, chunks) {
         if (!chunks) chunks = shaderChunks;
-        if (value === pc.TONEMAP_FILMIC) {
+        if (value === TONEMAP_FILMIC) {
             return chunks.tonemappingFilmicPS ? chunks.tonemappingFilmicPS : shaderChunks.tonemappingFilmicPS;
-        } else if (value === pc.TONEMAP_LINEAR) {
+        } else if (value === TONEMAP_LINEAR) {
             return chunks.tonemappingLinearPS ? chunks.tonemappingLinearPS : shaderChunks.tonemappingLinearPS;
-        } else if (value === pc.TONEMAP_HEJL) {
+        } else if (value === TONEMAP_HEJL) {
             return chunks.tonemappingHejlPS ? chunks.tonemappingHejlPS : shaderChunks.tonemappingHejlPS;
-        } else if (value === pc.TONEMAP_ACES) {
+        } else if (value === TONEMAP_ACES) {
             return chunks.tonemappingAcesPS ? chunks.tonemappingAcesPS : shaderChunks.tonemappingAcesPS;
-        } else if (value === pc.TONEMAP_ACES2) {
+        } else if (value === TONEMAP_ACES2) {
             return chunks.tonemappingAces2PS ? chunks.tonemappingAces2PS : shaderChunks.tonemappingAces2PS;
         }
         return chunks.tonemapingNonePS ? chunks.tonemapingNonePS : shaderChunks.tonemappingNonePS;

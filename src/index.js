@@ -43,6 +43,7 @@ export { Plane } from './shape/plane.js';
 export { Ray } from './shape/ray.js';
 
 // GRAPHICS
+export * from './graphics/graphics.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
 export { shaderChunks } from './graphics/chunks.js';
@@ -58,6 +59,7 @@ export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
 // SCENE
+export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch, BatchGroup, BatchManager } from './scene/batching.js';
