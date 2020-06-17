@@ -28,7 +28,6 @@ Object.assign(pc, function () {
     var INTERPOLATION_CUBIC = 2;
 
     /**
-     * @private
      * @class
      * @name pc.AnimData
      * @classdesc Wraps a set of data used in animation.
@@ -197,7 +196,6 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @private
      * @class
      * @name pc.AnimCurve
      * @classdesc Animation curve links an input data set to an output data set
@@ -243,7 +241,6 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @private
      * @class
      * @name pc.AnimTrack
      * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
