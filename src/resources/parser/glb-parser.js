@@ -1281,6 +1281,7 @@ Object.assign(pc, function () {
                                 var textureAsset = new pc.Asset(texture.name, 'texture');
                                 textureAsset.loaded = true;
                                 textureAsset.resource = texture;
+                                registry.add(textureAsset);
                                 onLoad(index, textureAsset);
                             }
                         }.bind(null, i));
