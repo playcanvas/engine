@@ -12,7 +12,7 @@ const notice = [
 ].join('\n');
 
 export default [{
-    input: 'src/playcanvas.js',
+    input: 'src/index.js',
     output: {
         file: 'build/playcanvas.js',
         format: 'umd',
@@ -23,6 +23,21 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: pkg.version
         }),
+        license({
+            banner: {
+                content: notice,
+                commentStyle: 'none'
+            }
+        })
+    ]
+}, {
+    input: 'extras/index.js',
+    output: {
+        file: 'build/playcanvas-extras.js',
+        format: 'umd',
+        name: 'pc'
+    },
+    plugins: [
         license({
             banner: {
                 content: notice,
