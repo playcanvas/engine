@@ -152,6 +152,7 @@ export { ScriptRegistry } from './script/script-registry.js';
 export { ScriptType } from './script/script-type.js';
 
 // INPUT
+export * from './input/constants.js';
 export { Controller } from './input/controller.js';
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './input/element-input.js';
 export { GamePads } from './input/game-pads.js';

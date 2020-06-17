@@ -5,7 +5,7 @@ import {
     EVENT_MOUSEMOVE,
     PAD_1,
     PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y,
-} from './input.js';
+} from './constants.js';
 
 import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';

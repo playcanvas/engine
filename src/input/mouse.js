@@ -4,7 +4,7 @@ import { EventHandler } from '../core/event-handler.js';
 import {
     EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL,
     MOUSEBUTTON_NONE
-} from './input.js';
+} from './constants.js';
 
 /**
  * @class
