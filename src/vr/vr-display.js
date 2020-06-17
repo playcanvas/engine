@@ -4,7 +4,7 @@ import { math } from '../math/math.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 
-import { RESOLUTION_AUTO } from '../framework/application.js';
+import { RESOLUTION_AUTO } from '../framework/constants.js';
 
 /**
  * @private

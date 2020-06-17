@@ -155,6 +155,7 @@ export { Mouse, MouseEvent } from './input/mouse.js';
 export { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
 
 // FRAMEWORK
+export * from './framework/constants.js';
 export { script } from './framework/script.js';
 export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
