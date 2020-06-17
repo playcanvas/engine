@@ -1,8 +1,6 @@
-import glslify from 'rollup-plugin-glslify';
 import replace from '@rollup/plugin-replace';
+import { createFilter } from '@rollup/pluginutils';
 import { version } from './package.json';
-
-const { createFilter } = require('rollup-pluginutils');
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim()

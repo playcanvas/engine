@@ -89,6 +89,7 @@ export { CanvasFont } from './framework/components/text/canvas-font.js';
 export { Font } from './framework/components/text/font.js';
 
 // ANIMATION
+export * from './anim/constants.js';
 export { Animation, Key, Node } from './anim/animation.js';
 export { Skeleton } from './anim/skeleton.js';
 export { AnimBinder, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
@@ -102,6 +103,9 @@ export { SoundInstance3d } from './sound/instance3d.js';
 // TEMPLATES
 export { Template } from './templates/template.js';
 export { TemplateUtils } from './templates/template-utils.js';
+
+// AUDIO
+export * from './audio/constants.js';
 
 // RESOURCES
 export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
@@ -161,12 +165,14 @@ export { script } from './framework/script.js';
 export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
+export * from './framework/components/anim/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
 export { AudioSourceComponent } from './framework/components/audio-source/component.js';
 export { AudioSourceComponentSystem } from './framework/components/audio-source/system.js';
+export * from './framework/components/button/constants.js';
 export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';
 export { CameraComponent } from './framework/components/camera/component.js';
@@ -176,12 +182,14 @@ export { CollisionComponentSystem } from './framework/components/collision/syste
 export { Component } from './framework/components/component.js';
 export { ComponentSystem } from './framework/components/system.js';
 export { ComponentSystemRegistry } from './framework/components/registry.js';
+export * from './framework/components/element/constants.js';
 export { ElementComponent } from './framework/components/element/component.js';
 export { ElementComponentSystem } from './framework/components/element/system.js';
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
 export { LayoutChildComponentSystem } from './framework/components/layout-child/system.js';
+export * from './framework/components/layout-group/constants.js';
 export { LayoutGroupComponent } from './framework/components/layout-group/component.js';
 export { LayoutGroupComponentSystem } from './framework/components/layout-group/system.js';
 export { LightComponent } from './framework/components/light/component.js';
@@ -191,6 +199,7 @@ export { ModelComponentSystem } from './framework/components/model/system.js';
 export { ParticleSystemComponent } from './framework/components/particle-system/component.js';
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
+export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry, SceneRegistryItem } from './framework/scene-registry.js';
@@ -202,11 +211,13 @@ export { ScriptLegacyComponent } from './framework/components/script-legacy/comp
 export { ScriptLegacyComponentSystem } from './framework/components/script-legacy/system.js';
 export { ScrollbarComponent } from './framework/components/scrollbar/component.js';
 export { ScrollbarComponentSystem } from './framework/components/scrollbar/system.js';
+export * from './framework/components/scroll-view/constants.js';
 export { ScrollViewComponent } from './framework/components/scroll-view/component.js';
 export { ScrollViewComponentSystem } from './framework/components/scroll-view/system.js';
 export { SoundSlot } from './framework/components/sound/slot.js';
 export { SoundComponent } from './framework/components/sound/component.js';
 export { SoundComponentSystem } from './framework/components/sound/system.js';
+export * from './framework/components/sprite/constants.js';
 export { SpriteAnimationClip } from './framework/components/sprite/sprite-animation-clip.js';
 export { SpriteComponent } from './framework/components/sprite/component.js';
 export { SpriteComponentSystem } from './framework/components/sprite/system.js';
@@ -218,6 +229,7 @@ export { VrDisplay } from './vr/vr-display.js';
 export { VrManager } from './vr/vr-manager.js';
 
 // XR
+export * from './xr/constants.js';
 export { XrInput } from './xr/xr-input.js';
 export { XrInputSource } from './xr/xr-input-source.js';
 export { XrLightEstimation } from './xr/xr-light-estimation.js';
