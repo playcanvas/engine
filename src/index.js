@@ -133,6 +133,7 @@ export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 
 // ASSETS
+export * from './asset/constants.js';
 export { Asset } from './asset/asset.js';
 export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
