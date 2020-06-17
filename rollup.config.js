@@ -1,11 +1,12 @@
+import glslify from 'rollup-plugin-glslify';
 import replace from '@rollup/plugin-replace';
-import pkg from './package.json';
+import { version } from './package.json';
 
 const execSync = require('child_process').execSync;
-const revision = execSync("git rev-parse --short HEAD").toString().trim()
+const revision = execSync('git rev-parse --short HEAD').toString().trim()
 const notice = [
     '/*',
-    ' * Playcanvas Engine v' + pkg.version + ' revision ' + revision,
+    ' * Playcanvas Engine v' + version + ' revision ' + revision,
     ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
     ' */'
 ].join('\n');
@@ -19,9 +20,12 @@ export default [{
         name: 'pc'
     },
     plugins: [
+        glslify({
+            compress: false
+        }),
         replace({
             __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: pkg.version
+            __CURRENT_SDK_VERSION__: version
         })
     ]
 }, {
