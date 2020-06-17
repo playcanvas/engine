@@ -63,6 +63,7 @@ Object.assign(pc, function () {
      * });
      * @param {object} [options] - The asset handler options.
      * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
+     * @param {pc.callbacks.ProcessGlobalCallback} [options.processGlobal] - For use with container resources. The callback for gltf files with global extras.
      * @param {pc.callbacks.ProcessAnimationCallback} [options.processAnimation] - For use with container resources. The callback for animations with extras.
      * @param {pc.callbacks.ProcessMaterialCallback} [options.processMaterial] - For use with container resources. The callback for materials with extras.
      * @param {pc.callbacks.ProcessTextureUriCallback} [options.processTextureUri] - For use with container resources. The callack for custom processing of embedded texture uris.

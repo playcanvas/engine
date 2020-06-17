@@ -1189,6 +1189,10 @@ Object.assign(pc, function () {
         var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
 
+        if (options.processGlobal && gltf.hasOwnProperty('extras')) {
+            options.processGlobal(gltf.extras);
+        }
+
         callback(null, {
             'gltf': gltf,
             'nodes': nodes,

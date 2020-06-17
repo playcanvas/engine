@@ -185,6 +185,13 @@
  */
 
 /**
+ * @callback pc.callbacks.ProcessGlobalCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading files that contain a global extras
+ * object.
+ * @param {object} extras - The global extras object.
+ */
+
+/**
  * @callback pc.callbacks.ProcessAnimationCallback
  * @description Callback used by the {@link pc.ContainerHandler} when loading animations that contain an extras
  * object.
