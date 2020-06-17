@@ -11,7 +11,7 @@ import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
 
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 import { StandardMaterialValidator } from '../../../scene/materials/standard-material-validator.js';
-import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameter-types.js';
+import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
 
 /**
  * @private

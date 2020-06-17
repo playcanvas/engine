@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { TagsCache } from '../core/tags.js';
 
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { standardMaterialTextureParameters } from '../scene/materials/standard-material-parameter-types.js';
+import { standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
 
 import { script } from '../framework/script.js';
 

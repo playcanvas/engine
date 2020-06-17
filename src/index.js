@@ -163,7 +163,7 @@ export { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/to
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { Application } from './framework/application.js';
+export { app, Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './framework/components/anim/constants.js';

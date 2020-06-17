@@ -10,7 +10,7 @@ import {
     BLEND_MIN, BLEND_MAX,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
-import { standardMaterialParameterTypes } from './standard-material-parameter-types.js';
+import { standardMaterialParameterTypes } from './standard-material-parameters.js';
 
 function StandardMaterialValidator() {
     this.removeInvalid = true;

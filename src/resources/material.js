@@ -5,7 +5,7 @@ import { Texture } from '../graphics/texture.js';
 
 import { SPECULAR_PHONG } from '../scene/constants.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameter-types.js';
+import { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
 
 import { AssetReference } from '../asset/asset-reference.js';
 

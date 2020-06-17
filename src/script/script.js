@@ -50,18 +50,18 @@ function createScript(name, app) {
     if (createScript.reservedScripts[name])
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
-    var script = function (args) {
+    var scriptType = function (args) {
         ScriptType.call(this, args);
     };
 
-    script.prototype = Object.create(ScriptType.prototype);
-    script.prototype.constructor = script;
+    scriptType.prototype = Object.create(ScriptType.prototype);
+    scriptType.prototype.constructor = scriptType;
 
-    script.extend = ScriptType.extend;
-    script.attributes = new ScriptAttributes(script);
+    scriptType.extend = ScriptType.extend;
+    scriptType.attributes = new ScriptAttributes(scriptType);
 
-    registerScript(script, name, app);
-    return script;
+    registerScript(scriptType, name, app);
+    return scriptType;
 };
 
 /* eslint-disable jsdoc/no-undefined-types */

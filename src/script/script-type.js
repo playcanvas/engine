@@ -69,7 +69,7 @@ function ScriptType(args) {
     // methods of this script instance will run relative to
     // other script instances in the component
     this.__executionOrder = -1;
-};
+}
 ScriptType.prototype = Object.create(EventHandler.prototype);
 ScriptType.prototype.constructor = ScriptType;
 
