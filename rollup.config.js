@@ -30,6 +30,6 @@ export default [{
         banner: notice,
         file: 'build/playcanvas-extras.js',
         format: 'umd',
-        name: 'pc'
+        name: 'pcx'
     }
 }];

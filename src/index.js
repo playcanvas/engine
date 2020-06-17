@@ -45,6 +45,7 @@ export { Ray } from './shape/ray.js';
 // GRAPHICS
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
+export { shaderChunks } from './graphics/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';

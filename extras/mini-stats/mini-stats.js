@@ -389,10 +389,10 @@ function MiniStats(app) {
     // create graphs
     var graphs = [
         new Graph('Frame', app, new FrameTimer(app), texture, 1),
-        new Graph('CPU', app, new pc.CpuTimer(app), texture, 2)
+        new Graph('CPU', app, new CpuTimer(app), texture, 2)
     ];
     if (device.extDisjointTimerQuery) {
-        graphs.push(new Graph('GPU', app, new pc.GpuTimer(app), texture, 3));
+        graphs.push(new Graph('GPU', app, new GpuTimer(app), texture, 3));
     }
 
     var sizes = [
