@@ -151,9 +151,9 @@ Object.assign(pc, function () {
         this.ComponentType = pc.RigidBodyComponent;
         this.DataType = pc.RigidBodyComponentData;
 
-        this.contactPointPool = new pc.AllocatePool(ContactPoint, 1);
-        this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
-        this.singleContactResultPool = new pc.AllocatePool(SingleContactResult, 1);
+        this.contactPointPool = null;
+        this.contactResultPool = null;
+        this.singleContactResultPool = null;
 
         this.schema = _schema;
 
@@ -197,6 +197,10 @@ Object.assign(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
+
+                this.contactPointPool = new pc.AllocatePool(ContactPoint, 1);
+                this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
+                this.singleContactResultPool = new pc.AllocatePool(SingleContactResult, 1);
 
                 pc.ComponentSystem.bind('update', this.onUpdate, this);
             } else {

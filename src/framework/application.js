@@ -247,8 +247,7 @@ Object.assign(pc, function () {
 
         options = options || {};
 
-        // Open the log
-        pc.log.open();
+        console.log("Powered by PlayCanvas " + pc.version + " " + pc.revision);
 
         // Store application instance
         Application._applications[canvas.id] = this;

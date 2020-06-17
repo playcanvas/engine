@@ -681,14 +681,14 @@ Object.assign(pc, function () {
             var ext;
 
             var supportedExtensions = gl.getSupportedExtensions();
+
             var getExtension = function () {
-                var extension = null;
                 for (var i = 0; i < arguments.length; i++) {
                     if (supportedExtensions.indexOf(arguments[i]) !== -1) {
-                        extension = gl.getExtension(arguments[i]);
+                        return gl.getExtension(arguments[i]);
                     }
                 }
-                return extension;
+                return null;
             };
 
             if (this.webgl2) {
@@ -703,7 +703,9 @@ Object.assign(pc, function () {
                 this.extUintElement = true;
                 this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2') || getExtension('EXT_disjoint_timer_query');
+                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
+                // EXT_disjoint_timer_query_webgl2
+                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
             } else {
                 this.extBlendMinmax = getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = getExtension('EXT_draw_buffers');

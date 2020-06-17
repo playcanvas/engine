@@ -61,7 +61,7 @@ Object.assign(pc, function () {
 
                 if (retryRequests && ++retries <= maxRetries) {
                     var retryDelay = Math.pow(2, retries) * 100;
-                    console.log(pc.string.format("Error loading Texture from: '{0}' - Retrying in {1}ms...", originalUrl, retryDelay));
+                    console.log("Error loading Texture from: '" + originalUrl + "' - Retrying in " + retryDelay + "ms...");
 
                     var idx = url.indexOf('?');
                     var separator = idx >= 0 ? '&' : '?';
@@ -74,7 +74,7 @@ Object.assign(pc, function () {
                     }, retryDelay);
                 } else {
                     // Call error callback with details.
-                    callback(pc.string.format("Error loading Texture from: '{0}'", originalUrl));
+                    callback("Error loading Texture from: '" + originalUrl + "'");
                 }
             };
 

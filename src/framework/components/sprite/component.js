@@ -233,11 +233,13 @@ Object.assign(pc, function () {
                 return;
             }
 
-            var material = this.system.defaultMaterial;
+            var material;
             if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
                 material = this.system.default9SlicedMaterialSlicedMode;
             } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
                 material = this.system.default9SlicedMaterialTiledMode;
+            } else {
+                material = this.system.defaultMaterial;
             }
 
             // create mesh instance if it doesn't exist yet
@@ -520,7 +522,9 @@ Object.assign(pc, function () {
                 this._currentClip = clip;
                 this._currentClip.play();
             } else {
-                logWARNING('Trying to play sprite animation ' + name + ' which does not exist.');
+                // #ifdef DEBUG
+                console.warn('Trying to play sprite animation ' + name + ' which does not exist.');
+                // #endif
             }
 
             return clip;

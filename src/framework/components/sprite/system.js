@@ -14,7 +14,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'sprite';
-        this.app = app;
 
         this.ComponentType = pc.SpriteComponent;
         this.DataType = pc.SpriteComponentData;
@@ -22,46 +21,16 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
-        var pixels = this._defaultTexture.lock();
-        var pixelData = new Uint8Array(4);
-        pixelData[0] = 255.0;
-        pixelData[1] = 255.0;
-        pixelData[2] = 255.0;
-        pixelData[3] = 255.0;
-        pixels.set(pixelData);
-        this._defaultTexture.name = 'sprite';
-        this._defaultTexture.unlock();
+        this._defaultTexture = null;
 
         // default material used by sprites
-        this.defaultMaterial = new pc.StandardMaterial();
-        this.defaultMaterial.diffuse = new pc.Color(0, 0, 0, 1); // black diffuse color to prevent ambient light being included
-        this.defaultMaterial.emissive = new pc.Color(0.5, 0.5, 0.5, 1); // use non-white to compile shader correctly
-        this.defaultMaterial.emissiveMap = this._defaultTexture;
-        this.defaultMaterial.emissiveMapTint = true;
-        this.defaultMaterial.opacityMap = this._defaultTexture;
-        this.defaultMaterial.opacityMapChannel = "a";
-        this.defaultMaterial.opacityTint = true;
-        this.defaultMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
-        this.defaultMaterial.useLighting = false;
-        this.defaultMaterial.useGammaTonemap = false;
-        this.defaultMaterial.useFog = false;
-        this.defaultMaterial.useSkybox = false;
-        this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultMaterial.depthWrite = false;
-        this.defaultMaterial.pixelSnap = false;
-        this.defaultMaterial.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
-        this.defaultMaterial.update();
+        this._defaultMaterial = null;
 
         // material used for 9-slicing in sliced mode
-        this.default9SlicedMaterialSlicedMode = this.defaultMaterial.clone();
-        this.default9SlicedMaterialSlicedMode.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        this.default9SlicedMaterialSlicedMode.update();
+        this._default9SlicedMaterialSlicedMode = null;
 
         // material used for 9-slicing in tiled mode
-        this.default9SlicedMaterialTiledMode = this.defaultMaterial.clone();
-        this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        this.default9SlicedMaterialTiledMode.update();
+        this._default9SlicedMaterialTiledMode = null;
 
         pc.ComponentSystem.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
@@ -71,10 +40,86 @@ Object.assign(pc, function () {
 
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
+    Object.defineProperties(SpriteComponentSystem.prototype, {
+        defaultMaterial: {
+            get: function () {
+                if (!this._defaultMaterial) {
+                    var texture = new pc.Texture(this.app.graphicsDevice, {
+                        width: 1,
+                        height: 1,
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8
+                    });
+                    var pixels = new Uint8Array(texture.lock());
+                    pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
+                    texture.name = 'sprite';
+                    texture.unlock();
+
+                    var material = new pc.StandardMaterial();
+                    material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+                    material.emissiveMap = texture;
+                    material.emissiveMapTint = true;
+                    material.opacityMap = texture;
+                    material.opacityMapChannel = "a";
+                    material.opacityTint = true;
+                    material.opacity = 0; // use non-1 opacity to compile shader correctly
+                    material.useLighting = false;
+                    material.useGammaTonemap = false;
+                    material.useFog = false;
+                    material.useSkybox = false;
+                    material.blendType = pc.BLEND_PREMULTIPLIED;
+                    material.depthWrite = false;
+                    material.pixelSnap = false;
+                    material.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
+                    material.update();
+
+                    this._defaultTexture = texture;
+                    this._defaultMaterial = material;
+                }
+                return this._defaultMaterial;
+            },
+            set: function (material) {
+                this._defaultMaterial = material;
+            }
+        },
+        default9SlicedMaterialSlicedMode: {
+            get: function () {
+                if (!this._default9SlicedMaterialSlicedMode) {
+                    var material = this.defaultMaterial.clone();
+                    material.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
+                    material.update();
+
+                    this._default9SlicedMaterialSlicedMode = material;
+                }
+                return this._default9SlicedMaterialSlicedMode;
+            },
+            set: function (material) {
+                this._default9SlicedMaterialSlicedMode = material;
+            }
+        },
+        default9SlicedMaterialTiledMode: {
+            get: function () {
+                if (!this._default9SlicedMaterialTiledMode) {
+                    var material = this.defaultMaterial.clone();
+                    material.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
+                    material.update();
+
+                    this._default9SlicedMaterialTiledMode = material;
+                }
+                return this._default9SlicedMaterialTiledMode;
+            },
+            set: function (material) {
+                this._default9SlicedMaterialTiledMode = material;
+            }
+        }
+    });
+
     Object.assign(SpriteComponentSystem.prototype, {
         destroy: function () {
-            this._defaultTexture.destroy();
-            this._defaultTexture = null;
+            if (this._defaultTexture) {
+                this._defaultTexture.destroy();
+                this._defaultTexture = null;
+            }
         },
 
         initializeComponentData: function (component, data, properties) {

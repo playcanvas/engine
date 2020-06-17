@@ -21,7 +21,7 @@ Object.assign(pc, function () {
         add: function (system) {
             var id = system.id;
             if (this[id]) {
-                throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", id));
+                throw new Error("ComponentSystem name '" + id + "' already registered or not allowed");
             }
 
             this[id] = system;
@@ -40,7 +40,7 @@ Object.assign(pc, function () {
         remove: function (system) {
             var id = system.id;
             if (!this[id]) {
-                throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", id));
+                throw new Error("No ComponentSystem named '" + id + "' registered");
             }
 
             delete this[id];

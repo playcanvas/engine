@@ -111,7 +111,7 @@ Object.assign(pc, function () {
                                                 }
                                             });
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
+                    callback("Error loading model: " + url.original + " [" + err + "]");
                 }
             });
         },

@@ -13,7 +13,6 @@ Object.assign(pc, function () {
         pc.ComponentSystem.call(this, app);
 
         this.id = 'layoutchild';
-        this.app = app;
 
         this.ComponentType = pc.LayoutChildComponent;
         this.DataType = pc.LayoutChildComponentData;

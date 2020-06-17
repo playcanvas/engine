@@ -135,6 +135,80 @@ Object.assign(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
+pc.log = {
+    write: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.write is deprecated. Use console.log instead.");
+        // #endif
+        console.log(text);
+    },
+
+    open: function () {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.open is deprecated. Use console.log instead.");
+        // #endif
+        pc.log.write("Powered by PlayCanvas " + pc.version + " " + pc.revision);
+    },
+
+    info: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.info is deprecated. Use console.info instead.");
+        // #endif
+        console.info("INFO:    " + text);
+    },
+
+    debug: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.debug is deprecated. Use console.debug instead.");
+        // #endif
+        console.debug("DEBUG:   " + text);
+    },
+
+    error: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.error is deprecated. Use console.error instead.");
+        // #endif
+        console.error("ERROR:   " + text);
+    },
+
+    warning: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.warning is deprecated. Use console.warn instead.");
+        // #endif
+        console.warn("WARNING: " + text);
+    },
+
+    alert: function (text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.alert is deprecated. Use alert instead.");
+        // #endif
+        pc.log.write("ALERT:   " + text);
+        alert(text); // eslint-disable-line no-alert
+    },
+
+    assert: function (condition, text) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.log.assert is deprecated. Use a conditional plus console.log instead.");
+        // #endif
+        if (condition === false) {
+            pc.log.write("ASSERT:  " + text);
+        }
+    }
+};
+
+// Shortcuts to logging functions
+// ESLint disabled here because these vars may be accessed from other files
+// once all sources have been concatenated together and wrapped by the closure.
+/* eslint-disable no-unused-vars */
+var logINFO = pc.log.info;
+var logDEBUG = pc.log.debug;
+var logWARNING = pc.log.warning;
+var logERROR = pc.log.error;
+
+var logALERT = pc.log.alert;
+var logASSERT = pc.log.assert;
+/* eslint-enable no-unused-vars */
+
 pc.math.INV_LOG2 = Math.LOG2E;
 
 pc.math.intToBytes = pc.math.intToBytes32;
@@ -188,18 +262,36 @@ pc.shape = {
     Plane: pc.Plane
 };
 
-pc.string.startsWith = function (s, subs) {
-    // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
-    // #endif
-    return s.startsWith(subs);
-};
-
 pc.string.endsWith = function (s, subs) {
     // #ifdef DEBUG
     console.warn("DEPRECATED: pc.string.endsWith is deprecated. Use String#endsWith instead.");
     // #endif
     return s.endsWith(subs);
+};
+
+pc.string.format = function (s) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.format is deprecated. Use string concatenation operator + instead.");
+    // #endif
+    var i = 0,
+        regexp,
+        args = pc.makeArray(arguments);
+
+    // drop first argument
+    args.shift();
+
+    for (i = 0; i < args.length; i++) {
+        regexp = new RegExp('\\{' + i + '\\}', 'gi');
+        s = s.replace(regexp, args[i]);
+    }
+    return s;
+};
+
+pc.string.startsWith = function (s, subs) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
+    // #endif
+    return s.startsWith(subs);
 };
 
 pc.time = {
