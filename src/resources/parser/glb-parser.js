@@ -1237,7 +1237,7 @@ Object.assign(pc, function () {
     };
 
     // load textures using the asset system
-    var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, callback) {
+    var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, options, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1253,7 +1253,7 @@ Object.assign(pc, function () {
                 // apply samplers
                 for (var t = 0; t < gltf.textures.length; ++t) {
                     var texture = gltf.textures[t];
-                    applySampler(result[texture.source], (gltf.samplers || [])[texture.sampler]);
+                    applySampler(result[texture.source].resource, (gltf.samplers || [])[texture.sampler]);
                 }
 
                 callback(null, result);
@@ -1265,15 +1265,30 @@ Object.assign(pc, function () {
 
             var url;
             var mimeType;
-            var options = {};
             if (imgData.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(imgData.uri)) {
                     url = imgData.uri;
                     mimeType = getDataURIMimeType(imgData.uri);
                 } else {
-                    url = pc.path.join(urlBase, imgData.uri);
-                    options.crossOrigin = "anonymous";
+                    if (options.processTextureUri) {
+                        options.processTextureUri(imgData.uri, function (index, err, texture) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            } else {
+                                // nasty: wrap the texture in an asset
+                                var textureAsset = new pc.Asset(texture.name, 'texture');
+                                textureAsset.loaded = true;
+                                textureAsset.resource = texture;
+                                onLoad(index, textureAsset);
+                            }
+                        }.bind(null, i));
+                        continue;
+                    } else {
+                        url = pc.path.join(urlBase, imgData.uri);
+                        options.crossOrigin = "anonymous";
+                    }
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1310,7 +1325,7 @@ Object.assign(pc, function () {
             }
 
             // create and load the asset
-            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false }, options);
+            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false });
             asset.on('load', onLoad.bind(null, i));
             registry.add(asset);
             registry.load(asset);
@@ -1318,7 +1333,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf buffers asynchronously, returning them in the callback
-    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
+    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) {
         var result = [];
 
         if (gltf.buffers === null || gltf.buffers.length === 0) {
@@ -1327,7 +1342,7 @@ Object.assign(pc, function () {
         }
 
         var remaining = gltf.buffers.length;
-        var onLoad = function (buffer, idx) {
+        var onLoad = function (idx, buffer) {
             result[idx] = buffer;
             if (--remaining === 0) {
                 callback(null, result);
@@ -1339,7 +1354,7 @@ Object.assign(pc, function () {
                 if (err) {
                     callback(err);
                 } else {
-                    onLoad(new Uint8Array(result), index);
+                    onLoad(index, new Uint8Array(result));
                 }
             };
         };
@@ -1363,16 +1378,27 @@ Object.assign(pc, function () {
                         binaryArray[j] = byteString.charCodeAt(j);
                     }
 
-                    onLoad(binaryArray, i);
+                    onLoad(i, binaryArray);
                 } else {
-                    pc.http.get(
-                        pc.path.join(urlBase, buffer.uri),
-                        { cache: true, responseType: 'arraybuffer', retry: false },
-                        createCallback(i));
+                    if (options.processBufferUri) {
+                        options.processBufferUri(buffer.uri, function (index, err, buffer) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            } else {
+                                onLoad(index, buffer);
+                            }
+                        }.bind(null, i));
+                    } else {
+                        pc.http.get(
+                            pc.path.join(urlBase, buffer.uri),
+                            { cache: true, responseType: 'arraybuffer', retry: false },
+                            createCallback(i));
+                    }
                 }
             } else {
                 // glb buffer reference
-                onLoad(binaryChunk, i);
+                onLoad(i, binaryChunk);
             }
         }
     };
@@ -1388,7 +1414,6 @@ Object.assign(pc, function () {
                 return accum;
             }, "");
             return decodeURIComponent(escape(str));
-
         };
 
         var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
@@ -1533,14 +1558,14 @@ Object.assign(pc, function () {
                 }
 
                 // async load external buffers
-                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, function (err, buffers) {
+                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, function (err, buffers) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
                     // async load images
-                    loadTexturesAsync(device, gltf, buffers, urlBase, registry, function (err, textures) {
+                    loadTexturesAsync(device, gltf, buffers, urlBase, registry, options, function (err, textures) {
                         if (err) {
                             callback(err);
                             return;

@@ -65,6 +65,8 @@ Object.assign(pc, function () {
      * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
      * @param {pc.callbacks.ProcessAnimationCallback} [options.processAnimation] - For use with container resources. The callback for animations with extras.
      * @param {pc.callbacks.ProcessMaterialCallback} [options.processMaterial] - For use with container resources. The callback for materials with extras.
+     * @param {pc.callbacks.ProcessTextureUriCallback} [options.processTextureUri] - For use with container resources. The callack for custom processing of embedded texture uris.
+     * @param {pc.callbacks.ProcessBufferUriCallback} [options.processBufferUri] - For use with container resources. The callback for custom processing of embedded buffer uris.
      * @property {string} name The name of the asset
      * @property {number} id The asset id
      * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]

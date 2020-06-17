@@ -199,3 +199,29 @@
  * @param {pc.StandardMaterial} material - The material that was constructed.
  * @param {object} extras - The extras object attached to the gltf material.
  */
+
+/**
+ * @callback pc.callbacks.TextureCalback
+ * @param {string|null} err - An error string if the operation failed otherwise null.
+ * @param {pc.Texture} texture - The loaded texture.
+ */
+
+/**
+ * @callback pc.callbacks.BufferCalback
+ * @param {string|null} err - An error string if the operation failed otherwise null.
+ * @param {pc.Texture} texture - The loaded buffer.
+ */
+
+ /**
+ * @callback pc.callbacks.ProcessTextureUriCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading textures with uri references.
+ * @param {string} uri - The texture uri to load.
+ * @param {pc.callbacks.TextureCallback} callback - The continuation with which to pass back results.
+ */
+
+ /**
+ * @callback pc.callbacks.ProcessBufferUriCallback
+ * @description Callback used by the {@link pc.ContainerHandler} when loading buffers with uri references.
+ * @param {string} uri - The buffer uri to load.
+ * @param {pc.callbacks.BufferCallback} callback - The continuation with which to pass back results.
+ */
