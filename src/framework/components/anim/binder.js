@@ -147,7 +147,7 @@ Object.assign(pc, function () {
                 var materialPropertyName = propertyHierarchy[1];
                 // if the property name ends in Map then we're binding a material texture
                 if (materialPropertyName.indexOf('Map') === materialPropertyName.length - 3) {
-                    return this.handlers.materialTexture(propertyComponent, propertyHierarchy[1]);
+                    return this.handlers.materialTexture(propertyComponent, materialPropertyName);
                 }
             }
 
