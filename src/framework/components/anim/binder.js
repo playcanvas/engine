@@ -33,6 +33,10 @@ Object.assign(pc, function () {
                     propertyComponent = entity;
                     break;
                 case 'graph':
+                    if (!this.nodes[entityHierarchy[0]]) {
+                        console.log('ISNT HERE', entityHierarchy[0]);
+                        return null;
+                    }
                     propertyComponent = this.nodes[entityHierarchy[0]].node;
                     break;
                 default:
@@ -140,6 +144,12 @@ Object.assign(pc, function () {
 
             if (this.handlers && propertyHierarchy[0] === 'weights') {
                 return this.handlers.weights(propertyComponent);
+            } else if (this.handlers && propertyHierarchy[0] === 'material' && propertyHierarchy.length === 2) {
+                var materialPropertyName = propertyHierarchy[1];
+                // if the property name ends in Map then we're binding a material texture
+                if (materialPropertyName.indexOf('Map') === materialPropertyName.length - 3) {
+                    return this.handlers.materialTexture(propertyComponent, propertyHierarchy[1]);
+                }
             }
 
             var property = this._getProperty(propertyComponent, propertyHierarchy);

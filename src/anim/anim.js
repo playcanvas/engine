@@ -717,6 +717,32 @@ Object.assign(pc, function () {
                     }
                 };
                 return new pc.AnimTarget(func, 'vector', morphInstance.morph._targets.length);
+            },
+            'materialTexture': function (node, textureName) {
+                var object = node;
+                while (object && object.constructor !== pc.Entity) {
+                    object = object.parent;
+                }
+                if (!object ||
+                    !object.model ||
+                    !object.model.model ||
+                    !object.model.model.morphInstances) {
+                    return null;
+                }
+                var meshInstances = object.model.meshInstances;
+                var meshInstance;
+                for (var i = 0; i < meshInstances.length; ++i) {
+                    if (meshInstances[i].node.name === node.name) {
+                        meshInstance = meshInstances[i];
+                        break;
+                    }
+                }
+                var func = function (value) {
+                    var textureAsset = pc.app.assets.get(value[0]);
+                    meshInstance.material[textureName] = textureAsset.resource;
+                    meshInstance.material.update();
+                };
+                return new pc.AnimTarget(func, 'vector', 1);
             }
         };
 
