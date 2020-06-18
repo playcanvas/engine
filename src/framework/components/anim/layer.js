@@ -90,9 +90,8 @@ Object.assign(pc, function () {
             }
         },
         /**
-         * @private
          * @name pc.AnimComponentLayer#playing
-         * @type {string}
+         * @type {boolean}
          * @description Whether this layer is currently playing
          */
         playing: {
