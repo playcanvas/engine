@@ -105,9 +105,9 @@ export { Sound } from './sound/sound.js';
 export { SoundInstance } from './sound/instance.js';
 export { SoundInstance3d } from './sound/instance3d.js';
 
-// TEMPLATES
-export { Template } from './templates/template.js';
-export { TemplateUtils } from './templates/template-utils.js';
+// BUNDLES
+export { Bundle } from './bundles/bundle.js';
+export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
 export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
@@ -148,14 +148,14 @@ export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';
 
-// LOCALIZATION
-export { I18n } from './i18n/i18n.js';
-
 // SCRIPTS
 export { createScript, registerScript } from './script/script.js';
 export { ScriptAttributes } from './script/script-attributes.js';
 export { ScriptRegistry } from './script/script-registry.js';
 export { ScriptType } from './script/script-type.js';
+
+// LOCALIZATION
+export { I18n } from './i18n/i18n.js';
 
 // INPUT
 export * from './input/constants.js';
@@ -235,6 +235,10 @@ export { SpriteComponent } from './framework/components/sprite/component.js';
 export { SpriteComponentSystem } from './framework/components/sprite/system.js';
 export { ZoneComponent } from './framework/components/zone/component.js';
 export { ZoneComponentSystem } from './framework/components/zone/system.js';
+
+// TEMPLATES
+export { Template } from './templates/template.js';
+export { TemplateUtils } from './templates/template-utils.js';
 
 // VR
 export { VrDisplay } from './vr/vr-display.js';
