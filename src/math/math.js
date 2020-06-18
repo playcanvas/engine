@@ -1,54 +1,9 @@
 /**
- * @constant
- * @type {number}
- * @name pc.CURVE_LINEAR
- * @description A linear interpolation scheme.
- */
-export var CURVE_LINEAR = 0;
-/**
- * @constant
- * @type {number}
- * @name pc.CURVE_SMOOTHSTEP
- * @description A smooth step interpolation scheme.
- */
-export var CURVE_SMOOTHSTEP = 1;
-/**
- * @deprecated
- * @constant
- * @type {number}
- * @name pc.CURVE_CATMULL
- * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
- */
-export var CURVE_CATMULL = 2;
-/**
- * @deprecated
- * @constant
- * @type {number}
- * @name pc.CURVE_CARDINAL
- * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
- */
-export var CURVE_CARDINAL = 3;
-/**
- * @constant
- * @type {number}
- * @name pc.CURVE_SPLINE
- * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
- */
-export var CURVE_SPLINE = 4;
-/**
- * @constant
- * @type {number}
- * @name pc.CURVE_STEP
- * @description A stepped interpolater, free from the shackles of blending.
- */
-export var CURVE_STEP = 5;
-
-/**
  * @name pc.math
  * @namespace
  * @description Math API.
  */
-export var math = {
+var math = {
     /**
      * @constant
      * @type {number}
@@ -193,7 +148,7 @@ export var math = {
      * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerp: function (a, b, alpha) {
-        return a + (b - a) * pc.math.clamp(alpha, 0, 1);
+        return a + (b - a) * math.clamp(alpha, 0, 1);
     },
 
     /**
@@ -215,7 +170,7 @@ export var math = {
         if (b - a < -180 ) {
             b += 360;
         }
-        return pc.math.lerp(a, b, pc.math.clamp(alpha, 0, 1));
+        return pc.math.lerp(a, b, math.clamp(alpha, 0, 1));
     },
 
     /**
@@ -319,3 +274,5 @@ export var math = {
         return Math.ceil(numToRound / multiple) * multiple;
     }
 };
+
+export { math };

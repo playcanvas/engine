@@ -1,4 +1,4 @@
-import { CURVE_SMOOTHSTEP } from './math.js';
+import { CURVE_SMOOTHSTEP } from './constants.js';
 import { Curve } from './curve.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 

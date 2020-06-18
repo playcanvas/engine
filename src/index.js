@@ -26,6 +26,7 @@ export { URI, createURI } from './core/uri.js';
 export { http, Http } from './net/http.js';
 
 // MATH
+export * from './math/constants.js';
 export { math } from './math/math.js';
 export { Curve } from './math/curve.js';
 export { CurveSet } from './math/curve-set.js';

@@ -1,4 +1,4 @@
-import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './math.js';
+import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 
 function CurveEvaluator(curve, time) {
     this._curve = curve;
