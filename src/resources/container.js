@@ -194,26 +194,31 @@ Object.assign(pc, function () {
                             return {
                                 name: animationAssets[animationIndex].resource.name,
                                 states: [
-                                    { name: pc.ANIM_STATE_START }, // Needed for pc.AnimComponentLayer not to crash
-                                    { name: "ACTIVE" }
+                                    { name: pc.ANIM_STATE_START },
+                                    { name: "LOOP", speed: 1, loop: true },
+                                    { name: "LOOP_REVERSE", speed: -1, loop: true },
+                                    { name: "ONCE", speed: 1, loop: false },
+                                    { name: "ONCE_REVERSE", speed: -1, loop: false }
                                 ],
-                                transitions: [],
-                                parameters: {}
+                                transitions: []
                             };
-                        })
+                        }),
+                        parameters: {}
                     });
 
                     components.animations.forEach(function (animationIndex) {
                         var layer = anim.findAnimationLayer(animationAssets[animationIndex].resource.name);
-                        if (!layer) {
-                            return;
+                        if (layer) {
+                            layer.states.slice(1, layer.states.length).forEach(function (state) {
+                                layer.assignAnimation(state, animationAssets[animationIndex].resource);
+                            });
+
+                            // This is currently the only public method to set the current state of a layer.
+                            // By doing this the animation of a layer can be played by simply running layer.play()
+                            // in an application.
+                            layer.play("LOOP");
+                            layer.pause();
                         }
-                        layer.assignAnimation(layer.states[1], animationAssets[animationIndex].resource);
-                        // This is currently the only public method to set the current state of a layer.
-                        // By doing this the animation of a layer can be played by simply running layer.play()
-                        // in an application.
-                        layer.play(layer.states[1]);
-                        layer.pause();
                     });
                 }
             });
