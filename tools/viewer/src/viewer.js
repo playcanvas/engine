@@ -139,7 +139,7 @@ var Viewer = function (canvas) {
     this.debugSkeleton = new DebugLines(app, camera);
     this.debugNormals = new DebugLines(app, camera);
 
-    this.miniStats = new pc.MiniStats(app);
+    this.miniStats = new pcx.MiniStats(app);
 
     function getUrlVars() {
         var vars = {};
