@@ -1,10 +1,11 @@
 Object.assign(pc, function () {
 
-    var AnimState = function (controller, name, speed) {
+    var AnimState = function (controller, name, speed, loop) {
         this._controller = controller;
         this._name = name;
         this._animations = [];
         this._speed = speed || 1.0;
+        this._loop = loop === undefined ? true : loop;
     };
 
     Object.defineProperties(AnimState.prototype, {
@@ -26,6 +27,11 @@ Object.assign(pc, function () {
         playable: {
             get: function () {
                 return (this.animations.length > 0 || this.name === pc.ANIM_STATE_START || this.name === pc.ANIM_STATE_END);
+            }
+        },
+        loop: {
+            get: function () {
+                return this._loop;
             }
         },
         looping: {
@@ -167,7 +173,8 @@ Object.assign(pc, function () {
             this._states[states[i].name] = new AnimState(
                 this,
                 states[i].name,
-                states[i].speed
+                states[i].speed,
+                states[i].loop
             );
             this._stateNames.push(states[i].name);
         }
@@ -461,8 +468,9 @@ Object.assign(pc, function () {
             // Add clips to the evaluator for each animation in the new state.
             for (i = 0; i < activeState.animations.length; i++) {
                 clip = this._animEvaluator.findClip(activeState.animations[i].name);
+                var startTime = activeState.speed >= 0 ? 0 : activeState.animations[i].animTrack.duration;
                 if (!clip) {
-                    clip = new pc.AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, true);
+                    clip = new pc.AnimClip(activeState.animations[i].animTrack, startTime, activeState.speed, true, activeState.loop);
                     clip.name = activeState.animations[i].name;
                     this._animEvaluator.addClip(clip);
                 }
@@ -476,6 +484,7 @@ Object.assign(pc, function () {
                     clip.time = activeState.timelineDuration * transition.transitionOffset;
                 }
                 clip.play();
+                clip.time = startTime;
             }
 
             // set the time in the new state to 0 or to a value based on transitionOffset if one was given
