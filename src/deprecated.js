@@ -202,8 +202,22 @@ Object.defineProperty(Vec4.prototype, "data", {
     }
 });
 
+// SHAPE
+import { BoundingBox } from './shape/bounding-box.js';
+import { BoundingSphere } from './shape/bounding-sphere.js';
+import { Plane } from './shape/plane.js';
+
+export var shape = {
+    Aabb: BoundingBox,
+    Sphere: BoundingSphere,
+    Plane: Plane
+};
+
+BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
+
 // GRAPHICS
 import {
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from './graphics/graphics.js';
 import { drawQuadWithShader } from './graphics/simple-post-effect.js';
@@ -211,6 +225,8 @@ import { programlib } from './graphics/program-lib/program-lib.js';
 import { shaderChunks } from './graphics/chunks.js';
 import { GraphicsDevice } from './graphics/device.js';
 import { IndexBuffer } from './graphics/index-buffer.js';
+import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
+import { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from './graphics/program-library.js';
 import { RenderTarget } from './graphics/render-target.js';
 import { ScopeId } from './graphics/scope-id.js';
@@ -260,8 +276,104 @@ export var gfx = {
     VertexIterator: VertexIterator
 };
 
+export var posteffect = {
+    createFullscreenQuad: createFullscreenQuad,
+    drawFullscreenQuad: drawFullscreenQuad,
+    PostEffect: PostEffect,
+    PostEffectQueue: PostEffectQueue
+};
+
+Object.defineProperty(shaderChunks, "transformSkinnedVS", {
+    get: function () {
+        return "#define SKIN\n" + shaderChunks.transformVS;
+    }
+});
+
+Object.defineProperties(Texture.prototype, {
+    rgbm: {
+        get: function () {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            return this.type === TEXTURETYPE_RGBM;
+        },
+        set: function (rgbm) {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            this.type = rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+        }
+    },
+
+    swizzleGGGR: {
+        get: function () {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            return this.type === TEXTURETYPE_SWIZZLEGGGR;
+        },
+        set: function (swizzleGGGR) {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
+            // #endif
+            this.type = swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+        }
+    }
+});
+
 // SCENE
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from './scene/constants.js';
+import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
+import { partitionSkin } from './scene/skin-partition.js';
+import { BasicMaterial } from './scene/materials/basic-material.js';
+import { DepthMaterial } from './scene/materials/depth-material.js';
+import { ForwardRenderer } from './scene/forward-renderer.js';
 import { GraphNode } from './scene/graph-node.js';
+import { Material } from './scene/materials/material.js';
+import { Mesh } from './scene/mesh.js';
+import { MeshInstance, Command } from './scene/mesh-instance.js';
+import { Model } from './scene/model.js';
+import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
+import { Picker } from './scene/pick.js';
+import { Scene } from './scene/scene.js';
+import { Skin, SkinInstance } from './scene/skin.js';
+import { StandardMaterial } from './scene/materials/standard-material.js';
+
+export var PhongMaterial = StandardMaterial;
+
+export var scene = {
+    partitionSkin: partitionSkin,
+    procedural: {
+        calculateTangents: calculateTangents,
+        createMesh: createMesh,
+        createTorus: createTorus,
+        createCylinder: createCylinder,
+        createCapsule: createCapsule,
+        createCone: createCone,
+        createSphere: createSphere,
+        createPlane: createPlane,
+        createBox: createBox
+    },
+    BasicMaterial: BasicMaterial,
+    Command: Command,
+    DepthMaterial: DepthMaterial,
+    ForwardRenderer: ForwardRenderer,
+    GraphNode: GraphNode,
+    Material: Material,
+    Mesh: Mesh,
+    MeshInstance: MeshInstance,
+    Model: Model,
+    ParticleEmitter: ParticleEmitter,
+    PhongMaterial: StandardMaterial,
+    Picker: Picker,
+    Projection: {
+        ORTHOGRAPHIC: PROJECTION_ORTHOGRAPHIC,
+        PERSPECTIVE: PROJECTION_PERSPECTIVE
+    },
+    Scene: Scene,
+    Skin: Skin,
+    SkinInstance: SkinInstance
+};
 
 GraphNode.prototype._dirtify = function (local) {
     // #ifdef DEBUG
@@ -372,6 +484,34 @@ GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
+Material.prototype.getName = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
+    // #endif
+    return this.name;
+};
+
+Material.prototype.setName = function (name) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#setName is deprecated. Use pc.Material#name instead.');
+    // #endif
+    this.name = name;
+};
+
+Material.prototype.getShader = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
+    // #endif
+    return this.shader;
+};
+
+Material.prototype.setShader = function (shader) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
+    // #endif
+    this.shader = shader;
+};
+
 // ANIMATION
 import { Animation, Key, Node } from './anim/animation.js';
 import { Skeleton } from './anim/skeleton.js';
@@ -383,20 +523,7 @@ export var anim = {
     Skeleton: Skeleton
 };
 
-export var asset = {
-    ASSET_ANIMATION: 'animation',
-    ASSET_AUDIO: 'audio',
-    ASSET_IMAGE: 'image',
-    ASSET_JSON: 'json',
-    ASSET_MODEL: 'model',
-    ASSET_MATERIAL: 'material',
-    ASSET_TEXT: 'text',
-    ASSET_TEXTURE: 'texture',
-    ASSET_CUBEMAP: 'cubemap',
-    ASSET_SCRIPT: 'script'
-};
-
-// AUDIO
+// SOUND
 import { Channel } from './audio/channel.js';
 import { Channel3d } from './audio/channel3d.js';
 import { Listener } from './sound/listener.js';
@@ -411,115 +538,159 @@ export var audio = {
     Sound: Sound
 };
 
-/*
-
-// FRAMEWORK
-export var fw = {
-    Application: pc.Application,
-    Component: pc.Component,
-    ComponentData: pc.ComponentData,
-    ComponentSystem: pc.ComponentSystem,
-    Entity: pc.Entity,
-    FillMode: {
-        NONE: pc.FILLMODE_NONE,
-        FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
-        KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
-    },
-    ResolutionMode: {
-        AUTO: pc.RESOLUTION_AUTO,
-        FIXED: pc.RESOLUTION_FIXED
-    }
+SoundManager.prototype.getListener = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
+    // #endif
+    return this.listener;
 };
 
-    RIGIDBODY_TYPE_STATIC: pc.BODYTYPE_STATIC,
-    RIGIDBODY_TYPE_DYNAMIC: pc.BODYTYPE_DYNAMIC,
-    RIGIDBODY_TYPE_KINEMATIC: pc.BODYTYPE_KINEMATIC,
-    RIGIDBODY_CF_STATIC_OBJECT: pc.BODYFLAG_STATIC_OBJECT,
-    RIGIDBODY_CF_KINEMATIC_OBJECT: pc.BODYFLAG_KINEMATIC_OBJECT,
-    RIGIDBODY_CF_NORESPONSE_OBJECT: pc.BODYFLAG_NORESPONSE_OBJECT,
-    RIGIDBODY_ACTIVE_TAG: pc.BODYSTATE_ACTIVE_TAG,
-    RIGIDBODY_ISLAND_SLEEPING: pc.BODYSTATE_ISLAND_SLEEPING,
-    RIGIDBODY_WANTS_DEACTIVATION: pc.BODYSTATE_WANTS_DEACTIVATION,
-    RIGIDBODY_DISABLE_DEACTIVATION: pc.BODYSTATE_DISABLE_DEACTIVATION,
-    RIGIDBODY_DISABLE_SIMULATION: pc.BODYSTATE_DISABLE_SIMULATION
+SoundManager.prototype.getVolume = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
+    // #endif
+    return this.volume;
+};
+
+SoundManager.prototype.setVolume = function (volume) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
+    // #endif
+    this.volume = volume;
+};
+
+// ASSET
+import { AssetRegistry } from './asset/asset-registry.js';
+
+export var asset = {
+    ASSET_ANIMATION: 'animation',
+    ASSET_AUDIO: 'audio',
+    ASSET_IMAGE: 'image',
+    ASSET_JSON: 'json',
+    ASSET_MODEL: 'model',
+    ASSET_MATERIAL: 'material',
+    ASSET_TEXT: 'text',
+    ASSET_TEXTURE: 'texture',
+    ASSET_CUBEMAP: 'cubemap',
+    ASSET_SCRIPT: 'script'
+};
+
+AssetRegistry.prototype.getAssetById = function (id) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.");
+    // #endif
+    return this.get(id);
+};
+
+// XR
+import { XrInputSource } from './xr/xr-input-source.js';
+
+Object.defineProperty(XrInputSource.prototype, 'ray', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#ray is deprecated. Use pc.XrInputSource#getOrigin and pc.XrInputSource#getDirection instead.');
+        // #endif
+        return this._rayLocal;
+    }
+});
+
+Object.defineProperty(XrInputSource.prototype, 'position', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#position is deprecated. Use pc.XrInputSource#getLocalPosition instead.');
+        // #endif
+        return this._localPosition;
+    }
+});
+
+Object.defineProperty(XrInputSource.prototype, 'rotation', {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.XrInputSource#rotation is deprecated. Use pc.XrInputSource#getLocalRotation instead.');
+        // #endif
+        return this._localRotation;
+    }
+});
 
 // INPUT
+import { Controller } from './input/controller.js';
+import { ElementInput } from './input/element-input.js';
+import { GamePads } from './input/game-pads.js';
+import { Keyboard, KeyboardEvent } from './input/keyboard.js';
+import { Mouse, MouseEvent } from './input/mouse.js';
+import { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
+
 export var input = {
     getTouchTargetCoords: getTouchTargetCoords,
-    Controller: pc.Controller,
-    GamePads: pc.GamePads,
-    Keyboard: pc.Keyboard,
-    KeyboardEvent: pc.KeyboardEvent,
-    Mouse: pc.Mouse,
-    MouseEvent: pc.MouseEvent,
-    Touch: pc.Touch,
-    TouchDevice: pc.TouchDevice,
-    TouchEvent: pc.TouchEvent
+    Controller: Controller,
+    GamePads: GamePads,
+    Keyboard: Keyboard,
+    KeyboardEvent: KeyboardEvent,
+    Mouse: Mouse,
+    MouseEvent: MouseEvent,
+    Touch: Touch,
+    TouchDevice: TouchDevice,
+    TouchEvent: TouchEvent
 };
 
-export var posteffect = {
-    createFullscreenQuad: pc.createFullscreenQuad,
-    drawFullscreenQuad: pc.drawFullscreenQuad,
-    PostEffect: pc.PostEffect,
-    PostEffectQueue: pc.PostEffectQueue
-};
-
-Object.assign(pc.scene, {
-    partitionSkin: pc.partitionSkin,
-    procedural: {
-        calculateTangents: pc.calculateTangents,
-        createMesh: pc.createMesh,
-        createTorus: pc.createTorus,
-        createCylinder: pc.createCylinder,
-        createCapsule: pc.createCapsule,
-        createCone: pc.createCone,
-        createSphere: pc.createSphere,
-        createPlane: pc.createPlane,
-        createBox: pc.createBox
-    },
-    BasicMaterial: pc.BasicMaterial,
-    DepthMaterial: pc.DepthMaterial,
-    ForwardRenderer: pc.ForwardRenderer,
-    GraphNode: pc.GraphNode,
-    Material: pc.Material,
-    Command: pc.Command,
-    Mesh: pc.Mesh,
-    MeshInstance: pc.MeshInstance,
-    Model: pc.Model,
-    ParticleEmitter: pc.ParticleEmitter,
-    PhongMaterial: pc.StandardMaterial,
-    Picker: pc.Picker,
-    PickMaterial: pc.PickMaterial,
-    Projection: {
-        ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
-        PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
-    },
-    Scene: pc.Scene,
-    Skin: pc.Skin,
-    SkinInstance: pc.SkinInstance
-});
-
-pc.shape = {
-    Aabb: pc.BoundingBox,
-    Sphere: pc.BoundingSphere,
-    Plane: pc.Plane
-};
-
-import { StandardMaterial } from './scene/materials/standard-material.js';
-
-export var PhongMaterial = StandardMaterial;
-
-import { BoundingSphere } from './shape/bounding-sphere.js';
-
-BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
-
-Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
+Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {
-        return "#define SKIN\n" + pc.shaderChunks.transformVS;
+        return this.wheelDelta * -2;
     }
 });
 
-pc.Application.prototype.isFullscreen = function () {
+Object.defineProperty(MouseEvent.prototype, 'wheel', {
+    get: function () {
+        return this.wheelDelta * -2;
+    }
+});
+
+// FRAMEWORK
+import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from './framework/constants.js';
+import { Application } from './framework/application.js';
+import { Component } from './framework/components/component.js';
+import { ComponentData } from './framework/components/data.js';
+import { ComponentSystem } from './framework/components/system.js';
+import { Entity } from './framework/entity.js';
+import { LightComponent } from './framework/components/light/component.js';
+import {
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+} from './framework/components/rigid-body/constants.js';
+import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
+import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+
+export var RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
+export var RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
+export var RIGIDBODY_TYPE_KINEMATIC = BODYTYPE_KINEMATIC;
+export var RIGIDBODY_CF_STATIC_OBJECT = BODYFLAG_STATIC_OBJECT;
+export var RIGIDBODY_CF_KINEMATIC_OBJECT = BODYFLAG_KINEMATIC_OBJECT;
+export var RIGIDBODY_CF_NORESPONSE_OBJECT = BODYFLAG_NORESPONSE_OBJECT;
+export var RIGIDBODY_ACTIVE_TAG = BODYSTATE_ACTIVE_TAG;
+export var RIGIDBODY_ISLAND_SLEEPING = BODYSTATE_ISLAND_SLEEPING;
+export var RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
+export var RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
+export var RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
+
+export var fw = {
+    Application: Application,
+    Component: Component,
+    ComponentData: ComponentData,
+    ComponentSystem: ComponentSystem,
+    Entity: Entity,
+    FillMode: {
+        NONE: FILLMODE_NONE,
+        FILL_WINDOW: FILLMODE_FILL_WINDOW,
+        KEEP_ASPECT: FILLMODE_KEEP_ASPECT
+    },
+    ResolutionMode: {
+        AUTO: RESOLUTION_AUTO,
+        FIXED: RESOLUTION_FIXED
+    }
+};
+
+Application.prototype.isFullscreen = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
@@ -527,7 +698,7 @@ pc.Application.prototype.isFullscreen = function () {
     return !!document.fullscreenElement;
 };
 
-pc.Application.prototype.enableFullscreen = function (element, success, error) {
+Application.prototype.enableFullscreen = function (element, success, error) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
@@ -561,7 +732,7 @@ pc.Application.prototype.enableFullscreen = function (element, success, error) {
     }
 };
 
-pc.Application.prototype.disableFullscreen = function (success) {
+Application.prototype.disableFullscreen = function (success) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
@@ -579,19 +750,7 @@ pc.Application.prototype.disableFullscreen = function (success) {
     document.exitFullscreen();
 };
 
-pc.AssetRegistry.prototype.getAssetById = function (id) {
-    // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.");
-    // #endif
-    return this.get(id);
-};
-
-pc.AudioManager = pc.SoundManager;
-
-*/
-
-/*
-Object.defineProperty(pc.LightComponent.prototype, "enable", {
+Object.defineProperty(LightComponent.prototype, "enable", {
     get: function () {
         // #ifdef DEBUG
         console.warn("DEPRECATED: pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.");
@@ -606,35 +765,7 @@ Object.defineProperty(pc.LightComponent.prototype, "enable", {
     }
 });
 
-pc.Material.prototype.getName = function () {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
-    // #endif
-    return this.name;
-};
-
-pc.Material.prototype.setName = function (name) {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#setName is deprecated. Use pc.Material#name instead.');
-    // #endif
-    this.name = name;
-};
-
-pc.Material.prototype.getShader = function () {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
-    // #endif
-    return this.shader;
-};
-
-pc.Material.prototype.setShader = function (shader) {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
-    // #endif
-    this.shader = shader;
-};
-
-Object.defineProperty(pc.RigidBodyComponent.prototype, "bodyType", {
+Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {
         // #ifdef DEBUG
         console.warn('DEPRECATED: pc.RigidBodyComponent#bodyType is deprecated. Use pc.RigidBodyComponent#type instead.');
@@ -649,14 +780,14 @@ Object.defineProperty(pc.RigidBodyComponent.prototype, "bodyType", {
     }
 });
 
-pc.RigidBodyComponent.prototype.syncBodyToEntity = function () {
+RigidBodyComponent.prototype.syncBodyToEntity = function () {
     // #ifdef DEBUG
     console.warn('pc.RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
     // #endif
     this._updateDynamic();
 };
 
-pc.RigidBodyComponentSystem.prototype.setGravity = function () {
+RigidBodyComponentSystem.prototype.setGravity = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
     // #endif
@@ -667,97 +798,3 @@ pc.RigidBodyComponentSystem.prototype.setGravity = function () {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
 };
-
-pc.SoundManager.prototype.getListener = function () {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
-    // #endif
-    return this.listener;
-};
-
-pc.SoundManager.prototype.getVolume = function () {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
-    // #endif
-    return this.volume;
-};
-
-pc.SoundManager.prototype.setVolume = function (volume) {
-    // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
-    // #endif
-    this.volume = volume;
-};
-
-Object.defineProperty(pc.ElementInput.prototype, 'wheel', {
-    get: function () {
-        return this.wheelDelta * -2;
-    }
-});
-
-Object.defineProperty(pc.MouseEvent.prototype, 'wheel', {
-    get: function () {
-        return this.wheelDelta * -2;
-    }
-});
-
-Object.defineProperty(pc.XrInputSource.prototype, 'ray', {
-    get: function () {
-        // #ifdef DEBUG
-        console.warn('DEPRECATED: pc.XrInputSource#ray is deprecated. Use pc.XrInputSource#getOrigin and pc.XrInputSource#getDirection instead.');
-        // #endif
-        return this._rayLocal;
-    }
-});
-
-Object.defineProperty(pc.XrInputSource.prototype, 'position', {
-    get: function () {
-        // #ifdef DEBUG
-        console.warn('DEPRECATED: pc.XrInputSource#position is deprecated. Use pc.XrInputSource#getLocalPosition instead.');
-        // #endif
-        return this._localPosition;
-    }
-});
-
-Object.defineProperty(pc.XrInputSource.prototype, 'rotation', {
-    get: function () {
-        // #ifdef DEBUG
-        console.warn('DEPRECATED: pc.XrInputSource#rotation is deprecated. Use pc.XrInputSource#getLocalRotation instead.');
-        // #endif
-        return this._localRotation;
-    }
-});
-
-Object.defineProperties(pc.Texture.prototype, {
-    rgbm: {
-        get: function () {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
-            // #endif
-            return this.type === pc.TEXTURETYPE_RGBM;
-        },
-        set: function (rgbm) {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: pc.Texture#rgbm is deprecated. Use pc.Texture#type instead.");
-            // #endif
-            this.type = rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
-        }
-    },
-
-    swizzleGGGR: {
-        get: function () {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
-            // #endif
-            return this.type === pc.TEXTURETYPE_SWIZZLEGGGR;
-        },
-        set: function (swizzleGGGR) {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
-            // #endif
-            this.type = swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
-        }
-    }
-});
-
-*/

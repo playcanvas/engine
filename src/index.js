@@ -71,11 +71,12 @@ export { LayerComposition } from './scene/layer-composition.js';
 export { Lightmapper } from './scene/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
-export { MeshInstance } from './scene/mesh-instance.js';
+export { MeshInstance, Command } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
+export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
 export { Skin, SkinInstance } from './scene/skin.js';
@@ -95,6 +96,8 @@ export { Skeleton } from './anim/skeleton.js';
 export { AnimBinder, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
 
 // SOUND
+export * from './audio/constants.js';
+
 export { SoundManager } from './sound/manager.js';
 export { Sound } from './sound/sound.js';
 export { SoundInstance } from './sound/instance.js';
@@ -103,9 +106,6 @@ export { SoundInstance3d } from './sound/instance3d.js';
 // TEMPLATES
 export { Template } from './templates/template.js';
 export { TemplateUtils } from './templates/template-utils.js';
-
-// AUDIO
-export * from './audio/constants.js';
 
 // RESOURCES
 export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
