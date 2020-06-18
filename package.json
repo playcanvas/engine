@@ -61,14 +61,13 @@
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint examples/assets/scripts extras src tools",
     "serve": "http-server build/output -a localhost -p 51000",
-    "test": "karma start tests/karma.conf.js -- --single-run",
-    "test:release": "karma start tests/karma.conf.js -- --single-run --release",
+    "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
     "tsd": "jsdoc -c conf-tsd.json",
     "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
-    "unzipbundle": "gzip -x tests/assets/bundle.gz",
+    "unzipbundle": "gzip -x tests/assets/bundle.gz"
   },
   "engines": {
     "node": ">= 0.6.12"
