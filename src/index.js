@@ -19,6 +19,7 @@ export { string } from './core/string.js';
 export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
 export { Tags } from './core/tags.js';
+export { URI } from './core/uri.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -119,6 +120,7 @@ export { ContainerHandler, ContainerResource } from './resources/container.js';
 export { createStyle, CssHandler } from './resources/css.js';
 export { CubemapHandler } from './resources/cubemap.js';
 export { FontHandler } from './resources/font.js';
+export { HierarchyHandler } from './resources/hierarchy.js';
 export { HtmlHandler } from './resources/html.js';
 export { JsonHandler } from './resources/json.js';
 export { MaterialHandler } from './resources/material.js';
@@ -127,6 +129,7 @@ export { ResourceHandler } from './resources/handler.js';
 export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
 export { SceneHandler } from './resources/scene.js';
+export { SceneSettingsHandler } from './resources/scene-settings.js';
 export { ShaderHandler } from './resources/shader.js';
 export { TemplateHandler } from './resources/template.js';
 export { TextureHandler, TextureParser } from './resources/texture.js';
