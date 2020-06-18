@@ -725,8 +725,7 @@ Object.assign(pc, function () {
                 }
                 if (!object ||
                     !object.model ||
-                    !object.model.model ||
-                    !object.model.model.morphInstances) {
+                    !object.model.model) {
                     return null;
                 }
                 var meshInstances = object.model.meshInstances;
@@ -736,6 +735,9 @@ Object.assign(pc, function () {
                         meshInstance = meshInstances[i];
                         break;
                     }
+                }
+                if (!meshInstance) {
+                    return null;
                 }
                 var func = function (value) {
                     var textureAsset = pc.app.assets.get(value[0]);
