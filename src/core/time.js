@@ -1,5 +1,16 @@
 /**
  * @private
+ * @function
+ * @name pc.now
+ * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
+ * @returns {number} The time in milliseconds.
+ */
+var now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
+    return window.performance.now();
+} : Date.now;
+
+/**
+ * @private
  * @class
  * @name pc.Timer
  * @description Create a new Timer instance.
@@ -20,7 +31,7 @@ Object.assign(Timer.prototype, {
      */
     start: function () {
         this._isRunning = true;
-        this._a = pc.now();
+        this._a = now();
     },
 
     /**
@@ -31,7 +42,7 @@ Object.assign(Timer.prototype, {
      */
     stop: function () {
         this._isRunning = false;
-        this._b = pc.now();
+        this._b = now();
     },
 
     /**
@@ -45,16 +56,5 @@ Object.assign(Timer.prototype, {
         return this._b - this._a;
     }
 });
-
-/**
- * @private
- * @function
- * @name pc.now
- * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
- * @returns {number} The time in milliseconds.
- */
-var now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
-    return window.performance.now();
-} : Date.now;
 
 export { now, Timer };

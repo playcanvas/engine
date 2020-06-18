@@ -12,7 +12,6 @@ export { apps, common, config, data, extend, isDefined, makeArray, revision, typ
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
-export { now } from './core/time.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
@@ -20,6 +19,7 @@ export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
 export { Tags } from './core/tags.js';
+export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
 
 // NET
