@@ -179,8 +179,10 @@ export { AnimationComponent } from './framework/components/animation/component.j
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './framework/components/anim/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
+export { AnimComponentLayer } from './framework/components/anim/layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';
 export { AnimController } from './framework/components/anim/controller.js';
+export { AnimPropertyLocator } from './framework/components/anim/property-locator.js';
 export { AnimStateGraph } from './framework/components/anim/state-graph.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
@@ -243,6 +245,7 @@ export * from './framework/components/sprite/constants.js';
 export { SpriteAnimationClip } from './framework/components/sprite/sprite-animation-clip.js';
 export { SpriteComponent } from './framework/components/sprite/component.js';
 export { SpriteComponentSystem } from './framework/components/sprite/system.js';
+export { TextElement } from './framework/components/element/text-element.js';
 export { ZoneComponent } from './framework/components/zone/component.js';
 export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
