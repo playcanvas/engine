@@ -21,6 +21,8 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 
 import { Application } from '../../framework/application.js';
 
+import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+
 /**
  * @class
  * @name pc.StandardMaterial
@@ -294,6 +296,9 @@ function StandardMaterial() {
 }
 StandardMaterial.prototype = Object.create(Material.prototype);
 StandardMaterial.prototype.constructor = StandardMaterial;
+
+StandardMaterial.TEXTURE_PARAMETERS = standardMaterialTextureParameters;
+StandardMaterial.CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
 var _propsSerial = [];
 var _propsSerialDefaultVal = [];

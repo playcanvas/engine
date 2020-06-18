@@ -146,12 +146,12 @@ function Texture(graphicsDevice, options) {
             this.type = options.type;
         } else if (options.hasOwnProperty('rgbm')) {
             // #ifdef DEBUG
-            console.warning("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
+            console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
             // #endif
             this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
         } else if (options.hasOwnProperty('swizzleGGGR')) {
             // #ifdef DEBUG
-            console.warning("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
+            console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
             // #endif
             this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
         }
