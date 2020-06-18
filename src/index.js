@@ -49,6 +49,7 @@ export { Ray } from './shape/ray.js';
 export * from './graphics/graphics.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
+export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';

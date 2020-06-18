@@ -170,7 +170,7 @@ var standardMaterialParameterTypes = {
 var key, type;
 var standardMaterialTextureParameters = [];
 for (key in standardMaterialParameterTypes) {
-    type = [key];
+    type = standardMaterialParameterTypes[key];
     if (type === 'texture') {
         standardMaterialTextureParameters.push(key);
     }
