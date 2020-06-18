@@ -115,7 +115,7 @@ import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 
 import {
-    FILLMODE_NONE, FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
+    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
 

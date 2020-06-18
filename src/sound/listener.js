@@ -3,8 +3,6 @@ import { Mat4 } from '../math/mat4.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
-import { SoundManager } from './manager.js';
-
 /**
  * @private
  * @class

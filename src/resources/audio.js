@@ -5,7 +5,6 @@ import { http, Http } from '../net/http.js';
 import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
-import { SoundManager } from '../sound/manager.js';
 
 // checks if user is running IE
 var ie = (function () {

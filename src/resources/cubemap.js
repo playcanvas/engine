@@ -1,5 +1,3 @@
-import { path } from '../core/path.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_R8_G8_B8_A8,

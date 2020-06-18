@@ -4,8 +4,7 @@ import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
 import { Texture } from '../graphics/texture.js';
 
 import { SPECULAR_PHONG } from '../scene/constants.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
+import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
 
 import { AssetReference } from '../asset/asset-reference.js';
 

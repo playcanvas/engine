@@ -13,7 +13,7 @@ function ParticleSystemComponentData() {
     this.emitterExtentsInner = new Vec3();
     this.emitterRadius = 0;
     this.emitterRadiusInner = 0;
-    this.emitterShape = pc.EMITTERSHAPE_BOX;
+    this.emitterShape = EMITTERSHAPE_BOX;
     this.initialVelocity = 0;
     this.wrapBounds = new Vec3();
     this.localSpace = false;
@@ -24,7 +24,7 @@ function ParticleSystemComponentData() {
     this.loop = true;
     this.preWarm = false;
     this.sort = 0;                          // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;   Forces CPU mode if not 0
-    this.mode = pc.PARTICLEMODE_GPU;
+    this.mode = PARTICLEMODE_GPU;
     this.scene = null;
     this.lighting = false;
     this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
@@ -38,7 +38,7 @@ function ParticleSystemComponentData() {
     this.depthWrite = false;
     this.noFog = false;
 
-    this.orientation = pc.PARTICLEORIENTATION_SCREEN;
+    this.orientation = PARTICLEORIENTATION_SCREEN;
     this.particleNormal = new Vec3(0, 1, 0);
 
     this.animTilesX = 1;
@@ -73,7 +73,7 @@ function ParticleSystemComponentData() {
     this.radialSpeedGraph = null;
     this.radialSpeedGraph2 = null;
 
-    this.blendType = pc.BLEND_NORMAL;
+    this.blendType = BLEND_NORMAL;
 
     this.model = null;
 
@@ -83,7 +83,7 @@ function ParticleSystemComponentData() {
 
     this.autoPlay = true;
 
-    this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
+    this.layers = [LAYERID_WORLD]; // assign to the default world layer
 }
 
 export { ParticleSystemComponentData };

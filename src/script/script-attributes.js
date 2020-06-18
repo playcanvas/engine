@@ -2,9 +2,6 @@ import { Color } from '../core/color.js';
 
 import { Curve } from '../math/curve.js';
 import { CurveSet } from '../math/curve-set.js';
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 

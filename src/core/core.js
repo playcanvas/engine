@@ -127,4 +127,4 @@ function isDefined(o) {
     return (o !== a);
 }
 
-export { extend, isDefined, makeArray, revision, type, version };
+export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version };

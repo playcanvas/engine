@@ -133,7 +133,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
 
         properties = [];
         var types = this.propertyTypes;
-        var type;
+        var t;
 
         // we store the mesh asset id as "mesh" (it should be "meshAsset")
         // this re-maps "mesh" into "meshAsset" if it is an asset or an asset id
@@ -156,15 +156,15 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
                 }
             } else if (types[prop] === 'curve') {
                 if (!(data[prop] instanceof Curve)) {
-                    type = data[prop].type;
+                    t = data[prop].type;
                     data[prop] = new Curve(data[prop].keys);
-                    data[prop].type = type;
+                    data[prop].type = t;
                 }
             } else if (types[prop] === 'curveset') {
                 if (!(data[prop] instanceof CurveSet)) {
-                    type = data[prop].type;
+                    t = data[prop].type;
                     data[prop] = new CurveSet(data[prop].keys);
-                    data[prop].type = type;
+                    data[prop].type = t;
                 }
             }
 

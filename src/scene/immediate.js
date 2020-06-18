@@ -1,18 +1,10 @@
 import { Mat4 } from '../math/mat4.js';
 
-import {
-    BUFFER_DYNAMIC,
-    PRIMITIVE_LINES, PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION, SEMANTIC_COLOR,
-    TYPE_FLOAT32, TYPE_UINT8
-} from '../graphics/graphics.js';
+import { BUFFER_DYNAMIC, PRIMITIVE_LINES, SEMANTIC_POSITION, SEMANTIC_COLOR, TYPE_FLOAT32, TYPE_UINT8 } from '../graphics/graphics.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 
-import {
-    BLEND_NORMAL,
-    LAYERID_IMMEDIATE
-} from '../scene/constants.js';
+import { BLEND_NORMAL } from '../scene/constants.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { Mesh } from '../scene/mesh.js';

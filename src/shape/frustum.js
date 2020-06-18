@@ -1,5 +1,4 @@
 import { Mat4 } from '../math/mat4.js';
-import { Vec3 } from '../math/vec3.js';
 
 var viewProj = new Mat4();
 

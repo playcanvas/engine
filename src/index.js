@@ -8,7 +8,7 @@ import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 
 // CORE
-export { version, revision } from './core/core.js';
+export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';

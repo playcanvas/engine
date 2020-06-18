@@ -6,7 +6,6 @@ import { Vec2 } from '../../../math/vec2.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { _lightProps, LightComponent } from './component.js';

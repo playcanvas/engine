@@ -4,8 +4,6 @@ import { math } from '../math/math.js';
 
 import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
 
-import { SoundManager } from './manager.js';
-
 var SoundInstance;
 
 var STATE_PLAYING = 0;

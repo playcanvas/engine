@@ -111,7 +111,6 @@ var maxBlurSize = 25;
 var keyA, keyB;
 
 var _autoInstanceBuffer = null;
-var _autoInstanceBufferData = null;
 var skipRenderCamera = null;
 var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
@@ -1936,7 +1935,6 @@ Object.assign(ForwardRenderer.prototype, {
         if (device.enableAutoInstancing) {
             if (!_autoInstanceBuffer) {
                 _autoInstanceBuffer = new VertexBuffer(device, VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, BUFFER_DYNAMIC);
-                _autoInstanceBufferData = new Float32Array(_autoInstanceBuffer.lock());
             }
         }
     },

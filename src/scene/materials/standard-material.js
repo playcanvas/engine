@@ -14,8 +14,7 @@ import {
     FRESNEL_NONE,
     SHADER_FORWARDHDR, SHADER_PICK,
     SPECOCC_AO,
-    SPECULAR_BLINN, SPECULAR_PHONG,
-    SPRITE_RENDERMODE_SLICED
+    SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';

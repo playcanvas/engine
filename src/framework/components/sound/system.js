@@ -1,5 +1,4 @@
 import { hasAudioContext } from '../../../audio/capabilities.js';
-import { SoundManager } from '../../../sound/manager.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

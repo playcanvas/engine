@@ -58,8 +58,7 @@ var path = {
      * @function
      * @name pc.path.normalize
      * @description Normalize the path by removing '.' and '..' instances.
-     * @param pathname
-     * @param {string} path - The path to normalize.
+     * @param {string} pathname - The path to normalize.
      * @returns {string} The normalized path.
      */
     normalize: function (pathname) {
@@ -102,8 +101,7 @@ var path = {
      * @name pc.path.split
      * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
      * after the last delimiter and head is everything leading up to that. tail will never contain a slash.
-     * @param pathname
-     * @param {string} path - The path to split.
+     * @param {string} pathname - The path to split.
      * @returns {string[]} The split path which is an array of two strings, the path and the filename.
      */
     split: function (pathname) {
@@ -118,8 +116,7 @@ var path = {
      * @name pc.path.getBasename
      * @description Return the basename of the path. That is the second element of the pair returned by
      * passing path into {@link pc.path.split}.
-     * @param pathname
-     * @param {string} path - The path to process.
+     * @param {string} pathname - The path to process.
      * @returns {string} The basename.
      * @example
      * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
@@ -133,8 +130,7 @@ var path = {
      * @function
      * @name pc.path.getDirectory
      * @description Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter.
-     * @param pathname
-     * @param {string} path - The path to get the directory from.
+     * @param {string} pathname - The path to get the directory from.
      * @returns {string} The directory part of the path.
      */
     getDirectory: function (pathname) {
@@ -145,8 +141,7 @@ var path = {
      * @function
      * @name pc.path.getExtension
      * @description Return the extension of the path. Pop the last value of a list after path is split by question mark and comma.
-     * @param pathname
-     * @param {string} path - The path to process.
+     * @param {string} pathname - The path to process.
      * @returns {string} The extension.
      * @example
      * pc.path.getExtension("/path/to/file.txt"); // returns ".txt"
@@ -165,7 +160,7 @@ var path = {
      * @function
      * @name pc.path.isRelativePath
      * @description Check if a string s is relative path.
-     * @param {string} s - The path to process.
+     * @param {string} pathname - The path to process.
      * @returns {boolean} True if s doesn't start with slash and doesn't include colon and double slash.
      * @example
      * pc.path.isRelativePath("file.txt"); // returns true
@@ -175,15 +170,15 @@ var path = {
      * pc.path.isRelativePath("/path/to/file.jpg"); // returns false
      * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
      */
-    isRelativePath: function (s) {
-        return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
+    isRelativePath: function (pathname) {
+        return pathname.charAt(0) !== "/" && pathname.match(/:\/\//) === null;
     },
 
     /**
      * @function
      * @name pc.path.extractPath
      * @description Return the path without file name. If path is relative path, start with period.
-     * @param {string} s - The full path to process.
+     * @param {string} pathname - The full path to process.
      * @returns {string} The path without a last element from list split by slash.
      * @example
      * pc.path.extractPath("path/to/file.txt");    // returns "./path/to"
@@ -191,35 +186,35 @@ var path = {
      * pc.path.extractPath("../path/to/file.txt"); // returns "../path/to"
      * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
-    extractPath: function (s) {
-        var pathname = "";
-        var parts = s.split("/");
+    extractPath: function (pathname) {
+        var result = "";
+        var parts = pathname.split("/");
         var i = 0;
 
         if (parts.length > 1) {
-            if (path.isRelativePath(s)) {
+            if (path.isRelativePath(pathname)) {
                 if (parts[0] === ".") {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        pathname += (i === 0) ? parts[i] : "/" + parts[i];
+                        result += (i === 0) ? parts[i] : "/" + parts[i];
 
                     }
                 } else if (parts[0] === "..") {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        pathname += (i === 0) ? parts[i] : "/" + parts[i];
+                        result += (i === 0) ? parts[i] : "/" + parts[i];
                     }
                 } else {
-                    pathname = ".";
+                    result = ".";
                     for (i = 0; i < parts.length - 1; ++i) {
-                        pathname += "/" + parts[i];
+                        result += "/" + parts[i];
                     }
                 }
             } else {
                 for (i = 0; i < parts.length - 1; ++i) {
-                    pathname += (i === 0) ? parts[i] : "/" + parts[i];
+                    result += (i === 0) ? parts[i] : "/" + parts[i];
                 }
             }
         }
-        return pathname;
+        return result;
     }
 };
 
