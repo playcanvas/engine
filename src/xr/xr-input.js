@@ -26,7 +26,7 @@ function XrInput(manager) {
 
     this.manager.on('start', this._onSessionStart, this);
     this.manager.on('end', this._onSessionEnd, this);
-};
+}
 XrInput.prototype = Object.create(EventHandler.prototype);
 XrInput.prototype.constructor = XrInput;
 

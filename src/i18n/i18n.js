@@ -219,7 +219,7 @@ function I18n(app) {
     this._app = app;
     this._assets = [];
     this._parser = new I18nParser();
-};
+}
 I18n.prototype = Object.create(EventHandler.prototype);
 I18n.prototype.constructor = I18n;
 

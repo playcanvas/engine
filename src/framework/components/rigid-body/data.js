@@ -1,4 +1,4 @@
-import { Vec3} from '../../../math/vec3.js';
+import { Vec3 } from '../../../math/vec3.js';
 
 import { BODYGROUP_STATIC, BODYMASK_NOT_STATIC, BODYTYPE_STATIC } from './constants.js';
 

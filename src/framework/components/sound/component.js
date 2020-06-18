@@ -46,7 +46,7 @@ function SoundComponent(system, entity) {
     this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
     this.on("set_distanceModel", this.onSetDistanceModel, this);
     this.on("set_positional", this.onSetPositional, this);
-};
+}
 SoundComponent.prototype = Object.create(Component.prototype);
 SoundComponent.prototype.constructor = SoundComponent;
 

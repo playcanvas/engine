@@ -56,9 +56,10 @@ var path = {
 
     /**
      * @function
-     * @name  pc.path.normalize
-     * @description  Normalize the path by removing '.' and '..' instances.
-     * @param  {string} path - The path to normalize.
+     * @name pc.path.normalize
+     * @description Normalize the path by removing '.' and '..' instances.
+     * @param pathname
+     * @param {string} path - The path to normalize.
      * @returns {string} The normalized path.
      */
     normalize: function (pathname) {
@@ -101,6 +102,7 @@ var path = {
      * @name pc.path.split
      * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
      * after the last delimiter and head is everything leading up to that. tail will never contain a slash.
+     * @param pathname
      * @param {string} path - The path to split.
      * @returns {string[]} The split path which is an array of two strings, the path and the filename.
      */
@@ -116,6 +118,7 @@ var path = {
      * @name pc.path.getBasename
      * @description Return the basename of the path. That is the second element of the pair returned by
      * passing path into {@link pc.path.split}.
+     * @param pathname
      * @param {string} path - The path to process.
      * @returns {string} The basename.
      * @example
@@ -130,6 +133,7 @@ var path = {
      * @function
      * @name pc.path.getDirectory
      * @description Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter.
+     * @param pathname
      * @param {string} path - The path to get the directory from.
      * @returns {string} The directory part of the path.
      */
@@ -141,6 +145,7 @@ var path = {
      * @function
      * @name pc.path.getExtension
      * @description Return the extension of the path. Pop the last value of a list after path is split by question mark and comma.
+     * @param pathname
      * @param {string} path - The path to process.
      * @returns {string} The extension.
      * @example

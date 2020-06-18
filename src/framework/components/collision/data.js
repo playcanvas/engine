@@ -13,6 +13,6 @@ function CollisionComponentData() {
     this.shape = null;
     this.model = null;
     this.initialized = false;
-};
+}
 
 export { CollisionComponentData };

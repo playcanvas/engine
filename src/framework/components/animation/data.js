@@ -23,6 +23,6 @@ function AnimationComponentData() {
 
     // glb animation controller
     this.animEvaluator = null;
-};
+}
 
 export { AnimationComponentData };

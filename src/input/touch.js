@@ -100,7 +100,7 @@ function TouchDevice(element) {
     this._cancelHandler = this._handleTouchCancel.bind(this);
 
     this.attach(element);
-};
+}
 TouchDevice.prototype = Object.create(EventHandler.prototype);
 TouchDevice.prototype.constructor = TouchDevice;
 

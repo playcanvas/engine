@@ -41,7 +41,7 @@ var regexFrame = /^data\.frames\.(\d+)$/;
 function TextureAtlasHandler(loader) {
     this._loader = loader;
     this.retryRequests = false;
-};
+}
 
 Object.assign(TextureAtlasHandler.prototype, {
     // Load the texture atlas texture using the texture resource loader

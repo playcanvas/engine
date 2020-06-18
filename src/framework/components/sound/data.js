@@ -17,4 +17,3 @@ function SoundComponentData() {
 }
 
 export { SoundComponentData };
-

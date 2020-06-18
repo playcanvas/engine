@@ -2,7 +2,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
-import { 
+import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES,

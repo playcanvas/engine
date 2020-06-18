@@ -1,1 +1,1 @@
-export { MiniStats} from './mini-stats/mini-stats.js';
+export { MiniStats } from './mini-stats/mini-stats.js';

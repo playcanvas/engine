@@ -70,7 +70,7 @@ function Picker(app, width, height) {
     this.resize(width, height);
 
     this._ignoreOpacityFor = null; // meshInstance
-};
+}
 
 /**
  * @function

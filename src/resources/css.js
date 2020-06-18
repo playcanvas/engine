@@ -53,6 +53,6 @@ function createStyle(cssString) {
     }
 
     return result;
-};
+}
 
 export { createStyle, CssHandler };

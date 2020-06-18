@@ -4,7 +4,7 @@ import {
     ACTION_GAMEPAD, ACTION_KEYBOARD, ACTION_MOUSE,
     EVENT_MOUSEMOVE,
     PAD_1,
-    PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y,
+    PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y
 } from './constants.js';
 
 import { Keyboard } from './keyboard.js';

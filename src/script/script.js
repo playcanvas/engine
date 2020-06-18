@@ -62,7 +62,7 @@ function createScript(name, app) {
 
     registerScript(scriptType, name, app);
     return scriptType;
-};
+}
 
 /* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/check-examples */
@@ -129,7 +129,7 @@ function registerScript(script, name, app) {
     registry.add(script);
 
     ScriptHandler._push(script);
-};
+}
 
 // reserved scripts
 createScript.reservedScripts = [

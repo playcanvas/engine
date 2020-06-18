@@ -466,4 +466,4 @@ Object.defineProperty(Asset.prototype, 'preload', {
     }
 });
 
-export { Asset};
+export { Asset };

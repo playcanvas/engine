@@ -21,7 +21,7 @@ function MorphInstance(morph) {
 
     // pre-allocate array of active vertex buffers used by rendering
     this._activeVertexBuffers = new Array(MorphInstance.RENDER_TARGET_COUNT);
-};
+}
 
 Object.defineProperties(MorphInstance, {
     // number of vertex buffer / weight slots

@@ -3,7 +3,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
-import { 
+import {
     INDEXFORMAT_UINT16,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES, SEMANTIC_COLOR,

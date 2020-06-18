@@ -93,7 +93,7 @@ var RenderTarget = function (options) {
     this._glResolveFrameBuffer = null;
     this._glMsaaColorBuffer = null;
     this._glMsaaDepthBuffer = null;
-}
+};
 
 Object.assign(RenderTarget.prototype, {
     /**

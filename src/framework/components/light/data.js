@@ -12,6 +12,6 @@ function LightComponentData() {
             this[_props[i]] = value;
         }
     }
-};
+}
 
 export { LightComponentData };
