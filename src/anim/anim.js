@@ -739,8 +739,10 @@ Object.assign(pc, function () {
                 }
                 var func = function (value) {
                     var textureAsset = pc.app.assets.get(value[0]);
-                    meshInstance.material[textureName] = textureAsset.resource;
-                    meshInstance.material.update();
+                    if (textureAsset && textureAsset.resource && textureAsset.resource.constructor === pc.Texture) {
+                        meshInstance.material[textureName] = textureAsset.resource;
+                        meshInstance.material.update();
+                    }
                 };
                 return new pc.AnimTarget(func, 'vector', 1);
             }

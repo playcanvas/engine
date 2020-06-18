@@ -34,7 +34,6 @@ Object.assign(pc, function () {
                     break;
                 case 'graph':
                     if (!this.nodes[entityHierarchy[0]]) {
-                        console.log('ISNT HERE', entityHierarchy[0]);
                         return null;
                     }
                     propertyComponent = this.nodes[entityHierarchy[0]].node;
