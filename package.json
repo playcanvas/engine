@@ -57,23 +57,18 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "build:debug": "cd build && node build.js -d -o output/playcanvas.dbg.js",
-    "build:profiler": "cd build && node build.js -p -o output/playcanvas.prf.js",
-    "build:min": "cd build && node build.js -l 1 -o output/playcanvas.min.js",
-    "build:extras": "cd build && node build.js -l 1 -t extras",
-    "build:all": "npm run build && npm run build:debug && npm run build:profiler && npm run build:min && npm run build:extras",
+    "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
     "docs": "jsdoc -c conf-api.json",
+    "lint": "eslint examples/assets/scripts extras src tools",
     "serve": "http-server build/output -a localhost -p 51000",
-    "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
-    "uglify": "uglifyjs build/output/playcanvas.js --compress --mangle --output build/output/playcanvas.min.js",
-    "unzipbundle": "gzip -x tests/assets/bundle.gz",
     "test": "karma start tests/karma.conf.js -- --single-run",
     "test:release": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
     "tsd": "jsdoc -c conf-tsd.json",
-    "lint": "eslint examples/assets/scripts extras src tools"
+    "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
+    "unzipbundle": "gzip -x tests/assets/bundle.gz",
   },
   "engines": {
     "node": ">= 0.6.12"
