@@ -237,3 +237,6 @@ export { XrLightEstimation } from './xr/xr-light-estimation.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';
+
+// BACKWARDS COMPATIBILITY
+export * from './deprecated.js';
