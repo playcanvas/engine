@@ -18,8 +18,9 @@ export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
+export { IndexedList } from './core/indexed-list.js';
 export { Tags } from './core/tags.js';
-export { URI } from './core/uri.js';
+export { URI, createURI } from './core/uri.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -94,7 +95,7 @@ export { Font } from './framework/components/text/font.js';
 export * from './anim/constants.js';
 export { Animation, Key, Node } from './anim/animation.js';
 export { Skeleton } from './anim/skeleton.js';
-export { AnimBinder, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
+export { AnimBinder, AnimClip, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
 
 // SOUND
 export * from './audio/constants.js';
@@ -142,8 +143,10 @@ export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 // ASSETS
 export * from './asset/constants.js';
 export { Asset } from './asset/asset.js';
+export { AssetListLoader } from './asset/asset-list-loader.js';
 export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
+export { LocalizedAsset } from './asset/asset-localized.js';
 
 // LOCALIZATION
 export { I18n } from './i18n/i18n.js';
@@ -184,6 +187,7 @@ export { CameraComponentSystem } from './framework/components/camera/system.js';
 export { CollisionComponent } from './framework/components/collision/component.js';
 export { CollisionComponentSystem } from './framework/components/collision/system.js';
 export { Component } from './framework/components/component.js';
+export { ComponentData } from './framework/components/data.js';
 export { ComponentSystem } from './framework/components/system.js';
 export { ComponentSystemRegistry } from './framework/components/registry.js';
 export * from './framework/components/element/constants.js';
@@ -191,6 +195,9 @@ export { ElementComponent } from './framework/components/element/component.js';
 export { ElementComponentSystem } from './framework/components/element/system.js';
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
+export { EntityReference } from './framework/utils/entity-reference.js';
+export { ImageElement } from './framework/components/element/image-element.js';
+export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
 export { LayoutChildComponentSystem } from './framework/components/layout-child/system.js';
 export * from './framework/components/layout-group/constants.js';
@@ -218,6 +225,7 @@ export { ScrollbarComponentSystem } from './framework/components/scrollbar/syste
 export * from './framework/components/scroll-view/constants.js';
 export { ScrollViewComponent } from './framework/components/scroll-view/component.js';
 export { ScrollViewComponentSystem } from './framework/components/scroll-view/system.js';
+export { SortedLoopArray } from './framework/utils/sorted-loop-array.js';
 export { SoundSlot } from './framework/components/sound/slot.js';
 export { SoundComponent } from './framework/components/sound/component.js';
 export { SoundComponentSystem } from './framework/components/sound/system.js';
