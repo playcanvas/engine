@@ -4,7 +4,7 @@ import { version } from './package.json';
 import Preprocessor from 'preprocessor';
 
 const execSync = require('child_process').execSync;
-const revision = execSync('git rev-parse --short HEAD').toString().trim()
+const revision = execSync('git rev-parse --short HEAD').toString().trim();
 const notice = [
     '/*',
     ' * Playcanvas Engine v' + version + ' revision ' + revision,
@@ -26,7 +26,8 @@ function preprocessor(options) {
             };
         }
     };
-};
+}
+
 function shaderChunks() {
     const filter = createFilter([
         '**/*.vert',
@@ -42,7 +43,7 @@ function shaderChunks() {
             };
         }
     };
-};
+}
 
 export default [{
     input: 'src/index.js',
