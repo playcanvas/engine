@@ -76,7 +76,7 @@ Object.assign(pc, function () {
      * @implements {pc.TextureParser}
      * @classdesc Texture parser for dds files.
      */
-    var DdsParser = function (retryRequests) {
+    var DdsParser = function (registry, retryRequests) {
         this.retryRequests = !!retryRequests;
     };
 

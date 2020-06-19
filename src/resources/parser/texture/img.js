@@ -17,7 +17,7 @@ Object.assign(pc, function () {
             var crossOrigin;
             if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
                 crossOrigin = asset.options.crossOrigin;
-            } else if (pc.ABSOLUTE_URL.test(url)) {
+            } else if (pc.ABSOLUTE_URL.test(url.load)) {
                 crossOrigin = this.crossOrigin;
             }
             this._loadImage(url.load, url.original, crossOrigin, callback);
