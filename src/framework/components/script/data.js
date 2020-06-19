@@ -1,9 +1,5 @@
-Object.assign(pc, function () {
-    var ScriptComponentData = function () {
-        this.enabled = true;
-    };
+function ScriptComponentData() {
+    this.enabled = true;
+}
 
-    return {
-        ScriptComponentData: ScriptComponentData
-    };
-}());
+export { ScriptComponentData };

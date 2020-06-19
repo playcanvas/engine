@@ -3,7 +3,7 @@
  * @namespace
  * @description Math API.
  */
-pc.math = {
+var math = {
     /**
      * @constant
      * @type {number}
@@ -148,7 +148,7 @@ pc.math = {
      * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerp: function (a, b, alpha) {
-        return a + (b - a) * pc.math.clamp(alpha, 0, 1);
+        return a + (b - a) * math.clamp(alpha, 0, 1);
     },
 
     /**
@@ -170,7 +170,7 @@ pc.math = {
         if (b - a < -180 ) {
             b += 360;
         }
-        return pc.math.lerp(a, b, pc.math.clamp(alpha, 0, 1));
+        return pc.math.lerp(a, b, math.clamp(alpha, 0, 1));
     },
 
     /**
@@ -274,3 +274,5 @@ pc.math = {
         return Math.ceil(numToRound / multiple) * multiple;
     }
 };
+
+export { math };
