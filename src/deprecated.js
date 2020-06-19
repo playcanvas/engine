@@ -2,6 +2,7 @@
 import { revision, version } from './core/core.js';
 import { string } from './core/string.js';
 import { Color } from './core/color.js';
+import { Timer, now } from "../src/core/time";
 
 export var log = {
     write: function (text) {
@@ -97,8 +98,8 @@ string.startsWith = function (s, subs) {
 };
 
 export var time = {
-    now: pc.now,
-    Timer: pc.Timer
+    now: now,
+    Timer: Timer
 };
 
 Object.defineProperty(Color.prototype, "data", {
