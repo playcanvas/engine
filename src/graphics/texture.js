@@ -134,12 +134,12 @@ Object.assign(pc, function () {
                 this.type = options.type;
             } else if (options.hasOwnProperty('rgbm')) {
                 // #ifdef DEBUG
-                console.warning("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
+                console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.rgbm ? pc.TEXTURETYPE_RGBM : pc.TEXTURETYPE_DEFAULT;
             } else if (options.hasOwnProperty('swizzleGGGR')) {
                 // #ifdef DEBUG
-                console.warning("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
+                console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
                 // #endif
                 this.type = options.swizzleGGGR ? pc.TEXTURETYPE_SWIZZLEGGGR : pc.TEXTURETYPE_DEFAULT;
             }
