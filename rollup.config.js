@@ -74,7 +74,7 @@ export default [{
     },
     plugins: [
         preprocessor({
-            PROFILER: false,
+            PROFILER: true,
             DEBUG: true,
             RELEASE: false
         }),
