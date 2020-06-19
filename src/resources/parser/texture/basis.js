@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @implements {pc.TextureParser}
      * @classdesc Parser for basis files.
      */
-    var BasisParser = function (retryRequests) {
+    var BasisParser = function (registry, retryRequests) {
         this.retryRequests = !!retryRequests;
     };
 

@@ -161,6 +161,31 @@ Object.assign(pc, function () {
         };
     };
 
+    Object.defineProperties(TextureHandler.prototype, {
+        crossOrigin: {
+            get: function () {
+                return this.imgParser.crossOrigin;
+            },
+            set: function (value) {
+                this.imgParser.crossOrigin = value;
+            }
+        },
+
+        retryRequests: {
+            get: function () {
+                return this.imgParser.retryRequests;
+            },
+            set: function (value) {
+                this.imgParser.retryRequests = value;
+                for (var parser in this.parsers) {
+                    if (this.parsers.hasOwnProperty(parser)) {
+                        this.parsers[parser].retryRequests = value;
+                    }
+                }
+            }
+        }
+    });
+
     Object.assign(TextureHandler.prototype, {
         _getUrlWithoutParams: function (url) {
             return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
