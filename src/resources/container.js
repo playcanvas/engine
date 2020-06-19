@@ -61,7 +61,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ContainerHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
+     * @classdesc Loads files that contain in them multiple resources. For example glTF files can contain
      * textures, models and animations.
      * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
      * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
@@ -101,6 +101,7 @@ Object.assign(pc, function () {
                                             response,
                                             self._device,
                                             asset.registry,
+                                            asset.options,
                                             function (err, result) {
                                                 if (err) {
                                                     callback(err);
@@ -136,7 +137,7 @@ Object.assign(pc, function () {
             var i;
 
             // create model asset
-            var model = createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
+            var model = (data.meshes.length === 0) ? null : createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
 
             // create material assets
             var materials = [];

@@ -419,7 +419,7 @@ Object.assign(pc, function () {
                         self.fire("error:" + asset.id, err, asset);
                         asset.fire("error", err, asset);
                     }
-                });
+                }, asset);
             }
 
             if (!file) {

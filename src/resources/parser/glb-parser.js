@@ -1128,22 +1128,30 @@ Object.assign(pc, function () {
 
     };
 
-    var createMaterials = function (gltf, textures) {
+    var createMaterials = function (gltf, textures, callback) {
         if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
             return [];
         }
         return gltf.materials.map(function (materialData) {
-            return createMaterial(materialData, textures);
+            var material = createMaterial(materialData, textures);
+            if (callback && materialData.hasOwnProperty('extras')) {
+                callback(material, materialData.extras);
+            }
+            return material;
         });
 
     };
 
-    var createAnimations = function (gltf, nodes, buffers) {
+    var createAnimations = function (gltf, nodes, buffers, callback) {
         if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
             return [];
         }
         return gltf.animations.map(function (animationData, animationIndex) {
-            return createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
+            var animation = createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
+            if (callback && animationData.hasOwnProperty('extras')) {
+                callback(animation, animationData.extras);
+            }
+            return animation;
         });
 
     };
@@ -1172,14 +1180,18 @@ Object.assign(pc, function () {
     };
 
     // create engine resources from the downloaded GLB data
-    var createResources = function (device, gltf, buffers, textures, callback) {
+    var createResources = function (device, gltf, buffers, textures, options, callback) {
         var nodes = createNodes(gltf);
-        var animations = createAnimations(gltf, nodes, buffers);
+        var animations = createAnimations(gltf, nodes, buffers, options && options.processAnimation);
         var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
             return textures[t.source].resource;
-        }) : []);
+        }) : [], options && options.processMaterial);
         var meshes = createMeshes(device, gltf, buffers, callback);
         var skins = createSkins(device, gltf, nodes, buffers);
+
+        if (options.processGlobal && gltf.hasOwnProperty('extras')) {
+            options.processGlobal(gltf.extras);
+        }
 
         callback(null, {
             'gltf': gltf,
@@ -1229,7 +1241,7 @@ Object.assign(pc, function () {
     };
 
     // load textures using the asset system
-    var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, callback) {
+    var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, options, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1245,7 +1257,7 @@ Object.assign(pc, function () {
                 // apply samplers
                 for (var t = 0; t < gltf.textures.length; ++t) {
                     var texture = gltf.textures[t];
-                    applySampler(result[texture.source], (gltf.samplers || [])[texture.sampler]);
+                    applySampler(result[texture.source].resource, (gltf.samplers || [])[texture.sampler]);
                 }
 
                 callback(null, result);
@@ -1257,15 +1269,30 @@ Object.assign(pc, function () {
 
             var url;
             var mimeType;
-            var options = {};
             if (imgData.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(imgData.uri)) {
                     url = imgData.uri;
                     mimeType = getDataURIMimeType(imgData.uri);
                 } else {
-                    url = pc.path.join(urlBase, imgData.uri);
-                    options.crossOrigin = "anonymous";
+                    if (options.processTextureUri) {
+                        options.processTextureUri(imgData.uri, function (index, err, texture) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                // nasty: wrap the texture in an asset
+                                var textureAsset = new pc.Asset(texture.name, 'texture');
+                                textureAsset.loaded = true;
+                                textureAsset.resource = texture;
+                                registry.add(textureAsset);
+                                onLoad(index, textureAsset);
+                            }
+                        }.bind(null, i));
+                        continue;
+                    } else {
+                        url = pc.path.join(urlBase, imgData.uri);
+                        options.crossOrigin = "anonymous";
+                    }
                 }
             } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1302,7 +1329,7 @@ Object.assign(pc, function () {
             }
 
             // create and load the asset
-            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false }, options);
+            var asset = new pc.Asset('texture_' + i, 'texture',  file, { flipY: false });
             asset.on('load', onLoad.bind(null, i));
             registry.add(asset);
             registry.load(asset);
@@ -1310,7 +1337,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf buffers asynchronously, returning them in the callback
-    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
+    var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) {
         var result = [];
 
         if (gltf.buffers === null || gltf.buffers.length === 0) {
@@ -1319,7 +1346,7 @@ Object.assign(pc, function () {
         }
 
         var remaining = gltf.buffers.length;
-        var onLoad = function (buffer, idx) {
+        var onLoad = function (idx, buffer) {
             result[idx] = buffer;
             if (--remaining === 0) {
                 callback(null, result);
@@ -1331,7 +1358,7 @@ Object.assign(pc, function () {
                 if (err) {
                     callback(err);
                 } else {
-                    onLoad(new Uint8Array(result), index);
+                    onLoad(index, new Uint8Array(result));
                 }
             };
         };
@@ -1355,16 +1382,26 @@ Object.assign(pc, function () {
                         binaryArray[j] = byteString.charCodeAt(j);
                     }
 
-                    onLoad(binaryArray, i);
+                    onLoad(i, binaryArray);
                 } else {
-                    pc.http.get(
-                        pc.path.join(urlBase, buffer.uri),
-                        { cache: true, responseType: 'arraybuffer', retry: false },
-                        createCallback(i));
+                    if (options.processBufferUri) {
+                        options.processBufferUri(buffer.uri, function (index, err, buffer) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                onLoad(index, buffer);
+                            }
+                        }.bind(null, i));
+                    } else {
+                        pc.http.get(
+                            pc.path.join(urlBase, buffer.uri),
+                            { cache: true, responseType: 'arraybuffer', retry: false },
+                            createCallback(i));
+                    }
                 }
             } else {
                 // glb buffer reference
-                onLoad(binaryChunk, i);
+                onLoad(i, binaryChunk);
             }
         }
     };
@@ -1380,7 +1417,6 @@ Object.assign(pc, function () {
                 return accum;
             }, "");
             return decodeURIComponent(escape(str));
-
         };
 
         var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
@@ -1465,11 +1501,51 @@ Object.assign(pc, function () {
         }
     };
 
-    // -- GlbParser
+    /**
+     * @private
+     * @namespace
+     * @name pc.GlbParser
+     * @description Functions for parsing glb and gltf files.
+     */
     var GlbParser = function () { };
 
-    // parse the gltf or glb data asynchronously, loading external resources
-    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, callback) {
+    /**
+     * @private
+     * @class
+     * @name pc.GlbParserResult
+     * @description The engine resources returned from parsing a gltf.
+     * @property {object} gltf - The gltf object that was parsed.
+     * @property {pc.GraphNode[]} nodes - The list of nodes.
+     * @property {pc.AnimTrack[]} animations - The list of animations.
+     * @property {pc.Texture[]} textures - The list of textures.
+     * @property {pc.StandardMaterial[]} materials - The list of materials.
+     * @property {pc.Mesh[]} meshes - The list of meshes.
+     * @property {pc.Skin[]} skins - The list of skins.
+     */
+
+    /**
+     * @private
+     * @callback pc.GlbParserCallback
+     * @description Callback used by {@link pc.GlbParser} to return parse results.
+     * @param {string|null} err - The error message if an error occurred otherwise null.
+     * @param {pc.GlbParserResult} data - The data containing the resources constructed from the glb.
+     */
+
+    /**
+     * @private
+     * @function
+     * @name pc.GlbParser.parseAsync
+     * @description Parse gltf or glb data asynchronously, loading external resources and return engine resources.
+     * @param {string} filename - Filename of the data being parsed. Used to determine the format of the data (either
+     * glb or gltf).
+     * @param {string} urlBase - The url base to append to internal urls.
+     * @param {ArrayBuffer} data - The file data.
+     * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
+     * @param {pc.AssetRegistry} registry - The asset registry to use for loading textures.
+     * @param {pc.ContainerHandlerOptions} options - The asset handler options.
+     * @param {pc.GlbParserCallback} callback - The callback which will be called with the parse results.
+     */
+    GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
@@ -1485,28 +1561,39 @@ Object.assign(pc, function () {
                 }
 
                 // async load external buffers
-                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, function (err, buffers) {
+                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, function (err, buffers) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
                     // async load images
-                    loadTexturesAsync(device, gltf, buffers, urlBase, registry, function (err, textures) {
+                    loadTexturesAsync(device, gltf, buffers, urlBase, registry, options, function (err, textures) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        createResources(device, gltf, buffers, textures, callback);
+                        createResources(device, gltf, buffers, textures, options, callback);
                     });
                 });
             });
         });
     };
 
-    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    GlbParser.parse = function (filename, data, device) {
+    /**
+     * @private
+     * @function
+     * @name pc.GlbParser.parseAsync
+     * @description Parse gltf or glb data synchronously. External resources (buffers and images) are ignored.
+     * @param {string} filename - Filename of the file being loaded. Used to determine whether the data blob is in
+     * glb or gltf format.
+     * @param {ArrayBuffer} data - The file data.
+     * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
+     * @param {pc.ContainerHandlerOptions} options - The asset handler options.
+     * @returns {pc.GlbParser.ResultData} The resulting parse data.
+     */
+    GlbParser.parse = function (filename, data, device, options) {
         var result = null;
 
         // parse the data
@@ -1523,7 +1610,7 @@ Object.assign(pc, function () {
                         var textures = [];
 
                         // create resources
-                        createResources(device, gltf, buffers, textures, function (err, result_) {
+                        createResources(device, gltf, buffers, textures, options, function (err, result_) {
                             if (err) {
                                 console.error(err);
                             } else {
