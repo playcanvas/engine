@@ -29,6 +29,7 @@ Object.assign(pc, function () {
         'wrap',
         'wrapBounds',
         'localSpace',
+        'screenSpace',
         'colorMapAsset',
         'normalMapAsset',
         'mesh',

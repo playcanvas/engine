@@ -81,6 +81,11 @@ Object.assign(pc, function () {
                 }
             }
 
+            // child particle system inside 2D screen sub-hierarachy gets sorted along other 2D elements
+            if (e.particlesystem) {
+                e.particlesystem.drawOrder = i++;
+            }
+
             var children = e.children;
             for (var j = 0; j < children.length; j++) {
                 i = this._recurseDrawOrderSync(children[j], i);
