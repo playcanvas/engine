@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <!-- obj parser is not included in default engine, load the extra file -->
     <script src="../assets/scripts/loaders/obj-model.js"></script>
     <style>
@@ -36,13 +36,13 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
         // set up obj parser
-        app.loader.getHandler("model").addParser(new pc.ObjModelParser(app.graphicsDevice), function (url, data) {
+        app.loader.getHandler("model").addParser(new ObjModelParser(app.graphicsDevice), function (url, data) {
         	return (pc.path.getExtension(url) === '.obj');
         });
 

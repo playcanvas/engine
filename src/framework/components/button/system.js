@@ -1,72 +1,74 @@
-Object.assign(pc, function () {
-    var _schema = [
-        'enabled',
-        'active',
-        { name: 'imageEntity', type: 'entity' },
-        { name: 'hitPadding', type: 'vec4' },
-        'transitionMode',
-        { name: 'hoverTint', type: 'rgba' },
-        { name: 'pressedTint', type: 'rgba' },
-        { name: 'inactiveTint', type: 'rgba' },
-        'fadeDuration',
-        'hoverSpriteAsset',
-        'hoverSpriteFrame',
-        'pressedSpriteAsset',
-        'pressedSpriteFrame',
-        'inactiveSpriteAsset',
-        'inactiveSpriteFrame'
-    ];
+import { Component } from '../component.js';
+import { ComponentSystem } from '../system.js';
 
-    /**
-     * @class
-     * @name pc.ButtonComponentSystem
-     * @augments pc.ComponentSystem
-     * @classdesc Manages creation of {@link pc.ButtonComponent}s.
-     * @description Create a new ButtonComponentSystem.
-     * @param {pc.Application} app - The application.
-     */
-    var ButtonComponentSystem = function ButtonComponentSystem(app) {
-        pc.ComponentSystem.call(this, app);
+import { ButtonComponent } from './component.js';
+import { ButtonComponentData } from './data.js';
 
-        this.id = 'button';
+var _schema = [
+    'enabled',
+    'active',
+    { name: 'imageEntity', type: 'entity' },
+    { name: 'hitPadding', type: 'vec4' },
+    'transitionMode',
+    { name: 'hoverTint', type: 'rgba' },
+    { name: 'pressedTint', type: 'rgba' },
+    { name: 'inactiveTint', type: 'rgba' },
+    'fadeDuration',
+    'hoverSpriteAsset',
+    'hoverSpriteFrame',
+    'pressedSpriteAsset',
+    'pressedSpriteFrame',
+    'inactiveSpriteAsset',
+    'inactiveSpriteFrame'
+];
 
-        this.ComponentType = pc.ButtonComponent;
-        this.DataType = pc.ButtonComponentData;
+/**
+ * @class
+ * @name pc.ButtonComponentSystem
+ * @augments pc.ComponentSystem
+ * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+ * @description Create a new ButtonComponentSystem.
+ * @param {pc.Application} app - The application.
+ */
+function ButtonComponentSystem(app) {
+    ComponentSystem.call(this, app);
 
-        this.schema = _schema;
+    this.id = 'button';
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+    this.ComponentType = ButtonComponent;
+    this.DataType = ButtonComponentData;
 
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
-    };
-    ButtonComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
-    ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
+    this.schema = _schema;
 
-    pc.Component._buildAccessors(pc.ButtonComponent.prototype, _schema);
+    this.on('beforeremove', this._onRemoveComponent, this);
 
-    Object.assign(ButtonComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
-        },
+    ComponentSystem.bind('update', this.onUpdate, this);
+}
+ButtonComponentSystem.prototype = Object.create(ComponentSystem.prototype);
+ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
 
-        onUpdate: function (dt) {
-            var components = this.store;
+Component._buildAccessors(ButtonComponent.prototype, _schema);
 
-            for (var id in components) {
-                var entity = components[id].entity;
-                var component = entity.button;
-                if (component.enabled && entity.enabled) {
-                    component.onUpdate();
-                }
+Object.assign(ButtonComponentSystem.prototype, {
+    initializeComponentData: function (component, data, properties) {
+        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+    },
+
+    onUpdate: function (dt) {
+        var components = this.store;
+
+        for (var id in components) {
+            var entity = components[id].entity;
+            var component = entity.button;
+            if (component.enabled && entity.enabled) {
+                component.onUpdate();
             }
-        },
-
-        _onRemoveComponent: function (entity, component) {
-            component.onRemove();
         }
-    });
+    },
 
-    return {
-        ButtonComponentSystem: ButtonComponentSystem
-    };
-}());
+    _onRemoveComponent: function (entity, component) {
+        component.onRemove();
+    }
+});
+
+export { ButtonComponentSystem };
