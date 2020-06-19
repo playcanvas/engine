@@ -65,6 +65,21 @@ Object.assign(Color.prototype, {
 
     /**
      * @function
+     * @name pc.Color#equals
+     * @description Reports whether two colors are equal.
+     * @param {pc.Color} rhs - The color to compare to the specified color.
+     * @returns {boolean} True if the colors are equal and false otherwise.
+     * @example
+     * var a = new pc.Color(1, 0, 0, 1);
+     * var b = new pc.Color(1, 1, 0, 1);
+     * console.log("The two colors are " + (a.equals(b) ? "equal" : "different"));
+     */
+    equals: function (rhs) {
+        return this.r === rhs.r && this.g === rhs.g && this.b === rhs.b && this.a === rhs.a;
+    },
+
+    /**
+     * @function
      * @name pc.Color#set
      * @description Assign values to the color components, including alpha.
      * @param {number} r - The value for red (0-1).
