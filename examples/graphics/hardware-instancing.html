@@ -45,7 +45,7 @@
             type: "point",
             color: new pc.Color(2, 3, 1),
             radius: 10,
-            castShadows : true
+            castShadows: true
         });
 
         // add sphere at the position of light
@@ -69,9 +69,9 @@
         // Move the camera back to see the cubes
         camera.translate(0, 0, 10);
 
-        // create standard material and enable instancing on it        
+        // create standard material and enable instancing on it
         var material = new pc.StandardMaterial();
-        material.onUpdateShader = function(options) {
+        material.onUpdateShader = function (options) {
             options.useInstancing = true;
             return options;
         };
@@ -93,7 +93,7 @@
         // store matrices for individual instances into array
         var matrices = new Float32Array(instanceCount * 16);
         var matrixIndex = 0;
-    
+
         var radius = 5;
         var pos = new pc.Vec3();
         var rot = new pc.Quat();
@@ -116,7 +116,7 @@
         var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
 
         // initialise instancing using the vertex buffer on meshInstance of the created box
-        var boxMeshInst = box.model.meshInstances[0];    
+        var boxMeshInst = box.model.meshInstances[0];
         boxMeshInst.setInstancing(vertexBuffer);
 
         // Set an update function on the app's update event

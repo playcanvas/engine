@@ -47,7 +47,7 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0.75,0.75,0.75)
+            clearColor: new pc.Color(0.75, 0.75, 0.75)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0, 20);
@@ -59,13 +59,13 @@
             color: new pc.Color(1, 1, 1),
             intensity: 1
         });
-        lightDirEntity.setLocalEulerAngles(45,0,0);
+        lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
         // Create a screen to display the particle texture
         var screenEntity = new pc.Entity();
-        screenEntity.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+        screenEntity.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true });
         screenEntity.screen.scaleMode = "blend";
-        screenEntity.screen.referenceResolution = new pc.Vec2(1280,720);
+        screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
         // Create a panel to display the full particle texture
         var panel = new pc.Entity();
@@ -122,7 +122,7 @@
                 scaleGraph: scaleCurve
             };
 
-            particleEntity1.addComponent("particlesystem", 
+            particleEntity1.addComponent("particlesystem",
                 Object.assign(particleSystemConfiguration, {
                     // states that each animation in the sprite sheet has 4 frames
                     animNumFrames: 4,
@@ -131,7 +131,7 @@
                 })
             );
 
-            particleEntity2.addComponent("particlesystem", 
+            particleEntity2.addComponent("particlesystem",
                 Object.assign(particleSystemConfiguration, {
                     // states that each animation in the sprite sheet has 4 frames
                     animNumFrames: 4,
@@ -140,7 +140,7 @@
                 })
             );
 
-            particleEntity3.addComponent("particlesystem", 
+            particleEntity3.addComponent("particlesystem",
                 Object.assign(particleSystemConfiguration, {
                     // states that each animation in the sprite sheet has 4 frames
                     animNumFrames: 4,
@@ -149,13 +149,13 @@
                 })
             );
 
-            particleEntity4.addComponent("particlesystem", 
-                Object.assign(particleSystemConfiguration, {
+            particleEntity4.addComponent("particlesystem",
+                 Object.assign(particleSystemConfiguration, {
                     // states that each animation in the sprite sheet has 4 frames
-                    animNumFrames: 4,
+                     animNumFrames: 4,
                     // set the animation index of the fourth particle system to 3
-                    animIndex: 3
-                })
+                     animIndex: 3
+                 })
             );
 
             // add the full particle texture to the panel
@@ -165,7 +165,7 @@
                 width: 100,
                 height: 100,
                 type: "image",
-                textureAsset: asset 
+                textureAsset: asset
             });
 
             app.start();

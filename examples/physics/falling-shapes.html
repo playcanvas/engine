@@ -51,11 +51,11 @@
         // Set the gravity for our rigid bodies
         app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
-        function createMaterial (color) {
+        function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
             // we need to call material.update when we change its properties
-            material.update()
+            material.update();
             return material;
         }
 
@@ -219,7 +219,7 @@
         // we'll just use them to clone other Entities
         templates.forEach(function (template) {
             template.enabled = false;
-        })
+        });
 
         // ***********    Update Function   *******************
 

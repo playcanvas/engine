@@ -42,7 +42,7 @@
         // Create a Entity with a Box model component
         var box = new pc.Entity();
         box.addComponent("model", {
-            type: "box",
+            type: "box"
         });
 
         // Create an Entity with a point light component and a sphere model component.
@@ -84,7 +84,7 @@
             light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
 
             // Rotate the box
-            box.setEulerAngles(angle*2, angle*4, angle*8);
+            box.setEulerAngles(angle * 2, angle * 4, angle * 8);
         });
 
         // load a texture, create material and apply to box

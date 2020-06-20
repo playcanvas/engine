@@ -48,7 +48,7 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0,0,0.05)
+            clearColor: new pc.Color(0, 0, 0.05)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0, 10);
@@ -60,7 +60,7 @@
             color: new pc.Color(1, 1, 1),
             intensity: 1
         });
-        lightDirEntity.setLocalEulerAngles(45,0,0);
+        lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
         // Add Entities into the scene hierarchy
         app.root.addChild(cameraEntity);
@@ -133,7 +133,6 @@
                 localVelocityGraph2: localVelocityCurve2
             });
         });
-
     </script>
 </body>
 </html>

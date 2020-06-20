@@ -43,7 +43,7 @@
         // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
         // set up obj parser
         app.loader.getHandler("model").addParser(new ObjModelParser(app.graphicsDevice), function (url, data) {
-        	return (pc.path.getExtension(url) === '.obj');
+            return (pc.path.getExtension(url) === '.obj');
         });
 
         var entity, light, camera;
@@ -57,12 +57,12 @@
             entity.addComponent("model");
             entity.model.model = asset.resource;
             app.root.addChild(entity);
-            
+        
             // add a randomly generated material to all mesh instances
             var mis = entity.model.model.meshInstances;
             for (var i = 0; i < mis.length; i++) {
                 mis[i].material = new pc.StandardMaterial();
-                mis[i].material.diffuse = new pc.Color(pc.math.random(0,1), pc.math.random(0,1), pc.math.random(0,1));
+                mis[i].material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
                 mis[i].material.update();
             }
         });
@@ -87,7 +87,7 @@
 
         app.on("update", function (dt) {
             if (entity) {
-                entity.rotate(0,100*dt,0);
+                entity.rotate(0, 100 * dt, 0);
             }
         });
     </script>

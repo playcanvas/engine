@@ -49,13 +49,13 @@
         primitive.setLocalPosition(new pc.Vec3(0, -0.01, 0));
         app.root.addChild(primitive);
 
-        // Create an Entity with a point light component 
+        // Create an Entity with a point light component
         var light = new pc.Entity();
         light.addComponent("light", {
             type: "point",
             color: new pc.Color(0.2, 0.2, 0.2),
             range: 30,
-            castShadows : true
+            castShadows: true
         });
         light.translate(0, 8, 0);
         app.root.addChild(light);
@@ -76,7 +76,7 @@
         // Create bounding call model and add it to hierarchy
         this.ball = new pc.Entity();
         this.ball.addComponent("model", {
-            type: "sphere",
+            type: "sphere"
         });
         app.root.addChild(this.ball);
 
@@ -100,7 +100,7 @@
         var quadTriangles = [0, 1, 2,       2, 3, 0];
         this.indices = new Uint16Array(6 * this.numDecals);
         for (i = 0; i < this.numDecals; i++) {
-            this.indices[6 * i + 0] = 4 * i + quadTriangles[0];     
+            this.indices[6 * i + 0] = 4 * i + quadTriangles[0];
             this.indices[6 * i + 1] = 4 * i + quadTriangles[1];
             this.indices[6 * i + 2] = 4 * i + quadTriangles[2];
             this.indices[6 * i + 3] = 4 * i + quadTriangles[3];
@@ -175,7 +175,7 @@
         // Create a model and add the mesh instance to it
         var model = new pc.Model();
         model.graph = node;
-        model.meshInstances = [ meshInstance ];
+        model.meshInstances = [meshInstance];
 
         // Create Entity and add it to the scene
         this.entity = new pc.Entity();
@@ -242,7 +242,6 @@
             // update mesh with the streams that were updated
             updateMesh(self.mesh, positionsUpdated, colorsUpdated);
         });
-
     </script>
 </body>
 </html>

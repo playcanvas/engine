@@ -131,19 +131,19 @@
                     var pos;
                     var angle = 135;
                     var radius = 3;
-                    var height = 0;//1.1;
+                    var height = 0;// 1.1;
                     app.on("update", function (dt) {
-                        angle += 30*dt;
+                        angle += 30 * dt;
                         if (angle > 360) {
                             angle -= 360;
                         }
                         var pos = camera.getPosition();
-                        entity.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
-                        entity.setLocalEulerAngles(0, angle+90, 0);
+                        entity.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
+                        entity.setLocalEulerAngles(0, angle + 90, 0);
                     });
                 }
             });
-        };
+        }
     </script>
 </body>
 </html>

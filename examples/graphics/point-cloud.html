@@ -135,8 +135,8 @@
                 // Set all primitives of the mesh to render as points
                 meshInstance.mesh.primitive.forEach(function (primitive) {
                     primitive.type = pc.PRIMITIVE_POINTS;
-                })
-            })
+                });
+            });
 
             currentTime = 0;
             app.on("update", function (dt) {

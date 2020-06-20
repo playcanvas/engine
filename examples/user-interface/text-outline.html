@@ -57,13 +57,13 @@
         // Create a text element a font outline enabled
         var text = new pc.Entity();
         text.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
             color: new pc.Color(0, 0, 0),
             fontSize: 128,
             outlineColor: new pc.Color(1, 1, 1),
             outlineThickness: 0.75,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             text: "Outline",
             type: pc.ELEMENTTYPE_TEXT,
             width: 640
@@ -71,7 +71,7 @@
         screen.addChild(text);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;

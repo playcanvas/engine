@@ -43,21 +43,21 @@
             // create camera
             var cam = new pc.Entity();
             cam.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
                 farClip: 10000
             });
-            cam.translate(1,1,1);
-            cam.lookAt(0,0,0);
+            cam.translate(1, 1, 1);
+            cam.lookAt(0, 0, 0);
             app.root.addChild(cam);
 
             // Load Assets
             var assetsToLoad = [
-                new pc.Asset('red_button_atlas.json', "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
-                new pc.Asset('red_button_sprite', "sprite", {url: "../assets/button/red_button_sprite.json"}),
-                new pc.Asset('snowflake.png', "texture", {url: "../assets/textures/snowflake.png"})
-            ]
+                new pc.Asset('red_button_atlas.json', "textureatlas", { url: "../assets/button/red_button_atlas.json" }),
+                new pc.Asset('red_button_sprite', "sprite", { url: "../assets/button/red_button_sprite.json" }),
+                new pc.Asset('snowflake.png', "texture", { url: "../assets/textures/snowflake.png" })
+            ];
 
-            var count =0;
+            var count = 0;
             app.assets.on('load', function () {
                 count++;
                 if (count === assetsToLoad.length) {
@@ -81,10 +81,10 @@
             // create the menu screen, panel and list items
             function createMenu() {
                 menu = new pc.Entity();
-                menu.name = "Menu"+c;
-                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.name = "Menu" + c;
+                menu.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true });
                 menu.screen.scaleMode = "blend";
-                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                menu.screen.referenceResolution = new pc.Vec2(1280, 720);
 
                 container = new pc.Entity();
                 container.name = "Container";
@@ -100,20 +100,20 @@
                 });
 
                 app.root.addChild(menu);
-                menu.addChild(container)
+                menu.addChild(container);
 
                 return container;
-
-            };
+            }
 
             var c = 0;
+
             function createPanel(menu) {
                 c++;
                 var panel, mask, subpanel, submask, block, redBlock;
 
                 // create a panel
                 panel = new pc.Entity();
-                panel.name = "Panel"+c;
+                panel.name = "Panel" + c;
                 panel.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -125,20 +125,20 @@
 
                 // create a mask (fills the panel)
                 mask = new pc.Entity();
-                mask.name = "Mask"+c;
+                mask.name = "Mask" + c;
                 mask.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0, 0, 1, 1),
                     pivot: new pc.Vec2(0.5, 0.5),
-                    margin: new pc.Vec4(0,0,0,0),
-                    color: new pc.Color(1,0.5,0.5),
+                    margin: new pc.Vec4(0, 0, 0, 0),
+                    color: new pc.Color(1, 0.5, 0.5),
                     opacity: 1,
                     mask: true
                 });
 
                 // create a grey subpanel
                 subpanel = new pc.Entity();
-                subpanel.name = "Subpanel"+c;
+                subpanel.name = "Subpanel" + c;
                 subpanel.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -146,16 +146,16 @@
                     width: 200,
                     height: 200,
                     opacity: 1,
-                    color: [0.5,0.5,0.5]
+                    color: [0.5, 0.5, 0.5]
                 });
 
                 // sub-mask
                 submask = new pc.Entity();
-                submask.name = "Submask"+c;
+                submask.name = "Submask" + c;
                 submask.addComponent("element", {
                     type: "image",
                     spriteAsset: assets.sprite,
-                    anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
                     pivot: new pc.Vec2(0.5, 0.5),
                     width: 190,
                     height: 49,
@@ -164,7 +164,7 @@
                 });
 
                 redBlock = new pc.Entity();
-                redBlock.name = "RedBlock"+c;
+                redBlock.name = "RedBlock" + c;
                 redBlock.addComponent("element", {
                     type: "image",
                     // textureAsset: assets.texture,
@@ -173,7 +173,7 @@
                     width: 300,
                     height: 100,
                     opacity: 1,
-                    color: new pc.Color(1,0,0)
+                    color: new pc.Color(1, 0, 0)
                 });
 
                 panel.addChild(mask);
@@ -184,7 +184,7 @@
                 menu.addChild(panel);
 
                 return panel;
-            };
+            }
 
             // called when all assets are loaded
             function onLoadComplete() {
@@ -200,7 +200,7 @@
             // update every frame
             app.on("update", function (dt) {
                 picker.prepare(cam.camera, app.scene, app.scene.layers.getLayerById(pc.LAYERID_WORLD));
-                picker.getSelection(250,250);
+                picker.getSelection(250, 250);
             });
         </script>
     </body>
