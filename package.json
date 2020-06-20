@@ -17,7 +17,7 @@
     "typings"
   ],
   "license": "MIT",
-  "main": "build/output/playcanvas.js",
+  "main": "build/playcanvas.js",
   "types": "index.d.ts",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
@@ -60,11 +60,11 @@
     "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint examples/assets/scripts extras src tools rollup.config.js",
-    "serve": "http-server build/output -a localhost -p 51000",
+    "serve": "http-server build -a localhost -p 51000",
     "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
-    "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
+    "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
     "tsd": "jsdoc -c conf-tsd.json",
     "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz"
