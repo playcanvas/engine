@@ -20,15 +20,6 @@
     <canvas id="application-canvas"></canvas>
 
     <script>
-        function createMaterial(colors) {
-            var material = new pc.StandardMaterial();
-            for (var param in colors) {
-                material[param] = colors[param];
-            }
-            material.update();
-            return material;
-        }
-
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop

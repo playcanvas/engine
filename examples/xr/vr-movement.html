@@ -163,7 +163,6 @@
                 var rotateSpeed = 45;
                 var rotateThreshold = 0.5;
                 var rotateResetThreshold = 0.25;
-                var lastRotateTime = 0;
                 var lastRotateValue = 0;
 
                 var tmpVec2A = new pc.Vec2();
@@ -172,13 +171,13 @@
                 var tmpVec3B = new pc.Vec3();
                 var lineColor = new pc.Color(1, 1, 1);
 
-                var keyboard = new pc.Keyboard(document.body);
-
                 // update position and rotation for each controller
                 app.on('update', function (dt) {
+                    var i, inputSource;
+
                     // fist we update movement
-                    for (var i = 0; i < controllers.length; i++) {
-                        var inputSource = controllers[i].inputSource;
+                    for (i = 0; i < controllers.length; i++) {
+                        inputSource = controllers[i].inputSource;
 
                         // should have gamepad
                         if (! inputSource.gamepad)
@@ -240,8 +239,8 @@
 
                     // after movement and rotation is done
                     // we update/render controllers
-                    for (var i = 0; i < controllers.length; i++) {
-                        var inputSource = controllers[i].inputSource;
+                    for (i = 0; i < controllers.length; i++) {
+                        inputSource = controllers[i].inputSource;
 
                         // render controller ray
                         tmpVec3A.copy(inputSource.getOrigin());
