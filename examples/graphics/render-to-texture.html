@@ -50,7 +50,7 @@
             var primitive = new pc.Entity();
             primitive.addComponent('model', {
                 type: primitiveType,
-                layers : layer
+                layers: layer
             });
             primitive.model.material = material;
 
@@ -117,7 +117,7 @@
             type: "point",
             color: new pc.Color(1, 1, 1),
             range: 200,
-            castShadows : true,
+            castShadows: true,
             layers: [worldLayer.id, tvLayer.id]
         });
         light.translate(0, 2, 5);
@@ -142,13 +142,11 @@
 
             // every 5 seconds switch tv camera between perspective and orthographic projection
             switchTime += dt;
-            if (switchTime > 5)
-            {
+            if (switchTime > 5) {
                 switchTime = 0;
                 if (tvCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
                     tvCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
-                }
-                else {
+                } else {
                     tvCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
                     tvCamera.camera.orthoHeight = 5;
                 }

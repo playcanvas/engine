@@ -75,10 +75,10 @@
         var keyboard = new pc.Keyboard(document.body);
         app.on("update", function () {
             if (keyboard.isPressed(pc.KEY_LEFT)) {
-                entity.rotate(0, -1, 0)
+                entity.rotate(0, -1, 0);
             }
             if (keyboard.isPressed(pc.KEY_RIGHT)) {
-                entity.rotate(0, 1, 0)
+                entity.rotate(0, 1, 0);
             }
         });
     </script>

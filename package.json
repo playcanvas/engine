@@ -30,6 +30,7 @@
     "extends": "@playcanvas/eslint-config"
   },
   "eslintIgnore": [
+    "examples/lib/*",
     "src/polyfill/*"
   ],
   "devDependencies": {
@@ -59,7 +60,7 @@
     "build": "rollup -c",
     "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
     "docs": "jsdoc -c conf-api.json",
-    "lint": "eslint examples/assets/scripts extras src tools rollup.config.js",
+    "lint": "eslint --ext .js examples extras src tools rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",
     "test": "karma start tests/karma.conf.js -- --single-run --release",
     "test:watch": "karma start tests/karma.conf.js",

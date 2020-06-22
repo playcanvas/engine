@@ -71,7 +71,7 @@
 
     <!-- The script -->
     <script>
-        var entity, light, camera;
+        var entity, camera;
         var shader, material, diffuseMap;
         var canvas = document.getElementById("application-canvas");
 
@@ -135,8 +135,8 @@
                 // Set all primitives of the mesh to render as points
                 meshInstance.mesh.primitive.forEach(function (primitive) {
                     primitive.type = pc.PRIMITIVE_POINTS;
-                })
-            })
+                });
+            });
 
             currentTime = 0;
             app.on("update", function (dt) {
@@ -148,7 +148,6 @@
                 // Rotate the model
                 entity.rotate(0, 15 * dt, 0);
             });
-
         });
     </script>
 </body>

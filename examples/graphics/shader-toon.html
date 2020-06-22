@@ -159,13 +159,13 @@
             // Set the new material on all meshes in the model
             model.meshInstances.forEach(function (meshInstance) {
                 meshInstance.material = material;
-            })
+            });
 
             app.on("update", function (dt) {
                 material.setParameter('uTexture', diffuseMap);
                 material.setParameter('uLightPos', light.getPosition().data);
 
-                entity.rotate(0, 60*dt, 0);
+                entity.rotate(0, 60 * dt, 0);
             });
 
         });
