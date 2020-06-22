@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 // check for wasm module support
 function wasmSupported() {
     try {
