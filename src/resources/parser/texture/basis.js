@@ -7,7 +7,7 @@ import { Texture } from '../../../graphics/texture.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for basis files.
  */
-function BasisParser(retryRequests) {
+function BasisParser(registry, retryRequests) {
     this.retryRequests = !!retryRequests;
 }
 

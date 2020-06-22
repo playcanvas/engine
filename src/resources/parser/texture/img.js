@@ -22,7 +22,7 @@ Object.assign(ImgParser.prototype, {
         var crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
-        } else if (ABSOLUTE_URL.test(url)) {
+        } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
         this._loadImage(url.load, url.original, crossOrigin, callback);
