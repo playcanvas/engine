@@ -6,22 +6,18 @@ import { Mat4 } from '../math/mat4.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
 import {
-    FILTER_NEAREST,
-    PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../graphics/graphics.js';
 import { shaderChunks } from '../graphics/chunks.js';
-import { Texture } from '../graphics/texture.js';
 
 import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-
-// TODO: split by new layers
+import { SkinInstance } from './skin.js';
 
 /**
  * @class
@@ -84,43 +80,19 @@ BatchGroup.MODEL = 'model';
 BatchGroup.ELEMENT = 'element';
 BatchGroup.SPRITE = 'sprite';
 
-// Modified SkinInstance for batching
-// Doesn't contain bind matrices, simplier
+// Class derived from SkinInstance with changes to make it suitable for batching
 function SkinBatchInstance(device, nodes, rootNode) {
+    var numBones = nodes.length;
+    this.init(device, numBones);
+
     this.device = device;
     this.rootNode = rootNode;
-    this._dirty = true;
 
     // Unique per clone
     this.bones = nodes;
-
-    var numBones = nodes.length;
-
-    if (device.supportsBoneTextures) {
-        var size;
-        if (numBones > 256)
-            size = 64;
-        else if (numBones > 64)
-            size = 32;
-        else if (numBones > 16)
-            size = 16;
-        else
-            size = 8;
-
-        this.boneTexture = new Texture(device, {
-            width: size,
-            height: size,
-            format: PIXELFORMAT_RGBA32F,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
-        });
-        this.boneTexture.name = 'batching';
-        this.matrixPalette = this.boneTexture.lock();
-    } else {
-        this.matrixPalette = new Float32Array(numBones * 16);
-    }
 }
+
+SkinBatchInstance.prototype = new SkinInstance(null);
 
 Object.assign(SkinBatchInstance.prototype, {
     updateMatrices: function (rootNode) {
@@ -154,10 +126,7 @@ Object.assign(SkinBatchInstance.prototype, {
             mp[base + 15] = pe[15];
         }
 
-        if (this.device.supportsBoneTextures) {
-            this.boneTexture.lock();
-            this.boneTexture.unlock();
-        }
+        this.uploadBones(this.device);
     }
 });
 
