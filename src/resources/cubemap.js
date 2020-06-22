@@ -82,8 +82,12 @@ Object.assign(CubemapHandler.prototype, {
         result[0] = cubemapAsset.file;
 
         // faces are stored at index 1..6
-        for (var i = 0; i < 6; ++i) {
-            result[i + 1] = cubemapAsset.data && cubemapAsset.data.textures && cubemapAsset.data.textures[i];
+        if (cubemapAsset.data && cubemapAsset.data.textures) {
+            for (var i = 0; i < 6; ++i) {
+                result[i + 1] = cubemapAsset.data.textures[i];
+            }
+        } else {
+            result[1] = result[2] = result[3] = result[4] = result[5] = result[6] = null;
         }
 
         return result;
@@ -273,7 +277,7 @@ Object.assign(CubemapHandler.prototype, {
                         }
                     }
                 } else {
-                    // asset hasn't been created yet, wait till it does
+                    // asset hasn't been created yet, wait till it is
                     registry.on('add:' + assetId, function (index, texAsset) {
                         // store the face asset and kick off loading immediately
                         registry.on('load:' + assetId, onLoad.bind(self, index));

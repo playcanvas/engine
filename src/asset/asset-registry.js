@@ -338,8 +338,6 @@ Object.assign(AssetRegistry.prototype, {
         // note: lots of code calls assets.load() assuming this check is present
         // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
         if (asset.loading || asset.loaded) {
-            if (asset.type === 'cubemap')
-                self._loader.patch(asset, this);
             return;
         }
 
@@ -408,6 +406,22 @@ Object.assign(AssetRegistry.prototype, {
             this.fire("load:" + asset.id + ":start", asset);
             _load();
         }
+    },
+
+    /**
+     * @function
+     * @name pc.AssetRegistry#loadCubemap
+     * @description Use this to load a cubemap
+     * @param {string} url - The url to load.
+     * @param {string} type - The type of asset to load.
+     * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+     * @example
+     * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
+     *     var texture = asset.resource;
+     * });
+     */
+    loadCubemap: function (prefilteredCubemapUrl, faceUrls) {
+        // construct faces assets and load blah
     },
 
     /**
