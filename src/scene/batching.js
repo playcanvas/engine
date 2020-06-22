@@ -88,7 +88,7 @@ function SkinBatchInstance(device, nodes, rootNode) {
     this.device = device;
     this.rootNode = rootNode;
 
-    // Unique per clone
+    // Unique bones per clone
     this.bones = nodes;
 }
 
