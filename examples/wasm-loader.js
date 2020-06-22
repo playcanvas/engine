@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 // check for wasm module support
 function wasmSupported() {
     try {
@@ -29,7 +31,11 @@ function loadWasmModuleAsync(moduleName, jsUrl, binaryUrl, doneCallback) {
     loadScriptAsync(jsUrl, function () {
         var lib = window[moduleName];
         window[moduleName + 'Lib'] = lib;
-        lib({ locateFile: function () { return binaryUrl; } } ).then( function (instance) {
+        lib({
+            locateFile: function () {
+                return binaryUrl;
+            }
+        }).then(function (instance) {
             window[moduleName] = instance;
             doneCallback();
         });

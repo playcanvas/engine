@@ -57,10 +57,10 @@
         // Create a basic text element
         var text = new pc.Entity();
         text.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
             fontSize: 128,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             text: "Basic Text",
             type: pc.ELEMENTTYPE_TEXT,
             width: 640
@@ -68,7 +68,7 @@
         screen.addChild(text);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;

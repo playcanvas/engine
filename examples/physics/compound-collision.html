@@ -50,7 +50,7 @@
         function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
-            material.update()
+            material.update();
 
             return material;
         }
@@ -94,14 +94,14 @@
                                 type: 'collision',
                                 options: {
                                     type: 'box',
-                                    halfExtents: [ 0.25, 0.025, 0.25 ]
+                                    halfExtents: [0.25, 0.025, 0.25]
                                 }
                             }
                         ],
                         children: [
                             {
                                 name: 'Seat Model',
-                                scl: [ 0.5, 0.05, 0.5 ],
+                                scl: [0.5, 0.05, 0.5],
                                 components: [
                                     {
                                         type: 'model',
@@ -115,20 +115,20 @@
                         ]
                     }, {
                         name: 'Seat Back',
-                        pos: [ 0, 0.3, -0.2 ],
+                        pos: [0, 0.3, -0.2],
                         components: [
                             {
                                 type: 'collision',
                                 options: {
                                     type: 'box',
-                                    halfExtents: [ 0.25, 0.2, 0.025 ]
+                                    halfExtents: [0.25, 0.2, 0.025]
                                 }
                             }
                         ],
                         children: [
                             {
                                 name: 'Seat Back Model',
-                                scl: [ 0.5, 0.4, 0.05 ],
+                                scl: [0.5, 0.4, 0.05],
                                 components: [
                                     {
                                         type: 'model',
@@ -142,7 +142,7 @@
                         ]
                     }, {
                         name: 'Leg 1',
-                        pos: [ 0.2, -0.25, 0.2 ],
+                        pos: [0.2, -0.25, 0.2],
                         components: [
                             {
                                 type: 'collision',
@@ -156,7 +156,7 @@
                         children: [
                             {
                                 name: 'Leg 1 Model',
-                                scl: [ 0.05, 0.5, 0.05 ],
+                                scl: [0.05, 0.5, 0.05],
                                 components: [
                                     {
                                         type: 'model',
@@ -170,7 +170,7 @@
                         ]
                     }, {
                         name: 'Leg 2',
-                        pos: [ -0.2, -0.25, 0.2 ],
+                        pos: [-0.2, -0.25, 0.2],
                         components: [
                             {
                                 type: 'collision',
@@ -184,7 +184,7 @@
                         children: [
                             {
                                 name: 'Leg 2 Model',
-                                scl: [ 0.05, 0.5, 0.05 ],
+                                scl: [0.05, 0.5, 0.05],
                                 components: [
                                     {
                                         type: 'model',
@@ -198,7 +198,7 @@
                         ]
                     }, {
                         name: 'Leg 3',
-                        pos: [ 0.2, 0, -0.2 ],
+                        pos: [0.2, 0, -0.2],
                         components: [
                             {
                                 type: 'collision',
@@ -212,7 +212,7 @@
                         children: [
                             {
                                 name: 'Leg 3 Model',
-                                scl: [ 0.05, 1, 0.05 ],
+                                scl: [0.05, 1, 0.05],
                                 components: [
                                     {
                                         type: 'model',
@@ -226,7 +226,7 @@
                         ]
                     }, {
                         name: 'Leg 4',
-                        pos: [ -0.2, 0, -0.2 ],
+                        pos: [-0.2, 0, -0.2],
                         components: [
                             {
                                 type: 'collision',
@@ -240,7 +240,7 @@
                         children: [
                             {
                                 name: 'Leg 4 Model',
-                                scl: [ 0.05, 1, 0.05 ],
+                                scl: [0.05, 1, 0.05],
                                 components: [
                                     {
                                         type: 'model',
@@ -256,13 +256,13 @@
                 ]
             }, {
                 name: 'Ground',
-                pos: [ 0, -0.5, 0 ],
+                pos: [0, -0.5, 0],
                 components: [
                     {
                         type: 'collision',
                         options: {
                             type: 'box',
-                            halfExtents: [ 5, 0.5, 5 ]
+                            halfExtents: [5, 0.5, 5]
                         }
                     }, {
                         type: 'rigidbody',
@@ -275,7 +275,7 @@
                 children: [
                     {
                         name: 'Ground Model',
-                        scl: [ 10, 1, 10 ],
+                        scl: [10, 1, 10],
                         components: [
                             {
                                 type: 'model',
@@ -289,7 +289,7 @@
                 ]
             }, {
                 name: 'Directional Light',
-                rot: [ 45, 30, 0 ],
+                rot: [45, 30, 0],
                 components: [
                     {
                         type: 'light',
@@ -304,13 +304,13 @@
                 ]
             }, {
                 name: 'Camera',
-                pos: [ 0, 4, 7 ],
-                rot: [ -30, 0, 0 ],
+                pos: [0, 4, 7],
+                rot: [-30, 0, 0],
                 components: [
                     {
                         type: 'camera',
                         options: {
-                            color: [ 0.5, 0.5, 0.5 ]
+                            color: [0.5, 0.5, 0.5]
                         }
                     }
                 ]
@@ -361,7 +361,7 @@
         function spawnChair() {
             var chair = app.root.findByName('Chair');
             var clone = chair.clone();
-            clone.setLocalPosition(Math.random() * 5 - 2.5, Math.random() * 2 + 1, Math.random() * 5 - 2.5)
+            clone.setLocalPosition(Math.random() * 5 - 2.5, Math.random() * 2 + 1, Math.random() * 5 - 2.5);
             app.root.addChild(clone);
             numChairs++;
         }

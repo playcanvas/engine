@@ -51,7 +51,7 @@
         var idx = app.scene.layers.getTransparentIndex(worldLayer);
 
         // insert the new layer after the world layer
-        app.scene.layers.insert(layer, idx+1);
+        app.scene.layers.insert(layer, idx + 1);
 
         // Create an Entity with a camera component
         // Make sure it renders both World and Front Layer
@@ -77,14 +77,14 @@
 
         // red material is semi-transparent
         var red = new pc.StandardMaterial();
-        red.diffuse.set(1,0,0);
+        red.diffuse.set(1, 0, 0);
         red.blendType = pc.BLEND_NORMAL;
         red.opacity = 0.5;
         red.update();
 
         // blue material does not test the existing depth buffer
         var blue = new pc.StandardMaterial();
-        blue.diffuse.set(0,0,1);
+        blue.diffuse.set(0, 0, 1);
         blue.depthTest = false;
         blue.update();
 
@@ -94,7 +94,7 @@
             type: 'box'
         });
         redBox.model.material = red;
-        redBox.setLocalScale(5,5,5);
+        redBox.setLocalScale(5, 5, 5);
         app.root.addChild(redBox);
 
         // blue box is rendered in the Front Layer which is after World
@@ -107,15 +107,15 @@
             layers: [layer.id] // try removing this line, the blue box will appear inside the red one
         });
         blueBox.model.material = blue;
-        blueBox.setLocalScale(2.5,2.5,2.5);
+        blueBox.setLocalScale(2.5, 2.5, 2.5);
         app.root.addChild(blueBox);
 
         app.on("update", function (dt) {
             if (redBox) {
-                redBox.rotate(0,10*dt,0);
+                redBox.rotate(0, 10 * dt, 0);
             }
             if (blueBox) {
-                blueBox.rotate(0,-10*dt,0);
+                blueBox.rotate(0, -10 * dt, 0);
             }
 
             blueBox.model.meshInstances[0].layer = 10;

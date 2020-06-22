@@ -38,7 +38,7 @@
         var miniStats = new pcx.MiniStats(app);
 
         // All model component primitive shape types
-        var shapes = [ "box", "plane", "cone", "cylinder", "sphere", "capsule" ];
+        var shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];
         var x = -1, z = -1;
 
         shapes.forEach(function (shape) {
@@ -132,7 +132,7 @@
                 // If we're baking, rebake all lights in the scene
                 app.lightmapper.bake(null, pc.BAKE_COLOR);
             }
-        };
+        }
 
         window.addEventListener('mousedown', toggleBaked, { passive: false });
         window.addEventListener('touchstart', toggleBaked, { passive: false });

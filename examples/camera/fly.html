@@ -46,15 +46,15 @@
 
         // ***********    Helper functions    *******************
 
-        function createMaterial (color) {
+        function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
             // we need to call material.update when we change its properties
-            material.update()
+            material.update();
             return material;
         }
 
-        function createBox (position, size, material) {
+        function createBox(position, size, material) {
             // create an entity and add a model component of type 'box'
             var box = new pc.Entity();
             box.addComponent("model", {
@@ -75,13 +75,13 @@
         // ***********    Create Boxes    *******************
 
         // create a few materials for our boxes
-        var red = createMaterial(new pc.Color(1,0,0));
-        var white = createMaterial(new pc.Color(1,1,1));
+        var red = createMaterial(new pc.Color(1, 0, 0));
+        var white = createMaterial(new pc.Color(1, 1, 1));
 
         // create a few boxes in our scene
-        for (var i=0; i<3; i++) {
-            for (var j=0; j<2; j++) {
-                createBox(new pc.Vec3(i*2, 0, j*4), pc.Vec3.ONE, red);
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 2; j++) {
+                createBox(new pc.Vec3(i * 2, 0, j * 4), pc.Vec3.ONE, red);
             }
         }
 

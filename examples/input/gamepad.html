@@ -76,16 +76,16 @@
         app.on("update", function () {
             gamepads.update();
             if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
-                entity.rotate(0, -1, 0)
+                entity.rotate(0, -1, 0);
             }
             if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
-                entity.rotate(0, 1, 0)
+                entity.rotate(0, 1, 0);
             }
             if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
-                entity.rotate(-1, 0, 0)
+                entity.rotate(-1, 0, 0);
             }
             if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
-                entity.rotate(1, 0, 0)
+                entity.rotate(1, 0, 0);
             }
         });
     </script>
