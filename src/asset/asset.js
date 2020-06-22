@@ -297,12 +297,7 @@ Object.assign(Asset.prototype, {
 
     reload: function () {
         // no need to be reloaded
-        if (!this.loaded)
-            return;
-
-        if (this.type === 'cubemap') {
-            this.registry._loader.patch(this, this.registry);
-        } else {
+        if (this.loaded) {
             this.loaded = false;
             this.registry.load(this);
         }
@@ -324,19 +319,23 @@ Object.assign(Asset.prototype, {
         this.fire('unload', this);
         this.registry.fire('unload:' + this.id, this);
 
-        for (var i = 0; i < this._resources.length; ++i) {
-            var resource = this._resources[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
-        }
+        var old = this._resources;
 
+        // clear resources on the asset
         this.resources = [];
         this.loaded = false;
 
+        // remove resource from loader cache
         if (this.file) {
-            // remove resource from loader cache
             this.registry._loader.clearCache(this.getFileUrl(), this.type);
+        }
+
+        // destroy old resources not present in the new set
+        for (var i = 0; i < old.length; ++i) {
+            var resource = old[i];
+            if (resource && resource.destroy) {
+                resource.destroy();
+            }
         }
     }
 });

@@ -29,9 +29,20 @@ var Viewer = function (canvas) {
     });
 
     // load cubemap background
-    var cubemapAsset = new pc.Asset('helipad.dds', 'texture', {
+    var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
         url: assetsFolder + "/cubemaps/helipad.dds"
     }, {
+        textures: [
+            assetsFolder + '/cubemaps/Helipad_posx.png',
+            assetsFolder + '/cubemaps/Helipad_negx.png',
+            assetsFolder + '/cubemaps/Helipad_posy.png',
+            assetsFolder + '/cubemaps/Helipad_negy.png',
+            assetsFolder + '/cubemaps/Helipad_posz.png',
+            assetsFolder + '/cubemaps/Helipad_negz.png',
+        ],
+        faceData: {
+            type: "rgbm"
+        },
         type: "rgbm"
     });
     cubemapAsset.ready(function () {
