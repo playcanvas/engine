@@ -691,7 +691,7 @@ Object.assign(pc, function () {
 
                 // Update any animation component
                 if (this.entity.anim)
-                    this.entity.anim.restartStateGraph();
+                    this.entity.anim.resetStateGraph();
 
                 // trigger event handler to load mapping
                 // for new model
