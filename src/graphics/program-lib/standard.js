@@ -687,59 +687,59 @@ var standard = {
             } else {
 
                 // set up 8 slots for morphing. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
-                code += "#define MORPHING\n";
+            code += "#define MORPHING\n";
 
-                // first 4 slots are either position or normal
-                if (options.useMorphPosition) {
+            // first 4 slots are either position or normal
+            if (options.useMorphPosition) {
                     attributes.morph_pos0 = SEMANTIC_ATTR0;
                     attributes.morph_pos1 = SEMANTIC_ATTR1;
                     attributes.morph_pos2 = SEMANTIC_ATTR2;
                     attributes.morph_pos3 = SEMANTIC_ATTR3;
 
-                    code += "#define MORPHING_POS03\n";
-                    code += "attribute vec3 morph_pos0;\n";
-                    code += "attribute vec3 morph_pos1;\n";
-                    code += "attribute vec3 morph_pos2;\n";
-                    code += "attribute vec3 morph_pos3;\n";
+                code += "#define MORPHING_POS03\n";
+                code += "attribute vec3 morph_pos0;\n";
+                code += "attribute vec3 morph_pos1;\n";
+                code += "attribute vec3 morph_pos2;\n";
+                code += "attribute vec3 morph_pos3;\n";
 
-                } else if (options.useMorphNormal) {
+            } else if (options.useMorphNormal) {
                     attributes.morph_nrm0 = SEMANTIC_ATTR0;
                     attributes.morph_nrm1 = SEMANTIC_ATTR1;
                     attributes.morph_nrm2 = SEMANTIC_ATTR2;
                     attributes.morph_nrm3 = SEMANTIC_ATTR3;
 
-                    code += "#define MORPHING_NRM03\n";
-                    code += "attribute vec3 morph_nrm0;\n";
-                    code += "attribute vec3 morph_nrm1;\n";
-                    code += "attribute vec3 morph_nrm2;\n";
-                    code += "attribute vec3 morph_nrm3;\n";
-                }
+                code += "#define MORPHING_NRM03\n";
+                code += "attribute vec3 morph_nrm0;\n";
+                code += "attribute vec3 morph_nrm1;\n";
+                code += "attribute vec3 morph_nrm2;\n";
+                code += "attribute vec3 morph_nrm3;\n";
+            }
 
-                // next 4 slots are either position or normal
-                if (!options.useMorphNormal) {
+            // next 4 slots are either position or normal
+            if (!options.useMorphNormal) {
                     attributes.morph_pos4 = SEMANTIC_ATTR4;
                     attributes.morph_pos5 = SEMANTIC_ATTR5;
                     attributes.morph_pos6 = SEMANTIC_ATTR6;
                     attributes.morph_pos7 = SEMANTIC_ATTR7;
 
-                    code += "#define MORPHING_POS47\n";
-                    code += "attribute vec3 morph_pos4;\n";
-                    code += "attribute vec3 morph_pos5;\n";
-                    code += "attribute vec3 morph_pos6;\n";
-                    code += "attribute vec3 morph_pos7;\n";
-                } else {
+                code += "#define MORPHING_POS47\n";
+                code += "attribute vec3 morph_pos4;\n";
+                code += "attribute vec3 morph_pos5;\n";
+                code += "attribute vec3 morph_pos6;\n";
+                code += "attribute vec3 morph_pos7;\n";
+            } else {
                     attributes.morph_nrm4 = SEMANTIC_ATTR4;
                     attributes.morph_nrm5 = SEMANTIC_ATTR5;
                     attributes.morph_nrm6 = SEMANTIC_ATTR6;
                     attributes.morph_nrm7 = SEMANTIC_ATTR7;
 
-                    code += "#define MORPHING_NRM47\n";
-                    code += "attribute vec3 morph_nrm4;\n";
-                    code += "attribute vec3 morph_nrm5;\n";
-                    code += "attribute vec3 morph_nrm6;\n";
-                    code += "attribute vec3 morph_nrm7;\n";
-                }
+                code += "#define MORPHING_NRM47\n";
+                code += "attribute vec3 morph_nrm4;\n";
+                code += "attribute vec3 morph_nrm5;\n";
+                code += "attribute vec3 morph_nrm6;\n";
+                code += "attribute vec3 morph_nrm7;\n";
             }
+        }
         }
 
         if (options.skin) {
@@ -1125,9 +1125,9 @@ var standard = {
             code += this._addMap(specularPropName, specularPropName + "PS", options, chunks);
             code += this._addMap("gloss", "glossPS", options, chunks);
             if (options.fresnelModel === FRESNEL_SCHLICK) {
-                code += chunks.fresnelSchlickPS;
+                    code += chunks.fresnelSchlickPS;
+                }
             }
-        }
 
         if (options.heightMap) {
             if (!options.normalMap) {

@@ -28,36 +28,36 @@ var MorphTarget = function (options) {
     }
 
     this.options = options;
-    this.name = options.name;
-    this.defaultWeight = options.defaultWeight || 0;
+        this.name = options.name;
+        this.defaultWeight = options.defaultWeight || 0;
 
         // bounds
-    this.aabb = options.aabb;
-    if (!this.aabb) {
+        this.aabb = options.aabb;
+        if (!this.aabb) {
         this.aabb = new BoundingBox();
         if (options.deltaPositions)
             this.aabb.compute(options.deltaPositions);
-    }
+        }
 
         // store delta positions, used by aabb evaluation
     this.deltaPositions = options.deltaPositions;
-};
+}
 
-Object.defineProperties(MorphTarget.prototype, {
-    'morphPositions': {
-        get: function () {
+    Object.defineProperties(MorphTarget.prototype, {
+        'morphPositions': {
+            get: function () {
             return !!this._vertexBufferPositions || !!this.texturePositions;
-        }
-    },
+            }
+        },
 
-    'morphNormals': {
-        get: function () {
+        'morphNormals': {
+            get: function () {
             return !!this._vertexBufferNormals || !!this.textureNormals;
+            }
         }
-    }
-});
+    });
 
-Object.assign(MorphTarget.prototype, {
+    Object.assign(MorphTarget.prototype, {
 
     _postInit: function () {
 
@@ -77,33 +77,33 @@ Object.assign(MorphTarget.prototype, {
         }
     },
 
-    _createVertexBuffer: function (device, data, dataType) {
+        _createVertexBuffer: function (device, data, dataType) {
 
-        if (data) {
+            if (data) {
 
                 // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
             var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType || TYPE_FLOAT32 }];
             return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
-        }
+            }
 
-        return null;
-    },
+            return null;
+        },
 
     _setTexture: function (name, texture) {
         this[name] = texture;
     },
 
-    destroy: function () {
+        destroy: function () {
 
-        if (this._vertexBufferPositions) {
-            this._vertexBufferPositions.destroy();
-            this._vertexBufferPositions = null;
-        }
+            if (this._vertexBufferPositions) {
+                this._vertexBufferPositions.destroy();
+                this._vertexBufferPositions = null;
+            }
 
-        if (this._vertexBufferNormals) {
-            this._vertexBufferNormals.destroy();
-            this._vertexBufferNormals = null;
-        }
+            if (this._vertexBufferNormals) {
+                this._vertexBufferNormals.destroy();
+                this._vertexBufferNormals = null;
+            }
 
         if (this.texturePositions) {
             this.texturePositions.destroy();
@@ -114,6 +114,6 @@ Object.assign(MorphTarget.prototype, {
             this.textureNormals = null;
         }
     }
-});
+    });
 
 export { MorphTarget };

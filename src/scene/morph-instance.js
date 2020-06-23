@@ -7,19 +7,19 @@ var textureMorphVertexShader =
     '    uv0 = vertex_position.xy * 0.5 + 0.5;\n' +
     '}\n';
 
-/**
- * @class
- * @name pc.MorphInstance
- * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, manages selection of active morph targets.
- * @param {pc.Morph} morph - The pc.Morph to instance.
- */
+    /**
+     * @class
+     * @name pc.MorphInstance
+     * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, manages selection of active morph targets.
+     * @param {pc.Morph} morph - The pc.Morph to instance.
+     */
 function MorphInstance(morph) {
-    this.morph = morph;
+        this.morph = morph;
     this.device = morph.device;
     this.meshInstance = null;
 
         // weights
-    this._weights = [];
+        this._weights = [];
     for (var v = 0; v < morph._targets.length; v++) {
         this.setWeight(v, morph._targets[v].defaultWeight);
     }
@@ -84,24 +84,24 @@ function MorphInstance(morph) {
     }
 }
 
-Object.assign(MorphInstance.prototype, {
+    Object.assign(MorphInstance.prototype, {
 
-    /**
-     * @function
-     * @name pc.MorphInstance#destroy
-     * @description Frees video memory allocated by this object.
-     */
-    destroy: function () {
+        /**
+         * @function
+         * @name pc.MorphInstance#destroy
+         * @description Frees video memory allocated by this object.
+         */
+        destroy: function () {
 
         this.meshInstance = null;
 
             // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
-        if (this.morph) {
-            this.morph.destroy();
-            this.morph = null;
-        }
+            if (this.morph) {
+                this.morph.destroy();
+                this.morph = null;
+            }
 
         if (this.rtPositions) {
             this.rtPositions.destroy();
@@ -122,30 +122,30 @@ Object.assign(MorphInstance.prototype, {
             this.textureNormals.destroy();
             this.textureNormals = null;
         }
-    },
+        },
 
-    /**
-     * @function
-     * @name pc.MorphInstance#getWeight
-     * @description Gets current weight of the specified morph target.
-     * @param {number} index - An index of morph target.
-     * @returns {number} Weight.
-     */
-    getWeight: function (index) {
-        return this._weights[index];
-    },
+        /**
+         * @function
+         * @name pc.MorphInstance#getWeight
+         * @description Gets current weight of the specified morph target.
+         * @param {number} index - An index of morph target.
+         * @returns {number} Weight.
+         */
+        getWeight: function (index) {
+            return this._weights[index];
+        },
 
-    /**
-     * @function
-     * @name pc.MorphInstance#setWeight
-     * @description Sets weight of the specified morph target.
-     * @param {number} index - An index of morph target.
-     * @param {number} weight - Weight.
-     */
-    setWeight: function (index, weight) {
-        this._weights[index] = weight;
-        this._dirty = true;
-    },
+        /**
+         * @function
+         * @name pc.MorphInstance#setWeight
+         * @description Sets weight of the specified morph target.
+         * @param {number} index - An index of morph target.
+         * @param {number} weight - Weight.
+         */
+        setWeight: function (index, weight) {
+            this._weights[index] = weight;
+            this._dirty = true;
+        },
 
     // generates fragment shader to blend number of textures using specified weights
     _getFragmentShader: function (numTextures) {
@@ -293,56 +293,56 @@ Object.assign(MorphInstance.prototype, {
         }
     },
 
-    /**
-     * @function
-     * @name pc.MorphInstance#update
-     * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
-     */
-    update: function () {
+        /**
+         * @function
+         * @name pc.MorphInstance#update
+         * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
+         */
+        update: function () {
 
         this._dirty = false;
-        var targets = this.morph._targets;
+            var targets = this.morph._targets;
 
-        // collect active targets, reuse objects in _activeTargets array to avoid allocations
-        var activeCount = 0, activeTarget;
-        var i, absWeight, epsilon = 0.00001;
-        for (i = 0; i < targets.length; i++) {
-            absWeight = Math.abs(this.getWeight(i));
-            if (absWeight > epsilon) {
+            // collect active targets, reuse objects in _activeTargets array to avoid allocations
+            var activeCount = 0, activeTarget;
+            var i, absWeight, epsilon = 0.00001;
+            for (i = 0; i < targets.length; i++) {
+                absWeight = Math.abs(this.getWeight(i));
+                if (absWeight > epsilon) {
 
-                // create new object if needed
-                if (this._activeTargets.length <= activeCount) {
-                    this._activeTargets[activeCount] = {};
+                    // create new object if needed
+                    if (this._activeTargets.length <= activeCount) {
+                        this._activeTargets[activeCount] = {};
+                    }
+
+                    activeTarget = this._activeTargets[activeCount++];
+                    activeTarget.absWeight = absWeight;
+                    activeTarget.weight = this.getWeight(i);
+                    activeTarget.target = targets[i];
                 }
-
-                activeTarget = this._activeTargets[activeCount++];
-                activeTarget.absWeight = absWeight;
-                activeTarget.weight = this.getWeight(i);
-                activeTarget.target = targets[i];
             }
-        }
-        this._activeTargets.length = activeCount;
+            this._activeTargets.length = activeCount;
 
-        // if there's more active targets then rendering supports
-        var maxActiveTargets = this.morph.maxActiveTargets;
-        if (this._activeTargets.length > maxActiveTargets) {
+            // if there's more active targets then rendering supports
+            var maxActiveTargets = this.morph.maxActiveTargets;
+            if (this._activeTargets.length > maxActiveTargets) {
 
-            // sort them by absWeight
-            this._activeTargets.sort(function (l, r) {
-                return (l.absWeight < r.absWeight) ? 1 : (r.absWeight < l.absWeight ? -1 : 0);
-            });
+                // sort them by absWeight
+                this._activeTargets.sort(function (l, r) {
+                    return (l.absWeight < r.absWeight) ? 1 : (r.absWeight < l.absWeight ? -1 : 0);
+                });
 
-            // remove excess
-            this._activeTargets.length = maxActiveTargets;
-        }
+                // remove excess
+                this._activeTargets.length = maxActiveTargets;
+            }
 
         // prepare for rendering
         if (this.morph.useTextureMorph) {
             this._updateTextureMorph();
         } else {
             this._updateVertexMorph();
-        }
-    }
-});
+                }
+            }
+    });
 
 export { MorphInstance };

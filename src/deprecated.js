@@ -72,24 +72,6 @@ string.endsWith = function (s, subs) {
     return s.endsWith(subs);
 };
 
-string.format = function (s) {
-    // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.string.format is deprecated. Use string concatenation operator + instead.");
-    // #endif
-    var i = 0,
-        regexp,
-        args = pc.makeArray(arguments);
-
-    // drop first argument
-    args.shift();
-
-    for (i = 0; i < args.length; i++) {
-        regexp = new RegExp('\\{' + i + '\\}', 'gi');
-        s = s.replace(regexp, args[i]);
-    }
-    return s;
-};
-
 string.startsWith = function (s, subs) {
     // #ifdef DEBUG
     console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
