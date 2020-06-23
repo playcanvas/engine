@@ -74,24 +74,29 @@
             diffuseMap = model.getMaterials()[0].diffuseMap;
 
             var rootNode = new pc.ShaderGraphNode();
-            rootNode.setFunctionString('vec4 root(in vec3 color, in float alpha){return vec4(color,alpha)}');
+            rootNode.setFunctionString('vec4 root(in vec3 color, in float alpha){ return vec4(color,alpha); }');
 
             var texSampleNode = new pc.ShaderGraphNode();
-            texSampleNode.setFunctionString('void texSample(in sampler2D texture, in vec2 uv, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n color=sample.rgb;\n alpha=sample.a;\n}\n');
+            texSampleNode.setFunctionString('void texSample(in sampler2D texture, in vec2 uv, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n color=sample.rgb;\n alpha=sample.a;\n}');
             
             var texParamNode = new pc.ShaderGraphNode();
             texParamNode.setParam('sampler2D', 'uDiffuseMap', diffuseMap);
 
-            var uv0Node = new pc.ShaderGraphNode();
-            uv0Node.setFunctionString('vec2 uv0() { return vUV0; }');
+            var uv0ScrollNode = new pc.ShaderGraphNode();
+            uv0ScrollNode.setFunctionString('vec2 uv0Scroll(in float t) { return vUv0+vec2(t, t); }');
+
+            var timeParamNode = new pc.ShaderGraphNode();
+            timeParamNode.setParam('float', 'uTime', 0.0);
 
             rootNode.setInput('color', texSampleNode, 'color');
             rootNode.setInput('alpha', texSampleNode, 'alpha');
 
             texSampleNode.setInput('texture', texParamNode);
-            texSampleNode.setInput('uv', uv0Node);
+            texSampleNode.setInput('uv', uv0ScrollNode);
+            
+            uv0ScrollNode.setInput('t', timeParamNode);
 
-            rootNode.getOutputs();
+            rootNode.genOutputs();
 
             material = new pc.NodeMaterial();
             material.shaderGraphNode=rootNode;
@@ -101,11 +106,11 @@
             });
 
             material.initShader(app.graphicsDevice);
+            material.updateUniforms();
 
             app.on("update", function (dt) {
                 time += dt;
-                timeNodeParam.value=time;
-                material.updateUniforms();
+                material.setParameter('uTime', time);
             });
 
             app.start();

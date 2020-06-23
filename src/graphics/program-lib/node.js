@@ -129,10 +129,10 @@ pc.programlib.node = {
 
         for (var n=0;n<options.shaderGraphNode.params.length;n++)
         {
-            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+'_'+options.shaderGraphNode.key+';\n';
+            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+';\n';
         }
   
-        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphDeclareString;
+        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphFuncString;
 
 //        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
 //        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;

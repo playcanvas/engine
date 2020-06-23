@@ -16,8 +16,10 @@ Object.assign(pc, function () {
      */
     var NodeMaterial = function () {
         pc.Material.call(this);
+        
+        this.paramValues=[];
 
-        this.nodeInputs = new NodeInputs();
+        //this.nodeInputs = new NodeInputs();
 
       //  this.nodeInputs.params = [];
         
@@ -67,7 +69,7 @@ Object.assign(pc, function () {
 
             pc.Material.prototype._cloneInternal.call(this, clone);
 
-            clone.nodeInputs.copy(this.nodeInputs);
+            //clone.nodeInputs.copy(this.nodeInputs);
 
             return clone;
         },
@@ -75,9 +77,14 @@ Object.assign(pc, function () {
         updateUniforms: function () {
             this.clearParameters();
 
-            for (var n=0;n<this.nodeInputs.params.length;n++)
+            for (var n=0;n<this.shaderGraphNode.params.length;n++)
             {
-                switch(this.nodeInputs.params[n].type)
+                if (!this.paramValues[n])
+                {
+                    this.paramValues[n] = (this.shaderGraphNode.params[n].value.clone) ? this.shaderGraphNode.params[n].value.clone() : this.shaderGraphNode.params[n].value;
+                }
+
+                switch(this.shaderGraphNode.params[n].type)
                 {
                     case 'sampler2D':
                     case 'samplerCube':
@@ -85,12 +92,12 @@ Object.assign(pc, function () {
                     case 'vec2':
                     case 'vec3':
                     case 'vec4':
-                        this.setParameter(this.nodeInputs.params[n].name+'_'+this.nodeInputs.key, this.nodeInputs.params[n].value);
+                        this.setParameter(this.shaderGraphNode.params[n].name, this.paramValues[n]);
                         break;
                     default:
                         //error
                         break;    
-                }
+                }           
             }
         },
 
@@ -100,7 +107,7 @@ Object.assign(pc, function () {
             {
                 var options = {
                     skin: !!this.meshInstances[0].skinInstance,
-                    nodeInputs: this.nodeInputs,
+                    shaderGraphNode: this.shaderGraphNode,
                     //pass: pass
                 };
 //              var library = device.getProgramLibrary();
