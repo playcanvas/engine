@@ -113,7 +113,7 @@ var MorphTarget = function (options) {
             this.textureNormals.destroy();
             this.textureNormals = null;
         }
-    }
+        }
     });
 
 export { MorphTarget };

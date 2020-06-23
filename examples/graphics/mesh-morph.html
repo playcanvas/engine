@@ -53,8 +53,8 @@
         app.root.addChild(camera);
 
         // helper function to return the shortest distance from point [x, y, z] to a plane defined by [a, b, c] normal
-        var shortestDistance = function (x, y, z, a, b, c)         {
-            var d = Math.abs((a * x + b * y + c * z)); 
+        var shortestDistance = function (x, y, z, a, b, c) {
+            var d = Math.abs(a * x + b * y + c * z); 
             var e = Math.sqrt(a * a + b * b + c * c); 
             return d / e;
         };
@@ -74,7 +74,7 @@
                 displacement = pc.math.clamp(dist, 0, limit);
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
-                
+        
                 // generate new position by extruding vertex along normal by displacement
                 modifiedPositions[i] = positions[i] + normals[i] * displacement;
                 modifiedPositions[i + 1] = positions[i + 1] + normals[i + 1] * displacement;
@@ -124,7 +124,7 @@
         // Create a model and add the mesh instance to it
         var model = new pc.Model();
         model.graph = node;
-        model.meshInstances = [ this.meshInstance ];
+        model.meshInstances = [this.meshInstance];
 
         // add morph instance - this is where currently set weights are stored
         var morphInstance = new pc.MorphInstance(mesh.morph);
