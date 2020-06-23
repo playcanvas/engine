@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,7 +35,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
@@ -56,7 +56,7 @@
         });
         app.root.addChild(light);
         var e = light.getLocalEulerAngles();
-        light.setLocalEulerAngles(e.x+90, e.y-75, e.z);
+        light.setLocalEulerAngles(e.x + 90, e.y - 75, e.z);
 
         // Load a cubemap asset. This DDS file was 'prefiltered' in the
         // PlayCanvas Editor and then downloaded.
@@ -68,7 +68,7 @@
         cubemapAsset.ready(function () {
             // Mark the cubemaps as RGBM format since it's an HDR cubemap
             cubemapAsset.resources.forEach(function (cubemap) {
-                cubemap.rgbm = true;
+                cubemap.type = pc.TEXTURETYPE_RGBM;
             });
             app.scene.setSkybox(cubemapAsset.resources);
         });
@@ -81,7 +81,7 @@
             material.metalness = 1.0;
             material.shininess = (z) / (NUM_SPHERES_Z - 1) * 100;
             material.useMetalness = true;
-            material.anisotropy = ((2*x / (NUM_SPHERES_X - 1))-1.0)*-1.0;
+            material.anisotropy = ((2 * x / (NUM_SPHERES_X - 1)) - 1.0) * -1.0;
             material.enableGGXSpecular = true;
             material.update();
 
@@ -94,23 +94,23 @@
             sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, y, z - (NUM_SPHERES_Z - 1) * 0.5);
             sphere.setLocalScale(0.7, 0.7, 0.7);
             app.root.addChild(sphere);
-        }
+        };
 
         var createText = function (fontAsset, message, x, y, z, rotx, roty) {
             // Create a text element-based entity
             var text = new pc.Entity();
             text.addComponent("element", {
-                anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+                anchor: [0.5, 0.5, 0.5, 0.5],
                 fontAsset: fontAsset,
                 fontSize: 0.5,
-                pivot: [ 0.5, 0.5 ],
+                pivot: [0.5, 0.5],
                 text: message,
                 type: pc.ELEMENTTYPE_TEXT
             });
             text.setLocalPosition(x, y, z);
             text.setLocalEulerAngles(rotx, roty, 0);
             app.root.addChild(text);
-        }
+        };
 
         for (var i = 0; i < NUM_SPHERES_Z; i++) {
             for (var j = 0; j < NUM_SPHERES_X; j++) {
@@ -119,10 +119,10 @@
         }
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
-            createText(fontAsset, 'Anisotropy', 0, 0, ((NUM_SPHERES_Z + 1) * 0.5),-90, 0);
-            createText(fontAsset, 'Roughness', -(NUM_SPHERES_X + 1) * 0.5, 0, 0,-90, 90);
+            createText(fontAsset, 'Anisotropy', 0, 0, ((NUM_SPHERES_Z + 1) * 0.5), -90, 0);
+            createText(fontAsset, 'Roughness', -(NUM_SPHERES_X + 1) * 0.5, 0, 0, -90, 90);
         });
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);

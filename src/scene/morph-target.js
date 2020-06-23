@@ -1,4 +1,8 @@
-Object.assign(pc, function () {
+import { BoundingBox } from '../shape/bounding-box.js';
+
+import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/graphics.js';
+import { VertexBuffer } from '../graphics/vertex-buffer.js';
+import { VertexFormat } from '../graphics/vertex-format.js';
 
     /**
      * @class
@@ -14,105 +18,102 @@ Object.assign(pc, function () {
      * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
      * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
      */
-    var MorphTarget = function (options) {
+var MorphTarget = function (options) {
 
-        if (arguments.length === 2) {
+    if (arguments.length === 2) {
             // #ifdef DEBUG
-            console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
+        console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
             // #endif
-            options = arguments[1];
-        }
+        options = arguments[1];
+    }
 
-        this.options = options;
-        this.name = options.name;
-        this.defaultWeight = options.defaultWeight || 0;
+    this.options = options;
+    this.name = options.name;
+    this.defaultWeight = options.defaultWeight || 0;
 
         // bounds
-        this.aabb = options.aabb;
-        if (!this.aabb) {
-            this.aabb = new pc.BoundingBox();
-            if (options.deltaPositions)
-                this.aabb.compute(options.deltaPositions);
-        }
+    this.aabb = options.aabb;
+    if (!this.aabb) {
+        this.aabb = new BoundingBox();
+        if (options.deltaPositions)
+            this.aabb.compute(options.deltaPositions);
+    }
 
         // store delta positions, used by aabb evaluation
-        this.deltaPositions = options.deltaPositions;
-    };
+    this.deltaPositions = options.deltaPositions;
+};
 
-    Object.defineProperties(MorphTarget.prototype, {
-        'morphPositions': {
-            get: function () {
-                return !!this._vertexBufferPositions || !!this.texturePositions;
-            }
-        },
-
-        'morphNormals': {
-            get: function () {
-                return !!this._vertexBufferNormals || !!this.textureNormals;
-            }
+Object.defineProperties(MorphTarget.prototype, {
+    'morphPositions': {
+        get: function () {
+            return !!this._vertexBufferPositions || !!this.texturePositions;
         }
-    });
+    },
 
-    Object.assign(MorphTarget.prototype, {
+    'morphNormals': {
+        get: function () {
+            return !!this._vertexBufferNormals || !!this.textureNormals;
+        }
+    }
+});
 
-        _postInit: function () {
+Object.assign(MorphTarget.prototype, {
+
+    _postInit: function () {
 
             // release original data
-            this.options = null;
-        },
+        this.options = null;
+    },
 
-        _initVertexBuffers: function (graphicsDevice) {
+    _initVertexBuffers: function (graphicsDevice) {
 
-            var options = this.options;
-            this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
-            this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
+        var options = this.options;
+        this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
+        this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
 
             // access positions from vertex buffer when needed
-            if (this._vertexBufferPositions) {
-                this.deltaPositions = this._vertexBufferPositions.lock();
-            }
-        },
+        if (this._vertexBufferPositions) {
+            this.deltaPositions = this._vertexBufferPositions.lock();
+        }
+    },
 
-        _createVertexBuffer: function (device, data, dataType) {
+    _createVertexBuffer: function (device, data, dataType) {
 
-            if (data) {
+        if (data) {
 
                 // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
-                var formatDesc = [{ semantic: pc.SEMANTIC_ATTR0, components: 3, type: dataType || pc.TYPE_FLOAT32 }];
-                return new pc.VertexBuffer(device, new pc.VertexFormat(device, formatDesc), data.length / 3, pc.BUFFER_STATIC, data);
-            }
-
-            return null;
-        },
-
-        _setTexture: function (name, texture) {
-            this[name] = texture;
-        },
-
-        destroy: function () {
-
-            if (this._vertexBufferPositions) {
-                this._vertexBufferPositions.destroy();
-                this._vertexBufferPositions = null;
-            }
-
-            if (this._vertexBufferNormals) {
-                this._vertexBufferNormals.destroy();
-                this._vertexBufferNormals = null;
-            }
-
-            if (this.texturePositions) {
-                this.texturePositions.destroy();
-                this.texturePositions = null;
-            }
-            if (this.textureNormals) {
-                this.textureNormals.destroy();
-                this.textureNormals = null;
-            }
+            var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType || TYPE_FLOAT32 }];
+            return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
         }
-    });
 
-    return {
-        MorphTarget: MorphTarget
-    };
-}());
+        return null;
+    },
+
+    _setTexture: function (name, texture) {
+        this[name] = texture;
+    },
+
+    destroy: function () {
+
+        if (this._vertexBufferPositions) {
+            this._vertexBufferPositions.destroy();
+            this._vertexBufferPositions = null;
+        }
+
+        if (this._vertexBufferNormals) {
+            this._vertexBufferNormals.destroy();
+            this._vertexBufferNormals = null;
+        }
+
+        if (this.texturePositions) {
+            this.texturePositions.destroy();
+            this.texturePositions = null;
+        }
+        if (this.textureNormals) {
+            this.textureNormals.destroy();
+            this.textureNormals = null;
+        }
+    }
+});
+
+export { MorphTarget };

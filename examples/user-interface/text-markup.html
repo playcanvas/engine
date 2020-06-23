@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,7 +35,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // Create a camera
         var camera = new pc.Entity();
@@ -57,11 +57,11 @@
         // Create a text element with substring coloring enabled via the enableMarkup property
         var text = new pc.Entity();
         text.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
             enableMarkup: true,
             fontSize: 32,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             text: 'There are seven colors in the rainbow: [color="#ff0000"]red[/color], [color="#ffa500"]orange[/color], [color="#ffff00"]yellow[/color], [color="#00ff00"]green[/color], [color="#0000ff"]blue[/color], [color="#4b0082"]indigo[/color] and [color="#7f00ff"]violet[/color].',
             type: pc.ELEMENTTYPE_TEXT,
             width: 512,
@@ -70,7 +70,7 @@
         screen.addChild(text);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;

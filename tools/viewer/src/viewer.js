@@ -29,15 +29,15 @@ var Viewer = function (canvas) {
     });
 
     // load cubemap background
-    var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+    var cubemapAsset = new pc.Asset('helipad.dds', 'texture', {
         url: assetsFolder + "/cubemaps/helipad.dds"
     }, {
-        rgbm: true
+        type: "rgbm"
     });
     cubemapAsset.ready(function () {
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.setSkybox(cubemapAsset.resources);
         app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
     });
@@ -139,7 +139,7 @@ var Viewer = function (canvas) {
     this.debugSkeleton = new DebugLines(app, camera);
     this.debugNormals = new DebugLines(app, camera);
 
-    this.miniStats = new pc.MiniStats(app);
+    this.miniStats = new pcx.MiniStats(app);
 
     function getUrlVars() {
         var vars = {};

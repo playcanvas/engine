@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,7 +35,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
@@ -58,7 +58,7 @@
         cubemapAsset.ready(function () {
             // Mark the cubemaps as RGBM format since it's an HDR cubemap
             cubemapAsset.resources.forEach(function (cubemap) {
-                cubemap.rgbm = true;
+                cubemap.type = pc.TEXTURETYPE_RGBM;
             });
             app.scene.setSkybox(cubemapAsset.resources);
         });
@@ -80,23 +80,23 @@
             sphere.setLocalPosition(x - (NUM_SPHERES - 1) * 0.5, y - (NUM_SPHERES - 1) * 0.5, z);
             sphere.setLocalScale(0.9, 0.9, 0.9);
             app.root.addChild(sphere);
-        }
+        };
 
         var createText = function (fontAsset, message, x, y, z, rot) {
             // Create a text element-based entity
             var text = new pc.Entity();
             text.addComponent("element", {
-                anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+                anchor: [0.5, 0.5, 0.5, 0.5],
                 fontAsset: fontAsset,
                 fontSize: 0.5,
-                pivot: [ 0.5, 0.5 ],
+                pivot: [0.5, 0.5],
                 text: message,
                 type: pc.ELEMENTTYPE_TEXT
             });
             text.setLocalPosition(x, y, z);
             text.setLocalEulerAngles(0, 0, rot);
             app.root.addChild(text);
-        }
+        };
 
         for (var i = 0; i < NUM_SPHERES; i++) {
             for (var j = 0; j < NUM_SPHERES; j++) {
@@ -105,7 +105,7 @@
         }
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
             createText(fontAsset, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
             createText(fontAsset, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);

@@ -1,63 +1,58 @@
-Object.assign(pc, function () {
-    'use strict';
+import { http } from '../net/http.js';
 
-    var CssHandler = function () {
-        this.retryRequests = false;
-    };
+function CssHandler() {
+    this.retryRequests = false;
+}
 
-    Object.assign(CssHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
+Object.assign(CssHandler.prototype, {
+    load: function (url, callback) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
+            };
+        }
+
+        http.get(url.load, {
+            retry: this.retryRequests
+        }, function (err, response) {
+            if (!err) {
+                callback(null, response);
+            } else {
+                callback("Error loading css resource: " + url.original + " [" + err + "]");
             }
+        });
+    },
 
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback(pc.string.format("Error loading css resource: {0} [{1}]", url.original, err));
-                }
-            });
-        },
+    open: function (url, data) {
+        return data;
+    },
 
-        open: function (url, data) {
-            return data;
-        },
+    patch: function (asset, assets) {
+    }
+});
 
-        patch: function (asset, assets) {
-        }
-    });
+/**
+ * @function
+ * @name pc.createStyle
+ * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
+ * @param {string} cssString - A string that contains valid CSS.
+ * @example
+ * var css = 'body {height: 100;}';
+ * var style = pc.createStyle(css);
+ * document.head.appendChild(style);
+ * @returns {Element} The style DOM element.
+ */
+function createStyle(cssString) {
+    var result = document.createElement('style');
+    result.type = 'text/css';
+    if (result.styleSheet) {
+        result.styleSheet.cssText = cssString;
+    } else {
+        result.appendChild(document.createTextNode(cssString));
+    }
 
-    /**
-     * @function
-     * @name pc.createStyle
-     * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
-     * @param {string} cssString - A string that contains valid CSS.
-     * @example
-     * var css = 'body {height: 100;}';
-     * var style = pc.createStyle(css);
-     * document.head.appendChild(style);
-     * @returns {Element} The style DOM element.
-     */
-    var createStyle = function (cssString) {
-        var result = document.createElement('style');
-        result.type = 'text/css';
-        if (result.styleSheet) {
-            result.styleSheet.cssText = cssString;
-        } else {
-            result.appendChild(document.createTextNode(cssString));
-        }
+    return result;
+}
 
-        return result;
-    };
-
-    return {
-        CssHandler: CssHandler,
-        createStyle: createStyle
-    };
-}());
+export { createStyle, CssHandler };

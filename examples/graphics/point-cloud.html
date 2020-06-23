@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -51,7 +51,7 @@
             intensity = smoothstep(0.9, 1.0, intensity);
 
             // point size depends on intensity
-            gl_PointSize = 12.0 * intensity;
+            gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
 
             // color mixes red and yellow based on intensity
             outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
@@ -71,7 +71,7 @@
 
     <!-- The script -->
     <script>
-        var entity, light, camera;
+        var entity, camera;
         var shader, material, diffuseMap;
         var canvas = document.getElementById("application-canvas");
 
@@ -86,7 +86,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // Create an Entity with a camera component
         camera = new pc.Entity();
@@ -135,8 +135,8 @@
                 // Set all primitives of the mesh to render as points
                 meshInstance.mesh.primitive.forEach(function (primitive) {
                     primitive.type = pc.PRIMITIVE_POINTS;
-                })
-            })
+                });
+            });
 
             currentTime = 0;
             app.on("update", function (dt) {
@@ -148,7 +148,6 @@
                 // Rotate the model
                 entity.rotate(0, 15 * dt, 0);
             });
-
         });
     </script>
 </body>

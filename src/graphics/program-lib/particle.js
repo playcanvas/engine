@@ -1,4 +1,9 @@
-pc.programlib.particle = {
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../scene/constants.js';
+import { shaderChunks } from '../chunks.js';
+
+import { programlib } from './program-lib.js';
+
+var particle = {
     generateKey: function (options) {
         var key = "particle";
         for (var prop in options) {
@@ -18,10 +23,10 @@ pc.programlib.particle = {
 
     createShaderDefinition: function (device, options) {
 
-        var chunk = pc.shaderChunks;
+        var chunk = shaderChunks;
 
         var vshader = "";
-        var fshader = pc.programlib.precisionCode(device) + "\n";
+        var fshader = programlib.precisionCode(device) + "\n";
 
         if (device.webgl2) {
             vshader += "#define GL2\n";
@@ -82,8 +87,8 @@ pc.programlib.particle = {
         if (options.soft) fshader += "\nvarying float vDepth;\n";
 
         if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
-        fshader += pc.programlib.gammaCode(options.gamma);
-        fshader += pc.programlib.tonemapCode(options.toneMap);
+        fshader += programlib.gammaCode(options.gamma);
+        fshader += programlib.tonemapCode(options.toneMap);
 
         if (options.fog === 'linear') {
             fshader += chunk.fogLinearPS;
@@ -103,16 +108,16 @@ pc.programlib.particle = {
         if (options.normal == 2) fshader += chunk.particle_normalMapPS;
         if (options.normal > 0) fshader += options.halflambert ? chunk.particle_halflambertPS : chunk.particle_lambertPS;
         if (options.normal > 0) fshader += chunk.particle_lightingPS;
-        if (options.blend == pc.BLEND_NORMAL) {
+        if (options.blend == BLEND_NORMAL) {
             fshader += chunk.particle_blendNormalPS;
-        } else if (options.blend == pc.BLEND_ADDITIVE) {
+        } else if (options.blend == BLEND_ADDITIVE) {
             fshader += chunk.particle_blendAddPS;
-        } else if (options.blend == pc.BLEND_MULTIPLICATIVE) {
+        } else if (options.blend == BLEND_MULTIPLICATIVE) {
             fshader += chunk.particle_blendMultiplyPS;
         }
         fshader += chunk.particle_endPS;
 
-        var attributes = pc.shaderChunks.collectAttribs(vshader);
+        var attributes = shaderChunks.collectAttribs(vshader);
 
         return {
             attributes: attributes,
@@ -121,3 +126,5 @@ pc.programlib.particle = {
         };
     }
 };
+
+export { particle };
