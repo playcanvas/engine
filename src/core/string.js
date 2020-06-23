@@ -118,16 +118,16 @@ var string = {
      */
     ASCII_LETTERS: ASCII_LETTERS,
 
-    /** 
-     * @function    
-     * @name pc.string.format   
-     * @description Return a string with {n} replaced with the n-th argument.   
-     * @param {string} s - The string to format.    
-     * @param {object} [arguments] - All other arguments are substituted into the string.   
-     * @returns {string} The formatted string.  
-     * @example 
-     * var s = pc.string.format("Hello {0}", "world");  
-     * console.log(s); // Prints "Hello world"  
+    /**
+     * @function
+     * @name pc.string.format
+     * @description Return a string with {n} replaced with the n-th argument.
+     * @param {string} s - The string to format.
+     * @param {object} [arguments] - All other arguments are substituted into the string.
+     * @returns {string} The formatted string.
+     * @example
+     * var s = pc.string.format("Hello {0}", "world");
+     * console.log(s); // Prints "Hello world"
      */
     format: function (s) {
         for (var i = 1; i < arguments.length; i++) {
