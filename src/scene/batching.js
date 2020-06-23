@@ -82,8 +82,10 @@ BatchGroup.SPRITE = 'sprite';
 
 // Class derived from SkinInstance with changes to make it suitable for batching
 function SkinBatchInstance(device, nodes, rootNode) {
+    SkinInstance.call(this);
+
     var numBones = nodes.length;
-    this.init(device, numBones);
+    SkinInstance.prototype.init.call(this, device, numBones);
 
     this.device = device;
     this.rootNode = rootNode;
@@ -92,7 +94,8 @@ function SkinBatchInstance(device, nodes, rootNode) {
     this.bones = nodes;
 }
 
-SkinBatchInstance.prototype = new SkinInstance(null);
+SkinBatchInstance.prototype = Object.create(SkinBatchInstance.prototype);
+SkinBatchInstance.prototype.constructor = SkinBatchInstance;
 
 Object.assign(SkinBatchInstance.prototype, {
     updateMatrices: function (rootNode) {
@@ -126,7 +129,7 @@ Object.assign(SkinBatchInstance.prototype, {
             mp[base + 15] = pe[15];
         }
 
-        this.uploadBones(this.device);
+        SkinInstance.prototype.uploadBones.call(this, this.device);
     }
 });
 
