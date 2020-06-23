@@ -7,7 +7,7 @@ const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
 const notice = [
     '/*',
-    ' * Playcanvas Engine v' + version + ' revision ' + revision,
+    ' * PlayCanvas Engine v' + version + ' revision ' + revision,
     ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
     ' */'
 ].join('\n');
