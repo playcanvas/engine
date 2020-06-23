@@ -420,7 +420,7 @@ Object.assign(GraphNode.prototype, {
      * Query can be simply a string, or comma separated strings,
      * to have inclusive results of assets that match at least one query.
      * A query that consists of an array of tags can be used to match graph nodes that have each tag of array.
-     * @param {...(string|string[])} query - Name of a tag or array of tags.
+     * @param {string|string[]} query - Name of a tag or array of tags.
      * @returns {pc.GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
