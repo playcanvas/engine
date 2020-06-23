@@ -72,6 +72,7 @@
 ../src/scene/light.js
 ../src/scene/materials/material.js
 ../src/scene/materials/basic-material.js
+../src/scene/materials/shader-node.js
 ../src/scene/materials/node-material.js
 ../src/scene/materials/depth-material.js
 ../src/scene/materials/standard-material.js

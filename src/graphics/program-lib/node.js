@@ -3,7 +3,7 @@ pc.programlib.node = {
         var key = 'node';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
-        if (options.nodeInputs) key += options.nodeInputs.key;
+        if (options.shaderGraphNode) key += options.shaderGraphNode.key;
 //        key += '_' + options.pass;
         return key;
     },
@@ -63,23 +63,23 @@ pc.programlib.node = {
             code += '#endif\n';
         }*/
 
-        for (var n=0;n<options.nodeInputs.params.length;n++)
+        for (var n=0;n<options.shaderGraphNode.params.length;n++)
         {
-            code += 'uniform '+options.nodeInputs.params[n].type+' '+options.nodeInputs.params[n].name+'_'+options.nodeInputs.key+';\n';
+            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+'_'+options.shaderGraphNode.key+';\n';
         }
 
         code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
         code +='vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
-        if (options.nodeInputs.vertexPositionOffset) 
+        if (options.shaderGraphNode.vertexPositionOffset) 
         {
-            code += options.nodeInputs.vertexPositionOffset;
+            code += options.shaderGraphNode.vertexPositionOffset;
         }
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
-        if (options.nodeInputs.vertexPositionOffset) {
+        if (options.shaderGraphNode.vertexPositionOffset) {
             code += "   vPosition = getWorldPositionNM()+getVertexPositionOffset();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
@@ -127,12 +127,14 @@ pc.programlib.node = {
             code += chunks.packDepthPS;
         }*/
 
-        for (var n=0;n<options.nodeInputs.params.length;n++)
+        for (var n=0;n<options.shaderGraphNode.params.length;n++)
         {
-            code += 'uniform '+options.nodeInputs.params[n].type+' '+options.nodeInputs.params[n].name+'_'+options.nodeInputs.key+';\n';
+            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+'_'+options.shaderGraphNode.key+';\n';
         }
-        
-        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
+  
+        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphDeclareString;
+
+//        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
 //        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
 //        if (options.nodeInputs.opacity) code += options.nodeInputs.opacity;
 //        if (options.nodeInputs.normal) code += options.nodeInputs.normal;
@@ -142,10 +144,13 @@ pc.programlib.node = {
         // FRAGMENT SHADER BODY
         code += pc.programlib.begin();            
 
+        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphNodeString;
+
         //code += pc.NodeMaterial.generateLightingCode(options);
 
         //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
-        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
+//        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
+        //code += '    gl_FragColor = '+options.shaderGraphNode.funcName+ root(getEmissiveColor(),1);\n';
 
         if (options.alphatest) {
             code += "   alphaTest(gl_FragColor.a);\n";
