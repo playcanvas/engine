@@ -1,6 +1,15 @@
 Object.assign(pc, function () {
 
     /**
+     * Maps an entity to a number of animation assets. Animations can be added to the node with either
+     * pc.AnimationComponent or pc.AnimComponent.
+     *
+     * @typedef {object} pc.ContainerResourceAnimationMapping
+     * @property {pc.Entity} node Entity that should be animated.
+     * @property {pc.Asset[]} animations Animations assets to be assigned to node.
+     */
+
+    /**
      * @class
      * @name pc.ContainerResource
      * @classdesc Container for a list of animations, textures, materials, models, scenes (as entities)
@@ -12,7 +21,7 @@ Object.assign(pc, function () {
      * @property {pc.Asset[]} materials Material assets.
      * @property {pc.Asset[]} textures Texture assets.
      * @property {pc.Asset[]} animations Animation assets.
-     * @property {pc.Asset[]} models Model assets.
+     * @property {pc.ContainerResourceAnimationMapping[]} nodeAnimations Mapping of animations to node entities.
      * @property {pc.AssetRegistry} registry The asset registry.
      */
     var ContainerResource = function (data) {
@@ -22,6 +31,7 @@ Object.assign(pc, function () {
         this.materials = [];
         this.textures = [];
         this.animations = [];
+        this.nodeAnimations = [];
         this.models = [];
         this.registry = null;
     };
@@ -56,6 +66,10 @@ Object.assign(pc, function () {
             if (this.animations) {
                 destroyAssets(this.animations);
                 this.animations = null;
+            }
+
+            if (this.nodeAnimations) {
+                this.nodeAnimations = null;
             }
 
             if (this.models) {
@@ -174,51 +188,26 @@ Object.assign(pc, function () {
             // texture assets are created in the parser
             var textureAssets = data.textures;
 
-            // add components to nodes
+            // create mapping from nodes to animations
+            var nodeAnimations = data.nodes
+                .map(function (node, nodeIndex) {
+                    return {
+                        node: node,
+                        animations: data.nodeComponents[nodeIndex].animations.map(function (animationIndex) {
+                            return animationAssets[animationIndex];
+                        })
+                    };
+                }).filter(function (mapping) {
+                    return mapping.animations.length > 0;
+                });
+
+            // add model components to nodes
             data.nodes.forEach(function (node, nodeIndex) {
                 var components = data.nodeComponents[nodeIndex];
-
                 if (components.model !== null) {
                     node.addComponent('model', {
                         type: 'asset',
                         asset: modelAssets[components.model]
-                    });
-                }
-
-                if (components.animations.length > 0) {
-                    var anim = node.addComponent('anim');
-
-                    // Create one layer per animation asset so that the animations can be played simultaneously
-                    anim.loadStateGraph({
-                        layers: components.animations.map(function (animationIndex) {
-                            return {
-                                name: animationAssets[animationIndex].resource.name,
-                                states: [
-                                    { name: pc.ANIM_STATE_START },
-                                    { name: "LOOP", speed: 1, loop: true },
-                                    { name: "LOOP_REVERSE", speed: -1, loop: true },
-                                    { name: "ONCE", speed: 1, loop: false },
-                                    { name: "ONCE_REVERSE", speed: -1, loop: false }
-                                ],
-                                transitions: []
-                            };
-                        }),
-                        parameters: {}
-                    });
-
-                    components.animations.forEach(function (animationIndex) {
-                        var layer = anim.findAnimationLayer(animationAssets[animationIndex].resource.name);
-                        if (layer) {
-                            layer.states.slice(1, layer.states.length).forEach(function (state) {
-                                layer.assignAnimation(state, animationAssets[animationIndex].resource);
-                            });
-
-                            // This is currently the only public method to set the current state of a layer.
-                            // By doing this the animation of a layer can be played by simply running layer.play()
-                            // in an application.
-                            layer.play("LOOP");
-                            layer.pause();
-                        }
                     });
                 }
             });
@@ -232,6 +221,7 @@ Object.assign(pc, function () {
             container.materials = materialAssets;
             container.textures = textureAssets;
             container.animations = animationAssets;
+            container.nodeAnimations = nodeAnimations;
             container.models = modelAssets;
             container.registry = assets;
         }
