@@ -50,7 +50,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.AnimComponentLayer#assignAnimation
          * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
@@ -177,7 +176,6 @@ Object.assign(pc, function () {
             }
         },
         /**
-         * @private
          * @readonly
          * @name pc.AnimComponentLayer#states
          * @type {string[]}

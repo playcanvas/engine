@@ -17,6 +17,19 @@ Object.assign(pc, {
     ANIM_PARAMETER_BOOLEAN: 'BOOLEAN',
     ANIM_PARAMETER_TRIGGER: 'TRIGGER',
 
+    /**
+     * @constant
+     * @name pc.ANIM_STATE_START
+     * @type {string}
+     * @description AnimComponent start state.
+     */
     ANIM_STATE_START: 'START',
+
+    /**
+     * @constant
+     * @name pc.ANIM_STATE_START
+     * @type {string}
+     * @description AnimComponent end state.
+     */
     ANIM_STATE_END: 'END'
 });
