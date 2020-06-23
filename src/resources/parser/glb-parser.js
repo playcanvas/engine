@@ -1157,8 +1157,7 @@ Object.assign(pc, function () {
 
         meshGroup.forEach(function (mesh) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-            var meshNode = new pc.GraphNode();
-            var meshInstance = new pc.MeshInstance(meshNode, mesh, material);
+            var meshInstance = new pc.MeshInstance(model.graph, mesh, material);
 
             if (mesh.morph) {
                 var morphInstance = new pc.MorphInstance(mesh.morph);
@@ -1182,7 +1181,6 @@ Object.assign(pc, function () {
                 model.skinInstances.push(skinInstance);
             }
 
-            model.graph.addChild(meshNode);
             model.meshInstances.push(meshInstance);
         });
 
