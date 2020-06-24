@@ -410,22 +410,6 @@ Object.assign(AssetRegistry.prototype, {
 
     /**
      * @function
-     * @name pc.AssetRegistry#loadCubemap
-     * @description Use this to load a cubemap
-     * @param {string} url - The url to load.
-     * @param {string} type - The type of asset to load.
-     * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
-     * @example
-     * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
-     *     var texture = asset.resource;
-     * });
-     */
-    loadCubemap: function (prefilteredCubemapUrl, faceUrls) {
-        // construct faces assets and load blah
-    },
-
-    /**
-     * @function
      * @name pc.AssetRegistry#loadFromUrl
      * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
      * if you are not integrated with the PlayCanvas Editor.
