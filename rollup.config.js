@@ -26,7 +26,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/    /g, '\t'),
+                code: code.replace(/    /g, '\t'), // eslint-disable-line no-regex-spaces
                 map: { mappings: '' }
             };
         }
