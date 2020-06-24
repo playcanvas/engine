@@ -14,9 +14,11 @@ Object.assign(pc, function () {
      * // Notify the material that it has been modified
      * material.update();
      */
-    var NodeMaterial = function () {
+    var NodeMaterial = function (shaderGraph) {
         pc.Material.call(this);
-        
+
+        this.shaderGraph=shaderGraph;
+
         this.paramValues=[];
 
         //this.nodeInputs = new NodeInputs();
@@ -41,13 +43,13 @@ Object.assign(pc, function () {
     NodeMaterial.prototype = Object.create(pc.Material.prototype);
     NodeMaterial.prototype.constructor = NodeMaterial;
 
-    var NodeInputs = function () { };
+ /*   var NodeInputs = function () { };
     NodeInputs.prototype.copy = function (from) {
         for (var p in from) {
             if (from.hasOwnProperty(p) && p !== 'copy')
                 this[p] = from[p];
         }
-    };
+    };*/
 
 /*    var NodeParam = function (type, name, value) {
         this.type = type;
@@ -77,14 +79,14 @@ Object.assign(pc, function () {
         updateUniforms: function () {
             this.clearParameters();
 
-            for (var n=0;n<this.shaderGraphNode.params.length;n++)
+            for (var n=0;n<this.shaderGraph.params.length;n++)
             {
                 if (!this.paramValues[n])
                 {
-                    this.paramValues[n] = (this.shaderGraphNode.params[n].value.clone) ? this.shaderGraphNode.params[n].value.clone() : this.shaderGraphNode.params[n].value;
+                    this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
                 }
 
-                switch(this.shaderGraphNode.params[n].type)
+                switch(this.shaderGraph.params[n].type)
                 {
                     case 'sampler2D':
                     case 'samplerCube':
@@ -92,7 +94,7 @@ Object.assign(pc, function () {
                     case 'vec2':
                     case 'vec3':
                     case 'vec4':
-                        this.setParameter(this.shaderGraphNode.params[n].name, this.paramValues[n]);
+                        this.setParameter(this.shaderGraph.params[n].name, this.paramValues[n]);
                         break;
                     default:
                         //error
@@ -107,7 +109,7 @@ Object.assign(pc, function () {
             {
                 var options = {
                     skin: !!this.meshInstances[0].skinInstance,
-                    shaderGraphNode: this.shaderGraphNode,
+                    shaderGraph: this.shaderGraph,
                     //pass: pass
                 };
 //              var library = device.getProgramLibrary();

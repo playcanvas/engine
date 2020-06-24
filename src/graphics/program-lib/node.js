@@ -3,12 +3,16 @@ pc.programlib.node = {
         var key = 'node';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
-        if (options.shaderGraphNode) key += options.shaderGraphNode.key;
+        if (options.shaderGraph) key += options.shaderGraph.key;
 //        key += '_' + options.pass;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
+
+        //generate graph
+        options.shaderGraph.generateShaderGraph();
+
         // GENERATE ATTRIBUTES
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION,
@@ -63,23 +67,23 @@ pc.programlib.node = {
             code += '#endif\n';
         }*/
 
-        for (var n=0;n<options.shaderGraphNode.params.length;n++)
+        for (var n=0;n<options.shaderGraph.params.length;n++)
         {
-            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+'_'+options.shaderGraphNode.key+';\n';
+            code += 'uniform '+options.shaderGraph.params[n].type+' '+options.shaderGraph.params[n].name+';\n';
         }
 
         code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
         code +='vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
-        if (options.shaderGraphNode.vertexPositionOffset) 
+        if (options.shaderGraph.vertexPositionOffset) 
         {
-            code += options.shaderGraphNode.vertexPositionOffset;
+            code += options.shaderGraph.vertexPositionOffset;
         }
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
-        if (options.shaderGraphNode.vertexPositionOffset) {
+        if (options.shaderGraph.vertexPositionOffset) {
             code += "   vPosition = getWorldPositionNM()+getVertexPositionOffset();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
@@ -127,12 +131,12 @@ pc.programlib.node = {
             code += chunks.packDepthPS;
         }*/
 
-        for (var n=0;n<options.shaderGraphNode.params.length;n++)
+        for (var n=0;n<options.shaderGraph.params.length;n++)
         {
-            code += 'uniform '+options.shaderGraphNode.params[n].type+' '+options.shaderGraphNode.params[n].name+';\n';
+            code += 'uniform '+options.shaderGraph.params[n].type+' '+options.shaderGraph.params[n].name+';\n';
         }
   
-        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphFuncString;
+        if (options.shaderGraph) code += options.shaderGraph.shaderGraphFuncString;
 
 //        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
 //        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
@@ -144,13 +148,13 @@ pc.programlib.node = {
         // FRAGMENT SHADER BODY
         code += pc.programlib.begin();            
 
-        if (options.shaderGraphNode) code += options.shaderGraphNode.shaderGraphNodeString;
+        if (options.shaderGraph) code += options.shaderGraph.shaderGraphNodeString;
 
         //code += pc.NodeMaterial.generateLightingCode(options);
 
         //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
 //        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
-        //code += '    gl_FragColor = '+options.shaderGraphNode.funcName+ root(getEmissiveColor(),1);\n';
+        //code += '    gl_FragColor = '+options.shaderGraph.funcName+ root(getEmissiveColor(),1);\n';
 
         if (options.alphatest) {
             code += "   alphaTest(gl_FragColor.a);\n";

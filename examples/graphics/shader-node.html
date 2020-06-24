@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Wobble Shader</title>
+    <title>PlayCanvas Shader Nodes</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -23,7 +23,7 @@
     <script>
         var entity, light, camera;
         var time = 0;
-        var shader, material, diffuseMap;
+        //var material, diffuseMap;
 
         var canvas = document.getElementById("application-canvas");
 
@@ -70,44 +70,46 @@
             app.root.addChild(entity);
 
             var model = modelComponent.model;
+            var diffuseMap = model.getMaterials()[0].diffuseMap;
 
-            diffuseMap = model.getMaterials()[0].diffuseMap;
+            //create and shader graph nodes
+            var rootNode = new pc.ShaderGraphNode('vec4 root(in vec3 color, in float alpha){ return vec4(color,alpha); }');        
+            var texSampleNode = new pc.ShaderGraphNode('void texSample(in sampler2D texture, in vec2 uv, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n color=sample.rgb;\n alpha=sample.a;\n}');
+            var uv0ScrollNode = new pc.ShaderGraphNode('vec2 uv0Scroll(in float t) { return vUv0+vec2(t, t); }');
 
-            var rootNode = new pc.ShaderGraphNode();
-            rootNode.setFunctionString('vec4 root(in vec3 color, in float alpha){ return vec4(color,alpha); }');
+            var timeParamNode = new pc.ShaderGraphNode('float', 'uTime', 0.0);
+            var diffuseMapParamNode = new pc.ShaderGraphNode('sampler2D', 'uDiffuseMap', diffuseMap);
 
-            var texSampleNode = new pc.ShaderGraphNode();
-            texSampleNode.setFunctionString('void texSample(in sampler2D texture, in vec2 uv, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n color=sample.rgb;\n alpha=sample.a;\n}');
+            //link up node inputs to parameters or node outputs
+            /*rootNode.setInput('color', texSampleNode.getOutput('color'));
+            rootNode.setInput('alpha', texSampleNode.getOutput('alpha'));
+
+            texSampleNode.setInput('texture', diffuseMapParamNode.getOutput());
+            texSampleNode.setInput('uv', uv0ScrollNode.getOutput());
             
-            var texParamNode = new pc.ShaderGraphNode();
-            texParamNode.setParam('sampler2D', 'uDiffuseMap', diffuseMap);
+            uv0ScrollNode.setInput('t', timeParamNode.getOutput());*/
 
-            var uv0ScrollNode = new pc.ShaderGraphNode();
-            uv0ScrollNode.setFunctionString('vec2 uv0Scroll(in float t) { return vUv0+vec2(t, t); }');
-
-            var timeParamNode = new pc.ShaderGraphNode();
-            timeParamNode.setParam('float', 'uTime', 0.0);
-
-            rootNode.setInput('color', texSampleNode, 'color');
-            rootNode.setInput('alpha', texSampleNode, 'alpha');
-
-            texSampleNode.setInput('texture', texParamNode);
-            texSampleNode.setInput('uv', uv0ScrollNode);
+            uv0ScrollNode.t = timeParamNode.uTime;
             
-            uv0ScrollNode.setInput('t', timeParamNode);
+            texSampleNode.texture = diffuseMapParamNode.uDiffuseMap;
+            texSampleNode.uv = uv0ScrollNode.ret;
 
-            rootNode.genOutputs();
+            rootNode.color=texSampleNode.color;
+            rootNode.alpha=texSampleNode.alpha;
 
-            material = new pc.NodeMaterial();
-            material.shaderGraphNode=rootNode;
+            //create NodeMaterial
+            var material = new pc.NodeMaterial(rootNode);
 
+            //assign material to all model meshInstances
             model.meshInstances.forEach(function (meshInstance) {
                 meshInstance.material = material;
             });
 
+            //initialize shader and uniforms
             material.initShader(app.graphicsDevice);
             material.updateUniforms();
 
+            //update time parameter every frame
             app.on("update", function (dt) {
                 time += dt;
                 material.setParameter('uTime', time);
