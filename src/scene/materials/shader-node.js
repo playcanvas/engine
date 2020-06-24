@@ -109,67 +109,13 @@ Object.assign(pc, function () {
                 this.outputTempVarIndex.push(-1); 
 
                 this.defineOuputGetter(this.outputName[this.outputName.length-1], this.outputName.length-1);  
-
-/*                switch (this.outputName.length)
-                {
-                    case 1:
-                        this.__defineGetter__(this.outputName[0], function() {
-                            return this.getOutput(this.outputName[0]);
-                        });  
-                    break;
-                    case 2:
-                        this.__defineGetter__(this.outputName[1], function() {
-                            return this.getOutput(this.outputName[1]);
-                        });  
-                    break;
-                    case 3:
-                        this.__defineGetter__(this.outputName[2], function() {
-                            return this.getOutput(this.outputName[2]);
-                        });  
-                    break;
-                    case 4:
-                        this.__defineGetter__(this.outputName[3], function() {
-                            return this.getOutput(this.outputName[3]);
-                        });  
-                    break;    
-                    default:
-                        //error!!
-                    break;                                        
-                }*/
             }
             if (io_type_name[0]==="in")
             {
                 this.inputName.push(io_type_name[2]);
                 this.inputType.push(io_type_name[1]); 
 
-                this.defineInputSetter(this.inputName[this.inputName.length-1], this.inputName.length-1);  
-/*
-                switch (this.inputName.length)
-                {
-                    case 1:
-                        this.__defineSetter__(this.inputName[0], function(value) {
-                            return this.setInput(this.inputName[0],value);
-                        });  
-                    break;
-                    case 2:
-                        this.__defineSetter__(this.inputName[1], function(value) {
-                            return this.setInput(this.inputName[1],value);
-                        });  
-                    break;
-                    case 3:
-                        this.__defineSetter__(this.inputName[2], function(value) {
-                            return this.setInput(this.inputName[2],value);
-                        });  
-                    break;
-                    case 4:
-                        this.__defineSetter__(this.inputName[3], function(value) {
-                            return this.setInput(this.inputName[3],value);
-                        });  
-                    break;    
-                    default:
-                        //error!!
-                    break;                                        
-                }      */          
+                this.defineInputSetter(this.inputName[this.inputName.length-1], this.inputName.length-1);         
             }
             else 
             {

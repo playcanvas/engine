@@ -72,7 +72,7 @@
             var model = modelComponent.model;
             var diffuseMap = model.getMaterials()[0].diffuseMap;
 
-            //create and shader graph nodes
+            //create shader graph nodes
             var rootNode = new pc.ShaderGraphNode('vec4 root(in vec3 color, in float alpha){ return vec4(color,alpha); }');        
             var texSampleNode = new pc.ShaderGraphNode('void texSample(in sampler2D texture, in vec2 uv, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n color=sample.rgb;\n alpha=sample.a;\n}');
             var uv0ScrollNode = new pc.ShaderGraphNode('vec2 uv0Scroll(in float t) { return vUv0+vec2(t, t); }');
@@ -80,15 +80,7 @@
             var timeParamNode = new pc.ShaderGraphNode('float', 'uTime', 0.0);
             var diffuseMapParamNode = new pc.ShaderGraphNode('sampler2D', 'uDiffuseMap', diffuseMap);
 
-            //link up node inputs to parameters or node outputs
-            /*rootNode.setInput('color', texSampleNode.getOutput('color'));
-            rootNode.setInput('alpha', texSampleNode.getOutput('alpha'));
-
-            texSampleNode.setInput('texture', diffuseMapParamNode.getOutput());
-            texSampleNode.setInput('uv', uv0ScrollNode.getOutput());
-            
-            uv0ScrollNode.setInput('t', timeParamNode.getOutput());*/
-
+            //hook up inputs to outputs
             uv0ScrollNode.t = timeParamNode.uTime;
             
             texSampleNode.texture = diffuseMapParamNode.uDiffuseMap;
@@ -105,7 +97,7 @@
                 meshInstance.material = material;
             });
 
-            //initialize shader and uniforms
+            //initialize shader and update uniforms
             material.initShader(app.graphicsDevice);
             material.updateUniforms();
 
