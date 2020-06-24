@@ -1,5 +1,5 @@
 import { Vec3 } from '../math/vec3.js';
-
+import { math } from '../math/math.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
@@ -174,7 +174,7 @@ Object.assign(Morph.prototype, {
         // texture format based vars
         var halfFloat = false;
         var numComponents = 3;  // RGB32 is used
-        var float2Half = pc.math.float2Half;
+        var float2Half = math.float2Half;
         if (this._textureFormat === Morph.FORMAT_HALF_FLOAT) {
             halfFloat = true;
             numComponents = 4;  // RGBA16 is used, RGB16 does not work

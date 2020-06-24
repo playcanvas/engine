@@ -1,3 +1,9 @@
+import { Morph } from './morph.js';
+import { RenderTarget } from '../graphics/render-target.js';
+import { shaderChunks } from '../graphics/chunks.js';
+import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/graphics.js';
+
 // vertex shader used to add morph targets from textures into render target
 var textureMorphVertexShader =
     'attribute vec2 vertex_position;\n' +
@@ -34,6 +40,7 @@ function MorphInstance(morph) {
 
         // max number of morph targets rendered at a time (each uses single texture slot)
         this.maxSubmitCount = this.device.maxTextures;
+        this.maxSubmitCount = 2;
 
         // array for max number of weights
         this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
@@ -42,9 +49,9 @@ function MorphInstance(morph) {
         var createRT = function (name, textureVar) {
 
             // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-            var format = morph._renderTextureFormat === pc.Morph.FORMAT_FLOAT ? pc.PIXELFORMAT_RGBA32F : pc.PIXELFORMAT_RGBA16F;
+            var format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
             this[textureVar] = morph._createTexture(name, format);
-            return new pc.RenderTarget({
+            return new RenderTarget({
                 colorBuffer: this[textureVar],
                 depth: false
             });
@@ -182,7 +189,7 @@ Object.assign(MorphInstance.prototype, {
         // if shader is not in cache, generate one
         if (!shader) {
             var fs = this._getFragmentShader(count);
-            shader = pc.shaderChunks.createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
+            shader = shaderChunks.createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
             this.shaderCache[count] = shader;
         }
 
@@ -202,13 +209,13 @@ Object.assign(MorphInstance.prototype, {
             // alpha blending - first pass gets none, following passes are additive
             device.setBlending(blending);
             if (blending) {
-                device.setBlendFunction(pc.BLENDMODE_ONE, pc.BLENDMODE_ONE);
-                device.setBlendEquation(pc.BLENDEQUATION_ADD);
+                device.setBlendFunction(BLENDMODE_ONE, BLENDMODE_ONE);
+                device.setBlendEquation(BLENDEQUATION_ADD);
             }
 
             // render quad with shader for required number of textures
             var shader = this._getShader(usedCount);
-            pc.drawQuadWithShader(device, renderTarget, shader, undefined, undefined, blending);
+            drawQuadWithShader(device, renderTarget, shader, undefined, undefined, blending);
 
         }.bind(this);
 
