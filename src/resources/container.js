@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      *
      * @typedef {object} pc.ContainerResourceAnimationMapping
      * @property {pc.Entity} node Entity that should be animated.
-     * @property {pc.Asset[]} animations Animations assets to be assigned to node.
+     * @property {number[]} animations Indexes of animations assets to be assigned to node.
      */
 
     /**
@@ -193,9 +193,7 @@ Object.assign(pc, function () {
                 .map(function (node, nodeIndex) {
                     return {
                         node: node,
-                        animations: data.nodeComponents[nodeIndex].animations.map(function (animationIndex) {
-                            return animationAssets[animationIndex];
-                        })
+                        animations: data.nodeComponents[nodeIndex].animations
                     };
                 }).filter(function (mapping) {
                     return mapping.animations.length > 0;
