@@ -133,7 +133,7 @@ Object.assign(CubemapHandler.prototype, {
                     // construct full prem chain in the case of ios
                     if (this._device.useTexCubeLod) {
                         for (mip = 1; mip < tex._levels.length; ++mip) {
-                            prelitLevel._levels[mip] = tex._levels[mip];
+                            prelit._levels[mip] = tex._levels[mip];
                         }
                     }
 
