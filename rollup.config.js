@@ -5,12 +5,16 @@ import Preprocessor from 'preprocessor';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
-const notice = [
-    '/*',
-    ' * PlayCanvas Engine v' + version + ' revision ' + revision,
-    ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
-    ' */'
-].join('\n');
+
+function getBanner(config) {
+    return [
+        '/**',
+        ' * @license',
+        ' * PlayCanvas Engine v' + version + ' revision ' + revision + config,
+        ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
+        ' */'
+    ].join('\n');
+}
 
 function preprocessor(options) {
     const filter = createFilter([
@@ -48,7 +52,7 @@ function shaderChunks() {
 export default [{
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(''),
         file: 'build/playcanvas.js',
         format: 'umd',
         name: 'pc'
@@ -68,7 +72,7 @@ export default [{
 }, {
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(' (DEBUG)'),
         file: 'build/playcanvas.dbg.js',
         format: 'umd',
         name: 'pc'
@@ -88,7 +92,7 @@ export default [{
 }, {
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(' (DEBUG PROFILER)'),
         file: 'build/playcanvas.prf.js',
         format: 'umd',
         name: 'pc'
@@ -108,7 +112,7 @@ export default [{
 }, {
     input: 'extras/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(''),
         file: 'build/playcanvas-extras.js',
         format: 'umd',
         name: 'pcx'
