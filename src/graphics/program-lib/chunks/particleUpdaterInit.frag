@@ -1,10 +1,10 @@
 varying vec2 vUv0;
 
-uniform sampler2D particleTexIN;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
-uniform sampler2D internalTex3;
+uniform highp sampler2D particleTexIN;
+uniform highp sampler2D internalTex0;
+uniform highp sampler2D internalTex1;
+uniform highp sampler2D internalTex2;
+uniform highp sampler2D internalTex3;
 
 uniform mat3 emitterMatrix, emitterMatrixInv;
 uniform vec3 emitterScale;
