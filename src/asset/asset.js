@@ -330,7 +330,7 @@ Object.assign(Asset.prototype, {
             this.registry._loader.clearCache(this.getFileUrl(), this.type);
         }
 
-        // destroy old resources not present in the new set
+        // destroy resources
         for (var i = 0; i < old.length; ++i) {
             var resource = old[i];
             if (resource && resource.destroy) {
