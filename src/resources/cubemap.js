@@ -55,7 +55,7 @@ Object.assign(CubemapHandler.prototype, {
         result[0] = cubemapAsset.file;
 
         // faces are stored at index 1..6
-        if (cubemapAsset.data && cubemapAsset.data.textures) {
+        if ((cubemapAsset.loadFaces || !cubemapAsset.file) && cubemapAsset.data && cubemapAsset.data.textures) {
             for (var i = 0; i < 6; ++i) {
                 result[i + 1] = cubemapAsset.data.textures[i];
             }
@@ -103,7 +103,7 @@ Object.assign(CubemapHandler.prototype, {
                         fixCubemapSeams: true,
                         mipmaps: true,
                         format: tex.format,
-                        type: cubemapAsset.data.type || TEXTURETYPE_DEFAULT,
+                        type: TEXTURETYPE_RGBM,
                         width: tex.width >> i,
                         height: tex.height >> i
                     });
@@ -150,7 +150,7 @@ Object.assign(CubemapHandler.prototype, {
                 var faces = new pc.Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
-                    rgbm: faceAssets[0].resource.rgbm,
+                    type: faceAssets[0].resource.type,
                     width: faceAssets[0].resource.width,
                     height: faceAssets[0].resource.height,
                     format: faceAssets[0].resource.format,
@@ -161,7 +161,7 @@ Object.assign(CubemapHandler.prototype, {
             }
         } else {
             // no faces changed so keep existing faces cubemap
-            resources[0] = oldResources[0];
+            resources[0] = oldResources[0] || null;
         }
 
         // set the new resources, change events will fire

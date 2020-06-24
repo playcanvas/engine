@@ -355,17 +355,27 @@ Scene.prototype.applySettings = function (settings) {
 
 Scene.prototype._updateSkybox = function (device) {
     // Create skybox
-    if (this._skyboxCubeMap && !this.skyboxModel) {
+    if (!this.skyboxModel) {
+
+        // select the texture
+        var usedTex =
+            this._skyboxMip ?
+                this._skyboxPrefiltered[this._skyboxMip] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                    this._skyboxCubeMap || this._skyboxPrefiltered[0];
+        if (!usedTex) {
+            return;
+        }
+
         var material = new Material();
         var scene = this;
         material.updateShader = function (dev, sc, defs, staticLightList, pass) {
             var library = device.getProgramLibrary();
             var shader = library.getProgram('skybox', {
-                rgbm: scene._skyboxCubeMap.type === TEXTURETYPE_RGBM,
-                hdr: (scene._skyboxCubeMap.type === TEXTURETYPE_RGBM || scene._skyboxCubeMap.format === PIXELFORMAT_RGBA32F),
+                rgbm: usedTex.type === TEXTURETYPE_RGBM,
+                hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                 useIntensity: scene.skyboxIntensity !== 1,
-                mip: scene._skyboxCubeMap.fixCubemapSeams ? scene.skyboxMip : 0,
-                fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
+                mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
+                fixSeams: usedTex.fixCubemapSeams,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
             });
@@ -373,15 +383,6 @@ Scene.prototype._updateSkybox = function (device) {
         };
 
         material.updateShader();
-        var usedTex;
-        if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
-            usedTex = this._skyboxCubeMap;
-        } else {
-            var mip2tex = [null, "64", "16", "8", "4"];
-            var mipTex = this["skyboxPrefiltered" + mip2tex[scene._skyboxMip]];
-            if (mipTex)
-                usedTex = mipTex;
-        }
         material.setParameter("texture_cubeMap", usedTex);
         material.cull = CULLFACE_FRONT;
         material.depthWrite = false;
