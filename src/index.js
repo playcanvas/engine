@@ -48,7 +48,7 @@ export { Ray } from './shape/ray.js';
 // GRAPHICS
 export * from './graphics/graphics.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
-export { prefilterCubemap } from './graphics/prefilter-cubemap.js';
+export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
@@ -222,6 +222,7 @@ export { ModelComponent } from './framework/components/model/component.js';
 export { ModelComponentSystem } from './framework/components/model/system.js';
 export { ParticleSystemComponent } from './framework/components/particle-system/component.js';
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
+export { PostEffectPass } from './framework/components/camera/post-effect-pass.js';
 export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';

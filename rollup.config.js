@@ -1,16 +1,37 @@
 import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
+import cleanup from 'rollup-plugin-cleanup';
 import { version } from './package.json';
 import Preprocessor from 'preprocessor';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
-const notice = [
-    '/*',
-    ' * Playcanvas Engine v' + version + ' revision ' + revision,
-    ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
-    ' */'
-].join('\n');
+
+function getBanner(config) {
+    return [
+        '/**',
+        ' * @license',
+        ' * PlayCanvas Engine v' + version + ' revision ' + revision + config,
+        ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
+        ' */'
+    ].join('\n');
+}
+
+function spacesToTabs() {
+    const filter = createFilter([
+        '**/*.js'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+            return {
+                code: code.replace(/    /g, '\t'),
+                map: { mappings: '' }
+            };
+        }
+    };
+}
 
 function preprocessor(options) {
     const filter = createFilter([
@@ -48,9 +69,10 @@ function shaderChunks() {
 export default [{
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(''),
         file: 'build/playcanvas.js',
         format: 'umd',
+        indent: '\t',
         name: 'pc'
     },
     plugins: [
@@ -63,14 +85,19 @@ export default [{
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
-        })
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
     ]
 }, {
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(' (DEBUG PROFILER)'),
         file: 'build/playcanvas.dbg.js',
         format: 'umd',
+        indent: '\t',
         name: 'pc'
     },
     plugins: [
@@ -83,14 +110,19 @@ export default [{
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
-        })
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
     ]
 }, {
     input: 'src/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(' (PROFILER)'),
         file: 'build/playcanvas.prf.js',
         format: 'umd',
+        indent: '\t',
         name: 'pc'
     },
     plugins: [
@@ -103,14 +135,25 @@ export default [{
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
-        })
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
     ]
 }, {
     input: 'extras/index.js',
     output: {
-        banner: notice,
+        banner: getBanner(''),
         file: 'build/playcanvas-extras.js',
         format: 'umd',
+        indent: '\t',
         name: 'pcx'
-    }
+    },
+    plugins: [
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
+    ]
 }];

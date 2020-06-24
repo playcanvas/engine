@@ -2,7 +2,7 @@
  * @constant
  * @name pc.ADDRESS_REPEAT
  * @type {number}
- * @description Ignores the integer part of texture coordinates; using only the fractional part.
+ * @description Ignores the integer part of texture coordinates, using only the fractional part.
  */
 export var ADDRESS_REPEAT = 0;
 /**
@@ -16,7 +16,7 @@ export var ADDRESS_CLAMP_TO_EDGE = 1;
  * @constant
  * @name pc.ADDRESS_MIRRORED_REPEAT
  * @type {number}
- * @description Texture coordinate to be set to the fractional part if the integer part is even; if the integer part is odd;
+ * @description Texture coordinate to be set to the fractional part if the integer part is even. If the integer part is odd,
  * then the texture coordinate is set to 1 minus the fractional part.
  */
 export var ADDRESS_MIRRORED_REPEAT = 2;
@@ -407,84 +407,84 @@ export var PIXELFORMAT_L8_A8 = 2;
  * @constant
  * @name pc.PIXELFORMAT_R5_G6_B5
  * @type {number}
- * @description 16-bit RGB (5-bits for red channel; 6 for green and 5 for blue).
+ * @description 16-bit RGB (5-bits for red channel, 6 for green and 5 for blue).
  */
 export var PIXELFORMAT_R5_G6_B5 = 3;
 /**
  * @constant
  * @name pc.PIXELFORMAT_R5_G5_B5_A1
  * @type {number}
- * @description 16-bit RGBA (5-bits for red channel; 5 for green; 5 for blue with 1-bit alpha).
+ * @description 16-bit RGBA (5-bits for red channel, 5 for green, 5 for blue with 1-bit alpha).
  */
 export var PIXELFORMAT_R5_G5_B5_A1 = 4;
 /**
  * @constant
  * @name pc.PIXELFORMAT_R4_G4_B4_A4
  * @type {number}
- * @description 16-bit RGBA (4-bits for red channel; 4 for green; 4 for blue with 4-bit alpha).
+ * @description 16-bit RGBA (4-bits for red channel, 4 for green, 4 for blue with 4-bit alpha).
  */
 export var PIXELFORMAT_R4_G4_B4_A4 = 5;
 /**
  * @constant
  * @name pc.PIXELFORMAT_R8_G8_B8
  * @type {number}
- * @description 24-bit RGB (8-bits for red channel; 8 for green and 8 for blue).
+ * @description 24-bit RGB (8-bits for red channel, 8 for green and 8 for blue).
  */
 export var PIXELFORMAT_R8_G8_B8 = 6;
 /**
  * @constant
  * @name pc.PIXELFORMAT_R8_G8_B8_A8
  * @type {number}
- * @description 32-bit RGBA (8-bits for red channel; 8 for green; 8 for blue with 8-bit alpha).
+ * @description 32-bit RGBA (8-bits for red channel, 8 for green, 8 for blue with 8-bit alpha).
  */
 export var PIXELFORMAT_R8_G8_B8_A8 = 7;
 /**
  * @constant
  * @name pc.PIXELFORMAT_DXT1
  * @type {number}
- * @description Block compressed format; storing 16 input pixels in 64 bits of output; consisting of two 16-bit RGB 5:6:5 color values and a 4x4 two bit lookup table.
+ * @description Block compressed format storing 16 input pixels in 64 bits of output, consisting of two 16-bit RGB 5:6:5 color values and a 4x4 two bit lookup table.
  */
 export var PIXELFORMAT_DXT1 = 8;
 /**
  * @constant
  * @name pc.PIXELFORMAT_DXT3
  * @type {number}
- * @description Block compressed format; storing 16 input pixels (corresponding to a 4x4 pixel block) into 128 bits of output; consisting of 64 bits of alpha channel data (4 bits for each pixel) followed by 64 bits of color data; encoded the same way as DXT1.
+ * @description Block compressed format storing 16 input pixels (corresponding to a 4x4 pixel block) into 128 bits of output, consisting of 64 bits of alpha channel data (4 bits for each pixel) followed by 64 bits of color data; encoded the same way as DXT1.
  */
 export var PIXELFORMAT_DXT3 = 9;
 /**
  * @constant
  * @name pc.PIXELFORMAT_DXT5
  * @type {number}
- * @description Block compressed format; storing 16 input pixels into 128 bits of output; consisting of 64 bits of alpha channel data (two 8 bit alpha values and a 4x4 3 bit lookup table) followed by 64 bits of color data (encoded the same way as DXT1).
+ * @description Block compressed format storing 16 input pixels into 128 bits of output, consisting of 64 bits of alpha channel data (two 8 bit alpha values and a 4x4 3 bit lookup table) followed by 64 bits of color data (encoded the same way as DXT1).
  */
 export var PIXELFORMAT_DXT5 = 10;
 /**
  * @constant
  * @name pc.PIXELFORMAT_RGB16F
  * @type {number}
- * @description 16-bit floating point RGB (16-bit float for each red; green and blue channels).
+ * @description 16-bit floating point RGB (16-bit float for each red, green and blue channels).
  */
 export var PIXELFORMAT_RGB16F = 11;
 /**
  * @constant
  * @name pc.PIXELFORMAT_RGBA16F
  * @type {number}
- * @description 16-bit floating point RGBA (16-bit float for each red; green; blue and alpha channels).
+ * @description 16-bit floating point RGBA (16-bit float for each red, green, blue and alpha channels).
  */
 export var PIXELFORMAT_RGBA16F = 12;
 /**
  * @constant
  * @name pc.PIXELFORMAT_RGB32F
  * @type {number}
- * @description 32-bit floating point RGB (32-bit float for each red; green and blue channels).
+ * @description 32-bit floating point RGB (32-bit float for each red, green and blue channels).
  */
 export var PIXELFORMAT_RGB32F = 13;
 /**
  * @constant
  * @name pc.PIXELFORMAT_RGBA32F
  * @type {number}
- * @description 32-bit floating point RGBA (32-bit float for each red; green; blue and alpha channels).
+ * @description 32-bit floating point RGBA (32-bit float for each red, green, blue and alpha channels).
  */
 export var PIXELFORMAT_RGBA32F = 14;
 
@@ -516,7 +516,7 @@ export var PIXELFORMAT_DEPTHSTENCIL = 17;
  * @constant
  * @name pc.PIXELFORMAT_111110F
  * @type {number}
- * @description A floating-point color-only format with 11 bits for red and green channels; and 10 bits for the blue channel (WebGL2 only).
+ * @description A floating-point color-only format with 11 bits for red and green channels and 10 bits for the blue channel (WebGL2 only).
  */
 export var PIXELFORMAT_111110F = 18;
 
@@ -636,7 +636,7 @@ export var PRIMITIVE_LINES = 1;
  * @constant
  * @name pc.PRIMITIVE_LINELOOP
  * @type {number}
- * @description List of points that are linked sequentially by line segments; with a closing line segment between the last and first points.
+ * @description List of points that are linked sequentially by line segments, with a closing line segment between the last and first points.
  */
 export var PRIMITIVE_LINELOOP = 2;
 /**
@@ -921,7 +921,7 @@ export var STENCILOP_INCREMENT = 3;
  * @constant
  * @name pc.STENCILOP_INCREMENTWRAP
  * @type {number}
- * @description Increment the value; but wrap it to zero when it's larger than a maximum representable value.
+ * @description Increment the value but wrap it to zero when it's larger than a maximum representable value.
  */
 export var STENCILOP_INCREMENTWRAP = 4;
 /**
@@ -935,7 +935,7 @@ export var STENCILOP_DECREMENT = 5;
  * @constant
  * @name pc.STENCILOP_DECREMENTWRAP
  * @type {number}
- * @description Decrement the value; but wrap it to a maximum representable value; if the current value is 0.
+ * @description Decrement the value but wrap it to a maximum representable value if the current value is 0.
  */
 export var STENCILOP_DECREMENTWRAP = 6;
 /**
