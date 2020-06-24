@@ -54,6 +54,7 @@ StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (option
     options.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
     options.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
     options.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
+    options.useMorphTextureBased = objDefs && (objDefs & pc.SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
 
     options.nineSlicedMode = stdMat.nineSlicedMode || 0;
 };
