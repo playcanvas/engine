@@ -252,8 +252,8 @@ Object.assign(CubemapHandler.prototype, {
                         onLoad(i, texAsset);
                     } else {
                         // asset is not loaded, register for load and error events
-                        registry.on('load:' + assetId, onLoad.bind(self, i));
-                        registry.on('error:' + assetId, onError.bind(self, i));
+                        registry.once('load:' + assetId, onLoad.bind(self, i));
+                        registry.once('error:' + assetId, onError.bind(self, i));
                         if (!texAsset.loading) {
                             // kick off load if it's not already
                             registry.load(texAsset);
@@ -263,8 +263,8 @@ Object.assign(CubemapHandler.prototype, {
                     // asset hasn't been created yet, wait till it is
                     registry.on('add:' + assetId, function (index, texAsset) {
                         // store the face asset and kick off loading immediately
-                        registry.on('load:' + assetId, onLoad.bind(self, index));
-                        registry.on('error:' + assetId, onError.bind(self, index));
+                        registry.once('load:' + assetId, onLoad.bind(self, index));
+                        registry.once('error:' + assetId, onError.bind(self, index));
                         registry.load(texAsset);
                     }.bind(null, i));
                 }
@@ -276,8 +276,8 @@ Object.assign(CubemapHandler.prototype, {
                 } : assetId;
                 texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file, cubemapAsset.data.faceData);
                 registry.add(texAsset);
-                registry.on('load:' + texAsset.id, onLoad.bind(self, i));
-                registry.on('error:' + texAsset.id, onError.bind(self, i));
+                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
+                registry.once('error:' + texAsset.id, onError.bind(self, i));
                 registry.load(texAsset);
             }
         }
