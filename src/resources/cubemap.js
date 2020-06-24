@@ -6,7 +6,6 @@ import {
 
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
-import { LightProbe } from '../scene/lightprobe.js';
 
 /**
  * @class
@@ -23,24 +22,6 @@ function CubemapHandler(device, assets, loader) {
     this._loader = loader;
 };
 
-/**
- * Cubemap asset works as follows
- * ------------------------------
- * If the cubemap has prefiltered lighting data, then it has a asset.file property specifying the
- * file's URL. (Otherwise the asset.file member is null).
- * The cubemap asset can also specify 6 texture assets (or URLs) which make up the normal cubemap
- * texture data.
- * At any point the asset can be changed (by the editor, say) and asset.patch() will be called which
- * must refresh the asset accordingly.
- * Current issues with legacy cubemap handler
- * ------------------------------------------
- * 1) does not load assets using the handler.load() function. This means the load callback is not
- * used at load time. The callback is required for engine use.
- * 2) the handler depends on special-case code in asset.js
- * 3) the handler doesn't load the individual texture faces as dependent assets
- * 4) the handler requires 6 seperate loads for a fully specified cubemap. one should be enough.
- * 5) no simple way to construct prefiltered data using engine-only
- */
 Object.assign(CubemapHandler.prototype, {
     load: function (url, callback, asset) {
         this.loadAssets(asset, callback);
