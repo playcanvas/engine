@@ -94,7 +94,7 @@ export default [{
 }, {
     input: 'src/index.js',
     output: {
-        banner: getBanner(' (DEBUG)'),
+        banner: getBanner(' (DEBUG PROFILER)'),
         file: 'build/playcanvas.dbg.js',
         format: 'umd',
         indent: '\t',
@@ -119,7 +119,7 @@ export default [{
 }, {
     input: 'src/index.js',
     output: {
-        banner: getBanner(' (DEBUG PROFILER)'),
+        banner: getBanner(' (PROFILER)'),
         file: 'build/playcanvas.prf.js',
         format: 'umd',
         indent: '\t',
