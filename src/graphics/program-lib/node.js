@@ -75,16 +75,18 @@ pc.programlib.node = {
         code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
         code +='vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
-        if (options.shaderGraph.vertexPositionOffset) 
+        if (options.shaderGraph)
         {
-            code += options.shaderGraph.vertexPositionOffset;
+            code += "#define SG_VS\n";
+            code += options.shaderGraph.shaderGraphFuncString;
         }
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
-        if (options.shaderGraph.vertexPositionOffset) {
-            code += "   vPosition = getWorldPositionNM()+getVertexPositionOffset();\n";
+        if (options.shaderGraph) {
+            code += options.shaderGraph.shaderGraphNodeString;    
+            code += "   vPosition = getWorldPositionNM()+shaderGraphVertexOffset;\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
         else {
@@ -136,8 +138,11 @@ pc.programlib.node = {
             code += 'uniform '+options.shaderGraph.params[n].type+' '+options.shaderGraph.params[n].name+';\n';
         }
   
-        if (options.shaderGraph) code += options.shaderGraph.shaderGraphFuncString;
-
+        if (options.shaderGraph) 
+        {   
+            code += "#define SG_PS\n";
+            code += options.shaderGraph.shaderGraphFuncString;
+        }
 //        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
 //        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
 //        if (options.nodeInputs.opacity) code += options.nodeInputs.opacity;
@@ -148,8 +153,10 @@ pc.programlib.node = {
         // FRAGMENT SHADER BODY
         code += pc.programlib.begin();            
 
-        if (options.shaderGraph) code += options.shaderGraph.shaderGraphNodeString;
-
+        if (options.shaderGraph)
+        { 
+            code += options.shaderGraph.shaderGraphNodeString;
+        }
         //code += pc.NodeMaterial.generateLightingCode(options);
 
         //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';

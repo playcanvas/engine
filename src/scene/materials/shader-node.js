@@ -4,8 +4,8 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ShaderGraphNode
-     * @classdesc ShaderGraphNode base class
-     * @description Create a new ShaderGraphNode instance.
+     * @classdesc WIP ShaderGraphNode base class
+     * @description WIP Create a new ShaderGraphNode instance.
      */
     var ShaderGraphNode = function ShaderGraphNode(f_or_t, n, v) {
         this.name = (!n)?"func_node" : "param_"+n+"_node";
@@ -39,7 +39,7 @@ Object.assign(pc, function () {
     ShaderGraphNode.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
 
-        clone.inputNode = this.inputNode ;
+        clone.inputNode = this.inputNode;
         clone.inputOutputIndex = this.inputOutputIndex;
         clone.inputName = this.inputName;
         clone.inputType = this.inputType;
@@ -181,75 +181,148 @@ Object.assign(pc, function () {
 
         if (this.functionString)
         {
-            graphFuncList.push(this.functionString); //TODO (probably before it can compile) remove duplicates
+            var funcString='';
+
+            if ( (this.funcName[this.funcName.length-2]==='P') && (this.funcName[this.funcName.length-1]==='S') )
+            {
+                funcString+='#ifdef SG_PS\n';
+            }
+            else if ( (this.funcName[this.funcName.length-2]==='V') && (this.funcName[this.funcName.length-1]==='S') )
+            {
+                funcString+='#ifdef SG_VS\n';
+            }
+
+            funcString+=this.functionString+'\n';
+
+            if ( (this.funcName[this.funcName.length-2]==='P') && (this.funcName[this.funcName.length-1]==='S') )
+            {
+                funcString+='#endif //SG_PS\n';
+            }
+            else if ( (this.funcName[this.funcName.length-2]==='V') && (this.funcName[this.funcName.length-1]==='S') )
+            {
+                funcString+='#endif //SG_VS\n';
+            }    
+
+            graphFuncList.push(funcString); //TODO (probably before it can compile) remove duplicates
 
             //get the graphs index for all inputs
             var inputTempVarIndex=[];
             for (var i=0;i<this.inputNode.length;i++)
             {
-                if (this.inputNode[i].outputTempVarIndex[this.inputOutputIndex[i]]==-1)
+                if (this.inputNode[i])
                 {
-                    this.inputNode[i].generateShaderGraph(graphParamList, graphFuncList, graphTmpVarList, graphNodeStringList);
+                    if (this.inputNode[i].outputTempVarIndex[this.inputOutputIndex[i]]==-1)
+                    {
+                        this.inputNode[i].generateShaderGraph(graphParamList, graphFuncList, graphTmpVarList, graphNodeStringList);
+                    }
+                    inputTempVarIndex[i]=this.inputNode[i].outputTempVarIndex[this.inputOutputIndex[i]];
                 }
-                inputTempVarIndex[i]=this.inputNode[i].outputTempVarIndex[this.inputOutputIndex[i]];
             }
 
             var nodeString='';
-            //assign graph index value to each output (if not already assigned)
-            for (var i=0;i<this.outputTempVarIndex.length;i++)
+            //construct the func call string
+            if (isRoot)
             {
-                if (this.outputTempVarIndex[i]==-1) //if already set, skip
+                var skip_colalpha=false;
+                for (var i=0;i<this.inputNode.length;i++)
                 {
-                    this.outputTempVarIndex[i]=graphTmpVarList.length;
-                    graphTmpVarList.push([this.outputType[i], this.outputName[i]]);
-
-                    nodeString += this.outputType[i]+' '+this.outputName[i]+'_'+this.outputTempVarIndex[i]+';\n';
+                    if (this.inputNode[i])
+                    {                    
+                        switch (this.inputName[i])
+                        {
+                            case 'rgba':
+                                nodeString+='#ifdef SG_PS\n';
+                                nodeString+='    gl_FragColor = '+graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i]+';\n';
+                                nodeString+='#endif //SG_PS\n';
+                                skip_colalpha=true;
+                                break;                            
+                            case 'color':
+                                if (skip_colalpha===false)
+                                {
+                                    nodeString+='#ifdef SG_PS\n';
+                                    nodeString+='    gl_FragColor.rgb = '+graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i]+';\n';
+                                    nodeString+='#endif //SG_PS\n';
+                                }
+                                break;
+                            case 'alpha':
+                                if (skip_colalpha===false)
+                                {
+                                    nodeString+='#ifdef SG_PS\n';
+                                    nodeString+='    gl_FragColor.a = '+graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i]+';\n';
+                                    nodeString+='#endif //SG_PS\n';
+                                }
+                                break;       
+                            case 'vertexOffset':
+                                nodeString+='#ifdef SG_VS\n';
+                                nodeString+='    vec3 shaderGraphVertexOffset = '+graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i]+';\n';
+                                nodeString+='#endif //SG_VS\n';
+                            break;                                              
+                        }
+                    }
                 }
             }
-            //construct the func call string
-            var skipRet=false;
-            if (this.outputName[0]==='ret') //TODO ensure there isn't a name clash!!!
+            else
             {
-                if (isRoot)
+                if ( (this.funcName[this.funcName.length-2]==='P') && (this.funcName[this.funcName.length-1]==='S') )
                 {
-                    nodeString+='gl_FragColor = ';
+                    nodeString+='#ifdef SG_PS\n';
                 }
-                else
+                else if ( (this.funcName[this.funcName.length-2]==='V') && (this.funcName[this.funcName.length-1]==='S') )
+                {
+                    nodeString+='#ifdef SG_VS\n';
+                }
+
+                //assign graph index value to each output (if not already assigned)
+                for (var i=0;i<this.outputTempVarIndex.length;i++)
+                {
+                    if (this.outputTempVarIndex[i]==-1) //if already set, skip
+                    {
+                        this.outputTempVarIndex[i]=graphTmpVarList.length;
+                        graphTmpVarList.push([this.outputType[i], this.outputName[i]]);
+
+                        nodeString += this.outputType[i]+' '+this.outputName[i]+'_'+this.outputTempVarIndex[i]+';\n';
+                    }
+                }
+
+                var skipRet=false;
+                if (this.outputName[0]==='ret') //TODO ensure there isn't a name clash!!!
                 {
                     nodeString+=graphTmpVarList[this.outputTempVarIndex[0]][1]+'_'+this.outputTempVarIndex[0]+' = ';
+                    skipRet=true;
                 }
-                skipRet=true;
-            }
 
-            nodeString+= this.funcName+'(';
-            for (var i=0;i<this.inputNode.length;i++)
-            {
-                nodeString+=graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i];
-                if (this.outputTempVarIndex.length>((skipRet)?1:0) || i<(this.inputNode.length-1)) nodeString+=', ';
-            }
-            for (var i=((skipRet)?1:0);i<this.outputTempVarIndex.length;i++)
-            {
-                nodeString+=graphTmpVarList[this.outputTempVarIndex[i]][1]+'_'+this.outputTempVarIndex[i];
-                if (i<(this.outputTempVarIndex.length-1)) nodeString+=', ';
-            }        
-            nodeString+=');\n';
+                nodeString+= this.funcName+'(';
+                for (var i=0;i<this.inputNode.length;i++)
+                {
+                    nodeString+=graphTmpVarList[inputTempVarIndex[i]][1]+'_'+inputTempVarIndex[i];
+                    if (this.outputTempVarIndex.length>((skipRet)?1:0) || i<(this.inputNode.length-1)) nodeString+=', ';
+                }
+                for (var i=((skipRet)?1:0);i<this.outputTempVarIndex.length;i++)
+                {
+                    nodeString+=graphTmpVarList[this.outputTempVarIndex[i]][1]+'_'+this.outputTempVarIndex[i];
+                    if (i<(this.outputTempVarIndex.length-1)) nodeString+=', ';
+                }        
+                nodeString+=');\n';
 
+                if ( (this.funcName[this.funcName.length-2]==='P') && (this.funcName[this.funcName.length-1]==='S') )
+                {
+                    nodeString+='#endif //SG_PS\n';
+                }
+                else if ( (this.funcName[this.funcName.length-2]==='V') && (this.funcName[this.funcName.length-1]==='S') )
+                {
+                    nodeString+='#endif //SG_VS\n';
+                }                
+            }
             graphNodeStringList.push(nodeString);
         }
 
         if (isRoot)
         {
-            this.shaderGraphFuncString=''; //TODO: shader precision stuff? extension stuff?
-
- /*           for (var i=0;i<graphParamList.length;i++)
-            {
-                this.shaderGraphString+=graphParamList[i].type+' '+graphParamList[i].name+';\n';
-            }
-            this.shaderGraphString+='\n';*/
+            this.shaderGraphFuncString='';
 
             for (var i=0;i<graphFuncList.length;i++)
             {
-                this.shaderGraphFuncString+=graphFuncList[i]+'\n\n';
+                this.shaderGraphFuncString+=graphFuncList[i]+'\n';
             }
             
             this.shaderGraphNodeString='';
@@ -257,7 +330,6 @@ Object.assign(pc, function () {
             {
                 this.shaderGraphNodeString+=graphNodeStringList[i]+'\n';
             }
-            //this.shaderGraphString+='\n';
 
             this.params=graphParamList;
         }
