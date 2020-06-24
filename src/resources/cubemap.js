@@ -43,20 +43,12 @@ function CubemapHandler(device, assets, loader) {
  */
 Object.assign(CubemapHandler.prototype, {
     load: function (url, callback, asset) {
-        // initialize asset structures for tracking load requests
-        asset._handlerState = {
-            // the list of requested asset ids in order of [prelit cubemap, 6 faces]
-            assetIds: [null, null, null, null, null, null, null],
-            // the dependent (loaded, active) texture assets
-            assets: [null, null, null, null, null, null, null]
-        };
-
         this.loadAssets(asset, callback);
     },
 
-    open: function (url, data) {
+    open: function (url, data, asset) {
         // nothing to do
-        return data;
+        return asset ? asset.resource : null;
     },
 
     patch: function (asset, registry) {
@@ -151,12 +143,12 @@ Object.assign(CubemapHandler.prototype, {
             }
         } else {
             // prelit asset didn't change so keep the existing cubemap resources
-            resources[1] = oldResources[1];
-            resources[2] = oldResources[2];
-            resources[3] = oldResources[3];
-            resources[4] = oldResources[4];
-            resources[5] = oldResources[5];
-            resources[6] = oldResources[6];
+            resources[1] = oldResources[1] || null;
+            resources[2] = oldResources[2] || null;
+            resources[3] = oldResources[3] || null;
+            resources[4] = oldResources[4] || null;
+            resources[5] = oldResources[5] || null;
+            resources[6] = oldResources[6] || null;
         }
 
         var faceAssets = assets.slice(1);
@@ -224,6 +216,16 @@ Object.assign(CubemapHandler.prototype, {
     },
 
     loadAssets: function (cubemapAsset, callback) {
+        // initialize asset structures for tracking load requests
+        if (!cubemapAsset.hasOwnProperty('_handlerState')) {
+            cubemapAsset._handlerState = {
+                // the list of requested asset ids in order of [prelit cubemap, 6 faces]
+                assetIds: [null, null, null, null, null, null, null],
+                // the dependent (loaded, active) texture assets
+                assets: [null, null, null, null, null, null, null]
+            };
+        }
+
         var self = this;
         var assetIds = self.getAssetIds(cubemapAsset);
         var assets = [null, null, null, null, null, null, null];
@@ -259,7 +261,7 @@ Object.assign(CubemapHandler.prototype, {
                 onLoad(i, null);
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
-                onLoad(i, loadedAssets[i])
+                onLoad(i, loadedAssets[i]);
             } else if (parseInt(assetId, 10) === assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);
@@ -273,7 +275,7 @@ Object.assign(CubemapHandler.prototype, {
                         registry.on('error:' + assetId, onError.bind(self, i));
                         if (!texAsset.loading) {
                             // kick off load if it's not already
-                            registery.load(texAsset);
+                            registry.load(texAsset);
                         }
                     }
                 } else {
