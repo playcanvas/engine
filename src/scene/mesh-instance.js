@@ -7,7 +7,7 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -301,7 +301,11 @@ Object.defineProperty(MeshInstance.prototype, 'morphInstance', {
     },
     set: function (val) {
         this._morphInstance = val;
+        if (this._morphInstance) {
+            this._morphInstance.meshInstance = this;
+        }
 
+        this._shaderDefs = (val && val.morph.useTextureMorph) ? (this._shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (this._shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         this._shaderDefs = (val && val.morph.morphPositions) ? (this._shaderDefs | SHADERDEF_MORPH_POSITION) : (this._shaderDefs & ~SHADERDEF_MORPH_POSITION);
         this._shaderDefs = (val && val.morph.morphNormals) ? (this._shaderDefs | SHADERDEF_MORPH_NORMAL) : (this._shaderDefs & ~SHADERDEF_MORPH_NORMAL);
         for (var i = 0; i < this._shader.length; i++) {

@@ -449,6 +449,9 @@ function ForwardRenderer(graphicsDevice) {
 
     this.morphWeightsA = scope.resolve('morph_weights_a');
     this.morphWeightsB = scope.resolve('morph_weights_b');
+    this.morphPositionTex = scope.resolve('morphPositionTex');
+    this.morphNormalTex = scope.resolve('morphNormalTex');
+    this.morphTexParams = scope.resolve('morph_tex_params');
 
     this.alphaTestId = scope.resolve('alpha_ref');
     this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -1213,13 +1216,12 @@ Object.assign(ForwardRenderer.prototype, {
         var morphTime = now();
         // #endif
 
-        var i, morph;
+        var i, morphInst;
         var drawCallsCount = drawCalls.length;
         for (i = 0; i < drawCallsCount; i++) {
-            morph = drawCalls[i].morphInstance;
-            if (morph && morph._dirty && drawCalls[i].visibleThisFrame) {
-                morph.update();
-                morph._dirty = false;
+            morphInst = drawCalls[i].morphInstance;
+            if (morphInst && morphInst._dirty && drawCalls[i].visibleThisFrame) {
+                morphInst.update();
             }
         }
         // #ifdef PROFILER
@@ -1491,7 +1493,8 @@ Object.assign(ForwardRenderer.prototype, {
                         // set buffers
                         style = meshInstance.renderStyle;
 
-                        this.setVertexBuffers(device, mesh, meshInstance.morphInstance);
+                        this.setVertexBuffers(device, mesh);
+                        this.setMorphing(device, meshInstance.morphInstance);
 
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                         // draw
@@ -1622,40 +1625,59 @@ Object.assign(ForwardRenderer.prototype, {
         this.device.setCullMode(mode);
     },
 
-    setVertexBuffers: function (device, mesh, morphInstance) {
+    setVertexBuffers: function (device, mesh) {
 
-        // morphing vertex attributes
-        if (morphInstance) {
-            this.tempSemanticArray.length = 0;
-            var tempVertexBuffer;
-            for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
-
-                var semantic = SEMANTIC_ATTR + t;
-                tempVertexBuffer = morphInstance._activeVertexBuffers[t];
-
-                if (tempVertexBuffer) {
-                    // patch semantic for the buffer to current ATTR slot
-                    tempVertexBuffer.format.elements[0].name = semantic;
-                    tempVertexBuffer.format.elements[0].scopeId = device.scope.resolve(semantic);
-
-                    device.setVertexBuffer(tempVertexBuffer, t + 1);
-                } else {
-                    // for null morph buffers set attributes to default constant value
-                    device.setVertexBuffer(null, t + 1);
-                    this.tempSemanticArray.push(semantic);
-                }
-            }
-
-            if (this.tempSemanticArray.length)
-                device.disableVertexBufferElements(this.tempSemanticArray);
-
-            // set all 8 weights
-            this.morphWeightsA.setValue(morphInstance._shaderMorphWeightsA);
-            this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
-        }
-
-        // main vertex buffer
+            // main vertex buffer
         device.setVertexBuffer(mesh.vertexBuffer, 0);
+    },
+
+    setMorphing: function (device, morphInstance) {
+
+        if (morphInstance) {
+
+            if (morphInstance.morph.useTextureMorph) {
+
+                    // vertex buffer with vertex ids
+                device.setVertexBuffer(morphInstance.morph.vertexBufferIds, 1);
+
+                    // textures
+                this.morphPositionTex.setValue(morphInstance.texturePositions);
+                this.morphNormalTex.setValue(morphInstance.textureNormals);
+
+                    // texture params
+                this.morphTexParams.setValue(morphInstance._textureParams);
+
+            } else {    // vertex attributes based morphing
+
+                this.tempSemanticArray.length = 0;
+                var tempVertexBuffer;
+                for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
+
+                    var semantic = SEMANTIC_ATTR + t;
+                    tempVertexBuffer = morphInstance._activeVertexBuffers[t];
+
+                    if (tempVertexBuffer) {
+                        // patch semantic for the buffer to current ATTR slot
+                        tempVertexBuffer.format.elements[0].name = semantic;
+                        tempVertexBuffer.format.elements[0].scopeId = device.scope.resolve(semantic);
+
+                        device.setVertexBuffer(tempVertexBuffer, t + 1);
+                    } else {
+                        // for null morph buffers set attributes to default constant value
+                        device.setVertexBuffer(null, t + 1);
+                        this.tempSemanticArray.push(semantic);
+                    }
+                }
+
+                if (this.tempSemanticArray.length) {
+                    device.disableVertexBufferElements(this.tempSemanticArray);
+                }
+
+                // set all 8 weights
+                this.morphWeightsA.setValue(morphInstance._shaderMorphWeightsA);
+                this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
+            }
+        }
     },
 
     renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
@@ -1837,7 +1859,8 @@ Object.assign(ForwardRenderer.prototype, {
                     }
                 }
 
-                this.setVertexBuffers(device, mesh, drawCall.morphInstance);
+                this.setVertexBuffers(device, mesh);
+                this.setMorphing(device, drawCall.morphInstance);
 
                 style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);

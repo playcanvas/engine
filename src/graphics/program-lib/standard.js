@@ -665,60 +665,80 @@ var standard = {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
-        // set up 8 slots for morphing. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
+        // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
 
-            code += "#define MORPHING\n";
+            if (options.useMorphTextureBased) {
 
-            // first 4 slots are either position or normal
-            if (options.useMorphPosition) {
-                attributes.morph_pos0 = SEMANTIC_ATTR0;
-                attributes.morph_pos1 = SEMANTIC_ATTR1;
-                attributes.morph_pos2 = SEMANTIC_ATTR2;
-                attributes.morph_pos3 = SEMANTIC_ATTR3;
+                code += "#define MORPHING_TEXTURE_BASED\n";
 
-                code += "#define MORPHING_POS03\n";
-                code += "attribute vec3 morph_pos0;\n";
-                code += "attribute vec3 morph_pos1;\n";
-                code += "attribute vec3 morph_pos2;\n";
-                code += "attribute vec3 morph_pos3;\n";
+                if (options.useMorphPosition) {
+                    code += "#define MORPHING_TEXTURE_BASED_POSITION\n";
+                }
 
-            } else if (options.useMorphNormal) {
-                attributes.morph_nrm0 = SEMANTIC_ATTR0;
-                attributes.morph_nrm1 = SEMANTIC_ATTR1;
-                attributes.morph_nrm2 = SEMANTIC_ATTR2;
-                attributes.morph_nrm3 = SEMANTIC_ATTR3;
+                if (options.useMorphNormal) {
+                    code += "#define MORPHING_TEXTURE_BASED_NORMAL\n";
+                }
 
-                code += "#define MORPHING_NRM03\n";
-                code += "attribute vec3 morph_nrm0;\n";
-                code += "attribute vec3 morph_nrm1;\n";
-                code += "attribute vec3 morph_nrm2;\n";
-                code += "attribute vec3 morph_nrm3;\n";
-            }
+                // vertex ids attributes
+                attributes.morph_vertex_id = SEMANTIC_ATTR0;
+                code += "attribute float morph_vertex_id;\n";
 
-            // next 4 slots are either position or normal
-            if (!options.useMorphNormal) {
-                attributes.morph_pos4 = SEMANTIC_ATTR4;
-                attributes.morph_pos5 = SEMANTIC_ATTR5;
-                attributes.morph_pos6 = SEMANTIC_ATTR6;
-                attributes.morph_pos7 = SEMANTIC_ATTR7;
-
-                code += "#define MORPHING_POS47\n";
-                code += "attribute vec3 morph_pos4;\n";
-                code += "attribute vec3 morph_pos5;\n";
-                code += "attribute vec3 morph_pos6;\n";
-                code += "attribute vec3 morph_pos7;\n";
             } else {
-                attributes.morph_nrm4 = SEMANTIC_ATTR4;
-                attributes.morph_nrm5 = SEMANTIC_ATTR5;
-                attributes.morph_nrm6 = SEMANTIC_ATTR6;
-                attributes.morph_nrm7 = SEMANTIC_ATTR7;
 
-                code += "#define MORPHING_NRM47\n";
-                code += "attribute vec3 morph_nrm4;\n";
-                code += "attribute vec3 morph_nrm5;\n";
-                code += "attribute vec3 morph_nrm6;\n";
-                code += "attribute vec3 morph_nrm7;\n";
+                // set up 8 slots for morphing. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
+                code += "#define MORPHING\n";
+
+                // first 4 slots are either position or normal
+                if (options.useMorphPosition) {
+                    attributes.morph_pos0 = SEMANTIC_ATTR0;
+                    attributes.morph_pos1 = SEMANTIC_ATTR1;
+                    attributes.morph_pos2 = SEMANTIC_ATTR2;
+                    attributes.morph_pos3 = SEMANTIC_ATTR3;
+
+                    code += "#define MORPHING_POS03\n";
+                    code += "attribute vec3 morph_pos0;\n";
+                    code += "attribute vec3 morph_pos1;\n";
+                    code += "attribute vec3 morph_pos2;\n";
+                    code += "attribute vec3 morph_pos3;\n";
+
+                } else if (options.useMorphNormal) {
+                    attributes.morph_nrm0 = SEMANTIC_ATTR0;
+                    attributes.morph_nrm1 = SEMANTIC_ATTR1;
+                    attributes.morph_nrm2 = SEMANTIC_ATTR2;
+                    attributes.morph_nrm3 = SEMANTIC_ATTR3;
+
+                    code += "#define MORPHING_NRM03\n";
+                    code += "attribute vec3 morph_nrm0;\n";
+                    code += "attribute vec3 morph_nrm1;\n";
+                    code += "attribute vec3 morph_nrm2;\n";
+                    code += "attribute vec3 morph_nrm3;\n";
+                }
+
+                // next 4 slots are either position or normal
+                if (!options.useMorphNormal) {
+                    attributes.morph_pos4 = SEMANTIC_ATTR4;
+                    attributes.morph_pos5 = SEMANTIC_ATTR5;
+                    attributes.morph_pos6 = SEMANTIC_ATTR6;
+                    attributes.morph_pos7 = SEMANTIC_ATTR7;
+
+                    code += "#define MORPHING_POS47\n";
+                    code += "attribute vec3 morph_pos4;\n";
+                    code += "attribute vec3 morph_pos5;\n";
+                    code += "attribute vec3 morph_pos6;\n";
+                    code += "attribute vec3 morph_pos7;\n";
+                } else {
+                    attributes.morph_nrm4 = SEMANTIC_ATTR4;
+                    attributes.morph_nrm5 = SEMANTIC_ATTR5;
+                    attributes.morph_nrm6 = SEMANTIC_ATTR6;
+                    attributes.morph_nrm7 = SEMANTIC_ATTR7;
+
+                    code += "#define MORPHING_NRM47\n";
+                    code += "attribute vec3 morph_nrm4;\n";
+                    code += "attribute vec3 morph_nrm5;\n";
+                    code += "attribute vec3 morph_nrm6;\n";
+                    code += "attribute vec3 morph_nrm7;\n";
+                }
             }
         }
 
