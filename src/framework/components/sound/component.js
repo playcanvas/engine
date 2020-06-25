@@ -54,6 +54,89 @@ function SoundComponent(system, entity) {
 SoundComponent.prototype = Object.create(Component.prototype);
 SoundComponent.prototype.constructor = SoundComponent;
 
+function defineSoundPropertyBasic(publicName, privateName) {
+    Object.defineProperty(SoundComponent.prototype, publicName, {
+        get: function () {
+            return this[privateName];
+        },
+        set: function (newValue) {
+            this[privateName] = newValue;
+
+            var slots = this._slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                // change refDistance of non-overlapping instances
+                if (!slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i][publicName] = newValue;
+                    }
+                }
+            }
+        }
+    });
+}
+
+function defineSoundPropertyFactor(publicName, privateName) {
+    Object.defineProperty(SoundComponent.prototype, publicName, {
+        get: function () {
+            return this[privateName];
+        },
+        set: function (newValue) {
+            this[privateName] = newValue;
+
+            var slots = this._slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                // change refDistance of non-overlapping instances
+                if (!slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i][publicName] = slot[publicName] * newValue;
+                    }
+                }
+            }
+        }
+    });
+}
+
+defineSoundPropertyFactor('pitch', '_pitch');
+defineSoundPropertyFactor('volume', '_volume');
+defineSoundPropertyBasic('refDistance', '_refDistance');
+defineSoundPropertyBasic('maxDistance', '_maxDistance');
+defineSoundPropertyBasic('rollOffFactor', '_rollOffFactor');
+defineSoundPropertyBasic('distanceModel', '_distanceModel');
+
+Object.defineProperty(SoundComponent.prototype, "positional", {
+    get: function () {
+        return this._positional;
+    },
+    set: function (newValue) {
+        this._positional = newValue;
+
+        var slots = this._slots;
+        for (var key in slots) {
+            var slot = slots[key];
+            // recreate non overlapping sounds
+            if (!slot.overlap) {
+                var instances = slot.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
+                    var currentTime = instances[i].currentTime;
+                    if (isPlaying)
+                        instances[i].stop();
+
+                    instances[i] = slot._createInstance();
+                    if (isPlaying) {
+                        instances[i].play();
+                        instances[i].currentTime = currentTime;
+                    }
+                }
+            }
+        }
+    }
+});
+
 Object.defineProperty(SoundComponent.prototype, "slots", {
     get: function () {
         return this._slots;
@@ -87,162 +170,6 @@ Object.defineProperty(SoundComponent.prototype, "slots", {
         // call onEnable in order to start autoPlay slots
         if (this.enabled && this.entity.enabled)
             this.onEnable();
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "volume", {
-    get: function () {
-        return this._volume;
-    },
-    set: function (newValue) {
-        this._volume = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change volume of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].volume = slot.volume * newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "pitch", {
-    get: function () {
-        return this._pitch;
-    },
-    set: function (newValue) {
-        this._pitch = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change pitch of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].pitch = slot.pitch * newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "refDistance", {
-    get: function () {
-        return this._refDistance;
-    },
-    set: function (newValue) {
-        this._refDistance = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change refDistance of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].refDistance = newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "maxDistance", {
-    get: function () {
-        return this._maxDistance;
-    },
-    set: function (newValue) {
-        this._maxDistance = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change maxDistance of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].maxDistance = newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "rollOffFactor", {
-    get: function () {
-        return this._rollOffFactor;
-    },
-    set: function (newValue) {
-        this._rollOffFactor = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change rollOffFactor of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].rollOffFactor = newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "distanceModel", {
-    get: function () {
-        return this._distanceModel;
-    },
-    set: function (newValue) {
-        this._distanceModel = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // change distanceModel of non-overlapping instances
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    instances[i].distanceModel = newValue;
-                }
-            }
-        }
-    }
-});
-
-Object.defineProperty(SoundComponent.prototype, "positional", {
-    get: function () {
-        return this._positional;
-    },
-    set: function (newValue) {
-        this._positional = newValue;
-
-        var slots = this._slots;
-        for (var key in slots) {
-            var slot = slots[key];
-            // recreate non overlapping sounds
-            if (!slot.overlap) {
-                var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
-                    var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
-                    var currentTime = instances[i].currentTime;
-                    if (isPlaying)
-                        instances[i].stop();
-
-                    instances[i] = slot._createInstance();
-                    if (isPlaying) {
-                        instances[i].play();
-                        instances[i].currentTime = currentTime;
-                    }
-                }
-            }
-        }
     }
 });
 
