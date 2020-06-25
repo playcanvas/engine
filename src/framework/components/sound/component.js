@@ -50,15 +50,6 @@ function SoundComponent(system, entity) {
     this._slots = {};
 
     this._playingBeforeDisable = {};
-
-    this.on('set_slots', this.onSetSlots, this);
-    this.on('set_volume', this.onSetVolume, this);
-    this.on('set_pitch', this.onSetPitch, this);
-    this.on("set_refDistance", this.onSetRefDistance, this);
-    this.on("set_maxDistance", this.onSetMaxDistance, this);
-    this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
-    this.on("set_distanceModel", this.onSetDistanceModel, this);
-    this.on("set_positional", this.onSetPositional, this);
 }
 SoundComponent.prototype = Object.create(Component.prototype);
 SoundComponent.prototype.constructor = SoundComponent;
