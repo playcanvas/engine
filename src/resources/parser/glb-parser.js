@@ -1594,22 +1594,10 @@ var parseChunk = function (filename, data, callback) {
 };
 
 // -- GlbParser
+
 function GlbParser() {}
 
-/**
- * @private
- * @function
- * @name pc.GlbParser.parseAsync
- * @description Parse gltf or glb data asynchronously, loading external resources and return engine resources.
- * @param {string} filename - Filename of the data being parsed. Used to determine the format of the data (either
- * glb or gltf).
- * @param {string} urlBase - The url base to append to internal urls.
- * @param {ArrayBuffer} data - The file data.
- * @param {pc.GraphicsDevice} device - The graphics device to use when contructing engine resources.
- * @param {pc.AssetRegistry} registry - The asset registry to use for loading textures.
- * @param {object} [options] - The asset handler options.
- * @param {pc.GlbParserCallback} callback - The callback which will be called with the parse results.
- */
+// parse the gltf or glb data asynchronously, loading external resources
 GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
     // parse the data
     parseChunk(filename, data, function (err, chunks) {

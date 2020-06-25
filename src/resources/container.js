@@ -67,8 +67,30 @@ Object.assign(ContainerResource.prototype, {
  * @class
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Loads files that contain in them multiple resources. For example glTF files can contain
+ * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
+ * The asset options object can be used for passing in load time callbacks to handle the various resources
+ * at different stages of loading as follows:
+ * ```
+ * |---------------------------------------------------------------------|
+ * |  resource   |  preprocess |   process   |processAsync | postprocess |
+ * |-------------+-------------+-------------+-------------+-------------|
+ * | global      |      X      |             |             |      X      |
+ * | node        |      X      |      X      |             |      X      |
+ * | animation   |      X      |             |             |      X      |
+ * | material    |      X      |      X      |             |      X      |
+ * | texture     |      X      |             |      X      |      X      |
+ * | buffer      |      X      |             |      X      |      X      |
+ * |---------------------------------------------------------------------|
+ * ```
+ * For example, to receive a texture preprocess callback:
+ * ```javascript
+ * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ *     texture: {
+ *         preprocess: function (gltfTexture) { console.log("texture preprocess"); }
+ *     },
+ * });
+ * ```
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
