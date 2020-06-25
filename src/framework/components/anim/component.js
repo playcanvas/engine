@@ -1,6 +1,7 @@
 Object.assign(pc, function () {
 
     /**
+     * @private
      * @component Anim
      * @class
      * @name pc.AnimComponent
@@ -11,7 +12,6 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
      * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
-     * @property {pc.AnimComponentData} data Animation component data
      */
     var AnimComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
@@ -21,6 +21,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimComponent.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#loadStateGraph
          * @description Initialises component animation controllers using the provided state graph.
@@ -92,11 +93,12 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AnimComponent#findAnimationLayer
          * @description Finds a pc.AnimComponentLayer in this component.
          * @param {string} layerName - The name of the anim component layer to find
-         * @returns {pc.AnimComponentLayer|null} layer
+         * @returns {pc.AnimComponentLayer} layer
          */
         findAnimationLayer: function (layerName) {
             var layerIndex = this.data.layerIndices[layerName];

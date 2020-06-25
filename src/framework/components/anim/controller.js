@@ -241,11 +241,6 @@ Object.assign(pc, function () {
                 return this._previousStateName;
             }
         },
-        playing: {
-            get: function () {
-                return this._playing;
-            }
-        },
         playable: {
             get: function () {
                 var playable = true;
