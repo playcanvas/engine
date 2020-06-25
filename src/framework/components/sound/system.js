@@ -7,17 +7,7 @@ import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 import { SoundSlot } from './slot.js';
 
-var _schema = [
-    'enabled',
-    'volume',
-    'pitch',
-    'positional',
-    'refDistance',
-    'maxDistance',
-    'rollOffFactor',
-    'distanceModel',
-    'slots'
-];
+var _schema = ['enabled'];
 
 /**
  * @class
@@ -56,50 +46,62 @@ Component._buildAccessors(SoundComponent.prototype, _schema);
 
 Object.assign(SoundComponentSystem.prototype, {
     initializeComponentData: function (component, data, properties) {
-        properties = ['volume', 'pitch', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'slots', 'enabled'];
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        properties = [
+            'distanceModel',
+            'maxDistance',
+            'pitch',
+            'positional',
+            'refDistance',
+            'rollOffFactor',
+            'slots',
+            'volume'
+        ];
+
+        for (var i = 0; i < properties.length; i++) {
+            if (data.hasOwnProperty(properties[i])) {
+                component[properties[i]] = data[properties[i]];
+            }
+        }
+
+        ComponentSystem.prototype.initializeComponentData.call(this, component, data, ['enabled']);
     },
 
     cloneComponent: function (entity, clone) {
-        var key;
-        var oldData = entity.sound.data;
-        var newData = {};
-
-        // copy old data to new data
-        for (key in oldData) {
-            if (oldData.hasOwnProperty(key)) {
-                newData[key] = oldData[key];
-            }
-        }
+        var srcComponent = entity.sound;
+        var srcSlots = srcComponent.slots;
 
         // convert 'slots' back to
         // simple option objects
-        newData.slots = {};
-
-        for (key in oldData.slots) {
-            var oldSlot = oldData.slots[key];
-            if (oldSlot instanceof SoundSlot) {
-                newData.slots[key] = {
-                    name: oldSlot.name,
-                    volume: oldSlot.volume,
-                    pitch: oldSlot.pitch,
-                    loop: oldSlot.loop,
-                    duration: oldSlot.duration,
-                    startTime: oldSlot.startTime,
-                    overlap: oldSlot.overlap,
-                    autoPlay: oldSlot.autoPlay,
-                    asset: oldSlot.asset
-                };
-            } else {
-                newData.slots[key] = oldSlot;
-            }
+        var slots = {};
+        for (key in srcSlots) {
+            var srcSlot = srcSlots[key];
+            slots[key] = {
+                name: srcSlot.name,
+                volume: srcSlot.volume,
+                pitch: srcSlot.pitch,
+                loop: srcSlot.loop,
+                duration: srcSlot.duration,
+                startTime: srcSlot.startTime,
+                overlap: srcSlot.overlap,
+                autoPlay: srcSlot.autoPlay,
+                asset: srcSlot.asset
+            };
         }
 
-        // reset playingBeforeDisable
-        newData.playingBeforeDisable = {};
+        var cloneData = {
+            distanceModel: srcComponent.distanceModel,
+            enabled: srcComponent.enabled,
+            maxDistance: srcComponent.maxDistance,
+            pitch: srcComponent.pitch,
+            positional: srcComponent.positional,
+            refDistance: srcComponent.refDistance,
+            rollOffFactor: srcComponent.rollOffFactor,
+            slots: slots,
+            volume: srcComponent.volume
+        };
 
         // add component with new data
-        return this.addComponent(clone, newData);
+        return this.addComponent(clone, cloneData);
     },
 
     onUpdate: function (dt) {
@@ -148,7 +150,9 @@ Object.defineProperty(SoundComponentSystem.prototype, 'volume', {
 Object.defineProperty(SoundComponentSystem.prototype, 'context', {
     get: function () {
         if (!hasAudioContext()) {
+            // #ifdef DEBUG
             console.warn('WARNING: Audio context is not supported on this browser');
+            // #endif
             return null;
         }
 
