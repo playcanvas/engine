@@ -1,127 +1,97 @@
-Object.assign(pc, function () {
+import { Color } from '../../core/color.js';
 
+import { programlib } from '../../graphics/program-lib/program-lib.js';
+import { Shader } from '../../graphics/shader.js';
+
+import { Material } from './material.js';
+import { ShaderGraphNode } from './shader-node.js';
+
+/**
+ * @class
+ * @name NodeMaterial
+ * @augments ShaderGraphNode
+ * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
+ * @example
+ * // Create a new Node material
+ * var material = new NodeMaterial();
+ *
+ *
+ * // Notify the material that it has been modified
+ * material.update();
+ */
+var NodeMaterial = function (shaderGraph) {
+    Material.call(this);
+
+    this.shaderGraph=shaderGraph;
+
+    //this.paramValues=[];
+};
+NodeMaterial.prototype = Object.create(Material.prototype);
+NodeMaterial.prototype.constructor = NodeMaterial;
+
+Object.assign(NodeMaterial.prototype, {
     /**
-     * @class
-     * @name pc.NodeMaterial
-     * @augments pc.Material
-     * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
-     * @property {pc.NodeInputs} nodeInputs
-     * @example
-     * // Create a new Node material
-     * var material = new pc.NodeMaterial();
-     *
-     *
-     * // Notify the material that it has been modified
-     * material.update();
+     * @function
+     * @name NodeMaterial#clone
+     * @description Duplicates a Node material. All properties are duplicated except textures
+     * where only the references are copied.
+     * @returns {NodeMaterial} A cloned Node material.
      */
-    var NodeMaterial = function (shaderGraph) {
-        pc.Material.call(this);
+    clone: function () {
+        var clone = new NodeMaterial();
 
-        this.shaderGraph=shaderGraph;
+        Material.prototype._cloneInternal.call(this, clone);
 
-        this.paramValues=[];
+        clone.shaderGraph=this.shaderGraph;
 
-        //this.nodeInputs = new NodeInputs();
+        //clone.nodeInputs.copy(this.nodeInputs);
 
-      //  this.nodeInputs.params = [];
-        
-     //   this.nodeInputs.key = null;
-     //   this.nodeInputs.vertexPositionOffset = 'vec3 getVertexPositionOffset(){\n return vec3(0,0,0); \n};\n';
-     //   this.nodeInputs.emissiveColor = 'vec3 getEmissiveColor(){\n return vec3(0,0,0); \n};\n';
-//        this.nodeInputs.baseColor = 'vec3 getBaseColor(){\n return vec3(0,0,0); \n};\n';
-//        this.nodeInputs.opacity = 'float getOpacity(){\n return float(0); \n};\n';
-//        this.nodeInputs.normal = 'vec3 getNormal(){\n return vec3(0,0,0); \n};\n';
-//        this.nodeInputs.metallic = 'float getMetallic(){\n return float(0); \n};\n';
-//        this.nodeInputs.roughness = 'float getRoughness(){\n return float(0); \n};\n';
+        return clone;
+    },
 
-        //no neeed? assume node input vector param values are Float32Arrays!
-//        this.tempVec2 = new Float32Array(2);
-//        this.tempVec3 = new Float32Array(3);
-//        this.tempVec4 = new Float32Array(4);
+    updateUniforms: function () {
+        this.clearParameters();
 
-    };
-    NodeMaterial.prototype = Object.create(pc.Material.prototype);
-    NodeMaterial.prototype.constructor = NodeMaterial;
+        for (var n=0;n<this.shaderGraph.params.length;n++)
+        {
+            /*if (!this.paramValues[n])
+            {
+                this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
+            }*/
 
- /*   var NodeInputs = function () { };
-    NodeInputs.prototype.copy = function (from) {
-        for (var p in from) {
-            if (from.hasOwnProperty(p) && p !== 'copy')
-                this[p] = from[p];
+            switch(this.shaderGraph.params[n].type)
+            {
+                case 'sampler2D':
+                case 'samplerCube':
+                case 'float':
+                case 'vec2':
+                case 'vec3':
+                case 'vec4':
+                    this.setParameter(this.shaderGraph.params[n].name, this.shaderGraph.params[n].value);
+                    break;
+                default:
+                    //error
+                    break;    
+            }           
         }
-    };*/
+    },
 
-/*    var NodeParam = function (type, name, value) {
-        this.type = type;
-        this.name = name;
-        this.value = value;    
-      }
-      NodeParam.prototype.constructor = NodeParam;*/
-
-    Object.assign(NodeMaterial.prototype, {
-        /**
-         * @function
-         * @name pc.NodeMaterial#clone
-         * @description Duplicates a Node material. All properties are duplicated except textures
-         * where only the references are copied.
-         * @returns {pc.NodeMaterial} A cloned Node material.
-         */
-        clone: function () {
-            var clone = new pc.NodeMaterial();
-
-            pc.Material.prototype._cloneInternal.call(this, clone);
-
-            //clone.nodeInputs.copy(this.nodeInputs);
-
-            return clone;
-        },
-
-        updateUniforms: function () {
-            this.clearParameters();
-
-            for (var n=0;n<this.shaderGraph.params.length;n++)
-            {
-                if (!this.paramValues[n])
-                {
-                    this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
-                }
-
-                switch(this.shaderGraph.params[n].type)
-                {
-                    case 'sampler2D':
-                    case 'samplerCube':
-                    case 'float':
-                    case 'vec2':
-                    case 'vec3':
-                    case 'vec4':
-                        this.setParameter(this.shaderGraph.params[n].name, this.paramValues[n]);
-                        break;
-                    default:
-                        //error
-                        break;    
-                }           
-            }
-        },
-
-        //updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-        initShader: function (device) {
-            if (!this.shader)
-            {
-                var options = {
-                    skin: !!this.meshInstances[0].skinInstance,
-                    shaderGraph: this.shaderGraph,
-                    //pass: pass
-                };
+    //updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+    initShader: function (device) {
+        if (!this.shader)
+        {
+            var options = {
+                skin: !!this.meshInstances[0].skinInstance,
+                shaderGraph: this.shaderGraph,
+                //pass: pass
+            };
 //              var library = device.getProgramLibrary();
 //              this.shader = library.getProgram('node', options);
 
-                var shaderDefinition = pc.programlib.node.createShaderDefinition(device, options);
-                this.shader = new pc.Shader(device, shaderDefinition);
-            }
+            var shaderDefinition = programlib.node.createShaderDefinition(device, options);
+            this.shader = new Shader(device, shaderDefinition);
         }
-    });
+    }
+});
 
-    return {
-        NodeMaterial: NodeMaterial
-    };
-}());
+export { NodeMaterial };

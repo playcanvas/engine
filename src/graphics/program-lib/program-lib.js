@@ -9,6 +9,7 @@ import { basic } from './basic.js';
 import { particle } from './particle.js';
 import { skybox } from './skybox.js';
 import { standard } from './standard.js';
+import { node } from './node.js';
 
 var programlib = {
     gammaCode: function (value, chunks) {
@@ -86,5 +87,6 @@ programlib.basic = basic;
 programlib.particle = particle;
 programlib.skybox = skybox;
 programlib.standard = standard;
+programlib.node = node;
 
 export { programlib };

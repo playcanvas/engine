@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -30,7 +30,6 @@
     <script>
         var entity, light, camera;
         var time = 0;
-        //var material, diffuseMap;
 
         var canvas = document.getElementById("application-canvas");
 
@@ -45,7 +44,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -66,13 +65,13 @@
         app.root.addChild(light);
         light.setLocalEulerAngles(85, -100, 0);
 
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
             entity = new pc.Entity();
 
             var modelComponent = entity.addComponent("model", {
                 type: "asset",
-                asset: asset
+                asset: asset.resource.model
             });
             app.root.addChild(entity);
 
@@ -80,18 +79,18 @@
             var diffuseMap = model.getMaterials()[0].diffuseMap;
 
             //create a simple PS shader graph node - just a 2D texture sample
-            var texSampleNode = pc.sgn.textureSample2D(diffuseMap, pc.sgn.uv0);
+            var texSampleNode = pc.shadergraph.textureSample2D(diffuseMap, pc.shadergraph.uv0);
 
             //create a custom vertex offset shader graph node
-            var wobbleVSNode = pc.sgn.customNode(document.getElementById("wobbleVS").textContent);//'vec3 wobbleVS(in vec3 wp, in vec3 wn, in float t){ return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.3)*normalize(wn); }');
+            var wobbleVSNode = pc.shadergraph.customNode(document.getElementById("wobbleVS").textContent);//'vec3 wobbleVS(in vec3 wp, in vec3 wn, in float t){ return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.3)*normalize(wn); }');
             
             //hook up custom node inputs
-            wobbleVSNode.wp = pc.sgn.worldPosVS;
-            wobbleVSNode.wn = pc.sgn.worldNormVS;
-            wobbleVSNode.t = pc.sgn.param('float', 'uTime', 0.0);
+            wobbleVSNode.wp = pc.shadergraph.worldPosVS;
+            wobbleVSNode.wn = pc.shadergraph.worldNormVS;
+            wobbleVSNode.t = pc.shadergraph.param('float', 'uTime', 0.0);
 
             //create root node and pass in sub graphs 
-            var rootNode = pc.sgn.root(texSampleNode.color, texSampleNode.alpha, wobbleVSNode);
+            var rootNode = pc.shadergraph.root(texSampleNode.color, texSampleNode.alpha, wobbleVSNode);
 
             //create NodeMaterial
             var material = new pc.NodeMaterial(rootNode);

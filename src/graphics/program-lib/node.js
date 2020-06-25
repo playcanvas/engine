@@ -1,4 +1,15 @@
-pc.programlib.node = {
+import {
+    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
+} from '../graphics.js';
+import { shaderChunks } from '../chunks.js';
+
+import {
+    SHADER_DEPTH, SHADER_PICK
+} from '../../scene/constants.js';
+
+import { programlib } from './program-lib.js';
+
+var node = {
     generateKey: function (options) {
         var key = 'node';
         if (options.fog)          key += '_fog';
@@ -15,17 +26,17 @@ pc.programlib.node = {
 
         // GENERATE ATTRIBUTES
         var attributes = {
-            vertex_position: pc.SEMANTIC_POSITION,
-            vertex_normal: pc.SEMANTIC_NORMAL,
-            vertex_color: pc.SEMANTIC_COLOR,
-            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+            vertex_position: SEMANTIC_POSITION,
+            vertex_normal: SEMANTIC_NORMAL,
+            vertex_color: SEMANTIC_COLOR,
+            vertex_texCoord0: SEMANTIC_TEXCOORD0
         };
         if (options.skin) {
-            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
+            attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
         }
 
-        var chunks = pc.shaderChunks;
+        var chunks = shaderChunks;
 
         // GENERATE VERTEX SHADER
         var code = '';
@@ -34,7 +45,7 @@ pc.programlib.node = {
         code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += pc.programlib.skinCode(device);
+            code += programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
         } else {
             code += chunks.transformVS;
@@ -55,7 +66,7 @@ pc.programlib.node = {
             code += 'varying vec2 vUv0;\n';
         }
 
-     /*   if (options.pass === pc.SHADER_DEPTH) {
+     /*   if (options.pass === SHADER_DEPTH) {
             code += 'varying float vDepth;\n';
             code += '#ifndef VIEWMATRIX\n';
             code += '#define VIEWMATRIX\n';
@@ -82,7 +93,7 @@ pc.programlib.node = {
         }
 
         // VERTEX SHADER BODY
-        code += pc.programlib.begin();
+        code += programlib.begin();
 
         if (options.shaderGraph) {
             code += options.shaderGraph.shaderGraphNodeString;    
@@ -94,7 +105,7 @@ pc.programlib.node = {
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
 
- /*       if (options.pass === pc.SHADER_DEPTH) {
+ /*       if (options.pass === SHADER_DEPTH) {
             code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
         }*/
 
@@ -106,12 +117,12 @@ pc.programlib.node = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += pc.programlib.end();
+        code += programlib.end();
 
         var vshader = code;
 
         // GENERATE FRAGMENT SHADER
-        code = pc.programlib.precisionCode(device);
+        code = programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (1)
@@ -121,13 +132,13 @@ pc.programlib.node = {
             code += 'varying vec2 vUv0;\n';
         }
         if (options.fog) {
-            code += pc.programlib.fogCode(options.fog);
+            code += programlib.fogCode(options.fog);
         }
         if (options.alphatest) {
             code += chunks.alphaTestPS;
         }
 
-        /*if (options.pass === pc.SHADER_DEPTH) {
+        /*if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += 'varying float vDepth;\n';
             code += chunks.packDepthPS;
@@ -151,13 +162,13 @@ pc.programlib.node = {
 //        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;    
 
         // FRAGMENT SHADER BODY
-        code += pc.programlib.begin();            
+        code += programlib.begin();            
 
         if (options.shaderGraph)
         { 
             code += options.shaderGraph.shaderGraphNodeString;
         }
-        //code += pc.NodeMaterial.generateLightingCode(options);
+        //code += NodeMaterial.generateLightingCode(options);
 
         //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
 //        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
@@ -167,9 +178,9 @@ pc.programlib.node = {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        /*if (options.pass === pc.SHADER_PICK) {
+        /*if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
-        } else if (options.pass === pc.SHADER_DEPTH) {
+        } else if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += "    gl_FragColor = packFloat(vDepth);\n";
         } else */{
@@ -179,7 +190,7 @@ pc.programlib.node = {
             }
         }
 
-        code += pc.programlib.end();
+        code += programlib.end();
 
         var fshader = code;
 
@@ -190,3 +201,5 @@ pc.programlib.node = {
         };
     }
 };
+
+export { node };
