@@ -58,11 +58,22 @@ Object.assign(pc, function () {
     };
 
     ShaderGraphNode.prototype.defineOuputGetter = function (name, index) {
-        this.__defineGetter__(name, function() { return this.getOutput(this.outputName[index]); });
+        //this.__defineGetter__(name, function() { return this.getOutput(this.outputName[index]); });
+        Object.defineProperty(this, name, {
+            get: function() {
+                return this.getOutput(this.outputName[index]);
+            }
+          });
+
     };
 
     ShaderGraphNode.prototype.defineInputSetter = function (name, index) {
-        this.__defineSetter__(name, function(value) { this.setInput(this.inputName[index],value); });
+        //this.__defineSetter__(name, function(value) { this.setInput(this.inputName[index],value); });
+        Object.defineProperty(this, name, {
+            set: function(value) {
+                this.setInput(this.inputName[index],value); 
+            }
+          });
     };
 
     ShaderGraphNode.prototype.setParam = function (inType, inName, inValue) {
@@ -124,14 +135,28 @@ Object.assign(pc, function () {
         }
     };
 
-    ShaderGraphNode.prototype.setInput = function (tName, tOutput) {
-        
+    ShaderGraphNode.prototype.setInput = function (tName, tOutput_or_node) 
+    {    
         var inIndex = this.inputName.indexOf(tName);
 
         var outIndex = -1;
-        if (tOutput && tOutput.node)
+
+        var tOutput;
+        if (tOutput_or_node) 
         {
-            outIndex = (tOutput.name) ? tOutput.node.outputName.indexOf(tOutput.name) : 0;
+            if (tOutput_or_node instanceof ShaderGraphNode)
+            {
+                tOutput = {node: tOutput_or_node};
+            }
+            else
+            {
+                tOutput = tOutput_or_node;
+            }
+
+            if (tOutput.node)
+            {
+                outIndex = (tOutput.name) ? tOutput.node.outputName.indexOf(tOutput.name) : 0;
+            }
         }
 
         //check transput valid and types match
@@ -337,5 +362,62 @@ Object.assign(pc, function () {
 
     return {
         ShaderGraphNode: ShaderGraphNode
+    };
+}());
+
+Object.assign(pc, function () {
+    var sgn={};
+
+    sgn.textureSample2D = function(texture, uv) 
+    {
+        var texSampleNode = new pc.ShaderGraphNode('void texSample(in sampler2D texture, in vec2 uv, out vec4 rgba, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n rgba=sample;\n color=sample.rgb;\n alpha=sample.a;\n}');
+        texSampleNode.texture = new pc.ShaderGraphNode('sampler2D', 'texture', texture);
+        texSampleNode.uv = uv;
+        return texSampleNode;
+    }
+
+    //sgn.__defineGetter__('uv0', function() { return new pc.ShaderGraphNode('vec2 uv0() { return vUv0; }'); });
+    Object.defineProperty(sgn, 'uv0', {
+        get: function() {
+            return new pc.ShaderGraphNode('vec2 uv0() { return vUv0; }');
+        }
+      });
+
+    sgn.customNode = function(f) 
+    {
+        var customNode = new pc.ShaderGraphNode(f);
+        return customNode;
+    }
+
+    //sgn.__defineGetter__('worldPosVS', function() { return new pc.ShaderGraphNode('vec3 wpVS() { return getWorldPositionNM(); }'); });
+    Object.defineProperty(sgn, 'worldPosVS', {
+        get: function() {
+            return new pc.ShaderGraphNode('vec3 wpVS() { return getWorldPositionNM(); }');
+        }
+      });
+    
+    //sgn.__defineGetter__('worldNormVS', function() { return new pc.ShaderGraphNode('vec3 wnVS() { return getWorldNormalNM(); }'); });
+    Object.defineProperty(sgn, 'worldNormVS', {
+        get: function() {
+            return new pc.ShaderGraphNode('vec3 wnVS() { return getWorldNormalNM(); }');
+        }
+      });
+
+    sgn.param = function(type, name, value) 
+    {
+        var paramNode = new pc.ShaderGraphNode(type, name, value);
+        return paramNode;
+    }
+
+    sgn.root = function(color, alpha, vertOff) 
+    {
+        var rootNode = new pc.ShaderGraphNode('void root(in vec4 rgba, in vec3 color, in float alpha, in vec3 vertexOffset){}');
+        rootNode.color = color;
+        rootNode.alpha = alpha;
+        rootNode.vertexOffset = vertOff;
+        return rootNode;  
+    }
+    return {
+        sgn: sgn
     };
 }());

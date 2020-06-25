@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Shader Nodes</title>
+    <title>PlayCanvas Shader Graph Nodes</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -72,21 +72,19 @@
             var model = modelComponent.model;
             var diffuseMap = model.getMaterials()[0].diffuseMap;
 
-            //create PS shader graph nodes and hook up node outputs to inputs
-            var texSampleNode = new pc.ShaderGraphNode('void texSample(in sampler2D texture, in vec2 uv, out vec4 rgba, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n rgba=sample;\n color=sample.rgb;\n alpha=sample.a;\n}');
-            texSampleNode.texture = new pc.ShaderGraphNode('sampler2D', 'uDiffuseMap', diffuseMap).uDiffuseMap;
-            texSampleNode.uv = new pc.ShaderGraphNode('vec2 uv0() { return vUv0; }').ret;
+            //create a simple PS shader graph node - just a 2D texture sample
+            var texSampleNode = pc.sgn.textureSample2D(diffuseMap, pc.sgn.uv0);
 
-            //create Vertex Offset shader graph nodes and hook up node outputs to inputs
-            var wobbleVertVSNode = new pc.ShaderGraphNode('vec3 wobbleVertVS(in vec3 wp, in vec3 wn, in float t){ return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.3)*normalize(wn); }');
-            wobbleVertVSNode.wp = new pc.ShaderGraphNode('vec3 wpVS() { return getWorldPositionNM(); }').ret;
-            wobbleVertVSNode.wn = new pc.ShaderGraphNode('vec3 wnVS() { return getWorldNormalNM(); }').ret;
-            wobbleVertVSNode.t = new pc.ShaderGraphNode('float', 'uTime', 0.0).uTime;
+            //create a custom vertex offset shader graph node
+            var wobbleVertVSNode = pc.sgn.customNode('vec3 wobbleVertVS(in vec3 wp, in vec3 wn, in float t){ return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.3)*normalize(wn); }');
+            
+            //hook up custom node inputs
+            wobbleVertVSNode.wp = pc.sgn.worldPosVS;
+            wobbleVertVSNode.wn = pc.sgn.worldNormVS;
+            wobbleVertVSNode.t = pc.sgn.param('float', 'uTime', 0.0);
 
-            //create root node and hook up sub graphs 
-            var rootNode = new pc.ShaderGraphNode('void root(in vec4 rgba, in vec3 color, in float alpha, in vec3 vertexOffset){}');
-            rootNode.rgba = texSampleNode.rgba;
-            rootNode.vertexOffset = wobbleVertVSNode.ret;
+            //create root node and pass in sub graphs 
+            var rootNode = pc.sgn.root(texSampleNode.color, texSampleNode.alpha, wobbleVertVSNode);
 
             //create NodeMaterial
             var material = new pc.NodeMaterial(rootNode);
