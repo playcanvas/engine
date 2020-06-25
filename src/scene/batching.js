@@ -566,7 +566,7 @@ function getScaleSign(mi) {
  * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
  * @param {boolean} translucent - Are we batching UI elements or sprites
  * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
- * @returns {pc.MeshInstance[]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
+ * @returns {pc.MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
  */
 BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, translucent) {
     if (meshInstances.length === 0) return [];
