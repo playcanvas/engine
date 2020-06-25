@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -20,15 +20,6 @@
     <canvas id="application-canvas"></canvas>
 
     <script>
-        function createMaterial(colors) {
-            var material = new pc.StandardMaterial();
-            for (var param in colors) {
-                material[param] = colors[param];
-            }
-            material.update();
-            return material;
-        }
-
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
@@ -43,12 +34,12 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0,0,0.05)
+            clearColor: new pc.Color(0, 0, 0.05)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0, 10);
@@ -60,7 +51,7 @@
             color: new pc.Color(1, 1, 1),
             intensity: 1
         });
-        lightDirEntity.setLocalEulerAngles(45,0,0);
+        lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
         // Add Entities into the scene hierarchy
         app.root.addChild(cameraEntity);
@@ -133,7 +124,6 @@
                 localVelocityGraph2: localVelocityCurve2
             });
         });
-
     </script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var categories = [
     {
         name: "animation",
@@ -19,13 +20,14 @@ var categories = [
             "layers",
             "lights",
             "lights-baked",
-            "loader-obj",
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
+            "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
             "model-outline",
@@ -44,6 +46,12 @@ var categories = [
             "shader-toon",
             "shader-wobble",
             "texture-basis"
+        ]
+    }, {
+        name: "loaders",
+        examples: [
+            "loader-glb",
+            "loader-obj"
         ]
     }, {
         name: "input",

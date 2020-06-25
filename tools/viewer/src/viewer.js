@@ -29,15 +29,15 @@ var Viewer = function (canvas) {
     });
 
     // load cubemap background
-    var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+    var cubemapAsset = new pc.Asset('helipad.dds', 'texture', {
         url: assetsFolder + "/cubemaps/helipad.dds"
     }, {
-        rgbm: true
+        type: "rgbm"
     });
     cubemapAsset.ready(function () {
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.setSkybox(cubemapAsset.resources);
         app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
     });
@@ -139,7 +139,7 @@ var Viewer = function (canvas) {
     this.debugSkeleton = new DebugLines(app, camera);
     this.debugNormals = new DebugLines(app, camera);
 
-    this.miniStats = new pc.MiniStats(app);
+    this.miniStats = new pcx.MiniStats(app);
 
     function getUrlVars() {
         var vars = {};
@@ -421,13 +421,19 @@ Object.assign(Viewer.prototype, {
                 // make a list of all the morph instance target names
                 var morphMap = { };
                 var morphs = [];
-                morphInstances.forEach(function (morphInstance) {
+                var targetName;
+                morphInstances.forEach(function (morphInstance, morphIndex) {
+
+                    // mesh name line
+                    morphs.push({ name: "Mesh " + morphIndex });
+
                     morphInstance.morph._targets.forEach(function (target, targetIndex) {
-                        if (!morphMap.hasOwnProperty(target.name)) {
-                            morphMap[target.name] = [{ instance: morphInstance, targetIndex: targetIndex }];
-                            morphs.push({ name: target.name, weight: target.defaultWeight });
+                        targetName = morphIndex + "-" + target.name;
+                        if (!morphMap.hasOwnProperty(targetName)) {
+                            morphMap[targetName] = [{ instance: morphInstance, targetIndex: targetIndex }];
+                            morphs.push({ name: targetName, weight: target.defaultWeight });
                         } else {
-                            morphMap[target.name].push({ instance: morphInstance, targetIndex: targetIndex });
+                            morphMap[targetName].push({ instance: morphInstance, targetIndex: targetIndex });
                         }
                     });
                 });
@@ -564,11 +570,23 @@ function startViewer() {
 }
 
 var main = function () {
-    if (wasmSupported()) {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.wasm.js', '../../examples/lib/draco/draco.wasm.wasm', startViewer);
-    } else {
-        loadWasmModuleAsync('DracoDecoderModule', '../../examples/lib/draco/draco.js', '', startViewer);
-    }
+    pc.basisDownload(
+        '../../examples/lib/basis/basis.wasm.js',
+        '../../examples/lib/basis/basis.wasm.wasm',
+        '../../examples/lib/basis/basis.js',
+        function () {
+            if (wasmSupported()) {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.wasm.js',
+                                    '../../examples/lib/draco/draco.wasm.wasm',
+                                    startViewer);
+            } else {
+                loadWasmModuleAsync('DracoDecoderModule',
+                                    '../../examples/lib/draco/draco.js',
+                                    '',
+                                    startViewer);
+            }
+        });
 };
 
 /* eslint-enable no-unused-vars */

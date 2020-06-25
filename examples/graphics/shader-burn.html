@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -77,7 +77,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -86,7 +86,7 @@
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.rotate(0,0,0);
+        camera.rotate(0, 0, 0);
         camera.translateLocal(0, 7, 24);
 
         // Create an Entity with a point light component and a sphere model component.
@@ -103,16 +103,16 @@
         app.root.addChild(light);
 
         var model, asset, heightMap;
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
-            var model = asset;
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            var model = asset.resource.model;
             app.assets.loadFromUrl('../assets/textures/clouds.jpg', 'texture', function (err, asset) {
                 app.start();
 
                 heightMap = asset.resource;
 
                 entity = new pc.Entity();
-                entity.rotateLocal(0,0,0);
+                entity.rotateLocal(0, 0, 0);
                 var modelComponent = entity.addComponent("model", {
                     type: "asset",
                     asset: model
@@ -146,7 +146,7 @@
                 });
 
                 app.on("update", function (dt) {
-                    time += 0.2*dt;
+                    time += 0.2 * dt;
 
                     var t = time % 2;
 
