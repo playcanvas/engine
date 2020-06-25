@@ -1,10 +1,7 @@
-import { Color } from '../../core/color.js';
-
 import { programlib } from '../../graphics/program-lib/program-lib.js';
 import { Shader } from '../../graphics/shader.js';
 
 import { Material } from './material.js';
-import { ShaderGraphNode } from './shader-node.js';
 
 /**
  * @class
