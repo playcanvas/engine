@@ -1805,8 +1805,8 @@ Object.assign(GraphicsDevice.prototype, {
                             if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                 src = _downsampleImage(src, this.maxCubeMapSize);
                                 if (mipLevel === 0) {
-                                    texture.width = src.width;
-                                    texture.height = src.height;
+                                    texture._width = src.width;
+                                    texture._height = src.height;
                                 }
                             }
                         }
@@ -1893,8 +1893,8 @@ Object.assign(GraphicsDevice.prototype, {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                             mipObject = _downsampleImage(mipObject, this.maxTextureSize);
                             if (mipLevel === 0) {
-                                texture.width = mipObject.width;
-                                texture.height = mipObject.height;
+                                texture._width = mipObject.width;
+                                texture._height = mipObject.height;
                             }
                         }
                     }
