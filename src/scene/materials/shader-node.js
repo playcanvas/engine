@@ -87,9 +87,10 @@ Object.assign(pc, function () {
     };
 
     ShaderGraphNode.prototype.setFunctionString = function (f) {
-        this.functionString=f;
+        this.functionString=f.trim();
 
-        var head = f.split(")")[0];
+        //var head = f.split(")")[0].replace(/[^A-Z0-9\s]+/ig, "");
+        var head = this.functionString.split(")")[0];
         var rettype_funcname = head.split("(")[0];
         var rettype = rettype_funcname.split(" ")[0];
         var params = head.split("(")[1].split(",");
