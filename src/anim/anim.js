@@ -705,7 +705,7 @@ Object.assign(DefaultAnimBinder.prototype, {
     resolve: function (path) {
         var pathSections = this.propertyLocator.decode(path);
 
-        var node = this.nodes[pathSections[0][0]];
+        var node = this.nodes[pathSections[0][0] || ""];
         if (!node) {
             return null;
         }
