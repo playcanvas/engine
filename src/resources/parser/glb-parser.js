@@ -163,6 +163,16 @@ var getPrimitiveType = function (primitive) {
     }
 };
 
+function getNodePath(targetNode, nodes) {
+    var parent = nodes.findIndex(function (node) {
+        return node.hasOwnProperty('children') ? node.children.includes(targetNode) : false;
+    });
+    if (parent !== -1) {
+        return getNodePath(parent, nodes).concat([targetNode]);
+    }
+    return [targetNode];
+}
+
 var generateIndices = function (numVertices) {
     var dummyIndices = new Uint16Array(numVertices);
     for (var i = 0; i < numVertices; i++) {
@@ -465,7 +475,7 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buff
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
+var createMeshGroup = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
     var meshes = [];
 
     var semanticMap = {
@@ -981,7 +991,7 @@ var createMaterial = function (gltfMaterial, textures) {
 };
 
 // create the anim structure
-var createAnimation = function (gltfAnimation, animationIndex, accessors, bufferViews, nodes, buffers) {
+var createAnimation = function (gltfAnimation, animationIndex, accessors, bufferViews, nodes, nodeEntities, buffers) {
 
     // create animation data block for the accessor
     var createAnimData = function (accessor) {
@@ -1003,6 +1013,7 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
     var outputs = [];
 
     var curves = [];
+    var targetRootNodes = [];
 
     var i;
 
@@ -1051,7 +1062,14 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
         var target = channel.target;
         var curve = curves[channel.sampler];
 
-        curve._paths.push(propertyLocator.encode([[nodes[target.node].name], 'graph', [transformSchema[target.path]]]));
+        // get node locator path relative to root node
+        var targetNodePath = getNodePath(target.node, nodes);
+        var targetNodePathNamed = targetNodePath.map(function (node) {
+            return nodeEntities[node].name;
+        });
+
+        targetRootNodes.push(targetNodePath[0]);
+        curve._paths.push(propertyLocator.encode([targetNodePathNamed, 'entity', [transformSchema[target.path]]]));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
@@ -1103,21 +1121,29 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
         return Math.max(value, data.length === 0 ? 0 : data[data.length - 1]);
     }, 0);
 
-    return new AnimTrack(
-        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ("animation_" + animationIndex),
-        duration,
-        inputs,
-        outputs,
-        curves);
+    return {
+        track: new AnimTrack(
+            gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ('animation_' + animationIndex),
+            duration,
+            inputs,
+            outputs,
+            curves
+        ),
+        // return root nodes without duplicates
+        targetRootNodes: targetRootNodes.filter(function (rootNode, index, rootNodes) {
+            return rootNodes.indexOf(rootNode) === index;
+        })
+    };
 };
 
 var createNode = function (gltfNode, nodeIndex) {
-    var entity = new GraphNode();
+    var entity = new Entity();
 
     if (gltfNode.hasOwnProperty('name')) {
-        entity.name = gltfNode.name;
+        // Remove slashes since they interfere with animation curve paths
+        entity.name = nodeData.name.replace(/\//g, '_');
     } else {
-        entity.name = "node_" + nodeIndex;
+        entity.name = 'node_' + nodeIndex;
     }
 
     // Parse transformation properties
@@ -1149,6 +1175,62 @@ var createNode = function (gltfNode, nodeIndex) {
     return entity;
 };
 
+
+var createScene = function (sceneData, sceneIndex, nodes) {
+    var sceneRoot = new Entity();
+
+    if (sceneData.hasOwnProperty('name')) {
+        sceneRoot.name = sceneData.name;
+    } else {
+        sceneRoot.name = 'scene_' + sceneIndex;
+    }
+
+    sceneData.nodes.forEach(function (nodeIndex) {
+        var node = nodes[nodeIndex];
+        if (node !== undefined) {
+            sceneRoot.addChild(node);
+        }
+    });
+
+    return sceneRoot;
+};
+
+var createModel = function (node, meshGroup, skin, materials, defaultMaterial) {
+    var model = new Model();
+    model.graph = new GraphNode('model_' + node.name);
+
+    meshGroup.forEach(function (mesh) {
+        var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+        var meshInstance = new MeshInstance(model.graph, mesh, material);
+
+        if (mesh.morph) {
+            var morphInstance = new MorphInstance(mesh.morph);
+            if (mesh.weights) {
+                for (var wi = 0; wi < mesh.weights.length; wi++) {
+                    morphInstance.setWeight(wi, mesh.weights[wi]);
+                }
+            }
+
+            meshInstance.morphInstance = morphInstance;
+            model.morphInstances.push(morphInstance);
+        }
+
+        if (skin !== null) {
+            mesh.skin = skin;
+
+            var skinInstance = new SkinInstance(skin);
+            skinInstance.bones = skin.bones;
+
+            meshInstance.skinInstance = skinInstance;
+            model.skinInstances.push(skinInstance);
+        }
+
+        model.meshInstances.push(meshInstance);
+    });
+
+    return model;
+};
+
 var createSkins = function (device, gltf, nodes, buffers) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
@@ -1158,14 +1240,14 @@ var createSkins = function (device, gltf, nodes, buffers) {
     });
 };
 
-var createMeshes = function (device, gltf, buffers, callback) {
+var createMeshGroups = function (device, gltf, buffers, callback) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
         return [];
     }
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
+        return createMeshGroup(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
     });
 };
 
@@ -1190,7 +1272,7 @@ var createMaterials = function (gltf, textures, options) {
     });
 };
 
-var createAnimations = function (gltf, nodes, buffers, options) {
+var createAnimations = function (gltf, nodes, nodeComponents, buffers, options) {
     if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
         return [];
     }
@@ -1202,11 +1284,25 @@ var createAnimations = function (gltf, nodes, buffers, options) {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        var animation = createAnimation(gltfAnimation, index, gltf.accessors, gltf.bufferViews, nodes, buffers);
+        var animation = createAnimation(gltfAnimation, index, gltf.accessors, gltf.bufferViews, gltf.nodes, nodes, buffers);
         if (postprocess) {
-            postprocess(gltfAnimation, animation);
+            postprocess(gltfAnimation, animation.track);
         }
-        return animation;
+
+        // Animation components should be added to all root nodes targeted by an
+        // animation track since the locator path in animation curves is relative
+        // to its targets root node
+        animation.targetRootNodes.forEach(function (rootNode) {
+            if (!nodeComponents[rootNode]) {
+                nodeComponents[rootNode] = {};
+            }
+            if (!nodeComponents[rootNode].animations) {
+                nodeComponents[rootNode].animations = [];
+            }
+            nodeComponents[rootNode].animations.push(index);
+        });
+
+        return animation.track;
     });
 };
 
@@ -1247,8 +1343,76 @@ var createNodes = function (gltf, options) {
     return nodes;
 };
 
+var createEmptyNodeComponents = function (nodes) {
+    return nodes.map(function () {
+        return {
+            model: null,
+            animations: []
+        };
+    });
+};
+
+var createScenes = function (gltf, nodes, options) {
+    if (!gltf.hasOwnProperty('scenes') || gltf.scenes.length === 0) {
+        return [];
+    }
+
+    var preprocess = options && options.scene && options.scene.preprocess;
+    var process = options && options.scene && options.scene.process || createScene;
+    var postprocess = options && options.scene && options.scene.postprocess;
+
+    return gltf.scenes.map(function (gltfScene, index) {
+        if (preprocess) {
+            preprocess(gltfScene);
+        }
+        var scene = process(gltfScene, index, nodes);
+        if (postprocess) {
+            postprocess(gltfScene, scene);
+        }
+        return scene;
+    });
+};
+
+var getDefaultScene = function (gltf, scenes) {
+    if (!gltf.hasOwnProperty('scene')) {
+        if (scenes.length === 0) {
+            return null;
+        }
+        return scenes[0];
+    }
+
+    return scenes[gltf.scene] || null;
+};
+
+var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial) {
+    if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
+        return [];
+    }
+
+    var models = [];
+
+    gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+        if (!gltfNode.hasOwnProperty('mesh')) {
+            return;
+        }
+
+        var node = nodes[nodeIndex];
+        var meshGroup = meshGroups[gltfNode.mesh];
+        var skin = gltfNode.hasOwnProperty('skin') ? skins[gltfNode.skin] : null;
+        var model = createModel(node, meshGroup, skin, materials, defaultMaterial);
+        var modelIndex = models.push(model) - 1;
+
+        if (!nodeComponents[nodeIndex]) {
+            nodeComponents[nodeIndex] = {};
+        }
+        nodeComponents[nodeIndex].model = modelIndex;
+    });
+
+    return models;
+};
+
 // create engine resources from the downloaded GLB data
-var createResources = function (device, gltf, buffers, textures, options, callback) {
+var createResources = function (device, gltf, buffers, textures, defaultMaterial, options, callback) {
 
     var preprocess = options && options.global && options.global.preprocess;
     var postprocess = options && options.global && options.global.postprocess;
@@ -1258,21 +1422,26 @@ var createResources = function (device, gltf, buffers, textures, options, callba
     }
 
     var nodes = createNodes(gltf, options);
-    var animations = createAnimations(gltf, nodes, buffers, options);
+    var nodeComponents = createEmptyNodeComponents(nodes);
+    var scenes = createScenes(gltf, nodes, options);
+    var scene = getDefaultScene(gltf, scenes);
+    var animations = createAnimations(gltf, nodes, nodeComponents, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
     }) : [], options);
-    var meshes = createMeshes(device, gltf, buffers, callback);
+    var meshGroups = createMeshGroups(device, gltf, buffers, callback);
     var skins = createSkins(device, gltf, nodes, buffers);
+    var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
 
     var result = {
-        'gltf': gltf,
         'nodes': nodes,
+        'nodeComponents': nodeComponents,
+        'models': models,
         'animations': animations,
+        'scenes': scenes,
+        'scene': scene,
         'textures': textures,
-        'materials': materials,
-        'meshes': meshes,
-        'skins': skins
+        'materials': materials
     };
 
     if (postprocess) {
@@ -1397,7 +1566,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
                 if (isDataURI(gltfImage.uri)) {
                     loadTexture(i, gltfImage.uri, getDataURIMimeType(gltfImage.uri));
                 } else {
-                    loadTexture(i, path.join(urlBase, gltfImage.uri), "anonymous");
+                    loadTexture(i, path.join(urlBase, gltfImage.uri).replace(registry.prefix, ""), "anonymous");
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -1598,7 +1767,7 @@ var parseChunk = function (filename, data, callback) {
 function GlbParser() {}
 
 // parse the gltf or glb data asynchronously, loading external resources
-GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
+GlbParser.parseAsync = function (filename, urlBase, data, device, defaultMaterial, registry, options, callback) {
     // parse the data
     parseChunk(filename, data, function (err, chunks) {
         if (err) {
@@ -1627,7 +1796,7 @@ GlbParser.parseAsync = function (filename, urlBase, data, device, registry, opti
                         return;
                     }
 
-                    createResources(device, gltf, buffers, textures, options, callback);
+                    createResources(device, gltf, buffers, textures, defaultMaterial, options, callback);
                 });
             });
         });
@@ -1635,7 +1804,7 @@ GlbParser.parseAsync = function (filename, urlBase, data, device, registry, opti
 };
 
 // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-GlbParser.parse = function (filename, data, device, options) {
+GlbParser.parse = function (filename, data, device, defaultMaterial, options) {
     var result = null;
 
     // parse the data
@@ -1652,7 +1821,7 @@ GlbParser.parse = function (filename, data, device, options) {
                     var textures = [];
 
                     // create resources
-                    createResources(device, gltf, buffers, textures, options || { }, function (err, result_) {
+                    createResources(device, gltf, buffers, textures, defaultMaterial, options || { }, function (err, result_) {
                         if (err) {
                             console.error(err);
                         } else {
@@ -1665,71 +1834,6 @@ GlbParser.parse = function (filename, data, device, options) {
     });
 
     return result;
-};
-
-// create a pc.Model from the parsed GLB data structures
-GlbParser.createModel = function (glb, defaultMaterial) {
-    var createMeshInstance = function (model, mesh, skins, materials, node, gltfNode) {
-        var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-
-        var meshInstance = new MeshInstance(node, mesh, material);
-
-        if (mesh.morph) {
-            var morphInstance = new MorphInstance(mesh.morph);
-            if (mesh.weights) {
-                for (var wi = 0; wi < mesh.weights.length; wi++) {
-                    morphInstance.setWeight(wi, mesh.weights[wi]);
-                }
-            }
-
-            meshInstance.morphInstance = morphInstance;
-            model.morphInstances.push(morphInstance);
-        }
-
-        if (gltfNode.hasOwnProperty('skin')) {
-            var skin = skins[gltfNode.skin];
-            mesh.skin = skin;
-
-            var skinInstance = new SkinInstance(skin);
-            skinInstance.bones = skin.bones;
-
-            meshInstance.skinInstance = skinInstance;
-            model.skinInstances.push(skinInstance);
-        }
-
-        model.meshInstances.push(meshInstance);
-    };
-
-    var model = new Model();
-    var i;
-
-    var rootNodes = [];
-    for (i = 0; i < glb.nodes.length; i++) {
-        var node = glb.nodes[i];
-        if (node.parent === null) {
-            rootNodes.push(node);
-        }
-
-        var gltfNode = glb.gltf.nodes[i];
-        if (gltfNode.hasOwnProperty('mesh')) {
-            var meshGroup = glb.meshes[gltfNode.mesh];
-            for (var mi = 0; mi < meshGroup.length; mi++) {
-                createMeshInstance(model, meshGroup[mi], glb.skins, glb.materials, node, gltfNode);
-            }
-        }
-    }
-
-    // set model root (create a group if there is more than one)
-    if (rootNodes.length === 1) {
-        model.graph = rootNodes[0];
-    } else {
-        model.graph = new GraphNode('SceneGroup');
-        for (i = 0; i < rootNodes.length; ++i) {
-            model.graph.addChild(rootNodes[i]);
-        }
-    }
-
-    return model;
 };
 
 export { GlbParser };

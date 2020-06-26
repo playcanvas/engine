@@ -112,6 +112,7 @@ Object.assign(ContainerResource.prototype, {
  * |-------------+-------------+-------------+-------------+-------------|
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
+ * | scene       |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | texture     |      x      |             |      x      |      x      |
@@ -163,6 +164,7 @@ Object.assign(ContainerHandler.prototype, {
                                      path.extractPath(url.load),
                                      response,
                                      self._device,
+                                     self._defaultMaterial,
                                      asset.registry,
                                      asset.options,
                                      function (err, result) {
