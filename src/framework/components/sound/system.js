@@ -5,7 +5,6 @@ import { ComponentSystem } from '../system.js';
 
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
-import { SoundSlot } from './slot.js';
 
 var _schema = ['enabled'];
 
