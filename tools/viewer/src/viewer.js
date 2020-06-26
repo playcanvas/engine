@@ -38,7 +38,7 @@ var Viewer = function (canvas) {
             assetsFolder + '/cubemaps/Helipad_posy.png',
             assetsFolder + '/cubemaps/Helipad_negy.png',
             assetsFolder + '/cubemaps/Helipad_posz.png',
-            assetsFolder + '/cubemaps/Helipad_negz.png',
+            assetsFolder + '/cubemaps/Helipad_negz.png'
         ],
         faceData: {
             type: "rgbm"

@@ -477,8 +477,9 @@ Object.defineProperty(Asset.prototype, 'loadFaces', {
         if (!this.hasOwnProperty('_loadFaces') || value !== this._loadFaces) {
             this._loadFaces = value;
 
-            // the loadFaces property should be part of the data block because
-            // changing the value should result in patch being invoked.
+            // the loadFaces property should be part of the asset data block
+            // because changing the flag should result in asset patch being invoked.
+            // here we must invoke it manually instead.
             if (this.loaded)
                 this.registry._loader.patch(this, this.registry);
         }

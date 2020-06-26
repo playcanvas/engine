@@ -361,7 +361,7 @@ Scene.prototype._updateSkybox = function (device) {
         var usedTex =
             this._skyboxMip ?
                 this._skyboxPrefiltered[this._skyboxMip] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
-                    this._skyboxCubeMap || this._skyboxPrefiltered[0];
+                this._skyboxCubeMap || this._skyboxPrefiltered[0];
         if (!usedTex) {
             return;
         }

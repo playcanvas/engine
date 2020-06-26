@@ -1,10 +1,9 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_R8_G8_B8_A8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../graphics/graphics.js';
 
-import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
 /**
@@ -20,7 +19,7 @@ function CubemapHandler(device, assets, loader) {
     this._device = device;
     this._registry = assets;
     this._loader = loader;
-};
+}
 
 Object.assign(CubemapHandler.prototype, {
     load: function (url, callback, asset) {
@@ -71,12 +70,12 @@ Object.assign(CubemapHandler.prototype, {
         if (assetIdA && assetIdB) {
             if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
                 return assetIdA === assetIdB;           // id or url
-            } else {
-                return assetIdA.url === assetIdB.url;   // file/url structure with url and filename
             }
-        } else {
-            return (assetIdA !== null) === (assetIdB !== null);
+            // else {
+            return assetIdA.url === assetIdB.url;       // file/url structure with url and filename
         }
+        // else {
+        return (assetIdA !== null) === (assetIdB !== null);
     },
 
     // bitmoji paint cookie
@@ -84,6 +83,7 @@ Object.assign(CubemapHandler.prototype, {
 
     // update the cubemap resources given a newly loaded set of assets with their corresponding ids
     update: function (cubemapAsset, assetIds, assets) {
+        var assetData = cubemapAsset.data || {};
         var oldAssets = cubemapAsset._handlerState.assets;
         var oldResources = cubemapAsset._resources;
         var tex, mip, i;
@@ -91,34 +91,41 @@ Object.assign(CubemapHandler.prototype, {
         // faces, prelit cubemap 128, 64, 32, 16, 8, 4
         var resources = [null, null, null, null, null, null, null];
 
+        // texture type used for faces and prelit cubemaps are both taken from
+        // cubemap.data.rgbm
+        var getType = function () {
+            return assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+        };
+
         // handle the prelit data
         if (assets[0] !== oldAssets[0]) {
             // prelit asset changed
             if (assets[0]) {
                 tex = assets[0].resource;
                 for (i = 0; i < 6; ++i) {
-                    var prelit = new Texture(this._device, {
-                        name: cubemapAsset.name + '_prelitCubemap' + i,
-                        cubemap: true,
-                        fixCubemapSeams: true,
-                        mipmaps: true,
-                        format: tex.format,
-                        type: TEXTURETYPE_RGBM,
-                        width: tex.width >> i,
-                        height: tex.height >> i
-                    });
+                    var levels = [tex._levels[i]];
 
-                    // set level 0
-                    prelit._levels[0] = tex._levels[i];
-
-                    // construct full prem chain in the case of ios
-                    if (this._device.useTexCubeLod) {
+                    // construct full prem chain on highest prefilter cubemap on ios
+                    if (i === 0 && this._device.useTexCubeLod) {
                         for (mip = 1; mip < tex._levels.length; ++mip) {
-                            prelit._levels[mip] = tex._levels[mip];
+                            levels[mip] = tex._levels[mip];
                         }
                     }
 
-                    prelit.upload();
+                    var prelit = new Texture(this._device, {
+                        name: cubemapAsset.name + '_prelitCubemap' + i,
+                        cubemap: true,
+                        type: getType(),
+                        width: tex.width >> i,
+                        height: tex.height >> i,
+                        format: tex.format,
+                        levels: levels,
+                        addressU: ADDRESS_CLAMP_TO_EDGE,
+                        addressV: ADDRESS_CLAMP_TO_EDGE,
+                        fixCubemapSeams: true
+                    });
+
+                    // prelit.upload();
                     resources[i + 1] = prelit;
                 }
             }
@@ -150,11 +157,16 @@ Object.assign(CubemapHandler.prototype, {
                 var faces = new pc.Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
-                    type: faceAssets[0].resource.type,
+                    type: getType(),
                     width: faceAssets[0].resource.width,
                     height: faceAssets[0].resource.height,
                     format: faceAssets[0].resource.format,
-                    levels: levels
+                    levels: levels,
+                    minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : FILTER_LINEAR_MIPMAP_LINEAR,
+                    magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : FILTER_LINEAR,
+                    anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
+                    addressU: ADDRESS_CLAMP_TO_EDGE,
+                    addressV: ADDRESS_CLAMP_TO_EDGE
                 });
 
                 resources[0] = faces;
@@ -215,7 +227,7 @@ Object.assign(CubemapHandler.prototype, {
 
         // one of the dependent assets has finished loading
         var awaiting = 7;
-        var onLoad = function(index, asset) {
+        var onLoad = function (index, asset) {
             assets[index] = asset;
             awaiting--;
 
@@ -229,7 +241,6 @@ Object.assign(CubemapHandler.prototype, {
         // handle an asset load failure
         var onError = function (index, err, asset) {
             callback(err);
-            return;
         };
 
         var registry = self._registry;
@@ -261,12 +272,12 @@ Object.assign(CubemapHandler.prototype, {
                     }
                 } else {
                     // asset hasn't been created yet, wait till it is
-                    registry.on('add:' + assetId, function (index, texAsset) {
+                    registry.on('add:' + assetId, function (index, assetId_, texAsset) {
                         // store the face asset and kick off loading immediately
-                        registry.once('load:' + assetId, onLoad.bind(self, index));
-                        registry.once('error:' + assetId, onError.bind(self, index));
+                        registry.once('load:' + assetId_, onLoad.bind(self, index));
+                        registry.once('error:' + assetId_, onError.bind(self, index));
                         registry.load(texAsset);
-                    }.bind(null, i));
+                    }.bind(null, i, assetId));
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
