@@ -1,46 +1,42 @@
-Object.assign(pc, function () {
-    'use strict';
+import { http, Http } from '../net/http.js';
 
-    var JsonHandler = function () {
-        this.retryRequests = false;
-    };
+function JsonHandler() {
+    this.retryRequests = false;
+}
 
-    Object.assign(JsonHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
-
-            // if this a blob URL we need to set the response type as json
-            var options = {
-                retry: this.retryRequests
+Object.assign(JsonHandler.prototype, {
+    load: function (url, callback) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
             };
-
-            if (url.load.startsWith('blob:')) {
-                options.responseType = pc.Http.ResponseType.JSON;
-            }
-
-            pc.http.get(url.load, options, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback(pc.string.format("Error loading JSON resource: {0} [{1}]", url.original, err));
-                }
-            });
-        },
-
-        open: function (url, data) {
-            return data;
-        },
-
-        patch: function (asset, assets) {
         }
-    });
 
-    return {
-        JsonHandler: JsonHandler
-    };
-}());
+        // if this a blob URL we need to set the response type as json
+        var options = {
+            retry: this.retryRequests
+        };
+
+        if (url.load.startsWith('blob:')) {
+            options.responseType = Http.ResponseType.JSON;
+        }
+
+        http.get(url.load, options, function (err, response) {
+            if (!err) {
+                callback(null, response);
+            } else {
+                callback("Error loading JSON resource: " + url.original + " [" + err + "]");
+            }
+        });
+    },
+
+    open: function (url, data) {
+        return data;
+    },
+
+    patch: function (asset, assets) {
+    }
+});
+
+export { JsonHandler };

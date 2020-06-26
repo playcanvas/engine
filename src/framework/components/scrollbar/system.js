@@ -1,49 +1,50 @@
-Object.assign(pc, function () {
-    var _schema = [
-        { name: 'enabled', type: 'boolean' },
-        { name: 'orientation', type: 'number' },
-        { name: 'value', type: 'number' },
-        { name: 'handleSize', type: 'number' },
-        { name: 'handleEntity', type: 'entity' }
-    ];
+import { Component } from '../component.js';
+import { ComponentSystem } from '../system.js';
 
-    /**
-     * @class
-     * @name pc.ScrollbarComponentSystem
-     * @augments pc.ComponentSystem
-     * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
-     * @description Create a new ScrollbarComponentSystem.
-     * @param {pc.Application} app - The application.
-     */
-    var ScrollbarComponentSystem = function ScrollbarComponentSystem(app) {
-        pc.ComponentSystem.call(this, app);
+import { ScrollbarComponent } from './component.js';
+import { ScrollbarComponentData } from './data.js';
 
-        this.id = 'scrollbar';
-        this.app = app;
+var _schema = [
+    { name: 'enabled', type: 'boolean' },
+    { name: 'orientation', type: 'number' },
+    { name: 'value', type: 'number' },
+    { name: 'handleSize', type: 'number' },
+    { name: 'handleEntity', type: 'entity' }
+];
 
-        this.ComponentType = pc.ScrollbarComponent;
-        this.DataType = pc.ScrollbarComponentData;
+/**
+ * @class
+ * @name pc.ScrollbarComponentSystem
+ * @augments pc.ComponentSystem
+ * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
+ * @description Create a new ScrollbarComponentSystem.
+ * @param {pc.Application} app - The application.
+ */
+function ScrollbarComponentSystem(app) {
+    ComponentSystem.call(this, app);
 
-        this.schema = _schema;
+    this.id = 'scrollbar';
 
-        this.on('beforeremove', this._onRemoveComponent, this);
-    };
-    ScrollbarComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
-    ScrollbarComponentSystem.prototype.constructor = ScrollbarComponentSystem;
+    this.ComponentType = ScrollbarComponent;
+    this.DataType = ScrollbarComponentData;
 
-    pc.Component._buildAccessors(pc.ScrollbarComponent.prototype, _schema);
+    this.schema = _schema;
 
-    Object.assign(ScrollbarComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
-        },
+    this.on('beforeremove', this._onRemoveComponent, this);
+}
+ScrollbarComponentSystem.prototype = Object.create(ComponentSystem.prototype);
+ScrollbarComponentSystem.prototype.constructor = ScrollbarComponentSystem;
 
-        _onRemoveComponent: function (entity, component) {
-            component.onRemove();
-        }
-    });
+Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
-    return {
-        ScrollbarComponentSystem: ScrollbarComponentSystem
-    };
-}());
+Object.assign(ScrollbarComponentSystem.prototype, {
+    initializeComponentData: function (component, data, properties) {
+        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+    },
+
+    _onRemoveComponent: function (entity, component) {
+        component.onRemove();
+    }
+});
+
+export { ScrollbarComponentSystem };

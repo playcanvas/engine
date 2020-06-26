@@ -1,3 +1,3 @@
-/// <reference path="build/output/playcanvas.d.ts" />
+/// <reference path="build/playcanvas.d.ts" />
 
 export = pc;

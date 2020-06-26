@@ -7,6 +7,27 @@
     uniform vec4 morph_weights_b;
 #endif
 
+#ifdef MORPHING_TEXTURE_BASED
+    uniform vec4 morph_tex_params;
+
+    vec2 getTextureMorphCoords() {
+        float vertexId = morph_vertex_id;
+        vec2 textureSize = morph_tex_params.xy;
+        vec2 invTextureSize = morph_tex_params.zw;
+
+        // turn vertexId into int grid coordinates
+        float morphGridV = floor(vertexId * invTextureSize.x);
+        float morphGridU = vertexId - (morphGridV * textureSize.x);
+
+        // convert grid coordinates to uv coordinates with half pixel offset
+        return (vec2(morphGridU, morphGridV) * invTextureSize) + (0.5 * invTextureSize);
+    }
+#endif
+
+#ifdef MORPHING_TEXTURE_BASED_POSITION
+    uniform highp sampler2D morphPositionTex;
+#endif
+
 mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH
         return getBoneMatrix(vertex_boneIndices);
@@ -55,6 +76,13 @@ vec4 getPosition() {
             localPos.xyz += morph_weights_b[2] * morph_pos6;
             localPos.xyz += morph_weights_b[3] * morph_pos7;
         #endif
+    #endif
+
+    #ifdef MORPHING_TEXTURE_BASED_POSITION
+        // apply morph offset from texture
+        vec2 morphUV = getTextureMorphCoords();
+        vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
+        localPos += morphPos;
     #endif
 
     vec4 posW = dModelMatrix * vec4(localPos, 1.0);

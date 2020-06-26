@@ -1,9 +1,5 @@
-Object.assign(pc, function () {
-    var ScrollbarComponentData = function () {
-        this.enabled = true;
-    };
+function ScrollbarComponentData() {
+    this.enabled = true;
+}
 
-    return {
-        ScrollbarComponentData: ScrollbarComponentData
-    };
-}());
+export { ScrollbarComponentData };
