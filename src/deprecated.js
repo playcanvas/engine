@@ -822,6 +822,13 @@ Object.defineProperty(LightComponent.prototype, "enable", {
     }
 });
 
+ModelComponent.prototype.setVisible = function (visible) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.");
+    // #endif
+    this.enabled = visible;
+};
+
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {
         // #ifdef DEBUG

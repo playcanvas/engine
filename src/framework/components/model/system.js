@@ -8,9 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
 
-var _schema = [
-    'enabled'
-];
+var _schema = ['enabled'];
 
 /**
  * @class
