@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var categories = [
     {
         name: "animation",
@@ -26,6 +27,7 @@ var categories = [
             "mesh-deformation",
             "mesh-generation",
             "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
             "model-outline",

@@ -28,9 +28,9 @@ uniform float seed;
 //uniform float graphNumSamples;
 uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
 uniform sampler2D texLifeAndSourcePosOUT;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
+uniform highp sampler2D internalTex0;
+uniform highp sampler2D internalTex1;
+uniform highp sampler2D internalTex2;
 uniform vec3 emitterPos;
 
 varying vec4 texCoordsAlphaLife;

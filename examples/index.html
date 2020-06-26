@@ -24,7 +24,7 @@
 
             function titleCase(string) {
                 let sentence = string.toLowerCase().split('-');
-                for(let i = 0; i < sentence.length; i++){
+                for (let i = 0; i < sentence.length; i++){
                     sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
                 }
                 return sentence.join(' ');
@@ -33,7 +33,7 @@
             function loadExample(example) {
                 let iframe = document.getElementById('example');
                 iframe.src = example;
-                location.href = location.protocol +'//' +
+                location.href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
                                 '#' +
@@ -82,12 +82,12 @@
             let navigationToggle = document.querySelector(".sidenav-toggle");
             navigationToggle.addEventListener("click", function (event){
                 sidenav.classList.toggle("closed");
-            })
+            });
 
             let sourceButton = document.querySelector(".sourcenav > .btn");
             sourceButton.addEventListener("click", function (event){
                 window.open("https://github.com/playcanvas/playcanvas.github.io/blob/master/" + currentExampleRelativeUrl);
-            })
+            });
         </script>
     </body>
 </html>

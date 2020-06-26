@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -95,7 +95,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -159,13 +159,13 @@
             // Set the new material on all meshes in the model
             model.meshInstances.forEach(function (meshInstance) {
                 meshInstance.material = material;
-            })
+            });
 
             app.on("update", function (dt) {
                 material.setParameter('uTexture', diffuseMap);
                 material.setParameter('uLightPos', light.getPosition().data);
 
-                entity.rotate(0, 60*dt, 0);
+                entity.rotate(0, 60 * dt, 0);
             });
 
         });
