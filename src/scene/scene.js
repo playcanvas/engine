@@ -357,7 +357,7 @@ Scene.prototype._updateSkybox = function (device) {
     // Create skybox
     if (!this.skyboxModel) {
 
-        // select the texture
+        // select which texture to use for the backdrop
         var usedTex =
             this._skyboxMip ?
                 this._skyboxPrefiltered[this._skyboxMip] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :

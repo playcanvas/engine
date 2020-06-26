@@ -28,12 +28,12 @@ Object.assign(CubemapHandler.prototype, {
     },
 
     open: function (url, data, asset) {
-        // nothing to do
+        // caller will set our return value to asset.resources[0]. We've already set resources[0],
+        // but we must return it again here so it doesn't get overwritten.
         return asset ? asset.resource : null;
     },
 
     patch: function (asset, registry) {
-        // TODO: check is assets are already busy loading first
         this.loadAssets(asset, function (err, result) {
             if (err) {
                 registry.fire('error', asset);

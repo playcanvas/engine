@@ -30,7 +30,7 @@ var Viewer = function (canvas) {
 
     // load cubemap background
     var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
-        url: assetsFolder + "/cubemaps/helipad.dds"
+        url: assetsFolder + "/cubemaps/Helipad.dds"
     }, {
         textures: [
             assetsFolder + '/cubemaps/Helipad_posx.png',
@@ -45,6 +45,7 @@ var Viewer = function (canvas) {
         },
         type: "rgbm"
     });
+    cubemapAsset.loadFaces = true;
     cubemapAsset.ready(function () {
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
