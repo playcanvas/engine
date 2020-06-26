@@ -9,7 +9,7 @@ import {
     GAMMA_NONE, GAMMA_SRGBHDR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     SHADER_FORWARDHDR,
-    SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
+    SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR,
     TONEMAP_LINEAR
 } from '../constants.js';
@@ -54,6 +54,7 @@ StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (option
     options.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
     options.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
     options.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
+    options.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
 
     options.nineSlicedMode = stdMat.nineSlicedMode || 0;
 };

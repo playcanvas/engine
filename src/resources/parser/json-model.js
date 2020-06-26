@@ -223,7 +223,7 @@ Object.assign(JsonModelParser.prototype, {
                         deltaNormals = sparseToFull(deltaNormals, indices, vertexCount);
                     }
 
-                    morphTarget = new MorphTarget(this._device, { deltaPositions: deltaPositions,
+                    morphTarget = new MorphTarget({ deltaPositions: deltaPositions,
                         deltaNormals: deltaNormals,
                         name: targets[j].name,
                         aabb: aabb });
@@ -231,7 +231,7 @@ Object.assign(JsonModelParser.prototype, {
                     morphTargetArray.push(morphTarget);
                 }
 
-                var morph = new Morph(morphTargetArray);
+                var morph = new Morph(morphTargetArray, this._device);
                 morphs.push(morph);
 
                 var morphInstance = new MorphInstance(morph);

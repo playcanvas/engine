@@ -97,6 +97,35 @@ function testRenderable(gl, pixelFormat) {
     return result;
 }
 
+function testTextureHalfFloatUpdatable(gl, pixelFormat) {
+    var result = true;
+
+    // Create a 2x2 texture
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    // upload some data - on iOS prior to about November 2019, passing data to half texture would fail here
+    // see details here: https://bugs.webkit.org/show_bug.cgi?id=169999
+    // note that if not supported, this prints an error to console, the error can be safely ignored as it's handled
+    var data = new Uint16Array(4 * 2 * 2);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, data);
+
+    if (gl.getError() !== gl.NO_ERROR) {
+        result = false;
+        console.log("Above error related to HALF_FLOAT_OES can be ignored, it was triggered by testing half float texture support");
+    }
+
+    // Clean up
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.deleteTexture(texture);
+
+    return result;
+}
+
 function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
@@ -634,7 +663,10 @@ var GraphicsDevice = function (canvas, options) {
         this.textureHalfFloatRenderable = false;
     }
 
+    this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
+
     this._textureFloatHighPrecision = undefined;
+    this._textureHalfFloatUpdatable = undefined;
 
     // #ifdef DEBUG
     this._spectorMarkers = [];
@@ -776,6 +808,7 @@ Object.assign(GraphicsDevice.prototype, {
 
         this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
         this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
+        this.extFloatBlend = getExtension("EXT_float_blend");
         this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
@@ -1772,8 +1805,8 @@ Object.assign(GraphicsDevice.prototype, {
                             if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                 src = _downsampleImage(src, this.maxCubeMapSize);
                                 if (mipLevel === 0) {
-                                    texture.width = src.width;
-                                    texture.height = src.height;
+                                    texture._width = src.width;
+                                    texture._height = src.height;
                                 }
                             }
                         }
@@ -1860,8 +1893,8 @@ Object.assign(GraphicsDevice.prototype, {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                             mipObject = _downsampleImage(mipObject, this.maxTextureSize);
                             if (mipLevel === 0) {
-                                texture.width = mipObject.width;
-                                texture.height = mipObject.height;
+                                texture._width = mipObject.width;
+                                texture._height = mipObject.height;
                             }
                         }
                     }
@@ -3476,6 +3509,27 @@ Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
             this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
         }
         return this._textureFloatHighPrecision;
+    }
+});
+
+/**
+ * @readonly
+ * @name pc.GraphicsDevice#textureHalfFloatUpdatable
+ * @type {number}
+ * @description Check if texture with half float format can be updated with data.
+ */
+Object.defineProperties(GraphicsDevice.prototype, {
+    textureHalfFloatUpdatable: {
+        get: function () {
+            if (this._textureHalfFloatUpdatable === undefined) {
+                if (this.webgl2) {
+                    this._textureHalfFloatUpdatable = true;
+                } else {
+                    this._textureHalfFloatUpdatable = testTextureHalfFloatUpdatable(this.gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                }
+            }
+            return this._textureHalfFloatUpdatable;
+        }
     }
 });
 

@@ -34,40 +34,63 @@ function Skin(graphicsDevice, ibp, boneNames) {
  * @property {pc.GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
 function SkinInstance(skin) {
-    this.skin = skin;
     this._dirty = true;
 
-    // Unique per clone
-    this.bones = [];
-
-    var numBones = skin.inverseBindPose.length;
-
-    var device = skin.device;
-    if (device.supportsBoneTextures) {
-
-        // texture size - square texture with power of two side, large enough to fit 4 pixels per bone
-        var size = numBones > 16 ? math.nextPowerOfTwo(Math.ceil(Math.sqrt(numBones * 4))) : 8;
-
-        this.boneTexture = new Texture(device, {
-            width: size,
-            height: size,
-            format: PIXELFORMAT_RGBA32F,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
-        });
-        this.boneTexture.name = 'skin';
-        this.matrixPalette = this.boneTexture.lock();
-    } else {
-        this.matrixPalette = new Float32Array(numBones * 16);
-    }
-    this.matrices = [];
-    for (var i = 0; i < numBones; i++) {
-        this.matrices[i] = new Mat4();
+    if (skin) {
+        this.initSkin(skin);
     }
 }
 
 Object.assign(SkinInstance.prototype, {
+
+    init: function (device, numBones) {
+
+        if (device.supportsBoneTextures) {
+
+            // texture size - square texture with power of two side, large enough to fit 4 pixels per bone
+            var size = numBones > 16 ? math.nextPowerOfTwo(Math.ceil(Math.sqrt(numBones * 4))) : 8;
+
+            this.boneTexture = new Texture(device, {
+                width: size,
+                height: size,
+                format: PIXELFORMAT_RGBA32F,
+                mipmaps: false,
+                minFilter: FILTER_NEAREST,
+                magFilter: FILTER_NEAREST
+            });
+
+            this.boneTexture.name = 'skin';
+            this.matrixPalette = this.boneTexture.lock();
+
+        } else {
+            this.matrixPalette = new Float32Array(numBones * 16);
+        }
+    },
+
+    initSkin: function (skin) {
+
+        this.skin = skin;
+
+        // Unique per clone
+        this.bones = [];
+
+        var numBones = skin.inverseBindPose.length;
+        this.init(skin.device, numBones);
+
+        this.matrices = [];
+        for (var i = 0; i < numBones; i++) {
+            this.matrices[i] = new Mat4();
+        }
+    },
+
+    uploadBones: function (device) {
+
+        // TODO: this is a bit strange looking. Change the Texture API to do a reupload
+        if (device.supportsBoneTextures) {
+            this.boneTexture.lock();
+            this.boneTexture.unlock();
+        }
+    },
 
     updateMatrices: function (rootNode) {
 
@@ -106,11 +129,7 @@ Object.assign(SkinInstance.prototype, {
             mp[base + 15] = pe[15];
         }
 
-        // TODO: this is a bit strange looking. Change the Texture API to do a reupload
-        if (this.skin.device.supportsBoneTextures) {
-            this.boneTexture.lock();
-            this.boneTexture.unlock();
-        }
+        this.uploadBones(this.skin.device);
     }
 });
 

@@ -27,6 +27,7 @@ var categories = [
             "mesh-deformation",
             "mesh-generation",
             "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
             "model-outline",

@@ -50,6 +50,7 @@ var DEFAULT_LOCALE_FALLBACKS = {
     'zh': 'zh-CN',
     'zh-HK': 'zh-TW',
     'zh-TW': 'zh-HK',
+    'zh-MO': 'zh-HK',
     'fr': 'fr-FR',
     'de': 'de-DE',
     'it': 'it-IT',
