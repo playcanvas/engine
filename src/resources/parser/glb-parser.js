@@ -38,8 +38,12 @@ import { Skin, SkinInstance } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
 import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';
+import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
 import { Asset } from '../../asset/asset.js';
+
+// TODO: this is a nasty dependency. property-locator should be moved to src/anim.
+import { AnimPropertyLocator } from '../../framework/components/anim/property-locator.js';
 
 var isDataURI = function (uri) {
     return /^data:.*,.*$/i.test(uri);
@@ -415,13 +419,13 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     return createVertexBufferInternal(device, numVertices, vertexDesc, positionDesc, sourceDesc);
 };
 
-var createSkin = function (device, skinData, accessors, bufferViews, nodes, buffers) {
+var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buffers) {
     var i, j, bindMatrix;
-    var joints = skinData.joints;
+    var joints = gltfSkin.joints;
     var numJoints = joints.length;
     var ibp = [];
-    if (skinData.hasOwnProperty('inverseBindMatrices')) {
-        var inverseBindMatrices = skinData.inverseBindMatrices;
+    if (gltfSkin.hasOwnProperty('inverseBindMatrices')) {
+        var inverseBindMatrices = gltfSkin.inverseBindMatrices;
         var ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews, buffers);
         var ibmValues = [];
 
@@ -445,7 +449,7 @@ var createSkin = function (device, skinData, accessors, bufferViews, nodes, buff
         boneNames[i] = nodes[joints[i]].name;
     }
 
-    var skeleton = skinData.skeleton;
+    var skeleton = gltfSkin.skeleton;
 
     var skin = new Skin(device, ibp, boneNames);
     skin.skeleton = nodes[skeleton];
@@ -461,7 +465,7 @@ var createSkin = function (device, skinData, accessors, bufferViews, nodes, buff
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, meshData, accessors, bufferViews, buffers, callback) {
+var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
     var meshes = [];
 
     var semanticMap = {
@@ -475,7 +479,7 @@ var createMesh = function (device, meshData, accessors, bufferViews, buffers, ca
         'TEXCOORD_1': { semantic: SEMANTIC_TEXCOORD1 }
     };
 
-    meshData.primitives.forEach(function (primitive) {
+    gltfMesh.primitives.forEach(function (primitive) {
 
         var primitiveType, vertexBuffer, numIndices;
         var indices = null;
@@ -659,9 +663,9 @@ var createMesh = function (device, meshData, accessors, bufferViews, buffers, ca
                     }
                 }
 
-                if (meshData.hasOwnProperty('extras') &&
-                    meshData.extras.hasOwnProperty('targetNames')) {
-                    options.name = meshData.extras.targetNames[index];
+                if (gltfMesh.hasOwnProperty('extras') &&
+                    gltfMesh.extras.hasOwnProperty('targetNames')) {
+                    options.name = gltfMesh.extras.targetNames[index];
                 } else {
                     options.name = targets.length.toString(10);
                 }
@@ -672,9 +676,9 @@ var createMesh = function (device, meshData, accessors, bufferViews, buffers, ca
             mesh.morph = new Morph(targets);
 
             // set default morph target weights if they're specified
-            if (meshData.hasOwnProperty('weights')) {
-                for (var i = 0; i < meshData.weights.length; ++i) {
-                    targets[i].defaultWeight = meshData.weights[i];
+            if (gltfMesh.hasOwnProperty('weights')) {
+                for (var i = 0; i < gltfMesh.weights.length; ++i) {
+                    targets[i].defaultWeight = gltfMesh.weights[i];
                 }
             }
         }
@@ -685,7 +689,7 @@ var createMesh = function (device, meshData, accessors, bufferViews, buffers, ca
     return meshes;
 };
 
-var createMaterial = function (materialData, textures) {
+var createMaterial = function (gltfMaterial, textures) {
     // TODO: integrate these shader chunks into the native engine
     var glossChunk = [
         "#ifdef MAPFLOAT",
@@ -786,14 +790,14 @@ var createMaterial = function (materialData, textures) {
     material.specularTint = true;
     material.specularVertexColor = true;
 
-    if (materialData.hasOwnProperty('name')) {
-        material.name = materialData.name;
+    if (gltfMaterial.hasOwnProperty('name')) {
+        material.name = gltfMaterial.name;
     }
 
     var color, texture;
-    if (materialData.hasOwnProperty('extensions') &&
-        materialData.extensions.hasOwnProperty('KHR_materials_pbrSpecularGlossiness')) {
-        var specData = materialData.extensions.KHR_materials_pbrSpecularGlossiness;
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_pbrSpecularGlossiness')) {
+        var specData = gltfMaterial.extensions.KHR_materials_pbrSpecularGlossiness;
 
         if (specData.hasOwnProperty('diffuseFactor')) {
             color = specData.diffuseFactor;
@@ -839,8 +843,8 @@ var createMaterial = function (materialData, textures) {
 
         material.chunks.specularPS = specularChunk;
 
-    } else if (materialData.hasOwnProperty('pbrMetallicRoughness')) {
-        var pbrData = materialData.pbrMetallicRoughness;
+    } else if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
+        var pbrData = gltfMaterial.pbrMetallicRoughness;
 
         if (pbrData.hasOwnProperty('baseColorFactor')) {
             color = pbrData.baseColorFactor;
@@ -885,8 +889,8 @@ var createMaterial = function (materialData, textures) {
         material.chunks.glossPS = glossChunk;
     }
 
-    if (materialData.hasOwnProperty('normalTexture')) {
-        var normalTexture = materialData.normalTexture;
+    if (gltfMaterial.hasOwnProperty('normalTexture')) {
+        var normalTexture = gltfMaterial.normalTexture;
         material.normalMap = textures[normalTexture.index];
 
         extractTextureTransform(normalTexture, material, ['normal']);
@@ -895,16 +899,16 @@ var createMaterial = function (materialData, textures) {
             material.bumpiness = normalTexture.scale;
         }
     }
-    if (materialData.hasOwnProperty('occlusionTexture')) {
-        var occlusionTexture = materialData.occlusionTexture;
+    if (gltfMaterial.hasOwnProperty('occlusionTexture')) {
+        var occlusionTexture = gltfMaterial.occlusionTexture;
         material.aoMap = textures[occlusionTexture.index];
         material.aoMapChannel = 'r';
 
         extractTextureTransform(occlusionTexture, material, ['ao']);
         // TODO: support 'strength'
     }
-    if (materialData.hasOwnProperty('emissiveFactor')) {
-        color = materialData.emissiveFactor;
+    if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
+        color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
         material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
         material.emissiveTint = true;
@@ -912,18 +916,18 @@ var createMaterial = function (materialData, textures) {
         material.emissive.set(0, 0, 0);
         material.emissiveTint = false;
     }
-    if (materialData.hasOwnProperty('emissiveTexture')) {
-        var emissiveTexture = materialData.emissiveTexture;
+    if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
+        var emissiveTexture = gltfMaterial.emissiveTexture;
         material.emissiveMap = textures[emissiveTexture.index];
 
         extractTextureTransform(emissiveTexture, material, ['emissive']);
     }
-    if (materialData.hasOwnProperty('alphaMode')) {
-        switch (materialData.alphaMode) {
+    if (gltfMaterial.hasOwnProperty('alphaMode')) {
+        switch (gltfMaterial.alphaMode) {
             case 'MASK':
                 material.blendType = BLEND_NONE;
-                if (materialData.hasOwnProperty('alphaCutoff')) {
-                    material.alphaTest = materialData.alphaCutoff;
+                if (gltfMaterial.hasOwnProperty('alphaCutoff')) {
+                    material.alphaTest = gltfMaterial.alphaCutoff;
                 } else {
                     material.alphaTest = 0.5;
                 }
@@ -939,9 +943,9 @@ var createMaterial = function (materialData, textures) {
     } else {
         material.blendType = BLEND_NONE;
     }
-    if (materialData.hasOwnProperty('doubleSided')) {
-        material.twoSidedLighting = materialData.doubleSided;
-        material.cull = materialData.doubleSided ? CULLFACE_NONE : CULLFACE_BACK;
+    if (gltfMaterial.hasOwnProperty('doubleSided')) {
+        material.twoSidedLighting = gltfMaterial.doubleSided;
+        material.cull = gltfMaterial.doubleSided ? CULLFACE_NONE : CULLFACE_BACK;
     } else {
         material.twoSidedLighting = false;
         material.cull = CULLFACE_BACK;
@@ -949,8 +953,8 @@ var createMaterial = function (materialData, textures) {
 
     // handle unlit material by disabling lighting and copying diffuse colours
     // into emissive.
-    if (materialData.hasOwnProperty('extensions') &&
-        materialData.extensions.hasOwnProperty('KHR_materials_unlit')) {
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_unlit')) {
         material.useLighting = false;
 
         // copy diffuse into emissive
@@ -977,7 +981,7 @@ var createMaterial = function (materialData, textures) {
 };
 
 // create the anim structure
-var createAnimation = function (animationData, animationIndex, accessors, bufferViews, nodes, buffers) {
+var createAnimation = function (gltfAnimation, animationIndex, accessors, bufferViews, nodes, buffers) {
 
     // create animation data block for the accessor
     var createAnimData = function (accessor) {
@@ -987,9 +991,9 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
     };
 
     var interpMap = {
-        "STEP": pc.INTERPOLATION_STEP,
-        "LINEAR": pc.INTERPOLATION_LINEAR,
-        "CUBICSPLINE": pc.INTERPOLATION_CUBIC
+        "STEP": INTERPOLATION_STEP,
+        "LINEAR": INTERPOLATION_LINEAR,
+        "CUBICSPLINE": INTERPOLATION_CUBIC
     };
 
     var inputMap = { };
@@ -1003,8 +1007,8 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
     var i;
 
     // convert samplers
-    for (i = 0; i < animationData.samplers.length; ++i) {
-        var sampler = animationData.samplers[i];
+    for (i = 0; i < gltfAnimation.samplers.length; ++i) {
+        var sampler = gltfAnimation.samplers[i];
 
         // get input data
         if (!inputMap.hasOwnProperty(sampler.input)) {
@@ -1021,7 +1025,7 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
         var interpolation =
             sampler.hasOwnProperty('interpolation') &&
             interpMap.hasOwnProperty(sampler.interpolation) ?
-                interpMap[sampler.interpolation] : pc.INTERPOLATION_LINEAR;
+                interpMap[sampler.interpolation] : INTERPOLATION_LINEAR;
 
         // create curve
         curves.push(new AnimCurve(
@@ -1033,7 +1037,7 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
 
     var quatArrays = [];
 
-    var propertyLocator = new pc.AnimPropertyLocator();
+    var propertyLocator = new AnimPropertyLocator();
     var transformSchema = {
         'translation': 'localPosition',
         'rotation': 'localRotation',
@@ -1042,15 +1046,16 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
     };
 
     // convert anim channels
-    for (i = 0; i < animationData.channels.length; ++i) {
-        var channel = animationData.channels[i];
+    for (i = 0; i < gltfAnimation.channels.length; ++i) {
+        var channel = gltfAnimation.channels[i];
         var target = channel.target;
         var curve = curves[channel.sampler];
+
         curve._paths.push(propertyLocator.encode([[nodes[target.node].name], 'graph', [transformSchema[target.path]]]));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
-        if (target.path.startsWith('rotation') && curve.interpolation !== pc.INTERPOLATION_CUBIC) {
+        if (target.path.startsWith('rotation') && curve.interpolation !== INTERPOLATION_CUBIC) {
             quatArrays.push(curve.output);
         } else if (target.path.startsWith('weights')) {
             // it's a bit strange, but morph target animations implicitly assume there are n output
@@ -1099,25 +1104,25 @@ var createAnimation = function (animationData, animationIndex, accessors, buffer
     }, 0);
 
     return new AnimTrack(
-        animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + animationIndex),
+        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ("animation_" + animationIndex),
         duration,
         inputs,
         outputs,
         curves);
 };
 
-var createNode = function (nodeData, nodeIndex) {
+var createNode = function (gltfNode, nodeIndex) {
     var entity = new GraphNode();
 
-    if (nodeData.hasOwnProperty('name')) {
-        entity.name = nodeData.name;
+    if (gltfNode.hasOwnProperty('name')) {
+        entity.name = gltfNode.name;
     } else {
         entity.name = "node_" + nodeIndex;
     }
 
     // Parse transformation properties
-    if (nodeData.hasOwnProperty('matrix')) {
-        tempMat.data.set(nodeData.matrix);
+    if (gltfNode.hasOwnProperty('matrix')) {
+        tempMat.data.set(gltfNode.matrix);
         tempMat.getTranslation(tempVec);
         entity.setLocalPosition(tempVec);
         tempMat.getEulerAngles(tempVec);
@@ -1126,18 +1131,18 @@ var createNode = function (nodeData, nodeIndex) {
         entity.setLocalScale(tempVec);
     }
 
-    if (nodeData.hasOwnProperty('rotation')) {
-        var r = nodeData.rotation;
+    if (gltfNode.hasOwnProperty('rotation')) {
+        var r = gltfNode.rotation;
         entity.setLocalRotation(r[0], r[1], r[2], r[3]);
     }
 
-    if (nodeData.hasOwnProperty('translation')) {
-        var t = nodeData.translation;
+    if (gltfNode.hasOwnProperty('translation')) {
+        var t = gltfNode.translation;
         entity.setLocalPosition(t[0], t[1], t[2]);
     }
 
-    if (nodeData.hasOwnProperty('scale')) {
-        var s = nodeData.scale;
+    if (gltfNode.hasOwnProperty('scale')) {
+        var s = gltfNode.scale;
         entity.setLocalScale(s[0], s[1], s[2]);
     }
 
@@ -1148,10 +1153,9 @@ var createSkins = function (device, gltf, nodes, buffers) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
     }
-    return gltf.skins.map(function (skinData) {
-        return createSkin(device, skinData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+    return gltf.skins.map(function (gltfSkin) {
+        return createSkin(device, gltfSkin, gltf.accessors, gltf.bufferViews, nodes, buffers);
     });
-
 };
 
 var createMeshes = function (device, gltf, buffers, callback) {
@@ -1160,45 +1164,79 @@ var createMeshes = function (device, gltf, buffers, callback) {
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
         return [];
     }
-    return gltf.meshes.map(function (meshData) {
-        return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers, callback);
+    return gltf.meshes.map(function (gltfMesh) {
+        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
     });
-
 };
 
-var createMaterials = function (gltf, textures) {
+var createMaterials = function (gltf, textures, options) {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
-    return gltf.materials.map(function (materialData) {
-        return createMaterial(materialData, textures);
-    });
 
+    var preprocess = options && options.material && options.material.preprocess;
+    var process = options && options.material && options.material.process || createMaterial;
+    var postprocess = options && options.material && options.material.postprocess;
+
+    return gltf.materials.map(function (gltfMaterial) {
+        if (preprocess) {
+            preprocess(gltfMaterial);
+        }
+        var material = process(gltfMaterial, textures);
+        if (postprocess) {
+            postprocess(gltfMaterial, material);
+        }
+        return material;
+    });
 };
 
-var createAnimations = function (gltf, nodes, buffers) {
+var createAnimations = function (gltf, nodes, buffers, options) {
     if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
         return [];
     }
-    return gltf.animations.map(function (animationData, animationIndex) {
-        return createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
-    });
 
+    var preprocess = options && options.animation && options.animation.preprocess;
+    var postprocess = options && options.animation && options.animation.postprocess;
+
+    return gltf.animations.map(function (gltfAnimation, index) {
+        if (preprocess) {
+            preprocess(gltfAnimation);
+        }
+        var animation = createAnimation(gltfAnimation, index, gltf.accessors, gltf.bufferViews, nodes, buffers);
+        if (postprocess) {
+            postprocess(gltfAnimation, animation);
+        }
+        return animation;
+    });
 };
 
-var createNodes = function (gltf) {
+var createNodes = function (gltf, options) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
-    var nodes = gltf.nodes.map(createNode);
+
+    var preprocess = options && options.node && options.node.preprocess;
+    var process = options && options.node && options.node.process || createNode;
+    var postprocess = options && options.node && options.node.postprocess;
+
+    var nodes = gltf.nodes.map(function (gltfNode, index) {
+        if (preprocess) {
+            preprocess(gltfNode);
+        }
+        var node = process(gltfNode, index);
+        if (postprocess) {
+            postprocess(gltfNode, node);
+        }
+        return node;
+    });
 
     // build node hierarchy
     for (var i = 0; i < gltf.nodes.length; ++i) {
-        var nodeData = gltf.nodes[i];
-        if (nodeData.hasOwnProperty('children')) {
-            for (var j = 0; j < nodeData.children.length; ++j) {
+        var gltfNode = gltf.nodes[i];
+        if (gltfNode.hasOwnProperty('children')) {
+            for (var j = 0; j < gltfNode.children.length; ++j) {
                 var parent = nodes[i];
-                var child = nodes[nodeData.children[j]];
+                var child = nodes[gltfNode.children[j]];
                 if (!child.parent) {
                     parent.addChild(child);
                 }
@@ -1210,16 +1248,24 @@ var createNodes = function (gltf) {
 };
 
 // create engine resources from the downloaded GLB data
-var createResources = function (device, gltf, buffers, textures, callback) {
-    var nodes = createNodes(gltf);
-    var animations = createAnimations(gltf, nodes, buffers);
+var createResources = function (device, gltf, buffers, textures, options, callback) {
+
+    var preprocess = options && options.global && options.global.preprocess;
+    var postprocess = options && options.global && options.global.postprocess;
+
+    if (preprocess) {
+        preprocess(gltf);
+    }
+
+    var nodes = createNodes(gltf, options);
+    var animations = createAnimations(gltf, nodes, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
-    }) : []);
+    }) : [], options);
     var meshes = createMeshes(device, gltf, buffers, callback);
     var skins = createSkins(device, gltf, nodes, buffers);
 
-    callback(null, {
+    var result = {
         'gltf': gltf,
         'nodes': nodes,
         'animations': animations,
@@ -1227,10 +1273,16 @@ var createResources = function (device, gltf, buffers, textures, callback) {
         'materials': materials,
         'meshes': meshes,
         'skins': skins
-    });
+    };
+
+    if (postprocess) {
+        postprocess(gltf, result);
+    }
+
+    callback(null, result);
 };
 
-var applySampler = function (texture, samplerData) {
+var applySampler = function (texture, gltfSampler) {
     var defaultSampler = {
         magFilter: 9729,
         minFilter: 9987,
@@ -1259,15 +1311,17 @@ var applySampler = function (texture, samplerData) {
         }
     };
 
-    samplerData = samplerData || defaultSampler;
-    texture.minFilter = getFilter(samplerData.minFilter);
-    texture.magFilter = getFilter(samplerData.magFilter);
-    texture.addressU = getWrap(samplerData.wrapS);
-    texture.addressV = getWrap(samplerData.wrapT);
+    if (texture) {
+        gltfSampler = gltfSampler || defaultSampler;
+        texture.minFilter = getFilter(gltfSampler.minFilter);
+        texture.magFilter = getFilter(gltfSampler.magFilter);
+        texture.addressU = getWrap(gltfSampler.wrapS);
+        texture.addressV = getWrap(gltfSampler.wrapT);
+    }
 };
 
 // load textures using the asset system
-var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, callback) {
+var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, callback) {
     var result = [];
 
     if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1276,52 +1330,28 @@ var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, call
         return;
     }
 
+    var preprocess = options && options.texture && options.texture.preprocess;
+    var processAsync = options && options.texture && options.texture.processAsync;
+    var postprocess = options && options.texture && options.texture.postprocess;
+
     var remaining = gltf.images.length;
-    var onLoad = function (idx, img) {
-        result[idx] = img;
+    var onLoad = function (index, textureAsset) {
+        result[index] = textureAsset;
+        if (postprocess) {
+            postprocess(gltf.images[index], textureAsset);
+        }
         if (--remaining === 0) {
             // apply samplers
             for (var t = 0; t < gltf.textures.length; ++t) {
                 var texture = gltf.textures[t];
-                applySampler(result[texture.source], (gltf.samplers || [])[texture.sampler]);
+                applySampler(result[texture.source].resource, (gltf.samplers || [])[texture.sampler]);
             }
 
             callback(null, result);
         }
     };
 
-    for (var i = 0; i < gltf.images.length; ++i) {
-        var imgData = gltf.images[i];
-
-        var url;
-        var mimeType;
-        var options = {};
-        if (imgData.hasOwnProperty('uri')) {
-            // uri specified
-            if (isDataURI(imgData.uri)) {
-                url = imgData.uri;
-                mimeType = getDataURIMimeType(imgData.uri);
-            } else {
-                url = path.join(urlBase, imgData.uri);
-                options.crossOrigin = "anonymous";
-            }
-        } else if (imgData.hasOwnProperty('bufferView') && imgData.hasOwnProperty('mimeType')) {
-            // bufferview
-            var bufferView = gltf.bufferViews[imgData.bufferView];
-            var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
-            var byteLength = bufferView.byteLength;
-
-            var buffer = buffers[bufferView.buffer];
-            var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
-            var blob = new Blob([imageBuffer], { type: imgData.mimeType });
-            url = URL.createObjectURL(blob);
-            mimeType = imgData.mimeType;
-        } else {
-            // fail
-            callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
-            return;
-        }
-
+    var loadTexture = function (index, url, mimeType, crossOrigin) {
         var mimeTypeFileExtensions = {
             'image/png': 'png',
             'image/jpeg': 'jpg',
@@ -1335,20 +1365,61 @@ var loadTexturesAsync = function (device, gltf, buffers, urlBase, registry, call
         if (mimeType) {
             var extension = mimeTypeFileExtensions[mimeType];
             if (extension) {
-                file.filename = 'glb-texture-' + i + '.' + extension;
+                file.filename = 'glb-texture-' + index + '.' + extension;
             }
         }
 
         // create and load the asset
-        var asset = new Asset('texture_' + i, 'texture',  file, { flipY: false }, options);
-        asset.on('load', onLoad.bind(null, i));
+        var asset = new Asset('texture_' + index, 'texture',  file, { flipY: false }, { crossOrigin: crossOrigin });
+        asset.on('load', onLoad.bind(null, index));
         registry.add(asset);
         registry.load(asset);
+    };
+
+    for (var i = 0; i < gltf.images.length; ++i) {
+        var gltfImage = gltf.images[i];
+
+        if (preprocess) {
+            preprocess(gltfImage);
+        }
+
+        if (processAsync) {
+            processAsync(gltfImage, function (index, err, textureAsset) {
+                if (err) {
+                    callback(err);
+                } else {
+                    onLoad(index, textureAsset);
+                }
+            }.bind(null, i));
+        } else {
+            if (gltfImage.hasOwnProperty('uri')) {
+                // uri specified
+                if (isDataURI(gltfImage.uri)) {
+                    loadTexture(i, gltfImage.uri, getDataURIMimeType(gltfImage.uri));
+                } else {
+                    loadTexture(i, path.join(urlBase, gltfImage.uri), "anonymous");
+                }
+            } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
+                // bufferview
+                var bufferView = gltf.bufferViews[gltfImage.bufferView];
+                var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
+                var byteLength = bufferView.byteLength;
+
+                var buffer = buffers[bufferView.buffer];
+                var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
+                var blob = new Blob([imageBuffer], { type: gltfImage.mimeType });
+                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType);
+            } else {
+                // fail
+                callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
+                return;
+            }
+        }
     }
 };
 
 // load gltf buffers asynchronously, returning them in the callback
-var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
+var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) {
     var result = [];
 
     if (gltf.buffers === null || gltf.buffers.length === 0) {
@@ -1356,53 +1427,72 @@ var loadBuffersAsync = function (gltf, binaryChunk, urlBase, callback) {
         return;
     }
 
+    var preprocess = options && options.buffer && options.buffer.preprocess;
+    var processAsync = options && options.buffer && options.buffer.processAsync;
+    var postprocess = options && options.buffer && options.buffer.postprocess;
+
     var remaining = gltf.buffers.length;
-    var onLoad = function (buffer, idx) {
-        result[idx] = buffer;
+    var onLoad = function (index, buffer) {
+        result[index] = buffer;
+        if (postprocess) {
+            postprocess(gltf.buffers[index], buffer);
+        }
         if (--remaining === 0) {
             callback(null, result);
         }
     };
 
-    var createCallback = function (index) {
-        return function (err, result) {
-            if (err) {
-                callback(err);
-            } else {
-                onLoad(new Uint8Array(result), index);
-            }
-        };
-    };
-
     for (var i = 0; i < gltf.buffers.length; ++i) {
-        var buffer = gltf.buffers[i];
-        if (buffer.hasOwnProperty('uri')) {
-            if (isDataURI(buffer.uri)) {
-                // convert base64 to raw binary data held in a string
-                // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-                var byteString = atob(buffer.uri.split(',')[1]);
+        var gltfBuffer = gltf.buffers[i];
 
-                // write the bytes of the string to an ArrayBuffer
-                var arrayBuffer = new ArrayBuffer(byteString.length);
+        if (preprocess) {
+            preprocess(gltfBuffer);
+        }
 
-                // create a view into the buffer
-                var binaryArray = new Uint8Array(arrayBuffer);
-
-                // set the bytes of the buffer to the correct values
-                for (var j = 0; j < byteString.length; j++) {
-                    binaryArray[j] = byteString.charCodeAt(j);
+        if (processAsync) {
+            processAsync(gltfBuffer, function (index, err, arrayBuffer) {           // eslint-disable-line no-loop-func
+                if (err) {
+                    callback(err);
+                } else {
+                    onLoad(index, new Uint8Array(arrayBuffer));
                 }
-
-                onLoad(binaryArray, i);
-            } else {
-                http.get(
-                    path.join(urlBase, buffer.uri),
-                    { cache: true, responseType: 'arraybuffer', retry: false },
-                    createCallback(i));
-            }
+            }.bind(null, i));
         } else {
-            // glb buffer reference
-            onLoad(binaryChunk, i);
+            if (gltfBuffer.hasOwnProperty('uri')) {
+                if (isDataURI(gltfBuffer.uri)) {
+                    // convert base64 to raw binary data held in a string
+                    // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+                    var byteString = atob(gltfBuffer.uri.split(',')[1]);
+
+                    // write the bytes of the string to an ArrayBuffer
+                    var arrayBuffer = new ArrayBuffer(byteString.length);
+
+                    // create a view into the buffer
+                    var binaryArray = new Uint8Array(arrayBuffer);
+
+                    // set the bytes of the buffer to the correct values
+                    for (var j = 0; j < byteString.length; j++) {
+                        binaryArray[j] = byteString.charCodeAt(j);
+                    }
+
+                    onLoad(i, binaryArray);
+                } else {
+                    http.get(
+                        path.join(urlBase, gltfBuffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        function (index, err, result) {                         // eslint-disable-line no-loop-func
+                            if (err) {
+                                callback(err);
+                            } else {
+                                onLoad(index, new Uint8Array(result));
+                            }
+                        }.bind(null, i)
+                    );
+                }
+            } else {
+                // glb buffer reference
+                onLoad(i, binaryChunk);
+            }
         }
     }
 };
@@ -1504,10 +1594,11 @@ var parseChunk = function (filename, data, callback) {
 };
 
 // -- GlbParser
+
 function GlbParser() {}
 
 // parse the gltf or glb data asynchronously, loading external resources
-GlbParser.parseAsync = function (filename, urlBase, data, device, registry, callback) {
+GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
     // parse the data
     parseChunk(filename, data, function (err, chunks) {
         if (err) {
@@ -1523,20 +1614,20 @@ GlbParser.parseAsync = function (filename, urlBase, data, device, registry, call
             }
 
             // async load external buffers
-            loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, function (err, buffers) {
+            loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, function (err, buffers) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
                 // async load images
-                loadTexturesAsync(device, gltf, buffers, urlBase, registry, function (err, textures) {
+                loadTexturesAsync(gltf, buffers, urlBase, registry, options, function (err, textures) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    createResources(device, gltf, buffers, textures, callback);
+                    createResources(device, gltf, buffers, textures, options, callback);
                 });
             });
         });
@@ -1544,7 +1635,7 @@ GlbParser.parseAsync = function (filename, urlBase, data, device, registry, call
 };
 
 // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-GlbParser.parse = function (filename, data, device) {
+GlbParser.parse = function (filename, data, device, options) {
     var result = null;
 
     // parse the data
@@ -1561,7 +1652,7 @@ GlbParser.parse = function (filename, data, device) {
                     var textures = [];
 
                     // create resources
-                    createResources(device, gltf, buffers, textures, function (err, result_) {
+                    createResources(device, gltf, buffers, textures, options || { }, function (err, result_) {
                         if (err) {
                             console.error(err);
                         } else {
@@ -1578,7 +1669,7 @@ GlbParser.parse = function (filename, data, device) {
 
 // create a pc.Model from the parsed GLB data structures
 GlbParser.createModel = function (glb, defaultMaterial) {
-    var createMeshInstance = function (model, mesh, skins, materials, node, nodeData) {
+    var createMeshInstance = function (model, mesh, skins, materials, node, gltfNode) {
         var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
 
         var meshInstance = new MeshInstance(node, mesh, material);
@@ -1595,8 +1686,8 @@ GlbParser.createModel = function (glb, defaultMaterial) {
             model.morphInstances.push(morphInstance);
         }
 
-        if (nodeData.hasOwnProperty('skin')) {
-            var skin = skins[nodeData.skin];
+        if (gltfNode.hasOwnProperty('skin')) {
+            var skin = skins[gltfNode.skin];
             mesh.skin = skin;
 
             var skinInstance = new SkinInstance(skin);
@@ -1619,11 +1710,11 @@ GlbParser.createModel = function (glb, defaultMaterial) {
             rootNodes.push(node);
         }
 
-        var nodeData = glb.gltf.nodes[i];
-        if (nodeData.hasOwnProperty('mesh')) {
-            var meshGroup = glb.meshes[nodeData.mesh];
+        var gltfNode = glb.gltf.nodes[i];
+        if (gltfNode.hasOwnProperty('mesh')) {
+            var meshGroup = glb.meshes[gltfNode.mesh];
             for (var mi = 0; mi < meshGroup.length; mi++) {
-                createMeshInstance(model, meshGroup[mi], glb.skins, glb.materials, node, nodeData);
+                createMeshInstance(model, meshGroup[mi], glb.skins, glb.materials, node, gltfNode);
             }
         }
     }

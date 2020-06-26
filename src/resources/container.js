@@ -67,8 +67,30 @@ Object.assign(ContainerResource.prototype, {
  * @class
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
+ * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
+ * The asset options object can be used for passing in load time callbacks to handle the various resources
+ * at different stages of loading as follows:
+ * ```
+ * |---------------------------------------------------------------------|
+ * |  resource   |  preprocess |   process   |processAsync | postprocess |
+ * |-------------+-------------+-------------+-------------+-------------|
+ * | global      |      x      |             |             |      x      |
+ * | node        |      x      |      x      |             |      x      |
+ * | animation   |      x      |             |             |      x      |
+ * | material    |      x      |      x      |             |      x      |
+ * | texture     |      x      |             |      x      |      x      |
+ * | buffer      |      x      |             |      x      |      x      |
+ * |---------------------------------------------------------------------|
+ * ```
+ * For example, to receive a texture preprocess callback:
+ * ```javascript
+ * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ *     texture: {
+ *         preprocess: function (gltfTexture) { console.log("texture preprocess"); }
+ *     },
+ * });
+ * ```
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
@@ -107,6 +129,7 @@ Object.assign(ContainerHandler.prototype, {
                                      response,
                                      self._device,
                                      asset.registry,
+                                     asset.options,
                                      function (err, result) {
                                          if (err) {
                                              callback(err);
@@ -142,7 +165,7 @@ Object.assign(ContainerHandler.prototype, {
         var i;
 
         // create model asset
-        var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
         // create material assets
         var materials = [];
