@@ -43,7 +43,8 @@ var Viewer = function (canvas) {
         faceData: {
             type: "rgbm"
         },
-        type: "rgbm"
+        type: "rgbm",
+        rgbm: true
     });
     cubemapAsset.loadFaces = true;
     cubemapAsset.ready(function () {
