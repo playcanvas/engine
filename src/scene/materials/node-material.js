@@ -4,6 +4,9 @@ import { Shader } from '../../graphics/shader.js';
 import { Material } from './material.js';
 
 /**
+ *
+ *
+ * @param {object} shaderGraph - shader graph
  * @class
  * @name NodeMaterial
  * @augments ShaderGraphNode
@@ -19,9 +22,9 @@ import { Material } from './material.js';
 var NodeMaterial = function (shaderGraph) {
     Material.call(this);
 
-    this.shaderGraph=shaderGraph;
+    this.shaderGraph = shaderGraph;
 
-    //this.paramValues=[];
+    // this.paramValues=[];
 };
 NodeMaterial.prototype = Object.create(Material.prototype);
 NodeMaterial.prototype.constructor = NodeMaterial;
@@ -39,9 +42,9 @@ Object.assign(NodeMaterial.prototype, {
 
         Material.prototype._cloneInternal.call(this, clone);
 
-        clone.shaderGraph=this.shaderGraph;
+        clone.shaderGraph = this.shaderGraph;
 
-        //clone.nodeInputs.copy(this.nodeInputs);
+        // clone.nodeInputs.copy(this.nodeInputs);
 
         return clone;
     },
@@ -49,15 +52,13 @@ Object.assign(NodeMaterial.prototype, {
     updateUniforms: function () {
         this.clearParameters();
 
-        for (var n=0;n<this.shaderGraph.params.length;n++)
-        {
-            /*if (!this.paramValues[n])
-            {
-                this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
-            }*/
+        for (var n = 0; n < this.shaderGraph.params.length; n++) {
+            // if (!this.paramValues[n])
+            // {
+            //     this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
+            // }
 
-            switch(this.shaderGraph.params[n].type)
-            {
+            switch (this.shaderGraph.params[n].type) {
                 case 'sampler2D':
                 case 'samplerCube':
                 case 'float':
@@ -67,20 +68,19 @@ Object.assign(NodeMaterial.prototype, {
                     this.setParameter(this.shaderGraph.params[n].name, this.shaderGraph.params[n].value);
                     break;
                 default:
-                    //error
-                    break;    
-            }           
+                    // error
+                    break;
+            }
         }
     },
 
-    //updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+    // updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
     initShader: function (device) {
-        if (!this.shader)
-        {
+        if (!this.shader) {
             var options = {
                 skin: !!this.meshInstances[0].skinInstance,
-                shaderGraph: this.shaderGraph,
-                //pass: pass
+                shaderGraph: this.shaderGraph
+                // pass: pass
             };
 //              var library = device.getProgramLibrary();
 //              this.shader = library.getProgram('node', options);

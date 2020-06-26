@@ -3,9 +3,10 @@ import {
 } from '../graphics.js';
 import { shaderChunks } from '../chunks.js';
 
-import {
-    SHADER_DEPTH, SHADER_PICK
-} from '../../scene/constants.js';
+// nb will probably need this soon
+// import {
+//    SHADER_DEPTH, SHADER_PICK
+// } from '../../scene/constants.js';
 
 import { programlib } from './program-lib.js';
 
@@ -20,8 +21,9 @@ var node = {
     },
 
     createShaderDefinition: function (device, options) {
+        var n;
 
-        //generate graph
+        // generate graph
         options.shaderGraph.generateShaderGraph();
 
         // GENERATE ATTRIBUTES
@@ -51,43 +53,39 @@ var node = {
             code += chunks.transformVS;
         }
 
-        if (1)
-        {
-//            code += 'attribute vec3 vertex_position;\n';
-            code += 'varying vec3 vPosition;\n';
 
-            code += 'attribute vec3 vertex_normal;\n';
-            code += 'varying vec3 vNormal;\n';
+//      code += 'attribute vec3 vertex_position;\n';
+        code += 'varying vec3 vPosition;\n';
 
-            code += 'attribute vec4 vertex_color;\n';
-            code += 'varying vec4 vColor;\n';
+        code += 'attribute vec3 vertex_normal;\n';
+        code += 'varying vec3 vNormal;\n';
 
-            code += 'attribute vec2 vertex_texCoord0;\n';
-            code += 'varying vec2 vUv0;\n';
+        code += 'attribute vec4 vertex_color;\n';
+        code += 'varying vec4 vColor;\n';
+
+        code += 'attribute vec2 vertex_texCoord0;\n';
+        code += 'varying vec2 vUv0;\n';
+
+
+     // if (options.pass === SHADER_DEPTH) {
+     //     code += 'varying float vDepth;\n';
+     //     code += '#ifndef VIEWMATRIX\n';
+     //     code += '#define VIEWMATRIX\n';
+     //     code += 'uniform mat4 matrix_view;\n';
+     //     code += '#endif\n';
+     //     code += '#ifndef CAMERAPLANES\n';
+     //     code += '#define CAMERAPLANES\n';
+     //     code += 'uniform vec4 camera_params;\n\n';
+     //     code += '#endif\n';
+     // }
+        for (n = 0; n < options.shaderGraph.params.length; n++) {
+            code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
         }
 
-     /*   if (options.pass === SHADER_DEPTH) {
-            code += 'varying float vDepth;\n';
-            code += '#ifndef VIEWMATRIX\n';
-            code += '#define VIEWMATRIX\n';
-            code += 'uniform mat4 matrix_view;\n';
-            code += '#endif\n';
-            code += '#ifndef CAMERAPLANES\n';
-            code += '#define CAMERAPLANES\n';
-            code += 'uniform vec4 camera_params;\n\n';
-            code += '#endif\n';
-        }*/
+        code += 'vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
+        code += 'vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
-        for (var n=0;n<options.shaderGraph.params.length;n++)
-        {
-            code += 'uniform '+options.shaderGraph.params[n].type+' '+options.shaderGraph.params[n].name+';\n';
-        }
-
-        code +='vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
-        code +='vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
-
-        if (options.shaderGraph)
-        {
+        if (options.shaderGraph) {
             code += "#define SG_VS\n";
             code += options.shaderGraph.shaderGraphFuncString;
         }
@@ -96,26 +94,24 @@ var node = {
         code += programlib.begin();
 
         if (options.shaderGraph) {
-            code += options.shaderGraph.shaderGraphNodeString;    
+            code += options.shaderGraph.shaderGraphNodeString;
             code += "   vPosition = getWorldPositionNM()+shaderGraphVertexOffset;\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
-        }
-        else {
+        } else {
             code += "   vPosition = getWorldPositionNM();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
 
- /*       if (options.pass === SHADER_DEPTH) {
-            code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
-        }*/
+ //    if (options.pass === SHADER_DEPTH) {
+ //         code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
+ //     }
 
-        if (1) 
-        {
-//            code += '    vNormal = getNormal(vertex_normal);\n';
-            code += '    vNormal = getWorldNormalNM();\n';            
-            code += '    vColor = vertex_color;\n';
-            code += '    vUv0 = vertex_texCoord0;\n';
-        }
+
+//      code += '    vNormal = getNormal(vertex_normal);\n';
+        code += '    vNormal = getWorldNormalNM();\n';
+        code += '    vColor = vertex_color;\n';
+        code += '    vUv0 = vertex_texCoord0;\n';
+
 
         code += programlib.end();
 
@@ -125,12 +121,11 @@ var node = {
         code = programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
-        if (1)
-        {
-            code += 'varying vec3 vNormal;\n';
-            code += 'varying vec4 vColor;\n';
-            code += 'varying vec2 vUv0;\n';
-        }
+
+        code += 'varying vec3 vNormal;\n';
+        code += 'varying vec4 vColor;\n';
+        code += 'varying vec2 vUv0;\n';
+
         if (options.fog) {
             code += programlib.fogCode(options.fog);
         }
@@ -138,19 +133,17 @@ var node = {
             code += chunks.alphaTestPS;
         }
 
-        /*if (options.pass === SHADER_DEPTH) {
-            // ##### SCREEN DEPTH PASS #####
-            code += 'varying float vDepth;\n';
-            code += chunks.packDepthPS;
-        }*/
+        // if (options.pass === SHADER_DEPTH) {
+        //     // ##### SCREEN DEPTH PASS #####
+        //     code += 'varying float vDepth;\n';
+        //     code += chunks.packDepthPS;
+        // }
 
-        for (var n=0;n<options.shaderGraph.params.length;n++)
-        {
-            code += 'uniform '+options.shaderGraph.params[n].type+' '+options.shaderGraph.params[n].name+';\n';
+        for (n = 0; n < options.shaderGraph.params.length; n++) {
+            code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
         }
-  
-        if (options.shaderGraph) 
-        {   
+
+        if (options.shaderGraph) {
             code += "#define SG_PS\n";
             code += options.shaderGraph.shaderGraphFuncString;
         }
@@ -159,36 +152,36 @@ var node = {
 //        if (options.nodeInputs.opacity) code += options.nodeInputs.opacity;
 //        if (options.nodeInputs.normal) code += options.nodeInputs.normal;
 //        if (options.nodeInputs.metallic) code += options.nodeInputs.metallic;
-//        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;    
+//        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;
 
         // FRAGMENT SHADER BODY
-        code += programlib.begin();            
+        code += programlib.begin();
 
-        if (options.shaderGraph)
-        { 
+        if (options.shaderGraph) {
             code += options.shaderGraph.shaderGraphNodeString;
         }
-        //code += NodeMaterial.generateLightingCode(options);
+        // code += NodeMaterial.generateLightingCode(options);
 
-        //code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
+        // code += '    gl_FragColor = getEmissiveColor()+lightGGX(getBaseColor(), getOpacity(), getNormal(), getMetallic(), getRoughness());\n';
 //        code += '    gl_FragColor = vec4(getEmissiveColor(),1);\n';
-        //code += '    gl_FragColor = '+options.shaderGraph.funcName+ root(getEmissiveColor(),1);\n';
+        // code += '    gl_FragColor = '+options.shaderGraph.funcName+ root(getEmissiveColor(),1);\n';
 
         if (options.alphatest) {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        /*if (options.pass === SHADER_PICK) {
-            // ##### PICK PASS #####
-        } else if (options.pass === SHADER_DEPTH) {
-            // ##### SCREEN DEPTH PASS #####
-            code += "    gl_FragColor = packFloat(vDepth);\n";
-        } else */{
+        // TODO implement passes
+        // if (options.pass === SHADER_PICK) {
+        //     // ##### PICK PASS #####
+        // } else if (options.pass === SHADER_DEPTH) {
+        //     // ##### SCREEN DEPTH PASS #####
+        //     code += "    gl_FragColor = packFloat(vDepth);\n";
+        // } else {
             // ##### FORWARD PASS #####
-            if (options.fog) {
-                code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
-            }
+        if (options.fog) {
+            code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
         }
+        // }
 
         code += programlib.end();
 
