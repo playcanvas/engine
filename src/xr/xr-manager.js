@@ -6,9 +6,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
-import { XRTYPE_INLINE } from './constants.js';
-import { XRTYPE_VR } from './constants.js';
-import { XRTYPE_AR } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
