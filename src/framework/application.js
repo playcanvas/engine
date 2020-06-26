@@ -1815,7 +1815,7 @@ Object.assign(Application.prototype, {
         if (this.scene.skyboxMip === 0)
             asset.loadFaces = true;
 
-        asset.reload();
+        this.assets.load(asset);
 
         this._onSkyboxChange(asset);
     },

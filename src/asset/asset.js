@@ -468,4 +468,21 @@ Object.defineProperty(Asset.prototype, 'preload', {
     }
 });
 
+Object.defineProperty(Asset.prototype, 'loadFaces', {
+    get: function () {
+        return this._loadFaces;
+    },
+    set: function (value) {
+        value = !!value;
+        if (!this.hasOwnProperty('_loadFaces') || value !== this._loadFaces) {
+            this._loadFaces = value;
+
+            // the loadFaces property should be part of the data block because
+            // changing the value should result in patch being invoked.
+            if (this.loaded)
+                this.registry._loader.patch(this, this.registry);
+        }
+    }
+});
+
 export { Asset };
