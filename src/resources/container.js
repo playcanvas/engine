@@ -7,17 +7,38 @@ import { Asset } from '../asset/asset.js';
 import { GlbParser } from './parser/glb-parser.js';
 
 /**
+ * Maps an entity to a number of animation assets. Animations can be added to the node with either
+ * pc.AnimationComponent or pc.AnimComponent.
+ *
+ * @typedef {object} pc.ContainerResourceAnimationMapping
+ * @property {pc.Entity} node Entity that should be animated.
+ * @property {number[]} animations Indexes of animations assets to be assigned to node.
+ */
+
+/**
  * @class
  * @name pc.ContainerResource
- * @classdesc Container for a list of animations, textures, materials and a model.
+ * @classdesc Container for a list of animations, textures, materials, models, scenes (as entities)
+ * and a default scene (as entity). Entities in scene hierarchies will have model and animation components
+ * attached to them.
  * @param {object} data - The loaded GLB data.
+ * @property {pc.Entity|null} scene The root entity of the default scene.
+ * @property {pc.Entity[]} scenes The root entities of all scenes.
+ * @property {pc.Asset[]} materials Material assets.
+ * @property {pc.Asset[]} textures Texture assets.
+ * @property {pc.Asset[]} animations Animation assets.
+ * @property {pc.ContainerResourceAnimationMapping[]} nodeAnimations Mapping of animations to node entities.
+ * @property {pc.AssetRegistry} registry The asset registry.
  */
 function ContainerResource(data) {
     this.data = data;
-    this.model = null;
+    this.scene = null;
+    this.scenes = [];
     this.materials = [];
     this.textures = [];
     this.animations = [];
+    this.nodeAnimations = [];
+    this.models = [];
     this.registry = null;
 }
 
@@ -32,15 +53,34 @@ Object.assign(ContainerResource.prototype, {
         };
 
         var destroyAssets = function (assets) {
-            assets.forEach(function (asset) {
-                destroyAsset(asset);
-            });
+            assets.forEach(destroyAsset);
         };
+
+        if (this.scene) {
+            this.scene.destroy();
+            this.scene = null;
+        }
+
+        if (this.scenes) {
+            this.scenes.forEach(function (scene) {
+                scene.destroy();
+            });
+            this.scenes = null;
+        }
 
         // unload and destroy assets
         if (this.animations) {
             destroyAssets(this.animations);
             this.animations = null;
+        }
+
+        if (this.nodeAnimations) {
+            this.nodeAnimations = null;
+        }
+
+        if (this.models) {
+            destroyAssets(this.models);
+            this.models = null;
         }
 
         if (this.textures) {
@@ -53,11 +93,6 @@ Object.assign(ContainerResource.prototype, {
             this.materials = null;
         }
 
-        if (this.model) {
-            destroyAsset(this.model);
-            this.model = null;
-        }
-
         this.data = null;
         this.assets = null;
     }
@@ -68,7 +103,7 @@ Object.assign(ContainerResource.prototype, {
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
- * textures, models and animations.
+ * textures, scenes and animations.
  * The asset options object can be used for passing in load time callbacks to handle the various resources
  * at different stages of loading as follows:
  * ```
@@ -148,7 +183,7 @@ Object.assign(ContainerHandler.prototype, {
         return data;
     },
 
-    // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
+    // Create assets to wrap the loaded engine resources - models, materials, textures and animations.
     patch: function (asset, assets) {
         var createAsset = function (type, resource, index) {
             var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
@@ -162,28 +197,52 @@ Object.assign(ContainerHandler.prototype, {
 
         var container = asset.resource;
         var data = container.data;
-        var i;
 
-        // create model asset
-        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+        // create model assets
+        var modelAssets = data.models.map(function (model, index) {
+            return createAsset('model', model, index);
+        });
 
         // create material assets
-        var materials = [];
-        for (i = 0; i < data.materials.length; ++i) {
-            materials.push(createAsset('material', data.materials[i], i));
-        }
+        var materialAssets = data.materials.map(function (material, index) {
+            return createAsset('material', material, index);
+        });
 
         // create animation assets
-        var animations = [];
-        for (i = 0; i < data.animations.length; ++i) {
-            animations.push(createAsset('animation', data.animations[i], i));
-        }
+        var animationAssets = data.animations.map(function (animation, index) {
+            return createAsset('animation', animation, index);
+        });
+
+        // create mapping from nodes to animations
+        var nodeAnimations = data.nodes
+            .map(function (node, nodeIndex) {
+                return {
+                    node: node,
+                    animations: data.nodeComponents[nodeIndex].animations
+                };
+            }).filter(function (mapping) {
+                return mapping.animations.length > 0;
+            });
+
+        // add model components to nodes
+        data.nodes.forEach(function (node, nodeIndex) {
+            var components = data.nodeComponents[nodeIndex];
+            if (components.model !== null) {
+                node.addComponent('model', {
+                    type: 'asset',
+                    asset: modelAssets[components.model]
+                });
+            }
+        });
 
         container.data = null;              // since assets are created, release GLB data
-        container.model = model;
-        container.materials = materials;
+        container.scene = data.scene;       // scenes are not wrapped in an Asset
+        container.scenes = data.scenes;     // scenes are not wrapped in an Asset
+        container.materials = materialAssets;
         container.textures = data.textures; // texture assets are created directly
-        container.animations = animations;
+        container.animations = animationAssets;
+        container.nodeAnimations = nodeAnimations;
+        container.models = modelAssets;
         container.registry = assets;
     }
 });
