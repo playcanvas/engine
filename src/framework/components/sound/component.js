@@ -15,11 +15,12 @@ import { SoundSlot } from './slot.js';
  * component.
  * @param {pc.Entity} entity - The entity that the Component is attached to.
  * @property {number} volume The volume modifier to play the audio with. In range 0-1.
+ * Defaults to 1.
  * @property {number} pitch The pitch modifier to play the audio with. Must be larger
- * than 0.01.
+ * than 0.01. Defaults to 1.
  * @property {boolean} positional If true the audio will play back at the location
  * of the Entity in space, so the audio will be affected by the position of the
- * {@link pc.AudioListenerComponent}.
+ * {@link pc.AudioListenerComponent}. Defaults to true.
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the sound as it moves away from the listener. Can be:
  *
@@ -27,15 +28,15 @@ import { SoundSlot } from './slot.js';
  * * {@link pc.DISTANCE_INVERSE}
  * * {@link pc.DISTANCE_EXPONENTIAL}
  *
- * Default is {@link pc.DISTANCE_LINEAR}.
+ * Defaults to {@link pc.DISTANCE_LINEAR}.
  * @property {number} refDistance The reference distance for reducing volume as the
- * sound source moves further from the listener.
+ * sound source moves further from the listener. Defaults to 1.
  * @property {number} maxDistance The maximum distance from the listener at which audio
  * falloff stops. Note the volume of the audio is not 0 after this distance, but just
- * doesn't fall off anymore.
- * @property {number} rollOffFactor The factor used in the falloff equation.
+ * doesn't fall off anymore. Defaults to 10000.
+ * @property {number} rollOffFactor The factor used in the falloff equation. Defaults to 1.
  * @property {object} slots A dictionary that contains the {@link pc.SoundSlot}s managed
- * by this Component.
+ * by this SoundComponent.
  */
 function SoundComponent(system, entity) {
     Component.call(this, system, entity);
