@@ -103,25 +103,23 @@ Object.assign(CubemapHandler.prototype, {
             if (assets[0]) {
                 tex = assets[0].resource;
                 for (i = 0; i < 6; ++i) {
-                    var levels = [tex._levels[i]];
+                    var prelitLevels = [tex._levels[i]];
 
                     // construct full prem chain on highest prefilter cubemap on ios
                     if (i === 0 && this._device.useTexCubeLod) {
                         for (mip = 1; mip < tex._levels.length; ++mip) {
-                            levels[mip] = tex._levels[mip];
+                            prelitLevels[mip] = tex._levels[mip];
                         }
                     }
 
                     var prelit = new Texture(this._device, {
-                        name: cubemapAsset.name + '_prelitCubemap' + i,
+                        name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
                         type: getType(),
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
-                        levels: levels,
-                        addressU: ADDRESS_CLAMP_TO_EDGE,
-                        addressV: ADDRESS_CLAMP_TO_EDGE,
+                        levels: prelitLevels,
                         fixCubemapSeams: true
                     });
 
@@ -147,9 +145,9 @@ Object.assign(CubemapHandler.prototype, {
                 var faceTextures = faceAssets.map(function (asset) {
                     return asset.resource;
                 });
-                var levels = [];
+                var faceLevels = [];
                 for (mip = 0; mip < faceTextures[0]._levels.length; ++mip) {
-                    levels.push(faceTextures.map(function (faceTexture) {  // eslint-disable-line no-loop-func
+                    faceLevels.push(faceTextures.map(function (faceTexture) {  // eslint-disable-line no-loop-func
                         return faceTexture._levels[mip];
                     }));
                 }
@@ -161,12 +159,13 @@ Object.assign(CubemapHandler.prototype, {
                     width: faceAssets[0].resource.width,
                     height: faceAssets[0].resource.height,
                     format: faceAssets[0].resource.format,
-                    levels: levels,
+                    levels: faceLevels,
                     minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : FILTER_LINEAR_MIPMAP_LINEAR,
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : FILTER_LINEAR,
                     anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
-                    addressV: ADDRESS_CLAMP_TO_EDGE
+                    addressV: ADDRESS_CLAMP_TO_EDGE,
+                    fixCubemapSeams: !!assets[0]
                 });
 
                 resources[0] = faces;
