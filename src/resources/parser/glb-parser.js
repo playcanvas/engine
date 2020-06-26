@@ -28,6 +28,7 @@ import {
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Entity } from '../../framework/entity.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Model } from '../../scene/model.js';
@@ -1141,7 +1142,7 @@ var createNode = function (gltfNode, nodeIndex) {
 
     if (gltfNode.hasOwnProperty('name')) {
         // Remove slashes since they interfere with animation curve paths
-        entity.name = nodeData.name.replace(/\//g, '_');
+        entity.name = gltfNode.name.replace(/\//g, '_');
     } else {
         entity.name = 'node_' + nodeIndex;
     }
