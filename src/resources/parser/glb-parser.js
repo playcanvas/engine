@@ -1450,7 +1450,7 @@ var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) 
         }
 
         if (processAsync) {
-            processAsync(gltfBuffer, function (index, err, arrayBuffer) {
+            processAsync(gltfBuffer, function (index, err, arrayBuffer) {           // eslint-disable-line no-loop-func
                 if (err) {
                     callback(err);
                 } else {
@@ -1480,7 +1480,7 @@ var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) 
                     http.get(
                         path.join(urlBase, gltfBuffer.uri),
                         { cache: true, responseType: 'arraybuffer', retry: false },
-                        function (index, err, result) {
+                        function (index, err, result) {                         // eslint-disable-line no-loop-func
                             if (err) {
                                 callback(err);
                             } else {

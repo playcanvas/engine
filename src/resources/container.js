@@ -75,12 +75,12 @@ Object.assign(ContainerResource.prototype, {
  * |---------------------------------------------------------------------|
  * |  resource   |  preprocess |   process   |processAsync | postprocess |
  * |-------------+-------------+-------------+-------------+-------------|
- * | global      |      X      |             |             |      X      |
- * | node        |      X      |      X      |             |      X      |
- * | animation   |      X      |             |             |      X      |
- * | material    |      X      |      X      |             |      X      |
- * | texture     |      X      |             |      X      |      X      |
- * | buffer      |      X      |             |      X      |      X      |
+ * | global      |      x      |             |             |      x      |
+ * | node        |      x      |      x      |             |      x      |
+ * | animation   |      x      |             |             |      x      |
+ * | material    |      x      |      x      |             |      x      |
+ * | texture     |      x      |             |      x      |      x      |
+ * | buffer      |      x      |             |      x      |      x      |
  * |---------------------------------------------------------------------|
  * ```
  * For example, to receive a texture preprocess callback:
