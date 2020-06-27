@@ -34,7 +34,6 @@ function AnimationComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'animation';
-    this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
     this.ComponentType = AnimationComponent;
     this.DataType = AnimationComponentData;

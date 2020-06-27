@@ -25,7 +25,6 @@ function ModelComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'model';
-    this.description = "Renders a 3D model at the location of the Entity.";
 
     this.ComponentType = ModelComponent;
     this.DataType = ModelComponentData;
