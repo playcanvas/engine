@@ -147,7 +147,7 @@ var target_2 = {
     ]
 }
 
-var target_3 = {
+var target_extras = {
     input: 'extras/index.js',
     output: {
         banner: getBanner(''),
@@ -168,7 +168,7 @@ var target_wasm = {
     input: 'src/index_assemblyscript.js',
     output: {
         banner: getBanner(''),
-        file: 'build/playcanvas.js',
+        file: 'build/playcanvas.assemblyscript.js',
         format: 'umd',
         indent: '\t',
         name: 'pc'
@@ -192,9 +192,9 @@ var target_wasm = {
 };
 
 export default [
-    //target_0,
-    //target_1,
-    //target_2,
-    //target_3,
+    target_0,
+    target_1,
+    target_2,
+    target_extras,
     target_wasm
 ];
