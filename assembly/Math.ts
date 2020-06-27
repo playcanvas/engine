@@ -36,9 +36,9 @@ export namespace pc_math {
      */
     export function clamp(value: f32, min: f32, max: f32): f32 {
         if (value >= max)
-			return max;
+            return max;
         if (value <= min)
-			return min;
+            return min;
         return value;
     }
 }
