@@ -66,7 +66,7 @@ function shaderChunks() {
     };
 }
 
-export default [{
+var target_0 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -91,7 +91,9 @@ export default [{
         }),
         spacesToTabs()
     ]
-}, {
+};
+
+var target_1 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (DEBUG PROFILER)'),
@@ -116,7 +118,9 @@ export default [{
         }),
         spacesToTabs()
     ]
-}, {
+};
+
+var target_2 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (PROFILER)'),
@@ -141,7 +145,9 @@ export default [{
         }),
         spacesToTabs()
     ]
-}, {
+}
+
+var target_3 = {
     input: 'extras/index.js',
     output: {
         banner: getBanner(''),
@@ -156,4 +162,39 @@ export default [{
         }),
         spacesToTabs()
     ]
-}];
+}
+
+var target_wasm = {
+    input: 'src/index_assemblyscript.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
+    ]
+};
+
+export default [
+    //target_0,
+    //target_1,
+    //target_2,
+    //target_3,
+    target_wasm
+];

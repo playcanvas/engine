@@ -1,28 +1,28 @@
-vec3_add          = instance.exports["Vec3#add"];
-vec3_add2         = instance.exports["Vec3#add2"];
-vec3_clone        = instance.exports["Vec3#clone"];
-vec3_constructor  = instance.exports["Vec3#constructor"];
-vec3_copy         = instance.exports["Vec3#copy"];
-vec3_cross        = instance.exports["Vec3#cross"];
-vec3_dot          = instance.exports["Vec3#dot"];
-vec3_equals       = instance.exports["Vec3#equals"];
-vec3_length       = instance.exports["Vec3#length"];
-vec3_lengthSq     = instance.exports["Vec3#lengthSq"];
-vec3_lerp         = instance.exports["Vec3#lerp"];
-vec3_mul          = instance.exports["Vec3#mul"];
-vec3_mul2         = instance.exports["Vec3#mul2"];
-vec3_normalize    = instance.exports["Vec3#normalize"];
-vec3_project      = instance.exports["Vec3#project"];
-vec3_scale        = instance.exports["Vec3#scale"];
-vec3_set          = instance.exports["Vec3#set"];
-vec3_sub          = instance.exports["Vec3#sub"];
-vec3_sub2         = instance.exports["Vec3#sub2"];
+var vec3_add          = instance.exports["Vec3#add"];
+var vec3_add2         = instance.exports["Vec3#add2"];
+var vec3_clone        = instance.exports["Vec3#clone"];
+var vec3_constructor  = instance.exports["Vec3#constructor"];
+var vec3_copy         = instance.exports["Vec3#copy"];
+var vec3_cross        = instance.exports["Vec3#cross"];
+var vec3_dot          = instance.exports["Vec3#dot"];
+var vec3_equals       = instance.exports["Vec3#equals"];
+var vec3_length       = instance.exports["Vec3#length"];
+var vec3_lengthSq     = instance.exports["Vec3#lengthSq"];
+var vec3_lerp         = instance.exports["Vec3#lerp"];
+var vec3_mul          = instance.exports["Vec3#mul"];
+var vec3_mul2         = instance.exports["Vec3#mul2"];
+var vec3_normalize    = instance.exports["Vec3#normalize"];
+var vec3_project      = instance.exports["Vec3#project"];
+var vec3_scale        = instance.exports["Vec3#scale"];
+var vec3_set          = instance.exports["Vec3#set"];
+var vec3_sub          = instance.exports["Vec3#sub"];
+var vec3_sub2         = instance.exports["Vec3#sub2"];
 
 /**
  * @constructor
  */
 
-pc.Vec3 = function(x, y, z) {
+function Vec3(x, y, z) {
 	if (x && x.length === 3) {
 		this.ptr = vec3_constructor(0, x[0], x[1], x[2]);
 	} else {
@@ -30,107 +30,107 @@ pc.Vec3 = function(x, y, z) {
 	}
 }
 
-pc.Vec3.wrap = function(ptr) {
-	var tmp = Object.create(pc.Vec3.prototype);
+Vec3.wrap = function(ptr) {
+	var tmp = Object.create(Vec3.prototype);
 	tmp.ptr = ptr;
 	return tmp;
 }
 
-pc.Vec3.prototype.add = function(rhs) {
+Vec3.prototype.add = function(rhs) {
 	vec3_add(this.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.add2 = function(lhs, rhs) {
+Vec3.prototype.add2 = function(lhs, rhs) {
 	vec3_add2(this.ptr, lhs.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.clone = function() {
+Vec3.prototype.clone = function() {
 	var tmp = vec3_clone(this.ptr);
-	return pc.Vec3.wrap(tmp);
+	return Vec3.wrap(tmp);
 }
 
-pc.Vec3.prototype.copy = function(rhs) {
+Vec3.prototype.copy = function(rhs) {
 	vec3_copy(this.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.cross = function(lhs, rhs) {
+Vec3.prototype.cross = function(lhs, rhs) {
 	vec3_cross(this.ptr, lhs.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.dot = function(rhs) {
+Vec3.prototype.dot = function(rhs) {
 	return vec3_dot(this.ptr, rhs.ptr);
 }
 
-pc.Vec3.prototype.equals = function(rhs) {
+Vec3.prototype.equals = function(rhs) {
 	return !!vec3_equals(this.ptr, rhs.ptr);
 }
 
-pc.Vec3.prototype.length = function() {
+Vec3.prototype.length = function() {
 	return vec3_length(this.ptr);
 }
 
-pc.Vec3.prototype.lengthSq = function() {
+Vec3.prototype.lengthSq = function() {
 	return vec3_lengthSq(this.ptr);
 }
 
-pc.Vec3.prototype.lerp = function(lhs, rhs, alpha) {
+Vec3.prototype.lerp = function(lhs, rhs, alpha) {
 	vec3_lerp(this.ptr, lhs.ptr, rhs.ptr, alpha);
 	return this;
 }
 
-pc.Vec3.prototype.mul = function(rhs) {
+Vec3.prototype.mul = function(rhs) {
 	vec3_mul(this.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.mul2 = function(lhs, rhs) {
+Vec3.prototype.mul2 = function(lhs, rhs) {
 	vec3_mul2(this.ptr, lhs.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.normalize = function() {
+Vec3.prototype.normalize = function() {
 	vec3_normalize(this.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.project = function(rhs) {
+Vec3.prototype.project = function(rhs) {
 	vec3_project(this.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.scale = function(scalar) {
+Vec3.prototype.scale = function(scalar) {
 	vec3_scale(this.ptr, scalar);
 	return this;
 }
 
-pc.Vec3.prototype.set = function(x, y, z) {
+Vec3.prototype.set = function(x, y, z) {
 	vec3_set(this.ptr, x, y, z);
 	return this;
 }
 
-pc.Vec3.prototype.sub = function(rhs) {
+Vec3.prototype.sub = function(rhs) {
 	vec3_sub(this.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.sub2 = function(lhs, rhs) {
+Vec3.prototype.sub2 = function(lhs, rhs) {
 	vec3_sub2(this.ptr, lhs.ptr, rhs.ptr);
 	return this;
 }
 
-pc.Vec3.prototype.toString = function() {
+Vec3.prototype.toString = function() {
 	return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
 }
 
-pc.Vec3.prototype.toStringFixed = function(n) {
+Vec3.prototype.toStringFixed = function(n) {
 	return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ']';
 }
 
-Object.defineProperty(pc.Vec3.prototype, 'x', {
+Object.defineProperty(Vec3.prototype, 'x', {
 	get: function() {
 		return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
 	},
@@ -139,7 +139,7 @@ Object.defineProperty(pc.Vec3.prototype, 'x', {
 	}
 });
 
-Object.defineProperty(pc.Vec3.prototype, 'y', {
+Object.defineProperty(Vec3.prototype, 'y', {
 	get: function() {
 		return module.F32[(this.ptr >> 2) + 1];
 	},
@@ -148,7 +148,7 @@ Object.defineProperty(pc.Vec3.prototype, 'y', {
 	}
 });
 
-Object.defineProperty(pc.Vec3.prototype, 'z', {
+Object.defineProperty(Vec3.prototype, 'z', {
 	get: function() {
 		return module.F32[(this.ptr >> 2) + 2];
 	},
@@ -161,13 +161,13 @@ Object.defineProperty(pc.Vec3.prototype, 'z', {
 /**
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.BACK
+ * @type Vec3
+ * @name Vec3.BACK
  * @description A constant vector set to [0, 0, 1].
  */
-Object.defineProperty(pc.Vec3, 'BACK', {
+Object.defineProperty(Vec3, 'BACK', {
 	get: (function () {
-		var back = new pc.Vec3(0, 0, 1);
+		var back = new Vec3(0, 0, 1);
 		return function () {
 			return back;
 		};
@@ -177,13 +177,13 @@ Object.defineProperty(pc.Vec3, 'BACK', {
 /**
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.DOWN
+ * @type Vec3
+ * @name Vec3.DOWN
  * @description A constant vector set to [0, -1, 0].
  */
-Object.defineProperty(pc.Vec3, 'DOWN', {
+Object.defineProperty(Vec3, 'DOWN', {
 	get: (function () {
-		var down = new pc.Vec3(0, -1, 0);
+		var down = new Vec3(0, -1, 0);
 		return function () {
 			return down;
 		};
@@ -193,13 +193,13 @@ Object.defineProperty(pc.Vec3, 'DOWN', {
 /**
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.FORWARD
+ * @type Vec3
+ * @name Vec3.FORWARD
  * @description A constant vector set to [0, 0, -1].
  */
-Object.defineProperty(pc.Vec3, 'FORWARD', {
+Object.defineProperty(Vec3, 'FORWARD', {
 	get: (function () {
-		var forward = new pc.Vec3(0, 0, -1);
+		var forward = new Vec3(0, 0, -1);
 		return function () {
 			return forward;
 		};
@@ -210,13 +210,13 @@ Object.defineProperty(pc.Vec3, 'FORWARD', {
  * @field
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.LEFT
+ * @type Vec3
+ * @name Vec3.LEFT
  * @description A constant vector set to [-1, 0, 0].
  */
-Object.defineProperty(pc.Vec3, 'LEFT', {
+Object.defineProperty(Vec3, 'LEFT', {
 	get: (function () {
-		var left = new pc.Vec3(-1, 0, 0);
+		var left = new Vec3(-1, 0, 0);
 		return function () {
 			return left;
 		};
@@ -227,13 +227,13 @@ Object.defineProperty(pc.Vec3, 'LEFT', {
  * @field
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.ONE
+ * @type Vec3
+ * @name Vec3.ONE
  * @description A constant vector set to [1, 1, 1].
  */
-Object.defineProperty(pc.Vec3, 'ONE', {
+Object.defineProperty(Vec3, 'ONE', {
 	get: (function () {
-		var one = new pc.Vec3(1, 1, 1);
+		var one = new Vec3(1, 1, 1);
 		return function () {
 			return one;
 		};
@@ -244,13 +244,13 @@ Object.defineProperty(pc.Vec3, 'ONE', {
  * @field
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.RIGHT
+ * @type Vec3
+ * @name Vec3.RIGHT
  * @description A constant vector set to [1, 0, 0].
  */
-Object.defineProperty(pc.Vec3, 'RIGHT', {
+Object.defineProperty(Vec3, 'RIGHT', {
 	get: (function () {
-		var right = new pc.Vec3(1, 0, 0);
+		var right = new Vec3(1, 0, 0);
 		return function () {
 			return right;
 		};
@@ -261,13 +261,13 @@ Object.defineProperty(pc.Vec3, 'RIGHT', {
  * @field
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.UP
+ * @type Vec3
+ * @name Vec3.UP
  * @description A constant vector set to [0, 1, 0].
  */
-Object.defineProperty(pc.Vec3, 'UP', {
+Object.defineProperty(Vec3, 'UP', {
 	get: (function () {
-		var down = new pc.Vec3(0, 1, 0);
+		var down = new Vec3(0, 1, 0);
 		return function () {
 			return down;
 		};
@@ -278,15 +278,17 @@ Object.defineProperty(pc.Vec3, 'UP', {
  * @field
  * @static
  * @readonly
- * @type pc.Vec3
- * @name pc.Vec3.ZERO
+ * @type Vec3
+ * @name Vec3.ZERO
  * @description A constant vector set to [0, 0, 0].
  */
-Object.defineProperty(pc.Vec3, 'ZERO', {
+Object.defineProperty(Vec3, 'ZERO', {
 	get: (function () {
-		var zero = new pc.Vec3(0, 0, 0);
+		var zero = new Vec3(0, 0, 0);
 		return function () {
 			return zero;
 		};
 	}())
 });
+
+export { Vec3 };
