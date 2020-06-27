@@ -158,6 +158,9 @@
 
         main().then(function() {
             console.log("main()");
+        }).catch(function(err) {
+            alert("Please run: 'npm i assemblyscript' and 'npm run build:as'");
+            console.log("err", err);
         })
     </script>
 </body>
