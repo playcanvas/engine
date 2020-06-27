@@ -1,5 +1,5 @@
 var mat3_add          = instance.exports["Mat3#add"];
-var mat3_add2         = instance.exports["Mat3#add2"];
+//var mat3_add2         = instance.exports["Mat3#add2"];
 var mat3_clone        = instance.exports["Mat3#clone"];
 var mat3_constructor  = instance.exports["Mat3#constructor"];
 var mat3_copy         = instance.exports["Mat3#copy"];
@@ -7,19 +7,23 @@ var mat3_equals       = instance.exports["Mat3#equals"];
 var mat3_isIdentity   = instance.exports["Mat3#isIdentity"];
 var mat3_setIdentity  = instance.exports["Mat3#setIdentity"];
 var mat3_transpose    = instance.exports["Mat3#transpose"];
-var mat3_mul2         = instance.exports["Mat3#mul2"];
-var mat3_mul          = instance.exports["Mat3#mul"];
+//var mat3_mul2         = instance.exports["Mat3#mul2"];
+//var mat3_mul          = instance.exports["Mat3#mul"];
+
+/**
+ * @class
+ */
 
 function Mat3() {
     this.ptr = mat3_constructor(0);
     // if (module.tlfs) {
     //    this.bufferByteLength = 0;
     // } else {
-        this.assignDataView();
+    this.assignDataView();
     // }
 }
 
-Mat3.wrap = function(ptr) {
+Mat3.wrap = function (ptr) {
     var tmp = Object.create(Mat3.prototype);
     tmp.ptr = ptr;
     // if (module.tlfs) {
@@ -30,33 +34,33 @@ Mat3.wrap = function(ptr) {
     return tmp;
 }
 
-Mat3.prototype.assignDataView = function() {
+Mat3.prototype.assignDataView = function () {
     //this.wrap = module.Mat3.wrap(this.ptr)
     this.data = new Float32Array(module.memory.buffer, this.ptr, 9);
 }
 
-Mat3.prototype.add = function(rhs) {
+Mat3.prototype.add = function (rhs) {
     mat3_add(this.ptr, rhs.ptr);
     return this;
 }
 
-Mat3.prototype.add2 = function(lhs, rhs) {
+Mat3.prototype.add2 = function (lhs, rhs) {
     mat3_add(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Mat3.prototype.clone = function() {
+Mat3.prototype.clone = function () {
     var ptr = mat3_clone(this.ptr);
     var tmp = Mat3.wrap(ptr);
     return tmp;
 }
 
-Mat3.prototype.copy = function(rhs) {
+Mat3.prototype.copy = function (rhs) {
     mat3_copy(this.ptr, rhs.ptr);
     return this;
 }
 
-Mat3.prototype.set = function(src) {
+Mat3.prototype.set = function (src) {
     var dst = this.data;
 
     dst[0] = src[0];
@@ -72,25 +76,25 @@ Mat3.prototype.set = function(src) {
     return this;
 }
 
-Mat3.prototype.equals = function(rhs) {
+Mat3.prototype.equals = function (rhs) {
     return !!mat3_equals(this.ptr, rhs.ptr);
 }
 
-Mat3.prototype.isIdentity = function() {
+Mat3.prototype.isIdentity = function () {
     return !!mat3_isIdentity(this.ptr);
 }
 
-Mat3.prototype.setIdentity = function() {
+Mat3.prototype.setIdentity = function () {
     mat3_setIdentity(this.ptr);
     return this;
 }
 
-Mat3.prototype.transpose = function() {
+Mat3.prototype.transpose = function () {
     mat3_transpose(this.ptr);
     return this;
 }
 
-Mat3.prototype.toString = function() {
+Mat3.prototype.toString = function () {
     var t = '[';
     for (var i = 0; i < 9; i++) {
         t += this.data[i];
@@ -100,7 +104,7 @@ Mat3.prototype.toString = function() {
     return t;
 }
 
-Mat3.prototype.toStringFixed = function(n) {
+Mat3.prototype.toStringFixed = function (n) {
     var t = '[';
     for (var i = 0; i < 9; i++) {
         t += this.data[i].toFixed(n);

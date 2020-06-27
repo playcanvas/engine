@@ -19,7 +19,7 @@ var vec4_sub          = instance.exports["Vec4#sub"];
 var vec4_sub2         = instance.exports["Vec4#sub2"];
 
 /**
- * @constructor
+ * @class
  */
 
 function Vec4(x, y, z, w) {
@@ -30,128 +30,128 @@ function Vec4(x, y, z, w) {
     }
 }
 
-Vec4.wrap = function(ptr) {
+Vec4.wrap = function (ptr) {
     var tmp = Object.create(Vec4.prototype);
     tmp.ptr = ptr;
     return tmp;
 }
 
-Vec4.prototype.add = function(rhs) {
+Vec4.prototype.add = function (rhs) {
     vec4_add(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.add2 = function(lhs, rhs) {
+Vec4.prototype.add2 = function (lhs, rhs) {
     vec4_add2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.clone = function() {
+Vec4.prototype.clone = function () {
     var tmp = vec4_clone(this.ptr);
     return Vec4.wrap(tmp);
 }
 
-Vec4.prototype.copy = function(rhs) {
+Vec4.prototype.copy = function (rhs) {
     vec4_copy(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.dot = function(rhs) {
+Vec4.prototype.dot = function (rhs) {
     return vec4_dot(this.ptr, rhs.ptr);
 }
 
-Vec4.prototype.equals = function(rhs) {
+Vec4.prototype.equals = function (rhs) {
     return !!vec4_equals(this.ptr, rhs.ptr);
 }
 
-Vec4.prototype.length = function() {
+Vec4.prototype.length = function () {
     return vec4_length(this.ptr);
 }
 
-Vec4.prototype.lengthSq = function() {
+Vec4.prototype.lengthSq = function () {
     return vec4_lengthSq(this.ptr);
 }
 
-Vec4.prototype.lerp = function(lhs, rhs, alpha) {
+Vec4.prototype.lerp = function (lhs, rhs, alpha) {
     vec4_lerp(this.ptr, lhs.ptr, rhs.ptr, alpha);
     return this;
 }
 
-Vec4.prototype.mul = function(rhs) {
+Vec4.prototype.mul = function (rhs) {
     vec4_mul(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.mul2 = function(lhs, rhs) {
+Vec4.prototype.mul2 = function (lhs, rhs) {
     vec4_mul2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.normalize = function() {
+Vec4.prototype.normalize = function () {
     vec4_normalize(this.ptr);
     return this;
 }
 
-Vec4.prototype.scale = function(scalar) {
+Vec4.prototype.scale = function (scalar) {
     vec4_scale(this.ptr, scalar);
     return this;
 }
 
-Vec4.prototype.set = function(x, y, z, w) {
+Vec4.prototype.set = function (x, y, z, w) {
     vec4_set(this.ptr, x, y, z, w);
     return this;
 }
 
-Vec4.prototype.sub = function(rhs) {
+Vec4.prototype.sub = function (rhs) {
     vec4_sub(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.sub2 = function(lhs, rhs) {
+Vec4.prototype.sub2 = function (lhs, rhs) {
     vec4_sub2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec4.prototype.toString = function() {
+Vec4.prototype.toString = function () {
     return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
 }
 
-Vec4.prototype.toStringFixed = function(n) {
+Vec4.prototype.toStringFixed = function (n) {
     return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
 }
 
 Object.defineProperty(Vec4.prototype, 'x', {
-    get: function() {
+    get: function () {
         return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'y', {
-    get: function() {
+    get: function () {
         return module.F32[(this.ptr >> 2) + 1];
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'z', {
-    get: function() {
+    get: function () {
         return module.F32[(this.ptr >> 2) + 2];
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[(this.ptr >> 2) + 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'w', {
-    get: function() {
+    get: function () {
         return module.F32[(this.ptr >> 2) + 3];
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[(this.ptr >> 2) + 3] = newValue;
     }
 });

@@ -16,6 +16,10 @@ var vec2_set          = instance.exports["Vec2#set"];
 var vec2_sub          = instance.exports["Vec2#sub"];
 var vec2_sub2         = instance.exports["Vec2#sub2"];
 
+/**
+ * @class
+ */
+
 function Vec2(x, y) {
     if (x && x.length === 2) {
         this.ptr = vec2_constructor(0, x[0], x[1]);
@@ -24,110 +28,110 @@ function Vec2(x, y) {
     }
 }
 
-Vec2.wrap = function(ptr) {
+Vec2.wrap = function (ptr) {
     var tmp = Object.create(Vec2.prototype);
     tmp.ptr = ptr;
     return tmp;
 }
 
-Vec2.prototype.add = function(rhs) {
+Vec2.prototype.add = function (rhs) {
     vec2_add(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.add2 = function(lhs, rhs) {
+Vec2.prototype.add2 = function (lhs, rhs) {
     vec2_add2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.clone = function() {
+Vec2.prototype.clone = function () {
     var tmp = vec2_clone(this.ptr);
     return Vec2.wrap(tmp);
 }
 
-Vec2.prototype.copy = function(rhs) {
+Vec2.prototype.copy = function (rhs) {
     vec2_copy(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.dot = function(rhs) {
+Vec2.prototype.dot = function (rhs) {
     return vec2_dot(this.ptr, rhs.ptr);
 }
 
-Vec2.prototype.equals = function(rhs) {
+Vec2.prototype.equals = function (rhs) {
     return !!vec2_equals(this.ptr, rhs.ptr);
 }
 
-Vec2.prototype.length = function() {
+Vec2.prototype.length = function () {
     return vec2_length(this.ptr);
 }
 
-Vec2.prototype.lengthSq = function() {
+Vec2.prototype.lengthSq = function () {
     return vec2_lengthSq(this.ptr);
 }
 
-Vec2.prototype.lerp = function(lhs, rhs, alpha) {
+Vec2.prototype.lerp = function (lhs, rhs, alpha) {
     vec2_lerp(this.ptr, lhs.ptr, rhs.ptr, alpha);
     return this;
 }
 
-Vec2.prototype.mul = function(rhs) {
+Vec2.prototype.mul = function (rhs) {
     vec2_mul(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.mul2 = function(lhs, rhs) {
+Vec2.prototype.mul2 = function (lhs, rhs) {
     vec2_mul2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.normalize = function() {
+Vec2.prototype.normalize = function () {
     vec2_normalize(this.ptr);
     return this;
 }
 
-Vec2.prototype.scale = function(scalar) {
+Vec2.prototype.scale = function (scalar) {
     vec2_scale(this.ptr, scalar);
     return this;
 }
 
-Vec2.prototype.set = function(x, y) {
+Vec2.prototype.set = function (x, y) {
     vec2_set(this.ptr, x, y);
     return this;
 }
 
-Vec2.prototype.sub = function(rhs) {
+Vec2.prototype.sub = function (rhs) {
     vec2_sub(this.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.sub2 = function(lhs, rhs) {
+Vec2.prototype.sub2 = function (lhs, rhs) {
     vec2_sub2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Vec2.prototype.toString = function() {
+Vec2.prototype.toString = function () {
     return '[' + this.x + ', ' + this.y + ']';
 }
 
-Vec2.prototype.toStringFixed = function(n) {
+Vec2.prototype.toStringFixed = function (n) {
     return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ']';
 }
 
 Object.defineProperty(Vec2.prototype, 'x', {
-    get: function() {
+    get: function () {
         return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec2.prototype, 'y', {
-    get: function() {
+    get: function () {
         return module.F32[(this.ptr >> 2) + 1];
     },
-    set: function(newValue) {
+    set: function (newValue) {
         module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });

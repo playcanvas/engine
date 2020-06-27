@@ -145,7 +145,7 @@ var target_performance = {
         }),
         spacesToTabs()
     ]
-}
+};
 
 var target_extras = {
     input: 'extras/index.js',
@@ -162,7 +162,7 @@ var target_extras = {
         }),
         spacesToTabs()
     ]
-}
+};
 
 var target_wasm = {
     input: 'src/index_assemblyscript.js',
@@ -202,7 +202,7 @@ if (process.env.AssemblyScript) {
     targets = [
         target_wasm,
         target_extras
-    ]
+    ];
 }
 
 export default targets;

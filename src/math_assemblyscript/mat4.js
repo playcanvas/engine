@@ -30,6 +30,10 @@ var mat4_transformVec4      = instance.exports["Mat4#transformVec4"];
 var mat4_transformVector    = instance.exports["Mat4#transformVector"];
 var mat4_transpose          = instance.exports["Mat4#transpose"];
 
+/**
+ * @class
+ */
+
 function Mat4() {
     this.ptr = mat4_constructor(0);
     // if (module.tlfs) {
@@ -39,7 +43,7 @@ function Mat4() {
     // }
 }
 
-Mat4.wrap = function(ptr) {
+Mat4.wrap = function (ptr) {
     var tmp = Object.create(Mat4.prototype);
     tmp.ptr = ptr;
     // if (tlfs) {
@@ -50,38 +54,38 @@ Mat4.wrap = function(ptr) {
     return tmp;
 }
 
-Mat4.prototype.assignDataView = function() {
+Mat4.prototype.assignDataView = function () {
     //this.wrap = module.Mat4.wrap(this.ptr)
     this.data = new Float32Array(module.memory.buffer, this.ptr, 16);
     //this.data.ptr = this.ptr;
 }
 
-Mat4.prototype.add = function(rhs) {
+Mat4.prototype.add = function (rhs) {
     mat4_add(this.ptr, rhs.ptr);
     return this;
 }
 
-Mat4.prototype.add2 = function(lhs, rhs) {
+Mat4.prototype.add2 = function (lhs, rhs) {
     mat4_add2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Mat4.prototype.clone = function() {
+Mat4.prototype.clone = function () {
     var ptr = mat4_clone(this.ptr);
     var tmp = Mat4.wrap(ptr);
     return tmp;
 }
 
-Mat4.prototype.copy = function(rhs) {
+Mat4.prototype.copy = function (rhs) {
     mat4_copy(this.ptr, rhs.ptr);
     return this;
 }
 
-Mat4.prototype.equals = function(rhs) {
+Mat4.prototype.equals = function (rhs) {
     return !!mat4_equals(this.ptr, rhs.ptr);
 }
 
-Mat4.prototype.getEulerAngles = function(eulers) {
+Mat4.prototype.getEulerAngles = function (eulers) {
     if (eulers === undefined) {
         eulers = new Vec3();
     }
@@ -89,7 +93,7 @@ Mat4.prototype.getEulerAngles = function(eulers) {
     return eulers;
 }
 
-Mat4.prototype.getScale = function(scale) {
+Mat4.prototype.getScale = function (scale) {
     if (scale === undefined) {
         scale = new Vec3();
     }
@@ -97,7 +101,7 @@ Mat4.prototype.getScale = function(scale) {
     return scale;
 }
 
-Mat4.prototype.getTranslation = function(t) {
+Mat4.prototype.getTranslation = function (t) {
     if (t === undefined) {
         t = new Vec3();
     }
@@ -105,7 +109,7 @@ Mat4.prototype.getTranslation = function(t) {
     return t;
 }
 
-Mat4.prototype.getX = function(x) {
+Mat4.prototype.getX = function (x) {
     if (x === undefined) {
         x = new Vec3();
     }
@@ -113,7 +117,7 @@ Mat4.prototype.getX = function(x) {
     return x;
 }
 
-Mat4.prototype.getY = function(y) {
+Mat4.prototype.getY = function (y) {
     if (y === undefined) {
         y = new Vec3();
     }
@@ -121,7 +125,7 @@ Mat4.prototype.getY = function(y) {
     return y;
 }
 
-Mat4.prototype.getZ = function(z) {
+Mat4.prototype.getZ = function (z) {
     if (z === undefined) {
         z = new Vec3();
     }
@@ -129,81 +133,81 @@ Mat4.prototype.getZ = function(z) {
     return z;
 }
 
-Mat4.prototype.invert = function() {
+Mat4.prototype.invert = function () {
     mat4_invert(this.ptr);
     return this;
 }
 
-Mat4.prototype.invertTo3x3 = function(mat3) {
+Mat4.prototype.invertTo3x3 = function (mat3) {
     mat4_invertTo3x3(this.ptr, mat3.ptr);
     return this;
 }
 
-Mat4.prototype.isIdentity = function() {
+Mat4.prototype.isIdentity = function () {
     return !!mat4_isIdentity(this.ptr);
 }
 
-Mat4.prototype.mul = function(rhs) {
+Mat4.prototype.mul = function (rhs) {
     mat4_mul(this.ptr, rhs.ptr);
     return this;
 }
 
-Mat4.prototype.mul2 = function(lhs, rhs) {
+Mat4.prototype.mul2 = function (lhs, rhs) {
     mat4_mul2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 }
 
-Mat4.prototype.setFromAxisAngle = function(axis, angle) {
+Mat4.prototype.setFromAxisAngle = function (axis, angle) {
     mat4_setFromAxisAngle(this.ptr, axis.ptr, angle);
     return this;
 }
 
-Mat4.prototype.setFromEulerAngles = function(ex, ey, ez) {
+Mat4.prototype.setFromEulerAngles = function (ex, ey, ez) {
     mat4_setFromEulerAngles(this.ptr, ex, ey, ez);
     return this;
 }
 
-Mat4.prototype.setFrustum = function(left, right, bottom, top, znear, zfar) {
+Mat4.prototype.setFrustum = function (left, right, bottom, top, znear, zfar) {
     mat4_setFrustum(this.ptr, left, right, bottom, top, znear, zfar);
     return this;
 }
 
-Mat4.prototype.setIdentity = function() {
+Mat4.prototype.setIdentity = function () {
     mat4_setIdentity(this.ptr);
     return this;
 }
 
-Mat4.prototype.setLookAt = function(position, target, up) {
+Mat4.prototype.setLookAt = function (position, target, up) {
     mat4_setLookAt(this.ptr, position.ptr, target.ptr, up.ptr);
     return this;
 }
 
-Mat4.prototype.setOrtho = function(left, right, bottom, top, near, far) {
+Mat4.prototype.setOrtho = function (left, right, bottom, top, near, far) {
     mat4_setOrtho(this.ptr, left, right, bottom, top, near, far);
     return this;
 }
 
-Mat4.prototype.setPerspective = function(fov, aspect, znear, zfar, fovIsHorizontal) {
+Mat4.prototype.setPerspective = function (fov, aspect, znear, zfar, fovIsHorizontal) {
     mat4_setPerspective(this.ptr, fov, aspect, znear, zfar, fovIsHorizontal);
     return this;
 }
 
-Mat4.prototype.setScale = function(x, y, z) {
+Mat4.prototype.setScale = function (x, y, z) {
     mat4_setScale(this.ptr, x, y, z);
     return this;
 }
 
-Mat4.prototype.setTRS = function(t, r, s) {
+Mat4.prototype.setTRS = function (t, r, s) {
     mat4_setTRS(this.ptr, t.ptr, r.ptr, s.ptr);
     return this;
 }
 
-Mat4.prototype.setTranslate = function(x, y, z) {
+Mat4.prototype.setTranslate = function (x, y, z) {
     mat4_setTranslate(this.ptr, x, y, z);
     return this;
 }
 
-Mat4.prototype.transformPoint = function(vec, res) {
+Mat4.prototype.transformPoint = function (vec, res) {
     if (res === undefined) {
         res = new Vec3();
     }
@@ -211,7 +215,7 @@ Mat4.prototype.transformPoint = function(vec, res) {
     return res;
 }
 
-Mat4.prototype.transformVec4 = function(vec, res) {
+Mat4.prototype.transformVec4 = function (vec, res) {
     if (res === undefined) {
         res = new Vec3();
     }
@@ -219,7 +223,7 @@ Mat4.prototype.transformVec4 = function(vec, res) {
     return res;
 }
 
-Mat4.prototype.transformVector = function(vec, res) {
+Mat4.prototype.transformVector = function (vec, res) {
     if (res === undefined) {
         res = new Vec3();
     }
@@ -227,12 +231,12 @@ Mat4.prototype.transformVector = function(vec, res) {
     return res;
 }
 
-Mat4.prototype.transpose = function() {
+Mat4.prototype.transpose = function () {
     mat4_transpose(this.ptr);
     return this;
 }
 
-Mat4.prototype.set = function(src) {
+Mat4.prototype.set = function (src) {
     var dst = this.data;
     dst[0] = src[0];
     dst[1] = src[1];
@@ -253,7 +257,7 @@ Mat4.prototype.set = function(src) {
     return this;
 }
 
-Mat4.prototype.toString = function() {
+Mat4.prototype.toString = function () {
     var i, t;
     t = '[';
     for (i = 0; i < 16; i += 1) {
@@ -264,7 +268,7 @@ Mat4.prototype.toString = function() {
     return t;
 }
 
-Mat4.prototype.toStringFixed = function(n) {
+Mat4.prototype.toStringFixed = function (n) {
     var i, t;
     t = '[';
     for (i = 0; i < 16; i += 1) {
@@ -281,7 +285,7 @@ But currently I use the Arena allocator, because it's faster.
 I simply preallocate 300mb and update the dataviews *never*.
 
 Object.defineProperty(Mat4.prototype, 'data', {
-    get: function() {
+    get: function () {
         if (this.bufferByteLength != module.memory.buffer.byteLength) {
             // Recreate dataview when the wasm arraybuffer changed size.
             // Needed because dataviews become invalid when original arraybuffer resizes.
