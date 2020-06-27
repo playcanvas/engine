@@ -66,7 +66,7 @@ function shaderChunks() {
     };
 }
 
-var target_0 = {
+var target_release = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -93,7 +93,7 @@ var target_0 = {
     ]
 };
 
-var target_1 = {
+var target_debug = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (DEBUG PROFILER)'),
@@ -120,7 +120,7 @@ var target_1 = {
     ]
 };
 
-var target_2 = {
+var target_performance = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (PROFILER)'),
@@ -191,10 +191,18 @@ var target_wasm = {
     ]
 };
 
-export default [
-    target_0,
-    target_1,
-    target_2,
-    target_extras,
-    target_wasm
+var targets = [
+    target_release,
+    target_debug,
+    target_performance,
+    target_extras
 ];
+
+if (process.env.AssemblyScript) {
+    targets = [
+        target_wasm,
+        target_extras
+    ]
+}
+
+export default targets;
