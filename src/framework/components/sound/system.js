@@ -46,14 +46,14 @@ Component._buildAccessors(SoundComponent.prototype, _schema);
 Object.assign(SoundComponentSystem.prototype, {
     initializeComponentData: function (component, data, properties) {
         properties = [
-            'distanceModel',
-            'maxDistance',
+            'volume',
             'pitch',
             'positional',
             'refDistance',
+            'maxDistance',
             'rollOffFactor',
-            'slots',
-            'volume'
+            'distanceModel',
+            'slots'
         ];
 
         for (var i = 0; i < properties.length; i++) {

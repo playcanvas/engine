@@ -66,7 +66,7 @@ function defineSoundPropertyBasic(publicName, privateName) {
             var slots = this._slots;
             for (var key in slots) {
                 var slot = slots[key];
-                // change refDistance of non-overlapping instances
+                // only change value of non-overlapping instances
                 if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
@@ -89,7 +89,7 @@ function defineSoundPropertyFactor(publicName, privateName) {
             var slots = this._slots;
             for (var key in slots) {
                 var slot = slots[key];
-                // change refDistance of non-overlapping instances
+                // only change value of non-overlapping instances
                 if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
