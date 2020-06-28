@@ -3,7 +3,7 @@ var vec4_add2         = instance.exports["Vec4#add2"];
 var vec4_clone        = instance.exports["Vec4#clone"];
 var vec4_constructor  = instance.exports["Vec4#constructor"];
 var vec4_copy         = instance.exports["Vec4#copy"];
-//var vec4_cross        = instance.exports["Vec4#cross"];
+// var vec4_cross        = instance.exports["Vec4#cross"];
 var vec4_dot          = instance.exports["Vec4#dot"];
 var vec4_equals       = instance.exports["Vec4#equals"];
 var vec4_length       = instance.exports["Vec4#length"];
@@ -12,7 +12,7 @@ var vec4_lerp         = instance.exports["Vec4#lerp"];
 var vec4_mul          = instance.exports["Vec4#mul"];
 var vec4_mul2         = instance.exports["Vec4#mul2"];
 var vec4_normalize    = instance.exports["Vec4#normalize"];
-//var vec4_project      = instance.exports["Vec4#project"];
+// var vec4_project      = instance.exports["Vec4#project"];
 var vec4_scale        = instance.exports["Vec4#scale"];
 var vec4_set          = instance.exports["Vec4#set"];
 var vec4_sub          = instance.exports["Vec4#sub"];
@@ -34,91 +34,91 @@ Vec4.wrap = function (ptr) {
     var tmp = Object.create(Vec4.prototype);
     tmp.ptr = ptr;
     return tmp;
-}
+};
 
 Vec4.prototype.add = function (rhs) {
     vec4_add(this.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.add2 = function (lhs, rhs) {
     vec4_add2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.clone = function () {
     var tmp = vec4_clone(this.ptr);
     return Vec4.wrap(tmp);
-}
+};
 
 Vec4.prototype.copy = function (rhs) {
     vec4_copy(this.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.dot = function (rhs) {
     return vec4_dot(this.ptr, rhs.ptr);
-}
+};
 
 Vec4.prototype.equals = function (rhs) {
     return !!vec4_equals(this.ptr, rhs.ptr);
-}
+};
 
 Vec4.prototype.length = function () {
     return vec4_length(this.ptr);
-}
+};
 
 Vec4.prototype.lengthSq = function () {
     return vec4_lengthSq(this.ptr);
-}
+};
 
 Vec4.prototype.lerp = function (lhs, rhs, alpha) {
     vec4_lerp(this.ptr, lhs.ptr, rhs.ptr, alpha);
     return this;
-}
+};
 
 Vec4.prototype.mul = function (rhs) {
     vec4_mul(this.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.mul2 = function (lhs, rhs) {
     vec4_mul2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.normalize = function () {
     vec4_normalize(this.ptr);
     return this;
-}
+};
 
 Vec4.prototype.scale = function (scalar) {
     vec4_scale(this.ptr, scalar);
     return this;
-}
+};
 
 Vec4.prototype.set = function (x, y, z, w) {
     vec4_set(this.ptr, x, y, z, w);
     return this;
-}
+};
 
 Vec4.prototype.sub = function (rhs) {
     vec4_sub(this.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.sub2 = function (lhs, rhs) {
     vec4_sub2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
-}
+};
 
 Vec4.prototype.toString = function () {
     return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
-}
+};
 
 Vec4.prototype.toStringFixed = function (n) {
     return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
-}
+};
 
 Object.defineProperty(Vec4.prototype, 'x', {
     get: function () {
