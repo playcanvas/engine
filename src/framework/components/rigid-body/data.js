@@ -1,34 +1,34 @@
-Object.assign(pc, function () {
-    /**
-     * @private
-     * @constructor
-     * @name pc.RigidBodyComponentData
-     * @extends pc.ComponentData
-     * @classdesc Contains data for the RigidBodyComponent
-     * @description Create a new data structure for a RigidBodyComponent
-     */
-    var RigidBodyComponentData = function () {
-        this.enabled = true;
-        this.mass = 1;
-        this.linearDamping = 0;
-        this.angularDamping = 0;
-        this.linearFactor = new pc.Vec3(1, 1, 1);
-        this.angularFactor = new pc.Vec3(1, 1, 1);
+import { Vec3 } from '../../../math/vec3.js';
 
-        this.friction = 0.5;
-        this.restitution = 0;
+import { BODYGROUP_STATIC, BODYMASK_NOT_STATIC, BODYTYPE_STATIC } from './constants.js';
 
-        this.type = pc.BODYTYPE_STATIC;
+/**
+ * @private
+ * @class
+ * @name pc.RigidBodyComponentData
+ * @augments pc.ComponentData
+ * @classdesc Contains data for the RigidBodyComponent.
+ * @description Create a new data structure for a RigidBodyComponent.
+ */
+function RigidBodyComponentData() {
+    this.enabled = true;
+    this.mass = 1;
+    this.linearDamping = 0;
+    this.angularDamping = 0;
+    this.linearFactor = new Vec3(1, 1, 1);
+    this.angularFactor = new Vec3(1, 1, 1);
 
-        this.group = pc.BODYGROUP_STATIC;
-        this.mask = pc.BODYMASK_NOT_STATIC;
+    this.friction = 0.5;
+    this.restitution = 0;
 
-        // Non-serialized properties
-        this.body = null;
-        this.simulationEnabled = false;
-    };
+    this.type = BODYTYPE_STATIC;
 
-    return {
-        RigidBodyComponentData: RigidBodyComponentData
-    };
-}());
+    this.group = BODYGROUP_STATIC;
+    this.mask = BODYMASK_NOT_STATIC;
+
+    // Non-serialized properties
+    this.body = null;
+    this.simulationEnabled = false;
+}
+
+export { RigidBodyComponentData };

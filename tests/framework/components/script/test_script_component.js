@@ -2,6 +2,8 @@ describe("pc.ScriptComponent", function () {
     var app;
 
     beforeEach(function (done) {
+        this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
         app = new pc.Application(document.createElement("canvas"));
 
         window.initializeCalls = [];
@@ -273,7 +275,7 @@ describe("pc.ScriptComponent", function () {
                 console.error(err);
             }
 
-            app.loadScene('base/tests/framework/components/script/scene1.json', function () {
+            app.scenes.loadScene('base/tests/framework/components/script/scene1.json', function () {
                 app.start();
                 done();
             });
@@ -1876,7 +1878,7 @@ describe("pc.ScriptComponent", function () {
         app.root.children[0].destroy();
 
         window.initializeCalls.length = 0;
-        app.loadScene('base/tests/framework/components/script/scene2.json', function () {
+        app.scenes.loadScene('base/tests/framework/components/script/scene2.json', function () {
             var e = app.root.findByName('A');
             var other = app.root.findByName('B');
 

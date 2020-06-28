@@ -6,7 +6,7 @@ var sourceFiles;
 
 if (release) {
     console.log('Testing release build');
-    sourceFiles = [path.resolve('build/output/playcanvas.js')];
+    sourceFiles = [path.resolve('build/playcanvas.js')];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {

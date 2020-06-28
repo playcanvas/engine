@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>PlayCanvas Positional Sound</title>
-    <script src="../../build/output/playcanvas.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -21,7 +25,6 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
-        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -30,6 +33,8 @@
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
+
+        var miniStats = new pcx.MiniStats(app);
 
         // Create an Entity with a camera component
         var camera = new pc.Entity();
@@ -87,6 +92,8 @@
             app.assets.loadFromUrl(requests[i].url, requests[i].type, function (err, asset) {
                 count--;
                 if (count === 0) {
+                    app.start();
+
                     var gravel = app.assets.find("footsteps.mp3");
                     var model = app.assets.find("playbot.json");
                     var anim = app.assets.find("playbot-run.json");
@@ -124,19 +131,19 @@
                     var pos;
                     var angle = 135;
                     var radius = 3;
-                    var height = 0;//1.1;
+                    var height = 0;// 1.1;
                     app.on("update", function (dt) {
-                        angle += 30*dt;
+                        angle += 30 * dt;
                         if (angle > 360) {
                             angle -= 360;
                         }
                         var pos = camera.getPosition();
-                        entity.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
-                        entity.setLocalEulerAngles(0, angle+90, 0);
+                        entity.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
+                        entity.setLocalEulerAngles(0, angle + 90, 0);
                     });
                 }
             });
-        };
+        }
     </script>
 </body>
 </html>

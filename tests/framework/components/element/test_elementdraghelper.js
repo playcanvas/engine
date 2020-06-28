@@ -38,8 +38,8 @@ describe("pc.ElementDragHelper", function() {
         };
 
         app = new pc.Application(canvas, {
-            mouse: new pc.input.Mouse(canvas),
-            touch: new pc.input.TouchDevice(canvas)
+            mouse: new pc.Mouse(canvas),
+            touch: new pc.TouchDevice(canvas)
         });
 
         entity = new pc.Entity("entity", app);

@@ -1,10 +1,31 @@
+import { Vec2 } from '../math/vec2.js';
+import { Vec3 } from '../math/vec3.js';
+
+import { BoundingBox } from '../shape/bounding-box.js';
+
+import {
+    INDEXFORMAT_UINT16,
+    PRIMITIVE_TRIANGLES,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES, SEMANTIC_COLOR,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    TYPE_FLOAT32, TYPE_UINT8
+} from '../graphics/graphics.js';
+import { IndexBuffer } from '../graphics/index-buffer.js';
+import { VertexBuffer } from '../graphics/vertex-buffer.js';
+import { VertexFormat } from '../graphics/vertex-format.js';
+import { VertexIterator } from '../graphics/vertex-iterator.js';
+
+import { Mesh } from './mesh.js';
+
+
 /**
  * @function
  * @name pc.calculateNormals
- * @description Generates normal information from the specified positions and triangle indices. See {@link pc.createMesh}.
- * @param {Number[]} positions An array of 3-dimensional vertex positions.
- * @param {Number[]} indices An array of triangle indices.
- * @returns {Number[]} An array of 3-dimensional vertex normals.
+ * @description Generates normal information from the specified positions and
+ * triangle indices. See {@link pc.createMesh}.
+ * @param {number[]} positions - An array of 3-dimensional vertex positions.
+ * @param {number[]} indices - An array of triangle indices.
+ * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
  * var normals = pc.calculateNormals(positions, indices);
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
@@ -14,17 +35,17 @@
 var primitiveUv1Padding = 4.0 / 64;
 var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 
-pc.calculateNormals = function (positions, indices) {
+function calculateNormals(positions, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
     var i1, i2, i3;
     var i; // Loop counter
-    var p1 = new pc.Vec3();
-    var p2 = new pc.Vec3();
-    var p3 = new pc.Vec3();
-    var p1p2 = new pc.Vec3();
-    var p1p3 = new pc.Vec3();
-    var faceNormal = new pc.Vec3();
+    var p1 = new Vec3();
+    var p2 = new Vec3();
+    var p3 = new Vec3();
+    var p1p2 = new Vec3();
+    var p1p3 = new Vec3();
+    var faceNormal = new Vec3();
 
     var normals = [];
 
@@ -70,35 +91,35 @@ pc.calculateNormals = function (positions, indices) {
     }
 
     return normals;
-};
+}
 
 /**
  * @function
  * @name pc.calculateTangents
- * @description Generates tangent information from the specified positions, normals, texture coordinates
- * and triangle indices. See {@link pc.createMesh}.
- * @param {Number[]} positions An array of 3-dimensional vertex positions.
- * @param {Number[]} normals An array of 3-dimensional vertex normals.
- * @param {Number[]} uvs An array of 2-dimensional vertex texture coordinates.
- * @param {Number[]} indices An array of triangle indices.
- * @returns {Number[]} An array of 3-dimensional vertex tangents.
+ * @description Generates tangent information from the specified positions,
+ * normals, texture coordinates and triangle indices. See {@link pc.createMesh}.
+ * @param {number[]} positions - An array of 3-dimensional vertex positions.
+ * @param {number[]} normals - An array of 3-dimensional vertex normals.
+ * @param {number[]} uvs - An array of 2-dimensional vertex texture coordinates.
+ * @param {number[]} indices - An array of triangle indices.
+ * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
-pc.calculateTangents = function (positions, normals, uvs, indices) {
+function calculateTangents(positions, normals, uvs, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
     var i1, i2, i3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-    var sdir = new pc.Vec3();
-    var tdir = new pc.Vec3();
-    var v1   = new pc.Vec3();
-    var v2   = new pc.Vec3();
-    var v3   = new pc.Vec3();
-    var w1   = new pc.Vec2();
-    var w2   = new pc.Vec2();
-    var w3   = new pc.Vec2();
+    var sdir = new Vec3();
+    var tdir = new Vec3();
+    var v1   = new Vec3();
+    var v2   = new Vec3();
+    var v3   = new Vec3();
+    var w1   = new Vec2();
+    var w2   = new Vec2();
+    var w3   = new Vec2();
     var i; // Loop counter
     var tan1 = new Float32Array(vertexCount * 3);
     var tan2 = new Float32Array(vertexCount * 3);
@@ -169,10 +190,10 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         tan2[i3 * 3 + 2] += tdir.z;
     }
 
-    t1 = new pc.Vec3();
-    t2 = new pc.Vec3();
-    var n = new pc.Vec3();
-    var temp = new pc.Vec3();
+    t1 = new Vec3();
+    t2 = new Vec3();
+    var n = new Vec3();
+    var temp = new Vec3();
 
     for (i = 0; i < vertexCount; i++) {
         n.set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
@@ -194,21 +215,21 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
     }
 
     return tangents;
-};
+}
 
 /**
  * @function
  * @name pc.createMesh
  * @description Creates a new mesh object from the supplied vertex information and topology.
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Number[]} positions An array of 3-dimensional vertex positions.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number[]} [opts.normals] An array of 3-dimensional vertex normals.
- * @param {Number[]} [opts.tangents] An array of 3-dimensional vertex tangents.
- * @param {Number[]} [opts.colors] An array of 4-dimensional vertex colors.
- * @param {Number[]} [opts.uvs] An array of 2-dimensional vertex texture coordinates.
- * @param {Number[]} [opts.uvs1] Same as opts.uvs, but for additional UV set
- * @param {Number[]} [opts.indices] An array of triangle indices.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {number[]} positions - An array of 3-dimensional vertex positions.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
+ * @param {number[]} [opts.tangents] - An array of 3-dimensional vertex tangents.
+ * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors.
+ * @param {number[]} [opts.uvs] - An array of 2-dimensional vertex texture coordinates.
+ * @param {number[]} [opts.uvs1] - Same as opts.uvs, but for additional UV set
+ * @param {number[]} [opts.indices] - An array of triangle indices.
  * @returns {pc.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
  * @example
  * // Create a new mesh supplying optional parameters using object literal notation
@@ -221,7 +242,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  *         indices: treeIndices
  *     });
  */
-pc.createMesh = function (device, positions, opts) {
+function createMesh(device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var normals      = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents     = opts && opts.tangents !== undefined ? opts.tangents : null;
@@ -233,60 +254,60 @@ pc.createMesh = function (device, positions, opts) {
     var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
 
     var vertexDesc = [
-        { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
+        { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
     ];
     if (normals !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 });
+        vertexDesc.push({ semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 });
     }
     if (tangents !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.TYPE_FLOAT32 });
+        vertexDesc.push({ semantic: SEMANTIC_TANGENT, components: 4, type: TYPE_FLOAT32 });
     }
     if (colors !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true });
+        vertexDesc.push({ semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true });
     }
     if (uvs !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 });
+        vertexDesc.push({ semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 });
     }
     if (uvs1 !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.TYPE_FLOAT32 });
+        vertexDesc.push({ semantic: SEMANTIC_TEXCOORD1, components: 2, type: TYPE_FLOAT32 });
     }
     if (blendIndices !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 2, type: pc.TYPE_UINT8 });
+        vertexDesc.push({ semantic: SEMANTIC_BLENDINDICES, components: 2, type: TYPE_UINT8 });
     }
     if (blendWeights !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.TYPE_FLOAT32 });
+        vertexDesc.push({ semantic: SEMANTIC_BLENDWEIGHT, components: 2, type: TYPE_FLOAT32 });
     }
 
-    var vertexFormat = new pc.VertexFormat(device, vertexDesc);
+    var vertexFormat = new VertexFormat(device, vertexDesc);
 
     // Create the vertex buffer
     var numVertices  = positions.length / 3;
-    var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, numVertices);
+    var vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices);
 
     // Write the vertex data into the vertex buffer
-    var iterator = new pc.VertexIterator(vertexBuffer);
+    var iterator = new VertexIterator(vertexBuffer);
     for (var i = 0; i < numVertices; i++) {
-        iterator.element[pc.SEMANTIC_POSITION].set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+        iterator.element[SEMANTIC_POSITION].set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
         if (normals !== null) {
-            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
+            iterator.element[SEMANTIC_NORMAL].set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
         }
         if (tangents !== null) {
-            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
+            iterator.element[SEMANTIC_TANGENT].set(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
         }
         if (colors !== null) {
-            iterator.element[pc.SEMANTIC_COLOR].set(colors[i * 4], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3]);
+            iterator.element[SEMANTIC_COLOR].set(colors[i * 4], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3]);
         }
         if (uvs !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i * 2], uvs[i * 2 + 1]);
+            iterator.element[SEMANTIC_TEXCOORD0].set(uvs[i * 2], uvs[i * 2 + 1]);
         }
         if (uvs1 !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i * 2], uvs1[i * 2 + 1]);
+            iterator.element[SEMANTIC_TEXCOORD1].set(uvs1[i * 2], uvs1[i * 2 + 1]);
         }
         if (blendIndices !== null) {
-            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i * 2], blendIndices[i * 2 + 1]);
+            iterator.element[SEMANTIC_BLENDINDICES].set(blendIndices[i * 2], blendIndices[i * 2 + 1]);
         }
         if (blendWeights !== null) {
-            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i * 2], blendWeights[i * 2 + 1]);
+            iterator.element[SEMANTIC_BLENDWEIGHT].set(blendWeights[i * 2], blendWeights[i * 2 + 1]);
         }
         iterator.next();
     }
@@ -296,7 +317,7 @@ pc.createMesh = function (device, positions, opts) {
     var indexBuffer = null;
     var indexed = (indices !== null);
     if (indexed) {
-        indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT16, indices.length);
+        indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, indices.length);
 
         // Read the indicies into the index buffer
         var dst = new Uint16Array(indexBuffer.lock());
@@ -304,38 +325,40 @@ pc.createMesh = function (device, positions, opts) {
         indexBuffer.unlock();
     }
 
-    var aabb = new pc.BoundingBox();
+    var aabb = new BoundingBox();
     aabb.compute(positions);
 
-    var mesh = new pc.Mesh();
+    var mesh = new Mesh(device);
     mesh.vertexBuffer = vertexBuffer;
     mesh.indexBuffer[0] = indexBuffer;
-    mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
+    mesh.primitive[0].type = PRIMITIVE_TRIANGLES;
     mesh.primitive[0].base = 0;
     mesh.primitive[0].count = indexed ? indices.length : numVertices;
     mesh.primitive[0].indexed = indexed;
     mesh.aabb = aabb;
     return mesh;
-};
+}
 
 /**
  * @function
  * @name pc.createTorus
  * @description Creates a procedural torus-shaped mesh.
+ *
  * The size, shape and tesselation properties of the torus can be controlled via function parameters.
  * By default, the function will create a torus in the XZ-plane with a tube radius of 0.2, a ring radius
- * of 0.3, 20 segments and 30 sides.<br />
+ * of 0.3, 20 segments and 30 sides.
+ *
  * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the torus's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number} [opts.tubeRadius] The radius of the tube forming the body of the torus (defaults to 0.2).
- * @param {Number} [opts.ringRadius] The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
- * @param {Number} [opts.segments] The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
- * @param {Number} [opts.sides] The number of divisions around the tubular body of the torus ring (defaults to 30).
+ * is generated into the vertex buffer of the torus's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus (defaults to 0.2).
+ * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
+ * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
+ * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring (defaults to 30).
  * @returns {pc.Mesh} A new torus-shaped mesh.
  */
-pc.createTorus = function (device, opts) {
+function createTorus(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var rc = opts && opts.tubeRadius !== undefined ? opts.tubeRadius : 0.2;
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
@@ -388,19 +411,19 @@ pc.createTorus = function (device, opts) {
     };
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
+        options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.createMesh(device, positions, options);
-};
+    return createMesh(device, positions, options);
+}
 
-pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
+function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
-    var pos = new pc.Vec3();
-    var bottomToTop = new pc.Vec3();
-    var norm = new pc.Vec3();
+    var pos = new Vec3();
+    var bottomToTop = new Vec3();
+    var norm = new Vec3();
     var top, bottom, tangent;
     var positions = [];
     var normals = [];
@@ -420,11 +443,11 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 theta = (j / capSegments) * 2.0 * Math.PI - Math.PI;
                 sinTheta = Math.sin(theta);
                 cosTheta = Math.cos(theta);
-                bottom = new pc.Vec3(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
-                top    = new pc.Vec3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
+                bottom = new Vec3(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
+                top    = new Vec3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
                 pos.lerp(bottom, top, i / heightSegments);
                 bottomToTop.sub2(top, bottom).normalize();
-                tangent = new pc.Vec3(cosTheta, 0.0, -sinTheta);
+                tangent = new Vec3(cosTheta, 0.0, -sinTheta);
                 norm.cross(tangent, bottomToTop).normalize();
 
                 positions.push(pos.x, pos.y, pos.z);
@@ -613,26 +636,28 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         uvs1: uvs1,
         indices: indices
     };
-};
+}
 
 /**
  * @function
  * @name pc.createCylinder
  * @description Creates a procedural cylinder-shaped mesh.
+ *
  * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
  * By default, the function will create a cylinder standing vertically centred on the XZ-plane with a radius
- * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.<br />
+ * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.
+ *
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the cylinder's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number} [opts.radius] The radius of the tube forming the body of the cylinder (defaults to 0.5).
- * @param {Number} [opts.height] The length of the body of the cylinder (defaults to 1.0).
- * @param {Number} [opts.heightSegments] The number of divisions along the length of the cylinder (defaults to 5).
- * @param {Number} [opts.capSegments] The number of divisions around the tubular body of the cylinder (defaults to 20).
+ * is generated into the vertex buffer of the cylinder's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
+ * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
+ * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder (defaults to 5).
+ * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cylinder (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
-pc.createCylinder = function (device, opts) {
+function createCylinder(device, opts) {
     // #ifdef DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
@@ -648,33 +673,36 @@ pc.createCylinder = function (device, opts) {
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var options = pc._createConeData(radius, radius, height, heightSegments, capSegments, false);
+    var options = _createConeData(radius, radius, height, heightSegments, capSegments, false);
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+        options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.createMesh(device, options.positions, options);
-};
+    return createMesh(device, options.positions, options);
+}
 
 /**
  * @function
  * @name pc.createCapsule
  * @description Creates a procedural capsule-shaped mesh.
- * The size, shape and tesselation properties of the capsule can be controlled via function parameters.
- * By default, the function will create a capsule standing vertically centred on the XZ-plane with a radius
- * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.<br />
+ *
+ * The size, shape and tesselation properties of the capsule can be controlled via function
+ * parameters. By default, the function will create a capsule standing vertically centred
+ * on the XZ-plane with a radius of 0.25, a height of 1.0, 1 height segment and 10 cap
+ * segments.
+ *
  * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the capsule's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number} [opts.radius] The radius of the tube forming the body of the capsule (defaults to 0.3).
- * @param {Number} [opts.height] The length of the body of the capsule from tip to tip (defaults to 1.0).
- * @param {Number} [opts.heightSegments] The number of divisions along the tubular length of the capsule (defaults to 1).
- * @param {Number} [opts.sides] The number of divisions around the tubular body of the capsule (defaults to 20).
+ * is generated into the vertex buffer of the capsule's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults to 0.3).
+ * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
+ * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the capsule (defaults to 1).
+ * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
-pc.createCapsule = function (device, opts) {
+function createCapsule(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
@@ -683,34 +711,37 @@ pc.createCapsule = function (device, opts) {
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var options = pc._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
+    var options = _createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+        options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.createMesh(device, options.positions, options);
-};
+    return createMesh(device, options.positions, options);
+}
 
 /**
  * @function
  * @name pc.createCone
- * @description Creates a procedural cone-shaped mesh.</p>
- * The size, shape and tesselation properties of the cone can be controlled via function parameters.
- * By default, the function will create a cone standing vertically centred on the XZ-plane with a base radius
- * of 0.5, a height of 1.0, 5 height segments and 20 cap segments.<br />
- * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the cone's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number} [opts.baseRadius] The base radius of the cone (defaults to 0.5).
- * @param {Number} [opts.peakRadius] The peak radius of the cone (defaults to 0.0).
- * @param {Number} [opts.height] The length of the body of the cone (defaults to 1.0).
- * @param {Number} [opts.heightSegments] The number of divisions along the length of the cone (defaults to 5).
- * @param {Number} [opts.capSegments] The number of divisions around the tubular body of the cone (defaults to 18).
+ * @description Creates a procedural cone-shaped mesh.
+ *
+ * The size, shape and tesselation properties of the cone can be controlled via function
+ * parameters. By default, the function will create a cone standing vertically centred
+ * on the XZ-plane with a base radius of 0.5, a height of 1.0, 5 height segments and 20
+ * cap segments.
+ *
+ * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the cone's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
+ * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
+ * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
+ * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone (defaults to 5).
+ * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone (defaults to 18).
  * @returns {pc.Mesh} A new cone-shaped mesh.
  */
-pc.createCone = function (device, opts) {
+function createCone(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var peakRadius = opts && opts.peakRadius !== undefined ? opts.peakRadius : 0.0;
@@ -719,31 +750,34 @@ pc.createCone = function (device, opts) {
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
-    var options = pc._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
+    var options = _createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+        options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.createMesh(device, options.positions, options);
-};
+    return createMesh(device, options.positions, options);
+}
 
 /**
  * @function
  * @name pc.createSphere
  * @description Creates a procedural sphere-shaped mesh.
- * The size and tesselation properties of the sphere can be controlled via function parameters. By
- * default, the function will create a sphere centred on the object space origin with a radius of 0.5
- * and 16 segments in both longitude and latitude.<br />
- * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the sphere's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {Number} [opts.radius] The radius of the sphere (defaults to 0.5).
- * @param {Number} [opts.segments] The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
+ *
+ * The size and tesselation properties of the sphere can be controlled via function
+ * parameters. By default, the function will create a sphere centred on the object
+ * space origin with a radius of 0.5 and 16 segments in both longitude and latitude.
+ *
+ * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the sphere's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
+ * @param {number} [opts.segments] - The number of divisions along the longitudinal
+ * and latitudinal axes of the sphere (defaults to 16).
  * @returns {pc.Mesh} A new sphere-shaped mesh.
  */
-pc.createSphere = function (device, opts) {
+function createSphere(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
@@ -801,32 +835,34 @@ pc.createSphere = function (device, opts) {
     };
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
+        options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.createMesh(device, positions, options);
-};
+    return createMesh(device, positions, options);
+}
 
 /**
  * @function
  * @name pc.createPlane
  * @description Creates a procedural plane-shaped mesh.
- * The size and tesselation properties of the plane can be controlled via function parameters. By
- * default, the function will create a plane centred on the object space origin with a width and
- * length of 1.0 and 5 segments in either axis (50 triangles). The normal vector of the plane is aligned
- * along the positive Y axis.<br />
- * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the plane's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec2} [opts.halfExtents] The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
- * @param {Number} [opts.widthSegments] The number of divisions along the X axis of the plane (defaults to 5).
- * @param {Number} [opts.lengthSegments] The number of divisions along the Z axis of the plane (defaults to 5).
+ *
+ * The size and tesselation properties of the plane can be controlled via function
+ * parameters. By default, the function will create a plane centred on the object
+ * space origin with a width and length of 1.0 and 5 segments in either axis (50
+ * triangles). The normal vector of the plane is aligned along the positive Y axis.
+ *
+ * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent
+ * information is generated into the vertex buffer of the plane's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {pc.Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
+ * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
+ * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
  * @returns {pc.Mesh} A new plane-shaped mesh.
  */
-pc.createPlane = function (device, opts) {
+function createPlane(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec2(0.5, 0.5);
+    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new Vec2(0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
@@ -879,46 +915,48 @@ pc.createPlane = function (device, opts) {
     };
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
+        options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.createMesh(device, positions, options);
-};
+    return createMesh(device, positions, options);
+}
 
 /**
  * @function
  * @name pc.createBox
  * @description Creates a procedural box-shaped mesh.
+ *
  * The size, shape and tesselation properties of the box can be controlled via function parameters. By
  * default, the function will create a box centred on the object space origin with a width, length and
- * height of 1.0 unit and 10 segments in either axis (50 triangles per face).<br />
+ * height of 1.0 unit and 10 segments in either axis (50 triangles per face).
+ *
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
- * information is generated into the vertex buffer of the box's mesh.<br />
- * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Object} [opts] An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec3} [opts.halfExtents] The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
- * @param {Number} [opts.widthSegments] The number of divisions along the X axis of the box (defaults to 1).
- * @param {Number} [opts.lengthSegments] The number of divisions along the Z axis of the box (defaults to 1).
- * @param {Number} [opts.heightSegments] The number of divisions along the Y axis of the box (defaults to 1).
+ * information is generated into the vertex buffer of the box's mesh.
+ * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+ * @param {pc.Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
+ * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
+ * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
+ * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).
  * @returns {pc.Mesh} A new box-shaped mesh.
  */
-pc.createBox = function (device, opts) {
+function createBox(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec3(0.5, 0.5, 0.5);
+    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new Vec3(0.5, 0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
     var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
-        new pc.Vec3(-he.x, -he.y,  he.z),
-        new pc.Vec3( he.x, -he.y,  he.z),
-        new pc.Vec3( he.x,  he.y,  he.z),
-        new pc.Vec3(-he.x,  he.y,  he.z),
-        new pc.Vec3( he.x, -he.y, -he.z),
-        new pc.Vec3(-he.x, -he.y, -he.z),
-        new pc.Vec3(-he.x,  he.y, -he.z),
-        new pc.Vec3( he.x,  he.y, -he.z)
+        new Vec3(-he.x, -he.y,  he.z),
+        new Vec3( he.x, -he.y,  he.z),
+        new Vec3( he.x,  he.y,  he.z),
+        new Vec3(-he.x,  he.y,  he.z),
+        new Vec3( he.x, -he.y, -he.z),
+        new Vec3(-he.x, -he.y, -he.z),
+        new Vec3(-he.x,  he.y, -he.z),
+        new Vec3( he.x,  he.y, -he.z)
     ];
 
     var faceAxes = [
@@ -961,10 +999,10 @@ pc.createBox = function (device, opts) {
 
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {
-                var temp1 = new pc.Vec3();
-                var temp2 = new pc.Vec3();
-                var temp3 = new pc.Vec3();
-                var r = new pc.Vec3();
+                var temp1 = new Vec3();
+                var temp2 = new Vec3();
+                var temp3 = new Vec3();
+                var r = new Vec3();
                 temp1.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments);
                 temp2.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][2]], j / vSegments);
                 temp3.sub2(temp2, corners[faceAxes[side][0]]);
@@ -1011,8 +1049,10 @@ pc.createBox = function (device, opts) {
     };
 
     if (calculateTangents) {
-        options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
+        options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.createMesh(device, positions, options);
-};
+    return createMesh(device, positions, options);
+}
+
+export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus };

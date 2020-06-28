@@ -1,10 +1,12 @@
+import { Application } from './application.js';
+
 /**
  * @private
- * @constructor
+ * @class
  * @name pc.ApplicationStats
- * @param {pc.GraphicsDevice} device The graphics device.
+ * @param {pc.GraphicsDevice} device - The graphics device.
  */
-pc.ApplicationStats = function (device) {
+function ApplicationStats(device) {
     this.frame = {
         fps: 0,
         ms: 0,
@@ -71,19 +73,21 @@ pc.ApplicationStats = function (device) {
 
     Object.defineProperty(this, 'scene', {
         get: function () {
-            return pc.Application._currentApplication.scene._stats;
+            return Application._currentApplication.scene._stats;
         }
     });
 
     Object.defineProperty(this, 'lightmapper', {
         get: function () {
-            return pc.Application._currentApplication.lightmapper._stats;
+            return Application._currentApplication.lightmapper._stats;
         }
     });
 
     Object.defineProperty(this, 'batcher', {
         get: function () {
-            return pc.Application._currentApplication.batcher._stats;
+            return Application._currentApplication.batcher._stats;
         }
     });
-};
+}
+
+export { ApplicationStats };

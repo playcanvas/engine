@@ -1,0 +1,32 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node.js 10.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10.x
+    - name: Setup Java JDK 1.8
+      uses: actions/setup-java@v1.3.0
+      with:
+        java-version: 1.8
+    - run: npm ci
+    - run: npm run build
+    - run: sudo apt-get install xvfb
+    - run: xvfb-run --auto-servernum npm run test
+    - run: npm run test:tsd
+    - run: npm run lint

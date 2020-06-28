@@ -1,8 +1,6 @@
-/**
- * @private
- * @constructor
- */
-pc.SoundComponentData = function SoundComponentData() {
+import { DISTANCE_LINEAR } from '../../../audio/constants.js';
+
+function SoundComponentData() {
     // serialized
     this.enabled = true;
     this.volume = 1;
@@ -11,9 +9,11 @@ pc.SoundComponentData = function SoundComponentData() {
     this.refDistance = 1;
     this.maxDistance = 10000;
     this.rollOffFactor = 1;
-    this.distanceModel = pc.DISTANCE_LINEAR;
+    this.distanceModel = DISTANCE_LINEAR;
     this.slots = {};
 
     // non serialized
     this.playingBeforeDisable = {};
-};
+}
+
+export { SoundComponentData };

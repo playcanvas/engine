@@ -1,18 +1,21 @@
-pc.events = {
+import { EventHandler } from './event-handler.js';
+
+var events = {
     /**
      * @private
      * @function
      * @name pc.events.attach
      * @description Attach event methods 'on', 'off', 'fire', 'once' and 'hasEvent' to the
      * target object.
-     * @param {Object} target The object to add events to.
-     * @returns {Object} The target object
+     * @param {object} target - The object to add events to.
+     * @returns {object} The target object.
      * @example
      * var obj = { };
      * pc.events.attach(obj);
      */
     attach: function (target) {
-        var ev = pc.events;
+        var ev = events;
+        target._addCallback = ev._addCallback;
         target.on = ev.on;
         target.off = ev.off;
         target.fire = ev.fire;
@@ -23,9 +26,12 @@ pc.events = {
         return target;
     },
 
-    on: pc.EventHandler.prototype.on,
-    off: pc.EventHandler.prototype.off,
-    fire: pc.EventHandler.prototype.fire,
-    once: pc.EventHandler.prototype.once,
-    hasEvent: pc.EventHandler.prototype.hasEvent
+    _addCallback: EventHandler.prototype._addCallback,
+    on: EventHandler.prototype.on,
+    off: EventHandler.prototype.off,
+    fire: EventHandler.prototype.fire,
+    once: EventHandler.prototype.once,
+    hasEvent: EventHandler.prototype.hasEvent
 };
+
+export { events };

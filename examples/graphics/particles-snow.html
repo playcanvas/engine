@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>PlayCanvas Snow Particles</title>
-    <script src="../../build/output/playcanvas.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -30,10 +34,12 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0,0,0)
+            clearColor: new pc.Color(0, 0, 0)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0, 10);
@@ -45,7 +51,7 @@
             color: new pc.Color(1, 1, 1),
             intensity: 1
         });
-        lightDirEntity.setLocalEulerAngles(45,0,0);
+        lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
         // Add Entities into the scene hierarchy
         app.root.addChild(cameraEntity);
@@ -60,7 +66,7 @@
         ]);
         var velocityCurve2 = new pc.CurveSet([
             [0, 0],   // x
-            [0, -0.4],// y
+            [0, -0.4], // y
             [0, 0]    // z
         ]);
 
@@ -94,7 +100,6 @@
                 colorMap: asset.resource
             });
         });
-
     </script>
 </body>
 </html>

@@ -1,9 +1,5 @@
-Object.assign(pc, function () {
-    var ZoneComponentData = function () {
-        this.enabled = true;
-    };
+function ZoneComponentData() {
+    this.enabled = true;
+}
 
-    return {
-        ZoneComponentData: ZoneComponentData
-    };
-}());
+export { ZoneComponentData };

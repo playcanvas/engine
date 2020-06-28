@@ -4,6 +4,8 @@ describe("async pc.AnimationComponent", function () {
     var assetlist;
 
     beforeEach(function () {
+        this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
         app = new pc.Application(document.createElement("canvas"));
     });
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var categories = [
     {
         name: "animation",
@@ -5,25 +6,52 @@ var categories = [
             "blend"
         ]
     }, {
+        name: "camera",
+        examples: [
+            "first-person",
+            "fly",
+            "orbit"
+        ]
+    }, {
         name: "graphics",
         examples: [
-            "camera-fly",
+            "batching-dynamic",
+            "hardware-instancing",
             "layers",
             "lights",
-            "loader-obj",
+            "lights-baked",
+            "material-anisotropic",
+            "material-clear-coat",
             "material-physical",
+            "mesh-decals",
+            "mesh-deformation",
+            "mesh-generation",
+            "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
+            "model-outline",
+            "model-shapes",
             "model-textured-box",
-            "portal",
+            "particles-anim-index",
+            "particles-random-sprites",
             "particles-snow",
             "particles-sparks",
+            "point-cloud",
+            "point-cloud-simulation",
+            "portal",
             "post-effects",
+            "render-to-texture",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis",
-            "virtual-reality"
+            "texture-basis"
+        ]
+    }, {
+        name: "loaders",
+        examples: [
+            "loader-glb",
+            "loader-obj"
         ]
     }, {
         name: "input",
@@ -40,7 +68,9 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "compound-collision",
+            "falling-shapes",
+            "raycast"
         ]
     }, {
         name: "sound",
@@ -61,6 +91,16 @@ var categories = [
             "text-typewriter",
             "text-wrap",
             "various"
+        ]
+    }, {
+        name: "xr",
+        examples: [
+            'ar-basic',
+            'ar-hit-test',
+            'vr-basic',
+            'vr-controllers',
+            'vr-movement',
+            'xr-picking'
         ]
     }
 ];

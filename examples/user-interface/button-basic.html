@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>PlayCanvas Basic Button</title>
-    <script src="../../build/output/playcanvas.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,6 +39,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         // Create a camera
         var camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -58,9 +64,9 @@
             imageEntity: button
         });
         button.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             height: 40,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             type: pc.ELEMENTTYPE_IMAGE,
             width: 175,
             useInput: true
@@ -70,11 +76,11 @@
         // Create a label for the button
         var label = new pc.Entity();
         label.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(0, 0, 0),
             fontSize: 32,
             height: 64,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             text: "CLICK ME",
             type: pc.ELEMENTTYPE_TEXT,
             width: 128,
@@ -88,7 +94,7 @@
         });
 
         // Load a font
-        var fontAsset = new pc.Asset('courier.json', "font", {url: "../assets/fonts/courier.json"});
+        var fontAsset = new pc.Asset('courier.json', "font", { url: "../assets/fonts/courier.json" });
         fontAsset.on('load', function () {
             // Apply the font to the text element
             label.element.fontAsset = fontAsset;

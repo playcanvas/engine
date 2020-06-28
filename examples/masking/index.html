@@ -1,9 +1,12 @@
 <!doctype html>
 <html>
     <head>
-        <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
-        <script src="../../build/output/playcanvas.js"></script>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+        <script src="../../build/playcanvas.js"></script>
+        <script src="../../build/playcanvas-extras.js"></script>
         <style>
             body {
                 margin: 0;
@@ -29,6 +32,8 @@
                 app.resizeCanvas(canvas.width, canvas.height);
             });
 
+            var miniStats = new pcx.MiniStats(app);
+
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
@@ -37,19 +42,19 @@
             // create camera
             var c = new pc.Entity("Camera");
             c.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
                 farClip: 10000
             });
-            c.translate(1,1,1);
-            c.lookAt(0,0,0);
+            c.translate(1, 1, 1);
+            c.lookAt(0, 0, 0);
             app.root.addChild(c);
 
             // Load Assets
             var assets = [
-                new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"})
-            ]
+                new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" })
+            ];
 
-            var count =0;
+            var count = 0;
             app.assets.on('load', function () {
                 count++;
                 if (count === assets.length) {
@@ -69,10 +74,10 @@
             // create the menu screen, panel and list items
             function createMenu() {
                 menu = new pc.Entity();
-                menu.name = "Menu"+c;
-                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.name = "Menu" + c;
+                menu.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true });
                 menu.screen.scaleMode = "blend";
-                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                menu.screen.referenceResolution = new pc.Vec2(1280, 720);
 
                 container = new pc.Entity();
                 container.name = "Container";
@@ -88,20 +93,21 @@
                 });
 
                 app.root.addChild(menu);
-                menu.addChild(container)
+                menu.addChild(container);
 
                 return container;
 
-            };
+            }
 
             var c = 0;
+
             function createPanel(menu) {
                 c++;
                 var panel, mask, subpanel, submask, block, hiddenblock;
 
                 // create a panel
                 panel = new pc.Entity();
-                panel.name = "Panel"+c;
+                panel.name = "Panel" + c;
                 panel.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -109,25 +115,25 @@
                     width: 300,
                     height: 300,
                     opacity: 1,
-                    color: new pc.Color(1,1,1,1)
+                    color: new pc.Color(1, 1, 1, 1)
                 });
 
                 // create a mask
                 mask = new pc.Entity();
-                mask.name = "Mask"+c;
+                mask.name = "Mask" + c;
                 mask.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0, 0, 1, 1),
                     pivot: new pc.Vec2(0.5, 0.5),
-                    margin: new pc.Vec4(0,0,0,0),
-                    color: new pc.Color(1,0.5,0.5),
+                    margin: new pc.Vec4(0, 0, 0, 0),
+                    color: new pc.Color(1, 0.5, 0.5),
                     opacity: 1,
                     mask: true
                 });
 
                 // create a panel
                 subpanel = new pc.Entity();
-                subpanel.name = "Subpanel"+c;
+                subpanel.name = "Subpanel" + c;
                 subpanel.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.1, 0.5, 0.1),
@@ -135,14 +141,14 @@
                     width: 400,
                     height: 100,
                     opacity: 1,
-                    color: new pc.Color(0.5,0.5,0.5)
+                    color: new pc.Color(0.5, 0.5, 0.5)
                 });
 
                 submask = new pc.Entity();
-                submask.name = "Submask"+c;
+                submask.name = "Submask" + c;
                 submask.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(0.5,0,0.5,0),
+                    anchor: new pc.Vec4(0.5, 0, 0.5, 0),
                     pivot: new pc.Vec2(0.5, 0),
                     width: 400,
                     height: 100,
@@ -151,21 +157,21 @@
                 });
 
                 block = new pc.Entity();
-                block.name = "Block"+c;
+                block.name = "Block" + c;
                 block.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(1,0.5,1,0.5),
+                    anchor: new pc.Vec4(1, 0.5, 1, 0.5),
                     pivot: new pc.Vec2(0.5, 0.5),
                     width: 150,
                     height: 100,
                     opacity: 1,
-                    color: new pc.Color(0,1,0)
+                    color: new pc.Color(0, 1, 0)
                 });
-                block.setLocalPosition(0,50,0);
+                block.setLocalPosition(0, 50, 0);
 
 
                 hiddenblock = new pc.Entity();
-                hiddenblock.name = "HiddenBlock"+c;
+                hiddenblock.name = "HiddenBlock" + c;
                 hiddenblock.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 1, 0.5, 1),
@@ -173,11 +179,11 @@
                     width: 100,
                     height: 300,
                     opacity: 1,
-                    color: new pc.Color(1,0,0)
+                    color: new pc.Color(1, 0, 0)
                 });
 
                 text = new pc.Entity();
-                text.name = "Text"+c;
+                text.name = "Text" + c;
                 text.addComponent("element", {
                     type: "text",
                     anchor: new pc.Vec4(0.5, 0.8, 0.5, 0.8),
@@ -185,7 +191,7 @@
                     fontSize: 64,
                     fontAsset: fontAsset,
                     opacity: 1,
-                    color: new pc.Color(0,0,1),
+                    color: new pc.Color(0, 0, 1),
                     text: "Hello World!"
                 });
 
@@ -199,10 +205,10 @@
                 menu.addChild(panel);
 
                 return panel;
-            };
+            }
 
 
-            var p1,p2,p3;
+            var p1, p2, p3;
 
             // called when all assets are loaded
             function onLoadComplete() {
@@ -217,13 +223,13 @@
                 // create the entities
                 var parent = createMenu();
                 p1 = createPanel(parent);
-                p1.translateLocal(-300,-25,0);
+                p1.translateLocal(-300, -25, 0);
 
                 p2 = createPanel(parent);
-                p2.translateLocal(0,25,0);
+                p2.translateLocal(0, 25, 0);
 
                 p3 = createPanel(parent);
-                p3.translateLocal(300,-25,0);
+                p3.translateLocal(300, -25, 0);
 
                 // var panel1 = app.root.findByName("Panel1");
             }
