@@ -24,13 +24,15 @@ var vec3_sub2         = assemblyscript.instance.exports["Vec3#sub2"];
 
 function Vec3(x, y, z) {
     if (x && x.length === 3) {
-        this.ptr = vec3_constructor(0,
+        this.ptr = vec3_constructor(
+            0,
             x[0],
             x[1],
             x[2]
         );
     } else {
-        this.ptr = vec3_constructor(0,
+        this.ptr = vec3_constructor(
+            0,
             x || 0,
             y || 0,
             z || 0

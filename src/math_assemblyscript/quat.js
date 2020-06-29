@@ -26,14 +26,16 @@ var quat_transformVector    = assemblyscript.instance.exports["Quat#transformVec
 
 function Quat(x, y, z, w) {
     if (x && x.length === 4) {
-        this.ptr = quat_constructor(0,
+        this.ptr = quat_constructor(
+            0,
             x[0],
             x[1],
             x[2],
             x[3]
         );
     } else {
-        this.ptr = quat_constructor(0,
+        this.ptr = quat_constructor(
+            0,
             (x === undefined) ? 0 : x,
             (y === undefined) ? 0 : y,
             (z === undefined) ? 0 : z,

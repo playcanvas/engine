@@ -32,7 +32,8 @@
   "eslintIgnore": [
     "examples/lib/*",
     "src/polyfill/*",
-    "examples/animation/Loader.js"
+    "examples/animation/Loader.js",
+    "examples/animation/test.js"
   ],
   "devDependencies": {
     "chai": "^4.2.0",

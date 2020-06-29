@@ -22,12 +22,14 @@ var vec2_sub2         = assemblyscript.instance.exports["Vec2#sub2"];
 
 function Vec2(x, y) {
     if (x && x.length === 2) {
-        this.ptr = vec2_constructor(0,
+        this.ptr = vec2_constructor(
+            0,
             x[0],
             x[1]
         );
     } else {
-        this.ptr = vec2_constructor(0,
+        this.ptr = vec2_constructor(
+            0,
             x || 0,
             y || 0
         );
