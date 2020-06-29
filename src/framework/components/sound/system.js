@@ -36,7 +36,6 @@ var SoundComponentSystem = function (app, manager) {
     ComponentSystem.call(this, app);
 
     this.id = "sound";
-    this.description = "Allows an Entity to play sounds";
 
     this.ComponentType = SoundComponent;
     this.DataType = SoundComponentData;

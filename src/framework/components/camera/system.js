@@ -55,7 +55,6 @@ var CameraComponentSystem = function (app) {
     ComponentSystem.call(this, app);
 
     this.id = 'camera';
-    this.description = "Renders the scene from the location of the Entity.";
 
     this.ComponentType = CameraComponent;
     this.DataType = CameraComponentData;

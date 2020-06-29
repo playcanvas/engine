@@ -36,7 +36,6 @@ var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'script';
-    this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
 
     this.ComponentType = ScriptLegacyComponent;
     this.DataType = ScriptLegacyComponentData;

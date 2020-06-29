@@ -591,7 +591,6 @@ var CollisionComponentSystem = function CollisionComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = "collision";
-    this.description = "Specifies a collision volume.";
 
     this.ComponentType = CollisionComponent;
     this.DataType = CollisionComponentData;
