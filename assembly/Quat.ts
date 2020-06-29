@@ -198,9 +198,9 @@ export class Quat {
     }
 
     setFromMat4(m_: Mat4): Quat {
-		var lx: f32;
-		var ly: f32;
-		var lz: f32;
+        var lx: f32;
+        var ly: f32;
+        var lz: f32;
         var s: f32;
         var rs: f32;
         
@@ -216,9 +216,6 @@ export class Quat {
         var m22 = m_.m10;
 
         // Remove the scale from the matrix
-        //var lx: f32 = 1.0 / Mathf.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-        //var ly: f32 = 1.0 / Mathf.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-        //var lz: f32 = 1.0 / Mathf.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
         lx = m00 * m00 + m01 * m01 + m02 * m02;
         if (lx === 0)
             return this;
@@ -230,8 +227,8 @@ export class Quat {
         lz = m20 * m20 + m21 * m21 + m22 * m22;
         if (lz === 0)
             return this;
-		lz = 1 / Mathf.sqrt(lz);
-		
+        lz = 1 / Mathf.sqrt(lz);
+        
         m00 *= lx;
         m01 *= lx;
         m02 *= lx;
