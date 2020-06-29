@@ -4,6 +4,8 @@ function CpuTimer(app) {
     this._timings = [];
     this._prevTimings = [];
 
+    this.enabled = true;
+
     app.on('frameupdate', this.begin.bind(this, 'update'));
     app.on('framerender', this.mark.bind(this, 'render'));
     app.on('frameend', this.mark.bind(this, 'other'));
@@ -12,6 +14,10 @@ function CpuTimer(app) {
 Object.assign(CpuTimer.prototype, {
     // mark the beginning of the frame
     begin: function (name) {
+        if (!this.enabled) {
+            return;
+        }
+
         // end previous frame timings
         if (this._frameIndex < this._frameTimings.length) {
             this._frameTimings.splice(this._frameIndex);
@@ -27,6 +33,10 @@ Object.assign(CpuTimer.prototype, {
 
     // mark
     mark: function (name) {
+        if (!this.enabled) {
+            return;
+        }
+
         var timestamp = pc.now();
 
         // end previous mark
