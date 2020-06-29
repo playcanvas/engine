@@ -69,8 +69,12 @@ describe('Test Bundle Loader', function () {
             })
         ];
 
-        // flag the cubemap faces for loading
-        this.assets[4].loadFaces = true;
+        // setup cubemap correctly so faces load
+        var id = this.assets[7].id;
+        this.assets[5].loadFaces = true;
+        this.assets[5].data = {
+            textures: [id, id, id, id, id, id]
+        };
 
         // expected types of asset types
         this.expectedTypes = {
