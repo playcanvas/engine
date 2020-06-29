@@ -32,10 +32,7 @@ mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH
         return getBoneMatrix(vertex_boneIndices);
     #elif defined(SKIN)
-        return matrix_model * (getBoneMatrix(vertex_boneIndices.x) * vertex_boneWeights.x +
-               getBoneMatrix(vertex_boneIndices.y) * vertex_boneWeights.y +
-               getBoneMatrix(vertex_boneIndices.z) * vertex_boneWeights.z +
-               getBoneMatrix(vertex_boneIndices.w) * vertex_boneWeights.w);
+        return matrix_model * getSkinMatrix(vertex_boneIndices, vertex_boneWeights);
     #elif defined(INSTANCING)
         return mat4(instance_line1, instance_line2, instance_line3, instance_line4);
     #else

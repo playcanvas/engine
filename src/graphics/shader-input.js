@@ -1,4 +1,4 @@
-import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY } from './graphics.js';
+import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC4ARRAY } from './graphics.js';
 import { Version } from './version.js';
 
 function ShaderInput(graphicsDevice, name, type, locationId) {
@@ -11,10 +11,16 @@ function ShaderInput(graphicsDevice, name, type, locationId) {
     // Create the version
     this.version = new Version();
 
-    // Set the data dataType
-    if (type === UNIFORMTYPE_FLOAT) {
-        if (name.substr(name.length - 3) === "[0]") type = UNIFORMTYPE_FLOATARRAY;
+    // custome data type for arrays
+    if (name.substr(name.length - 3) === "[0]") {
+        if (type === UNIFORMTYPE_FLOAT) {
+            type = UNIFORMTYPE_FLOATARRAY;
+        } else if (type === UNIFORMTYPE_VEC4) {
+            type = UNIFORMTYPE_VEC4ARRAY;
+        }
     }
+
+    // Set the data dataType
     this.dataType = type;
 
     this.value = [null, null, null, null];

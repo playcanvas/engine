@@ -273,6 +273,75 @@ Object.assign(Mat4.prototype, {
 
     /**
      * @function
+     * @name pc.Mat4#mulTransform2
+     * @description Multiplies the specified 4x4 matrices together and stores the result in
+     * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
+     * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
+     * are not verified to be in the expected format. This function is faster than general {@link pc.Mat4#mul2}.
+     * @param {pc.Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of the operation.
+     * @param {pc.Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
+     * @returns {pc.Mat4} Self for chaining.
+     */
+    mulTransform2: function (lhs, rhs) {
+        var a00, a01, a02,
+            a10, a11, a12,
+            a20, a21, a22,
+            a30, a31, a32,
+            b0, b1, b2,
+            a = lhs.data,
+            b = rhs.data,
+            r = this.data;
+
+        a00 = a[0];
+        a01 = a[1];
+        a02 = a[2];
+        a10 = a[4];
+        a11 = a[5];
+        a12 = a[6];
+        a20 = a[8];
+        a21 = a[9];
+        a22 = a[10];
+        a30 = a[12];
+        a31 = a[13];
+        a32 = a[14];
+
+        b0 = b[0];
+        b1 = b[1];
+        b2 = b[2];
+        r[0]  = a00 * b0 + a10 * b1 + a20 * b2;
+        r[1]  = a01 * b0 + a11 * b1 + a21 * b2;
+        r[2]  = a02 * b0 + a12 * b1 + a22 * b2;
+        r[3] = 0;
+
+        b0 = b[4];
+        b1 = b[5];
+        b2 = b[6];
+        r[4]  = a00 * b0 + a10 * b1 + a20 * b2;
+        r[5]  = a01 * b0 + a11 * b1 + a21 * b2;
+        r[6]  = a02 * b0 + a12 * b1 + a22 * b2;
+        r[7] = 0;
+
+        b0 = b[8];
+        b1 = b[9];
+        b2 = b[10];
+        r[8]  = a00 * b0 + a10 * b1 + a20 * b2;
+        r[9]  = a01 * b0 + a11 * b1 + a21 * b2;
+        r[10] = a02 * b0 + a12 * b1 + a22 * b2;
+        r[11] = 0;
+
+        b0 = b[12];
+        b1 = b[13];
+        b2 = b[14];
+        r[12] = a00 * b0 + a10 * b1 + a20 * b2 + a30;
+        r[13] = a01 * b0 + a11 * b1 + a21 * b2 + a31;
+        r[14] = a02 * b0 + a12 * b1 + a22 * b2 + a32;
+        r[15] = 1;
+
+        return this;
+    },
+
+    /**
+     * @function
      * @name pc.Mat4#mul
      * @description Multiplies the current instance by the specified 4x4 matrix.
      * @param {pc.Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
