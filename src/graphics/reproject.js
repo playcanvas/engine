@@ -34,7 +34,7 @@ var getCoding = function (texture) {
  * @function
  * @name pc.reproject
  * @description Reproject a cubemap into equirectangular layout or visa-versa
- * in RGBE, RGBM, linear or SRGB encoding.
+ * while converting between RGBE, RGBM, linear or SRGB encoding.
  * @param {pc.GraphicsDevice} device - The graphics device
  * @param {pc.Texture} source - The texture that requires reprojection
  * @param {pc.Texture} target - The target texture

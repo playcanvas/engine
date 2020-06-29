@@ -482,7 +482,7 @@ Object.assign(Viewer.prototype, {
                     self.app.assets.add(textureAsset);
                     self.app.assets.load(textureAsset);
                 } else {
-                    continuation("failed to load uri=" + uri);
+                    continuation("failed to load uri=" + gltfTexture.uri);
                 }
             };
 
@@ -498,7 +498,7 @@ Object.assign(Viewer.prototype, {
                     self.app.assets.add(bufferAsset);
                     self.app.assets.load(bufferAsset);
                 } else {
-                    continuation("failed to load uri=" + uri);
+                    continuation("failed to load uri=" + gltfBuffer.uri);
                 }
             };
 
