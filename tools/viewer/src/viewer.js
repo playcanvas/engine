@@ -30,7 +30,7 @@ var Viewer = function (canvas) {
 
     // load cubemap background
     var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
-        url: assetsFolder + "/cubemaps/Helipad.dds"
+        url: assetsFolder + "/cubemaps/helipad.dds"
     }, {
         textures: [
             assetsFolder + '/cubemaps/Helipad_posx.png',
