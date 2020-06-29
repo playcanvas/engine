@@ -300,12 +300,7 @@ Object.assign(Asset.prototype, {
 
     reload: function () {
         // no need to be reloaded
-        if (!this.loaded)
-            return;
-
-        if (this.type === 'cubemap') {
-            this.registry._loader.patch(this, this.registry);
-        } else {
+        if (this.loaded) {
             this.loaded = false;
             this.registry.load(this);
         }
@@ -327,19 +322,23 @@ Object.assign(Asset.prototype, {
         this.fire('unload', this);
         this.registry.fire('unload:' + this.id, this);
 
-        for (var i = 0; i < this._resources.length; ++i) {
-            var resource = this._resources[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
-        }
+        var old = this._resources;
 
+        // clear resources on the asset
         this.resources = [];
         this.loaded = false;
 
+        // remove resource from loader cache
         if (this.file) {
-            // remove resource from loader cache
             this.registry._loader.clearCache(this.getFileUrl(), this.type);
+        }
+
+        // destroy resources
+        for (var i = 0; i < old.length; ++i) {
+            var resource = old[i];
+            if (resource && resource.destroy) {
+                resource.destroy();
+            }
         }
     }
 });
@@ -466,6 +465,24 @@ Object.defineProperty(Asset.prototype, 'preload', {
         this._preload = value;
         if (this._preload && !this.loaded && !this.loading && this.registry)
             this.registry.load(this);
+    }
+});
+
+Object.defineProperty(Asset.prototype, 'loadFaces', {
+    get: function () {
+        return this._loadFaces;
+    },
+    set: function (value) {
+        value = !!value;
+        if (!this.hasOwnProperty('_loadFaces') || value !== this._loadFaces) {
+            this._loadFaces = value;
+
+            // the loadFaces property should be part of the asset data block
+            // because changing the flag should result in asset patch being invoked.
+            // here we must invoke it manually instead.
+            if (this.loaded)
+                this.registry._loader.patch(this, this.registry);
+        }
     }
 });
 
