@@ -38,6 +38,7 @@ var getCoding = function (texture) {
  * @param {pc.GraphicsDevice} device - The graphics device
  * @param {pc.Texture} source - The texture that requires reprojection
  * @param {pc.Texture} target - The target texture
+ * @param {number} [specularPower] - optional specular power in order to convolve the source texture while reprojecting
  */
 var reproject = function (device, source, target, specularPower) {
     var chunks = shaderChunks;
