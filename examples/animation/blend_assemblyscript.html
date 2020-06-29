@@ -45,6 +45,10 @@
             imports = {};
             //module = Loader.instantiateBuffer(buffer, imports);
             module = await Loader.instantiateStreaming(response, imports);
+            window.assemblyscript = {
+                module,
+                instance
+            };
             //console.log(module.I8.length);
             // next three lines just test the auto-generated demangled class, which isn't so useful currently
             // this PR might change it: https://github.com/AssemblyScript/assemblyscript/pull/437

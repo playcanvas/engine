@@ -1,24 +1,24 @@
 import { Vec3 } from "./vec3";
 
-var quat_clone              = instance.exports["Quat#clone"];
-var quat_conjugate          = instance.exports["Quat#conjugate"];
-var quat_constructor        = instance.exports["Quat#constructor"];
-var quat_copy               = instance.exports["Quat#copy"];
-var quat_equals             = instance.exports["Quat#equals"];
-var quat_getAxisAngle       = instance.exports["Quat#getAxisAngle"];
-var quat_getEulerAngles     = instance.exports["Quat#getEulerAngles"];
-var quat_invert             = instance.exports["Quat#invert"];
-var quat_length             = instance.exports["Quat#length"];
-var quat_lengthSq           = instance.exports["Quat#lengthSq"];
-var quat_mul                = instance.exports["Quat#mul"];
-var quat_mul2               = instance.exports["Quat#mul2"];
-var quat_normalize          = instance.exports["Quat#normalize"];
-var quat_set                = instance.exports["Quat#set"];
-var quat_setFromAxisAngle   = instance.exports["Quat#setFromAxisAngle"];
-var quat_setFromEulerAngles = instance.exports["Quat#setFromEulerAngles"];
-var quat_setFromMat4        = instance.exports["Quat#setFromMat4"];
-var quat_slerp              = instance.exports["Quat#slerp"];
-var quat_transformVector    = instance.exports["Quat#transformVector"];
+var quat_clone              = assemblyscript.instance.exports["Quat#clone"];
+var quat_conjugate          = assemblyscript.instance.exports["Quat#conjugate"];
+var quat_constructor        = assemblyscript.instance.exports["Quat#constructor"];
+var quat_copy               = assemblyscript.instance.exports["Quat#copy"];
+var quat_equals             = assemblyscript.instance.exports["Quat#equals"];
+var quat_getAxisAngle       = assemblyscript.instance.exports["Quat#getAxisAngle"];
+var quat_getEulerAngles     = assemblyscript.instance.exports["Quat#getEulerAngles"];
+var quat_invert             = assemblyscript.instance.exports["Quat#invert"];
+var quat_length             = assemblyscript.instance.exports["Quat#length"];
+var quat_lengthSq           = assemblyscript.instance.exports["Quat#lengthSq"];
+var quat_mul                = assemblyscript.instance.exports["Quat#mul"];
+var quat_mul2               = assemblyscript.instance.exports["Quat#mul2"];
+var quat_normalize          = assemblyscript.instance.exports["Quat#normalize"];
+var quat_set                = assemblyscript.instance.exports["Quat#set"];
+var quat_setFromAxisAngle   = assemblyscript.instance.exports["Quat#setFromAxisAngle"];
+var quat_setFromEulerAngles = assemblyscript.instance.exports["Quat#setFromEulerAngles"];
+var quat_setFromMat4        = assemblyscript.instance.exports["Quat#setFromMat4"];
+var quat_slerp              = assemblyscript.instance.exports["Quat#slerp"];
+var quat_transformVector    = assemblyscript.instance.exports["Quat#transformVector"];
 
 /**
  * @class
@@ -26,9 +26,19 @@ var quat_transformVector    = instance.exports["Quat#transformVector"];
 
 function Quat(x, y, z, w) {
     if (x && x.length === 4) {
-        this.ptr = quat_constructor(0, x[0], x[1], x[2], x[3]);
+        this.ptr = quat_constructor(0,
+            x[0],
+            x[1],
+            x[2],
+            x[3]
+        );
     } else {
-        this.ptr = quat_constructor(0, x || 0, y || 0, z || 0, w || 1);
+        this.ptr = quat_constructor(0,
+            (x === undefined) ? 0 : x,
+            (y === undefined) ? 0 : y,
+            (z === undefined) ? 0 : z,
+            (w === undefined) ? 1 : w
+        );
     }
 }
 
@@ -142,37 +152,37 @@ Quat.prototype.toStringFixed = function (n) {
 
 Object.defineProperty(Quat.prototype, 'x', {
     get: function () {
-        return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
+        return assemblyscript.module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in assemblyscript.module.F32
     },
     set: function (newValue) {
-        module.F32[this.ptr >> 2] = newValue;
+        assemblyscript.module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'y', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 1];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 1];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 1] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'z', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 2];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 2];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 2] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 2] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'w', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 3];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 3];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 3] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 3] = newValue;
     }
 });
 

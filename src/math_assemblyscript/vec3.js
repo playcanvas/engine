@@ -1,22 +1,22 @@
-var vec3_add          = instance.exports["Vec3#add"];
-var vec3_add2         = instance.exports["Vec3#add2"];
-var vec3_clone        = instance.exports["Vec3#clone"];
-var vec3_constructor  = instance.exports["Vec3#constructor"];
-var vec3_copy         = instance.exports["Vec3#copy"];
-var vec3_cross        = instance.exports["Vec3#cross"];
-var vec3_dot          = instance.exports["Vec3#dot"];
-var vec3_equals       = instance.exports["Vec3#equals"];
-var vec3_length       = instance.exports["Vec3#length"];
-var vec3_lengthSq     = instance.exports["Vec3#lengthSq"];
-var vec3_lerp         = instance.exports["Vec3#lerp"];
-var vec3_mul          = instance.exports["Vec3#mul"];
-var vec3_mul2         = instance.exports["Vec3#mul2"];
-var vec3_normalize    = instance.exports["Vec3#normalize"];
-var vec3_project      = instance.exports["Vec3#project"];
-var vec3_scale        = instance.exports["Vec3#scale"];
-var vec3_set          = instance.exports["Vec3#set"];
-var vec3_sub          = instance.exports["Vec3#sub"];
-var vec3_sub2         = instance.exports["Vec3#sub2"];
+var vec3_add          = assemblyscript.instance.exports["Vec3#add"];
+var vec3_add2         = assemblyscript.instance.exports["Vec3#add2"];
+var vec3_clone        = assemblyscript.instance.exports["Vec3#clone"];
+var vec3_constructor  = assemblyscript.instance.exports["Vec3#constructor"];
+var vec3_copy         = assemblyscript.instance.exports["Vec3#copy"];
+var vec3_cross        = assemblyscript.instance.exports["Vec3#cross"];
+var vec3_dot          = assemblyscript.instance.exports["Vec3#dot"];
+var vec3_equals       = assemblyscript.instance.exports["Vec3#equals"];
+var vec3_length       = assemblyscript.instance.exports["Vec3#length"];
+var vec3_lengthSq     = assemblyscript.instance.exports["Vec3#lengthSq"];
+var vec3_lerp         = assemblyscript.instance.exports["Vec3#lerp"];
+var vec3_mul          = assemblyscript.instance.exports["Vec3#mul"];
+var vec3_mul2         = assemblyscript.instance.exports["Vec3#mul2"];
+var vec3_normalize    = assemblyscript.instance.exports["Vec3#normalize"];
+var vec3_project      = assemblyscript.instance.exports["Vec3#project"];
+var vec3_scale        = assemblyscript.instance.exports["Vec3#scale"];
+var vec3_set          = assemblyscript.instance.exports["Vec3#set"];
+var vec3_sub          = assemblyscript.instance.exports["Vec3#sub"];
+var vec3_sub2         = assemblyscript.instance.exports["Vec3#sub2"];
 
 /**
  * @class
@@ -24,9 +24,17 @@ var vec3_sub2         = instance.exports["Vec3#sub2"];
 
 function Vec3(x, y, z) {
     if (x && x.length === 3) {
-        this.ptr = vec3_constructor(0, x[0], x[1], x[2]);
+        this.ptr = vec3_constructor(0,
+            x[0],
+            x[1],
+            x[2]
+        );
     } else {
-        this.ptr = vec3_constructor(0, x || 0, y || 0, z || 0);
+        this.ptr = vec3_constructor(0,
+            x || 0,
+            y || 0,
+            z || 0
+        );
     }
 }
 
@@ -132,28 +140,28 @@ Vec3.prototype.toStringFixed = function (n) {
 
 Object.defineProperty(Vec3.prototype, 'x', {
     get: function () {
-        return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
+        return assemblyscript.module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in assemblyscript.module.F32
     },
     set: function (newValue) {
-        module.F32[this.ptr >> 2] = newValue;
+        assemblyscript.module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec3.prototype, 'y', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 1];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 1];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 1] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });
 
 Object.defineProperty(Vec3.prototype, 'z', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 2];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 2];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 2] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 2] = newValue;
     }
 });
 

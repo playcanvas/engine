@@ -1,20 +1,20 @@
-var vec2_add          = instance.exports["Vec2#add"];
-var vec2_add2         = instance.exports["Vec2#add2"];
-var vec2_clone        = instance.exports["Vec2#clone"];
-var vec2_constructor  = instance.exports["Vec2#constructor"];
-var vec2_copy         = instance.exports["Vec2#copy"];
-var vec2_dot          = instance.exports["Vec2#dot"];
-var vec2_equals       = instance.exports["Vec2#equals"];
-var vec2_length       = instance.exports["Vec2#length"];
-var vec2_lengthSq     = instance.exports["Vec2#lengthSq"];
-var vec2_lerp         = instance.exports["Vec2#lerp"];
-var vec2_mul          = instance.exports["Vec2#mul"];
-var vec2_mul2         = instance.exports["Vec2#mul2"];
-var vec2_normalize    = instance.exports["Vec2#normalize"];
-var vec2_scale        = instance.exports["Vec2#scale"];
-var vec2_set          = instance.exports["Vec2#set"];
-var vec2_sub          = instance.exports["Vec2#sub"];
-var vec2_sub2         = instance.exports["Vec2#sub2"];
+var vec2_add          = assemblyscript.instance.exports["Vec2#add"];
+var vec2_add2         = assemblyscript.instance.exports["Vec2#add2"];
+var vec2_clone        = assemblyscript.instance.exports["Vec2#clone"];
+var vec2_constructor  = assemblyscript.instance.exports["Vec2#constructor"];
+var vec2_copy         = assemblyscript.instance.exports["Vec2#copy"];
+var vec2_dot          = assemblyscript.instance.exports["Vec2#dot"];
+var vec2_equals       = assemblyscript.instance.exports["Vec2#equals"];
+var vec2_length       = assemblyscript.instance.exports["Vec2#length"];
+var vec2_lengthSq     = assemblyscript.instance.exports["Vec2#lengthSq"];
+var vec2_lerp         = assemblyscript.instance.exports["Vec2#lerp"];
+var vec2_mul          = assemblyscript.instance.exports["Vec2#mul"];
+var vec2_mul2         = assemblyscript.instance.exports["Vec2#mul2"];
+var vec2_normalize    = assemblyscript.instance.exports["Vec2#normalize"];
+var vec2_scale        = assemblyscript.instance.exports["Vec2#scale"];
+var vec2_set          = assemblyscript.instance.exports["Vec2#set"];
+var vec2_sub          = assemblyscript.instance.exports["Vec2#sub"];
+var vec2_sub2         = assemblyscript.instance.exports["Vec2#sub2"];
 
 /**
  * @class
@@ -22,9 +22,15 @@ var vec2_sub2         = instance.exports["Vec2#sub2"];
 
 function Vec2(x, y) {
     if (x && x.length === 2) {
-        this.ptr = vec2_constructor(0, x[0], x[1]);
+        this.ptr = vec2_constructor(0,
+            x[0],
+            x[1]
+        );
     } else {
-        this.ptr = vec2_constructor(0, x || 0, y || 0);
+        this.ptr = vec2_constructor(0,
+            x || 0,
+            y || 0
+        );
     }
 }
 
@@ -120,19 +126,19 @@ Vec2.prototype.toStringFixed = function (n) {
 
 Object.defineProperty(Vec2.prototype, 'x', {
     get: function () {
-        return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
+        return assemblyscript.module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in assemblyscript.module.F32
     },
     set: function (newValue) {
-        module.F32[this.ptr >> 2] = newValue;
+        assemblyscript.module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec2.prototype, 'y', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 1];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 1];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 1] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });
 

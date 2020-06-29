@@ -1,22 +1,22 @@
-var vec4_add          = instance.exports["Vec4#add"];
-var vec4_add2         = instance.exports["Vec4#add2"];
-var vec4_clone        = instance.exports["Vec4#clone"];
-var vec4_constructor  = instance.exports["Vec4#constructor"];
-var vec4_copy         = instance.exports["Vec4#copy"];
-// var vec4_cross        = instance.exports["Vec4#cross"];
-var vec4_dot          = instance.exports["Vec4#dot"];
-var vec4_equals       = instance.exports["Vec4#equals"];
-var vec4_length       = instance.exports["Vec4#length"];
-var vec4_lengthSq     = instance.exports["Vec4#lengthSq"];
-var vec4_lerp         = instance.exports["Vec4#lerp"];
-var vec4_mul          = instance.exports["Vec4#mul"];
-var vec4_mul2         = instance.exports["Vec4#mul2"];
-var vec4_normalize    = instance.exports["Vec4#normalize"];
-// var vec4_project      = instance.exports["Vec4#project"];
-var vec4_scale        = instance.exports["Vec4#scale"];
-var vec4_set          = instance.exports["Vec4#set"];
-var vec4_sub          = instance.exports["Vec4#sub"];
-var vec4_sub2         = instance.exports["Vec4#sub2"];
+var vec4_add             = assemblyscript.instance.exports["Vec4#add"];
+var vec4_add2            = assemblyscript.instance.exports["Vec4#add2"];
+var vec4_clone           = assemblyscript.instance.exports["Vec4#clone"];
+var vec4_constructor     = assemblyscript.instance.exports["Vec4#constructor"];
+var vec4_copy            = assemblyscript.instance.exports["Vec4#copy"];
+// var vec4_cross        = assemblyscript.instance.exports["Vec4#cross"];
+var vec4_dot             = assemblyscript.instance.exports["Vec4#dot"];
+var vec4_equals          = assemblyscript.instance.exports["Vec4#equals"];
+var vec4_length          = assemblyscript.instance.exports["Vec4#length"];
+var vec4_lengthSq        = assemblyscript.instance.exports["Vec4#lengthSq"];
+var vec4_lerp            = assemblyscript.instance.exports["Vec4#lerp"];
+var vec4_mul             = assemblyscript.instance.exports["Vec4#mul"];
+var vec4_mul2            = assemblyscript.instance.exports["Vec4#mul2"];
+var vec4_normalize       = assemblyscript.instance.exports["Vec4#normalize"];
+// var vec4_project      = assemblyscript.instance.exports["Vec4#project"];
+var vec4_scale           = assemblyscript.instance.exports["Vec4#scale"];
+var vec4_set             = assemblyscript.instance.exports["Vec4#set"];
+var vec4_sub             = assemblyscript.instance.exports["Vec4#sub"];
+var vec4_sub2            = assemblyscript.instance.exports["Vec4#sub2"];
 
 /**
  * @class
@@ -24,9 +24,19 @@ var vec4_sub2         = instance.exports["Vec4#sub2"];
 
 function Vec4(x, y, z, w) {
     if (x && x.length === 4) {
-        this.ptr = vec4_constructor(0, x[0], x[1], x[2], x[3]);
+        this.ptr = vec4_constructor(0,
+            x[0],
+            x[1],
+            x[2],
+            x[3]
+        );
     } else {
-        this.ptr = vec4_constructor(0, x || 0, y || 0, z || 0, w || 0);
+        this.ptr = vec4_constructor(0,
+            x || 0,
+            y || 0,
+            z || 0,
+            w || 0
+        );
     }
 }
 
@@ -122,37 +132,37 @@ Vec4.prototype.toStringFixed = function (n) {
 
 Object.defineProperty(Vec4.prototype, 'x', {
     get: function () {
-        return module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in module.F32
+        return assemblyscript.module.F32[this.ptr >> 2]; // the shifting is same as dividing by 4, used to quickly lookup the value in assemblyscript.module.F32
     },
     set: function (newValue) {
-        module.F32[this.ptr >> 2] = newValue;
+        assemblyscript.module.F32[this.ptr >> 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'y', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 1];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 1];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 1] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 1] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'z', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 2];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 2];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 2] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 2] = newValue;
     }
 });
 
 Object.defineProperty(Vec4.prototype, 'w', {
     get: function () {
-        return module.F32[(this.ptr >> 2) + 3];
+        return assemblyscript.module.F32[(this.ptr >> 2) + 3];
     },
     set: function (newValue) {
-        module.F32[(this.ptr >> 2) + 3] = newValue;
+        assemblyscript.module.F32[(this.ptr >> 2) + 3] = newValue;
     }
 });
 

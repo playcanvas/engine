@@ -1,36 +1,36 @@
 import { Vec3 } from "./vec3";
 
-var mat4_add                = instance.exports["Mat4#add"];
-var mat4_add2               = instance.exports["Mat4#add2"];
-var mat4_clone              = instance.exports["Mat4#clone"];
-var mat4_constructor        = instance.exports["Mat4#constructor"];
-var mat4_copy               = instance.exports["Mat4#copy"];
-var mat4_equals             = instance.exports["Mat4#equals"];
-var mat4_getEulerAngles     = instance.exports["Mat4#getEulerAngles"];
-var mat4_getScale           = instance.exports["Mat4#getScale"];
-var mat4_getTranslation     = instance.exports["Mat4#getTranslation"];
-var mat4_getX               = instance.exports["Mat4#getX"];
-var mat4_getY               = instance.exports["Mat4#getY"];
-var mat4_getZ               = instance.exports["Mat4#getZ"];
-var mat4_invert             = instance.exports["Mat4#invert"];
-var mat4_invertTo3x3        = instance.exports["Mat4#invertTo3x3"];
-var mat4_isIdentity         = instance.exports["Mat4#isIdentity"];
-var mat4_mul                = instance.exports["Mat4#mul"];
-var mat4_mul2               = instance.exports["Mat4#mul2"];
-var mat4_setFromAxisAngle   = instance.exports["Mat4#setFromAxisAngle"];
-var mat4_setFromEulerAngles = instance.exports["Mat4#setFromEulerAngles"];
-var mat4_setFrustum         = instance.exports["Mat4#setFrustum"];
-var mat4_setIdentity        = instance.exports["Mat4#setIdentity"];
-var mat4_setLookAt          = instance.exports["Mat4#setLookAt"];
-var mat4_setOrtho           = instance.exports["Mat4#setOrtho"];
-var mat4_setPerspective     = instance.exports["Mat4#setPerspective"];
-var mat4_setScale           = instance.exports["Mat4#setScale"];
-var mat4_setTRS             = instance.exports["Mat4#setTRS"];
-var mat4_setTranslate       = instance.exports["Mat4#setTranslate"];
-var mat4_transformPoint     = instance.exports["Mat4#transformPoint"];
-var mat4_transformVec4      = instance.exports["Mat4#transformVec4"];
-var mat4_transformVector    = instance.exports["Mat4#transformVector"];
-var mat4_transpose          = instance.exports["Mat4#transpose"];
+var mat4_add                = assemblyscript.instance.exports["Mat4#add"];
+var mat4_add2               = assemblyscript.instance.exports["Mat4#add2"];
+var mat4_clone              = assemblyscript.instance.exports["Mat4#clone"];
+var mat4_constructor        = assemblyscript.instance.exports["Mat4#constructor"];
+var mat4_copy               = assemblyscript.instance.exports["Mat4#copy"];
+var mat4_equals             = assemblyscript.instance.exports["Mat4#equals"];
+var mat4_getEulerAngles     = assemblyscript.instance.exports["Mat4#getEulerAngles"];
+var mat4_getScale           = assemblyscript.instance.exports["Mat4#getScale"];
+var mat4_getTranslation     = assemblyscript.instance.exports["Mat4#getTranslation"];
+var mat4_getX               = assemblyscript.instance.exports["Mat4#getX"];
+var mat4_getY               = assemblyscript.instance.exports["Mat4#getY"];
+var mat4_getZ               = assemblyscript.instance.exports["Mat4#getZ"];
+var mat4_invert             = assemblyscript.instance.exports["Mat4#invert"];
+var mat4_invertTo3x3        = assemblyscript.instance.exports["Mat4#invertTo3x3"];
+var mat4_isIdentity         = assemblyscript.instance.exports["Mat4#isIdentity"];
+var mat4_mul                = assemblyscript.instance.exports["Mat4#mul"];
+var mat4_mul2               = assemblyscript.instance.exports["Mat4#mul2"];
+var mat4_setFromAxisAngle   = assemblyscript.instance.exports["Mat4#setFromAxisAngle"];
+var mat4_setFromEulerAngles = assemblyscript.instance.exports["Mat4#setFromEulerAngles"];
+var mat4_setFrustum         = assemblyscript.instance.exports["Mat4#setFrustum"];
+var mat4_setIdentity        = assemblyscript.instance.exports["Mat4#setIdentity"];
+var mat4_setLookAt          = assemblyscript.instance.exports["Mat4#setLookAt"];
+var mat4_setOrtho           = assemblyscript.instance.exports["Mat4#setOrtho"];
+var mat4_setPerspective     = assemblyscript.instance.exports["Mat4#setPerspective"];
+var mat4_setScale           = assemblyscript.instance.exports["Mat4#setScale"];
+var mat4_setTRS             = assemblyscript.instance.exports["Mat4#setTRS"];
+var mat4_setTranslate       = assemblyscript.instance.exports["Mat4#setTranslate"];
+var mat4_transformPoint     = assemblyscript.instance.exports["Mat4#transformPoint"];
+var mat4_transformVec4      = assemblyscript.instance.exports["Mat4#transformVec4"];
+var mat4_transformVector    = assemblyscript.instance.exports["Mat4#transformVector"];
+var mat4_transpose          = assemblyscript.instance.exports["Mat4#transpose"];
 
 /**
  * @class
@@ -38,7 +38,7 @@ var mat4_transpose          = instance.exports["Mat4#transpose"];
 
 function Mat4() {
     this.ptr = mat4_constructor(0);
-    // if (module.tlfs) {
+    // if (assemblyscript.module.tlfs) {
     //    this.bufferByteLength = 0;
     // } else {
     this.assignDataView();
@@ -57,8 +57,8 @@ Mat4.wrap = function (ptr) {
 };
 
 Mat4.prototype.assignDataView = function () {
-    // this.wrap = module.Mat4.wrap(this.ptr)
-    this.data = new Float32Array(module.memory.buffer, this.ptr, 16);
+    // this.wrap = assemblyscript.module.Mat4.wrap(this.ptr)
+    this.data = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 16);
     // this.data.ptr = this.ptr;
 };
 
@@ -286,12 +286,12 @@ Mat4.prototype.toStringFixed = function (n) {
 // I simply preallocate 300mb and update the dataviews *never*.
 // Object.defineProperty(Mat4.prototype, 'data', {
 //     get: function () {
-//         if (this.bufferByteLength != module.memory.buffer.byteLength) {
+//         if (this.bufferByteLength != assemblyscript.module.memory.buffer.byteLength) {
 //             // Recreate dataview when the wasm arraybuffer changed size.
 //             // Needed because dataviews become invalid when original arraybuffer resizes.
 //             // I cache them because recreating dataviews for 64 animated models costs like 5ms per frame.
-//             this.cachedDataView = new Float32Array(module.memory.buffer, this.ptr, 16);
-//             this.bufferByteLength = module.memory.buffer.byteLength;
+//             this.cachedDataView = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 16);
+//             this.bufferByteLength = assemblyscript.module.memory.buffer.byteLength;
 //             console.log("recreate dataview for ", this);
 //         }
 //         return this.cachedDataView;

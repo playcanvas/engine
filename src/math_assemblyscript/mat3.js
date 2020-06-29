@@ -1,14 +1,14 @@
-var mat3_add          = instance.exports["Mat3#add"];
-// var mat3_add2         = instance.exports["Mat3#add2"];
-var mat3_clone        = instance.exports["Mat3#clone"];
-var mat3_constructor  = instance.exports["Mat3#constructor"];
-var mat3_copy         = instance.exports["Mat3#copy"];
-var mat3_equals       = instance.exports["Mat3#equals"];
-var mat3_isIdentity   = instance.exports["Mat3#isIdentity"];
-var mat3_setIdentity  = instance.exports["Mat3#setIdentity"];
-var mat3_transpose    = instance.exports["Mat3#transpose"];
-// var mat3_mul2         = instance.exports["Mat3#mul2"];
-// var mat3_mul          = instance.exports["Mat3#mul"];
+var mat3_add             = assemblyscript.instance.exports["Mat3#add"];
+// var mat3_add2         = assemblyscript.instance.exports["Mat3#add2"];
+var mat3_clone           = assemblyscript.instance.exports["Mat3#clone"];
+var mat3_constructor     = assemblyscript.instance.exports["Mat3#constructor"];
+var mat3_copy            = assemblyscript.instance.exports["Mat3#copy"];
+var mat3_equals          = assemblyscript.instance.exports["Mat3#equals"];
+var mat3_isIdentity      = assemblyscript.instance.exports["Mat3#isIdentity"];
+var mat3_setIdentity     = assemblyscript.instance.exports["Mat3#setIdentity"];
+var mat3_transpose       = assemblyscript.instance.exports["Mat3#transpose"];
+// var mat3_mul2         = assemblyscript.instance.exports["Mat3#mul2"];
+// var mat3_mul          = assemblyscript.instance.exports["Mat3#mul"];
 
 /**
  * @class
@@ -16,7 +16,7 @@ var mat3_transpose    = instance.exports["Mat3#transpose"];
 
 function Mat3() {
     this.ptr = mat3_constructor(0);
-    // if (module.tlfs) {
+    // if (assemblyscript.module.tlfs) {
     //    this.bufferByteLength = 0;
     // } else {
     this.assignDataView();
@@ -26,7 +26,7 @@ function Mat3() {
 Mat3.wrap = function (ptr) {
     var tmp = Object.create(Mat3.prototype);
     tmp.ptr = ptr;
-    // if (module.tlfs) {
+    // if (assemblyscript.module.tlfs) {
     //     tmp.bufferByteLength = 0;
     // } else {
     this.assignDataView();
@@ -35,8 +35,8 @@ Mat3.wrap = function (ptr) {
 };
 
 Mat3.prototype.assignDataView = function () {
-    // this.wrap = module.Mat3.wrap(this.ptr)
-    this.data = new Float32Array(module.memory.buffer, this.ptr, 9);
+    // this.wrap = assemblyscript.module.Mat3.wrap(this.ptr)
+    this.data = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 9);
 };
 
 Mat3.prototype.add = function (rhs) {
