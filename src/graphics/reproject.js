@@ -1,4 +1,3 @@
-
 import { Vec4 } from '../math/vec4.js';
 
 import {
@@ -67,8 +66,8 @@ var reproject = function (device, source, target, specularPower) {
 
     var constantParams = device.scope.resolve("params");
     var params = new Vec4();
-    params.y = specularPower !== undefined ? specularPower : 1,
-    params.z = specularPower !== undefined ? 1 : 0;
+    params.y = (specularPower !== undefined) ? specularPower : 1;
+    params.z = (specularPower !== undefined) ? 1 : 0;
 
     for (var face = 0; face < (target.cubemap ? 6 : 1); face++) {
         var targ = new RenderTarget(device, target, {

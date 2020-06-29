@@ -1,4 +1,3 @@
-
 // initialize controls
 
 // populate select inputs with manifest assets

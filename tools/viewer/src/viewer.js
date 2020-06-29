@@ -104,7 +104,7 @@ var Viewer = function (canvas) {
     this.meshInstances = [];
     this.animationMap = { };
     this.morphMap = { };
-    this.morphs = [ ];
+    this.morphs = [];
     this.firstFrame = false;
 
     this.showGraphs = false;
@@ -142,10 +142,10 @@ var Viewer = function (canvas) {
     }
 
     // initialize the envmap
-    app.loader.getHandler(pc.ASSET_TEXTURE).parsers['hdr'] = new HdrParser(app.assets, false);
+    app.loader.getHandler(pc.ASSET_TEXTURE).parsers.hdr = new HdrParser(app.assets, false);
     this.loadHeliSkybox();
-    //this.load(assetsFolder + '/textures/wooden_motel_2k.hdr');
-    //this.load(assetsFolder + '/models/playcanvas-cube.glb');
+    // this.load(assetsFolder + '/textures/wooden_motel_2k.hdr');
+    // this.load(assetsFolder + '/models/playcanvas-cube.glb');
 
     // construct debug shiny ball
     var shiny = new pc.StandardMaterial();
@@ -272,11 +272,11 @@ Object.assign(Viewer.prototype, {
         } else {
             // sort files into the correct order based on filename
             const names = [
-                [ 'posx', 'negx', 'posy', 'negy', 'posz', 'negz' ],
-                [ 'px', 'nx', 'py', 'ny', 'pz', 'nz' ],
-                [ 'right', 'left', 'up', 'down', 'front', 'back' ],
-                [ 'right', 'left', 'top', 'bottom', 'forward', 'backward' ],
-                [ '0', '1', '2', '3', '4', '5' ]
+                ['posx', 'negx', 'posy', 'negy', 'posz', 'negz'],
+                ['px', 'nx', 'py', 'ny', 'pz', 'nz'],
+                ['right', 'left', 'up', 'down', 'front', 'back'],
+                ['right', 'left', 'top', 'bottom', 'forward', 'backward'],
+                ['0', '1', '2', '3', '4', '5']
             ];
 
             var getOrder = function (filename) {
@@ -407,7 +407,7 @@ Object.assign(Viewer.prototype, {
         onAnimationsLoaded([]);
 
         this.morphMap = { };
-        this.morphs = [ ];
+        this.morphs = [];
         onMorphTargetsLoaded([]);
 
         this.dirtyWireframe = this.dirtyBounds = this.dirtySkeleton = this.dirtyNormals = true;
@@ -454,9 +454,9 @@ Object.assign(Viewer.prototype, {
         // convert url strings to url structs
         urls = urls.map(function (url) {
             return typeof url === "string" ? {
-                    url: url,
-                    filename: url
-                } : url;
+                url: url,
+                filename: url
+            } : url;
         });
 
         var ext = function (filename) {
@@ -468,6 +468,7 @@ Object.assign(Viewer.prototype, {
             return ext(url.filename) === '.gltf';
         });
 
+        var result = false;     // sceneLoaded
         var self = this;
         if (gltf) {
             var processTexture = function (gltfTexture, continuation) {
@@ -515,16 +516,15 @@ Object.assign(Viewer.prototype, {
             });
             self.app.assets.add(containerAsset);
             self.app.assets.load(containerAsset);
-            return true;
+            result = true;
         } else {
             // load scene files
-            var sceneLoaded = false;
             var imageUrls = urls.filter(function (url) {
                 switch (ext(url.filename)) {
                     case '.glb':
                     case '.gltf':
                         self.loadScene(url);
-                        sceneLoaded = true;
+                        result = true;
                         return false;
                     default:
                         return true;
@@ -535,8 +535,9 @@ Object.assign(Viewer.prototype, {
             if (imageUrls.length > 0) {
                 self.loadSkybox(imageUrls);
             }
-            return sceneLoaded;
         }
+
+        return result;
     },
 
     // play the animation
@@ -699,7 +700,7 @@ Object.assign(Viewer.prototype, {
                         filename: file.name
                     });
                 } else if (item.kind === 'string' && item.type === 'text/plain') {
-                    item.getAsString(function (s) {
+                    item.getAsString(function (s) {         // eslint-disable-line no-loop-func
                         urls.push(s);
                         awaiting--;
                         checkDone();
@@ -893,24 +894,24 @@ Object.assign(Viewer.prototype, {
                             }
 
                             this.debugNormals.generateNormals(vertexBuffer,
-                                                            meshInstance.node.getWorldTransform(),
-                                                            this.normalLength,
-                                                            skinMatrices);
+                                                              meshInstance.node.getWorldTransform(),
+                                                              this.normalLength,
+                                                              skinMatrices);
                         }
                     }
                 }
                 this.debugNormals.update();
             }
-            
+
             // debug skeleton
             if (this.dirtySkeleton) {
                 this.dirtySkeleton = false;
                 this.debugSkeleton.clear();
 
                 if (this.showSkeleton) {
-                    for (var i = 0; i < this.entities.length; ++i) {
+                    for (i = 0; i < this.entities.length; ++i) {
                         var entity = this.entities[i];
-                        if (entity.model && entity.model.model) {             
+                        if (entity.model && entity.model.model) {
                             this.debugSkeleton.generateSkeleton(entity.model.model.graph);
                         }
                     }

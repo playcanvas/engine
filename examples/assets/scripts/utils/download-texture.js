@@ -1,4 +1,3 @@
-
 // Construct an uncompressed PNG file manually because the canvas API suffers from
 // bit loss due to its handling of premultiplied alpha.
 // Taken from https://rawgit.com/zholos/js_bitmap/master/bitmap.js
@@ -7,18 +6,18 @@ function constructPngUrl(data, width, height) {
         var result = "\0";
         var r = y * width * 4;
         for (var x = 0; x < width; x++) {
-            result += String.fromCharCode(data[r], data[r+1], data[r+2], data[r+3]);
+            result += String.fromCharCode(data[r], data[r + 1], data[r + 2], data[r + 3]);
             r += 4;
         }
         return result;
-    }
+    };
 
     var rows = function (data, width, height) {
         var result = "";
         for (var y = 0; y < height; y++)
             result += row(data, width, y);
         return result;
-    }
+    };
 
     var adler = function (data) {
         var s1 = 1, s2 = 0;
@@ -27,11 +26,11 @@ function constructPngUrl(data, width, height) {
             s2 = (s2 + s1) % 65521;
         }
         return s2 << 16 | s1;
-    }
+    };
 
     var hton = function (i) {
-        return String.fromCharCode(i>>>24, i>>>16 & 255, i>>>8 & 255, i & 255);
-    }
+        return String.fromCharCode(i >>> 24, i >>> 16 & 255, i >>> 8 & 255, i & 255);
+    };
 
     var deflate = function (data) {
         var compressed = "\x78\x01";
@@ -41,11 +40,11 @@ function constructPngUrl(data, width, height) {
             var len = block.length;
             compressed += String.fromCharCode(
                 ((i += block.length) == data.length) << 0,
-                len & 255, len>>>8, ~len & 255, (~len>>>8) & 255);
+                len & 255, len >>> 8, ~len & 255, (~len >>> 8) & 255);
             compressed += block;
         } while (i < data.length);
         return compressed + hton(adler(data));
-    }
+    };
 
     var crc32 = function (data) {
         var c = ~0;
@@ -53,11 +52,11 @@ function constructPngUrl(data, width, height) {
             for (var b = data.charCodeAt(i) | 0x100; b != 1; b >>>= 1)
                 c = (c >>> 1) ^ ((c ^ b) & 1 ? 0xedb88320 : 0);
         return ~c;
-    }
+    };
 
     var chunk = function (type, data) {
         return hton(data.length) + type + data + hton(crc32(type + data));
-    }
+    };
 
     var png = "\x89PNG\r\n\x1a\n" +
         chunk("IHDR", hton(width) + hton(height) + "\x08\x06\0\0\0") +
@@ -65,7 +64,7 @@ function constructPngUrl(data, width, height) {
         chunk("IEND", "");
 
     return "data:image/png;base64," + btoa(png);
-};
+}
 
 // Construct a PNG using canvas API. This function is much faster than the manual approach,
 // but suffers from canvas premultiplied alpha bit loss.
@@ -90,14 +89,14 @@ function download(url, filename) {
     if (document.createEvent) {
         var e = document.createEvent("MouseEvents");
         e.initMouseEvent("click", true, true, window,
-                            0, 0, 0, 0, 0, false, false, false,
-                            false, 0, null);
+                         0, 0, 0, 0, 0, false, false, false,
+                         false, 0, null);
 
         lnk.dispatchEvent(e);
     } else if (lnk.fireEvent) {
         lnk.fireEvent("onclick");
     }
-};
+}
 
 // read the pixel data of the given texture face
 function readPixels(texture, face) {
@@ -108,7 +107,7 @@ function readPixels(texture, face) {
     device.initRenderTarget(rt);
     device.gl.readPixels(0, 0, texture.width, texture.height, device.gl.RGBA, device.gl.UNSIGNED_BYTE, data);
     return data;
-};
+}
 
 // flip image data in Y
 function flipY(data, width, height) {
@@ -125,7 +124,7 @@ function flipY(data, width, height) {
             data[x + (height - y - 1) * width * 4] = tmp[x];
         }
     }
-};
+}
 
 // download the image as png
 function downloadTexture(texture, filename, face, flipY_) {
@@ -140,15 +139,15 @@ function downloadTexture(texture, filename, face, flipY_) {
 
         var i, j, k, src, dst;
         for (i = 0; i < 6; ++i) {
-            var face = readPixels(texture, [1, 4, 0, 5, 2, 3][i]);
+            var faceData = readPixels(texture, [1, 4, 0, 5, 2, 3][i]);
             for (j = 0; j < texture.height; ++j) {
                 src = j * texture.width * 4;
                 dst = j * width * 4 + i * texture.width * 4;
                 for (k = 0; k < texture.width; ++k) {
-                    data[dst++] = face[src++];
-                    data[dst++] = face[src++];
-                    data[dst++] = face[src++];
-                    data[dst++] = face[src++];
+                    data[dst++] = faceData[src++];
+                    data[dst++] = faceData[src++];
+                    data[dst++] = faceData[src++];
+                    data[dst++] = faceData[src++];
                 }
             }
         }
@@ -163,4 +162,4 @@ function downloadTexture(texture, filename, face, flipY_) {
     }
 
     download(constructPngUrl(data, width, height), filename);
-};
+}

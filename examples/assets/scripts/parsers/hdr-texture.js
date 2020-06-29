@@ -1,8 +1,7 @@
-
-function Reader (data) {
+function Reader(data) {
     this.view = new DataView(data);
     this.offset = 0;
-};
+}
 
 Object.assign(Reader.prototype, {
     readLine: function () {
