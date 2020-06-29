@@ -78,9 +78,6 @@ Object.assign(CubemapHandler.prototype, {
         return (assetIdA !== null) === (assetIdB !== null);
     },
 
-    // bitmoji paint cookie
-    // document.cookie = "tutorialCompleted=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/939720;";
-
     // update the cubemap resources given a newly loaded set of assets with their corresponding ids
     update: function (cubemapAsset, assetIds, assets) {
         var assetData = cubemapAsset.data || {};
@@ -94,7 +91,9 @@ Object.assign(CubemapHandler.prototype, {
         // texture type used for faces and prelit cubemaps are both taken from
         // cubemap.data.rgbm
         var getType = function () {
-            return assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+            return assetData.hasOwnProperty('type') ?
+                   assetData.type :
+                   (assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
         };
 
         // handle the prelit data
@@ -284,7 +283,7 @@ Object.assign(CubemapHandler.prototype, {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file, cubemapAsset.data.faceData);
+                texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file);
                 registry.add(texAsset);
                 registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));

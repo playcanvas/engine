@@ -40,17 +40,13 @@ var Viewer = function (canvas) {
             assetsFolder + '/cubemaps/Helipad_posz.png',
             assetsFolder + '/cubemaps/Helipad_negz.png'
         ],
-        faceData: {
-            type: "rgbm"
-        },
-        type: "rgbm",
-        rgbm: true
+        type: "rgbm"
     });
-    cubemapAsset.loadFaces = true;
+    // cubemapAsset.loadFaces = true;
     cubemapAsset.ready(function () {
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.setSkybox(cubemapAsset.resources);
         app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
     });
