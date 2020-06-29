@@ -69,6 +69,9 @@ describe('Test Bundle Loader', function () {
             })
         ];
 
+        // flag the cubemap faces for loading
+        this.assets[4].loadFaces = true;
+
         // expected types of asset types
         this.expectedTypes = {
             css: {
