@@ -68,7 +68,7 @@ function constructPngUrl(data, width, height) {
 
 // Construct a PNG using canvas API. This function is much faster than the manual approach,
 // but suffers from canvas premultiplied alpha bit loss.
-var constructPngUrlOld = function (data, width, height) {
+var constructPngUrlOld = function (data, width, height) {       // eslint-disable-line no-unused-vars
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -127,7 +127,7 @@ function flipY(data, width, height) {
 }
 
 // download the image as png
-function downloadTexture(texture, filename, face, flipY_) {
+function downloadTexture(texture, filename, face, flipY_) {         // eslint-disable-line no-unused-vars
     var width;
     var height;
     var data;

@@ -1,7 +1,7 @@
 // initialize controls
 
 // populate select inputs with manifest assets
-var handleAssetManifest = function (err, result) {
+var handleAssetManifest = function (err, result) {      // eslint-disable-line no-unused-vars
     if (err) {
         console.warn(err);
     } else {
