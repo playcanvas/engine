@@ -92,8 +92,8 @@ Object.assign(CubemapHandler.prototype, {
         // cubemap.data.rgbm
         var getType = function () {
             return assetData.hasOwnProperty('type') ?
-                   assetData.type :
-                   (assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
+                assetData.type :
+                (assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
         };
 
         // handle the prelit data
