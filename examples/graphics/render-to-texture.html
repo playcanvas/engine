@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -35,7 +35,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -50,7 +50,7 @@
             var primitive = new pc.Entity();
             primitive.addComponent('model', {
                 type: primitiveType,
-                layers : layer
+                layers: layer
             });
             primitive.model.material = material;
 
@@ -117,7 +117,7 @@
             type: "point",
             color: new pc.Color(1, 1, 1),
             range: 200,
-            castShadows : true,
+            castShadows: true,
             layers: [worldLayer.id, tvLayer.id]
         });
         light.translate(0, 2, 5);
@@ -142,13 +142,11 @@
 
             // every 5 seconds switch tv camera between perspective and orthographic projection
             switchTime += dt;
-            if (switchTime > 5)
-            {
+            if (switchTime > 5) {
                 switchTime = 0;
                 if (tvCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
                     tvCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
-                }
-                else {
+                } else {
                     tvCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
                     tvCamera.camera.orthoHeight = 5;
                 }

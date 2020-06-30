@@ -3,7 +3,7 @@
  * @private
  * @namespace
  */
-pc.debug = (function () {
+var debug = (function () {
     var table = null;
     var row = null;
     var title = null;
@@ -52,3 +52,5 @@ pc.debug = (function () {
         }
     };
 }());
+
+export { debug };

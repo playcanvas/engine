@@ -3,7 +3,7 @@
         "include": ["src"]
     },
     "opts": {
-        "destination": "build/output",
+        "destination": "build",
         "outFile": "playcanvas.d.ts",
         "recurse": true,
         "template": "node_modules/tsd-jsdoc/dist"
