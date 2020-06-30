@@ -40,7 +40,8 @@
         var module;
 
         async function load_wasm() {
-            response = fetch("../../build/untouched.wasm");
+            //response = fetch("../../build/untouched.wasm");
+            response = fetch("../../build/optimized.wasm");
             //buffer = await response.arrayBuffer();
             imports = {};
             //module = Loader.instantiateBuffer(buffer, imports);
@@ -66,7 +67,7 @@
             await fetch_script("./Loader.js");
             await load_wasm();
             module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which fucks up dataviews :S)
-			module.updateDataViews();
+            module.updateDataViews();
             await fetch_script("../../build/playcanvas.assemblyscript.js");
             await fetch_script("../../build/playcanvas-extras.js");
 

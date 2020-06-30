@@ -54,7 +54,8 @@ global.window = {
 require("./Loader");
 
 async function load_wasm() {
-    var wasmFile = fs.readFileSync("../../build/untouched.wasm");
+    //var wasmFile = fs.readFileSync("../../build/untouched.wasm");
+    var wasmFile = fs.readFileSync("../../build/optimized.wasm");
     imports = {};
     var module = await Loader.instantiateBuffer(wasmFile, imports);
     window.module = module;
