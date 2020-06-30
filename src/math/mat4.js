@@ -273,7 +273,7 @@ Object.assign(Mat4.prototype, {
 
     /**
      * @function
-     * @name pc.Mat4#mulTransform2
+     * @name pc.Mat4#mulAffine2
      * @description Multiplies the specified 4x4 matrices together and stores the result in
      * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
      * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
@@ -282,7 +282,7 @@ Object.assign(Mat4.prototype, {
      * @param {pc.Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
      * @returns {pc.Mat4} Self for chaining.
      */
-    mulTransform2: function (lhs, rhs) {
+    mulAffine2: function (lhs, rhs) {
         var a00, a01, a02,
             a10, a11, a12,
             a20, a21, a22,

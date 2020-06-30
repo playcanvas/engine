@@ -99,8 +99,8 @@ Object.assign(SkinInstance.prototype, {
 
         _invMatrix.copy(rootNode.getWorldTransform()).invert();
         for (var i = this.bones.length - 1; i >= 0; i--) {
-            this.matrices[i].mulTransform2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
-            this.matrices[i].mulTransform2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
+            this.matrices[i].mulAffine2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+            this.matrices[i].mulAffine2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
         }
     },
 
