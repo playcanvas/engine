@@ -221,7 +221,7 @@ Object.assign(Viewer.prototype, {
                 type: pc.TEXTURETYPE_RGBM
             });
 
-            pc.reproject(device, skybox, faces);
+            pc.reprojectTexture(device, skybox, faces);
             cubemaps.push(faces);
         }
 
@@ -236,7 +236,7 @@ Object.assign(Viewer.prototype, {
                 height: sizes[i],
                 type: pc.TEXTURETYPE_RGBM
             });
-            pc.reproject(device, cubemaps[1] || skybox, prefilter, specPower[i]);
+            pc.reprojectTexture(device, cubemaps[1] || skybox, prefilter, specPower[i]);
             cubemaps.push(prefilter);
         }
 
@@ -371,7 +371,7 @@ Object.assign(Viewer.prototype, {
                 //     height: 1024,
                 //     type: pc.TEXTURETYPE_RGBM
                 // });
-                // pc.reproject(app.graphicsDevice, cubemap.resource, equi);
+                // pc.reprojectTexture(app.graphicsDevice, cubemap.resource, equi);
                 // pc.downloadTexture(equi, 'Helipad_equi.png', 0, true);
 
                 // pc.downloadTexture(cubemap.resource, 'Helipad_cube.png');

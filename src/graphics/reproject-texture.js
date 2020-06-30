@@ -31,7 +31,7 @@ var getCoding = function (texture) {
 /**
  * @static
  * @function
- * @name pc.reproject
+ * @name pc.reprojectTexture
  * @description This function reprojects textures between cubemap and equirectangular formats. The
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
  * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
@@ -43,7 +43,7 @@ var getCoding = function (texture) {
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
  */
-var reproject = function (device, source, target, specularPower) {
+var reprojectTexture = function (device, source, target, specularPower) {
     var chunks = shaderChunks;
 
     var decodeFunc = "decode" + getCoding(source);
@@ -85,4 +85,4 @@ var reproject = function (device, source, target, specularPower) {
     }
 };
 
-export { reproject };
+export { reprojectTexture };
