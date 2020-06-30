@@ -48,7 +48,7 @@ Object.assign(Reader.prototype, {
  */
 function HdrParser(registry, retryRequests) {
     this.retryRequests = retryRequests;
-};
+}
 
 Object.assign(HdrParser.prototype, {
     load: function (url, callback, asset) {
