@@ -1209,7 +1209,7 @@ Object.defineProperty(TextElement.prototype, "text", {
     },
     set: function (value) {
         this._i18nKey = null;
-        var str = value && value.toString() || "";
+        var str = value != null && value.toString() || "";
         this._setText(str);
     }
 });

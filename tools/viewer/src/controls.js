@@ -1,22 +1,48 @@
 // initialize controls
-document.getElementById('play').onclick = function () {
-    viewer.play();
+
+// populate select inputs with manifest assets
+var handleAssetManifest = function (err, result) {      // eslint-disable-line no-unused-vars
+    if (err) {
+        console.warn(err);
+    } else {
+        var models = document.getElementById('model');
+        result.models.forEach(function (model) {
+            var option = document.createElement("option");
+            option.text = model.label;
+            option.value = model.filename;
+            models.add(option);
+        });
+
+        var skyboxes = document.getElementById('skybox');
+        result.skyboxes.forEach(function (skybox) {
+            var option = document.createElement("option");
+            option.text = skybox.label;
+            option.value = skybox.filename;
+            skyboxes.add(option);
+        });
+    }
 };
 
-document.getElementById('stop').onclick = function () {
-    viewer.stop();
+document.getElementById('model').onchange = function (e) {
+    if (this.value) {
+        if (viewer.load("models/" + this.value) && !e.shiftKey) {
+            viewer.resetScene();
+        }
+    } else {
+        viewer.resetScene();
+    }
 };
 
-document.getElementById('speed').oninput = function (e) {
-    viewer.setSpeed(Number.parseFloat(this.value));
+document.getElementById('shiny').onclick = function (e) {
+    viewer.setShowShinyBall(this.checked);
 };
 
-document.getElementById('graphs').onclick = function (e) {
-    viewer.setShowGraphs(this.checked);
+document.getElementById('stats').onclick = function (e) {
+    viewer.setStats(this.checked);
 };
 
 document.getElementById('wireframe').onclick = function (e) {
-    viewer.setWireframe(this.checked);
+    viewer.setShowWireframe(this.checked);
 };
 
 document.getElementById('bounds').onclick = function (e) {
@@ -31,12 +57,40 @@ document.getElementById('normals').oninput = function (e) {
     viewer.setNormalLength(Number.parseFloat(this.value));
 };
 
+document.getElementById('fov').oninput = function (e) {
+    viewer.setFov(Number.parseFloat(this.value));
+};
+
 document.getElementById('directl').oninput = function (e) {
     viewer.setDirectLighting(Number.parseFloat(this.value));
 };
 
 document.getElementById('envl').oninput = function (e) {
     viewer.setEnvLighting(Number.parseFloat(this.value));
+};
+
+document.getElementById('skybox').onchange = function (e) {
+    if (this.value) {
+        viewer.load("skybox/" + this.value);
+    } else {
+        viewer.clearSkybox();
+    }
+};
+
+document.getElementById('play').onclick = function () {
+    viewer.play();
+};
+
+document.getElementById('stop').onclick = function () {
+    viewer.stop();
+};
+
+document.getElementById('speed').oninput = function (e) {
+    viewer.setSpeed(Number.parseFloat(this.value));
+};
+
+document.getElementById('graphs').onclick = function (e) {
+    viewer.setShowGraphs(this.checked);
 };
 
 var animList = document.getElementById('anim-list');

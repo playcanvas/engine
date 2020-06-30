@@ -65,6 +65,29 @@ input {
     background-color: 293538;
 }
 
+.header {
+    margin: 0px;
+    height: 32px;
+    line-height: 32px;
+}
+
+.header img {
+    width: 32px;
+    height: 32px;
+}
+
+.header div {
+    color: #fff;
+    display: inline-block;
+    vertical-align: top;
+    line-height: 32px;
+    padding: 0px 0px 0px 8px;
+}
+
+.header span {
+    color: #777;
+}
+
 .controls {
     margin: 0px;
     padding: 10px 4px;
