@@ -32,12 +32,16 @@ var getCoding = function (texture) {
  * @static
  * @function
  * @name pc.reproject
- * @description Reproject a cubemap into equirectangular layout or visa-versa
- * while converting between RGBE, RGBM, linear or SRGB encoding.
+ * @description This function reprojects textures between cubemap and equirectangular formats. The
+ * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
+ * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
+ * a gloss maps).
  * @param {pc.GraphicsDevice} device - The graphics device
- * @param {pc.Texture} source - The texture that requires reprojection
+ * @param {pc.Texture} source - The source texture
  * @param {pc.Texture} target - The target texture
- * @param {number} [specularPower] - optional specular power in order to convolve the source texture while reprojecting
+ * @param {number} [specularPower] - optional specular power. When specular power is specified,
+ * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
+ * the function performs a standard resample.
  */
 var reproject = function (device, source, target, specularPower) {
     var chunks = shaderChunks;

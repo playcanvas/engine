@@ -42,11 +42,11 @@ Object.assign(Reader.prototype, {
 
 /**
  * @class
- * @name pc.HdrParser
+ * @name HdrParser
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for hdr files.
  */
-var HdrParser = function (registry, retryRequests) {
+function HdrParser(registry, retryRequests) {
     this.retryRequests = retryRequests;
 };
 
