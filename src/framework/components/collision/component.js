@@ -273,6 +273,10 @@ Object.assign(CollisionComponent.prototype, {
         if (this.entity.rigidbody) {
             if (this.entity.rigidbody.enabled) {
                 this.entity.rigidbody.enableSimulation();
+
+                if (this.data.type === 'compound') {
+                    this.system._compounds.push(this);
+                }
             }
         } else if (this._compoundParent && this !== this._compoundParent) {
             if (this._compoundParent.shape.getNumChildShapes() === 0) {
@@ -293,6 +297,11 @@ Object.assign(CollisionComponent.prototype, {
     onDisable: function () {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
+
+            var idx = this.system._compounds.indexOf(this);
+            if (idx > -1) {
+                this.system._compounds.splice(idx, 1);
+            }
         } else if (this._compoundParent && this !== this._compoundParent) {
             if (! this._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(this._compoundParent, this.data.shape);

@@ -273,10 +273,6 @@ Object.assign(RigidBodyComponent.prototype, {
                         break;
                 }
 
-                if (this.entity.collision.type === 'compound') {
-                    this.system._compounds.push(this.entity.collision);
-                }
-
                 body.activate();
 
                 this.data.simulationEnabled = true;
@@ -288,11 +284,6 @@ Object.assign(RigidBodyComponent.prototype, {
         var body = this.body;
         if (body && this.data.simulationEnabled) {
             var idx;
-
-            idx = this.system._compounds.indexOf(this.entity.collision);
-            if (idx > -1) {
-                this.system._compounds.splice(idx, 1);
-            }
 
             idx = this.system._dynamic.indexOf(this);
             if (idx > -1) {
