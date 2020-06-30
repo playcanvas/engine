@@ -119,29 +119,40 @@ Object.assign(ContainerHandler.prototype, {
 
         var self = this;
 
-        http.get(url.load, options, function (err, response) {
-            if (!callback)
-                return;
+        // parse downloaded file data
+        var parseData = function (arrayBuffer) {
+            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
+                                 path.extractPath(url.load),
+                                 arrayBuffer,
+                                 self._device,
+                                 asset.registry,
+                                 asset.options,
+                                 function (err, result) {
+                                     if (err) {
+                                         callback(err);
+                                     } else {
+                                         // return everything
+                                         callback(null, new ContainerResource(result));
+                                     }
+                                 });
+        };
 
-            if (!err) {
-                GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                     path.extractPath(url.load),
-                                     response,
-                                     self._device,
-                                     asset.registry,
-                                     asset.options,
-                                     function (err, result) {
-                                         if (err) {
-                                             callback(err);
-                                         } else {
-                                             // return everything
-                                             callback(null, new ContainerResource(result));
-                                         }
-                                     });
-            } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
-            }
-        });
+        if (asset && asset.file && asset.file.contents) {
+            // file data supplied by caller
+            parseData(asset.file.contents);
+        } else {
+            // data requires download
+            http.get(url.load, options, function (err, response) {
+                if (!callback)
+                    return;
+
+                if (err) {
+                    callback("Error loading model: " + url.original + " [" + err + "]");
+                } else {
+                    parseData(response);
+                }
+            });
+        }
     },
 
     open: function (url, data, asset) {
