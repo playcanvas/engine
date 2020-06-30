@@ -99,11 +99,6 @@ ModelComponent.prototype = Object.create(Component.prototype);
 ModelComponent.prototype.constructor = ModelComponent;
 
 Object.assign(ModelComponent.prototype, {
-    setVisible: function (visible) {
-        console.warn("WARNING: setVisible: Function is deprecated. Set enabled property instead.");
-        this.enabled = visible;
-    },
-
     addModelToLayers: function () {
         var layer;
         var layers = this.system.app.scene.layers;
