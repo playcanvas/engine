@@ -640,6 +640,7 @@ function DefaultAnimBinder(graph) {
     };
     flatten(graph);
 
+    this.app = Application.getApplication();
     this.nodes = nodes;                 // map of node name -> { node, count }
     this.activeNodes = [];              // list of active nodes
     this.handlers = {
@@ -648,7 +649,7 @@ function DefaultAnimBinder(graph) {
             var func = function (value) {
                 object.set.apply(object, value);
             };
-            return new pc.AnimTarget(func, 'vector', 3);
+            return new AnimTarget(func, 'vector', 3);
         },
 
         'localRotation': function (node) {
@@ -656,7 +657,7 @@ function DefaultAnimBinder(graph) {
             var func = function (value) {
                 object.set.apply(object, value);
             };
-            return new pc.AnimTarget(func, 'quaternion', 4);
+            return new AnimTarget(func, 'quaternion', 4);
         },
 
         'localScale': function (node) {
@@ -664,12 +665,12 @@ function DefaultAnimBinder(graph) {
             var func = function (value) {
                 object.set.apply(object, value);
             };
-            return new pc.AnimTarget(func, 'vector', 3);
+            return new AnimTarget(func, 'vector', 3);
         },
 
         'weights': function (node) {
             var object = node;
-            while (object && object.constructor !== pc.Entity) {
+            while (object && object.constructor !== Entity) {
                 object = object.parent;
             }
             if (!object ||
@@ -694,11 +695,11 @@ function DefaultAnimBinder(graph) {
                     morphInstance.setWeight(i, value[i]);
                 }
             };
-            return new pc.AnimTarget(func, 'vector', morphInstance.morph._targets.length);
+            return new AnimTarget(func, 'vector', morphInstance.morph._targets.length);
         },
         'materialTexture': function (node, textureName) {
             var object = node;
-            while (object && object.constructor !== pc.Entity) {
+            while (object && object.constructor !== Entity) {
                 object = object.parent;
             }
             if (!object ||
@@ -718,13 +719,13 @@ function DefaultAnimBinder(graph) {
                 return null;
             }
             var func = function (value) {
-                var textureAsset = pc.app.assets.get(value[0]);
-                if (textureAsset && textureAsset.resource && textureAsset.resource.constructor === pc.Texture) {
+                var textureAsset = this.app.assets.get(value[0]);
+                if (textureAsset && textureAsset.resource && textureAsset.resource.constructor === Texture) {
                     meshInstance.material[textureName] = textureAsset.resource;
                     meshInstance.material.update();
                 }
             };
-            return new pc.AnimTarget(func, 'vector', 1);
+            return new AnimTarget(func, 'vector', 1);
         }
     };
 
