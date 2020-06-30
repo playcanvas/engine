@@ -145,6 +145,7 @@ import reflectionPrefilteredCubeLodPS from './program-lib/chunks/reflectionPrefi
 import reflectionSpherePS from './program-lib/chunks/reflectionSphere.frag';
 import reflectionSphereLowPS from './program-lib/chunks/reflectionSphereLow.frag';
 import refractionPS from './program-lib/chunks/refraction.frag';
+import reprojectPS from './program-lib/chunks/reproject.frag';
 import rgbmPS from './program-lib/chunks/rgbm.frag';
 import screenDepthPS from './program-lib/chunks/screenDepth.frag';
 import shadowCommonPS from './program-lib/chunks/shadowCommon.frag';
@@ -343,6 +344,7 @@ var shaderChunks = {
     reflectionSpherePS: reflectionSpherePS,
     reflectionSphereLowPS: reflectionSphereLowPS,
     refractionPS: refractionPS,
+    reprojectPS: reprojectPS,
     rgbmPS: rgbmPS,
     screenDepthPS: screenDepthPS,
     shadowCommonPS: shadowCommonPS,
@@ -455,7 +457,7 @@ shaderChunks.createShader = function (device, vsName, psName, useTransformFeedba
     });
 };
 
-shaderChunks.createShaderFromCode = function (device, vsCode, psCode, uName, useTransformFeedback) {
+shaderChunks.createShaderFromCode = function (device, vsCode, psCode, uName, useTransformFeedback, psPreamble) {
     var shaderCache = device.programLib._cache;
     var cached = shaderCache[uName];
     if (cached !== undefined) return cached;
@@ -471,7 +473,7 @@ shaderChunks.createShaderFromCode = function (device, vsCode, psCode, uName, use
     shaderCache[uName] = new Shader(device, {
         attributes: attribs,
         vshader: vsCode,
-        fshader: psCode,
+        fshader: (psPreamble ? psPreamble : "") + psCode,
         useTransformFeedback: useTransformFeedback
     });
     return shaderCache[uName];

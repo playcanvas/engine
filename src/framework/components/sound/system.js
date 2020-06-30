@@ -71,7 +71,7 @@ Object.assign(SoundComponentSystem.prototype, {
         // convert 'slots' back to
         // simple option objects
         var slots = {};
-        for (key in srcSlots) {
+        for (var key in srcSlots) {
             var srcSlot = srcSlots[key];
             slots[key] = {
                 name: srcSlot.name,

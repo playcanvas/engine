@@ -1,0 +1,27 @@
+{
+    "models": [
+        { "label": "Antique camera", "filename": "AntiqueCamera.glb" },
+        { "label": "Barramundi fish", "filename": "BarramundiFish.glb" },
+        { "label": "Boom box", "filename": "BoomBox.glb" },
+        { "label": "Damaged helmet", "filename": "DamagedHelmet.glb" },
+        { "label": "Flight helmet", "filename": "flightHelmet.glb" },
+        { "label": "Fox", "filename": "Fox.glb" },
+        { "label": "Interpolation test", "filename": "InterpolationTest.glb" },
+        { "label": "Metal rough spheres", "filename": "MetalRoughSpheres.glb" },
+        { "label": "Water bottle", "filename": "WaterBottle.glb" }
+    ],
+
+    "skyboxes": [
+        { "label": "Abandoned tank farm", "filename": "abandoned_tank_farm_01_2k.hdr" },
+        { "label": "Ballroom", "filename": "ballroom_2k.hdr" },
+        { "label": "Circus Arena", "filename": "circus_arena_2k.hdr" },
+        { "label": "Helipad", "filename": "Helipad_equi.png" },
+        { "label": "Kloppenheim", "filename": "kloppenheim_02_2k.hdr" },
+        { "label": "Outdoor Umbrellas", "filename": "outdoor_umbrellas_2k.hdr" },
+        { "label": "Spruit sunrise", "filename": "spruit_sunrise_2k.hdr" },
+        { "label": "Studio small", "filename": "studio_small_03_2k.hdr" },
+        { "label": "Sunset", "filename": "sunset.hdr" },
+        { "label": "Vignaioli night", "filename": "vignaioli_night_2k.hdr" },
+        { "label": "Wooden motel", "filename": "wooden_motel_2k.hdr" }
+    ]
+}
