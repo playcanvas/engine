@@ -640,7 +640,6 @@ function DefaultAnimBinder(graph) {
     };
     flatten(graph);
 
-    this.app = Application.getApplication();
     this.nodes = nodes;                 // map of node name -> { node, count }
     this.activeNodes = [];              // list of active nodes
     this.handlers = {
@@ -719,7 +718,7 @@ function DefaultAnimBinder(graph) {
                 return null;
             }
             var func = function (value) {
-                var textureAsset = this.app.assets.get(value[0]);
+                var textureAsset = this.animComponent.system.app.assets.get(value[0]);
                 if (textureAsset && textureAsset.resource && textureAsset.resource.constructor === Texture) {
                     meshInstance.material[textureName] = textureAsset.resource;
                     meshInstance.material.update();
