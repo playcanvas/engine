@@ -114,6 +114,23 @@ Mat3.prototype.toStringFixed = function (n) {
     return t;
 };
 
+// Useful for: TLSF allocator.
+// But currently I use the Arena allocator, because it's faster.
+// I simply preallocate 300mb and update the dataviews *never*.
+// Object.defineProperty(Mat3.prototype, 'data', {
+//     get: function () {
+//         if (this.bufferByteLength != assemblyscript.module.memory.buffer.byteLength) {
+//             // Recreate dataview when the wasm arraybuffer changed size.
+//             // Needed because dataviews become invalid when original arraybuffer resizes.
+//             // I cache them because recreating dataviews for 64 animated models costs like 5ms per frame.
+//             this.cachedDataView = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 9);
+//             this.bufferByteLength = assemblyscript.module.memory.buffer.byteLength;
+//             //console.log("recreate dataview for ", this);
+//         }
+//         return this.cachedDataView;
+//     }
+// });
+
 Object.defineProperty(Mat3, 'IDENTITY', {
     get: function () {
         var identity = new Mat3();

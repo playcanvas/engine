@@ -292,7 +292,7 @@ Mat4.prototype.toStringFixed = function (n) {
 //             // I cache them because recreating dataviews for 64 animated models costs like 5ms per frame.
 //             this.cachedDataView = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 16);
 //             this.bufferByteLength = assemblyscript.module.memory.buffer.byteLength;
-//             console.log("recreate dataview for ", this);
+//             //console.log("recreate dataview for ", this);
 //         }
 //         return this.cachedDataView;
 //     }
