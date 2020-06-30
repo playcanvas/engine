@@ -719,13 +719,13 @@ function DefaultAnimBinder(graph) {
             }
             var func = function (value) {
                 var textureAsset = this.animComponent.system.app.assets.get(value[0]);
-                if (textureAsset && textureAsset.resource && textureAsset.resource.constructor === Texture) {
+                if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
                     meshInstance.material[textureName] = textureAsset.resource;
                     meshInstance.material.update();
                 }
-            };
+            }.bind(this);
             return new AnimTarget(func, 'vector', 1);
-        }
+        }.bind(this)
     };
 
     this.propertyLocator = new AnimPropertyLocator();
