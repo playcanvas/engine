@@ -49,6 +49,28 @@ function preprocessor(options) {
     };
 }
 
+function importAssemblyScriptInstead(options) {
+    const filter = createFilter([
+        '**/*.js'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+            code = code.replace(/math\/quat\.js/g, "math_assemblyscript/quat.js");
+            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript/mat3.js");
+            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript/mat4.js");
+            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript/vec2.js");
+            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript/vec3.js");
+            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript/vec4.js");
+            return {
+                code: code,
+                map: { mappings: '' }
+            };
+        }
+    };
+}
+
 function shaderChunks() {
     const filter = createFilter([
         '**/*.vert',
@@ -187,7 +209,8 @@ var target_wasm = {
         cleanup({
             comments: 'some'
         }),
-        spacesToTabs()
+        spacesToTabs(),
+        importAssemblyScriptInstead()
     ]
 };
 
