@@ -784,17 +784,6 @@ Object.assign(DefaultAnimBinder.prototype, {
         for (var i = 0; i < activeNodes.length; ++i) {
             activeNodes[i]._dirtifyLocal();
         }
-    },
-
-    // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale|weights]
-    _getParts: function (path) {
-        var parts = AnimBinder.splitPath(path);
-        if (parts.length !== 2 ||
-            !this.nodes.hasOwnProperty(parts[0]) ||
-            !this.handlers.hasOwnProperty(parts[1])) {
-            return null;
-        }
-        return parts;
     }
 });
 
