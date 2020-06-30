@@ -25,7 +25,7 @@ import {
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
-    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC4ARRAY
+    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY
 } from './graphics.js';
 
 import { drawQuadWithShader } from './simple-post-effect.js';
@@ -577,6 +577,12 @@ var GraphicsDevice = function (canvas, options) {
     };
     this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
         gl.uniform1fv(uniform.locationId, value);
+    };
+    this.commitFunction[UNIFORMTYPE_VEC2ARRAY]  = function (uniform, value) {
+        gl.uniform2fv(uniform.locationId, value);
+    };
+    this.commitFunction[UNIFORMTYPE_VEC3ARRAY]  = function (uniform, value) {
+        gl.uniform3fv(uniform.locationId, value);
     };
     this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
         gl.uniform4fv(uniform.locationId, value);
