@@ -56,9 +56,9 @@ var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
  * @property {object} file The file details or null if no file
  * @property {string} [file.url] The URL of the resource file that contains the asset data
- * @property {string} [file.filename] The filename of the resource file
- * @property {number} [file.size] The size of the resource file
- * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data field
+ * @property {string} [file.filename] The filename of the resource file or null if no filename was set (e.g from using {@link pc.AssetRegistry#loadFromUrl})
+ * @property {number} [file.size] The size of the resource file or null if no size was set (e.g from using {@link pc.AssetRegistry#loadFromUrl})
+ * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data field or null if hash was set (e.g from using {@link pc.AssetRegistry#loadFromUrl})
  * @property {object} [data] Optional JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
  * @property {object} [options] - Optional JSON data that contains the asset handler options.
  * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
