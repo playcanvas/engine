@@ -165,8 +165,11 @@ export class Quat {
     setFromAxisAngle(axis: Vec3, angle: f32): Quat {
         angle *= 0.5 * pc_math.DEG_TO_RAD;
 
-        var sa = Mathf.sin(angle);
-        var ca = Mathf.cos(angle);
+        //var sa = Mathf.sin(angle);
+        //var ca = Mathf.cos(angle);
+        Mathf.sincos(angle);
+        var sa = Mathf.sincos_sin;
+        var ca = Mathf.sincos_cos;
 
         this.x = sa * axis.x;
         this.y = sa * axis.y;
@@ -182,12 +185,21 @@ export class Quat {
         ey *= halfToRad;
         ez *= halfToRad;
 
-        var sx = Mathf.sin(ex);
-        var cx = Mathf.cos(ex);
-        var sy = Mathf.sin(ey);
-        var cy = Mathf.cos(ey);
-        var sz = Mathf.sin(ez);
-        var cz = Mathf.cos(ez);
+        //var sx = Mathf.sin(ex);
+        //var cx = Mathf.cos(ex);
+        //var sy = Mathf.sin(ey);
+        //var cy = Mathf.cos(ey);
+        //var sz = Mathf.sin(ez);
+        //var cz = Mathf.cos(ez);
+        Mathf.sincos(ex);
+        var sx = Mathf.sincos_sin;
+        var cx = Mathf.sincos_cos;
+        Mathf.sincos(ey);
+        var sy = Mathf.sincos_sin;
+        var cy = Mathf.sincos_cos;
+        Mathf.sincos(ez);
+        var sz = Mathf.sincos_sin;
+        var cz = Mathf.sincos_cos;
 
         this.x = sx * cy * cz - cx * sy * sz;
         this.y = cx * sy * cz + sx * cy * sz;

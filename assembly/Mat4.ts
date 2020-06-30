@@ -369,8 +369,11 @@ export class Mat4 {
         var x: f32 = axis.x;
         var y: f32 = axis.y;
         var z: f32 = axis.z;
-        var c: f32 = Mathf.cos(angle);
-        var s: f32 = Mathf.sin(angle);
+        //var c: f32 = Mathf.cos(angle);
+        //var s: f32 = Mathf.sin(angle);
+        Mathf.sincos(angle);
+        var c: f32 = Mathf.sincos_cos;
+        var s: f32 = Mathf.sincos_sin;
         var t: f32 = 1.0 - c;
         var tx: f32 = t * x;
         var ty: f32 = t * y;
@@ -405,12 +408,22 @@ export class Mat4 {
         ez *= pc_math.DEG_TO_RAD;
 
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-        var s1 = Mathf.sin(-ex);
-        var c1 = Mathf.cos(-ex);
-        var s2 = Mathf.sin(-ey);
-        var c2 = Mathf.cos(-ey);
-        var s3 = Mathf.sin(-ez);
-        var c3 = Mathf.cos(-ez);
+        //var s1 = Mathf.sin(-ex);
+        //var c1 = Mathf.cos(-ex);
+        //var s2 = Mathf.sin(-ey);
+        //var c2 = Mathf.cos(-ey);
+        //var s3 = Mathf.sin(-ez);
+        //var c3 = Mathf.cos(-ez);
+        Mathf.sincos(-ex);
+        var s1 = Mathf.sincos_sin;
+        var c1 = Mathf.sincos_cos;
+        Mathf.sincos(-ey);
+        var s2 = Mathf.sincos_sin;
+        var c2 = Mathf.sincos_cos;
+        Mathf.sincos(-ez);
+        var s3 = Mathf.sincos_sin;
+        var c3 = Mathf.sincos_cos;
+
 
         // Set rotation elements
         this.m0 = c2 * c3;
@@ -585,10 +598,6 @@ export class Mat4 {
      * m.setTRS(t, r, s);
      */
     setTRS(t: Vec3, r: Quat, s: Vec3): Mat4 {
-        var tx = t.x;
-        var ty = t.y;
-        var tz = t.z;
-
         var qx = r.x;
         var qy = r.y;
         var qz = r.z;
@@ -626,9 +635,9 @@ export class Mat4 {
         this.m10 = (1 - (xx + yy)) * sz;
         this.m11 = 0;
 
-        this.m12 = tx;
-        this.m13 = ty;
-        this.m14 = tz;
+        this.m12 = t.x;
+        this.m13 = t.y;
+        this.m14 = t.z;
         this.m15 = 1;
 
         return this;
