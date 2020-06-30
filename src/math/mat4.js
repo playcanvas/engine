@@ -916,12 +916,8 @@ Object.assign(Mat4.prototype, {
      * m.setTRS(t, r, s);
      */
     setTRS: function (t, r, s) {
-        var tx, ty, tz, qx, qy, qz, qw, sx, sy, sz,
+        var qx, qy, qz, qw, sx, sy, sz,
             x2, y2, z2, xx, xy, xz, yy, yz, zz, wx, wy, wz, m;
-
-        tx = t.x;
-        ty = t.y;
-        tz = t.z;
 
         qx = r.x;
         qy = r.y;
@@ -962,9 +958,9 @@ Object.assign(Mat4.prototype, {
         m[10] = (1 - (xx + yy)) * sz;
         m[11] = 0;
 
-        m[12] = tx;
-        m[13] = ty;
-        m[14] = tz;
+        m[12] = t.x;
+        m[13] = t.y;
+        m[14] = t.z;
         m[15] = 1;
 
         return this;

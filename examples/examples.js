@@ -17,6 +17,7 @@ var categories = [
         examples: [
             "batching-dynamic",
             "hardware-instancing",
+            "hierarchy",
             "layers",
             "lights",
             "lights-baked",

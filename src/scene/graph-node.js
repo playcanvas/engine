@@ -1239,7 +1239,7 @@ Object.assign(GraphNode.prototype, {
                     this.worldTransform.setTRS(scaleCompensatePos, scaleCompensateRot, scale);
 
                 } else {
-                    this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                    this.worldTransform.mulAffine2(this._parent.worldTransform, this.localTransform);
                 }
             }
 
