@@ -784,7 +784,8 @@ Object.assign(Texture.prototype, {
                         face.height !== height || // face is different height
                         !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
                           (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
-                          (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement))) {  // video
+                          (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement) ||   // video
+                          (typeof ImageBitmap !== 'undefined' && face instanceof ImageBitmap))) {            // new image bitmap
                         invalid = true;
                         break;
                     }
@@ -805,7 +806,8 @@ Object.assign(Texture.prototype, {
             // check if source is valid type of element
             if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
                   (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
-                  (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
+                  (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement) ||
+                  (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap)))
                 invalid = true;
 
             if (!invalid) {

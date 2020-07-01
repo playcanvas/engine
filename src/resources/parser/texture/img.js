@@ -25,7 +25,11 @@ Object.assign(ImgParser.prototype, {
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
-        this._loadImage(url.load, url.original, crossOrigin, callback);
+        if (typeof ImageBitmap !== 'undefined') {
+            this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
+        } else {
+            this._loadImage(url.load, url.original, crossOrigin, callback);
+        }
     },
 
     open: function (url, data, device) {
@@ -84,6 +88,20 @@ Object.assign(ImgParser.prototype, {
         };
 
         image.src = url;
+    },
+
+    _loadImageBitmap: function (url, originalUrl, crossOrigin, callback) {
+		fetch( url ).then( function ( res ) {
+			return res.blob();
+		} ).then( function ( blob ) {
+			return createImageBitmap( blob, {
+                premultiplyAlpha: 'none'
+            } );
+		} ).then( function ( imageBitmap ) {
+			callback(null, imageBitmap);
+		} ).catch( function ( e ) {
+			callback(e);
+        } );
     }
 });
 
