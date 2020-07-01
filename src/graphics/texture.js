@@ -782,10 +782,7 @@ Object.assign(Texture.prototype, {
                     if (!face ||                  // face is missing
                         face.width !== width ||   // face is different width
                         face.height !== height || // face is different height
-                        !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
-                          (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
-                          (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement) ||   // video
-                          (typeof ImageBitmap !== 'undefined' && face instanceof ImageBitmap))) {            // new image bitmap
+                        !this.device._isBrowserBased(face)) {            // new image bitmap
                         invalid = true;
                         break;
                     }
@@ -804,10 +801,7 @@ Object.assign(Texture.prototype, {
             }
         } else {
             // check if source is valid type of element
-            if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
-                  (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
-                  (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement) ||
-                  (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap)))
+            if (!this.device._isBrowserBased(source))
                 invalid = true;
 
             if (!invalid) {

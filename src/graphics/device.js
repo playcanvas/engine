@@ -1767,10 +1767,10 @@ Object.assign(GraphicsDevice.prototype, {
     },
 
     _isBrowserBased: function (texture) {
-        return texture instanceof HTMLCanvasElement || 
-               texture instanceof HTMLImageElement ||
-               texture instanceof HTMLVideoElement ||
-               texture instanceof ImageBitmap;
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) || 
+               (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
+               (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
+               (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
     },
 
     uploadTexture: function (texture) {
