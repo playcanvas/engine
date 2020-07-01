@@ -35,7 +35,7 @@ export class Quat {
     }
 
     equals(rhs: Quat): boolean {
-        return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
+        return this.x == rhs.x && this.y == rhs.y && this.z == rhs.z && this.w == rhs.w;
     }
 
     getAxisAngle(axis: Vec3): f32 {
