@@ -844,13 +844,6 @@ describe("pc.ScriptComponent", function () {
 
         expect(e.script.scriptWithAttributes.attribute1).to.equal(e2);
         expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
-
-        expect(e.script.scriptWithAttributes.attribute3).to.be.an('object');
-        expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(null);
-
-        expect(e.script.scriptWithAttributes.attribute4).to.be.an.instanceof(Array);
-        expect(e.script.scriptWithAttributes.attribute4).to.be.an.instanceof(Array);
-        expect(e.script.scriptWithAttributes.attribute4).to.be.empty;
     });
 
 
