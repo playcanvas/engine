@@ -357,8 +357,9 @@ export class Quat {
             return this;
         }
 
-        var ratioA = Mathf.sin((1.0 - alpha) * halfTheta) / sinHalfTheta;
-        var ratioB = Mathf.sin(alpha * halfTheta) / sinHalfTheta;
+        var angle = alpha * halfTheta;
+        var ratioA = Mathf.sin(halfTheta - angle) / sinHalfTheta;
+        var ratioB = Mathf.sin(angle) / sinHalfTheta;
 
         // Calculate Quaternion.
         this.w = (lw * ratioA + rw * ratioB);
