@@ -29,14 +29,31 @@ var rawToValue = function (app, args, value, old) {
             }
             return null;
         case 'json':
-            if (typeof value === 'object') {
-                return value;
+            var result = {};
+
+            if (!value || typeof value !== 'object') {
+                value = {};
             }
-            try {
-                return JSON.parse(value);
-            } catch (ex) {
-                return null;
+
+            if (Array.isArray(args.schema)) {
+                for (let i = 0; i < args.schema.length; i++) {
+                    var field = args.schema[i];
+                    if (!field.name) continue;
+
+                    if (field.array) {
+                        result[field.name] = [];
+                        if (Array.isArray(value[field.name])) {
+                            for (let j = 0; j < value[field.name].length; j++) {
+                                result[field.name].push(rawToValue(app, field, value[field.name][j]));
+                            }
+                        }
+                    } else {
+                        result[field.name] = rawToValue(app, field, value[field.name]);
+                    }
+                }
             }
+
+            return result;
         case 'asset':
             if (value instanceof Asset) {
                 return value;
