@@ -1,4 +1,5 @@
 import { path } from '../../../core/path.js';
+import { http } from '../../../net/http.js';
 
 import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/graphics.js';
 import { Texture } from '../../../graphics/texture.js';
@@ -92,17 +93,26 @@ Object.assign(ImgParser.prototype, {
     },
 
     _loadImageBitmap: function (url, originalUrl, crossOrigin, callback) {
-		fetch( url ).then( function ( res ) {
-			return res.blob();
-		} ).then( function ( blob ) {
-			return createImageBitmap( blob, {
-                premultiplyAlpha: 'none'
-            } );
-		} ).then( function ( imageBitmap ) {
-			callback(null, imageBitmap);
-		} ).catch( function ( e ) {
-			callback(e);
-        } );
+        var options = {
+            cache: true,
+            responseType: "blob",
+            retry: this.retryRequests
+        };
+        pc.http.get(url, options, function (err, blob) {
+            if (err) {
+                callback(err);
+            } else {
+                createImageBitmap(blob, {
+                    premultiplyAlpha: 'none'
+                })
+                .then( function (imageBitmap) {
+                    callback(null, imageBitmap);
+                })
+                .catch( function (e) {
+                    callback(e);
+                });
+            }
+        });
     }
 });
 
