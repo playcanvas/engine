@@ -1,11 +1,10 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_R8_G8_B8_A8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../graphics/graphics.js';
-import { Texture } from '../graphics/texture.js';
 
-import { Asset } from '../asset/asset.js';
+import { Texture } from '../graphics/texture.js';
 
 /**
  * @class
@@ -18,211 +17,279 @@ import { Asset } from '../asset/asset.js';
  */
 function CubemapHandler(device, assets, loader) {
     this._device = device;
-    this._assets = assets;
+    this._registry = assets;
     this._loader = loader;
 }
 
 Object.assign(CubemapHandler.prototype, {
-    load: function (url, callback) { },
-
-    open: function (url, data) { },
-
-    patch: function (assetCubeMap, assets) {
-        var self = this;
-        var loaded = false;
-
-        if (!assetCubeMap.resources[0]) {
-            assetCubeMap.resources[0] = new Texture(this._device, {
-                format: PIXELFORMAT_R8_G8_B8_A8,
-                cubemap: true,
-                mipmaps: true,
-                fixCubemapSeams: !!assetCubeMap._dds
-            });
-            assetCubeMap.resources[0].name = 'cubemap';
-
-            loaded = true;
-        }
-
-        if (!assetCubeMap.file) {
-            delete assetCubeMap._dds;
-        } else if (assetCubeMap.file && !assetCubeMap._dds) {
-            var url = assetCubeMap.getFileUrl();
-
-            assets._loader.load(url + '?t=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
-                if (!err) {
-                    assets._loader.patch({
-                        resource: texture,
-                        type: 'texture',
-                        data: assetCubeMap.data
-                    }, assets);
-
-                    assetCubeMap._dds = texture;
-                    self.patch(assetCubeMap, assets);
-                } else {
-                    assets.fire("error", err, assetCubeMap);
-                    assets.fire("error:" + assetCubeMap.id, err, assetCubeMap);
-                    assetCubeMap.fire("error", err, assetCubeMap);
-                }
-            });
-        }
-
-        if ((!assetCubeMap.file || !assetCubeMap._dds) && assetCubeMap.resources[1]) {
-            // unset prefiltered textures
-            assetCubeMap.resources = [assetCubeMap.resources[0]];
-
-            loaded = true;
-        } else if (assetCubeMap._dds && !assetCubeMap.resources[1]) {
-            assetCubeMap.resources = [assetCubeMap.resources[0]];
-
-            // set prefiltered textures
-            assetCubeMap._dds.fixCubemapSeams = true;
-            assetCubeMap._dds.addressU = ADDRESS_CLAMP_TO_EDGE;
-            assetCubeMap._dds.addressV = ADDRESS_CLAMP_TO_EDGE;
-
-            var startIndex = 0;
-            if (this._device.useTexCubeLod) {
-                // full PMREM mipchain is added for ios
-                assetCubeMap.resources.push(assetCubeMap._dds);
-                startIndex = 1;
-            }
-
-            for (var i = startIndex; i < 6; i++) {
-                // create a cubemap for each mip in the prefiltered cubemap
-                var mip = new Texture(this._device, {
-                    cubemap: true,
-                    fixCubemapSeams: true,
-                    mipmaps: true,
-                    format: assetCubeMap._dds.format,
-                    type: assetCubeMap._dds.type,
-                    width: Math.pow(2, 7 - i),
-                    height: Math.pow(2, 7 - i)
-                });
-
-                mip.name = 'cubemap-mip';
-                mip._levels[0] = assetCubeMap._dds._levels[i];
-                mip.upload();
-                assetCubeMap.resources.push(mip);
-            }
-
-            loaded = true;
-        }
-
-        var cubemap = assetCubeMap.resource;
-
-        if (cubemap.name !== assetCubeMap.name)
-            cubemap.name = assetCubeMap.name;
-
-        if (assetCubeMap.data.hasOwnProperty('rgbm')) {
-            var type = assetCubeMap.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-            if (cubemap.type !== type) {
-                cubemap.type = type;
-            }
-        }
-
-        cubemap.fixCubemapSeams = !!assetCubeMap._dds;
-
-        if (assetCubeMap.data.hasOwnProperty('minFilter') && cubemap.minFilter !== assetCubeMap.data.minFilter)
-            cubemap.minFilter = assetCubeMap.data.minFilter;
-
-        if (assetCubeMap.data.hasOwnProperty('magFilter') && cubemap.magFilter !== assetCubeMap.data.magFilter)
-            cubemap.magFilter = assetCubeMap.data.magFilter;
-
-        if (assetCubeMap.data.hasOwnProperty('anisotropy') && cubemap.anisotropy !== assetCubeMap.data.anisotropy)
-            cubemap.anisotropy = assetCubeMap.data.anisotropy;
-
-        if (cubemap.addressU !== ADDRESS_CLAMP_TO_EDGE)
-            cubemap.addressU = ADDRESS_CLAMP_TO_EDGE;
-
-        if (cubemap.addressV !== ADDRESS_CLAMP_TO_EDGE)
-            cubemap.addressV = ADDRESS_CLAMP_TO_EDGE;
-
-        this._patchTextureFaces(assetCubeMap, assets);
-
-        if (loaded) {
-            // trigger load event as resource is changed
-            assets.fire('load', assetCubeMap);
-            assets.fire('load:' + assetCubeMap.id, assetCubeMap);
-            assetCubeMap.fire('load', assetCubeMap);
-        }
+    load: function (url, callback, asset) {
+        this.loadAssets(asset, callback);
     },
 
-    _patchTexture: function () {
-        this.registry._loader._handlers.cubemap._patchTextureFaces(this, this.registry);
+    open: function (url, data, asset) {
+        // caller will set our return value to asset.resources[0]. We've already set resources[0],
+        // but we must return it again here so it doesn't get overwritten.
+        return asset ? asset.resource : null;
     },
 
-    _patchTextureFaces: function (assetCubeMap, assets) {
-        if (!assetCubeMap.loadFaces && assetCubeMap.file)
-            return;
-
-        var cubemap = assetCubeMap.resource;
-        var sources = [];
-        var count = 0;
-        var levelsUpdated = false;
-        var self = this;
-
-        if (!assetCubeMap._levelsEvents)
-            assetCubeMap._levelsEvents = [null, null, null, null, null, null];
-
-        assetCubeMap.data.textures.forEach(function (id, index) {
-            var assetReady = function (asset) {
-                count++;
-                sources[index] = asset && asset.resource.getSource() || null;
-
-                // events of texture loads
-                var evtAsset = assetCubeMap._levelsEvents[index];
-                if (evtAsset !== asset) {
-                    if (evtAsset)
-                        evtAsset.off('load', self._patchTexture, assetCubeMap);
-
-                    if (asset)
-                        asset.on('load', self._patchTexture, assetCubeMap);
-
-                    assetCubeMap._levelsEvents[index] = asset || null;
-                }
-
-                // check if source is actually changed
-                if (sources[index] !== cubemap._levels[0][index])
-                    levelsUpdated = true;
-
-                // when all faces checked
-                if (count === 6 && levelsUpdated) {
-                    cubemap.setSource(sources);
-                    // trigger load event (resource changed)
-                    assets.fire('load', assetCubeMap);
-                    assets.fire('load:' + assetCubeMap.id, assetCubeMap);
-                    assetCubeMap.fire('load', assetCubeMap);
-                }
-            };
-
-            var assetAdded = function (asset) {
-                asset.ready(assetReady);
-                assets.load(asset);
-            };
-
-            if (id === null) {
-                assetReady(null);
+    patch: function (asset, registry) {
+        this.loadAssets(asset, function (err, result) {
+            if (err) {
+                registry.fire('error', asset);
+                registry.fire('error:' + asset.id, err, asset);
+                asset.fire('error', asset);
             } else {
-                var asset;
-                if (parseInt(id, 10) === id) {
-                    asset = assets.get(id);
-                    if (asset) {
-                        asset.ready(assetReady);
-                        assets.load(asset);
-                    } else if (id) {
-                        assets.once("load:" + id, assetReady);
-                        assets.once("add:" + id, assetAdded);
-                    } else {
-                        assetReady(null);
-                    }
-                } else {
-                    asset = new Asset(assetCubeMap.name + "_face_" + index, "texture", { url: id });
-                    assets.add(asset);
-                    assets.load(asset);
-                    assets.once("load:" + asset.id, assetReady);
-                    assets.once("add:" + asset.id, assetAdded);
-                }
+                registry.fire('load', asset);
+                registry.fire('load:' + asset.id, asset);
+                asset.fire('load', asset);
             }
         });
+    },
+
+    // get the list of dependent asset ids for the cubemap
+    getAssetIds: function (cubemapAsset) {
+        var result = [];
+
+        // prefiltered cubemap is stored at index 0
+        result[0] = cubemapAsset.file;
+
+        // faces are stored at index 1..6
+        if ((cubemapAsset.loadFaces || !cubemapAsset.file) && cubemapAsset.data && cubemapAsset.data.textures) {
+            for (var i = 0; i < 6; ++i) {
+                result[i + 1] = cubemapAsset.data.textures[i];
+            }
+        } else {
+            result[1] = result[2] = result[3] = result[4] = result[5] = result[6] = null;
+        }
+
+        return result;
+    },
+
+    // test whether two assets ids are the same
+    compareAssetIds: function (assetIdA, assetIdB) {
+        if (assetIdA && assetIdB) {
+            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
+                return assetIdA === assetIdB;           // id or url
+            }
+            // else {
+            return assetIdA.url === assetIdB.url;       // file/url structure with url and filename
+        }
+        // else {
+        return (assetIdA !== null) === (assetIdB !== null);
+    },
+
+    // update the cubemap resources given a newly loaded set of assets with their corresponding ids
+    update: function (cubemapAsset, assetIds, assets) {
+        var assetData = cubemapAsset.data || {};
+        var oldAssets = cubemapAsset._handlerState.assets;
+        var oldResources = cubemapAsset._resources;
+        var tex, mip, i;
+
+        // faces, prelit cubemap 128, 64, 32, 16, 8, 4
+        var resources = [null, null, null, null, null, null, null];
+
+        // texture type used for faces and prelit cubemaps are both taken from
+        // cubemap.data.rgbm
+        var getType = function () {
+            return assetData.hasOwnProperty('type') ?
+                assetData.type :
+                (assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
+        };
+
+        // handle the prelit data
+        if (assets[0] !== oldAssets[0]) {
+            // prelit asset changed
+            if (assets[0]) {
+                tex = assets[0].resource;
+                for (i = 0; i < 6; ++i) {
+                    var prelitLevels = [tex._levels[i]];
+
+                    // construct full prem chain on highest prefilter cubemap on ios
+                    if (i === 0 && this._device.useTexCubeLod) {
+                        for (mip = 1; mip < tex._levels.length; ++mip) {
+                            prelitLevels[mip] = tex._levels[mip];
+                        }
+                    }
+
+                    var prelit = new Texture(this._device, {
+                        name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
+                        cubemap: true,
+                        type: getType(),
+                        width: tex.width >> i,
+                        height: tex.height >> i,
+                        format: tex.format,
+                        levels: prelitLevels,
+                        fixCubemapSeams: true
+                    });
+
+                    // prelit.upload();
+                    resources[i + 1] = prelit;
+                }
+            }
+        } else {
+            // prelit asset didn't change so keep the existing cubemap resources
+            resources[1] = oldResources[1] || null;
+            resources[2] = oldResources[2] || null;
+            resources[3] = oldResources[3] || null;
+            resources[4] = oldResources[4] || null;
+            resources[5] = oldResources[5] || null;
+            resources[6] = oldResources[6] || null;
+        }
+
+        var faceAssets = assets.slice(1);
+        if (!this.cmpArrays(faceAssets, oldAssets.slice(1))) {
+            // face assets have changed
+            if (faceAssets.indexOf(null) === -1) {
+                // extract cubemap level data from face textures
+                var faceTextures = faceAssets.map(function (asset) {
+                    return asset.resource;
+                });
+                var faceLevels = [];
+                for (mip = 0; mip < faceTextures[0]._levels.length; ++mip) {
+                    faceLevels.push(faceTextures.map(function (faceTexture) {  // eslint-disable-line no-loop-func
+                        return faceTexture._levels[mip];
+                    }));
+                }
+
+                var faces = new pc.Texture(this._device, {
+                    name: cubemapAsset.name + '_faces',
+                    cubemap: true,
+                    type: getType(),
+                    width: faceAssets[0].resource.width,
+                    height: faceAssets[0].resource.height,
+                    format: faceAssets[0].resource.format,
+                    levels: faceLevels,
+                    minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : FILTER_LINEAR_MIPMAP_LINEAR,
+                    magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : FILTER_LINEAR,
+                    anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
+                    addressU: ADDRESS_CLAMP_TO_EDGE,
+                    addressV: ADDRESS_CLAMP_TO_EDGE,
+                    fixCubemapSeams: !!assets[0]
+                });
+
+                resources[0] = faces;
+            }
+        } else {
+            // no faces changed so keep existing faces cubemap
+            resources[0] = oldResources[0] || null;
+        }
+
+        // set the new resources, change events will fire
+        cubemapAsset.resources = resources;
+        cubemapAsset._handlerState.assetIds = assetIds;
+        cubemapAsset._handlerState.assets = assets;
+
+        // destroy the old cubemap resources that are not longer needed
+        for (i = 0; i < oldResources.length; ++i) {
+            if (oldResources[i] !== null && resources.indexOf(oldResources[i]) === -1) {
+                oldResources[i].destroy();
+            }
+        }
+
+        // destroy old assets which have been replaced
+        for (i = 0; i < oldAssets.length; ++i) {
+            if (oldAssets[i] !== null && assets.indexOf(oldAssets[i]) === -1) {
+                oldAssets[i].unload();
+            }
+        }
+    },
+
+    cmpArrays: function (arr1, arr2) {
+        if (arr1.length !== arr2.length) {
+            return false;
+        }
+        for (var i = 0; i < arr1.length; ++i) {
+            if (arr1[i] !== arr2[i]) {
+                return false;
+            }
+        }
+        return true;
+    },
+
+    loadAssets: function (cubemapAsset, callback) {
+        // initialize asset structures for tracking load requests
+        if (!cubemapAsset.hasOwnProperty('_handlerState')) {
+            cubemapAsset._handlerState = {
+                // the list of requested asset ids in order of [prelit cubemap, 6 faces]
+                assetIds: [null, null, null, null, null, null, null],
+                // the dependent (loaded, active) texture assets
+                assets: [null, null, null, null, null, null, null]
+            };
+        }
+
+        var self = this;
+        var assetIds = self.getAssetIds(cubemapAsset);
+        var assets = [null, null, null, null, null, null, null];
+        var loadedAssetIds = cubemapAsset._handlerState.assetIds;
+        var loadedAssets = cubemapAsset._handlerState.assets;
+
+        // one of the dependent assets has finished loading
+        var awaiting = 7;
+        var onLoad = function (index, asset) {
+            assets[index] = asset;
+            awaiting--;
+
+            if (awaiting === 0) {
+                // all dependent assets are finished loading, set them as the active resources
+                self.update(cubemapAsset, assetIds, assets);
+                callback(null, cubemapAsset.resources);
+            }
+        };
+
+        // handle an asset load failure
+        var onError = function (index, err, asset) {
+            callback(err);
+        };
+
+        var registry = self._registry;
+        var texAsset;
+        for (var i = 0; i < 7; ++i) {
+            var assetId = assetIds[i];
+
+            if (!assetId) {
+                // no asset
+                onLoad(i, null);
+            } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
+                // asset id hasn't changed from what is currently set
+                onLoad(i, loadedAssets[i]);
+            } else if (parseInt(assetId, 10) === assetId) {
+                // assetId is an asset id
+                texAsset = registry.get(assetId);
+                if (texAsset) {
+                    if (texAsset.loaded) {
+                        // asset already exists
+                        onLoad(i, texAsset);
+                    } else {
+                        // asset is not loaded, register for load and error events
+                        registry.once('load:' + assetId, onLoad.bind(self, i));
+                        registry.once('error:' + assetId, onError.bind(self, i));
+                        if (!texAsset.loading) {
+                            // kick off load if it's not already
+                            registry.load(texAsset);
+                        }
+                    }
+                } else {
+                    // asset hasn't been created yet, wait till it is
+                    registry.on('add:' + assetId, function (index, assetId_, texAsset) {
+                        // store the face asset and kick off loading immediately
+                        registry.once('load:' + assetId_, onLoad.bind(self, index));
+                        registry.once('error:' + assetId_, onError.bind(self, index));
+                        registry.load(texAsset);
+                    }.bind(null, i, assetId));
+                }
+            } else {
+                // assetId is a url or file object and we're responsible for creating it
+                var file = (typeof assetId === "string") ? {
+                    url: assetId,
+                    filename: assetId
+                } : assetId;
+                texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file);
+                registry.add(texAsset);
+                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
+                registry.once('error:' + texAsset.id, onError.bind(self, i));
+                registry.load(texAsset);
+            }
+        }
     }
 });
 

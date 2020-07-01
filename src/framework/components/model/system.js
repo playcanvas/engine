@@ -8,9 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
 
-var _schema = [
-    'enabled'
-];
+var _schema = ['enabled'];
 
 /**
  * @class
@@ -25,7 +23,6 @@ function ModelComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'model';
-    this.description = "Renders a 3D model at the location of the Entity.";
 
     this.ComponentType = ModelComponent;
     this.DataType = ModelComponentData;

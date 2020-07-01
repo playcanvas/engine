@@ -334,20 +334,14 @@ Object.assign(AssetRegistry.prototype, {
      * });
      */
     load: function (asset) {
-        if (asset.loading)
-            return;
-
-        var self = this;
-
         // do nothing if asset is already loaded
         // note: lots of code calls assets.load() assuming this check is present
         // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
-        if (asset.loaded) {
-            if (asset.type === 'cubemap')
-                self._loader.patch(asset, this);
+        if (asset.loading || asset.loaded) {
             return;
         }
 
+        var self = this;
         var file = asset.getPreferredFile();
         var load = !!file;
 
@@ -404,32 +398,6 @@ Object.assign(AssetRegistry.prototype, {
             asset.loaded = true;
             _opened(resource);
         };
-
-        // check for special case for cubemaps
-        if (file && asset.type === "cubemap") {
-            load = false;
-            // loading prefiltered cubemap data
-            var url = asset.getFileUrl();
-
-            this._loader.load(url, "texture", function (err, texture) {
-                if (!err) {
-                    // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
-                    self._loader.patch({
-                        resource: texture,
-                        type: "texture",
-                        data: asset.data
-                    }, self);
-
-                    // store in asset data
-                    asset._dds = texture;
-                    _open();
-                } else {
-                    self.fire("error", err, asset);
-                    self.fire("error:" + asset.id, err, asset);
-                    asset.fire("error", err, asset);
-                }
-            });
-        }
 
         if (!file) {
             _open();

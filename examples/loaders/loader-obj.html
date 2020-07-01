@@ -8,7 +8,7 @@
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <!-- obj parser is not included in default engine, load the extra file -->
-    <script src="../assets/scripts/loaders/obj-model.js"></script>
+    <script src="../assets/scripts/parsers/obj-model.js"></script>
     <style>
         body { 
             margin: 0;
@@ -57,7 +57,7 @@
             entity.addComponent("model");
             entity.model.model = asset.resource;
             app.root.addChild(entity);
-        
+
             // add a randomly generated material to all mesh instances
             var mis = entity.model.model.meshInstances;
             for (var i = 0; i < mis.length; i++) {

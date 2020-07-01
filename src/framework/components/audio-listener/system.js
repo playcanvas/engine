@@ -19,7 +19,6 @@ function AudioListenerComponentSystem(app, manager) {
     ComponentSystem.call(this, app);
 
     this.id = "audiolistener";
-    this.description = "Specifies the location of the listener for 3D audio playback.";
 
     this.ComponentType = AudioListenerComponent;
     this.DataType = AudioListenerComponentData;

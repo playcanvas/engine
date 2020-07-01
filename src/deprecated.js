@@ -710,6 +710,7 @@ import { ComponentData } from './framework/components/data.js';
 import { ComponentSystem } from './framework/components/system.js';
 import { Entity } from './framework/entity.js';
 import { LightComponent } from './framework/components/light/component.js';
+import { ModelComponent } from './framework/components/model/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
@@ -821,6 +822,13 @@ Object.defineProperty(LightComponent.prototype, "enable", {
         this.enabled = value;
     }
 });
+
+ModelComponent.prototype.setVisible = function (visible) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.");
+    // #endif
+    this.enabled = visible;
+};
 
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {
