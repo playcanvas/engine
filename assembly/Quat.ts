@@ -41,7 +41,10 @@ export class Quat {
     getAxisAngle(axis: Vec3): f32 {
         var rad = Mathf.acos(this.w) * 2;
         var s = Mathf.sin(rad / 2);
-        let ax: f32 = 1, ay: f32 = 0, az: f32 = 0;
+        // If s is zero, return any axis (no rotation - axis does not matter)
+        let ax: f32 = 1;
+        let ay: f32 = 0;
+        let az: f32 = 0;
         if (s !== 0) {
             s = 1.0 / s;
             ax = this.x * s;
