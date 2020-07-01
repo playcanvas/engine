@@ -15,6 +15,7 @@ function ImgParser(registry, retryRequests) {
     // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
     this.crossOrigin = registry.prefix ? 'anonymous' : null;
     this.retryRequests = !!retryRequests;
+    this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
 }
 
 Object.assign(ImgParser.prototype, {
@@ -25,7 +26,7 @@ Object.assign(ImgParser.prototype, {
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
-        if (typeof ImageBitmap !== 'undefined') {
+        if (this.useImageBitmap) {
             this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
         } else {
             this._loadImage(url.load, url.original, crossOrigin, callback);
