@@ -1766,7 +1766,7 @@ Object.assign(GraphicsDevice.prototype, {
         }
     },
 
-    _isBrowserBased: function (texture) {
+    _isBrowserInterface: function (texture) {
         return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) || 
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
@@ -1809,7 +1809,7 @@ Object.assign(GraphicsDevice.prototype, {
                 // ----- CUBEMAP -----
                 var face;
 
-                if (this._isBrowserBased(mipObject[0])) {
+                if (this._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
                         if (!texture._levelsUpdated[0][face])
@@ -1903,7 +1903,7 @@ Object.assign(GraphicsDevice.prototype, {
                 }
             } else {
                 // ----- 2D -----
-                if (this._isBrowserBased(mipObject)) {
+                if (this._isBrowserInterface(mipObject)) {
                     // Downsize images that are too large to be used as textures
                     if (mipObject instanceof HTMLImageElement) {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
