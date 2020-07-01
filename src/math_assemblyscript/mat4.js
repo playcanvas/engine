@@ -17,6 +17,7 @@ var mat4_invertTo3x3        = assemblyscript.instance.exports["Mat4#invertTo3x3"
 var mat4_isIdentity         = assemblyscript.instance.exports["Mat4#isIdentity"];
 var mat4_mul                = assemblyscript.instance.exports["Mat4#mul"];
 var mat4_mul2               = assemblyscript.instance.exports["Mat4#mul2"];
+var mat4_mulAffine2         = assemblyscript.instance.exports["Mat4#mulAffine2"];
 var mat4_setFromAxisAngle   = assemblyscript.instance.exports["Mat4#setFromAxisAngle"];
 var mat4_setFromEulerAngles = assemblyscript.instance.exports["Mat4#setFromEulerAngles"];
 var mat4_setFrustum         = assemblyscript.instance.exports["Mat4#setFrustum"];
@@ -156,6 +157,11 @@ Mat4.prototype.mul = function (rhs) {
 
 Mat4.prototype.mul2 = function (lhs, rhs) {
     mat4_mul2(this.ptr, lhs.ptr, rhs.ptr);
+    return this;
+};
+
+Mat4.prototype.mulAffine2 = function (lhs, rhs) {
+    mat4_mulAffine2(this.ptr, lhs.ptr, rhs.ptr);
     return this;
 };
 

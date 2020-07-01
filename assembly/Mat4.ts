@@ -363,6 +363,72 @@ export class Mat4 {
         return this;
     }
 
+    /**
+     * @function
+     * @name pc.Mat4#mulAffine2
+     * @description Multiplies the specified 4x4 matrices together and stores the result in
+     * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
+     * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
+     * are not verified to be in the expected format. This function is faster than general {@link pc.Mat4#mul2}.
+     * @param {pc.Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of the operation.
+     * @param {pc.Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
+     * @returns {pc.Mat4} Self for chaining.
+     */
+    mulAffine2(lhs: Mat4, rhs: Mat4): Mat4 {
+        var a00: f32, a01: f32, a02: f32,
+            a10: f32, a11: f32, a12: f32,
+            a20: f32, a21: f32, a22: f32,
+            a30: f32, a31: f32, a32: f32,
+            b0:  f32, b1:  f32, b2:  f32;
+
+        a00 = lhs.m0;
+        a01 = lhs.m1;
+        a02 = lhs.m2;
+        a10 = lhs.m4;
+        a11 = lhs.m5;
+        a12 = lhs.m6;
+        a20 = lhs.m8;
+        a21 = lhs.m9;
+        a22 = lhs.m10;
+        a30 = lhs.m12;
+        a31 = lhs.m13;
+        a32 = lhs.m14;
+
+        b0 = rhs.m0;
+        b1 = rhs.m1;
+        b2 = rhs.m2;
+        this.m0 = a00 * b0 + a10 * b1 + a20 * b2;
+        this.m1 = a01 * b0 + a11 * b1 + a21 * b2;
+        this.m2 = a02 * b0 + a12 * b1 + a22 * b2;
+        this.m3 = 0;
+
+        b0 = rhs.m4;
+        b1 = rhs.m5;
+        b2 = rhs.m6;
+        this.m4 = a00 * b0 + a10 * b1 + a20 * b2;
+        this.m5 = a01 * b0 + a11 * b1 + a21 * b2;
+        this.m6 = a02 * b0 + a12 * b1 + a22 * b2;
+        this.m7 = 0;
+
+        b0 = rhs.m8;
+        b1 = rhs.m9;
+        b2 = rhs.m10;
+        this.m8  = a00 * b0 + a10 * b1 + a20 * b2;
+        this.m9  = a01 * b0 + a11 * b1 + a21 * b2;
+        this.m10 = a02 * b0 + a12 * b1 + a22 * b2;
+        this.m11 = 0;
+
+        b0 = rhs.m12;
+        b1 = rhs.m13;
+        b2 = rhs.m14;
+        this.m12 = a00 * b0 + a10 * b1 + a20 * b2 + a30;
+        this.m13 = a01 * b0 + a11 * b1 + a21 * b2 + a31;
+        this.m14 = a02 * b0 + a12 * b1 + a22 * b2 + a32;
+        this.m15 = 1;
+
+        return this;
+    }
+
     setFromAxisAngle(axis: Vec3, angle: f32): Mat4 {
         angle *= pc_math.DEG_TO_RAD;
 
