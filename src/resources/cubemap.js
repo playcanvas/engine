@@ -34,11 +34,11 @@ Object.assign(CubemapHandler.prototype, {
 
     patch: function (asset, registry) {
         this.loadAssets(asset, function (err, result) {
-            if (err) {	
+            if (err) {
                 // fire error event if patch failed
-                registry.fire('error', asset);	
-                registry.fire('error:' + asset.id, err, asset);	
-                asset.fire('error', asset);	
+                registry.fire('error', asset);
+                registry.fire('error:' + asset.id, err, asset);
+                asset.fire('error', asset);
             } else {
                 // nothing to do since asset:change would have been raised if
                 // resources were changed.

@@ -340,15 +340,14 @@ Object.assign(Viewer.prototype, {
         var cubemap = new pc.Asset('helipad', 'cubemap', {
             url: assetsFolder + "/cubemaps/Helipad.dds"
         }, {
-            /*
-            textures: [
-                assetsFolder + "/cubemaps/Helipad_posx.png",
-                assetsFolder + "/cubemaps/Helipad_negx.png",
-                assetsFolder + "/cubemaps/Helipad_posy.png",
-                assetsFolder + "/cubemaps/Helipad_negy.png",
-                assetsFolder + "/cubemaps/Helipad_posz.png",
-                assetsFolder + "/cubemaps/Helipad_negz.png"
-            ],//*/
+            // textures: [
+            //     assetsFolder + "/cubemaps/Helipad_posx.png",
+            //     assetsFolder + "/cubemaps/Helipad_negx.png",
+            //     assetsFolder + "/cubemaps/Helipad_posy.png",
+            //     assetsFolder + "/cubemaps/Helipad_negy.png",
+            //     assetsFolder + "/cubemaps/Helipad_posz.png",
+            //     assetsFolder + "/cubemaps/Helipad_negz.png"
+            // ],
             magFilter: pc.FILTER_LINEAR,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             anisotropy: 1,
