@@ -1408,7 +1408,7 @@ var createNodeModels = function (gltf, nodeComponents, models, skins) {
         var model = models[gltfNode.mesh].clone();
         var skin = gltfNode.hasOwnProperty('skin') ? skins[gltfNode.skin] : null;
         if (skin !== null) {
-            model.skinInstances = createSkinInstances(model, skins);
+            model.skinInstances = createSkinInstances(model, skin);
         }
 
         var nodeModelIndex = nodeModels.push(model) - 1;
