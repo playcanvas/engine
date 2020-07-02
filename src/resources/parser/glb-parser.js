@@ -1196,7 +1196,7 @@ var createScene = function (sceneData, sceneIndex, nodes) {
     return sceneRoot;
 };
 
-var createModel = function (name, meshGroup, skin, materials, defaultMaterial) {
+var createModel = function (name, meshGroup, materials, defaultMaterial) {
     var model = new Model();
     model.graph = new GraphNode(name);
 
@@ -1216,20 +1216,22 @@ var createModel = function (name, meshGroup, skin, materials, defaultMaterial) {
             model.morphInstances.push(morphInstance);
         }
 
-        if (skin !== null) {
-            mesh.skin = skin;
-
-            var skinInstance = new SkinInstance(skin);
-            skinInstance.bones = skin.bones;
-
-            meshInstance.skinInstance = skinInstance;
-            model.skinInstances.push(skinInstance);
-        }
-
         model.meshInstances.push(meshInstance);
     });
 
     return model;
+};
+
+var createSkinInstances = function (model, skin) {
+    return model.meshInstances.map(function (meshInstance) {
+        meshInstance.mesh.skin = skin;
+
+        var skinInstance = new SkinInstance(skin);
+        skinInstance.bones = skin.bones;
+
+        meshInstance.skinInstance = skinInstance;
+        return skinInstance;
+    });
 };
 
 var createSkins = function (device, gltf, nodes, buffers) {
@@ -1385,15 +1387,13 @@ var getDefaultScene = function (gltf, scenes) {
     return scenes[gltf.scene] || null;
 };
 
-// Create standalone models per mesh group to include in parser response
 var createModels = function (meshGroups, materials, defaultMaterial) {
     return meshGroups.map(function (meshGroup, meshGroupIndex) {
-        return createModel('mesh_model_' + meshGroupIndex, meshGroup, null, materials, defaultMaterial);
+        return createModel('model_' + meshGroupIndex, meshGroup, materials, defaultMaterial);
     });
 };
 
-// Create model per node that uses the node skin
-var createNodeModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial) {
+var createNodeModels = function (gltf, nodeComponents, models, skins) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
@@ -1405,16 +1405,18 @@ var createNodeModels = function (gltf, nodes, nodeComponents, meshGroups, skins,
             return;
         }
 
-        var node = nodes[nodeIndex];
-        var meshGroup = meshGroups[gltfNode.mesh];
+        var model = models[gltfNode.mesh].clone();
         var skin = gltfNode.hasOwnProperty('skin') ? skins[gltfNode.skin] : null;
-        var model = createModel('node_model_' + node.name, meshGroup, skin, materials, defaultMaterial);
-        var modelIndex = nodeModels.push(model) - 1;
+        if (skin !== null) {
+            model.skinInstances = createSkinInstances(model, skins);
+        }
+
+        var nodeModelIndex = nodeModels.push(model) - 1;
 
         if (!nodeComponents[nodeIndex]) {
             nodeComponents[nodeIndex] = {};
         }
-        nodeComponents[nodeIndex].model = modelIndex;
+        nodeComponents[nodeIndex].model = nodeModelIndex;
     });
 
     return nodeModels;
@@ -1441,7 +1443,7 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var meshGroups = createMeshGroups(device, gltf, buffers, callback);
     var skins = createSkins(device, gltf, nodes, buffers);
     var models = createModels(meshGroups, materials, defaultMaterial);
-    var nodeModels = createNodeModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
+    var nodeModels = createNodeModels(gltf, nodeComponents, models, skins);
 
     var result = {
         'nodes': nodes,
