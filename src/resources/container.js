@@ -25,9 +25,10 @@ import { GlbParser } from './parser/glb-parser.js';
  * @property {pc.Entity|null} scene The root entity of the default scene.
  * @property {pc.Entity[]} scenes The root entities of all scenes.
  * @property {pc.Asset[]} materials Material assets.
- * @property {pc.Asset[]} textures Texture assets.
+ * @property {pc.Asset[]} textures Texture assets per GLB image.
  * @property {pc.Asset[]} animations Animation assets.
  * @property {pc.ContainerResourceAnimationMapping[]} nodeAnimations Mapping of animations to node entities.
+ * @property {pc.Asset[]} models Model assets per GLB mesh.
  * @property {pc.AssetRegistry} registry The asset registry.
  */
 function ContainerResource(data) {
@@ -39,6 +40,7 @@ function ContainerResource(data) {
     this.animations = [];
     this.nodeAnimations = [];
     this.models = [];
+    this.nodeModels = [];
     this.registry = null;
 }
 
@@ -81,6 +83,11 @@ Object.assign(ContainerResource.prototype, {
         if (this.models) {
             destroyAssets(this.models);
             this.models = null;
+        }
+
+        if (this.nodeModels) {
+            destroyAssets(this.nodeModels);
+            this.nodeModels = null;
         }
 
         if (this.textures) {
@@ -205,6 +212,11 @@ Object.assign(ContainerHandler.prototype, {
             return createAsset('model', model, index);
         });
 
+        // create node model assets
+        var nodeModelAssets = data.nodeModels.map(function (model, index) {
+            return createAsset('model', model, index);
+        });
+
         // create material assets
         var materialAssets = data.materials.map(function (material, index) {
             return createAsset('material', material, index);
@@ -232,7 +244,7 @@ Object.assign(ContainerHandler.prototype, {
             if (components.model !== null) {
                 node.addComponent('model', {
                     type: 'asset',
-                    asset: modelAssets[components.model]
+                    asset: nodeModelAssets[components.model]
                 });
             }
         });
@@ -245,6 +257,7 @@ Object.assign(ContainerHandler.prototype, {
         container.animations = animationAssets;
         container.nodeAnimations = nodeAnimations;
         container.models = modelAssets;
+        container.nodeModels = nodeModelAssets;
         container.registry = assets;
     }
 });

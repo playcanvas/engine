@@ -1196,9 +1196,9 @@ var createScene = function (sceneData, sceneIndex, nodes) {
     return sceneRoot;
 };
 
-var createModel = function (node, meshGroup, skin, materials, defaultMaterial) {
+var createModel = function (name, meshGroup, skin, materials, defaultMaterial) {
     var model = new Model();
-    model.graph = new GraphNode('model_' + node.name);
+    model.graph = new GraphNode(name);
 
     meshGroup.forEach(function (mesh) {
         var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
@@ -1385,12 +1385,20 @@ var getDefaultScene = function (gltf, scenes) {
     return scenes[gltf.scene] || null;
 };
 
-var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial) {
+// Create standalone models per mesh group to include in parser response
+var createModels = function (meshGroups, materials, defaultMaterial) {
+    return meshGroups.map(function (meshGroup, meshGroupIndex) {
+        return createModel('mesh_model_' + meshGroupIndex, meshGroup, null, materials, defaultMaterial);
+    });
+};
+
+// Create model per node that uses the node skin
+var createNodeModels = function (gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
 
-    var models = [];
+    var nodeModels = [];
 
     gltf.nodes.forEach(function (gltfNode, nodeIndex) {
         if (!gltfNode.hasOwnProperty('mesh')) {
@@ -1400,8 +1408,8 @@ var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, mat
         var node = nodes[nodeIndex];
         var meshGroup = meshGroups[gltfNode.mesh];
         var skin = gltfNode.hasOwnProperty('skin') ? skins[gltfNode.skin] : null;
-        var model = createModel(node, meshGroup, skin, materials, defaultMaterial);
-        var modelIndex = models.push(model) - 1;
+        var model = createModel('node_model_' + node.name, meshGroup, skin, materials, defaultMaterial);
+        var modelIndex = nodeModels.push(model) - 1;
 
         if (!nodeComponents[nodeIndex]) {
             nodeComponents[nodeIndex] = {};
@@ -1409,7 +1417,7 @@ var createModels = function (gltf, nodes, nodeComponents, meshGroups, skins, mat
         nodeComponents[nodeIndex].model = modelIndex;
     });
 
-    return models;
+    return nodeModels;
 };
 
 // create engine resources from the downloaded GLB data
@@ -1432,12 +1440,14 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     }) : [], options);
     var meshGroups = createMeshGroups(device, gltf, buffers, callback);
     var skins = createSkins(device, gltf, nodes, buffers);
-    var models = createModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
+    var models = createModels(meshGroups, materials, defaultMaterial);
+    var nodeModels = createNodeModels(gltf, nodes, nodeComponents, meshGroups, skins, materials, defaultMaterial);
 
     var result = {
         'nodes': nodes,
         'nodeComponents': nodeComponents,
         'models': models,
+        'nodeModels': nodeModels,
         'animations': animations,
         'scenes': scenes,
         'scene': scene,
