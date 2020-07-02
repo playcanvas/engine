@@ -1,4 +1,7 @@
 var chai = require("chai");
+var path = require("path");
+var fs = require("fs");
+require("../examples/animation/Loader");
 
 function describe(name, func) {
     console.log(name);
@@ -43,19 +46,15 @@ global.close = function (a, b, e) {
     expect(a).to.be.closeTo(b, e);
 }
 
-fs = require("fs");
-
 global.window = {
     navigator: {
         userAgent: "node"
     }
 };
 
-require("./Loader");
-
 async function load_wasm() {
-    //var wasmFile = fs.readFileSync("../../build/untouched.wasm");
-    var wasmFile = fs.readFileSync("../../build/optimized.wasm");
+    var wasmFile = fs.readFileSync(path.join(__dirname, "../build/untouched.wasm"));
+    var wasmFile = fs.readFileSync(path.join(__dirname, "../build/optimized.wasm"));
     imports = {};
     var module = await Loader.instantiateBuffer(wasmFile, imports);
     window.module = module;
@@ -76,13 +75,13 @@ async function main() {
     window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
     window.module.updateDataViews();
     global.instance = window.instance;
-    global.pc = require("../../build/playcanvas.assemblyscript");
+    global.pc = require("../build/playcanvas.assemblyscript");
     
-    require("../../tests/math/test_mat4")
-    require("../../tests/math/test_quat")
-    require("../../tests/math/test_vec2")
-    require("../../tests/math/test_vec3")
-    require("../../tests/math/test_vec4")
+    require("./math/test_mat4")
+    require("./math/test_quat")
+    require("./math/test_vec2")
+    require("./math/test_vec3")
+    require("./math/test_vec4")
 
 }
 

@@ -70,6 +70,7 @@
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
+    "test:as": "node tests/test_assemblyscript.js",
     "tsd": "jsdoc -c conf-tsd.json",
     "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz",
