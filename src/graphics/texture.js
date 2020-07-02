@@ -1,3 +1,5 @@
+import { math } from '../math/math.js';
+
 import {
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -561,7 +563,7 @@ Object.defineProperties(Texture.prototype, {
      */
     pot: {
         get: function () {
-            return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+            return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
         }
     }
 });
