@@ -24,6 +24,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @param {object} data - The loaded GLB data.
  * @property {pc.Entity|null} scene The root entity of the default scene.
  * @property {pc.Entity[]} scenes The root entities of all scenes.
+ * @property {pc.Entity[]} nodes Entity per GLB node.
  * @property {pc.Asset[]} materials Material assets.
  * @property {pc.Asset[]} textures Texture assets per GLB image.
  * @property {pc.Asset[]} animations Animation assets.
@@ -35,6 +36,7 @@ function ContainerResource(data) {
     this.data = data;
     this.scene = null;
     this.scenes = [];
+    this.nodes = [];
     this.materials = [];
     this.textures = [];
     this.animations = [];
@@ -58,6 +60,7 @@ Object.assign(ContainerResource.prototype, {
             assets.forEach(destroyAsset);
         };
 
+        // destroy entities
         if (this.scene) {
             this.scene.destroy();
             this.scene = null;
@@ -68,6 +71,13 @@ Object.assign(ContainerResource.prototype, {
                 scene.destroy();
             });
             this.scenes = null;
+        }
+
+        if (this.nodes) {
+            this.nodes.forEach(function (node) {
+                node.destroy();
+            });
+            this.nodes = null;
         }
 
         // unload and destroy assets
@@ -252,6 +262,7 @@ Object.assign(ContainerHandler.prototype, {
         container.data = null;              // since assets are created, release GLB data
         container.scene = data.scene;       // scenes are not wrapped in an Asset
         container.scenes = data.scenes;     // scenes are not wrapped in an Asset
+        container.nodes = data.nodes;       // nodes are not wrapped in an Asset
         container.materials = materialAssets;
         container.textures = data.textures; // texture assets are created directly
         container.animations = animationAssets;
