@@ -340,6 +340,7 @@ Object.assign(Viewer.prototype, {
         var cubemap = new pc.Asset('helipad', 'cubemap', {
             url: assetsFolder + "/cubemaps/Helipad.dds"
         }, {
+            /*
             textures: [
                 assetsFolder + "/cubemaps/Helipad_posx.png",
                 assetsFolder + "/cubemaps/Helipad_negx.png",
@@ -347,35 +348,32 @@ Object.assign(Viewer.prototype, {
                 assetsFolder + "/cubemaps/Helipad_negy.png",
                 assetsFolder + "/cubemaps/Helipad_posz.png",
                 assetsFolder + "/cubemaps/Helipad_negz.png"
-            ],
+            ],//*/
             magFilter: pc.FILTER_LINEAR,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             anisotropy: 1,
             type: pc.TEXTURETYPE_RGBM
         });
-        cubemap.loadFaces = true;
+        // cubemap.loadFaces = true;
         cubemap.on('load', function () {
-            if (cubemap.resource.width != 4) {
-                cubemap.resource.type = pc.TEXTURETYPE_RGBM;
-                app.scene.gammaCorrection = pc.GAMMA_SRGB;
-                app.scene.toneMapping = pc.TONEMAP_ACES;
-                app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
-                app.scene.setSkybox(cubemap.resources);
-                app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
+            app.scene.gammaCorrection = pc.GAMMA_SRGB;
+            app.scene.toneMapping = pc.TONEMAP_ACES;
+            app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
+            app.scene.setSkybox(cubemap.resources);
+            app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
 
-                // generate Helipad_equi.png from cubemaps
-                // reproject the heli to equirect
-                // var equi = new pc.Texture(app.graphicsDevice, {
-                //     name: 'heli_equirect',
-                //     width: 2048,
-                //     height: 1024,
-                //     type: pc.TEXTURETYPE_RGBM
-                // });
-                // pc.reprojectTexture(app.graphicsDevice, cubemap.resource, equi);
-                // pc.downloadTexture(equi, 'Helipad_equi.png', 0, true);
+            // generate Helipad_equi.png from cubemaps
+            // reproject the heli to equirect
+            // var equi = new pc.Texture(app.graphicsDevice, {
+            //     name: 'heli_equirect',
+            //     width: 2048,
+            //     height: 1024,
+            //     type: pc.TEXTURETYPE_RGBM
+            // });
+            // pc.reprojectTexture(app.graphicsDevice, cubemap.resource, equi);
+            // pc.downloadTexture(equi, 'Helipad_equi.png', 0, true);
 
-                // pc.downloadTexture(cubemap.resource, 'Helipad_cube.png');
-            }
+            // pc.downloadTexture(cubemap.resource, 'Helipad_cube.png');
         });
         app.assets.add(cubemap);
         app.assets.load(cubemap);
