@@ -90,6 +90,12 @@ Object.assign(ResourceLoader.prototype, {
             return;
         }
 
+        // handle requests with null file
+        if (!url) {
+            this._loadNull(handler, callback, asset);
+            return;
+        }
+
         var key = url + type;
 
         if (this._cache[key] !== undefined) {
@@ -150,6 +156,22 @@ Object.assign(ResourceLoader.prototype, {
                 });
             }
         }
+    },
+
+    // load an asset with no url, skipping bundles and caching
+    _loadNull: function (handler, callback, asset) {
+        var onLoad = function (err, data, extra) {
+            if (err) {
+                callback(err);
+            } else {
+                try {
+                    callback(null, handler.open(null, data, asset), extra);
+                } catch (e) {
+                    callback(e);
+                }
+            }
+        };
+        handler.load(null, onLoad, asset);
     },
 
     _onSuccess: function (key, result, extra) {

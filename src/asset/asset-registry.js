@@ -343,7 +343,6 @@ Object.assign(AssetRegistry.prototype, {
 
         var self = this;
         var file = asset.getPreferredFile();
-        var load = !!file;
 
         // open has completed on the resource
         var _opened = function (resource) {
@@ -353,6 +352,7 @@ Object.assign(AssetRegistry.prototype, {
                 asset.resource = resource;
             }
 
+            // let handler patch the resource
             self._loader.patch(asset, self);
 
             self.fire("load", asset);
@@ -362,49 +362,41 @@ Object.assign(AssetRegistry.prototype, {
             asset.fire("load", asset);
         };
 
-        var _load = function () {
-            var url = asset.getFileUrl();
+        // load has completed on the resource
+        var _loaded = function (err, resource, extra) {
+            asset.loaded = true;
+            asset.loading = false;
 
-            asset.loading = true;
-
-            self._loader.load(url, asset.type, function (err, resource, extra) {
-                asset.loaded = true;
-                asset.loading = false;
-
-                if (err) {
-                    self.fire("error", err, asset);
-                    self.fire("error:" + asset.id, err, asset);
-                    asset.fire("error", err, asset);
-                    return;
-                }
-
+            if (err) {
+                self.fire("error", err, asset);
+                self.fire("error:" + asset.id, err, asset);
+                asset.fire("error", err, asset);
+            } else {
                 if (!script.legacy && asset.type === 'script') {
-                    var loader = self._loader.getHandler('script');
-
-                    if (loader._cache[asset.id] && loader._cache[asset.id].parentNode === document.head) {
+                    var handler = self._loader.getHandler('script');
+                    if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
                         // remove old element
-                        document.head.removeChild(loader._cache[asset.id]);
+                        document.head.removeChild(handler._cache[asset.id]);
                     }
-
-                    loader._cache[asset.id] = extra;
+                    handler._cache[asset.id] = extra;
                 }
 
                 _opened(resource);
-            }, asset);
+            }
         };
 
-        var _open = function () {
+        if (file || asset.type === 'cubemap') {
+            // start loading the resource
+            this.fire("load:start", asset);
+            this.fire("load:" + asset.id + ":start", asset);
+
+            asset.loading = true;
+            self._loader.load(asset.getFileUrl(), asset.type, _loaded, asset);
+        } else {
+            // asset has no file to load, open it directly
             var resource = self._loader.open(asset.type, asset.data);
             asset.loaded = true;
             _opened(resource);
-        };
-
-        if (!file) {
-            _open();
-        } else if (load) {
-            this.fire("load:start", asset);
-            this.fire("load:" + asset.id + ":start", asset);
-            _load();
         }
     },
 
