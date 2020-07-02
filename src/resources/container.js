@@ -40,7 +40,7 @@ function ContainerResource(data) {
     this.animations = [];
     this.nodeAnimations = [];
     this.models = [];
-    this.nodeModels = [];
+    this._nodeModels = [];
     this.registry = null;
 }
 
@@ -85,9 +85,9 @@ Object.assign(ContainerResource.prototype, {
             this.models = null;
         }
 
-        if (this.nodeModels) {
-            destroyAssets(this.nodeModels);
-            this.nodeModels = null;
+        if (this._nodeModels) {
+            destroyAssets(this._nodeModels);
+            this._nodeModels = null;
         }
 
         if (this.textures) {
@@ -257,7 +257,7 @@ Object.assign(ContainerHandler.prototype, {
         container.animations = animationAssets;
         container.nodeAnimations = nodeAnimations;
         container.models = modelAssets;
-        container.nodeModels = nodeModelAssets;
+        container._nodeModels = nodeModelAssets;
         container.registry = assets;
     }
 });
