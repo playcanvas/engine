@@ -9,7 +9,7 @@ vec3 unpack3NFloats(float src) {
     return vec3(r, g, b);
 }
 
-vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
+vec3 tex1Dlod_lerp(highp sampler2D tex, vec2 tc, out vec3 w) {
     vec4 a = texture2D(tex, tc);
     vec4 b = texture2D(tex, tc + graphSampleSize);
     float c = fract(tc.x * graphNumSamples);
