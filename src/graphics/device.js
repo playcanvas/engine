@@ -1767,7 +1767,7 @@ Object.assign(GraphicsDevice.prototype, {
     },
 
     _isBrowserInterface: function (texture) {
-        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) || 
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
                (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
