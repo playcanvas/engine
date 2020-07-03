@@ -35,14 +35,13 @@ Object.assign(CubemapHandler.prototype, {
     patch: function (asset, registry) {
         this.loadAssets(asset, function (err, result) {
             if (err) {
+                // fire error event if patch failed
                 registry.fire('error', asset);
                 registry.fire('error:' + asset.id, err, asset);
                 asset.fire('error', asset);
-            } else {
-                registry.fire('load', asset);
-                registry.fire('load:' + asset.id, asset);
-                asset.fire('load', asset);
             }
+            // nothing to do since asset:change would have been raised if
+            // resources were changed.
         });
     },
 
@@ -174,15 +173,18 @@ Object.assign(CubemapHandler.prototype, {
             resources[0] = oldResources[0] || null;
         }
 
-        // set the new resources, change events will fire
-        cubemapAsset.resources = resources;
-        cubemapAsset._handlerState.assetIds = assetIds;
-        cubemapAsset._handlerState.assets = assets;
+        // check if any resource changed
+        if (!this.cmpArrays(resources, oldResources)) {
+            // set the new resources, change events will fire
+            cubemapAsset.resources = resources;
+            cubemapAsset._handlerState.assetIds = assetIds;
+            cubemapAsset._handlerState.assets = assets;
 
-        // destroy the old cubemap resources that are not longer needed
-        for (i = 0; i < oldResources.length; ++i) {
-            if (oldResources[i] !== null && resources.indexOf(oldResources[i]) === -1) {
-                oldResources[i].destroy();
+            // destroy the old cubemap resources that are not longer needed
+            for (i = 0; i < oldResources.length; ++i) {
+                if (oldResources[i] !== null && resources.indexOf(oldResources[i]) === -1) {
+                    oldResources[i].destroy();
+                }
             }
         }
 
