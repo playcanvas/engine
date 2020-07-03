@@ -39,10 +39,9 @@ Object.assign(CubemapHandler.prototype, {
                 registry.fire('error', asset);
                 registry.fire('error:' + asset.id, err, asset);
                 asset.fire('error', asset);
-            } else {
-                // nothing to do since asset:change would have been raised if
-                // resources were changed.
             }
+            // nothing to do since asset:change would have been raised if
+            // resources were changed.
         });
     },
 
