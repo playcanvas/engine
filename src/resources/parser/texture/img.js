@@ -98,19 +98,19 @@ Object.assign(ImgParser.prototype, {
             responseType: "blob",
             retry: this.retryRequests
         };
-        pc.http.get(url, options, function (err, blob) {
+        http.get(url, options, function (err, blob) {
             if (err) {
                 callback(err);
             } else {
                 createImageBitmap(blob, {
                     premultiplyAlpha: 'none'
                 })
-                .then( function (imageBitmap) {
-                    callback(null, imageBitmap);
-                })
-                .catch( function (e) {
-                    callback(e);
-                });
+                    .then( function (imageBitmap) {
+                        callback(null, imageBitmap);
+                    })
+                    .catch( function (e) {
+                        callback(e);
+                    });
             }
         });
     }
