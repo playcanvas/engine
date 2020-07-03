@@ -103,9 +103,9 @@
         this.oldPositions = new Float32Array(3 * maxNumPoints);
 
         // generate random positions and old positions within small cube (delta between them represents velocity)
-        for (var i = 0; i < 3 * self.maxNumPoints; i++)         {
-            self.positions[i] = Math.random() * 2 - 1;
-            self.oldPositions[i] = self.positions[i] + Math.random() * 0.04 - 0.01;
+        for (var i = 0; i < 3 * this.maxNumPoints; i++)         {
+            this.positions[i] = Math.random() * 2 - 1;
+            this.oldPositions[i] = this.positions[i] + Math.random() * 0.04 - 0.01;
         }
 
         // helper function to update vertex of the mesh
