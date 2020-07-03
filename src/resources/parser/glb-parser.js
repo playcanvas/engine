@@ -1351,7 +1351,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
         }
     };
 
-    var loadTexture = function (index, url, mimeType, crossOrigin) {
+    var loadTexture = function (index, url, mimeType, crossOrigin, isBlobUrl) {
         var mimeTypeFileExtensions = {
             'image/png': 'png',
             'image/jpeg': 'jpg',
@@ -1371,7 +1371,15 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
 
         // create and load the asset
         var asset = new Asset('texture_' + index, 'texture',  file, { flipY: false }, { crossOrigin: crossOrigin });
-        asset.on('load', onLoad.bind(null, index));
+        asset.on('load', function () {
+            if (isBlobUrl) {
+                URL.revokeObjectURL(url);
+            }
+            onLoad(index, asset);
+        });
+        asset.on('error', function (err, asset) {
+            callback(err);
+        });
         registry.add(asset);
         registry.load(asset);
     };
@@ -1408,7 +1416,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
                 var buffer = buffers[bufferView.buffer];
                 var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
                 var blob = new Blob([imageBuffer], { type: gltfImage.mimeType });
-                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType);
+                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType, null, true);
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);

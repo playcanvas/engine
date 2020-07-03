@@ -4,12 +4,13 @@
     <title>PlayCanvas Glb Viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <link rel="icon" type="image/png" href="../playcanvas-logo.png" />
     <link rel="stylesheet" href="style.css">
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../../examples/assets/scripts/parsers/hdr-texture.js"></script>
     <script src="../../examples/assets/scripts/utils/download-texture.js"></script>
+    <script src="../../examples/wasm-loader.js"></script>
 </head>
 
 <body onload="main()">
@@ -59,7 +60,6 @@
         <!-- The canvas element -->
         <canvas id="application-canvas"></canvas>
     </div>
-    <script src="../../examples/wasm-loader.js"></script>
     <script src="./src/viewer.js"></script>
     <script src="./src/controls.js"></script>
     <script src="./src/graph.js"></script>
