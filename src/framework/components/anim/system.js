@@ -24,7 +24,6 @@ function AnimComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'anim';
-    this.description = "State based animation system that can animate the models and component properties of this entity and its children";
 
     this.ComponentType = AnimComponent;
     this.DataType = AnimComponentData;

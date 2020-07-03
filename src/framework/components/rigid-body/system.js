@@ -157,7 +157,6 @@ function RigidBodyComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'rigidbody';
-    this.description = "Adds the entity to the scene's physical simulation.";
     this._stats = app.stats.frame;
 
     this.ComponentType = RigidBodyComponent;

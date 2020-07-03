@@ -25,7 +25,7 @@ import {
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
-    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D
+    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY
 } from './graphics.js';
 
 import { drawQuadWithShader } from './simple-post-effect.js';
@@ -578,6 +578,15 @@ var GraphicsDevice = function (canvas, options) {
     this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
         gl.uniform1fv(uniform.locationId, value);
     };
+    this.commitFunction[UNIFORMTYPE_VEC2ARRAY]  = function (uniform, value) {
+        gl.uniform2fv(uniform.locationId, value);
+    };
+    this.commitFunction[UNIFORMTYPE_VEC3ARRAY]  = function (uniform, value) {
+        gl.uniform3fv(uniform.locationId, value);
+    };
+    this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
+        gl.uniform4fv(uniform.locationId, value);
+    };
 
     // Create the ScopeNamespace for shader attributes and variables
     this.scope = new ScopeSpace("Device");
@@ -599,7 +608,7 @@ var GraphicsDevice = function (canvas, options) {
     numUniforms -= 8;     // 8 lights max, each specifying a position vector
     numUniforms -= 1;     // Eye position
     numUniforms -= 4 * 4; // Up to 4 texture transforms
-    this.boneLimit = Math.floor(numUniforms / 4);
+    this.boneLimit = Math.floor(numUniforms / 3);   // each bone uses 3 uniforms
 
     // Put a limit on the number of supported bones before skin partitioning must be performed
     // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
@@ -1757,6 +1766,13 @@ Object.assign(GraphicsDevice.prototype, {
         }
     },
 
+    _isBrowserInterface: function (texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
+               (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
+               (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
+               (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
+    },
+
     uploadTexture: function (texture) {
         var gl = this.gl;
 
@@ -1793,7 +1809,7 @@ Object.assign(GraphicsDevice.prototype, {
                 // ----- CUBEMAP -----
                 var face;
 
-                if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
+                if (this._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
                         if (!texture._levelsUpdated[0][face])
@@ -1805,8 +1821,8 @@ Object.assign(GraphicsDevice.prototype, {
                             if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                 src = _downsampleImage(src, this.maxCubeMapSize);
                                 if (mipLevel === 0) {
-                                    texture.width = src.width;
-                                    texture.height = src.height;
+                                    texture._width = src.width;
+                                    texture._height = src.height;
                                 }
                             }
                         }
@@ -1887,14 +1903,14 @@ Object.assign(GraphicsDevice.prototype, {
                 }
             } else {
                 // ----- 2D -----
-                if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
+                if (this._isBrowserInterface(mipObject)) {
                     // Downsize images that are too large to be used as textures
                     if (mipObject instanceof HTMLImageElement) {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                             mipObject = _downsampleImage(mipObject, this.maxTextureSize);
                             if (mipLevel === 0) {
-                                texture.width = mipObject.width;
-                                texture.height = mipObject.height;
+                                texture._width = mipObject.width;
+                                texture._height = mipObject.height;
                             }
                         }
                     }

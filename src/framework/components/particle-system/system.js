@@ -90,7 +90,6 @@ function ParticleSystemComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'particlesystem';
-    this.description = "Updates and renders particle system in the scene.";
 
     this.ComponentType = ParticleSystemComponent;
     this.DataType = ParticleSystemComponentData;

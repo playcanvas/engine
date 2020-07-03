@@ -695,7 +695,37 @@ function DefaultAnimBinder(graph) {
                 }
             };
             return new AnimTarget(func, 'vector', morphInstance.morph._targets.length);
-        }
+        },
+        'materialTexture': function (node, textureName) {
+            var object = node;
+            while (object && object.constructor !== Entity) {
+                object = object.parent;
+            }
+            if (!object ||
+                !object.model ||
+                !object.model.model) {
+                return null;
+            }
+            var meshInstances = object.model.meshInstances;
+            var meshInstance;
+            for (var i = 0; i < meshInstances.length; ++i) {
+                if (meshInstances[i].node.name === node.name) {
+                    meshInstance = meshInstances[i];
+                    break;
+                }
+            }
+            if (!meshInstance) {
+                return null;
+            }
+            var func = function (value) {
+                var textureAsset = this.animComponent.system.app.assets.get(value[0]);
+                if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
+                    meshInstance.material[textureName] = textureAsset.resource;
+                    meshInstance.material.update();
+                }
+            }.bind(this);
+            return new AnimTarget(func, 'vector', 1);
+        }.bind(this)
     };
 
     this.propertyLocator = new AnimPropertyLocator();
@@ -705,7 +735,7 @@ Object.assign(DefaultAnimBinder.prototype, {
     resolve: function (path) {
         var pathSections = this.propertyLocator.decode(path);
 
-        var node = this.nodes[pathSections[0][0]];
+        var node = this.nodes[pathSections[0][0] || ""];
         if (!node) {
             return null;
         }
@@ -753,17 +783,6 @@ Object.assign(DefaultAnimBinder.prototype, {
         for (var i = 0; i < activeNodes.length; ++i) {
             activeNodes[i]._dirtifyLocal();
         }
-    },
-
-    // get the path parts. we expect parts to have structure nodeName.[translation|rotation|scale|weights]
-    _getParts: function (path) {
-        var parts = AnimBinder.splitPath(path);
-        if (parts.length !== 2 ||
-            !this.nodes.hasOwnProperty(parts[0]) ||
-            !this.handlers.hasOwnProperty(parts[1])) {
-            return null;
-        }
-        return parts;
     }
 });
 

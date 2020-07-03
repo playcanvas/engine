@@ -67,8 +67,30 @@ Object.assign(ContainerResource.prototype, {
  * @class
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
+ * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
+ * The asset options object can be used for passing in load time callbacks to handle the various resources
+ * at different stages of loading as follows:
+ * ```
+ * |---------------------------------------------------------------------|
+ * |  resource   |  preprocess |   process   |processAsync | postprocess |
+ * |-------------+-------------+-------------+-------------+-------------|
+ * | global      |      x      |             |             |      x      |
+ * | node        |      x      |      x      |             |      x      |
+ * | animation   |      x      |             |             |      x      |
+ * | material    |      x      |      x      |             |      x      |
+ * | texture     |      x      |             |      x      |      x      |
+ * | buffer      |      x      |             |      x      |      x      |
+ * |---------------------------------------------------------------------|
+ * ```
+ * For example, to receive a texture preprocess callback:
+ * ```javascript
+ * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ *     texture: {
+ *         preprocess: function (gltfTexture) { console.log("texture preprocess"); }
+ *     },
+ * });
+ * ```
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
@@ -97,28 +119,40 @@ Object.assign(ContainerHandler.prototype, {
 
         var self = this;
 
-        http.get(url.load, options, function (err, response) {
-            if (!callback)
-                return;
+        // parse downloaded file data
+        var parseData = function (arrayBuffer) {
+            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
+                                 path.extractPath(url.load),
+                                 arrayBuffer,
+                                 self._device,
+                                 asset.registry,
+                                 asset.options,
+                                 function (err, result) {
+                                     if (err) {
+                                         callback(err);
+                                     } else {
+                                         // return everything
+                                         callback(null, new ContainerResource(result));
+                                     }
+                                 });
+        };
 
-            if (!err) {
-                GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                     path.extractPath(url.load),
-                                     response,
-                                     self._device,
-                                     asset.registry,
-                                     function (err, result) {
-                                         if (err) {
-                                             callback(err);
-                                         } else {
-                                             // return everything
-                                             callback(null, new ContainerResource(result));
-                                         }
-                                     });
-            } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
-            }
-        });
+        if (asset && asset.file && asset.file.contents) {
+            // file data supplied by caller
+            parseData(asset.file.contents);
+        } else {
+            // data requires download
+            http.get(url.load, options, function (err, response) {
+                if (!callback)
+                    return;
+
+                if (err) {
+                    callback("Error loading model: " + url.original + " [" + err + "]");
+                } else {
+                    parseData(response);
+                }
+            });
+        }
     },
 
     open: function (url, data, asset) {
@@ -142,7 +176,7 @@ Object.assign(ContainerHandler.prototype, {
         var i;
 
         // create model asset
-        var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
         // create material assets
         var materials = [];

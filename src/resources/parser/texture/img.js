@@ -1,4 +1,5 @@
 import { path } from '../../../core/path.js';
+import { http } from '../../../net/http.js';
 
 import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/graphics.js';
 import { Texture } from '../../../graphics/texture.js';
@@ -15,6 +16,7 @@ function ImgParser(registry, retryRequests) {
     // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
     this.crossOrigin = registry.prefix ? 'anonymous' : null;
     this.retryRequests = !!retryRequests;
+    this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
 }
 
 Object.assign(ImgParser.prototype, {
@@ -25,7 +27,11 @@ Object.assign(ImgParser.prototype, {
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
-        this._loadImage(url.load, url.original, crossOrigin, callback);
+        if (this.useImageBitmap) {
+            this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
+        } else {
+            this._loadImage(url.load, url.original, crossOrigin, callback);
+        }
     },
 
     open: function (url, data, device) {
@@ -84,6 +90,29 @@ Object.assign(ImgParser.prototype, {
         };
 
         image.src = url;
+    },
+
+    _loadImageBitmap: function (url, originalUrl, crossOrigin, callback) {
+        var options = {
+            cache: true,
+            responseType: "blob",
+            retry: this.retryRequests
+        };
+        http.get(url, options, function (err, blob) {
+            if (err) {
+                callback(err);
+            } else {
+                createImageBitmap(blob, {
+                    premultiplyAlpha: 'none'
+                })
+                    .then( function (imageBitmap) {
+                        callback(null, imageBitmap);
+                    })
+                    .catch( function (e) {
+                        callback(e);
+                    });
+            }
+        });
     }
 });
 

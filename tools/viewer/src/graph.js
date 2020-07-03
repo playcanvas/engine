@@ -25,6 +25,12 @@ Object.assign(Graph.prototype, {
         });
     },
 
+    hasNode: function (node) {
+        return this.graphs.findIndex(function (g) {
+            return g.node === node;
+        }) !== -1;
+    },
+
     clear: function () {
         this.graphs = [];
     },

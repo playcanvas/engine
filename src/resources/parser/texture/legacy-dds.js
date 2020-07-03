@@ -18,7 +18,7 @@ import { Texture } from '../../../graphics/texture.js';
  * @classdesc Legacy texture parser for dds files.
  */
 function LegacyDdsParser(registry, retryRequests) {
-    this.retryRequests = retryRequests;
+    this.retryRequests = !!retryRequests;
 }
 
 Object.assign(LegacyDdsParser.prototype, {

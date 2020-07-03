@@ -634,7 +634,7 @@ var standard = {
 
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
-                attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
+                attributes["vertex_texCoord" + i] = "TEXCOORD" + i;
                 code += chunks["uv" + i + "VS"];
                 codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
             }

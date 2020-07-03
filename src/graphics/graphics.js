@@ -1071,6 +1071,9 @@ export var UNIFORMTYPE_FLOATARRAY = 17;
 export var UNIFORMTYPE_TEXTURE2D_SHADOW = 18;
 export var UNIFORMTYPE_TEXTURECUBE_SHADOW = 19;
 export var UNIFORMTYPE_TEXTURE3D = 20;
+export var UNIFORMTYPE_VEC2ARRAY = 21;
+export var UNIFORMTYPE_VEC3ARRAY = 22;
+export var UNIFORMTYPE_VEC4ARRAY = 23;
 
 // map of engine pc.TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
