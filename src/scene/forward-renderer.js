@@ -102,7 +102,7 @@ var frustumDiagonal = new Vec3();
 var tempSphere = { center: null, radius: 0 };
 var meshPos;
 var visibleSceneAabb = new BoundingBox();
-var boneTextureSize = [0, 0];
+var boneTextureSize = [0, 0, 0, 0];
 var boneTexture, instancingData, modelMatrix, normalMatrix;
 
 var shadowMapCubeCache = {};
@@ -1247,6 +1247,8 @@ Object.assign(ForwardRenderer.prototype, {
                 this.boneTextureId.setValue(boneTexture);
                 boneTextureSize[0] = boneTexture.width;
                 boneTextureSize[1] = boneTexture.height;
+                boneTextureSize[2] = 1.0 / boneTexture.width;
+                boneTextureSize[3] = 1.0 / boneTexture.height;
                 this.boneTextureSizeId.setValue(boneTextureSize);
             } else {
                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);

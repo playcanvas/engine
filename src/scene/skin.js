@@ -47,12 +47,15 @@ Object.assign(SkinInstance.prototype, {
 
         if (device.supportsBoneTextures) {
 
-            // texture size - square texture with power of two side, large enough to fit 4 pixels per bone
-            var size = numBones > 16 ? math.nextPowerOfTwo(Math.ceil(Math.sqrt(numBones * 4))) : 8;
+            // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
+            var numPixels = numBones * 3;
+            var width = Math.ceil(Math.sqrt(numPixels));
+            width = math.roundUp(width, 3);
+            var height = Math.ceil(numPixels / width);
 
             this.boneTexture = new Texture(device, {
-                width: size,
-                height: size,
+                width: width,
+                height: height,
                 format: PIXELFORMAT_RGBA32F,
                 mipmaps: false,
                 minFilter: FILTER_NEAREST,
@@ -63,7 +66,7 @@ Object.assign(SkinInstance.prototype, {
             this.matrixPalette = this.boneTexture.lock();
 
         } else {
-            this.matrixPalette = new Float32Array(numBones * 16);
+            this.matrixPalette = new Float32Array(numBones * 12);
         }
     },
 
@@ -96,8 +99,8 @@ Object.assign(SkinInstance.prototype, {
 
         _invMatrix.copy(rootNode.getWorldTransform()).invert();
         for (var i = this.bones.length - 1; i >= 0; i--) {
-            this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
-            this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
+            this.matrices[i].mulAffine2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+            this.matrices[i].mulAffine2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
         }
     },
 
@@ -106,27 +109,24 @@ Object.assign(SkinInstance.prototype, {
         var mp = this.matrixPalette;
         var base;
 
-        for (var i = this.bones.length - 1; i >= 0; i--) {
+        var count = this.bones.length;
+        for (var i = 0; i < count; i++) {
             pe = this.matrices[i].data;
 
-            // Copy the matrix into the palette, ready to be sent to the vertex shader
-            base = i * 16;
+            // Copy the matrix into the palette, ready to be sent to the vertex shader, transpose matrix from 4x4 to 4x3 format as well
+            base = i * 12;
             mp[base] = pe[0];
-            mp[base + 1] = pe[1];
-            mp[base + 2] = pe[2];
-            mp[base + 3] = pe[3];
-            mp[base + 4] = pe[4];
+            mp[base + 1] = pe[4];
+            mp[base + 2] = pe[8];
+            mp[base + 3] = pe[12];
+            mp[base + 4] = pe[1];
             mp[base + 5] = pe[5];
-            mp[base + 6] = pe[6];
-            mp[base + 7] = pe[7];
-            mp[base + 8] = pe[8];
-            mp[base + 9] = pe[9];
+            mp[base + 6] = pe[9];
+            mp[base + 7] = pe[13];
+            mp[base + 8] = pe[2];
+            mp[base + 9] = pe[6];
             mp[base + 10] = pe[10];
-            mp[base + 11] = pe[11];
-            mp[base + 12] = pe[12];
-            mp[base + 13] = pe[13];
-            mp[base + 14] = pe[14];
-            mp[base + 15] = pe[15];
+            mp[base + 11] = pe[14];
         }
 
         this.uploadBones(this.skin.device);

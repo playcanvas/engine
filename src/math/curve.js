@@ -1,3 +1,5 @@
+import { extend } from '../core/core.js';
+
 import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
@@ -121,7 +123,7 @@ Object.assign(Curve.prototype, {
      */
     clone: function () {
         var result = new Curve();
-        result.keys = pc.extend(result.keys, this.keys);
+        result.keys = extend(result.keys, this.keys);
         result.type = this.type;
         result.tension = this.tension;
         return result;

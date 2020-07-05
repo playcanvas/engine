@@ -29,7 +29,6 @@ function LightComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'light';
-    this.description = "Enables the Entity to emit light.";
 
     this.ComponentType = LightComponent;
     this.DataType = LightComponentData;
