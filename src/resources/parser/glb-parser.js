@@ -1405,7 +1405,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
                 if (isDataURI(gltfImage.uri)) {
                     loadTexture(i, gltfImage.uri, getDataURIMimeType(gltfImage.uri));
                 } else {
-                    loadTexture(i, path.join(urlBase, gltfImage.uri), "anonymous");
+                    loadTexture(i, path.join(urlBase, gltfImage.uri), null, "anonymous");
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
