@@ -8,12 +8,19 @@ function describe(name, func) {
     func()
 }
 
+var counter = 0;
+var success = 0;
+var error = 0;
+
 function it(name, func) {
     //console.log(name);
+    counter++;
     try {
         func();
+        success++;
     } catch (e) {
         console.log(name, "failed: ", e)
+        error++;
     }
 }
 
@@ -83,6 +90,7 @@ async function main() {
     require("./math/test_vec3")
     require("./math/test_vec4")
 
+    console.log(`${counter} tests (${success} succeeded, ${error} failed)`);
 }
 
 main();
