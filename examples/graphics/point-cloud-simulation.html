@@ -103,7 +103,7 @@
         oldPositions = new Float32Array(3 * maxNumPoints);
 
         // generate random positions and old positions within small cube (delta between them represents velocity)
-        for (var i = 0; i < 3 * maxNumPoints; i++)         {
+        for (var i = 0; i < 3 * maxNumPoints; i++) {
             positions[i] = Math.random() * 2 - 1;
             oldPositions[i] = positions[i] + Math.random() * 0.04 - 0.01;
         }
