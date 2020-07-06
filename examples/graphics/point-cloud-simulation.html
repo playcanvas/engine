@@ -97,7 +97,7 @@
         app.root.addChild(this.camera);
 
         // allocate two buffers to store positions of particles
-        maxNumPoints = 100000;
+        var maxNumPoints = 100000;
         var visiblePoints = 10000;
         positions = new Float32Array(3 * maxNumPoints);
         oldPositions = new Float32Array(3 * maxNumPoints);
