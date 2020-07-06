@@ -3,6 +3,11 @@ import { Shader } from '../../graphics/shader.js';
 
 import { Material } from './material.js';
 
+import {
+    SHADER_FORWARD
+    //SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW
+ } from '../constants.js';
+
 /**
  *
  *
@@ -23,6 +28,8 @@ var NodeMaterial = function (shaderGraph) {
     Material.call(this);
 
     this.shaderGraph = shaderGraph;
+    
+    this.shaderVariants = [];
 
     // this.paramValues=[];
 };
@@ -74,19 +81,60 @@ Object.assign(NodeMaterial.prototype, {
         }
     },
 
-    // updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-    initShader: function (device) {
-        if (!this.shader) {
-            var options = {
-                skin: !!this.meshInstances[0].skinInstance,
-                shaderGraph: this.shaderGraph
-                // pass: pass
-            };
-//              var library = device.getProgramLibrary();
-//              this.shader = library.getProgram('node', options);
+    updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights)
+    {
+        //update dynamic lighting - for now main light is first directional light in slot 0 of 32 slots
+ /*      
+        var dynamicLightlist = [];
+        var mainLight;
 
-            var shaderDefinition = programlib.node.createShaderDefinition(device, options);
-            this.shader = new Shader(device, shaderDefinition);
+        for (i = 0; i < sortedLights[LIGHTTYPE_DIRECTIONAL].length; i++) 
+        {
+            var light = sortedLights[LIGHTTYPE_DIRECTIONAL][i];
+            if (light.enabled && light. ) {
+                if (light.mask & mask) {
+                    if (lType !== LIGHTTYPE_DIRECTIONAL) {
+                        if (light.isStatic) {
+                            continue;
+                        }
+                    }
+                    lightsFiltered.push(light);
+                }
+            }
+        }
+*/
+        if (this.shaderVariants[pass])
+        {
+            this.shader = this.shaderVariants[pass];
+        }
+        else
+        {
+            //new variant - maybe new layer that this material has a special output for?
+            //TODO: 
+            this.shader = this.shaderVariants[SHADER_FORWARD];//pass];
+        }
+    },
+
+    //initShaderVariants: function (device) {
+    initShader: function (device) {    
+        // this is where we could get a list of pass types in current app render pipeline (layers)
+        // and query shader graph to check if there is a special output
+        //var passes=[SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW];
+        var passes=[SHADER_FORWARD];
+
+        for (var i=0;i<passes.length; i++)
+        {
+            if (!this.shaderVariants[passes[i]]) 
+            {
+                var options = {
+                    skin: !!this.meshInstances[0].skinInstance,
+                    shaderGraph: this.shaderGraph,
+                    pass: passes[i]
+                };
+
+                var shaderDefinition = programlib.node.createShaderDefinition(device, options);
+                this.shaderVariants[passes[i]] = new Shader(device, shaderDefinition);
+            }
         }
     }
 });

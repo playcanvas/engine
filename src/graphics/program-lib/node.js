@@ -3,10 +3,9 @@ import {
 } from '../graphics.js';
 import { shaderChunks } from '../chunks.js';
 
-// nb will probably need this soon
-// import {
-//    SHADER_DEPTH, SHADER_PICK
-// } from '../../scene/constants.js';
+ //import {
+ //   SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW
+ //} from '../../scene/constants.js';
 
 import { programlib } from './program-lib.js';
 
@@ -53,7 +52,6 @@ var node = {
             code += chunks.transformVS;
         }
 
-
 //      code += 'attribute vec3 vertex_position;\n';
         code += 'varying vec3 vPosition;\n';
 
@@ -66,6 +64,17 @@ var node = {
         code += 'attribute vec2 vertex_texCoord0;\n';
         code += 'varying vec2 vUv0;\n';
 
+        /*
+        if (options.pass === SHADER_PICK) {
+            // ##### PICK PASS #####
+        } else if (options.pass === SHADER_DEPTH) {
+            // ##### SCREEN DEPTH PASS #####
+            code += "    gl_FragColor = packFloat(vDepth);\n";
+        } 
+        else if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR )
+        {
+            
+        }*/
 
      // if (options.pass === SHADER_DEPTH) {
      //     code += 'varying float vDepth;\n';
@@ -96,22 +105,40 @@ var node = {
         if (options.shaderGraph) {
             code += options.shaderGraph.shaderGraphNodeString;
             code += "   vPosition = getWorldPositionNM()+shaderGraphVertexOffset;\n";
-            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
+            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";            
         } else {
             code += "   vPosition = getWorldPositionNM();\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
         }
+/*
+        if (options.pass === SHADER_DEPTH) 
+        {
+            code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
+        }
+        else if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR )
+        {
+            //vert lighting!
 
- //    if (options.pass === SHADER_DEPTH) {
- //         code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
- //     }
+        }    
 
+        if (options.pass === SHADER_PICK) {
+            // ##### PICK PASS #####
+        } else if (options.pass === SHADER_DEPTH) {
+            // ##### SCREEN DEPTH PASS #####
+            code += "    gl_FragColor = packFloat(vDepth);\n";
+        } 
+        else if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR )
+        {
+            
+        }    */   
 
 //      code += '    vNormal = getNormal(vertex_normal);\n';
-        code += '    vNormal = getWorldNormalNM();\n';
+        //code += '    vNormal = vertex_normal;/*getWorldNormalNM();*/\n';
+        code += '    vNormal = normalize(getWorldNormalNM());\n';
         code += '    vColor = vertex_color;\n';
         code += '    vUv0 = vertex_texCoord0;\n';
 
+        code += '   calcVertexLightingVS(vPosition, vNormal);\n';
 
         code += programlib.end();
 
@@ -122,6 +149,9 @@ var node = {
 
         // FRAGMENT SHADER DECLARATIONS
 
+        code += 'uniform vec3 view_position;\n';
+
+        code += 'varying vec3 vPosition;\n';
         code += 'varying vec3 vNormal;\n';
         code += 'varying vec4 vColor;\n';
         code += 'varying vec2 vUv0;\n';

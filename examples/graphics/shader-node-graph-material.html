@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Shader Graph Nodes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+    <!-- shaders -->
+    <script id="wobbleVS" type="x-shader/x-vertex">
+        vec3 wobbleVS(in vec3 wp, in vec3 wn, in float t)
+        { 
+            return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.1)*normalize(wn); 
+        }
+    </script>
+
+    <script id="_declare_lighting_PS" type="x-shader/x-fragment">
+        void getLightLambertGGX(in vec3 N, in float roughness, in float roughness4, in float F0, in vec3 V, in vec3 L, out float diffuse, out float specular)
+        {
+            vec3 H = normalize(V+L);
+
+            float dotNL = max(dot(N,L),0.0);
+            float dotLH = max(dot(L,H),0.0);
+            float dotNH = max(dot(N,H),0.0);
+
+            float pi = 3.14159;
+            float denom = dotNH * dotNH * (roughness4-1.0) + 1.0;
+
+            // D
+            float D = roughness4/(pi * denom * denom);
+
+            // F
+            float om_dotLH= 1.0-dotLH;
+            float om_dotLH2 = om_dotLH*om_dotLH;
+            float dotLH5 = om_dotLH2*om_dotLH2*om_dotLH; //pow(1.0-dotLH,5.0);
+            float F = F0+(1.0-F0)*dotLH5;
+
+            // V
+            float k = roughness/2.0;
+            float k2 = k*k;
+            float invK2 = 1.0-k2;
+            float vis = 1.0/(dotLH*dotLH*invK2 + k2);
+
+            specular = dotNL * D * F * vis;
+            diffuse = dotNL;
+        }
+
+        //float getDirShadow(in shadowPos)
+        //{
+        //    float shadowDepth = textureSample2D( shadowMap, shadowPos.xy).r;
+        //    return (shadowDepth<shadowPos.w)? 0.0 : 1.0;
+        //}
+
+        uniform vec3 lightDir[5];
+        uniform vec3 lightPos[5];
+        uniform vec3 lightCol[5];
+        uniform vec3 lightCSR[5];
+
+        //uniform vec4 vLightIndex;
+        //varying vec4 vShadowPos;
+        varying vec4 vVertexLightCol_Flags;
+
+        void getDynamicLighting(in vec3 viewDir, in vec3 position, in vec3 normal, in float roughness, in float F0, out vec3 diffuse, out vec3 specular)
+        {
+            float roughness4=roughness*roughness*roughness*roughness;
+
+            float S = 1.0;//getDirShadow(position);
+
+            float diff,spec;
+            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -lightDir[0], diff, spec);
+            diffuse = lightCol[0]*diff*S*0.0;
+            specular = lightCol[0]*spec*S*0.0;
+
+            float flags=vVertexLightCol_Flags.a;
+            diffuse+=vVertexLightCol_Flags.rgb;
+
+            for (int i = 1; i < 5; i++)
+            {
+                if (fract(flags/pow(2.0,float(i+1)))>=0.5)
+                {
+                    //for (int x = 1; x < 100; x++)
+                    {
+                        vec3 L = position-lightPos[i]; float sqlen = dot(L,L); L = normalize(L);
+                        S = 1.0-min(sqlen*lightCSR[i].z,1.0); 
+                        S *= clamp((dot(L, lightDir[i])-lightCSR[i].x)*lightCSR[i].y,0.0,1.0);                
+                        getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
+                        diffuse += lightCol[i]*diff*S;//*0.01;
+                        specular += lightCol[i]*spec*S;
+                    }
+                }
+            }
+        }
+
+        vec3 getAmbientLighting(in vec3 position, in vec3 normal)
+        {
+            return vec3(0,0,0);
+            //return textureCubeLodEXT(texture_prefilteredCubeMap128, normal, 7.0).rgb;
+        }
+
+        vec3 getReflection(in vec3 V, in vec3 position, in vec3 N, in float roughness, in float F0)
+        {
+            return vec3(0);
+            /*
+            vec3 reflectionDir=reflect(V, N);
+            float mip=roughness*7.0;
+
+            //this is not GGX fresnel
+            float dotVN = max(dot(V,N),0.0);
+            float dotVN5 = pow(1.0f-dotVN,5.0);
+            float F = F0+(1.0f-F0)*dotVN5;
+
+            return textureCubeLodEXT(texture_prefilteredCubeMap128, reflectionDir, mip).rgb*vec3(F);*/
+        }
+
+        vec3 getViewPos()
+        {
+            return view_position;
+        }
+        
+    </script>
+
+    <script id="_declare_lighting_VS" type="x-shader/x-vertex">
+
+        uniform vec3 lightDir[5];
+        uniform vec3 lightPos[5];
+        uniform vec3 lightCol[5];
+        uniform vec3 lightCSR[5];
+        varying vec4 vVertexLightCol_Flags;
+
+        void calcVertexLightingVS(in vec3 position, in vec3 normal)
+        { 
+           //create varyings for light indices 
+           //and main shadow uvs + shadow depths
+           //vLightIndex = vec4(1,2,3,4);
+
+           int index0=0;
+           int index1=0;
+           int index2=0;
+           int index3=0;
+           float sqlen0=10000.0;
+           float sqlen1=10000.0;
+           float sqlen2=10000.0;
+           float sqlen3=10000.0;
+           
+           for (int n = 1; n < 5; n++)
+           {
+                vec3 L = position-lightPos[n]; 
+                float sqlen = dot(L,L);
+                int index=n;
+                float sqlent = sqlen;
+                int indext = index;
+                if (sqlen<sqlen0)
+                {
+                    sqlent=sqlen0;
+                    indext=index0;
+                    sqlen0=sqlen;
+                    index0=index;
+                    sqlen=sqlent;
+                    index=indext;
+                }
+                if (sqlen<sqlen1)
+                {
+                    sqlent=sqlen1;
+                    indext=index1;
+                    sqlen1=sqlen;
+                    index1=index;
+                    sqlen=sqlent;
+                    index=indext;
+                }         
+                if (sqlen<sqlen2)
+                {
+                    sqlent=sqlen2;
+                    indext=index2;
+                    sqlen2=sqlen;
+                    index2=index;
+                    sqlen=sqlent;
+                    index=indext;
+                }
+                if (sqlen<sqlen3)
+                {
+                    sqlent=sqlen3;
+                    indext=index3;
+                    sqlen3=sqlen;
+                    index3=index;
+                    sqlen=sqlent;
+                    index=indext;
+                }                     
+           }
+
+           //float flags=pow(2.0,float(4));//pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
+           float flags=pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
+
+           vVertexLightCol_Flags.rgb=vec3(0);
+
+           for (int i = 1; i < 5; i++)
+           {
+                if (fract(flags/pow(2.0,float(i+1)))>=0.5) continue;
+
+                vec3 L = position-lightPos[i]; float sqlen = dot(L,L); L = normalize(L);
+                float S = 1.0-min(sqlen*lightCSR[i].z,1.0); 
+                S *= clamp((dot(L, lightDir[i])-lightCSR[i].x)*lightCSR[i].y,0.0,1.0);                
+                float dotNL = max(dot(normal,-L),0.0);
+                vVertexLightCol_Flags.rgb += lightCol[i]*dotNL*S;
+           }
+
+           vVertexLightCol_Flags.a=flags;
+        }
+    </script>
+    <script id="applyLightingPS" type="x-shader/x-fragment">
+        vec3 applyLightingPS(in vec3 position, in vec3 baseColor, in float metallic, in vec3 normal, in float roughness, out vec3 diffuse, out vec3 specular)
+        {           
+            vec3 viewDir = normalize(position-getViewPos());
+
+            float F0=mix(0.04, 1.0, metallic);
+
+            getDynamicLighting(viewDir, position, normal, roughness, F0, diffuse, specular);
+
+            diffuse += getAmbientLighting(position, normal);
+            specular += getReflection(viewDir, position, normal, roughness, F0);
+
+            diffuse *= mix(baseColor, vec3(0), metallic);
+            specular *= mix(vec3(1), baseColor, metallic);
+
+            return diffuse+specular;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var entity, light, camera;
+        var time = 0;
+        //var material, diffuseMap;
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // Create an Entity with a camera component
+        camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 25);
+        app.root.addChild(camera);
+
+        // Create an entity with a directional light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 0.8, 0.25)
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(85, -100, 0);
+
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            entity = new pc.Entity();
+
+            var modelComponent = entity.addComponent("model", {
+                type: "asset",
+                asset: asset.resource.model
+            });
+            app.root.addChild(entity);
+
+            var model = modelComponent.model;
+            var diffuseMap = model.getMaterials()[0].diffuseMap;
+
+            //create a base color textue sample node 
+            var baseColorNode = pc.shadergraph.textureSample2D(diffuseMap, pc.shadergraph.uv0);
+
+            //create a lighting PS shader graph node 
+            var lightigPSNode = pc.shadergraph.customNode(document.getElementById("applyLightingPS").textContent, document.getElementById("_declare_lighting_PS").textContent);
+
+            //hook up lighting node inputs (in vec3 position, in vec3 baseColor, in float metallic, in vec3 normal, in float roughness, out vec3 diffuse, out vec3 specular)
+            lightigPSNode.position = pc.shadergraph.worldPosPS;
+            lightigPSNode.baseColor = baseColorNode.color;
+            lightigPSNode.metallic = pc.shadergraph.param('float', 'uMetallic', 0.0);
+            lightigPSNode.normal = pc.shadergraph.worldNormPS;
+            lightigPSNode.roughness = pc.shadergraph.param('float', 'uRoughness', 0.25);
+
+            //create a custom vertex offset shader graph node
+            var wobbleVSNode = pc.shadergraph.customNode(document.getElementById("wobbleVS").textContent, document.getElementById("_declare_lighting_VS").textContent);
+                
+            //hook up custom node inputs
+            wobbleVSNode.wp = pc.shadergraph.worldPosVS;
+            wobbleVSNode.wn = pc.shadergraph.worldNormVS;
+            wobbleVSNode.t = pc.shadergraph.param('float', 'uTime', 0.0);
+
+            //create root node and pass in sub graphs 
+            var rootNode = pc.shadergraph.root(lightigPSNode, baseColorNode.alpha, wobbleVSNode);
+
+            //create NodeMaterial
+            var material = new pc.NodeMaterial(rootNode);
+
+            //assign material to all model meshInstances
+            model.meshInstances.forEach(function (meshInstance) {
+                meshInstance.material = material;
+            });
+
+            //initialize shader and update uniforms
+            material.initShader(app.graphicsDevice);
+            material.updateUniforms();
+
+            var lightDirId = app.graphicsDevice.scope.resolve("lightDir[0]");
+            var lightPosId = app.graphicsDevice.scope.resolve("lightPos[0]");
+            var lightColId = app.graphicsDevice.scope.resolve("lightCol[0]");
+            var lightCSRId = app.graphicsDevice.scope.resolve("lightCSR[0]");
+
+            var oosqr=1.0/(12.0*12.0);
+
+            lightDirId.setValue(new Float32Array([0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1 ]));
+            lightPosId.setValue(new Float32Array([0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4 ]));
+            lightColId.setValue(new Float32Array([1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1 ]));
+            lightCSRId.setValue(new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.9,8,oosqr ]));
+
+//            material.setParameter('lightDir[0]', new Float32Array([0,0,1,0,1,0]));
+//            material.setParameter('lightCol[0]', new Float32Array([0,0,1,0,1,0]));
+
+            //update time parameter every frame
+            app.on("update", function (dt) {
+                time += dt;
+                material.setParameter('uTime', time);
+            });
+
+            app.start();
+        });
+    </script>
+</body>
+</html>
