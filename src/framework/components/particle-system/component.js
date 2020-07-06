@@ -109,7 +109,7 @@ var depthLayer;
  * @property {boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
  * @property {boolean} noFog Disable fogging.
  * @property {boolean} localSpace Binds particles to emitter transformation rather then world space.
- * @property {boolean} screenSpace Renders particles in 2D screen space. This needs to be set when particle system is part of hierarchy with {@link pc.ScreenComponent} at its root, and allows particle system to integrate with the rendering of {@link pc.ElementComponent}s. Note that an entity with ParticleSystem component cannot be parented directly to {@link pc.ScreenComponent}, but has to be a child of a {@link pc.ElementComponent}, for example {@link pc.LayoutGroupComponent}.
+ * @property {boolean} screenSpace Renders particles in 2D screen space. This needs to be set when particle system is part of hierarchy with {@link pc.ScreenComponent} as its ancestor, and allows particle system to integrate with the rendering of {@link pc.ElementComponent}s. Note that an entity with ParticleSystem component cannot be parented directly to {@link pc.ScreenComponent}, but has to be a child of a {@link pc.ElementComponent}, for example {@link pc.LayoutGroupComponent}.
  * @property {number} numParticles Maximum number of simulated particles.
  * @property {number} rate Minimal interval in seconds between particle births.
  * @property {number} rate2 Maximal interval in seconds between particle births.
