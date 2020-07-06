@@ -41,8 +41,6 @@ Object.assign(AnimComponent.prototype, {
      */
     loadStateGraph: function (stateGraph) {
         var data = this.data;
-        var i;
-        var layer;
         data.stateGraph = stateGraph;
         data.parameters = stateGraph.parameters;
         data.layers = [];
@@ -70,8 +68,8 @@ Object.assign(AnimComponent.prototype, {
             data.layerIndices[name] = order;
         }
 
-        for (i = 0; i < stateGraph.layers.length; i++) {
-            layer = stateGraph.layers[i];
+        for (var i = 0; i < stateGraph.layers.length; i++) {
+            var layer = stateGraph.layers[i];
             addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }
         this.setAnimationAssets();
@@ -397,7 +395,6 @@ Object.defineProperties(AnimComponent.prototype, {
                 }.bind(this));
                 _asset.on('change', function (asset) {
                     this.data.stateGraph = new AnimStateGraph(asset._data);
-                    this.data.stateGraph = asset.resource;
                     this.loadStateGraph(this.data.stateGraph);
                 }.bind(this));
                 this.system.app.assets.load(_asset);
