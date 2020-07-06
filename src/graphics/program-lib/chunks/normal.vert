@@ -1,3 +1,7 @@
+#ifdef MORPHING_TEXTURE_BASED_NORMAL
+    uniform highp sampler2D morphNormalTex;
+#endif
+
 vec3 getNormal() {
     #ifdef SKIN
         dNormalMatrix = mat3(dModelMatrix[0].xyz, dModelMatrix[1].xyz, dModelMatrix[2].xyz);
@@ -22,6 +26,13 @@ vec3 getNormal() {
             tempNormal += morph_weights_b[2] * morph_nrm6;
             tempNormal += morph_weights_b[3] * morph_nrm7;
         #endif
+    #endif
+
+    #ifdef MORPHING_TEXTURE_BASED_NORMAL
+        // apply morph offset from texture
+        vec2 morphUV = getTextureMorphCoords();
+        vec3 morphNormal = texture2D(morphNormalTex, morphUV).xyz;
+        tempNormal += morphNormal;
     #endif
 
     return normalize(dNormalMatrix * tempNormal);

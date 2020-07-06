@@ -12,6 +12,9 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
+[English](https://github.com/playcanvas/engine/blob/master/README.md)
+[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
+
 ## Project Showcase
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
@@ -116,15 +119,12 @@ Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of th
 
 Now you can run various build options:
 
-| Command                | Description                      | Outputs                          |
-|------------------------|----------------------------------|----------------------------------|
-| `npm run build`        | Build unminified release engine  | `build\output\playcanvas.js`     |
-| `npm run build:min`    | Build minified release engine    | `build\output\playcanvas.min.js` |
-| `npm run build:prf`    | Build unminified profiler engine | `build\output\playcanvas.prf.js` |
-| `npm run build:dbg`    | Build unminified debug engine    | `build\output\playcanvas.dbg.js` |
-| `npm run build:extras` | Build engine extras (includes ministats profiler) | `build\output\playcanvas-extras.js` |
-| `npm run tsd`          | Build engine Typescript bindings | `build\output\playcanvas.d.ts`   |
-| `npm run docs`         | Build engine [API reference docs](https://developer.playcanvas.com/en/api/) | `docs` |
+| Command                | Description                               | Outputs                          |
+|------------------------|-------------------------------------------|----------------------------------|
+| `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
+| `npm run closure`      | Build minified release engine             | `build\playcanvas.min.js`        |
+| `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
+| `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
 
 Pre-built versions of the engine are also available.
 
@@ -155,13 +155,12 @@ Note: The preprocessor is ignored when when generating the source map as it brea
 
 ## How to run tests
 
-PlayCanvas uses of Karma for unit testing. There are three ways of running the tests:
+PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
 
 | Command                | Description                                                                           |
 |------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | Runs unit tests over unbuilt engine source                                            |
+| `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
 | `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
-| `npm run test:release` | Runs unit tests on a built `playcanvas.js`                                            |
 
 ## How to get models?
 
@@ -196,3 +195,4 @@ The PlayCanvas Engine is released under the [MIT](https://opensource.org/license
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
+[docs]: https://developer.playcanvas.com/en/api/

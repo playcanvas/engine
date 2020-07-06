@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var categories = [
     {
         name: "animation",
@@ -16,6 +17,7 @@ var categories = [
         examples: [
             "batching-dynamic",
             "hardware-instancing",
+            "hierarchy",
             "layers",
             "lights",
             "lights-baked",
@@ -26,6 +28,7 @@ var categories = [
             "mesh-deformation",
             "mesh-generation",
             "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
             "model-outline",

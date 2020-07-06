@@ -170,37 +170,40 @@ describe('Test Bundle Loader', function () {
         var self = this;
         var todo = 0;
 
+        var onLoad = function () {
+            todo--;
+            if (todo === 0) {
+                self.assets.forEach(function (asset, index) {
+                    var resource = asset.type === 'cubemap' ? asset.resources[1] : asset.resource;
+                    expect(resource).to.not.equal(null);
+                    var expected = self.expectedTypes[asset.type];
+
+                    if (expected.typeof) {
+                        expect(typeof resource).to.equal(expected.typeof);
+                    }
+
+                    if (expected.instanceof) {
+                        expect(resource instanceof expected.instanceof).to.equal(true);
+                    }
+
+                    if (asset.type === 'font') {
+                        expect(resource.textures.length).to.equal(2);
+                    }
+                });
+                done();
+            }
+        };
+
+        this.bundleAsset.on('load', onLoad);
         self.app.assets.add(this.bundleAsset);
         self.app.assets.load(this.bundleAsset);
         todo++;
 
         self.assets.forEach(function (asset) {
+            asset.on('load', onLoad);
             self.app.assets.add(asset);
             self.app.assets.load(asset);
             todo++;
-        });
-
-        self.app.assets.on('load', function () {
-            todo--;
-            if (todo === 0) {
-                self.assets.forEach(function (asset, index) {
-                    expect(asset.resource).to.not.equal(null);
-                    var expected = self.expectedTypes[asset.type];
-
-                    if (expected.typeof) {
-                        expect(typeof asset.resource).to.equal(expected.typeof);
-                    }
-
-                    if (expected.instanceof) {
-                        expect(asset.resource instanceof expected.instanceof).to.equal(true);
-                    }
-
-                    if (asset.type === 'font') {
-                        expect(asset.resource.textures.length).to.equal(2);
-                    }
-                });
-                done();
-            }
         });
     });
 
@@ -210,37 +213,40 @@ describe('Test Bundle Loader', function () {
         var self = this;
         var todo = 0;
 
+        var onLoad = function () {
+            todo--;
+            if (todo === 0) {
+                self.assets.forEach(function (asset, index) {
+                    var resource = asset.type === 'cubemap' ? asset.resources[1] : asset.resource;
+                    expect(resource).to.not.equal(null);
+                    var expected = self.expectedTypes[asset.type];
+
+                    if (expected.typeof) {
+                        expect(typeof resource).to.equal(expected.typeof);
+                    }
+
+                    if (expected.instanceof) {
+                        expect(resource instanceof expected.instanceof).to.equal(true);
+                    }
+
+                    if (asset.type === 'font') {
+                        expect(resource.textures.length).to.equal(2);
+                    }
+                });
+                done();
+            }
+        };
+
+        this.bundleAsset.on('load', onLoad);
         self.app.assets.add(this.bundleAsset);
         self.app.assets.load(this.bundleAsset);
         todo++;
 
         self.assets.forEach(function (asset) {
+            asset.on('load', onLoad);
             self.app.assets.add(asset);
             self.app.assets.load(asset);
             todo++;
-        });
-
-        self.app.assets.on('load', function () {
-            todo--;
-            if (todo === 0) {
-                self.assets.forEach(function (asset, index) {
-                    expect(asset.resource).to.not.equal(null);
-                    var expected = self.expectedTypes[asset.type];
-
-                    if (expected.typeof) {
-                        expect(typeof asset.resource).to.equal(expected.typeof);
-                    }
-
-                    if (expected.instanceof) {
-                        expect(asset.resource instanceof expected.instanceof).to.equal(true);
-                    }
-
-                    if (asset.type === 'font') {
-                        expect(asset.resource.textures.length).to.equal(2);
-                    }
-                });
-                done();
-            }
         });
     });
 

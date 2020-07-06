@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
-    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -85,7 +85,7 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        var miniStats = new pc.MiniStats(app);
+        var miniStats = new pcx.MiniStats(app);
 
         // Create an Entity with a camera component
         this.camera = new pc.Entity();
@@ -97,16 +97,15 @@
         app.root.addChild(this.camera);
 
         // allocate two buffers to store positions of particles
-        this.maxNumPoints = 100000;
+        var maxNumPoints = 100000;
         var visiblePoints = 10000;
-        this.positions = new Float32Array(3 * maxNumPoints);
-        this.oldPositions = new Float32Array(3 * maxNumPoints);
+        positions = new Float32Array(3 * maxNumPoints);
+        oldPositions = new Float32Array(3 * maxNumPoints);
 
         // generate random positions and old positions within small cube (delta between them represents velocity)
-        for (var i = 0; i < 3 * self.maxNumPoints; i++)
-        {
-            self.positions[i] = Math.random() * 2 - 1;
-            self.oldPositions[i] = self.positions[i] + Math.random() * 0.04 - 0.01;
+        for (var i = 0; i < 3 * maxNumPoints; i++) {
+            positions[i] = Math.random() * 2 - 1;
+            oldPositions[i] = positions[i] + Math.random() * 0.04 - 0.01;
         }
 
         // helper function to update vertex of the mesh
@@ -115,7 +114,7 @@
             // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
             // For best performance, we could preallocate enough space using mesh.Clear.
             // Also turn off bounding box generation, as we set up large box manually
-            mesh.setPositions(this.positions, 3, visiblePoints);
+            mesh.setPositions(positions, 3, visiblePoints);
             mesh.update(pc.PRIMITIVE_POINTS, false);
         }
 
@@ -138,7 +137,7 @@
         material = new pc.Material();
         material.shader = shader;
         material.blendType = pc.BLEND_ADDITIVEALPHA;
-        material.depthWrite = false; 
+        material.depthWrite = false;
 
         // Create the mesh instance
         var node = new pc.GraphNode();
@@ -147,7 +146,7 @@
         // Create a model and add the mesh instance to it
         var model = new pc.Model();
         model.graph = node;
-        model.meshInstances = [ meshInstance ];
+        model.meshInstances = [meshInstance];
 
         // Create Entity and add it to the scene
         this.entity = new pc.Entity();
@@ -171,14 +170,14 @@
             // update particle positions using simple verlet integration, and keep them inside a sphere boundary
             var dist;
             var pos = new pc.Vec3();
-            var old = new pc.Vec3(); 
-            var delta = new pc.Vec3(); 
+            var old = new pc.Vec3();
+            var delta = new pc.Vec3();
             var next = new pc.Vec3();
-            for (var i = 0; i < self.maxNumPoints; i++) {
+            for (var i = 0; i < maxNumPoints; i++) {
 
                 // read positions from buffers
-                old.set(self.oldPositions[i * 3], self.oldPositions[i * 3 + 1], self.oldPositions[i * 3 + 2]);
-                pos.set(self.positions[i * 3], self.positions[i * 3 + 1], self.positions[i * 3 + 2]);
+                old.set(oldPositions[i * 3], oldPositions[i * 3 + 1], oldPositions[i * 3 + 2]);
+                pos.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 
                 // verlet integration to move them
                 delta.sub2(pos, old);
@@ -190,13 +189,13 @@
                     next.copy(old);
 
                 // write out changed positions
-                self.positions[i * 3] = next.x;         self.positions[i * 3 + 1] = next.y;             self.positions[i * 3 + 2] = next.z;
-                self.oldPositions[i * 3] = pos.x;       self.oldPositions[i * 3 + 1] = pos.y;           self.oldPositions[i * 3 + 2] = pos.z;
+                positions[i * 3] = next.x;         positions[i * 3 + 1] = next.y;             positions[i * 3 + 2] = next.z;
+                oldPositions[i * 3] = pos.x;       oldPositions[i * 3 + 1] = pos.y;           oldPositions[i * 3 + 2] = pos.z;
             }
 
             // once a second change how many points are visible
             if (Math.round(time) !== Math.round(previousTime))
-                visiblePoints = Math.floor(10000 + Math.random() * self.maxNumPoints - 10000);
+                visiblePoints = Math.floor(10000 + Math.random() * maxNumPoints - 10000);
 
             // update mesh vertices
             updateMesh(self.mesh);
@@ -210,7 +209,6 @@
             // pass the camera position to shader
             material.setParameter('cameraPos', [cameraPos.x, cameraPos.y, cameraPos.z]);
         });
-
     </script>
 </body>
 </html>

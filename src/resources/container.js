@@ -1,166 +1,202 @@
-Object.assign(pc, function () {
+import { path } from '../core/path.js';
 
-    /**
-     * @class
-     * @name pc.ContainerResource
-     * @classdesc Container for a list of animations, textures, materials and a model.
-     * @param {object} data - The loaded GLB data.
-     */
-    var ContainerResource = function (data) {
-        this.data = data;
-        this.model = null;
-        this.materials = [];
-        this.textures = [];
-        this.animations = [];
-        this.registry = null;
-    };
+import { http, Http } from '../net/http.js';
 
-    Object.assign(ContainerResource.prototype, {
-        destroy: function () {
+import { Asset } from '../asset/asset.js';
 
-            var registry = this.registry;
+import { GlbParser } from './parser/glb-parser.js';
 
-            var destroyAsset = function (asset) {
-                registry.remove(asset);
-                asset.unload();
-            };
+/**
+ * @class
+ * @name pc.ContainerResource
+ * @classdesc Container for a list of animations, textures, materials and a model.
+ * @param {object} data - The loaded GLB data.
+ */
+function ContainerResource(data) {
+    this.data = data;
+    this.model = null;
+    this.materials = [];
+    this.textures = [];
+    this.animations = [];
+    this.registry = null;
+}
 
-            var destroyAssets = function (assets) {
-                assets.forEach(function (asset) {
-                    destroyAsset(asset);
-                });
-            };
+Object.assign(ContainerResource.prototype, {
+    destroy: function () {
 
-            // unload and destroy assets
-            if (this.animations) {
-                destroyAssets(this.animations);
-                this.animations = null;
-            }
+        var registry = this.registry;
 
-            if (this.textures) {
-                destroyAssets(this.textures);
-                this.textures = null;
-            }
+        var destroyAsset = function (asset) {
+            registry.remove(asset);
+            asset.unload();
+        };
 
-            if (this.materials) {
-                destroyAssets(this.materials);
-                this.materials = null;
-            }
+        var destroyAssets = function (assets) {
+            assets.forEach(function (asset) {
+                destroyAsset(asset);
+            });
+        };
 
-            if (this.model) {
-                destroyAsset(this.model);
-                this.model = null;
-            }
-
-            this.data = null;
-            this.assets = null;
+        // unload and destroy assets
+        if (this.animations) {
+            destroyAssets(this.animations);
+            this.animations = null;
         }
-    });
 
-    /**
-     * @class
-     * @name pc.ContainerHandler
-     * @implements {pc.ResourceHandler}
-     * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
-     * textures, models and animations.
-     * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
-     * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
-     */
-    var ContainerHandler = function (device, defaultMaterial) {
-        this._device = device;
-        this._defaultMaterial = defaultMaterial;
-    };
+        if (this.textures) {
+            destroyAssets(this.textures);
+            this.textures = null;
+        }
 
-    Object.assign(ContainerHandler.prototype, {
-        _getUrlWithoutParams: function (url) {
-            return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-        },
+        if (this.materials) {
+            destroyAssets(this.materials);
+            this.materials = null;
+        }
 
-        load: function (url, callback, asset) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
+        if (this.model) {
+            destroyAsset(this.model);
+            this.model = null;
+        }
 
-            var options = {
-                responseType: pc.Http.ResponseType.ARRAY_BUFFER,
-                retry: false
+        this.data = null;
+        this.assets = null;
+    }
+});
+
+/**
+ * @class
+ * @name pc.ContainerHandler
+ * @implements {pc.ResourceHandler}
+ * @classdesc Loads files that contain multiple resources. For example glTF files can contain
+ * textures, models and animations.
+ * The asset options object can be used for passing in load time callbacks to handle the various resources
+ * at different stages of loading as follows:
+ * ```
+ * |---------------------------------------------------------------------|
+ * |  resource   |  preprocess |   process   |processAsync | postprocess |
+ * |-------------+-------------+-------------+-------------+-------------|
+ * | global      |      x      |             |             |      x      |
+ * | node        |      x      |      x      |             |      x      |
+ * | animation   |      x      |             |             |      x      |
+ * | material    |      x      |      x      |             |      x      |
+ * | texture     |      x      |             |      x      |      x      |
+ * | buffer      |      x      |             |      x      |      x      |
+ * |---------------------------------------------------------------------|
+ * ```
+ * For example, to receive a texture preprocess callback:
+ * ```javascript
+ * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ *     texture: {
+ *         preprocess: function (gltfTexture) { console.log("texture preprocess"); }
+ *     },
+ * });
+ * ```
+ * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ */
+function ContainerHandler(device, defaultMaterial) {
+    this._device = device;
+    this._defaultMaterial = defaultMaterial;
+}
+
+Object.assign(ContainerHandler.prototype, {
+    _getUrlWithoutParams: function (url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    },
+
+    load: function (url, callback, asset) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
             };
+        }
 
-            var self = this;
+        var options = {
+            responseType: Http.ResponseType.ARRAY_BUFFER,
+            retry: false
+        };
 
-            pc.http.get(url.load, options, function (err, response) {
+        var self = this;
+
+        // parse downloaded file data
+        var parseData = function (arrayBuffer) {
+            GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
+                                 path.extractPath(url.load),
+                                 arrayBuffer,
+                                 self._device,
+                                 asset.registry,
+                                 asset.options,
+                                 function (err, result) {
+                                     if (err) {
+                                         callback(err);
+                                     } else {
+                                         // return everything
+                                         callback(null, new ContainerResource(result));
+                                     }
+                                 });
+        };
+
+        if (asset && asset.file && asset.file.contents) {
+            // file data supplied by caller
+            parseData(asset.file.contents);
+        } else {
+            // data requires download
+            http.get(url.load, options, function (err, response) {
                 if (!callback)
                     return;
 
-                if (!err) {
-                    pc.GlbParser.parseAsync(self._getUrlWithoutParams(url.original),
-                                            pc.path.extractPath(url.load),
-                                            response,
-                                            self._device,
-                                            asset.registry,
-                                            function (err, result) {
-                                                if (err) {
-                                                    callback(err);
-                                                } else {
-                                                    // return everything
-                                                    callback(null, new ContainerResource(result));
-                                                }
-                                            });
+                if (err) {
+                    callback("Error loading model: " + url.original + " [" + err + "]");
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
+                    parseData(response);
                 }
             });
-        },
-
-        open: function (url, data, asset) {
-            return data;
-        },
-
-        // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
-        patch: function (asset, assets) {
-            var createAsset = function (type, resource, index) {
-                var subAsset = new pc.Asset(asset.name + '/' + type + '/' + index, type, {
-                    url: ''
-                });
-                subAsset.resource = resource;
-                subAsset.loaded = true;
-                assets.add(subAsset);
-                return subAsset;
-            };
-
-            var container = asset.resource;
-            var data = container.data;
-            var i;
-
-            // create model asset
-            var model = createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
-
-            // create material assets
-            var materials = [];
-            for (i = 0; i < data.materials.length; ++i) {
-                materials.push(createAsset('material', data.materials[i], i));
-            }
-
-            // create animation assets
-            var animations = [];
-            for (i = 0; i < data.animations.length; ++i) {
-                animations.push(createAsset('animation', data.animations[i], i));
-            }
-
-            container.data = null;              // since assets are created, release GLB data
-            container.model = model;
-            container.materials = materials;
-            container.textures = data.textures; // texture assets are created directly
-            container.animations = animations;
-            container.registry = assets;
         }
-    });
+    },
 
-    return {
-        ContainerResource: ContainerResource,
-        ContainerHandler: ContainerHandler
-    };
-}());
+    open: function (url, data, asset) {
+        return data;
+    },
+
+    // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
+    patch: function (asset, assets) {
+        var createAsset = function (type, resource, index) {
+            var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
+                url: ''
+            });
+            subAsset.resource = resource;
+            subAsset.loaded = true;
+            assets.add(subAsset);
+            return subAsset;
+        };
+
+        var container = asset.resource;
+        var data = container.data;
+        var i;
+
+        // create model asset
+        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+
+        // create material assets
+        var materials = [];
+        for (i = 0; i < data.materials.length; ++i) {
+            materials.push(createAsset('material', data.materials[i], i));
+        }
+
+        // create animation assets
+        var animations = [];
+        for (i = 0; i < data.animations.length; ++i) {
+            animations.push(createAsset('animation', data.animations[i], i));
+        }
+
+        container.data = null;              // since assets are created, release GLB data
+        container.model = model;
+        container.materials = materials;
+        container.textures = data.textures; // texture assets are created directly
+        container.animations = animations;
+        container.registry = assets;
+    }
+});
+
+export { ContainerHandler, ContainerResource };
