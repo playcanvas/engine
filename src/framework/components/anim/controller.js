@@ -580,6 +580,7 @@ Object.assign(AnimController.prototype, {
         var j;
         var state;
         var animation;
+        var clip;
         this._timeInStateBefore = this._timeInState;
         this._timeInState += dt;
 
@@ -597,7 +598,10 @@ Object.assign(AnimController.prototype, {
                     var stateWeight = this._transitionPreviousStates[i].weight;
                     for (j = 0; j < state.animations.length; j++) {
                         animation = state.animations[j];
-                        this._animEvaluator.findClip(animation.name + '.previous.' + i).blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                        clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
+                        if (clip) {
+                            clip.blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                        }
                     }
                 }
                 // while transitioning, set active state animations to be weighted by (interpolationTime).
@@ -619,7 +623,10 @@ Object.assign(AnimController.prototype, {
                 state = this.activeState;
                 for (i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
-                    this._animEvaluator.findClip(animation.name).blendWeight = animation.weight / state.totalWeight;
+                    clip = this._animEvaluator.findClip(animation.name);
+                    if (clip) {
+                        clip.blendWeight = animation.weight / state.totalWeight;
+                    }
                 }
             }
             this._currTransitionTime += dt;
