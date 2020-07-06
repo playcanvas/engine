@@ -10,6 +10,7 @@ import {
 import { AnimComponentBinder } from './binder.js';
 import { AnimComponentLayer } from './layer.js';
 import { AnimController } from './controller.js';
+import { AnimStateGraph } from './state-graph.js';
 
 /**
  * @private
@@ -90,7 +91,7 @@ Object.assign(AnimComponent.prototype, {
                 }
             }
         }
-        this.data.animationAssets = Object.assign(animationAssets, this.data.animationAssets);
+        this.animationAssets = Object.assign(animationAssets, this.data.animationAssets);
     },
 
     loadAnimationAssets: function () {
@@ -100,6 +101,7 @@ Object.assign(AnimComponent.prototype, {
                 var stateName = layer.states[j];
                 var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
+                    this.removeNodeAnimations(stateName, layer.name);
                     continue;
                 }
                 var assetId = animationAsset.asset;
@@ -384,14 +386,38 @@ Object.defineProperties(AnimComponent.prototype, {
             if (_asset.resource) {
                 this.data.stateGraph = _asset.resource;
                 this.loadStateGraph(this.data.stateGraph);
+                _asset.on('change', function (asset) {
+                    this.data.stateGraph = new AnimStateGraph(asset._data);
+                    this.loadStateGraph(this.data.stateGraph);
+                }.bind(this));
             } else {
                 _asset.on('load', function (asset) {
+                    this.data.stateGraph = asset.resource;
+                    this.loadStateGraph(this.data.stateGraph);
+                }.bind(this));
+                _asset.on('change', function (asset) {
+                    this.data.stateGraph = new AnimStateGraph(asset._data);
                     this.data.stateGraph = asset.resource;
                     this.loadStateGraph(this.data.stateGraph);
                 }.bind(this));
                 this.system.app.assets.load(_asset);
             }
             this.data.stateGraphAsset = _id;
+        }
+    },
+    /**
+     * @private
+     * @name pc.AnimComponent#animationAssets
+     * @type {object}
+     * @description The animation assets used to load each states animation tracks
+     */
+    animationAssets: {
+        get: function () {
+            return this.data.animationAssets;
+        },
+        set: function (value) {
+            this.data.animationAssets = value;
+            this.loadAnimationAssets();
         }
     },
     /**

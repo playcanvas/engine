@@ -23,6 +23,9 @@ Object.defineProperties(AnimState.prototype, {
     animations: {
         get: function () {
             return this._animations;
+        },
+        set: function (value) {
+            this._animations = value;
         }
     },
     speed: {

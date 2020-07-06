@@ -31,7 +31,7 @@ function AnimComponentSystem(app) {
     this.schema = _schema;
 
     this.on('beforeremove', this.onBeforeRemove, this);
-    this.on('animationUpdate', this.onAnimationUpdate, this);
+    ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
 }
 
 AnimComponentSystem.prototype = Object.create(ComponentSystem.prototype);
@@ -41,11 +41,13 @@ Component._buildAccessors(AnimComponent.prototype, _schema);
 
 Object.assign(AnimComponentSystem.prototype, {
     initializeComponentData: function (component, data, properties) {
-        properties = ['activate', 'enabled', 'speed', 'playing', 'stateGraphAsset'];
+        properties = ['activate', 'enabled', 'speed', 'playing'];
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        if (data.stateGraphAsset) {
+            component.stateGraphAsset = data.stateGraphAsset;
+        }
         if (data.animationAssets) {
-            component.data.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
-            component.loadAnimationAssets();
+            component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
         }
     },
 

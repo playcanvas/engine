@@ -1,3 +1,5 @@
+import { AnimTrack } from '../../../anim/anim.js';
+
 /**
  * @private
  * @class
@@ -80,6 +82,7 @@ Object.assign(AnimComponentLayer.prototype, {
      */
     removeNodeAnimations: function (nodeName) {
         this._controller.removeNodeAnimations(nodeName);
+        this._component.playing = false;
     }
 });
 
