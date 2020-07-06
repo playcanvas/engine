@@ -1071,11 +1071,12 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
     // run through the quaternion data arrays flipping quaternion keys
     // that don't fall in the same winding order.
     var prevIndex = null;
+    var data;
     for (i = 0; i < quatArrays.length; ++i) {
         var index = quatArrays[i];
         // skip over duplicate array indices
         if (i === 0 || index !== prevIndex) {
-            var data = outputs[index];
+            data = outputs[index];
             if (data.components === 4) {
                 var d = data.data;
                 var len = d.length - 4;
@@ -1098,10 +1099,11 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
     }
 
     // calculate duration of the animation as maximum time value
-    var duration = inputs.reduce(function (value, input) {
-        var data  = input._data;
-        return Math.max(value, data.length === 0 ? 0 : data[data.length - 1]);
-    }, 0);
+    var duration = 0;
+    for (i = 0; i < inputs.length; i++) {
+        data  = inputs[i]._data;
+        duration = Math.max(duration, data.length === 0 ? 0 : data[data.length - 1]);
+    }
 
     return new AnimTrack(
         gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ("animation_" + animationIndex),
@@ -1351,7 +1353,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
         }
     };
 
-    var loadTexture = function (index, url, mimeType, crossOrigin) {
+    var loadTexture = function (index, url, mimeType, crossOrigin, isBlobUrl) {
         var mimeTypeFileExtensions = {
             'image/png': 'png',
             'image/jpeg': 'jpg',
@@ -1371,7 +1373,15 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
 
         // create and load the asset
         var asset = new Asset('texture_' + index, 'texture',  file, { flipY: false }, { crossOrigin: crossOrigin });
-        asset.on('load', onLoad.bind(null, index));
+        asset.on('load', function () {
+            if (isBlobUrl) {
+                URL.revokeObjectURL(url);
+            }
+            onLoad(index, asset);
+        });
+        asset.on('error', function (err, asset) {
+            callback(err);
+        });
         registry.add(asset);
         registry.load(asset);
     };
@@ -1408,7 +1418,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
                 var buffer = buffers[bufferView.buffer];
                 var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
                 var blob = new Blob([imageBuffer], { type: gltfImage.mimeType });
-                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType);
+                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType, null, true);
             } else {
                 // fail
                 callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
@@ -1503,18 +1513,19 @@ var parseGltf = function (gltfChunk, callback) {
         if (typeof TextDecoder !== 'undefined') {
             return new TextDecoder().decode(array);
         }
-        var str = array.reduce( function (accum, value) {
-            accum += String.fromCharCode(value);
-            return accum;
-        }, "");
-        return decodeURIComponent(escape(str));
 
+        var str = "";
+        for (var i = 0; i < array.length; i++) {
+            str += String.fromCharCode(array[i]);
+        }
+
+        return decodeURIComponent(escape(str));
     };
 
     var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
 
     // check gltf version
-    if (gltf.asset && gltf.asset.version && Number.parseFloat(gltf.asset.version) < 2) {
+    if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {
         callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
         return;
     }
