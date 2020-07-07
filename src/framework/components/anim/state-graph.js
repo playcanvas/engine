@@ -5,7 +5,7 @@ function AnimStateGraph(data) {
         if (data.states) {
             this._layers = [];
             this._layers.push({
-                name: 'DEFAULT_LAYER',
+                name: 'Base',
                 states: data.states,
                 transitions: data.transitions
             });

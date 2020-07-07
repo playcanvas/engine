@@ -186,8 +186,7 @@ Object.assign(AnimComponent.prototype, {
             // #endif
             return;
         }
-        layerName = layerName || 'DEFAULT_LAYER';
-        var layer = this.findAnimationLayer(layerName);
+        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #ifdef DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
@@ -206,8 +205,7 @@ Object.assign(AnimComponent.prototype, {
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations: function (nodeName, layerName) {
-        layerName = layerName || 'DEFAULT_LAYER';
-        var layer = this.findAnimationLayer(layerName);
+        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #ifdef DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
