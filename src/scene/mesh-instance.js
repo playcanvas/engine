@@ -389,8 +389,10 @@ Object.assign(MeshInstance.prototype, {
     setInstancing: function (vertexBuffer) {
         if (vertexBuffer) {
             this.instancingData = new InstancingData(vertexBuffer.numVertices);
-            this.instancingData.offset = 0;
             this.instancingData.vertexBuffer = vertexBuffer;
+
+            // mark vertex buffer as instancing data
+            vertexBuffer.instancing = true;
 
             // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
             this.cull = false;
@@ -475,7 +477,6 @@ Object.defineProperty(Command.prototype, 'key', {
 function InstancingData(numObjects) {
     this.count = numObjects;
     this.vertexBuffer = null;
-    this.offset = 0;
 }
 
 function getKey(layer, blendType, isCommand, materialId) {

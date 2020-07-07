@@ -1,5 +1,7 @@
 import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './graphics.js';
 
+var id = 0;
+
 /**
  * @class
  * @name pc.VertexBuffer
@@ -17,6 +19,7 @@ function VertexBuffer(graphicsDevice, format, numVertices, usage, initialData) {
     this.usage = usage || BUFFER_STATIC;
     this.format = format;
     this.numVertices = numVertices;
+    this.id = id++;
 
     // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
     this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
@@ -49,20 +52,16 @@ Object.assign(VertexBuffer.prototype, {
         }
 
         if (this.bufferId) {
+
+            // clear up bound vertex buffers
             var gl = device.gl;
+            device.boundVao = null;
+            gl.bindVertexArray(null);
+
+            // delete buffer
             gl.deleteBuffer(this.bufferId);
             device._vram.vb -= this.storage.byteLength;
             this.bufferId = null;
-
-            // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
-            device.boundBuffer = null;
-            device.vertexBuffers.length = 0;
-            device.vbOffsets.length = 0;
-            device.attributesInvalidated = true;
-            for (var loc in device.enabledAttributes) {
-                gl.disableVertexAttribArray(Number(loc));
-            }
-            device.enabledAttributes = {};
         }
     },
 
