@@ -238,6 +238,27 @@ Object.assign(CubemapHandler.prototype, {
             }
         };
 
+        var onNewLoad = function (index, asset) {
+            var level0 = asset && asset.resource && asset.resource._levels[0];
+            if (level0 &&
+                typeof ImageBitmap !== 'undefined' &&
+                level0 instanceof ImageBitmap) {
+                    createImageBitmap(level0, {
+                        premultiplyAlpha: 'none',
+                        imageOrientation: 'flipY'
+                    })
+                    .then( function (imageBitmap) {
+                        asset.resource._levels[0] = imageBitmap;
+                        onLoad(index, asset);
+                    })
+                    .catch( function (e) {
+                        callback(e);
+                    });
+            } else {
+                onLoad(index, asset);
+            }
+        };
+
         // handle an asset load failure
         var onError = function (index, err, asset) {
             callback(err);
@@ -263,7 +284,7 @@ Object.assign(CubemapHandler.prototype, {
                         onLoad(i, texAsset);
                     } else {
                         // asset is not loaded, register for load and error events
-                        registry.once('load:' + assetId, onLoad.bind(self, i));
+                        registry.once('load:' + assetId, onNewLoad.bind(self, i));
                         registry.once('error:' + assetId, onError.bind(self, i));
                         if (!texAsset.loading) {
                             // kick off load if it's not already
@@ -274,7 +295,7 @@ Object.assign(CubemapHandler.prototype, {
                     // asset hasn't been created yet, wait till it is
                     registry.on('add:' + assetId, function (index, assetId_, texAsset) {
                         // store the face asset and kick off loading immediately
-                        registry.once('load:' + assetId_, onLoad.bind(self, index));
+                        registry.once('load:' + assetId_, onNewLoad.bind(self, index));
                         registry.once('error:' + assetId_, onError.bind(self, index));
                         registry.load(texAsset);
                     }.bind(null, i, assetId));
@@ -287,7 +308,7 @@ Object.assign(CubemapHandler.prototype, {
                 } : assetId;
                 texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file);
                 registry.add(texAsset);
-                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
+                registry.once('load:' + texAsset.id, onNewLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));
                 registry.load(texAsset);
             }

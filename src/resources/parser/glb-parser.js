@@ -197,6 +197,51 @@ var generateNormals = function (sourceDesc, vertexDesc, positions, numVertices, 
     };
 };
 
+var flipTexCoordVs = function (vertexBuffer) {
+    var floatOffsets = [];
+    var shortOffsets = [];
+    var byteOffsets = [];
+    for (var i = 0; i < vertexBuffer.format.elements.length; ++i) {
+        var element = vertexBuffer.format.elements[i];
+        if (element.name === SEMANTIC_TEXCOORD0 ||
+            element.name === SEMANTIC_TEXCOORD1) {
+            switch (element.dataType) {
+                case TYPE_FLOAT32:
+                    floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
+                    break;
+                case TYPE_UINT16:
+                    shortOffsets.push({ offset: element.offset / 2 + 1, stride: element.stride / 2 });
+                    break;
+                case TYPE_UINT8:
+                    byteOffsets.push({ offset: element.offset + 1, stride: element.stride });
+                    break;
+            }
+        }
+    }
+
+    var flip = function (offsets, type, one) {
+        var typedArray = new type(vertexBuffer.storage);
+        for (i = 0; i < offsets.length; ++i) {
+            var index = offsets[i].offset;
+            var stride = offsets[i].stride;
+            for (i = 0; i < vertexBuffer.numVertices; ++i) {
+                typedArray[index] = one - typedArray[index];
+                index += stride;
+            }
+        }
+    };
+
+    if (floatOffsets.length > 0) {
+        flip(floatOffsets, Float32Array, 1.0);
+    }
+    if (shortOffsets.length > 0) {
+        flip(shortOffsets, Uint16Array, 65535);
+    }
+    if (byteOffsets.length > 0) {
+        flip(byteOffsets, Uint8Array, 255);
+    }
+};
+
 var createVertexBufferInternal = function (device, numVertices, vertexDesc, positionDesc, sourceDesc) {
 
     // order vertexDesc to match the rest of the engine
@@ -274,6 +319,9 @@ var createVertexBufferInternal = function (device, numVertices, vertexDesc, posi
             }
         }
     }
+
+    flipTexCoordVs(vertexBuffer);
+
     vertexBuffer.unlock();
 
     return vertexBuffer;
@@ -1372,7 +1420,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
         }
 
         // create and load the asset
-        var asset = new Asset('texture_' + index, 'texture',  file, { flipY: false }, { crossOrigin: crossOrigin });
+        var asset = new Asset('texture_' + index, 'texture',  file, null, { crossOrigin: crossOrigin });
         asset.on('load', function () {
             if (isBlobUrl) {
                 URL.revokeObjectURL(url);
