@@ -700,6 +700,10 @@ Object.defineProperty(ModelComponent.prototype, "model", {
             if (this.entity.animation)
                 this.entity.animation.setModel(this._model);
 
+            // Update any animation component
+            if (this.entity.anim) {
+                this.entity.anim.resetStateGraph();
+            }
             // trigger event handler to load mapping
             // for new model
             if (this.type === 'asset') {
