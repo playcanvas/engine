@@ -62,14 +62,12 @@
         // PlayCanvas Editor and then downloaded.
         var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
             url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
         });
         app.assets.add(cubemapAsset);
         app.assets.load(cubemapAsset);
         cubemapAsset.ready(function () {
-            // Mark the cubemaps as RGBM format since it's an HDR cubemap
-            cubemapAsset.resources.forEach(function (cubemap) {
-                cubemap.type = pc.TEXTURETYPE_RGBM;
-            });
             app.scene.setSkybox(cubemapAsset.resources);
         });
 
