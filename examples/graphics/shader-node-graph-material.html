@@ -68,11 +68,39 @@
         uniform vec3 lightCol[32];
         uniform vec3 lightCSR[32];
 
-        //uniform vec4 vLightIndex;
+        //uniform vec4 uLightIndex;
+        uniform int uLightIndex0;
+        uniform int uLightIndex1;
+        uniform int uLightIndex2;
+        uniform int uLightIndex3;
         //varying vec4 vShadowPos;
         varying vec4 vVertexLightCol_Flags;
 
         void getDynamicLighting(in vec3 viewDir, in vec3 position, in vec3 normal, in float roughness, in float F0, out vec3 diffuse, out vec3 specular)
+        {
+            float roughness4=roughness*roughness*roughness*roughness;
+
+            float S = 1.0;//getDirShadow(position);
+
+            float diff,spec;
+            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -lightDir[0], diff, spec);
+            diffuse = lightCol[0]*diff*S*0.0;
+            specular = lightCol[0]*spec*S*0.0;
+
+            float flags=vVertexLightCol_Flags.a;
+            diffuse+=vVertexLightCol_Flags.rgb;
+
+            vec3 L = position-lightPos[uLightIndex0]; 
+            float sqlen = dot(L,L); 
+            L = normalize(L);
+            S = 1.0-min(sqlen*lightCSR[uLightIndex0].z,1.0); 
+            S *= clamp((dot(L, lightDir[uLightIndex0])-lightCSR[uLightIndex0].x)*lightCSR[uLightIndex0].y,0.0,1.0);                
+            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
+            diffuse += lightCol[uLightIndex0]*diff*S;
+            specular += lightCol[uLightIndex0]*spec*S;
+        }
+
+        void getDynamicLighting0(in vec3 viewDir, in vec3 position, in vec3 normal, in float roughness, in float F0, out vec3 diffuse, out vec3 specular)
         {
             float roughness4=roughness*roughness*roughness*roughness;
 
@@ -186,7 +214,7 @@
            float sqlen2=10000.0;
            float sqlen3=10000.0;
            
-           for (int n = 1; n < 8; n++)
+           for (int n = 1; n < 32; n++)
            {
                 vec3 L = position-lightPos[n]; 
                 float sqlen = dot(L,L);
@@ -237,7 +265,7 @@
 
            vVertexLightCol_Flags.rgb=vec3(0);
 
-           for (int i = 1; i < 8; i++)
+           for (int i = 1; i < 32; i++)
            {
                 if (fract(flags/pow(2.0,float(i+1)))>=0.5)
                 {
@@ -364,6 +392,7 @@
             material.initShader(app.graphicsDevice);
             material.updateUniforms();
 
+            //setup a bunch of lights for testing - TODO hook up to engine lights
             var lightDirId = app.graphicsDevice.scope.resolve("lightDir[0]");
             var lightPosId = app.graphicsDevice.scope.resolve("lightPos[0]");
             var lightColId = app.graphicsDevice.scope.resolve("lightCol[0]");
@@ -382,6 +411,13 @@
 
             lightCSRId.setValue(new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ,
                                                   0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ]));
+
+            //material.setParameter('uLightIndex', new Float32Array([3,4,5,6]) );
+
+            material.setParameter('uLightIndex0', 3 );
+            material.setParameter('uLightIndex1', 4 );
+            material.setParameter('uLightIndex2', 5 );
+            material.setParameter('uLightIndex3', 6 );
 
             //update time parameter every frame
             app.on("update", function (dt) {
