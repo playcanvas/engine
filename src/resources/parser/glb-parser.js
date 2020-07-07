@@ -198,10 +198,12 @@ var generateNormals = function (sourceDesc, vertexDesc, positions, numVertices, 
 };
 
 var flipTexCoordVs = function (vertexBuffer) {
+    var i, j;
+
     var floatOffsets = [];
     var shortOffsets = [];
     var byteOffsets = [];
-    for (var i = 0; i < vertexBuffer.format.elements.length; ++i) {
+    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
         var element = vertexBuffer.format.elements[i];
         if (element.name === SEMANTIC_TEXCOORD0 ||
             element.name === SEMANTIC_TEXCOORD1) {
@@ -224,7 +226,7 @@ var flipTexCoordVs = function (vertexBuffer) {
         for (i = 0; i < offsets.length; ++i) {
             var index = offsets[i].offset;
             var stride = offsets[i].stride;
-            for (i = 0; i < vertexBuffer.numVertices; ++i) {
+            for (j = 0; j < vertexBuffer.numVertices; ++j) {
                 typedArray[index] = one - typedArray[index];
                 index += stride;
             }

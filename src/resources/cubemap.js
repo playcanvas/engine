@@ -241,13 +241,11 @@ Object.assign(CubemapHandler.prototype, {
 
         var onNewLoad = function (index, asset) {
             var level0 = asset && asset.resource && asset.resource._levels[0];
-            if (level0 &&
-                typeof ImageBitmap !== 'undefined' &&
-                level0 instanceof ImageBitmap) {
-                    createImageBitmap(level0, {
-                        premultiplyAlpha: 'none',
-                        imageOrientation: 'flipY'
-                    })
+            if (level0 && typeof ImageBitmap !== 'undefined' && level0 instanceof ImageBitmap) {
+                createImageBitmap(level0, {
+                    premultiplyAlpha: 'none',
+                    imageOrientation: 'flipY'
+                })
                     .then( function (imageBitmap) {
                         asset.resource._levels[0] = imageBitmap;
                         onLoad(index, asset);
