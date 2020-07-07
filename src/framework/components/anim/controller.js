@@ -256,6 +256,14 @@ Object.defineProperties(AnimController.prototype, {
             return playable;
         }
     },
+    playing: {
+        get: function () {
+            return this._playing;
+        },
+        set: function (value) {
+            this._playing = value;
+        }
+    },
     activeStateProgress: {
         get: function () {
             return this._getActiveStateProgressForTime(this._timeInState);
