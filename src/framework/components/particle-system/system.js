@@ -44,6 +44,7 @@ var _schema = [
     'wrap',
     'wrapBounds',
     'localSpace',
+    'screenSpace',
     'colorMapAsset',
     'normalMapAsset',
     'mesh',

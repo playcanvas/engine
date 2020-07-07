@@ -5,14 +5,18 @@ function AnimStateGraph(data) {
         if (data.states) {
             this._layers = [];
             this._layers.push({
-                name: 'DEFAULT_LAYER',
+                name: 'Base',
                 states: data.states,
                 transitions: data.transitions
             });
         } else {
             this._layers = data.layers;
         }
-        this._parameters = Object.assign({}, data.parameters);
+        this._parameters = {};
+        for (var paramId in data.parameters) {
+            var param = data.parameters[paramId];
+            this._parameters[param.name] = { type: param.type, value: param.value };
+        }
     }
 }
 
