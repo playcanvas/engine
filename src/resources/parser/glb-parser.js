@@ -192,7 +192,8 @@ var generateNormals = function (sourceDesc, indices) {
         stride: 12,
         count: numVertices,
         components: 3,
-        type: TYPE_FLOAT32    };
+        type: TYPE_FLOAT32
+    };
 };
 
 var flipTexCoordVs = function (vertexBuffer) {
@@ -251,12 +252,11 @@ var createVertexBufferInternal = function (device, sourceDesc) {
     var vertexDesc = [];
     for (var semantic in sourceDesc) {
         if (sourceDesc.hasOwnProperty(semantic)) {
-            var source = sourceDesc[semantic];
             vertexDesc.push({
                 semantic: semantic,
-                components: source.components,
-                type: source.type,
-                normalize: !!source.normalize
+                components: sourceDesc[semantic].components,
+                type: sourceDesc[semantic].type,
+                normalize: !!sourceDesc[semantic].normalize
             });
         }
     }
@@ -302,9 +302,9 @@ var createVertexBufferInternal = function (device, sourceDesc) {
 
     // create vertex buffer
     var vertexBuffer = new VertexBuffer(device,
-        vertexFormat,
-        numVertices,
-        BUFFER_STATIC);
+                                        vertexFormat,
+                                        numVertices,
+                                        BUFFER_STATIC);
 
     var vertexData = vertexBuffer.lock();
     var targetArray = new Uint32Array(vertexData);
