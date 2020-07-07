@@ -63,10 +63,10 @@
         //    return (shadowDepth<shadowPos.w)? 0.0 : 1.0;
         //}
 
-        uniform vec3 lightDir[16];
-        uniform vec3 lightPos[16];
-        uniform vec3 lightCol[16];
-        uniform vec3 lightCSR[16];
+        uniform vec3 lightDir[32];
+        uniform vec3 lightPos[32];
+        uniform vec3 lightCol[32];
+        uniform vec3 lightCSR[32];
 
         //uniform vec4 vLightIndex;
         //varying vec4 vShadowPos;
@@ -116,11 +116,11 @@
 
             float oopow2=0.5;
 
-            for (int i = 1; i < 16; i++)
+            for (int i = 1; i < 8; i++)
             {
                 oopow2*=0.501;
                 if (fract(flags*oopow2)>=0.5)
-                //if (fract(flags/pow(2.0,float(i+1)))>)
+                //if (fract((flags+0.01)/pow(2.0,float(i+1)))>=0.5)
                 {
                     //for (int x = 1; x < 500; x++)
                     {
@@ -165,10 +165,10 @@
 
     <script id="_declare_lighting_VS" type="x-shader/x-vertex">
 
-        uniform vec3 lightDir[16];
-        uniform vec3 lightPos[16];
-        uniform vec3 lightCol[16];
-        uniform vec3 lightCSR[16];
+        uniform vec3 lightDir[32];
+        uniform vec3 lightPos[32];
+        uniform vec3 lightCol[32];
+        uniform vec3 lightCSR[32];
         varying vec4 vVertexLightCol_Flags;
 
         void calcVertexLightingVS(in vec3 position, in vec3 normal)
@@ -186,7 +186,7 @@
            float sqlen2=10000.0;
            float sqlen3=10000.0;
            
-           for (int n = 1; n < 16; n++)
+           for (int n = 1; n < 8; n++)
            {
                 vec3 L = position-lightPos[n]; 
                 float sqlen = dot(L,L);
@@ -231,13 +231,13 @@
                 }                     
            }
 
-           float flags=pow(2.0,float(3))+pow(2.0,float(4))+pow(2.0,float(5))+pow(2.0,float(6));//pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
+           float flags=pow(2.0,float(3))+pow(2.0,float(4))+pow(2.0,float(5))+pow(2.0,float(6))+pow(2.0,float(7));//pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
            //float flags=pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
            //float flags=0.0;//pow(2.0,float(12))+pow(2.0,float(13))+pow(2.0,float(14))+pow(2.0,float(15));
 
            vVertexLightCol_Flags.rgb=vec3(0);
 
-           for (int i = 1; i < 16; i++)
+           for (int i = 1; i < 8; i++)
            {
                 if (fract(flags/pow(2.0,float(i+1)))>=0.5)
                 {
@@ -371,10 +371,17 @@
 
             var oosqr=1.0/(12.0*12.0);
 
-            lightDirId.setValue(new Float32Array([0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ]));
-            lightPosId.setValue(new Float32Array([0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,          -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ]));
-            lightColId.setValue(new Float32Array([1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ]));
-            lightCSRId.setValue(new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ]));
+            lightDirId.setValue(new Float32Array([0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ,
+                                                  0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ]));
+
+            lightPosId.setValue(new Float32Array([0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,          -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ,
+                                                  0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,          -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ]));
+
+            lightColId.setValue(new Float32Array([1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ,
+                                                  1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ]));
+
+            lightCSRId.setValue(new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ,
+                                                  0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ]));
 
             //update time parameter every frame
             app.on("update", function (dt) {
