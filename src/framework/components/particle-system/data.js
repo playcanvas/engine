@@ -17,6 +17,7 @@ function ParticleSystemComponentData() {
     this.initialVelocity = 0;
     this.wrapBounds = new Vec3();
     this.localSpace = false;
+    this.screenSpace = false;
     this.colorMap = null;
     this.colorMapAsset = null;
     this.normalMap = null;
