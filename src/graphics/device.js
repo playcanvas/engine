@@ -2210,8 +2210,7 @@ Object.assign(GraphicsDevice.prototype, {
                 vertexBuffer._vao = this.createVertexArray(this.vertexBuffers);
             }
             vao = vertexBuffer._vao;
-        }
-        else {
+        } else {
             // obtain temporary VAO for multiple vertex buffers
             vao = this.createVertexArray(this.vertexBuffers);
         }
