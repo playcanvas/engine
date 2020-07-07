@@ -144,8 +144,49 @@ var node = {
 
         var vshader = code;
 
+        var startCode = "";
+        if (device.webgl2) {
+            startCode = programlib.versionCode(device);
+            if (chunks.extensionVS) {
+                startCode += chunks.extensionVS + "\n";
+            }
+            vshader = startCode + chunks.gles3VS + vshader;
+        } else {
+            if (chunks.extensionVS) {
+                startCode = chunks.extensionVS + "\n";
+            }
+            vshader = startCode + vshader;
+        }
+
         // GENERATE FRAGMENT SHADER
-        code = programlib.precisionCode(device);
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
+            options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
+            options.forceFragmentPrecision = null;
+
+        if (options.forceFragmentPrecision) {
+            if (options.forceFragmentPrecision === "highp" && device.maxPrecision !== "highp") options.forceFragmentPrecision = "mediump";
+            if (options.forceFragmentPrecision === "mediump" && device.maxPrecision === "lowp") options.forceFragmentPrecision = "lowp";
+        }
+
+        var fshader;
+        code = '';
+
+        if (device.webgl2) {
+            code += programlib.versionCode(device);
+        }
+
+        if (device.extStandardDerivatives && !device.webgl2) {
+            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        }
+        if (chunks.extensionPS) {
+            code += chunks.extensionPS + "\n";
+        }
+
+        if (device.webgl2) {
+            code += chunks.gles3PS;
+        }
+
+        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
 

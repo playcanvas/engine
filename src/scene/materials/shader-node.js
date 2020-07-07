@@ -330,8 +330,8 @@ ShaderGraphNode.prototype.generateShaderGraph = function (graphParamList, graphF
 var shadergraph = {};
 
 shadergraph.textureSample2D = function (texture, uv) {
-    var texSampleNode = new ShaderGraphNode('void texSample(in sampler2D texture, in vec2 uv, out vec4 rgba, out vec3 color, out float alpha) {\n vec4 sample=texture2D(texture, uv);\n rgba=sample;\n color=sample.rgb;\n alpha=sample.a;\n}');
-    texSampleNode.texture = new ShaderGraphNode('sampler2D', 'texture', texture);
+    var texSampleNode = new ShaderGraphNode('void texSample(in sampler2D tex, in vec2 uv, out vec4 rgba, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n rgba=samp;\n color=samp.rgb;\n alpha=samp.a;\n}');
+    texSampleNode.tex = new ShaderGraphNode('sampler2D', 'tex', texture);
     texSampleNode.uv = uv;
     return texSampleNode;
 };
