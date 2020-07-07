@@ -128,6 +128,7 @@ Object.assign(AnimComponent.prototype, {
      */
     removeStateGraph: function () {
         this.data.stateGraph = null;
+        this.data.stateGraphAsset = null;
         this.data.animationAssets = {};
         this.data.layers = [];
         this.data.layerIndices = {};
