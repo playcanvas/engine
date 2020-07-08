@@ -5,31 +5,13 @@ var handleAssetManifest = function (err, result) {      // eslint-disable-line n
     if (err) {
         console.warn(err);
     } else {
-        var models = document.getElementById('model');
-        result.models.forEach(function (model) {
-            var option = document.createElement("option");
-            option.text = model.label;
-            option.value = model.filename;
-            models.add(option);
-        });
-
         var skyboxes = document.getElementById('skybox');
         result.skyboxes.forEach(function (skybox) {
             var option = document.createElement("option");
             option.text = skybox.label;
-            option.value = skybox.filename;
+            option.value = skybox.url;
             skyboxes.add(option);
         });
-    }
-};
-
-document.getElementById('model').onchange = function (e) {
-    if (this.value) {
-        if (viewer.load("models/" + this.value) && !e.shiftKey) {
-            viewer.resetScene();
-        }
-    } else {
-        viewer.resetScene();
     }
 };
 
@@ -71,7 +53,7 @@ document.getElementById('envl').oninput = function (e) {
 
 document.getElementById('skybox').onchange = function (e) {
     if (this.value) {
-        viewer.load("skybox/" + this.value);
+        viewer.load(this.value);
     } else {
         viewer.clearSkybox();
     }
