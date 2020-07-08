@@ -1322,4 +1322,7 @@ Object.defineProperties(Mat4, {
     IDENTITY: { value: new Mat4() }
 });
 
+Object.freeze(Mat4.ZERO);
+Object.freeze(Mat4.IDENTITY);
+
 export { Mat4 };
