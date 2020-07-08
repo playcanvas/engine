@@ -3,7 +3,7 @@ float linstep(float a, float b, float v) {
 }
 
 float reduceLightBleeding(float pMax, float amount) {
-  // Remove the [0, amount] tail and linearly rescale (amount, 1].
+   // Remove the [0, amount] tail and linearly rescale (amount, 1].
    return linstep(amount, 1.0, pMax);
 }
 
@@ -33,4 +33,3 @@ float calculateEVSM(vec3 moments, float Z, float vsmBias, float exponent) {
     float minVariance1 = depthScale * depthScale;
     return chebyshevUpperBound(moments.xy, warpedDepth, minVariance1, 0.1);
 }
-

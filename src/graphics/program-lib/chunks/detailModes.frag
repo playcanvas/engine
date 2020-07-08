@@ -23,4 +23,3 @@ vec3 detailMode_min(vec3 c1, vec3 c2) {
 vec3 detailMode_max(vec3 c1, vec3 c2) {
     return max(c1, c2);
 }
-

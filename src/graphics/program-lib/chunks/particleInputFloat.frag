@@ -8,4 +8,3 @@ void readInput(float uv) {
     inShow = tex.w >= 0.0;
     inLife = tex2.w;
 }
-

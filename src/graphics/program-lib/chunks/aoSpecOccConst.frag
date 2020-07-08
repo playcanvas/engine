@@ -7,4 +7,3 @@ void occludeSpecular() {
     dSpecularLight *= specOcc;
     dReflection *= specOcc;
 }
-

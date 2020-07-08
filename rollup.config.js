@@ -58,6 +58,19 @@ function shaderChunks() {
     return {
         transform(code, id) {
             if (!filter(id)) return;
+
+            // Remove carriage returns
+            code = code.replace(/\r/g, '');
+
+            // Remove comments
+            code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+
+            // Comment removal can leave an empty line to condense 2 or more to 1
+            code = code.replace( /\n{2,}/g, '\n' );
+
+            // 4 spaces to tabs
+            code = code.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+
             return {
                 code: `export default ${JSON.stringify(code)};`,
                 map: { mappings: '' }

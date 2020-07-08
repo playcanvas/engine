@@ -3,6 +3,8 @@
 uniform mat4 matrix_view;
 #endif
 uniform sampler2D texture_sphereMap;
+uniform float material_reflectivity;
+
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 reflDirV = (mat3(matrix_view) * tReflDirW).xyz;
 
@@ -12,7 +14,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return $texture2DSAMPLE(texture_sphereMap, sphereMapUv).rgb;
 }
 
-uniform float material_reflectivity;
 void addReflection() {   
     dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
