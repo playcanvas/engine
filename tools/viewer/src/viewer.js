@@ -152,12 +152,12 @@ var Viewer = function (canvas) {
     // start the application
     app.start();
 
-    //-- load url parameters
+    // load url parameters
 
     // taken from https://stackoverflow.com/a/21152762
     var qd = {};
     if (location.search) {
-        location.search.substr(1).split("&").forEach(function(item) {
+        location.search.substr(1).split("&").forEach(function (item) {
             var s = item.split("="),
                 k = s[0],
                 v = s[1] && decodeURIComponent(s[1]);
@@ -718,7 +718,7 @@ Object.assign(Viewer.prototype, {
     // use webkitGetAsEntry to extract files so we can include folders
     _dropHandler: function (event) {
         var self = this;
-        
+
         var resolveFiles = function (entries) {
             var urls = [];
             entries.forEach(function (entry) {
