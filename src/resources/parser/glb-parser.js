@@ -376,6 +376,7 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
+        // NOTE: this assumes the position data is tightly packed (not interleaved)
         var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
         generateNormals(sourceDesc, positions, indices);
     }
@@ -461,6 +462,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
+        // NOTE: this assumes the position data is tightly packed (not interleaved)
         var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
         generateNormals(sourceDesc, positions, indices);
     }
