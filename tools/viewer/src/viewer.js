@@ -447,10 +447,6 @@ Object.assign(Viewer.prototype, {
     _loadGltf: function (gltfUrl, externalUrls) {
         var self = this;
 
-        var isDataURI = function (uri) {
-            return /^data:.*,.*$/i.test(uri);
-        };
-
         var processTexture = function (gltfTexture, continuation) {
             var u = externalUrls.find(function (url) {
                 return url.filename === gltfTexture.uri;
