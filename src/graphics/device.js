@@ -332,7 +332,7 @@ var GraphicsDevice = function (canvas, options) {
     this.gl = gl;
 
     // init polyfill for VAOs
-    setupVertexArrayObject(gl);
+    window.setupVertexArrayObject(gl);
 
     canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
     canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
