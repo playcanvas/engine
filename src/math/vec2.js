@@ -476,4 +476,11 @@ Object.defineProperties(Vec2, {
     LEFT: { value: new Vec2(-1, 0) }
 });
 
+Object.freeze(Vec2.ZERO);
+Object.freeze(Vec2.ONE);
+Object.freeze(Vec2.UP);
+Object.freeze(Vec2.DOWN);
+Object.freeze(Vec2.RIGHT);
+Object.freeze(Vec2.LEFT);
+
 export { Vec2 };
