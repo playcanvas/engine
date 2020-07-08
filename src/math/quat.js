@@ -728,4 +728,7 @@ Object.defineProperties(Quat, {
     IDENTITY: { value: new Quat(0, 0, 0, 1) }
 });
 
+Object.freeze(Quat.ZERO);
+Object.freeze(Quat.IDENTITY);
+
 export { Quat };

@@ -1093,3 +1093,39 @@ export var typedArrayToType = {
 // map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export var typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export var typedArrayIndexFormatsByteSize = [1, 2, 4];
+
+// map of engine semantics into location on device in range 0..15 (note - semantics mapping to
+// the same location cannot be used at the same time)
+// organized in a way that ATTR0-ATTR7 do not overlap with common important semantics
+export var semanticToLocation = {};
+semanticToLocation[SEMANTIC_POSITION] = 0;
+semanticToLocation[SEMANTIC_NORMAL] = 1;
+semanticToLocation[SEMANTIC_BLENDWEIGHT] = 2;
+semanticToLocation[SEMANTIC_BLENDINDICES] = 3;
+semanticToLocation[SEMANTIC_COLOR] = 4;
+semanticToLocation[SEMANTIC_TEXCOORD0] = 5;
+semanticToLocation[SEMANTIC_TEXCOORD1] = 6;
+semanticToLocation[SEMANTIC_TEXCOORD2] = 7;
+semanticToLocation[SEMANTIC_TEXCOORD3] = 8;
+semanticToLocation[SEMANTIC_TEXCOORD4] = 9;
+semanticToLocation[SEMANTIC_TEXCOORD5] = 10;
+semanticToLocation[SEMANTIC_TEXCOORD6] = 11;
+semanticToLocation[SEMANTIC_TEXCOORD7] = 12;
+semanticToLocation[SEMANTIC_TANGENT] = 13;
+
+semanticToLocation[SEMANTIC_ATTR0] = 15;
+semanticToLocation[SEMANTIC_ATTR1] = 14;
+semanticToLocation[SEMANTIC_ATTR2] = 13;
+semanticToLocation[SEMANTIC_ATTR3] = 12;
+semanticToLocation[SEMANTIC_ATTR4] = 11;
+semanticToLocation[SEMANTIC_ATTR5] = 10;
+semanticToLocation[SEMANTIC_ATTR6] = 9;
+semanticToLocation[SEMANTIC_ATTR7] = 8;
+semanticToLocation[SEMANTIC_ATTR8] = 7;
+semanticToLocation[SEMANTIC_ATTR9] = 6;
+semanticToLocation[SEMANTIC_ATTR10] = 5;
+semanticToLocation[SEMANTIC_ATTR11] = 4;
+semanticToLocation[SEMANTIC_ATTR12] = 3;
+semanticToLocation[SEMANTIC_ATTR13] = 2;
+semanticToLocation[SEMANTIC_ATTR14] = 1;
+semanticToLocation[SEMANTIC_ATTR15] = 0;
