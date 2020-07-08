@@ -171,10 +171,8 @@ var generateIndices = function (numVertices) {
     return dummyIndices;
 };
 
-var generateNormals = function (sourceDesc, indices) {
-
-    var positions = sourceDesc[SEMANTIC_POSITION];
-    var numVertices = positions.count;
+var generateNormals = function (sourceDesc, positions, indices) {
+    var numVertices = positions.length / 3;
 
     if (!indices) {
         indices = generateIndices(numVertices);
@@ -378,7 +376,8 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        generateNormals(sourceDesc, indices);
+        var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
+        generateNormals(sourceDesc, positions, indices);
     }
 
     return createVertexBufferInternal(device, sourceDesc);
@@ -462,7 +461,8 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        generateNormals(sourceDesc, indices);
+        var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
+        generateNormals(sourceDesc, positions, indices);
     }
 
     return createVertexBufferInternal(device, sourceDesc);

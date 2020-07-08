@@ -95,6 +95,7 @@ var Viewer = function (canvas) {
     // store app things
     this.app = app;
     this.camera = camera;
+    this.cameraPosition = null;
     this.light = light;
     this.sceneRoot = sceneRoot;
     this.debugRoot = debugRoot;
@@ -106,6 +107,7 @@ var Viewer = function (canvas) {
     this.morphMap = { };
     this.morphs = [];
     this.firstFrame = false;
+    this.skyboxLoaded = false;
 
     this.showGraphs = false;
     this.showWireframe = false;
@@ -127,23 +129,8 @@ var Viewer = function (canvas) {
     this.miniStats = new pcx.MiniStats(app);
     this.miniStats.enabled = false;
 
-    function getUrlVars() {
-        var vars = {};
-        window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-            vars[key] = value;
-        });
-        return vars;
-    }
-
-    // specify ?load= in URL to load a file
-    var vars = getUrlVars();
-    if (vars.hasOwnProperty('load')) {
-        this.load({ url: vars.load, filename: vars.load });
-    }
-
     // initialize the envmap
     app.loader.getHandler(pc.ASSET_TEXTURE).parsers.hdr = new HdrParser(app.assets, false);
-    this._loadHeliSkybox();
     // this.load(assetsFolder + '/textures/wooden_motel_2k.hdr');
     // this.load(assetsFolder + '/models/playcanvas-cube.glb');
 
@@ -164,6 +151,38 @@ var Viewer = function (canvas) {
 
     // start the application
     app.start();
+
+    //-- load url parameters
+
+    // taken from https://stackoverflow.com/a/21152762
+    var qd = {};
+    if (location.search) {
+        location.search.substr(1).split("&").forEach(function(item) {
+            var s = item.split("="),
+                k = s[0],
+                v = s[1] && decodeURIComponent(s[1]);
+            (qd[k] = qd[k] || []).push(v);
+        });
+    }
+
+    // load urls
+    var loadUrls = (qd.hasOwnProperty('load') ? qd.load : []).concat(qd.hasOwnProperty('assetUrl') ? qd.assetUrl : []);
+    if (loadUrls.length > 0) {
+        this.load(loadUrls);
+    }
+
+    // set camera position
+    if (qd.hasOwnProperty('cameraPosition')) {
+        var pos = qd.cameraPosition[0].split(',').map(Number);
+        if (pos.length === 3) {
+            this.cameraPosition = new pc.Vec3(pos);
+        }
+    }
+
+    // load the default skybox if one wasn't specified in url params
+    if (!this.skyboxLoaded) {
+        this._loadHeliSkybox();
+    }
 };
 
 // flatten a hierarchy of nodes
@@ -332,6 +351,7 @@ Object.assign(Viewer.prototype, {
             app.assets.add(cubemapAsset);
             app.assets.load(cubemapAsset);
         }
+        this.skyboxLoaded = true;
     },
 
     // load the built in helipad cubemap
@@ -378,6 +398,7 @@ Object.assign(Viewer.prototype, {
         });
         app.assets.add(cubemap);
         app.assets.load(cubemap);
+        this.skyboxLoaded = true;
     },
 
     // reset the viewer, unloading resources
@@ -417,6 +438,7 @@ Object.assign(Viewer.prototype, {
     clearSkybox: function () {
         this.app.scene.setSkybox(null);
         this.app.renderNextFrame = true;
+        this.skyboxLoaded = false;
     },
 
     // move the camera to view the loaded object
@@ -429,8 +451,13 @@ Object.assign(Viewer.prototype, {
         var radius = bbox.halfExtents.length();
         var distance = (radius * 1.4) / Math.sin(0.5 * camera.fov * camera.aspectRatio * pc.math.DEG_TO_RAD);
 
-        orbitCamera.pivotPoint = bbox.center;
-        orbitCamera.distance = distance;
+        if (this.cameraPosition) {
+            orbitCamera.resetAndLookAtPoint(this.cameraPosition, bbox.center);
+            this.cameraPosition = null;
+        } else {
+            orbitCamera.pivotPoint = bbox.center;
+            orbitCamera.distance = distance;
+        }
         camera.nearClip = distance / 10;
         camera.farClip = distance * 10;
 
@@ -688,44 +715,63 @@ Object.assign(Viewer.prototype, {
         this.app.renderNextFrame = true;
     },
 
-    _dropHandler: function (ev) {
-        ev.preventDefault();
-
-        if (ev.dataTransfer && ev.dataTransfer.items) {
-            var self = this;
+    // use webkitGetAsEntry to extract files so we can include folders
+    _dropHandler: function (event) {
+        var self = this;
+        
+        var resolveFiles = function (entries) {
             var urls = [];
-            var awaiting = 0;
-            var shiftKey = !!ev.shiftKey;
-
-            var checkDone = function () {
-                if (awaiting === 0) {
-                    // if a scene was loaded (and not just a skybox), clear the current scene
-                    if (self.load(urls) && !shiftKey) {
-                        self.resetScene();
-                    }
-                }
-            };
-
-            for (var i = 0; i < ev.dataTransfer.items.length; ++i) {
-                var item = ev.dataTransfer.items[i];
-                if (item.kind === 'file') {
-                    var file = item.getAsFile();
+            entries.forEach(function (entry) {
+                entry.file(function (file) {
                     urls.push({
                         url: URL.createObjectURL(file),
-                        filename: file.name
+                        filename: entry.fullPath.substring(1)
                     });
-                } else if (item.kind === 'string' && item.type === 'text/plain') {
-                    item.getAsString(function (s) {         // eslint-disable-line no-loop-func
-                        urls.push(s);
-                        awaiting--;
-                        checkDone();
-                    });
-                    awaiting++;
-                }
-            }
+                    if (urls.length === entries.length) {
+                        // if a scene was loaded (and not just a skybox), clear the current scene
+                        if (self.load(urls) && !event.shiftKey) {
+                            self.resetScene();
+                        }
+                    }
+                });
+            });
+        };
 
-            checkDone();
+        var resolveDirectories = function (entries) {
+            var awaiting = 0;
+            var files = [];
+            var recurse = function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isFile) {
+                        files.push(entry);
+                    } else if (entry.isDirectory) {
+                        awaiting++;
+                        entry.createReader().readEntries(function (subEntries) {
+                            awaiting--;
+                            recurse(subEntries);
+                        });
+                    }
+                });
+                if (awaiting === 0) {
+                    resolveFiles(files);
+                }
+            };
+            recurse(entries);
+        };
+
+        // first things first
+        event.preventDefault();
+
+        var items = event.dataTransfer.items;
+        if (!items) {
+            return;
         }
+
+        var entries = [];
+        for (var i = 0; i < items.length; ++i) {
+            entries.push(items[i].webkitGetAsEntry());
+        }
+        resolveDirectories(entries);
     },
 
     _onLoaded: function (err, asset) {
