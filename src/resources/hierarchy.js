@@ -4,6 +4,8 @@ import { SceneParser } from './parser/scene.js';
 
 import { TemplateUtils } from '../templates/template-utils.js';
 
+import { CompressUtils } from '../compress/compress-utils.js';
+
 function HierarchyHandler(app) {
     this._app = app;
     this.retryRequests = false;
@@ -47,6 +49,8 @@ Object.assign(HierarchyHandler.prototype, {
     open: function (url, data) {
         // prevent script initialization until entire scene is open
         this._app.systems.script.preloading = true;
+
+        data = CompressUtils.decompress(data);
 
         var parser = new SceneParser(this._app, false);
         var parent = parser.parse(data);
