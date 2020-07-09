@@ -1,59 +1,59 @@
 function Decompress(node, srcToDst) {
-    this.node = node;
+    this._node = node;
 
-    this.srcToDst = srcToDst;
+    this._srcToDst = srcToDst;
 }
 
 Object.assign(Decompress.prototype, {
     run: function () {
-        if (this.isMapObj(this.node)) {
-            this.handleMap();
+        if (this._isMapObj(this._node)) {
+            this._handleMap();
 
-        } else if (Array.isArray(this.node)) {
-            this.handleArray();
+        } else if (Array.isArray(this._node)) {
+            this._handleArray();
 
         } else {
-            this.handleLeaf();
+            this._handleLeaf();
         }
 
-        return this.result;
+        return this._result;
     },
 
-    handleMap: function () {
-        this.result = {};
+    _handleMap: function () {
+        this._result = {};
 
-        var a = Object.keys(this.node);
+        var a = Object.keys(this._node);
 
-        a.forEach(this.handleKey, this);
+        a.forEach(this._handleKey, this);
     },
 
-    handleKey: function (origKey) {
-        var newKey = this.handleTreeKey(origKey);
+    _handleKey: function (origKey) {
+        var newKey = this._handleTreeKey(origKey);
 
-        this.result[newKey] = new Decompress(this.node[origKey], this.srcToDst).run();
+        this._result[newKey] = new Decompress(this._node[origKey], this._srcToDst).run();
     },
 
-    handleArray: function () {
-        this.result = [];
+    _handleArray: function () {
+        this._result = [];
 
-        this.node.forEach(this.handleArElt, this);
+        this._node.forEach(this._handleArElt, this);
     },
 
-    handleArElt: function (elt) {
-        var v = new Decompress(elt, this.srcToDst).run();
+    _handleArElt: function (elt) {
+        var v = new Decompress(elt, this._srcToDst).run();
 
-        this.result.push(v);
+        this._result.push(v);
     },
 
-    handleLeaf: function () {
-        this.result = this.node;
+    _handleLeaf: function () {
+        this._result = this._node;
     },
 
-    handleTreeKey: function (k) {
-        return this.srcToDst[k] || k; // new guids -- no need - guids have len > 2
+    _handleTreeKey: function (k) {
+        return this._srcToDst[k] || k; // new guids -- no need - guids have len > 2
     },
 
-    isMapObj: function (obj) {
+    _isMapObj: function (obj) {
         var isObj = typeof obj === "object";
 
         var isNull = obj === null;
