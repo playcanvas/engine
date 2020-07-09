@@ -6,9 +6,13 @@ var CompressUtils = {
     decompress: function (data) {
         var srcToDst = data[CompressUtils.KEY_MAP_FIELD];
 
-        delete data[CompressUtils.KEY_MAP_FIELD];
+        if (srcToDst) {
+            delete data[CompressUtils.KEY_MAP_FIELD];
 
-        return new Decompress(data, srcToDst).run();
+            return new Decompress(data, srcToDst).run();
+        } else {
+            return data;
+        }
     }
 };
 
