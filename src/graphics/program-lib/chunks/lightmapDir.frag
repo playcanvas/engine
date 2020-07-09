@@ -28,4 +28,3 @@ void addDirLightMap() {
     dLightDirNormW = normalize(dir.xyz * 2.0 - vec3(1.0));
     dSpecularLight += vec3(getLightSpecular()) * color;
 }
-

@@ -6,6 +6,7 @@ import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
+import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';

@@ -7,6 +7,8 @@ uniform samplerCube texture_prefilteredCubeMap8;
 #define PMREM4
 uniform samplerCube texture_prefilteredCubeMap4;
 #endif
+uniform float material_reflectivity;
+
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.
     // We fix mip0 to 128x128, so code is rather static.
@@ -59,7 +61,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return refl;
 }
 
-uniform float material_reflectivity;
 void addReflection() {   
     dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }

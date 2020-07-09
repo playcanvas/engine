@@ -170,7 +170,7 @@ var math = {
         if (b - a < -180 ) {
             b += 360;
         }
-        return pc.math.lerp(a, b, math.clamp(alpha, 0, 1));
+        return math.lerp(a, b, math.clamp(alpha, 0, 1));
     },
 
     /**

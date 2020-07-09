@@ -10,15 +10,14 @@ void getAlbedo() {
     dAlbedo = vec3(1.0);
 
     #ifdef MAPCOLOR
-        dAlbedo *= material_diffuse.rgb;
+    dAlbedo *= material_diffuse.rgb;
     #endif
 
     #ifdef MAPTEXTURE
-        dAlbedo *= gammaCorrectInput(addAlbedoDetail(texture2D(texture_diffuseMap, $UV).$CH));
+    dAlbedo *= gammaCorrectInput(addAlbedoDetail(texture2D(texture_diffuseMap, $UV).$CH));
     #endif
 
     #ifdef MAPVERTEX
-        dAlbedo *= gammaCorrectInput(saturate(vVertexColor.$VC));
+    dAlbedo *= gammaCorrectInput(saturate(vVertexColor.$VC));
     #endif
 }
-

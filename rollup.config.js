@@ -49,6 +49,44 @@ function preprocessor(options) {
     };
 }
 
+function shaderChunks(removeComments) {
+    const filter = createFilter([
+        '**/*.vert',
+        '**/*.frag'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+
+            // Remove carriage returns
+            code = code.replace(/\r/g, '');
+
+            // 4 spaces to tabs
+            code = code.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+
+            if (removeComments) {
+                // Remove comments
+                code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+
+                // Trim all whitespace from line endings
+                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+
+                // Restore final new line
+                code += '\n';
+
+                // Comment removal can leave an empty line so condense 2 or more to 1
+                code = code.replace(/\n{2,}/g, '\n');
+            }
+
+            return {
+                code: `export default ${JSON.stringify(code)};`,
+                map: { mappings: '' }
+            };
+        }
+    };
+}
+
 function importAssemblyScriptInstead(options) {
     const filter = createFilter([
         '**/*.js'
@@ -71,23 +109,6 @@ function importAssemblyScriptInstead(options) {
     };
 }
 
-function shaderChunks() {
-    const filter = createFilter([
-        '**/*.vert',
-        '**/*.frag'
-    ], []);
-
-    return {
-        transform(code, id) {
-            if (!filter(id)) return;
-            return {
-                code: `export default ${JSON.stringify(code)};`,
-                map: { mappings: '' }
-            };
-        }
-    };
-}
-
 var target_release = {
     input: 'src/index.js',
     output: {
@@ -103,7 +124,7 @@ var target_release = {
             DEBUG: false,
             RELEASE: true
         }),
-        shaderChunks(),
+        shaderChunks(true),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
@@ -130,7 +151,7 @@ var target_debug = {
             DEBUG: true,
             RELEASE: false
         }),
-        shaderChunks(),
+        shaderChunks(false),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
@@ -157,7 +178,7 @@ var target_performance = {
             DEBUG: false,
             RELEASE: false
         }),
-        shaderChunks(),
+        shaderChunks(false),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
@@ -201,7 +222,7 @@ var target_wasm = {
             DEBUG: false,
             RELEASE: true
         }),
-        shaderChunks(),
+        shaderChunks(false),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version

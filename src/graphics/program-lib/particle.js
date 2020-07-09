@@ -35,6 +35,7 @@ var particle = {
         vshader += "#define VERTEXSHADER\n";
         if (options.mesh) vshader += "#define USE_MESH\n";
         if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
+        if (options.screenSpace) vshader += "#define SCREEN_SPACE\n";
 
         if (options.animTex) vshader += "\nuniform vec2 animTexTilesParams;\n";
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";

@@ -138,12 +138,12 @@ var Viewer = function (canvas) {
     // specify ?load= in URL to load a file
     var vars = getUrlVars();
     if (vars.hasOwnProperty('load')) {
-        this.loadScene({ url: vars.load, filename: vars.load });
+        this.load({ url: vars.load, filename: vars.load });
     }
 
     // initialize the envmap
     app.loader.getHandler(pc.ASSET_TEXTURE).parsers.hdr = new HdrParser(app.assets, false);
-    this.loadHeliSkybox();
+    this._loadHeliSkybox();
     // this.load(assetsFolder + '/textures/wooden_motel_2k.hdr');
     // this.load(assetsFolder + '/models/playcanvas-cube.glb');
 
@@ -201,7 +201,7 @@ Viewer._calcBoundingBox = function (meshInstances) {
 Object.assign(Viewer.prototype, {
     // initialize the faces and prefiltered lighting data from the given
     // skybox texture, which is either a cubemap or equirect texture.
-    initSkyboxFromTexture: function (skybox) {
+    _initSkyboxFromTexture: function (skybox) {
         var self = this;
         var app = self.app;
         var device = app.graphicsDevice;
@@ -248,7 +248,9 @@ Object.assign(Viewer.prototype, {
         app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
     },
 
-    loadSkybox: function (files) {
+    // load the image files into the skybox. this function supports loading a single equirectangular
+    // skybox image or 6 cubemap faces.
+    _loadSkybox: function (files) {
         var self = this;
         var app = self.app;
 
@@ -265,7 +267,7 @@ Object.assign(Viewer.prototype, {
                     texture.type = pc.TEXTURETYPE_RGBM;
                 }
                 texture.minFilter = pc.FILTER_NEAREST;
-                self.initSkyboxFromTexture(texture);
+                self._initSkyboxFromTexture(texture);
             });
             app.assets.add(textureAsset);
             app.assets.load(textureAsset);
@@ -324,7 +326,7 @@ Object.assign(Viewer.prototype, {
                 if (cubemap) {
                     cubemap.type = pc.TEXTURETYPE_RGBM;
                     cubemap.minFilter = pc.FILTER_NEAREST;
-                    self.initSkyboxFromTexture(cubemap);
+                    self._initSkyboxFromTexture(cubemap);
                 }
             });
             app.assets.add(cubemapAsset);
@@ -332,23 +334,32 @@ Object.assign(Viewer.prototype, {
         }
     },
 
-    // load helipad cubemap
-    loadHeliSkybox: function () {
+    // load the built in helipad cubemap
+    _loadHeliSkybox: function () {
         var self = this;
         var app = self.app;
 
         var cubemap = new pc.Asset('helipad', 'cubemap', {
             url: assetsFolder + "/cubemaps/Helipad.dds"
         }, {
+            textures: [
+                assetsFolder + '/cubemaps/Helipad_posx.png',
+                assetsFolder + '/cubemaps/Helipad_negx.png',
+                assetsFolder + '/cubemaps/Helipad_posy.png',
+                assetsFolder + '/cubemaps/Helipad_negy.png',
+                assetsFolder + '/cubemaps/Helipad_posz.png',
+                assetsFolder + '/cubemaps/Helipad_negz.png'
+            ],
             magFilter: pc.FILTER_LINEAR,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             anisotropy: 1,
             type: pc.TEXTURETYPE_RGBM
         });
+        cubemap.loadFaces = true;
         cubemap.on('load', function () {
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
             app.scene.toneMapping = pc.TONEMAP_ACES;
-            app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
+            app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
             app.scene.setSkybox(cubemap.resources);
             app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
 
@@ -427,12 +438,65 @@ Object.assign(Viewer.prototype, {
         light.light.shadowDistance = distance * 2;
     },
 
-    // load model
-    loadScene: function (url) {
+    // load glb model
+    _loadGlb: function (url) {
         this.app.assets.loadFromUrlAndFilename(url.url, url.filename, "container", this._onLoaded.bind(this));
     },
 
-    // perform load given a list of url objects
+    // load gltf model given its url and list of external urls
+    _loadGltf: function (gltfUrl, externalUrls) {
+        var self = this;
+
+        var processTexture = function (gltfTexture, continuation) {
+            var u = externalUrls.find(function (url) {
+                return url.filename === gltfTexture.uri;
+            });
+            if (u) {
+                var textureAsset = new pc.Asset(u.filename, 'texture', { url: u.url, filename: u.filename }, { flipY: false } );
+                textureAsset.on('load', function () {
+                    continuation(null, textureAsset);
+                });
+                self.app.assets.add(textureAsset);
+                self.app.assets.load(textureAsset);
+            } else {
+                continuation("failed to load uri=" + gltfTexture.uri);
+            }
+        };
+
+        var processBuffer = function (gltfBuffer, continuation) {
+            var u = externalUrls.find(function (url) {
+                return url.filename === gltfBuffer.uri;
+            });
+            if (u) {
+                var bufferAsset = new pc.Asset(u.filename, 'binary', { url: u.url, filename: u.filename }, null );
+                bufferAsset.on('load', function () {
+                    continuation(null, new Uint8Array(bufferAsset.resource));
+                });
+                self.app.assets.add(bufferAsset);
+                self.app.assets.load(bufferAsset);
+            } else {
+                continuation("failed to load uri=" + gltfBuffer.uri);
+            }
+        };
+
+        var containerAsset = new pc.Asset(gltfUrl.filename, 'container', gltfUrl, null, {
+            texture: {
+                processAsync: processTexture
+            },
+            buffer: {
+                processAsync: processBuffer
+            }
+        });
+        containerAsset.on('load', function () {
+            self._onLoaded(null, containerAsset);
+        });
+        self.app.assets.add(containerAsset);
+        self.app.assets.load(containerAsset);
+    },
+
+    // load the list of urls.
+    // urls can reference glTF files, glb files and skybox textures.
+    // returns true if a model was loaded.
     load: function (urls) {
         // convert single url to list
         if (!Array.isArray(urls)) {
@@ -451,67 +515,29 @@ Object.assign(Viewer.prototype, {
             return pc.path.getExtension(filename).toLowerCase();
         };
 
-        // check if a gltf file is being loaded
-        var gltf = urls.find(function (url) {
-            return ext(url.filename) === '.gltf';
+        // extract gltf url
+        var gltfUrl;
+        var externalUrls = urls.filter(function (url) {
+            switch (ext(url.filename)) {
+                case '.gltf':
+                    gltfUrl = url;
+                    return false;
+                default:
+                    return true;
+            }
         });
 
-        var result = false;     // sceneLoaded
+        var result = false;
         var self = this;
-        if (gltf) {
-            var processTexture = function (gltfTexture, continuation) {
-                var u = urls.find(function (url) {
-                    return url.filename === gltfTexture.uri;
-                });
-                if (u) {
-                    var textureAsset = new pc.Asset(u.filename, 'texture', { url: u.url, filename: u.filename }, { flipY: false } );
-                    textureAsset.on('load', function () {
-                        continuation(null, textureAsset);
-                    });
-                    self.app.assets.add(textureAsset);
-                    self.app.assets.load(textureAsset);
-                } else {
-                    continuation("failed to load uri=" + gltfTexture.uri);
-                }
-            };
-
-            var processBuffer = function (gltfBuffer, continuation) {
-                var u = urls.find(function (url) {
-                    return url.filename === gltfBuffer.uri;
-                });
-                if (u) {
-                    var bufferAsset = new pc.Asset(u.filename, 'binary', { url: u.url, filename: u.filename }, null );
-                    bufferAsset.on('load', function () {
-                        continuation(null, new Uint8Array(bufferAsset.resource));
-                    });
-                    self.app.assets.add(bufferAsset);
-                    self.app.assets.load(bufferAsset);
-                } else {
-                    continuation("failed to load uri=" + gltfBuffer.uri);
-                }
-            };
-
-            var containerAsset = new pc.Asset(gltf.filename, 'container', gltf, null, {
-                texture: {
-                    processAsync: processTexture
-                },
-                buffer: {
-                    processAsync: processBuffer
-                }
-            });
-            containerAsset.on('load', function () {
-                self._onLoaded(null, containerAsset);
-            });
-            self.app.assets.add(containerAsset);
-            self.app.assets.load(containerAsset);
+        if (gltfUrl) {
+            self._loadGltf(gltfUrl, externalUrls);
             result = true;
         } else {
-            // load scene files
+            // load glbs
             var imageUrls = urls.filter(function (url) {
                 switch (ext(url.filename)) {
                     case '.glb':
-                    case '.gltf':
-                        self.loadScene(url);
+                        self._loadGlb(url);
                         result = true;
                         return false;
                     default:
@@ -519,12 +545,13 @@ Object.assign(Viewer.prototype, {
                 }
             });
 
-            // load skybox textures
+            // load textures
             if (imageUrls.length > 0) {
-                self.loadSkybox(imageUrls);
+                self._loadSkybox(imageUrls);
             }
         }
 
+        // return true if a model/scene was loaded and false otherwise
         return result;
     },
 

@@ -1,3 +1,5 @@
+import { AnimTrack } from '../../../anim/anim.js';
+
 /**
  * @private
  * @class
@@ -59,8 +61,13 @@ Object.assign(AnimComponentLayer.prototype, {
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      */
     assignAnimation: function (nodeName, animTrack) {
+        if (animTrack.constructor !== AnimTrack) {
+            // #ifdef DEBUG
+            console.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
+            // #endif
+            return;
+        }
         this._controller.assignAnimation(nodeName, animTrack);
-
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
         }
@@ -75,6 +82,7 @@ Object.assign(AnimComponentLayer.prototype, {
      */
     removeNodeAnimations: function (nodeName) {
         this._controller.removeNodeAnimations(nodeName);
+        this._component.playing = false;
     }
 });
 

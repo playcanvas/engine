@@ -1,4 +1,3 @@
-
 vec3 unpack3NFloats(float src) {
     float r = fract(src);
     float g = fract(src * 256.0);
@@ -10,11 +9,11 @@ float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc) {
+vec4 tex1Dlod_lerp(highp sampler2D tex, vec2 tc) {
     return mix( texture2D(tex,tc), texture2D(tex,tc + graphSampleSize), fract(tc.x*graphNumSamples) );
 }
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
+vec4 tex1Dlod_lerp(highp sampler2D tex, vec2 tc, out vec3 w) {
     vec4 a = texture2D(tex,tc);
     vec4 b = texture2D(tex,tc + graphSampleSize);
     float c = fract(tc.x*graphNumSamples);
@@ -25,7 +24,6 @@ vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
 
     return mix(a, b, c);
 }
-
 
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
     float c = cos(pRotation);
