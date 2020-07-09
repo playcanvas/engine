@@ -49,7 +49,7 @@ function preprocessor(options) {
     };
 }
 
-function shaderChunks() {
+function shaderChunks(removeComments) {
     const filter = createFilter([
         '**/*.vert',
         '**/*.frag'
@@ -62,14 +62,22 @@ function shaderChunks() {
             // Remove carriage returns
             code = code.replace(/\r/g, '');
 
-            // Remove comments
-            code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-
-            // Comment removal can leave an empty line to condense 2 or more to 1
-            code = code.replace( /\n{2,}/g, '\n' );
-
             // 4 spaces to tabs
             code = code.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+
+            if (removeComments) {
+                // Remove comments
+                code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+
+                // Trim all whitespace from line endings
+                code = code.split('\n').map(line => line.trimEnd()).join('\n');
+
+                // Restore final new line
+                code += '\n';
+
+                // Comment removal can leave an empty line to condense 2 or more to 1
+                code = code.replace(/\n{2,}/g, '\n');
+            }
 
             return {
                 code: `export default ${JSON.stringify(code)};`,
@@ -94,7 +102,7 @@ export default [{
             DEBUG: false,
             RELEASE: true
         }),
-        shaderChunks(),
+        shaderChunks(true),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
@@ -119,7 +127,7 @@ export default [{
             DEBUG: true,
             RELEASE: false
         }),
-        shaderChunks(),
+        shaderChunks(false),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
@@ -144,7 +152,7 @@ export default [{
             DEBUG: false,
             RELEASE: false
         }),
-        shaderChunks(),
+        shaderChunks(false),
         replace({
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
