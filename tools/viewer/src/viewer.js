@@ -370,7 +370,7 @@ Object.assign(Viewer.prototype, {
         cubemap.on('load', function () {
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
             app.scene.toneMapping = pc.TONEMAP_ACES;
-            app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
+            app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
             app.scene.setSkybox(cubemap.resources);
             app.renderNextFrame = true;                     // ensure we render again when the cubemap arrives
 
