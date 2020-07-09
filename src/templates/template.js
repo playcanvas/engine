@@ -2,6 +2,8 @@ import { SceneParser } from '../resources/parser/scene.js';
 
 import { TemplateUtils } from './template-utils.js';
 
+import { CompressUtils } from '../compress/compress-utils.js';
+
 /**
  * @private
  * @class
@@ -55,6 +57,8 @@ Template.prototype.getExpandedData = function () {
 };
 
 Template.prototype._parseTemplate = function () {
+    this._data = CompressUtils.decompress(this._data);
+
     var parser = new SceneParser(this._app, true);
 
     this._templateRoot = parser.parse(this.getExpandedData());
