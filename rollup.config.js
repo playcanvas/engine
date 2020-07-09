@@ -75,7 +75,7 @@ function shaderChunks(removeComments) {
                 // Restore final new line
                 code += '\n';
 
-                // Comment removal can leave an empty line to condense 2 or more to 1
+                // Comment removal can leave an empty line so condense 2 or more to 1
                 code = code.replace(/\n{2,}/g, '\n');
             }
 
