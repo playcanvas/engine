@@ -1,4 +1,3 @@
-
 vec3 unpack3NFloats(float src) {
     float r = fract(src);
     float g = fract(src * 256.0);
@@ -25,7 +24,6 @@ vec4 tex1Dlod_lerp(highp sampler2D tex, vec2 tc, out vec3 w) {
 
     return mix(a, b, c);
 }
-
 
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
     float c = cos(pRotation);

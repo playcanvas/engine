@@ -1,7 +1,7 @@
 void getNormal() {
     dNormalW = normalize(dVertexNormalW);
+
     #ifdef CLEARCOAT
-        ccNormalW = dNormalW;
+    ccNormalW = dNormalW;
     #endif
 }
-

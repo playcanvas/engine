@@ -28,9 +28,7 @@ vec4 hash41(float p) {
     return fract(vec4((p4.x + p4.y)*p4.z, (p4.x + p4.z)*p4.y, (p4.y + p4.z)*p4.w, (p4.z + p4.w)*p4.x));
 }
 
-
-void main(void)
-{
+void main(void) {
     if (gl_FragCoord.x > numParticles) discard;
 
     readInput(vUv0.x);

@@ -41,4 +41,3 @@ void main(void) {
     gl_FragColor = textureCube(source, vec);
     if (params.w >= 2.0) gl_FragColor = encodeRGBM(gl_FragColor);
 }
-

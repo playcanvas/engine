@@ -1,4 +1,5 @@
 uniform sampler2D texture_sphereMap;
+uniform float material_reflectivity;
 
 vec2 getDpAtlasUv(vec2 uv, float mip) {
 
@@ -51,7 +52,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return tex1;
 }
 
-uniform float material_reflectivity;
 void addReflection() {   
     dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
