@@ -62,45 +62,26 @@
         //    float shadowDepth = textureSample2D( shadowMap, shadowPos.xy).r;
         //    return (shadowDepth<shadowPos.w)? 0.0 : 1.0;
         //}
-
-        uniform vec3 lightDir[32];
-        uniform vec3 lightPos[32];
-        uniform vec3 lightCol[32];
-        uniform vec3 lightCSR[32];
-
-        //uniform vec4 uLightIndex;
-        uniform int uLightIndex0;
-        uniform int uLightIndex1;
-        uniform int uLightIndex2;
-        uniform int uLightIndex3;
-        //varying vec4 vShadowPos;
-        varying vec4 vVertexLightCol_Flags;
-/*
-        void getDynamicLighting0(in vec3 viewDir, in vec3 position, in vec3 normal, in float roughness, in float F0, out vec3 diffuse, out vec3 specular)
+        
+        uniform sampler2D lightTexture;
+        void getLightData(in int i, out vec3 lightDir, out vec3 lightPos, out vec3 lightCol, out vec3 lightCSR)
         {
-            float roughness4=roughness*roughness*roughness*roughness;
+            float dx=1.0/4.0;
+            float y=(float(i)+0.5)/32.0;
 
-            float S = 1.0;//getDirShadow(position);
-
-            float diff,spec;
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -lightDir[0], diff, spec);
-            diffuse = lightCol[0]*diff*S*0.0;
-            specular = lightCol[0]*spec*S*0.0;
-
-            float flags=vVertexLightCol_Flags.a;
-            diffuse+=vVertexLightCol_Flags.rgb;
-
-            vec3 L = position-lightPos[uLightIndex0]; 
-            float sqlen = dot(L,L); 
-            L = normalize(L);
-            S = 1.0-min(sqlen*lightCSR[uLightIndex0].z,1.0); 
-            S *= clamp((dot(L, lightDir[uLightIndex0])-lightCSR[uLightIndex0].x)*lightCSR[uLightIndex0].y,0.0,1.0);                
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-            diffuse += lightCol[uLightIndex0]*diff*S;
-            specular += lightCol[uLightIndex0]*spec*S;
+            lightDir = texture2D(lightTexture, vec2(dx * 0.5, y)).rgb;
+            lightPos = texture2D(lightTexture, vec2(dx * 1.5, y)).rgb;
+            lightCol = texture2D(lightTexture, vec2(dx * 2.5, y)).rgb;
+            lightCSR = texture2D(lightTexture, vec2(dx * 3.5, y)).rgb;
         }
-*/
-        varying vec4 vLightIndex;
+
+        //uniform vec4 uLightIndexPS;
+#if MAX_PS_LIGHTS !=0         
+        uniform float uLightIndicesPS[MAX_PS_LIGHTS];
+#endif //MAX_PS_LIGHTS !=0  
+        varying vec3 vVertexLightCol;
+
+        //varying vec4 vLightIndex;
 
         void getDynamicLighting(in vec3 viewDir, in vec3 position, in vec3 normal, in float roughness, in float F0, out vec3 diffuse, out vec3 specular)
         {
@@ -108,81 +89,37 @@
 
             float S = 1.0;//getDirShadow(position);
 
+            vec3 lightDir;
+            vec3 lightPos;
+            vec3 lightCol;
+            vec3 lightCSR;
+
+            getLightData(0, lightDir, lightPos, lightCol, lightCSR);            
+
             float diff,spec;
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -lightDir[0], diff, spec);
-            diffuse = lightCol[0]*diff*S*0.0;
-            specular = lightCol[0]*spec*S*0.0;
+            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -lightDir, diff, spec);
+            diffuse = lightCol*diff*S*0.0;
+            specular = lightCol*spec*S*0.0;
 
-            float flags=vVertexLightCol_Flags.a;
-            diffuse+=vVertexLightCol_Flags.rgb;
-
- /*           vec3 L = position-lightPos[3]; float sqlen = dot(L,L); L = normalize(L);
-            S = 1.0-min(sqlen*lightCSR[3].z,1.0); 
-            S *= clamp((dot(L, lightDir[3])-lightCSR[3].x)*lightCSR[3].y,0.0,1.0);                
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-            diffuse += lightCol[3]*diff*S;//*0.01;
-            specular += lightCol[3]*spec*S;
-
-            L = position-lightPos[4]; sqlen = dot(L,L); L = normalize(L);
-            S = 1.0-min(sqlen*lightCSR[4].z,1.0); 
-            S *= clamp((dot(L, lightDir[4])-lightCSR[4].x)*lightCSR[4].y,0.0,1.0);                
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-            diffuse += lightCol[4]*diff*S;//*0.01;
-            specular += lightCol[4]*spec*S;
-
-            L = position-lightPos[5]; sqlen = dot(L,L); L = normalize(L);
-            S = 1.0-min(sqlen*lightCSR[5].z,1.0); 
-            S *= clamp((dot(L, lightDir[5])-lightCSR[5].x)*lightCSR[5].y,0.0,1.0);                
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-            diffuse += lightCol[5]*diff*S;//*0.01;
-            specular += lightCol[5]*spec*S;
-
-            L = position-lightPos[6]; sqlen = dot(L,L); L = normalize(L);
-            S = 1.0-min(sqlen*lightCSR[6].z,1.0); 
-            S *= clamp((dot(L, lightDir[6])-lightCSR[6].x)*lightCSR[6].y,0.0,1.0);                
-            getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-            diffuse += lightCol[6]*diff*S;//*0.01;
-            specular += lightCol[6]*spec*S;*/
-
-/*            float oopow2=0.5;
-            for (int i = 1; i < 32; i++)
+            diffuse+=vVertexLightCol;
+#if MAX_PS_LIGHTS !=0 
+            for (int n = 0; n < MAX_PS_LIGHTS; n++)
             {
-                oopow2*=0.501;
-                if (fract(flags*oopow2)>=0.5)
-                //if (fract((flags+0.01)/pow(2.0,float(i+1)))>=0.5)
-                {
-                    //for (int x = 1; x < 500; x++)
-                    {
-                    vec3 L = position-lightPos[i]; float sqlen = dot(L,L); L = normalize(L);
-                    S = 1.0-min(sqlen*lightCSR[i].z,1.0); 
-                    S *= clamp((dot(L, lightDir[i])-lightCSR[i].x)*lightCSR[i].y,0.0,1.0);                
-                    getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-                    diffuse += lightCol[i]*diff*S;//*0.01;
-                    specular += lightCol[i]*spec*S;
-                    }
-                }
-            }*/
-
-            int index[4];
-            index[0]=int(vLightIndex.x+0.01);
-            index[1]=int(vLightIndex.y+0.01);
-            index[2]=int(vLightIndex.z+0.01);
-            index[3]=int(vLightIndex.w+0.01);
-
-            for (int n = 0; n < 4; n++)
-            {
-                int i = index[n];
+                int i = int(uLightIndicesPS[n]);
 
                 if (i>0)
                 {
-                    vec3 L = position-lightPos[i]; float sqlen = dot(L,L); L = normalize(L);
-                    S = 1.0-min(sqlen*lightCSR[i].z,1.0); 
-                    S *= clamp((dot(L, lightDir[i])-lightCSR[i].x)*lightCSR[i].y,0.0,1.0);                
+                    getLightData(i, lightDir, lightPos, lightCol, lightCSR);  
+
+                    vec3 L = position-lightPos; float sqlen = dot(L,L); L = normalize(L);
+                    S = 1.0-min(sqlen*lightCSR.z,1.0); 
+                    S *= clamp((dot(L, lightDir)-lightCSR.x)*lightCSR.y,0.0,1.0);                
                     getLightLambertGGX(normal, roughness, roughness4, F0, -viewDir, -L, diff, spec);
-                    diffuse += lightCol[i]*diff*S;//*0.01;
-                    specular += lightCol[i]*spec*S;
+                    diffuse += lightCol*diff*S;//*0.01;
+                    specular += lightCol*spec*S;
                 }
-            }            
+            }   
+#endif //MAX_PS_LIGHTS !=0                      
         }
 
         vec3 getAmbientLighting(in vec3 position, in vec3 normal)
@@ -215,104 +152,64 @@
 
     <script id="_declare_lighting_VS" type="x-shader/x-vertex">
 
-        uniform vec3 lightDir[32];
-        uniform vec3 lightPos[32];
-        uniform vec3 lightCol[32];
-        uniform vec3 lightCSR[32];
-        varying vec4 vVertexLightCol_Flags;
-        
-        varying vec4 vLightIndex;
+        uniform sampler2D lightTexture;
+        void getLightData(in int i, out vec3 lightDir, out vec3 lightPos, out vec3 lightCol, out vec3 lightCSR)
+        {
+            float dx=1.0/4.0;
+            float y=(float(i)+0.5)/32.0;
+
+            lightDir = texture2D(lightTexture, vec2(dx * 0.5, y)).rgb;
+            lightPos = texture2D(lightTexture, vec2(dx * 1.5, y)).rgb;
+            lightCol = texture2D(lightTexture, vec2(dx * 2.5, y)).rgb;
+            lightCSR = texture2D(lightTexture, vec2(dx * 3.5, y)).rgb;
+        }
+
+        uniform vec3 uSH[9];
+#if MAX_VS_LIGHTS !=0        
+        uniform float uLightIndicesVS[MAX_VS_LIGHTS];
+#endif //MAX_VS_LIGHTS !=0
+        varying vec3 vVertexLightCol;
+
+        vec3 calcSH(in vec3 normal)
+        {
+            vec3 col=uSH[0];
+            col += uSH[1] * normal.y;
+            col += uSH[2] * normal.z;
+            col += uSH[3] * normal.x;
+            col += uSH[4] * (normal.x * normal.y);
+            col += uSH[5] * (normal.y * normal.z);
+            col += uSH[6] * (3.0 * normal.z * normal.z - 1.0);
+            col += uSH[7] * (normal.x * normal.z);
+            col += uSH[8] * (normal.x * normal.x - normal.y * normal.y);            
+
+            return col;
+        }
 
         void calcVertexLightingVS(in vec3 position, in vec3 normal)
         { 
-           //create varyings for light indices 
-           //and main shadow uvs + shadow depths
-           //vLightIndex = vec4(1,2,3,4);
+            vec3 lightDir;
+            vec3 lightPos;
+            vec3 lightCol;
+            vec3 lightCSR;
 
-           int index0=0;
-           int index1=0;
-           int index2=0;
-           int index3=0;
-           float sqlen0=10000.0;
-           float sqlen1=10000.0;
-           float sqlen2=10000.0;
-           float sqlen3=10000.0;
-           
-           for (int n = 1; n < 32; n++)
-           {
-                vec3 L = position-lightPos[n]; 
-                float sqlen = dot(L,L);
-                int index=n;
-                float sqlent = sqlen;
-                int indext = index;
-                if (sqlen<sqlen0)
-                {
-                    sqlent=sqlen0;
-                    indext=index0;
-                    sqlen0=sqlen;
-                    index0=index;
-                    sqlen=sqlent;
-                    index=indext;
-                }
-                if (sqlen<sqlen1)
-                {
-                    sqlent=sqlen1;
-                    indext=index1;
-                    sqlen1=sqlen;
-                    index1=index;
-                    sqlen=sqlent;
-                    index=indext;
-                }         
-                if (sqlen<sqlen2)
-                {
-                    sqlent=sqlen2;
-                    indext=index2;
-                    sqlen2=sqlen;
-                    index2=index;
-                    sqlen=sqlent;
-                    index=indext;
-                }
-                if (sqlen<sqlen3)
-                {
-                    sqlent=sqlen3;
-                    indext=index3;
-                    sqlen3=sqlen;
-                    index3=index;
-                    sqlen=sqlent;
-                    index=indext;
-                }                     
-           }
+            vVertexLightCol=calcSH(normal);
 
-           index0=0;
-           index1=0;
-           index2=0;
-           index3=0;
+#if MAX_VS_LIGHTS !=0
+            for (int n = 0; n < MAX_VS_LIGHTS; n++)
+            {
+                int i = int(uLightIndicesVS[n]);
+                if (i>0)
+                { 
+                    getLightData(i, lightDir, lightPos, lightCol, lightCSR); 
 
-           vLightIndex=vec4(float(index0),float(index1), float(index2), float(index3));
-
-           //float flags=pow(2.0,float(3))+pow(2.0,float(4))+pow(2.0,float(5))+pow(2.0,float(6));//+pow(2.0,float(7));//pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
-           float flags=pow(2.0,float(index0))+pow(2.0,float(index1))+pow(2.0,float(index2))+pow(2.0,float(index3));
-           //float flags=0.0;//pow(2.0,float(12))+pow(2.0,float(13))+pow(2.0,float(14))+pow(2.0,float(15));
-
-           vVertexLightCol_Flags.rgb=vec3(0);
-
-           for (int i = 1; i < 32; i++)
-           {
-                if (fract((flags+0.01)/pow(2.0,float(i+1)))>=0.5)
-                {
-                    continue;
-                }
-                else
-                {
-                    vec3 L = position-lightPos[i]; float sqlen = dot(L,L); L = normalize(L);
-                    float S = 1.0-min(sqlen*lightCSR[i].z,1.0); 
-                    S *= clamp((dot(L, lightDir[i])-lightCSR[i].x)*lightCSR[i].y,0.0,1.0);                
+                    vec3 L = position-lightPos; float sqlen = dot(L,L); L = normalize(L);
+                    float S = 1.0-min(sqlen*lightCSR.z,1.0); 
+                    S *= clamp((dot(L, lightDir)-lightCSR.x)*lightCSR.y,0.0,1.0);                
                     float dotNL = max(dot(normal,-L),0.0);
-                    vVertexLightCol_Flags.rgb += lightCol[i]*dotNL*S;
-                }
-           }
-
-           vVertexLightCol_Flags.a=flags;
+                    vVertexLightCol += lightCol*dotNL*S;
+                }          
+            }
+#endif //MAX_VS_LIGHTS !=0
         }
     </script>
     <script id="applyLightingPS" type="x-shader/x-fragment">
@@ -413,6 +310,11 @@
 
             //create NodeMaterial
             var material = new pc.NodeMaterial(rootNode);
+            
+            //set max pixel, vertex and SH lights for this material - TODO eventually quality settings will override/clamp these settings
+            material.maxPixelLights = 22; //defaults to 4
+            material.maxVertexLights = 0; //defaults to 8
+            material.maxSHLights = 4; //-1 means no limit (default)
 
             //assign material to all model meshInstances
             model.meshInstances.forEach(function (meshInstance) {
@@ -424,36 +326,217 @@
             material.updateUniforms();
 
             //setup a bunch of lights for testing - TODO hook up to engine lights
-            var lightDirId = app.graphicsDevice.scope.resolve("lightDir[0]");
-            var lightPosId = app.graphicsDevice.scope.resolve("lightPos[0]");
-            var lightColId = app.graphicsDevice.scope.resolve("lightCol[0]");
-            var lightCSRId = app.graphicsDevice.scope.resolve("lightCSR[0]");
-
             var oosqr=1.0/(12.0*12.0);
 
-            lightDirId.setValue(new Float32Array([0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ,
-                                                  0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ]));
+            var lightDir = new Float32Array([0,-1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,          0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ,
+                                            0,1,0,   0,0,-1,           0,0,-1,       0,-1,0,     0,0,-1,          0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1,         0,0,-1      ]);
 
-            lightPosId.setValue(new Float32Array([0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,          -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ,
-                                                  0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,          -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ]));
+            var lightPos = new Float32Array([0,0,0,    -2,4,8,           2,4,8,        0,12,0,     0,4,4,           -1.5,4,4,       1.5,4,4,        -1.5,2,5,       1.5,2,5,        -1.5,6,4,       1.5,6,4,        -3,4,4,         3,4,4,          -3,2,5,         3,2,5,          0,8,4       ,
+                                            0,0,0,    -2,2,8,           2,2,8,        0,10,0,     0,2,4,           -1.5,2,4,       1.5,2,4,        -1.5,0,5,       1.5,0,5,        -1.5,4,4,       1.5,4,4,        -3,2,4,         3,2,4,          -3,0,5,         3,0,5,          0,6,4       ]);
 
-            lightColId.setValue(new Float32Array([1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ,
-                                                  1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ]));
+            var lightCol = new Float32Array([1,1,1,    1,0,0,            0,0,1,        0,1,0,      1,1,1,           1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,0,          1,1,1,          1,1,1,          1,1,1,          1,1,1,          1,1,1       ,
+                                            1,1,1,    1,1,0,            0,1,1,        1,0,1,      1,1,1,           0,0,1,          0,0,1,          0,0,1,          0,0,1,          0,0,1,          0,0,1,          1,0,1,          1,0,1,          1,0,1,          1,0,1,          1,0,1       ]);
 
-            lightCSRId.setValue(new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ,
-                                                  0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr,    0.95,40,oosqr ]));
+            var lightCSR = new Float32Array([0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,   0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr ,
+                                            0,0,0,    0.75,10.0,oosqr,  -2,1,oosqr,   -2,1,oosqr, 0.95,40,oosqr,   0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr,  0.95,40,oosqr ]);
 
-            //material.setParameter('uLightIndex', new Float32Array([3,4,5,6]) );
+            var lightTexture;
+            if (app.graphicsDevice.supportsBoneTextures) //TODO make a new flag once RGBA float/half encoding implemented
+            {
+                lightTexture = new pc.Texture(app.graphicsDevice, {
+                    width: 4,
+                    height: 32,
+                    format: pc.PIXELFORMAT_RGBA32F,
+                    mipmaps: false,
+                    minFilter: pc.FILTER_NEAREST,
+                    magFilter: pc.FILTER_NEAREST
+                });
 
-            material.setParameter('uLightIndex0', 3 );
-            material.setParameter('uLightIndex1', 4 );
-            material.setParameter('uLightIndex2', 5 );
-            material.setParameter('uLightIndex3', 6 );
+                var lightPalette = lightTexture.lock();
+
+                var one = new Float32Array([1.0]);
+
+                for (var i=0;i<lightDir.length/3;i++)
+                {
+                    lightPalette[i*16+0]=lightDir[i*3+0];
+                    lightPalette[i*16+1]=lightDir[i*3+1];
+                    lightPalette[i*16+2]=lightDir[i*3+2];
+                    lightPalette[i*16+3]=one[0];
+
+                    lightPalette[i*16+4]=lightPos[i*3+0];
+                    lightPalette[i*16+5]=lightPos[i*3+1];
+                    lightPalette[i*16+6]=lightPos[i*3+2];
+                    lightPalette[i*16+7]=one[0];
+
+                    lightPalette[i*16+8]=lightCol[i*3+0];
+                    lightPalette[i*16+9]=lightCol[i*3+1];
+                    lightPalette[i*16+10]=lightCol[i*3+2];
+                    lightPalette[i*16+11]=one[0];
+
+                    lightPalette[i*16+12]=lightCSR[i*3+0];
+                    lightPalette[i*16+13]=lightCSR[i*3+1];
+                    lightPalette[i*16+14]=lightCSR[i*3+2];
+                    lightPalette[i*16+15]=one[0];
+                }
+
+                lightTexture.unlock();
+
+                var lightTextureId = app.graphicsDevice.scope.resolve('lightTexture');
+
+                lightTextureId.setValue(lightTexture);
+            }
+            else
+            {
+                var lightDirId = app.graphicsDevice.scope.resolve("lightDir[0]");
+                var lightPosId = app.graphicsDevice.scope.resolve("lightPos[0]");
+                var lightColId = app.graphicsDevice.scope.resolve("lightCol[0]");
+                var lightCSRId = app.graphicsDevice.scope.resolve("lightCSR[0]");
+
+                lightDirId.setValue(lightDir);
+                lightPosId.setValue(lightPos);
+                lightColId.setValue(lightCol);
+                lightCSRId.setValue(lightCSR);
+            }
+
+            //figure out which lights will be per pixel or per vertex and generate spherical harmonic
+            var SHId = app.graphicsDevice.scope.resolve("uSH[0]");
+
+            var lightPosT = new pc.Vec3(0);
+            var lightDirT = new pc.Vec3(0);
+            var lightColT = new pc.Vec3(0);
+            var lightCSRT = new pc.Vec3(0);
+            var L = new pc.Vec3(0);
+
+            var SH = new Float32Array([0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0]);
+
+            var lightIndicesPS = new Float32Array(material.maxPixelLights);
+            var lightIndicesVS = new Float32Array(material.maxVertexLights);
+            
+            var sqlenList = [];
+            var indexList = [];
+
+            var updateLightIndicesAndSH = function (probePos)
+            {
+                //zero out SH - TODO eventually keep history and update temporally?
+                for (var s = 0; s < 9; s++)
+                {
+                    SH[s*3+0] = 0;
+                    SH[s*3+1] = 0;
+                    SH[s*3+2] = 0;                        
+                }
+
+                var numSortedLights = (material.maxSHLights>0) ? material.maxPixelLights+material.maxVertexLights+material.maxSHLights : material.maxPixelLights+material.maxVertexLights;
+
+                for (var j = 0; j < numSortedLights; j++)
+                {
+                    sqlenList[j]=10000.0;
+                    indexList[j]=0;
+                }
+
+                //sort lights
+                for (var i = 1; i < lightDir.length/3; i++)
+                {
+                    var index=i;
+                    lightPosT.set(lightPos[index*3+0], lightPos[index*3+1], lightPos[index*3+2]);
+                    L.sub2(probePos,lightPosT); 
+                    var sqlen = L.dot(L);
+
+                    for (var j = 0; j < numSortedLights; j++)
+                    {
+                        if (sqlen<sqlenList[j])
+                        {
+                            var sqlent=sqlenList[j];
+                            var indext=indexList[j];
+                            sqlenList[j]=sqlen;
+                            indexList[j]=index;
+                            sqlen=sqlent;
+                            index=indext;
+                        }
+                    }
+                }
+
+                var calcSH = function(index)
+                {
+                    L.normalize();
+                    var sh=[];
+
+                    //reference: https://gist.github.com/dwilliamson/cc59b6b23f48c3d8ebe7
+                    var sh=[];
+                    sh[0] = 0.886226925453;
+                    sh[1] = -1.02332670795 * L.y;
+                    sh[2] = 1.02332670795 * L.z;
+                    sh[3] = -1.02332670795 * L.x;
+                    
+                    sh[4] = 0.85808553081 * L.x * L.y;
+                    sh[5] = -0.85808553081 * L.y * L.z;
+                    sh[6] = 0.2477079561 * (3 * L.z * L.z - 1);
+                    sh[7] = -0.85808553081 * L.x * L.z;
+                    sh[8] = 0.429042765405 * (L.x * L.x - L.y * L.y);
+
+                    lightDirT.set(lightDir[index*3+0], lightDir[index*3+1], lightDir[index*3+2]);
+                    lightCSRT.set(lightCSR[index*3+0], lightCSR[index*3+1], lightCSR[index*3+2]);
+                    
+                    S = 1.0-Math.min(sqlen*lightCSRT.z,1.0); 
+                    S *= pc.math.clamp((L.dot(lightDirT)-lightCSRT.x)*lightCSRT.y,0.0,1.0); 
+
+                    for (var s = 0; s < 9; s++)
+                    {
+                        lightColT.set(lightCol[index*3+0], lightCol[index*3+1], lightCol[index*3+2]);
+                        lightColT.scale(sh[s]*S);
+                        SH[s*3+0] += lightColT.x;
+                        SH[s*3+1] += lightColT.y;
+                        SH[s*3+2] += lightColT.z;
+                    }
+                };
+
+                //calculate SH
+                if (material.maxSHLights===-1) 
+                {
+                    for (var i = 1; i < lightDir.length/3; i++)
+                    {
+                        var isInSortedList = false;
+                        for (var j = 0; j < numSortedLights; j++)
+                        {
+                            if (i==indexList[j]) isInSortedList=true;
+                        }
+
+                        if (isInSortedList === false) calcSH(i);
+                    }
+                }
+                else if (material.maxSHLights>0) 
+                {
+                    for (var i = 0; i < material.maxSHLights; i++)
+                    {
+                        var k=i+material.maxPixelLights+material.maxVertexLights;
+                        calcSH(k);
+                    }
+                }
+
+                SHId.setValue(SH);
+
+                for (var i = 0; i < material.maxPixelLights; i++)
+                {
+                    var k=i;
+                    lightIndicesPS[i]=indexList[k];
+                }
+                for (var i = 0; i < material.maxVertexLights; i++)
+                {
+                    var k=i+material.maxPixelLights;
+                    lightIndicesVS[i]=indexList[k];
+                }                           
+
+                if (material.maxPixelLights>0) material.setParameter('uLightIndicesPS[0]', lightIndicesPS );
+                if (material.maxVertexLights>0) material.setParameter('uLightIndicesVS[0]', lightIndicesVS );
+            };
+
+            var probePos0 = new pc.Vec3(0,7,0);
 
             //update time parameter every frame
             app.on("update", function (dt) {
                 time += dt;
                 material.setParameter('uTime', time);
+
+                updateLightIndicesAndSH(probePos0);
             });
 
             app.start();

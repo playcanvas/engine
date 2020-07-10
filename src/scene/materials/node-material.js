@@ -129,7 +129,9 @@ Object.assign(NodeMaterial.prototype, {
                 var options = {
                     skin: !!this.meshInstances[0].skinInstance,
                     shaderGraph: this.shaderGraph,
-                    pass: passes[i]
+                    pass: passes[i],
+                    maxPixelLights: (this.maxPixelLights) ? this.maxPixelLights : 4,
+                    maxVertexLights: (this.maxVertexLights) ? this.maxVertexLights : 8
                 };
 
                 var shaderDefinition = programlib.node.createShaderDefinition(device, options);

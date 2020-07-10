@@ -95,6 +95,7 @@ var node = {
         code += 'vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
 
         if (options.shaderGraph) {
+            code += "#define MAX_VS_LIGHTS "+Math.floor(options.maxVertexLights)+"\n";
             code += "#define SG_VS\n";
             code += options.shaderGraph.shaderGraphFuncString;
         }
@@ -210,11 +211,11 @@ var node = {
         //     code += chunks.packDepthPS;
         // }
 
-        for (n = 0; n < options.shaderGraph.params.length; n++) {
-            code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
-        }
-
         if (options.shaderGraph) {
+            for (n = 0; n < options.shaderGraph.params.length; n++) {
+                code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
+            }
+            code += "#define MAX_PS_LIGHTS "+Math.floor(options.maxPixelLights)+"\n";
             code += "#define SG_PS\n";
             code += options.shaderGraph.shaderGraphFuncString;
         }
