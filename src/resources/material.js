@@ -300,7 +300,7 @@ Object.assign(MaterialHandler.prototype, {
                 }
 
                 if (assetReference.asset) {
-                    if (assetReference.asset.resource) {
+                    if (assetReference.asset.loaded) {
                         // asset loaded
                         this._assignCubemap(name, materialAsset, assetReference.asset.resources);
                     }
