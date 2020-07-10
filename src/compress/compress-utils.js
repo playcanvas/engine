@@ -9,10 +9,10 @@ var CompressUtils = {
         if (srcToDst) {
             delete data[CompressUtils.KEY_MAP_FIELD];
 
-            return new Decompress(data, srcToDst).run();
-        } else {
-            return data;
+            data = new Decompress(data, srcToDst).run();
         }
+
+        return data;
     }
 };
 
