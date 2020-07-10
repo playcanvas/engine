@@ -2160,6 +2160,10 @@ Object.assign(GraphicsDevice.prototype, {
             vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
+            // don't capture index buffer in VAO
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            this.boundElementBuffer = null;
+
             var e, elements;
             for (i = 0; i < vertexBuffers.length; i++) {
 
