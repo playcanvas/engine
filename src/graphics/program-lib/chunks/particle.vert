@@ -36,8 +36,13 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 }
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY) {
-   vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
-   return pos;
+    #ifdef SCREEN_SPACE
+        vec3 pos = vec3(-1, 0, 0) * quadXY.x + vec3(0, -1, 0) * quadXY.y;
+    #else
+        vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+    #endif
+
+    return pos;
 }
 
 vec3 customFace(vec3 InstanceCoords, vec2 quadXY) {
