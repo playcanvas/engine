@@ -8,4 +8,3 @@ vec3 toneMap(vec3 color) {
     vec3 h = max( vec3(0.0), color - vec3(0.004) );
     return (h*((Scl*A)*h+Scl*vec3(C*B,C*B,C*B))+Scl*vec3(D*E,D*E,D*E)) / (h*(A*h+vec3(B,B,B))+vec3(D*F,D*F,D*F)) - Scl*vec3(E/F,E/F,E/F);
 }
-

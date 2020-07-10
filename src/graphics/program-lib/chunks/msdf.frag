@@ -16,7 +16,6 @@ float map (float min, float max, float v) {
     return (v - min) / (max - min);
 }
 
-
 uniform float font_sdfIntensity; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
 uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
 uniform float font_textureWidth; // the width of the texture atlas
@@ -36,17 +35,17 @@ vec4 applyMsdf(vec4 color) {
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
     #ifdef USE_FWIDTH
-        // smoothing depends on size of texture on screen
-        vec2 w = fwidth(vUv0);
-        float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
+    // smoothing depends on size of texture on screen
+    vec2 w = fwidth(vUv0);
+    float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
     #else
-        float font_size = 16.0; // TODO fix this
-        // smoothing gets smaller as the font size gets bigger
-        // don't have fwidth we can approximate from font size, this doesn't account for scaling
-        // so a big font scaled down will be wrong...
-
-        float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5);
+    float font_size = 16.0; // TODO fix this
+    // smoothing gets smaller as the font size gets bigger
+    // don't have fwidth we can approximate from font size, this doesn't account for scaling
+    // so a big font scaled down will be wrong...
+    float smoothing = clamp(font_pxrange / font_size, 0.0, 0.5);
     #endif
+
     float mapMin = 0.05;
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
 

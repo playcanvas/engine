@@ -3,16 +3,14 @@ attribute vec4 vertex_boneIndices;
 
 uniform vec4 matrix_pose[BONE_LIMIT * 3];
 
-void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3)
-{
+void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3) {
     // read 4x3 matrix
     v1 = matrix_pose[int(3.0 * i)];
     v2 = matrix_pose[int(3.0 * i + 1.0)];
     v3 = matrix_pose[int(3.0 * i + 2.0)];
 }
 
-mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights)
-{
+mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights) {
     // get 4 bone matrices
     vec4 a1, a2, a3;
     getBoneMatrix(indices.x, a1, a2, a3);
@@ -42,4 +40,3 @@ mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights)
         v1.w, v2.w, v3.w, one
     );
 }
-

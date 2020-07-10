@@ -8,4 +8,3 @@ float getFalloffInvSquared(float lightRadius) {
 
     return falloff;
 }
-

@@ -1751,14 +1751,12 @@ Object.assign(ForwardRenderer.prototype, {
                         drawCall._lightHash = lightHash;
                     }
 
-                    // #ifdef DEBUG
-                    if (!device.setShader(drawCall._shader[pass])) {
+                    if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
+                        // #ifdef DEBUG
                         console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                        drawCall.material = scene.defaultMaterial;
+                        // #endif
+                        drawCall._shader[pass].failed = true;
                     }
-                    // #else
-                    device.setShader(drawCall._shader[pass]);
-                    // #endif
 
                     // Uniforms I: material
                     parameters = material.parameters;

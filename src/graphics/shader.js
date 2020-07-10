@@ -51,6 +51,7 @@ function Shader(graphicsDevice, definition) {
     this.samplers = [];
 
     this.ready = false;
+    this.failed = false;
 
     this.device.createShader(this);
 }

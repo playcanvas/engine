@@ -1,8 +1,8 @@
 attribute float vertex_boneIndices;
+
 uniform vec4 matrix_pose[BONE_LIMIT * 3];
 
 mat4 getBoneMatrix(const in float i) {
-
     // read 4x3 matrix
     vec4 v1 = matrix_pose[int(3.0 * i)];
     vec4 v2 = matrix_pose[int(3.0 * i + 1.0)];
@@ -16,4 +16,3 @@ mat4 getBoneMatrix(const in float i) {
         v1.w, v2.w, v3.w, 1
     );
 }
-
