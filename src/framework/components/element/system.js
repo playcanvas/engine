@@ -1,4 +1,3 @@
-import { type } from '../../../core/core.js';
 import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
@@ -173,7 +172,7 @@ Object.assign(ElementComponentSystem.prototype, {
 
         component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
-        if (data.layers && type(data.layers) === 'array') {
+        if (data.layers && Array.isArray(data.layers)) {
             component.layers = data.layers.slice(0);
         }
 
