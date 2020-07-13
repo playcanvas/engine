@@ -1,6 +1,7 @@
 import { Entity } from '../../framework/entity.js';
 
 import { TemplateUtils } from '../../templates/template-utils.js';
+import { CompressUtils } from '../../compress/compress-utils';
 
 function SceneParser(app, isTemplate) {
     this._app = app;
@@ -13,6 +14,8 @@ Object.assign(SceneParser.prototype, {
         var entities = {};
         var id, i;
         var parent = null;
+
+        data = CompressUtils.decompress(data);
 
         if (data.collapsedInstances) {
             this._addCollapsedToEntities(this._app, data);
