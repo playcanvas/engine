@@ -30,9 +30,10 @@ import {
     semanticToLocation
 } from './graphics.js';
 
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { programlib } from './program-lib/program-lib.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { ProgramLibrary } from './program-library.js';
 import { ScopeSpace } from './scope-space.js';
@@ -132,9 +133,8 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    var chunks = shaderChunks;
-    var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
-    var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
+    var test1 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTestPS, "ptest1");
+    var test2 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTest2PS, "ptest2");
 
     var textureOptions = {
         format: PIXELFORMAT_RGBA32F,
@@ -1424,8 +1424,10 @@ Object.assign(GraphicsDevice.prototype, {
      */
     getCopyShader: function () {
         if (!this._copyShader) {
-            var chunks = shaderChunks;
-            this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            this._copyShader = createShaderFromCode(this,
+                                                    shaderChunks.fullscreenQuadVS,
+                                                    shaderChunks.outputTex2DPS,
+                                                    "outputTex2D");
         }
         return this._copyShader;
     },

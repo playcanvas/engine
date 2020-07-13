@@ -52,7 +52,7 @@ export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.j
 export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
-export { shaderChunks } from './graphics/chunks.js';
+export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
