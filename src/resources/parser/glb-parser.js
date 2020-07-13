@@ -9,7 +9,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
-    typedArrayToType,
+    typedArrayTypes, typedArrayToType,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BUFFER_STATIC,
     CULLFACE_NONE, CULLFACE_BACK,
@@ -92,8 +92,8 @@ var getComponentSizeInBytes = function (componentType) {
     }
 };
 
-var getAccessorDataType = function (accessor) {
-    switch (accessor.componentType) {
+var getComponentDataType = function (componentType) {
+    switch (componentType) {
         case 5120: return Int8Array;
         case 5121: return Uint8Array;
         case 5122: return Int16Array;
@@ -123,7 +123,7 @@ var getAccessorData = function (accessor, bufferViews, buffers) {
     var byteOffset = typedArray.byteOffset + accessorByteOffset + bufferViewByteOffset;
     var length = count * getNumComponents(accessor.type);
 
-    var dataType = getAccessorDataType(accessor);
+    var dataType = getComponentDataType(accessor.componentType);
     return dataType ? new dataType(typedArray.buffer, byteOffset, length) : null;
 };
 
@@ -171,9 +171,18 @@ var generateIndices = function (numVertices) {
     return dummyIndices;
 };
 
-var generateNormals = function (sourceDesc, positions, indices) {
-    var numVertices = positions.length / 3;
+var generateNormals = function (sourceDesc, indices) {
+    // get positions
+    var p = sourceDesc[SEMANTIC_POSITION];
+    if (!p || p.components !== 3 || p.size !== p.stride) {
+        // NOTE: normal generation only works on tightly packed positions
+        return;
+    }
 
+    var positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
+    var numVertices = p.count;
+
+    // generate indices if necessary
     if (!indices) {
         indices = generateIndices(numVertices);
     }
@@ -242,7 +251,6 @@ var flipTexCoordVs = function (vertexBuffer) {
 };
 
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
-
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
     var numVertices = positionDesc.count;
 
@@ -378,9 +386,7 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        // NOTE: this assumes the position data is tightly packed (not interleaved)
-        var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
-        generateNormals(sourceDesc, positions, indices);
+        generateNormals(sourceDesc, indices);
     }
 
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
@@ -464,9 +470,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
 
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        // NOTE: this assumes the position data is tightly packed (not interleaved)
-        var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
-        generateNormals(sourceDesc, positions, indices);
+        generateNormals(sourceDesc, indices);
     }
 
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
@@ -685,7 +689,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
                 if (target.hasOwnProperty('POSITION')) {
 
                     accessor = accessors[target.POSITION];
-                    dataType = getAccessorDataType(accessor);
+                    dataType = getComponentDataType(accessor.componentType);
 
                     options.deltaPositions = getAccessorData(accessor, bufferViews, buffers);
                     options.deltaPositionsType = typedArrayToType[dataType.name];
@@ -705,7 +709,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
                 if (target.hasOwnProperty('NORMAL')) {
 
                     accessor = accessors[target.NORMAL];
-                    dataType = getAccessorDataType(accessor);
+                    dataType = getComponentDataType(accessor.componentType);
 
                     options.deltaNormals = getAccessorData(accessor, bufferViews, buffers);
                     options.deltaNormalsType = typedArrayToType[dataType.name];
