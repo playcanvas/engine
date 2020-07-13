@@ -7,7 +7,7 @@ import { Shader } from '../shader.js';
 
 import { shaderChunks } from './chunks/chunks.js';
 
-import { dummyFragmentCode, precisionCode, versionCode } from './shader-code.js';
+import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
 var attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,

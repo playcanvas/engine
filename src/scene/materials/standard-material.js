@@ -6,7 +6,7 @@ import { Vec4 } from '../../math/vec4.js';
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
 import { programlib } from '../../graphics/program-lib/program-lib.js';
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,

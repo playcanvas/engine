@@ -1,9 +1,9 @@
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
-} from '../../scene/constants.js';
+} from '../../../scene/constants.js';
 
-import { shaderChunks } from './chunks/chunks.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
 function gammaCode(value, chunks) {
     if (!chunks) chunks = shaderChunks;

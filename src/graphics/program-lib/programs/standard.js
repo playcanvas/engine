@@ -1,12 +1,12 @@
-import { hashCode } from '../../core/hash.js';
+import { hashCode } from '../../../core/hash.js';
 
 import {
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_ATTR5, SEMANTIC_ATTR6, SEMANTIC_ATTR7,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL
-} from '../graphics.js';
-import { shaderChunks } from './chunks/chunks.js';
+} from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -18,9 +18,9 @@ import {
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
-} from '../../scene/constants.js';
+} from '../../../scene/constants.js';
 
-import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './shader-code.js';
+import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG

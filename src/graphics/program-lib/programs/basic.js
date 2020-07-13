@@ -1,13 +1,13 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
-} from '../graphics.js';
-import { shaderChunks } from './chunks/chunks.js';
+} from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     SHADER_DEPTH, SHADER_PICK
-} from '../../scene/constants.js';
+} from '../../../scene/constants.js';
 
-import { begin, end, fogCode, precisionCode, skinCode } from './shader-code.js';
+import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
 
 var basic = {
     generateKey: function (options) {

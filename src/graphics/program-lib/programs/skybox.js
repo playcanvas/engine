@@ -1,7 +1,7 @@
-import { SEMANTIC_POSITION } from '../graphics.js';
-import { shaderChunks } from './chunks/chunks.js';
+import { SEMANTIC_POSITION } from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
-import { gammaCode, precisionCode, tonemapCode } from './shader-code.js';
+import { gammaCode, precisionCode, tonemapCode } from './common.js';
 
 var skybox = {
     generateKey: function (options) {

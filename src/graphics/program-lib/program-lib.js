@@ -1,9 +1,8 @@
-import { begin, dummyFragmentCode, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './shader-code.js';
-
-import { basic } from './basic.js';
-import { particle } from './particle.js';
-import { skybox } from './skybox.js';
-import { standard } from './standard.js';
+import { begin, dummyFragmentCode, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './programs/common.js';
+import { basic } from './programs/basic.js';
+import { particle } from './programs/particle.js';
+import { skybox } from './programs/skybox.js';
+import { standard } from './programs/standard.js';
 
 var programlib = {
     begin: begin,

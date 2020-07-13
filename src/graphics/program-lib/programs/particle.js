@@ -1,8 +1,8 @@
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../scene/constants.js';
-import { shaderChunks } from './chunks/chunks.js';
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../../scene/constants.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
-import { collectAttribs } from './utils.js';
-import { gammaCode, precisionCode, tonemapCode } from './shader-code.js';
+import { collectAttribs } from '../utils.js';
+import { gammaCode, precisionCode, tonemapCode } from './common.js';
 
 var particle = {
     generateKey: function (options) {
