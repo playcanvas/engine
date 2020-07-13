@@ -6,11 +6,11 @@ function Decompress(node, srcToDst) {
 
 Object.assign(Decompress.prototype, {
     run: function () {
-        if (this._isMapObj(this._node)) {
-            this._handleMap();
-
-        } else if (Array.isArray(this._node)) {
+        if (Array.isArray(this._node)) {
             this._handleArray();
+
+        } else if (this._isMapNode()) {
+            this._handleMap();
 
         } else {
             this._result = this._node;
@@ -49,12 +49,9 @@ Object.assign(Decompress.prototype, {
         return (k.length <= 2 && this._srcToDst[k]) || k;
     },
 
-    _isMapObj: function (obj) {
-        var isObj = typeof obj === "object";
-
-        var isNull = obj === null;
-
-        return isObj && !isNull && !Array.isArray(obj);
+    _isMapNode: function () { // after array check
+        return typeof this._node === "object" &&
+            this._node !== null;
     }
 });
 
