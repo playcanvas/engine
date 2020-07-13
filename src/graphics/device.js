@@ -1424,7 +1424,7 @@ Object.assign(GraphicsDevice.prototype, {
      */
     getCopyShader: function () {
         if (!this._copyShader) {
-            this._copyShader = createShaderFromCode(this, 
+            this._copyShader = createShaderFromCode(this,
                                                     shaderChunks.fullscreenQuadVS,
                                                     shaderChunks.outputTex2DPS,
                                                     "outputTex2D");

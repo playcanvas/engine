@@ -325,7 +325,6 @@ function shFromCubemap(source, dontFlipX) {
             // Cubemap is made of imgs - convert to arrays
             var device = Application.getApplication().graphicsDevice;
             var gl = device.gl;
-            var chunks = shaderChunks;
             var shader = createShaderFromCode(device,
                                               shaderChunks.fullscreenQuadVS,
                                               shaderChunks.fullscreenQuadPS,
