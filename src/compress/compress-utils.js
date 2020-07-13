@@ -9,7 +9,7 @@ var CompressUtils = {
         if (srcToDst) {
             delete data[CompressUtils.KEY_MAP_FIELD];
 
-            data = new Decompress(data, srcToDst).run();
+            data.entities = new Decompress(data.entities, srcToDst).run();
         }
 
         return data;
