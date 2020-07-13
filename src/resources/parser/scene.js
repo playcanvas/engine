@@ -15,7 +15,11 @@ Object.assign(SceneParser.prototype, {
         var id, i;
         var parent = null;
 
-        data = CompressUtils.decompress(data);
+        var compressed = data.format_compressed;
+
+        if (compressed) {
+            CompressUtils.decompressEntities(data, compressed);
+        }
 
         if (data.collapsedInstances) {
             this._addCollapsedToEntities(this._app, data);
@@ -24,7 +28,7 @@ Object.assign(SceneParser.prototype, {
         // instantiate entities
         for (id in data.entities) {
             var curData = data.entities[id];
-            var curEnt = this._createEntity(curData);
+            var curEnt = this._createEntity(curData, compressed);
             entities[id] = curEnt;
             if (curData.parent === null) {
                 parent = curEnt;
@@ -49,18 +53,12 @@ Object.assign(SceneParser.prototype, {
         return parent;
     },
 
-    _createEntity: function (data) {
+    _createEntity: function (data, compressed) {
         var entity = new Entity();
-
-        var p = data.position;
-        var r = data.rotation;
-        var s = data.scale;
 
         entity.name = data.name;
         entity.setGuid(data.resource_id);
-        entity.setLocalPosition(p[0], p[1], p[2]);
-        entity.setLocalEulerAngles(r[0], r[1], r[2]);
-        entity.setLocalScale(s[0], s[1], s[2]);
+        this._setPosRotScale(entity, data, compressed);
         entity._enabled = data.enabled !== undefined ? data.enabled : true;
 
         if (!this._isTemplate) {
@@ -82,6 +80,21 @@ Object.assign(SceneParser.prototype, {
         }
 
         return entity;
+    },
+
+    _setPosRotScale: function (entity, data, compressed) {
+        if (compressed) {
+            CompressUtils.setCompressedPRS(entity, data, compressed);
+
+        } else {
+            var p = data.position;
+            var r = data.rotation;
+            var s = data.scale;
+
+            entity.setLocalPosition(p[0], p[1], p[2]);
+            entity.setLocalEulerAngles(r[0], r[1], r[2]);
+            entity.setLocalScale(s[0], s[1], s[2]);
+        }
     },
 
     _openComponentData: function (entity, entities) {

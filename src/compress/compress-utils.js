@@ -1,18 +1,26 @@
 import { Decompress } from './decompress.js';
 
 var CompressUtils = {
-    KEY_MAP_FIELD: 'playcanvas_compressed',
+    decompressEntities: function (data, compressed) {
+        data.entities = new Decompress(data.entities, compressed.fieldMap).run();
+    },
 
-    decompress: function (data) {
-        var srcToDst = data[CompressUtils.KEY_MAP_FIELD];
+    setCompressedPRS: function (entity, data, compressed) {
+        var a = compressed.locationData.singleVecs;
 
-        if (srcToDst) {
-            delete data[CompressUtils.KEY_MAP_FIELD];
+        var v = data.___1 || compressed.locationData.tripleVecs[data.___2];
 
-            data.entities = new Decompress(data.entities, srcToDst).run();
-        }
+        var n = v[0];
 
-        return data;
+        entity.setLocalPosition(a[n], a[n+1], a[n+2]);
+
+        n = v[1];
+
+        entity.setLocalEulerAngles(a[n], a[n+1], a[n+2]);
+
+        n = v[2];
+
+        entity.setLocalScale(a[n], a[n+1], a[n+2]);
     }
 };
 

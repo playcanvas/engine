@@ -13,7 +13,7 @@ Object.assign(Decompress.prototype, {
             this._handleArray();
 
         } else {
-            this._handleLeaf();
+            this._result = this._node;
         }
 
         return this._result;
@@ -45,12 +45,8 @@ Object.assign(Decompress.prototype, {
         this._result.push(v);
     },
 
-    _handleLeaf: function () {
-        this._result = this._node;
-    },
-
     _handleTreeKey: function (k) {
-        return this._srcToDst[k] || k; // new guids -- no need - guids have len > 2
+        return (k.length <= 2 && this._srcToDst[k]) || k;
     },
 
     _isMapObj: function (obj) {
