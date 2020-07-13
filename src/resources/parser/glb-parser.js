@@ -1311,16 +1311,26 @@ var createNodes = function (gltf, options) {
 var createScenes = function (gltf, nodes) {
 
     var scenes = [];
-    for (var i = 0; i < gltf.scenes.length; i++) {
-        var scene = gltf.scenes[i];
-        var sceneRoot = new GraphNode(scene.name);
+    var count = gltf.scenes.length;
 
-        for (var n = 0; n < scene.nodes.length; n++) {
-            var childNode = nodes[scene.nodes[n]];
-            sceneRoot.addChild(childNode);
+    // if there's a single scene with a single node in it, don't create wrapper nodes
+    if (count === 1 && gltf.scenes[0].nodes.length === 1) {
+        var nodeIndex = gltf.scenes[0].nodes[0];
+        scenes.push(nodes[nodeIndex]);
+    } else {
+
+        // create root node per scene
+        for (var i = 0; i < count; i++) {
+            var scene = gltf.scenes[i];
+            var sceneRoot = new GraphNode(scene.name);
+
+            for (var n = 0; n < scene.nodes.length; n++) {
+                var childNode = nodes[scene.nodes[n]];
+                sceneRoot.addChild(childNode);
+            }
+
+            scenes.push(sceneRoot);
         }
-
-        scenes.push(sceneRoot);
     }
 
     return scenes;
