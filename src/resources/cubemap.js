@@ -97,7 +97,7 @@ Object.assign(CubemapHandler.prototype, {
         };
 
         // handle the prelit data
-        if (assets[0] !== oldAssets[0]) {
+        if (!cubemapAsset.loaded || assets[0] !== oldAssets[0]) {
             // prelit asset changed
             if (assets[0]) {
                 tex = assets[0].resource;
@@ -122,7 +122,6 @@ Object.assign(CubemapHandler.prototype, {
                         fixCubemapSeams: true
                     });
 
-                    // prelit.upload();
                     resources[i + 1] = prelit;
                 }
             }
@@ -137,7 +136,7 @@ Object.assign(CubemapHandler.prototype, {
         }
 
         var faceAssets = assets.slice(1);
-        if (!this.cmpArrays(faceAssets, oldAssets.slice(1))) {
+        if (!cubemapAsset.loaded || !this.cmpArrays(faceAssets, oldAssets.slice(1))) {
             // face assets have changed
             if (faceAssets.indexOf(null) === -1) {
                 // extract cubemap level data from face textures
