@@ -1,4 +1,3 @@
-
     localPos *= particle_vertexData2.y * emitterScale;
     localPos += particlePos;
 

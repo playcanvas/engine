@@ -1071,11 +1071,12 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
     // run through the quaternion data arrays flipping quaternion keys
     // that don't fall in the same winding order.
     var prevIndex = null;
+    var data;
     for (i = 0; i < quatArrays.length; ++i) {
         var index = quatArrays[i];
         // skip over duplicate array indices
         if (i === 0 || index !== prevIndex) {
-            var data = outputs[index];
+            data = outputs[index];
             if (data.components === 4) {
                 var d = data.data;
                 var len = d.length - 4;
@@ -1098,10 +1099,11 @@ var createAnimation = function (gltfAnimation, animationIndex, accessors, buffer
     }
 
     // calculate duration of the animation as maximum time value
-    var duration = inputs.reduce(function (value, input) {
-        var data  = input._data;
-        return Math.max(value, data.length === 0 ? 0 : data[data.length - 1]);
-    }, 0);
+    var duration = 0;
+    for (i = 0; i < inputs.length; i++) {
+        data  = inputs[i]._data;
+        duration = Math.max(duration, data.length === 0 ? 0 : data[data.length - 1]);
+    }
 
     return new AnimTrack(
         gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ("animation_" + animationIndex),
@@ -1391,37 +1393,37 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
             preprocess(gltfImage);
         }
 
-        if (processAsync) {
-            processAsync(gltfImage, function (index, err, textureAsset) {
-                if (err) {
-                    callback(err);
-                } else {
-                    onLoad(index, textureAsset);
-                }
-            }.bind(null, i));
-        } else {
-            if (gltfImage.hasOwnProperty('uri')) {
-                // uri specified
-                if (isDataURI(gltfImage.uri)) {
-                    loadTexture(i, gltfImage.uri, getDataURIMimeType(gltfImage.uri));
-                } else {
-                    loadTexture(i, path.join(urlBase, gltfImage.uri), "anonymous");
-                }
-            } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
-                // bufferview
-                var bufferView = gltf.bufferViews[gltfImage.bufferView];
-                var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
-                var byteLength = bufferView.byteLength;
-
-                var buffer = buffers[bufferView.buffer];
-                var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
-                var blob = new Blob([imageBuffer], { type: gltfImage.mimeType });
-                loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType, null, true);
+        if (gltfImage.hasOwnProperty('uri')) {
+            // uri specified
+            if (isDataURI(gltfImage.uri)) {
+                loadTexture(i, gltfImage.uri, getDataURIMimeType(gltfImage.uri));
             } else {
-                // fail
-                callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
-                return;
+                if (processAsync) {
+                    processAsync(gltfImage, function (index, err, textureAsset) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            onLoad(index, textureAsset);
+                        }
+                    }.bind(null, i));
+                } else {
+                    loadTexture(i, path.join(urlBase, gltfImage.uri), null, "anonymous");
+                }
             }
+        } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
+            // bufferview
+            var bufferView = gltf.bufferViews[gltfImage.bufferView];
+            var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
+            var byteLength = bufferView.byteLength;
+
+            var buffer = buffers[bufferView.buffer];
+            var imageBuffer = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
+            var blob = new Blob([imageBuffer], { type: gltfImage.mimeType });
+            loadTexture(i, URL.createObjectURL(blob), gltfImage.mimeType, null, true);
+        } else {
+            // fail
+            callback("Invalid image found in gltf (neither uri or bufferView found). index=" + i);
+            return;
         }
     }
 };
@@ -1457,33 +1459,33 @@ var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) 
             preprocess(gltfBuffer);
         }
 
-        if (processAsync) {
-            processAsync(gltfBuffer, function (index, err, arrayBuffer) {           // eslint-disable-line no-loop-func
-                if (err) {
-                    callback(err);
-                } else {
-                    onLoad(index, new Uint8Array(arrayBuffer));
+        if (gltfBuffer.hasOwnProperty('uri')) {
+            if (isDataURI(gltfBuffer.uri)) {
+                // convert base64 to raw binary data held in a string
+                // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+                var byteString = atob(gltfBuffer.uri.split(',')[1]);
+
+                // write the bytes of the string to an ArrayBuffer
+                var arrayBuffer = new ArrayBuffer(byteString.length);
+
+                // create a view into the buffer
+                var binaryArray = new Uint8Array(arrayBuffer);
+
+                // set the bytes of the buffer to the correct values
+                for (var j = 0; j < byteString.length; j++) {
+                    binaryArray[j] = byteString.charCodeAt(j);
                 }
-            }.bind(null, i));
-        } else {
-            if (gltfBuffer.hasOwnProperty('uri')) {
-                if (isDataURI(gltfBuffer.uri)) {
-                    // convert base64 to raw binary data held in a string
-                    // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-                    var byteString = atob(gltfBuffer.uri.split(',')[1]);
 
-                    // write the bytes of the string to an ArrayBuffer
-                    var arrayBuffer = new ArrayBuffer(byteString.length);
-
-                    // create a view into the buffer
-                    var binaryArray = new Uint8Array(arrayBuffer);
-
-                    // set the bytes of the buffer to the correct values
-                    for (var j = 0; j < byteString.length; j++) {
-                        binaryArray[j] = byteString.charCodeAt(j);
-                    }
-
-                    onLoad(i, binaryArray);
+                onLoad(i, binaryArray);
+            } else {
+                if (processAsync) {
+                    processAsync(gltfBuffer, function (index, err, arrayBuffer) {           // eslint-disable-line no-loop-func
+                        if (err) {
+                            callback(err);
+                        } else {
+                            onLoad(index, new Uint8Array(arrayBuffer));
+                        }
+                    }.bind(null, i));
                 } else {
                     http.get(
                         path.join(urlBase, gltfBuffer.uri),
@@ -1497,10 +1499,10 @@ var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) 
                         }.bind(null, i)
                     );
                 }
-            } else {
-                // glb buffer reference
-                onLoad(i, binaryChunk);
             }
+        } else {
+            // glb buffer reference
+            onLoad(i, binaryChunk);
         }
     }
 };
@@ -1511,18 +1513,19 @@ var parseGltf = function (gltfChunk, callback) {
         if (typeof TextDecoder !== 'undefined') {
             return new TextDecoder().decode(array);
         }
-        var str = array.reduce( function (accum, value) {
-            accum += String.fromCharCode(value);
-            return accum;
-        }, "");
-        return decodeURIComponent(escape(str));
 
+        var str = "";
+        for (var i = 0; i < array.length; i++) {
+            str += String.fromCharCode(array[i]);
+        }
+
+        return decodeURIComponent(escape(str));
     };
 
     var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
 
     // check gltf version
-    if (gltf.asset && gltf.asset.version && Number.parseFloat(gltf.asset.version) < 2) {
+    if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {
         callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
         return;
     }

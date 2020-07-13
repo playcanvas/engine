@@ -4,6 +4,7 @@ import {
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../graphics/graphics.js';
 
+import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
 /**
@@ -150,7 +151,7 @@ Object.assign(CubemapHandler.prototype, {
                     }));
                 }
 
-                var faces = new pc.Texture(this._device, {
+                var faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
                     type: getType(),
@@ -285,7 +286,7 @@ Object.assign(CubemapHandler.prototype, {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new pc.Asset(cubemapAsset.name + "_part_" + i, "texture", file);
+                texAsset = new Asset(cubemapAsset.name + "_part_" + i, "texture", file);
                 registry.add(texAsset);
                 registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));

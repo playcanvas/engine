@@ -1,4 +1,5 @@
 varying vec3 vViewDir;
+
 uniform samplerCube texture_cubeMap;
 
 vec3 fixSeamsStretch(vec3 vec, float mipmapIndex, float cubemapSize) {
@@ -16,4 +17,3 @@ void main(void) {
     color = gammaCorrectOutput(color);
     gl_FragColor = vec4(color, 1.0);
 }
-

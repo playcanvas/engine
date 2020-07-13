@@ -14,4 +14,3 @@ void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams
 void getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams) {
     _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, vPositionW);
 }
-

@@ -222,6 +222,7 @@ var ParticleEmitter = function (graphicsDevice, options) {
     setProperty("initialVelocity", 1);
     setProperty("wrap", false);
     setProperty("localSpace", false);
+    setProperty("screenSpace", false);
     setProperty("wrapBounds", null);
     setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
     setProperty("normalMap", null);
@@ -342,6 +343,7 @@ var ParticleEmitter = function (graphicsDevice, options) {
 
     this.material = null;
     this.meshInstance = null;
+    this.drawOrder = 0;
 
     this.seed = Math.random();
 
@@ -849,6 +851,9 @@ Object.assign(ParticleEmitter.prototype, {
                 }
             }
 
+            // set by Editor if running inside editor
+            var inTools = this.emitter.inTools;
+
             var shader = programLib.getProgram("particle", {
                 useCpu: this.emitter.useCpu,
                 normal: this.emitter.normalOption,
@@ -862,6 +867,10 @@ Object.assign(ParticleEmitter.prototype, {
                 fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : "none",
                 wrap: this.emitter.wrap && this.emitter.wrapBounds,
                 localSpace: this.emitter.localSpace,
+
+                // in Editor, screen space particles (children of 2D Screen) are still rendered in 3d space
+                screenSpace: inTools ? false : this.emitter.screenSpace,
+
                 blend: this.blendType,
                 animTex: this.emitter._isAnimated(),
                 animTexLoop: this.emitter.animLoop,
@@ -1198,6 +1207,10 @@ Object.assign(ParticleEmitter.prototype, {
                 if (this.onFinished) this.onFinished();
                 this.meshInstance.visible = false;
             }
+        }
+
+        if (this.meshInstance) {
+            this.meshInstance.drawOrder = this.drawOrder;
         }
 
         // #ifdef PROFILER

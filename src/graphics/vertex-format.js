@@ -91,7 +91,6 @@ import {
  * unchanged. If this property is unspecified, false is assumed.
  * @property {number} elements[].offset The number of initial bytes at the start of a vertex that are not relevant to this attribute.
  * @property {number} elements[].stride The number of total bytes that are between the start of one vertex, and the start of the next.
- * @property {pc.ScopeId} elements[].scopeId The shader input variable corresponding to the attribute.
  * @property {number} elements[].size The size of the attribute in bytes.
  * @example
  * // Specify 3-component positions (x, y, z)
@@ -145,8 +144,6 @@ function VertexFormat(graphicsDevice, description, vertexCount) {
             name: elementDesc.semantic,
             offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
             stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
-            stream: -1,
-            scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
             dataType: elementDesc.type,
             numComponents: elementDesc.components,
             normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
@@ -175,7 +172,7 @@ function VertexFormat(graphicsDevice, description, vertexCount) {
         this.verticesByteSize = offset;
     }
 
-    this.batchingHash = this._evaluateBatchingHash();
+    this.update();
 }
 
 VertexFormat.init = function (graphicsDevice) {
@@ -207,27 +204,45 @@ Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
 
 Object.assign(VertexFormat.prototype, {
 
-    // evaluates hash value for the format allowing fast compare of batching compatibility
-    _evaluateBatchingHash: function () {
+    /**
+     * @function
+     * @name pc.VertexFormat#update
+     * @description Applies any changes made to the VertexFormat's properties.
+     */
+    update: function () {
+        this._evaluateHash();
+    },
 
-        // create string description of each element that is relevant for batching
-        var stringElement, stringElements = [];
+    // evaluates hash valuees for the format allowing fast compare of batching / rendering compatibility
+    _evaluateHash: function () {
+
+        var stringElementBatch, stringElementsBatch = [];
+        var stringElementRender, stringElementsRender = [];
         var i, len = this.elements.length, element;
         for (i = 0; i < len; i++) {
             element = this.elements[i];
 
-            stringElement = element.name;
-            stringElement += element.dataType;
-            stringElement += element.numComponents;
-            stringElement += element.normalize;
+            // create string description of each element that is relevant for batching
+            stringElementBatch = element.name;
+            stringElementBatch += element.dataType;
+            stringElementBatch += element.numComponents;
+            stringElementBatch += element.normalize;
+            stringElementsBatch.push(stringElementBatch);
 
-            stringElements.push(stringElement);
+            // create string description of each element that is relevant for rendering
+            stringElementRender = stringElementBatch;
+            stringElementRender += element.offset;
+            stringElementRender += element.stride;
+            stringElementRender += element.size;
+            stringElementsRender.push(stringElementRender);
         }
 
-        // sort them alphabetically to make hash order independent
-        stringElements.sort();
+        // sort batching ones them alphabetically to make hash order independent
+        stringElementsBatch.sort();
+        this.batchingHash = hashCode(stringElementsBatch.join());
 
-        return hashCode(stringElements.join());
+        // rendering hash
+        this.renderingingHash = hashCode(stringElementsRender.join());
     }
 });
 

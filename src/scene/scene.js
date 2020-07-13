@@ -357,10 +357,16 @@ Scene.prototype._updateSkybox = function (device) {
     // Create skybox
     if (!this.skyboxModel) {
 
+        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
+        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
+        // to change the look of existing scenes dramatically.
+        // NOTE: the table skips the 32x32 mipmap
+        var skyboxMapping = [0, 1, 3, 4, 5, 6];
+
         // select which texture to use for the backdrop
         var usedTex =
             this._skyboxMip ?
-                this._skyboxPrefiltered[this._skyboxMip] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
                 this._skyboxCubeMap || this._skyboxPrefiltered[0];
         if (!usedTex) {
             return;

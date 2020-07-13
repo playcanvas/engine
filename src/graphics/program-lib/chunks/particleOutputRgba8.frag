@@ -2,22 +2,20 @@ uniform vec3 outBoundsMul;
 uniform vec3 outBoundsAdd;
 
 vec2 encodeFloatRG( float v ) {
-  vec2 enc = vec2(1.0, 255.0) * v;
-  enc = fract(enc);
-  enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);
-  return enc;
+    vec2 enc = vec2(1.0, 255.0) * v;
+    enc = fract(enc);
+    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);
+    return enc;
 }
 
 vec4 encodeFloatRGBA( float v ) {
-  vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;
-  enc = fract(enc);
-  enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
-  return enc;
+    vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;
+    enc = fract(enc);
+    enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
+    return enc;
 }
 
 void writeOutput() {
-    //outPos = (outPos - outBoundsCenter) / outBoundsSize + vec3(0.5);
-
     outPos = outPos * outBoundsMul + outBoundsAdd;
     outAngle = fract(outAngle / PI2);
 
@@ -37,4 +35,3 @@ void writeOutput() {
         gl_FragColor = encodeFloatRGBA(outLife);
     }
 }
-
