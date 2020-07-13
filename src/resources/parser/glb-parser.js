@@ -1308,6 +1308,24 @@ var createNodes = function (gltf, options) {
     return nodes;
 };
 
+var createScenes = function (gltf, nodes) {
+
+    var scenes = [];
+    for (var i = 0; i < gltf.scenes.length; i++) {
+        var scene = gltf.scenes[i];
+        var sceneRoot = new GraphNode(scene.name);
+
+        for (var n = 0; n < scene.nodes.length; n++) {
+            var childNode = nodes[scene.nodes[n]];
+            sceneRoot.addChild(childNode);
+        }
+
+        scenes.push(sceneRoot);
+    }
+
+    return scenes;
+};
+
 // create engine resources from the downloaded GLB data
 var createResources = function (device, gltf, buffers, textures, options, callback) {
 
@@ -1319,6 +1337,7 @@ var createResources = function (device, gltf, buffers, textures, options, callba
     }
 
     var nodes = createNodes(gltf, options);
+    var scenes = createScenes(gltf, nodes);
     var animations = createAnimations(gltf, nodes, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
@@ -1329,6 +1348,7 @@ var createResources = function (device, gltf, buffers, textures, options, callba
     var result = {
         'gltf': gltf,
         'nodes': nodes,
+        'scenes': scenes,
         'animations': animations,
         'textures': textures,
         'materials': materials,
@@ -1739,9 +1759,9 @@ GlbParser.parse = function (filename, data, device, options) {
 
 // create a pc.Model from the parsed GLB data structures
 GlbParser.createModel = function (glb, defaultMaterial) {
-    var createMeshInstance = function (model, mesh, skins, materials, node, gltfNode) {
-        var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
 
+    var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
+        var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
         var meshInstance = new MeshInstance(node, mesh, material);
 
         if (mesh.morph) {
@@ -1757,12 +1777,11 @@ GlbParser.createModel = function (glb, defaultMaterial) {
         }
 
         if (gltfNode.hasOwnProperty('skin')) {
-            var skin = skins[gltfNode.skin];
+            var skinIndex = gltfNode.skin;
+            var skin = skins[skinIndex];
             mesh.skin = skin;
 
-            var skinInstance = new SkinInstance(skin);
-            skinInstance.bones = skin.bones;
-
+            var skinInstance = skinInstances[skinIndex];
             meshInstance.skinInstance = skinInstance;
             model.skinInstances.push(skinInstance);
         }
@@ -1771,33 +1790,59 @@ GlbParser.createModel = function (glb, defaultMaterial) {
     };
 
     var model = new Model();
-    var i;
 
-    var rootNodes = [];
-    for (i = 0; i < glb.nodes.length; i++) {
-        var node = glb.nodes[i];
-        if (node.parent === null) {
-            rootNodes.push(node);
+    // create skinInstance for each skin
+    var s, skinInstances = [];
+    for (s = 0; s < glb.skins.length; s++) {
+        var skinInstance = new SkinInstance(glb.skins[s]);
+        skinInstance.bones = glb.skins[s].bones;
+        skinInstances.push(skinInstance);
+    }
+
+    // node hierarchy for the model
+    if (glb.scenes.length === 1) {
+        // use scene if only one
+        model.graph = glb.scenes[0];
+    } else {
+        // create group node for all scenes
+        model.graph = new GraphNode('SceneGroup');
+        for (s = 0; s < glb.scenes.length; s++) {
+            model.graph.addChild(glb.scenes[s]);
         }
+    }
 
-        var gltfNode = glb.gltf.nodes[i];
-        if (gltfNode.hasOwnProperty('mesh')) {
-            var meshGroup = glb.meshes[gltfNode.mesh];
-            for (var mi = 0; mi < meshGroup.length; mi++) {
-                createMeshInstance(model, meshGroup[mi], glb.skins, glb.materials, node, gltfNode);
+    // function to mark nodes in hierarchy with a property
+    var markNodes = function (node, name, value) {
+        if (value) {
+            node[name] = true;  // add property
+        } else {
+            delete node[name];  // remove property
+        }
+        for (var idx = 0; idx < node._children.length; idx++) {
+            markNodes(node._children[idx], name, value);
+        }
+    };
+
+    // temporarily mark nodes in hierarchy as used
+    var markName = "__tempNodeUsed";
+    markNodes(model.graph, markName, true);
+
+    // create mesh instance for meshes on nodes that are part of hierarchy
+    for (var i = 0; i < glb.nodes.length; i++) {
+        var node = glb.nodes[i];
+        if (node.__tempNodeUsed) {
+            var gltfNode = glb.gltf.nodes[i];
+            if (gltfNode.hasOwnProperty('mesh')) {
+                var meshGroup = glb.meshes[gltfNode.mesh];
+                for (var mi = 0; mi < meshGroup.length; mi++) {
+                    createMeshInstance(model, meshGroup[mi], glb.skins, skinInstances, glb.materials, node, gltfNode);
+                }
             }
         }
     }
 
-    // set model root (create a group if there is more than one)
-    if (rootNodes.length === 1) {
-        model.graph = rootNodes[0];
-    } else {
-        model.graph = new GraphNode('SceneGroup');
-        for (i = 0; i < rootNodes.length; ++i) {
-            model.graph.addChild(rootNodes[i]);
-        }
-    }
+    // remove marks
+    markNodes(model.graph, markName, false);
 
     return model;
 };
