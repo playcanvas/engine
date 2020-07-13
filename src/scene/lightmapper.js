@@ -14,7 +14,8 @@ import {
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
@@ -381,12 +382,11 @@ Object.assign(Lightmapper.prototype, {
 
 
         // Init shaders
-        var chunks = shaderChunks;
-        var xformUv1 = "#define UV1LAYOUT\n" + chunks.transformVS;
-        var bakeLmEnd = chunks.bakeLmEndPS;
-        var dilate = chunks.dilatePS;
+        var xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
+        var bakeLmEnd = shaderChunks.bakeLmEndPS;
+        var dilate = shaderChunks.dilatePS;
 
-        var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
+        var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, dilate, "lmDilate");
         var constantTexSource = device.scope.resolve("source");
         var constantPixelOffset = device.scope.resolve("pixelOffset");
         var constantBakeDir = device.scope.resolve("bakeDir");
@@ -487,8 +487,8 @@ Object.assign(Lightmapper.prototype, {
                     lmMaterial.ambientTint = true;
                     lmMaterial.lightMap = blackTex;
                 } else {
-                    lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
-                    lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
+                    lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
+                    lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
                 }
 
                 // avoid writing unrelated things to alpha

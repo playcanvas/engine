@@ -21,7 +21,8 @@ import {
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
 } from '../../graphics/graphics.js';
-import { shaderChunks } from '../../graphics/chunks.js';
+import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
@@ -661,23 +662,21 @@ Object.assign(ParticleEmitter.prototype, {
             this.swapTex = false;
         }
 
-        var chunks = shaderChunks;
-        var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + chunks.particleUpdaterInitPS +
-        (this.pack8 ? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
-            (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
-        (this.emitterShape === EMITTERSHAPE_BOX ? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
-        chunks.particleUpdaterStartPS;
-        var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
-        var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
-        var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
-
+        var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + shaderChunks.particleUpdaterInitPS +
+        (this.pack8 ? (shaderChunks.particleInputRgba8PS + shaderChunks.particleOutputRgba8PS) :
+            (shaderChunks.particleInputFloatPS + shaderChunks.particleOutputFloatPS)) +
+        (this.emitterShape === EMITTERSHAPE_BOX ? shaderChunks.particleUpdaterAABBPS : shaderChunks.particleUpdaterSpherePS) +
+        shaderChunks.particleUpdaterStartPS;
+        var shaderCodeRespawn = shaderCodeStart + shaderChunks.particleUpdaterRespawnPS + shaderChunks.particleUpdaterEndPS;
+        var shaderCodeNoRespawn = shaderCodeStart + shaderChunks.particleUpdaterNoRespawnPS + shaderChunks.particleUpdaterEndPS;
+        var shaderCodeOnStop = shaderCodeStart + shaderChunks.particleUpdaterOnStopPS + shaderChunks.particleUpdaterEndPS;
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
         var params = this.emitterShape + "" + this.pack8 + "" + this.localSpace;
-        this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + params);
-        this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + params);
-        this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + params);
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + params);
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + params);
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + params);
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;

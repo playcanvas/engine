@@ -1,7 +1,7 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
 } from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+import { shaderChunks } from './chunks/chunks.js';
 
 import {
     SHADER_DEPTH, SHADER_PICK
@@ -36,19 +36,17 @@ var basic = {
             attributes.vertex_texCoord0 = SEMANTIC_TEXCOORD0;
         }
 
-        var chunks = shaderChunks;
-
         // GENERATE VERTEX SHADER
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += chunks.transformDeclVS;
+        code += shaderChunks.transformDeclVS;
 
         if (options.skin) {
             code += programlib.skinCode(device);
-            code += chunks.transformSkinnedVS;
+            code += shaderChunks.transformSkinnedVS;
         } else {
-            code += chunks.transformVS;
+            code += shaderChunks.transformVS;
         }
 
         if (options.vertexColors) {
@@ -109,13 +107,13 @@ var basic = {
             code += programlib.fogCode(options.fog);
         }
         if (options.alphatest) {
-            code += chunks.alphaTestPS;
+            code += shaderChunks.alphaTestPS;
         }
 
         if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
             code += 'varying float vDepth;\n';
-            code += chunks.packDepthPS;
+            code += shaderChunks.packDepthPS;
         }
 
         // FRAGMENT SHADER BODY

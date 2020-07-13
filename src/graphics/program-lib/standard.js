@@ -6,7 +6,7 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL
 } from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+import { shaderChunks } from './chunks/chunks.js';
 
 import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,

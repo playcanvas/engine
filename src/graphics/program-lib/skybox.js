@@ -1,5 +1,5 @@
 import { SEMANTIC_POSITION } from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+import { shaderChunks } from './chunks/chunks.js';
 
 import { programlib } from './program-lib.js';
 
@@ -11,20 +11,25 @@ var skybox = {
     },
 
     createShaderDefinition: function (device, options) {
-        var chunks = shaderChunks;
         var mip2size = [128, 64, 32, 16, 8, 4, 2];
+
+        var fshader;
+        fshader  = programlib.precisionCode(device);
+        fshader += (options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS);
+        fshader += (options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS);
+        fshader += programlib.gammaCode(options.gamma);
+        fshader += programlib.tonemapCode(options.toneMapping);
+        fshader += shaderChunks.rgbmPS;
+        fshader += shaderChunks.skyboxHDRPS
+            .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
+            .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
 
         return {
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
-            vshader: chunks.skyboxVS,
-            fshader: programlib.precisionCode(device) +
-                (options.mip ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
-                (options.useIntensity ? chunks.envMultiplyPS : chunks.envConstPS) +
-                programlib.gammaCode(options.gamma) + programlib.tonemapCode(options.toneMapping) + chunks.rgbmPS +
-                chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
-                    .replace(/\$FIXCONST/g, (1.0 - 1.0 / mip2size[options.mip]) + "")
+            vshader: shaderChunks.skyboxVS,
+            fshader: fshader
         };
     }
 };

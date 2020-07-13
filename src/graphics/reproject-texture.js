@@ -4,8 +4,9 @@ import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from './graphics.js';
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 
 // get a coding string for texture based on its type and pixel format.
@@ -44,22 +45,20 @@ var getCoding = function (texture) {
  * the function performs a standard resample.
  */
 var reprojectTexture = function (device, source, target, specularPower) {
-    var chunks = shaderChunks;
-
     var decodeFunc = "decode" + getCoding(source);
     var encodeFunc = "encode" + getCoding(target);
     var sourceFunc = source.cubemap ? "sampleCubemap" : "sampleEquirect";
     var targetFunc = target.cubemap ? "getDirectionCubemap" : "getDirectionEquirect";
 
-    var shader = chunks.createShaderFromCode(
+    var shader = createShaderFromCode(
         device,
-        chunks.fullscreenQuadVS,
+        shaderChunks.fullscreenQuadVS,
         "#define DECODE_FUNC " + decodeFunc + "\n" +
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
         "#define NUM_SAMPLES 1024\n\n" +
-        chunks.reprojectPS,
+        shaderChunks.reprojectPS,
         "reproject" + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
         device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"

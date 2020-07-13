@@ -3,7 +3,7 @@ import {
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
 } from '../../scene/constants.js';
 
-import { shaderChunks } from '../chunks.js';
+import { shaderChunks } from './chunks/chunks.js';
 
 import { basic } from './basic.js';
 import { particle } from './particle.js';
