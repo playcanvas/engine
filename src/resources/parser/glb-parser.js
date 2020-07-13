@@ -1811,26 +1811,10 @@ GlbParser.createModel = function (glb, defaultMaterial) {
         }
     }
 
-    // function to mark nodes in hierarchy with a property
-    var markNodes = function (node, name, value) {
-        if (value) {
-            node[name] = true;  // add property
-        } else {
-            delete node[name];  // remove property
-        }
-        for (var idx = 0; idx < node._children.length; idx++) {
-            markNodes(node._children[idx], name, value);
-        }
-    };
-
-    // temporarily mark nodes in hierarchy as used
-    var markName = "__tempNodeUsed";
-    markNodes(model.graph, markName, true);
-
     // create mesh instance for meshes on nodes that are part of hierarchy
     for (var i = 0; i < glb.nodes.length; i++) {
         var node = glb.nodes[i];
-        if (node.__tempNodeUsed) {
+        if (node.root === model.graph) {
             var gltfNode = glb.gltf.nodes[i];
             if (gltfNode.hasOwnProperty('mesh')) {
                 var meshGroup = glb.meshes[gltfNode.mesh];
@@ -1840,9 +1824,6 @@ GlbParser.createModel = function (glb, defaultMaterial) {
             }
         }
     }
-
-    // remove marks
-    markNodes(model.graph, markName, false);
 
     return model;
 };
