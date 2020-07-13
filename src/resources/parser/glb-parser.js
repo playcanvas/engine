@@ -173,8 +173,12 @@ var generateIndices = function (numVertices) {
 
 var generateNormals = function (sourceDesc, indices) {
     // get positions
-    // NOTE: this assumes position data is tightly packed (not interleaved)
     var p = sourceDesc[SEMANTIC_POSITION];
+    if (!p || p.components !== 3 || p.size !== p.stride) {
+        // NOTE: normal generation only works on tightly packed positions
+        return;
+    }
+
     var positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
     var numVertices = p.count;
 
