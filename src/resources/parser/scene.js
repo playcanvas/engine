@@ -20,21 +20,23 @@ Object.assign(SceneParser.prototype, {
 
         // instantiate entities
         for (id in data.entities) {
-            entities[id] = this._createEntity(data.entities[id]);
-            if (data.entities[id].parent === null) {
-                parent = entities[id];
+            var curData = data.entities[id];
+            var curEnt = this._createEntity(curData);
+            entities[id] = curEnt;
+            if (curData.parent === null) {
+                parent = curEnt;
             }
         }
 
         // put entities into hierarchy
         for (id in data.entities) {
-            var l = data.entities[id].children.length;
-            for (i = 0; i < l; i++) {
-                // pop resource id off the end of the array
-                var resource_id = data.entities[id].children[i];
-                if (entities[resource_id]) {
-                    // push entity on the front of the array
-                    entities[id].addChild(entities[resource_id]);
+            var curEnt = entities[id];
+            var children = data.entities[id].children;
+            var len = children.length;
+            for (i = 0; i < len; i++) {
+                var childEnt = entities[children[i]];
+                if (childEnt) {
+                    curEnt.addChild(childEnt);
                 }
             }
         }
