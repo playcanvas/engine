@@ -2,7 +2,7 @@ import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../scene/
 import { shaderChunks } from './chunks/chunks.js';
 
 import { collectAttribs } from './utils.js';
-import { programlib } from './program-lib.js';
+import { gammaCode, precisionCode, tonemapCode } from './shader-code.js';
 
 var particle = {
     generateKey: function (options) {
@@ -24,7 +24,7 @@ var particle = {
 
     createShaderDefinition: function (device, options) {
         var vshader = "";
-        var fshader = programlib.precisionCode(device) + "\n";
+        var fshader = precisionCode(device) + "\n";
 
         if (device.webgl2) {
             vshader += "#define GL2\n";
@@ -86,8 +86,8 @@ var particle = {
         if (options.soft) fshader += "\nvarying float vDepth;\n";
 
         if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
-        fshader += programlib.gammaCode(options.gamma);
-        fshader += programlib.tonemapCode(options.toneMap);
+        fshader += gammaCode(options.gamma);
+        fshader += tonemapCode(options.toneMap);
 
         if (options.fog === 'linear') {
             fshader += shaderChunks.fogLinearPS;

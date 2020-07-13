@@ -7,7 +7,7 @@ import { Shader } from '../shader.js';
 
 import { shaderChunks } from './chunks/chunks.js';
 
-import { programlib } from './program-lib.js';
+import { dummyFragmentCode, precisionCode, versionCode } from './shader-code.js';
 
 var attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -52,12 +52,12 @@ function collectAttribs(vsCode) {
 
 function createShader(device, vsName, psName, useTransformFeedback) {
     var vsCode = shaderChunks[vsName];
-    var psCode = programlib.precisionCode(device) + "\n" + shaderChunks[psName];
+    var psCode = precisionCode(device) + "\n" + shaderChunks[psName];
     var attribs = collectAttribs(vsCode);
 
     if (device.webgl2) {
-        vsCode = programlib.versionCode(device) + shaderChunks.gles3VS + vsCode;
-        psCode = programlib.versionCode(device) + shaderChunks.gles3PS + psCode;
+        vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
+        psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
     }
 
     return new Shader(device, {
@@ -73,12 +73,12 @@ function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedbac
     var cached = shaderCache[uName];
     if (cached !== undefined) return cached;
 
-    psCode = programlib.precisionCode(device) + "\n" + (psCode || programlib.dummyFragmentCode());
+    psCode = precisionCode(device) + "\n" + (psCode || dummyFragmentCode());
     var attribs = collectAttribs(vsCode);
 
     if (device.webgl2) {
-        vsCode = programlib.versionCode(device) + shaderChunks.gles3VS + vsCode;
-        psCode = programlib.versionCode(device) + shaderChunks.gles3PS + psCode;
+        vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
+        psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
     }
 
     shaderCache[uName] = new Shader(device, {

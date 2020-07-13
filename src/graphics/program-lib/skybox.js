@@ -1,7 +1,7 @@
 import { SEMANTIC_POSITION } from '../graphics.js';
 import { shaderChunks } from './chunks/chunks.js';
 
-import { programlib } from './program-lib.js';
+import { gammaCode, precisionCode, tonemapCode } from './shader-code.js';
 
 var skybox = {
     generateKey: function (options) {
@@ -14,11 +14,11 @@ var skybox = {
         var mip2size = [128, 64, 32, 16, 8, 4, 2];
 
         var fshader;
-        fshader  = programlib.precisionCode(device);
+        fshader  = precisionCode(device);
         fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
         fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
-        fshader += programlib.gammaCode(options.gamma);
-        fshader += programlib.tonemapCode(options.toneMapping);
+        fshader += gammaCode(options.gamma);
+        fshader += tonemapCode(options.toneMapping);
         fshader += shaderChunks.rgbmPS;
         fshader += shaderChunks.skyboxHDRPS
             .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))

@@ -7,7 +7,7 @@ import {
     SHADER_DEPTH, SHADER_PICK
 } from '../../scene/constants.js';
 
-import { programlib } from './program-lib.js';
+import { begin, end, fogCode, precisionCode, skinCode } from './shader-code.js';
 
 var basic = {
     generateKey: function (options) {
@@ -43,7 +43,7 @@ var basic = {
         code += shaderChunks.transformDeclVS;
 
         if (options.skin) {
-            code += programlib.skinCode(device);
+            code += skinCode(device);
             code += shaderChunks.transformSkinnedVS;
         } else {
             code += shaderChunks.transformVS;
@@ -71,7 +71,7 @@ var basic = {
         }
 
         // VERTEX SHADER BODY
-        code += programlib.begin();
+        code += begin();
 
         code += "   gl_Position = getPosition();\n";
 
@@ -86,12 +86,12 @@ var basic = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += programlib.end();
+        code += end();
 
         var vshader = code;
 
         // GENERATE FRAGMENT SHADER
-        code = programlib.precisionCode(device);
+        code = precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -104,7 +104,7 @@ var basic = {
             code += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            code += programlib.fogCode(options.fog);
+            code += fogCode(options.fog);
         }
         if (options.alphatest) {
             code += shaderChunks.alphaTestPS;
@@ -117,7 +117,7 @@ var basic = {
         }
 
         // FRAGMENT SHADER BODY
-        code += programlib.begin();
+        code += begin();
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
@@ -145,7 +145,7 @@ var basic = {
             }
         }
 
-        code += programlib.end();
+        code += end();
 
         var fshader = code;
 
