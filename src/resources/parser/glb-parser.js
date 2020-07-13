@@ -171,7 +171,8 @@ var generateIndices = function (numVertices) {
     return dummyIndices;
 };
 
-var generateNormals = function (sourceDesc, vertexDesc, positions, numVertices, indices) {
+var generateNormals = function (sourceDesc, positions, indices) {
+    var numVertices = positions.length / 3;
 
     if (!indices) {
         indices = generateIndices(numVertices);
@@ -182,22 +183,81 @@ var generateNormals = function (sourceDesc, vertexDesc, positions, numVertices, 
     var normals = new Float32Array(normalsTemp.length);
     normals.set(normalsTemp);
 
-    vertexDesc.push({
-        semantic: SEMANTIC_NORMAL,
-        components: 3,
-        type: TYPE_FLOAT32
-    });
-
     sourceDesc[SEMANTIC_NORMAL] = {
         buffer: normals.buffer,
         size: 12,
         offset: 0,
         stride: 12,
-        count: numVertices
+        count: numVertices,
+        components: 3,
+        type: TYPE_FLOAT32
     };
 };
 
-var createVertexBufferInternal = function (device, numVertices, vertexDesc, positionDesc, sourceDesc) {
+var flipTexCoordVs = function (vertexBuffer) {
+    var i, j;
+
+    var floatOffsets = [];
+    var shortOffsets = [];
+    var byteOffsets = [];
+    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
+        var element = vertexBuffer.format.elements[i];
+        if (element.name === SEMANTIC_TEXCOORD0 ||
+            element.name === SEMANTIC_TEXCOORD1) {
+            switch (element.dataType) {
+                case TYPE_FLOAT32:
+                    floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
+                    break;
+                case TYPE_UINT16:
+                    shortOffsets.push({ offset: element.offset / 2 + 1, stride: element.stride / 2 });
+                    break;
+                case TYPE_UINT8:
+                    byteOffsets.push({ offset: element.offset + 1, stride: element.stride });
+                    break;
+            }
+        }
+    }
+
+    var flip = function (offsets, type, one) {
+        var typedArray = new type(vertexBuffer.storage);
+        for (i = 0; i < offsets.length; ++i) {
+            var index = offsets[i].offset;
+            var stride = offsets[i].stride;
+            for (j = 0; j < vertexBuffer.numVertices; ++j) {
+                typedArray[index] = one - typedArray[index];
+                index += stride;
+            }
+        }
+    };
+
+    if (floatOffsets.length > 0) {
+        flip(floatOffsets, Float32Array, 1.0);
+    }
+    if (shortOffsets.length > 0) {
+        flip(shortOffsets, Uint16Array, 65535);
+    }
+    if (byteOffsets.length > 0) {
+        flip(byteOffsets, Uint8Array, 255);
+    }
+};
+
+var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
+
+    var positionDesc = sourceDesc[SEMANTIC_POSITION];
+    var numVertices = positionDesc.count;
+
+    // generate vertexDesc elements
+    var vertexDesc = [];
+    for (var semantic in sourceDesc) {
+        if (sourceDesc.hasOwnProperty(semantic)) {
+            vertexDesc.push({
+                semantic: semantic,
+                components: sourceDesc[semantic].components,
+                type: sourceDesc[semantic].type,
+                normalize: !!sourceDesc[semantic].normalize
+            });
+        }
+    }
 
     // order vertexDesc to match the rest of the engine
     var elementOrder = [
@@ -218,19 +278,15 @@ var createVertexBufferInternal = function (device, numVertices, vertexDesc, posi
         return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
     });
 
-    // create vertex buffer
-    var vertexBuffer = new VertexBuffer(device,
-                                        new VertexFormat(device, vertexDesc),
-                                        numVertices,
-                                        BUFFER_STATIC);
-
     var i, j, k;
     var source, target, sourceOffset;
 
+    var vertexFormat = new VertexFormat(device, vertexDesc);
+
     // check whether source data is correctly interleaved
     var isCorrectlyInterleaved = true;
-    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
-        target = vertexBuffer.format.elements[i];
+    for (i = 0; i < vertexFormat.elements.length; ++i) {
+        target = vertexFormat.elements[i];
         source = sourceDesc[target.name];
         sourceOffset = source.offset - positionDesc.offset;
         if ((source.buffer !== positionDesc.buffer) ||
@@ -241,6 +297,12 @@ var createVertexBufferInternal = function (device, numVertices, vertexDesc, posi
             break;
         }
     }
+
+    // create vertex buffer
+    var vertexBuffer = new VertexBuffer(device,
+                                        vertexFormat,
+                                        numVertices,
+                                        BUFFER_STATIC);
 
     var vertexData = vertexBuffer.lock();
     var targetArray = new Uint32Array(vertexData);
@@ -274,15 +336,19 @@ var createVertexBufferInternal = function (device, numVertices, vertexDesc, posi
             }
         }
     }
+
+    if (!disableFlipV) {
+        flipTexCoordVs(vertexBuffer);
+    }
+
     vertexBuffer.unlock();
 
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV) {
 
     // build vertex buffer format desc and source
-    var vertexDesc = [];
     var sourceDesc = {};
     for (var attrib in attributes) {
         if (attributes.hasOwnProperty(attrib)) {
@@ -291,12 +357,6 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
 
             if (semanticMap.hasOwnProperty(attrib)) {
                 var semantic = semanticMap[attrib].semantic;
-                vertexDesc.push({
-                    semantic: semantic,
-                    components: getNumComponents(accessor.type),
-                    type: getComponentType(accessor.componentType),
-                    normalize: accessor.normalized
-                });
                 // store the info we'll need to copy this data into the vertex buffer
                 var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
                 var buffer = buffers[bufferView.buffer];
@@ -307,26 +367,26 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
                             (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
                             (buffer.byteOffset),
                     stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
-                    count: accessor.count
+                    count: accessor.count,
+                    components: getNumComponents(accessor.type),
+                    type: getComponentType(accessor.componentType),
+                    normalize: accessor.normalized
                 };
             }
         }
     }
 
-    // get position attribute
-    var positionDesc = sourceDesc[SEMANTIC_POSITION];
-    var numVertices = positionDesc.count;
-
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
+        // NOTE: this assumes the position data is tightly packed (not interleaved)
         var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
-        generateNormals(sourceDesc, vertexDesc, positions, numVertices, indices);
+        generateNormals(sourceDesc, positions, indices);
     }
 
-    return createVertexBufferInternal(device, numVertices, vertexDesc, positionDesc, sourceDesc);
+    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices) {
+var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV) {
 
     var numPoints = outputGeometry.num_points();
 
@@ -378,7 +438,6 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     };
 
     // build vertex buffer format desc and source
-    var vertexDesc = [];
     var sourceDesc = {};
     var attributes = extDraco.attributes;
     for (var attrib in attributes) {
@@ -386,13 +445,6 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
             var semanticInfo = semanticMap[attrib];
             var semantic = semanticInfo.semantic;
             var attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
-
-            vertexDesc.push({
-                semantic: semantic,
-                components: attributeInfo.numComponents,
-                type: attributeInfo.storageType,
-                normalize: attributeInfo.normalized
-            });
 
             // store the info we'll need to copy this data into the vertex buffer
             var size = attributeInfo.numComponents * attributeInfo.componentSizeInBytes;
@@ -402,21 +454,22 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
                 size: size,
                 offset: 0,
                 stride: size,
-                count: numPoints
+                count: numPoints,
+                components: attributeInfo.numComponents,
+                type: attributeInfo.storageType,
+                normalize: attributeInfo.normalized
             };
         }
     }
 
-    // get position attribute
-    var positionDesc = sourceDesc[SEMANTIC_POSITION];
-    var numVertices = positionDesc.count;
-
     // generate normals if they're missing (this should probably be a user option)
     if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        generateNormals(sourceDesc, vertexDesc, positionDesc.values, numVertices, indices);
+        // NOTE: this assumes the position data is tightly packed (not interleaved)
+        var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
+        generateNormals(sourceDesc, positions, indices);
     }
 
-    return createVertexBufferInternal(device, numVertices, vertexDesc, positionDesc, sourceDesc);
+    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
 var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buffers) {
@@ -465,7 +518,7 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buff
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
+var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback, disableFlipV) {
     var meshes = [];
 
     var semanticMap = {
@@ -548,7 +601,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -569,7 +622,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -1166,8 +1219,14 @@ var createMeshes = function (device, gltf, buffers, callback) {
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
         return [];
     }
+
+    // The original version of FACT generated incorrectly flipped V texture
+    // coordinates. We must compensate by -not- flipping V in this case. Once
+    // all models have been re-exported we can remove this flag.
+    var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
+
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
+        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback, disableFlipV);
     });
 };
 
@@ -1372,7 +1431,7 @@ var loadTexturesAsync = function (gltf, buffers, urlBase, registry, options, cal
         }
 
         // create and load the asset
-        var asset = new Asset('texture_' + index, 'texture',  file, { flipY: false }, { crossOrigin: crossOrigin });
+        var asset = new Asset('texture_' + index, 'texture',  file, null, { crossOrigin: crossOrigin });
         asset.on('load', function () {
             if (isBlobUrl) {
                 URL.revokeObjectURL(url);

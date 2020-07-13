@@ -16,8 +16,7 @@ function ImgParser(registry, retryRequests) {
     // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
     this.crossOrigin = registry.prefix ? 'anonymous' : null;
     this.retryRequests = !!retryRequests;
-    // temporarily disable image bitmap till cubemaps are correctly dealt with.
-    this.useImageBitmap = false;// typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
+    this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
 }
 
 Object.assign(ImgParser.prototype, {
@@ -104,7 +103,8 @@ Object.assign(ImgParser.prototype, {
                 callback(err);
             } else {
                 createImageBitmap(blob, {
-                    premultiplyAlpha: 'none'
+                    premultiplyAlpha: 'none',
+                    imageOrientation: 'flipY'
                 })
                     .then( function (imageBitmap) {
                         callback(null, imageBitmap);
