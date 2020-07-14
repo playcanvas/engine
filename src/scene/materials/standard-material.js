@@ -5,8 +5,7 @@ import { Vec4 } from '../../math/vec4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
-import { programlib } from '../../graphics/program-lib/program-lib.js';
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -971,10 +970,9 @@ Object.assign(StandardMaterial.prototype, {
             }
         }
 
-        var generator = programlib.standard;
-       // Minimal options for Depth and Shadow passes
+        // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
-        var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
+        var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);

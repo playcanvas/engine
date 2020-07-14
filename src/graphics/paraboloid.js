@@ -1,17 +1,20 @@
 import { math } from '../math/math.js';
 import { Vec4 } from '../math/vec4.js';
 
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
 
 var dpMult = 2.0;
 
 function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount, dontFlipX) {
-    var chunks = shaderChunks;
-    var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS,
-                                             (sourceCubemap.fixCubemapSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) + chunks.genParaboloidPS, "genParaboloid");
+    var seamsCode = sourceCubemap.fixCubemapSeams ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
+    var shader = createShaderFromCode(device,
+                                      shaderChunks.fullscreenQuadVS,
+                                      seamsCode + shaderChunks.genParaboloidPS,
+                                      "genParaboloid");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
     var params = new Vec4();
@@ -62,8 +65,10 @@ function generateDpAtlas(device, sixCubemaps, dontFlipX) {
     var params = new Vec4();
     var size = sixCubemaps[0].width * 2 * dpMult;
 
-    var chunks = shaderChunks;
-    var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.dpAtlasQuadPS, "dpAtlasQuad");
+    var shader = createShaderFromCode(device,
+                                      shaderChunks.fullscreenQuadVS,
+                                      shaderChunks.dpAtlasQuadPS,
+                                      "dpAtlasQuad");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
 

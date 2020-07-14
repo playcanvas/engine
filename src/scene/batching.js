@@ -11,7 +11,7 @@ import {
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 
 import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
 import { Mesh } from './mesh.js';
