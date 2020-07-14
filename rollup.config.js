@@ -208,7 +208,7 @@ var target_extras = {
 };
 
 var target_wasm = {
-    input: 'src/index_assemblyscript.js',
+    input: 'src/index.js',
     output: {
         banner: getBanner(''),
         file: 'build/playcanvas.assemblyscript.js',
