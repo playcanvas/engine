@@ -226,21 +226,23 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
  * @param {number[]} [opts.tangents] - An array of 3-dimensional vertex tangents.
- * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors.
+ * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors where each
+ * component is an integer in the range 0 to 255.
  * @param {number[]} [opts.uvs] - An array of 2-dimensional vertex texture coordinates.
  * @param {number[]} [opts.uvs1] - Same as opts.uvs, but for additional UV set
+ * @param {number[]} [opts.blendIndices] - An array of 4-dimensional bone indices where each
+ * component is an integer in the range 0 to 255.
+ * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
+ * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
- * @returns {pc.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
+ * @returns {pc.Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
- * // Create a new mesh supplying optional parameters using object literal notation
- * var mesh = pc.createMesh(
- *     graphicsDevice,
- *     positions,
- *     {
- *         normals: treeNormals,
- *         uvs: treeUvs,
- *         indices: treeIndices
- *     });
+ * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
+ * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
+ *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+ *     uvs: [0, 0, 1, 0, 0, 1],
+ *     indices: [0, 1, 2]
+ * });
  */
 function createMesh(device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
