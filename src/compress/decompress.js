@@ -6,11 +6,13 @@ function Decompress(node, srcToDst) {
 
 Object.assign(Decompress.prototype, {
     run: function () {
-        if (Array.isArray(this._node)) {
-            this._handleArray();
+        var type = Object.prototype.toString.call(this._node);
 
-        } else if (this._isMapNode()) {
+        if (type === '[object Object]') {
             this._handleMap();
+
+        } else if (type === '[object Array]') {
+            this._handleArray();
 
         } else {
             this._result = this._node;
@@ -47,11 +49,6 @@ Object.assign(Decompress.prototype, {
 
     _handleTreeKey: function (k) {
         return (k.length <= 2 && this._srcToDst[k]) || k;
-    },
-
-    _isMapNode: function () { // after array check
-        return typeof this._node === "object" &&
-            this._node !== null;
     }
 });
 
