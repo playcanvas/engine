@@ -36,6 +36,8 @@ function AnimStateGraph(data) {
             }
             this._layers.push(layer);
         }
+    } else {
+        this._layers = data.layers;
     }
     for (var paramId in data.parameters) {
         var param = data.parameters[paramId];
