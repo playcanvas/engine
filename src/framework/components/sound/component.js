@@ -364,8 +364,9 @@ Object.assign(SoundComponent.prototype, {
     /**
      * @function
      * @name pc.SoundComponent#resume
-     * @description Resumes playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be resumed.
-     * @param {string} name - The name of the slot to resume. Leave undefined to resume everything.
+     * @description Resumes playback of the sound slot with the specified name if it's paused. If no
+     * name is specified all slots will be resumed.
+     * @param {string} [name] - The name of the slot to resume. Leave undefined to resume everything.
      * @example
      * // resume all sounds
      * this.entity.sound.resume();
@@ -397,8 +398,9 @@ Object.assign(SoundComponent.prototype, {
     /**
      * @function
      * @name pc.SoundComponent#stop
-     * @description Stops playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be stopped.
-     * @param {string} name - The name of the slot to stop. Leave undefined to stop everything.
+     * @description Stops playback of the sound slot with the specified name if it's paused. If no
+     * name is specified all slots will be stopped.
+     * @param {string} [name] - The name of the slot to stop. Leave undefined to stop everything.
      * @example
      * // stop all sounds
      * this.entity.sound.stop();
