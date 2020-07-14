@@ -20,8 +20,9 @@ import {
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP
 } from '../graphics/graphics.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
@@ -487,8 +488,7 @@ function ForwardRenderer(graphicsDevice) {
     this.sourceId = scope.resolve("source");
     this.pixelOffsetId = scope.resolve("pixelOffset");
     this.weightId = scope.resolve("weight[0]");
-    var chunks = shaderChunks;
-    this.blurVsmShaderCode = [chunks.blurVSMPS, "#define GAUSS\n" + chunks.blurVSMPS];
+    this.blurVsmShaderCode = [shaderChunks.blurVSMPS, "#define GAUSS\n" + shaderChunks.blurVSMPS];
     var packed = "#define PACKED\n";
     this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
     this.blurVsmShader = [{}, {}];
@@ -1535,7 +1535,7 @@ Object.assign(ForwardRenderer.prototype, {
                                 blurFS += this.blurVsmShaderCode[blurMode];
                             }
                             var blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
-                            blurShader = shaderChunks.createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+                            blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
 
                             if (isVsm8) {
                                 this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
@@ -1751,14 +1751,12 @@ Object.assign(ForwardRenderer.prototype, {
                         drawCall._lightHash = lightHash;
                     }
 
-                    // #ifdef DEBUG
-                    if (!device.setShader(drawCall._shader[pass])) {
+                    if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
+                        // #ifdef DEBUG
                         console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                        drawCall.material = scene.defaultMaterial;
+                        // #endif
+                        drawCall._shader[pass].failed = true;
                     }
-                    // #else
-                    device.setShader(drawCall._shader[pass]);
-                    // #endif
 
                     // Uniforms I: material
                     parameters = material.parameters;
