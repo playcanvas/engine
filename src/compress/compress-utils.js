@@ -2,18 +2,20 @@ import { Decompress } from './decompress.js';
 
 var CompressUtils = {
     decompressEntities: function (data, compressed) {
-        data.entities = new Decompress(data.entities, compressed.fieldMap).run();
+        if (compressed) {
+            data.entities = new Decompress(data.entities, compressed.fieldMap).run();
+        }
     },
 
     setCompressedPRS: function (entity, data, compressed) {
-        var a = compressed.locationData.singleVecs;
+        var a = compressed.singleVecs;
 
         var b, i;
 
         var v = data.___1;
 
         if (!v) {
-            b = compressed.locationData.tripleVecs;
+            b = compressed.tripleVecs;
 
             i = data.___2;
         }

@@ -15,11 +15,8 @@ Object.assign(SceneParser.prototype, {
         var id, i;
         var parent = null;
 
-        var compressed = data.format_compressed;
-
-        if (compressed) {
-            CompressUtils.decompressEntities(data, compressed);
-        }
+        var compressed = data.compressedFormat;
+        CompressUtils.decompressEntities(data, compressed);
 
         if (data.collapsedInstances) {
             this._addCollapsedToEntities(this._app, data);
@@ -49,6 +46,8 @@ Object.assign(SceneParser.prototype, {
         }
 
         this._openComponentData(parent, data.entities);
+
+        delete data.compressedFormat;
 
         return parent;
     },
