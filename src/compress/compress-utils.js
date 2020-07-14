@@ -3,7 +3,7 @@ import { Decompress } from './decompress.js';
 var CompressUtils = {
     decompressEntities: function (data, compressed) {
         if (compressed) {
-            data.entities = new Decompress(data.entities, compressed.fieldMap).run();
+            data.entities = new Decompress(data.entities, compressed).run();
         }
     },
 
@@ -31,6 +31,22 @@ var CompressUtils = {
         n = v ? v[2] : b[i+2];
 
         entity.setLocalScale(a[n], a[n+1], a[n+2]);
+    },
+
+    oneCharToKey: function (s, data) {
+        var i = s.charCodeAt(0) - data.fieldFirstCode;
+
+        return data.fieldArray[i];
+    },
+
+    multCharToKey: function (s, data) {
+        var ind = 0;
+
+        for (var i = 0; i < s.length; i++) {
+            ind = ind * data.fieldCodeBase + s.charCodeAt(i) - data.fieldFirstCode;
+        }
+
+        return data.fieldArray[ind];
     }
 };
 

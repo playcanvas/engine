@@ -1,7 +1,9 @@
-function Decompress(node, srcToDst) {
+import { CompressUtils } from './compress-utils';
+
+function Decompress(node, data) {
     this._node = node;
 
-    this._srcToDst = srcToDst;
+    this._data = data;
 }
 
 Object.assign(Decompress.prototype, {
@@ -30,9 +32,17 @@ Object.assign(Decompress.prototype, {
     },
 
     _handleKey: function (origKey) {
-        var newKey = this._handleTreeKey(origKey);
+        var newKey = origKey;
 
-        this._result[newKey] = new Decompress(this._node[origKey], this._srcToDst).run();
+        var len = origKey.length;
+
+        if (len === 1) {
+            newKey = CompressUtils.oneCharToKey(origKey, this._data);
+        } else if (len === 2) {
+            newKey = CompressUtils.multCharToKey(origKey, this._data);
+        }
+
+        this._result[newKey] = new Decompress(this._node[origKey], this._data).run();
     },
 
     _handleArray: function () {
@@ -42,13 +52,9 @@ Object.assign(Decompress.prototype, {
     },
 
     _handleArElt: function (elt) {
-        var v = new Decompress(elt, this._srcToDst).run();
+        var v = new Decompress(elt, this._data).run();
 
         this._result.push(v);
-    },
-
-    _handleTreeKey: function (k) {
-        return (k.length <= 2 && this._srcToDst[k]) || k;
     }
 });
 
