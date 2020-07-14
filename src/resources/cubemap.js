@@ -224,10 +224,11 @@ Object.assign(CubemapHandler.prototype, {
         var assets = [null, null, null, null, null, null, null];
         var loadedAssetIds = cubemapAsset._handlerState.assetIds;
         var loadedAssets = cubemapAsset._handlerState.assets;
+        var registry = self._registry;
 
         // one of the dependent assets has finished loading
         var awaiting = 7;
-        var onLoad = function (index, asset) {
+        var onReady = function (index, asset) {
             assets[index] = asset;
             awaiting--;
 
@@ -238,7 +239,10 @@ Object.assign(CubemapHandler.prototype, {
             }
         };
 
-        var onNewLoad = function (index, asset) {
+        // handle a texture asset finished loading.
+        // the engine is unable to flip ImageBitmaps (to orient them correctly for cubemaps)
+        // so we do that here.
+        var onLoad = function (index, asset) {
             var level0 = asset && asset.resource && asset.resource._levels[0];
             if (level0 && typeof ImageBitmap !== 'undefined' && level0 instanceof ImageBitmap) {
                 createImageBitmap(level0, {
@@ -247,13 +251,13 @@ Object.assign(CubemapHandler.prototype, {
                 })
                     .then( function (imageBitmap) {
                         asset.resource._levels[0] = imageBitmap;
-                        onLoad(index, asset);
+                        onReady(index, asset);
                     })
                     .catch( function (e) {
                         callback(e);
                     });
             } else {
-                onLoad(index, asset);
+                onReady(index, asset);
             }
         };
 
@@ -262,40 +266,49 @@ Object.assign(CubemapHandler.prototype, {
             callback(err);
         };
 
-        var registry = self._registry;
+        // process the texture asset
+        var processTexAsset = function (index, texAsset) {
+            if (texAsset.loaded) {
+                // asset already exists
+                onLoad(index, texAsset);
+            } else {
+                // asset is not loaded, register for load and error events
+                registry.once('load:' + texAsset.id, onLoad.bind(self, index));
+                registry.once('error:' + texAsset.id, onError.bind(self, index));
+                if (!texAsset.loading) {
+                    // kick off load if it's not already
+                    registry.load(texAsset);
+                }
+            }
+        };
+
         var texAsset;
         for (var i = 0; i < 7; ++i) {
             var assetId = assetIds[i];
 
             if (!assetId) {
                 // no asset
-                onLoad(i, null);
+                onReady(i, null);
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
-                onLoad(i, loadedAssets[i]);
+                onReady(i, loadedAssets[i]);
             } else if (parseInt(assetId, 10) === assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);
                 if (texAsset) {
-                    if (texAsset.loaded) {
-                        // asset already exists
-                        onLoad(i, texAsset);
-                    } else {
-                        // asset is not loaded, register for load and error events
-                        registry.once('load:' + assetId, onNewLoad.bind(self, i));
-                        registry.once('error:' + assetId, onError.bind(self, i));
-                        if (!texAsset.loading) {
-                            // kick off load if it's not already
-                            registry.load(texAsset);
-                        }
-                    }
+                    processTexAsset(i, texAsset);
                 } else {
-                    // asset hasn't been created yet, wait till it is
-                    registry.on('add:' + assetId, function (index, assetId_, texAsset) {
-                        // store the face asset and kick off loading immediately
-                        registry.once('load:' + assetId_, onNewLoad.bind(self, index));
-                        registry.once('error:' + assetId_, onError.bind(self, index));
-                        registry.load(texAsset);
+                    // if we are unable to find the dependent asset, then we introduce here an
+                    // asynchronous step. this gives the caller (for example the scene loader)
+                    // a chance to add the dependent scene texture to registry before we attempt
+                    // to get the asset again.
+                    setTimeout(function (index, assetId_) {
+                        var texAsset = registry.get(assetId_);
+                        if (texAsset) {
+                            processTexAsset(index, texAsset);
+                        } else {
+                            onError(index, "failed to find dependent cubemap asset=" + assetId_);
+                        }
                     }.bind(null, i, assetId));
                 }
             } else {
@@ -306,7 +319,7 @@ Object.assign(CubemapHandler.prototype, {
                 } : assetId;
                 texAsset = new Asset(cubemapAsset.name + "_part_" + i, "texture", file);
                 registry.add(texAsset);
-                registry.once('load:' + texAsset.id, onNewLoad.bind(self, i));
+                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));
                 registry.load(texAsset);
             }
