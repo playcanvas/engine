@@ -1,5 +1,15 @@
 import { CompressUtils } from './compress-utils';
 
+/**
+ * @private
+ * @class
+ * @name pc.Decompress
+ * @classdesc Reconstruct original object field names in a
+ *   compressed scene
+ * @param {object} node - The current node of the object being
+ *   decompressed, initially the 'entities' field of a scene
+ * @param {object} data - Compression metadata
+ */
 function Decompress(node, data) {
     this._node = node;
 
