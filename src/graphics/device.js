@@ -2166,6 +2166,10 @@ Object.assign(GraphicsDevice.prototype, {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
             this.boundElementBuffer = null;
 
+            // #ifdef DEBUG
+            var locZero = false;
+            // #endif
+
             var e, elements;
             for (i = 0; i < vertexBuffers.length; i++) {
 
@@ -2178,6 +2182,12 @@ Object.assign(GraphicsDevice.prototype, {
                 for (var j = 0; j < elements.length; j++) {
                     e = elements[j];
                     var loc = semanticToLocation[e.name];
+
+                    // #ifdef DEBUG
+                    if (loc === 0) {
+                        locZero = true;
+                    }
+                    // #endif
 
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
@@ -2198,6 +2208,12 @@ Object.assign(GraphicsDevice.prototype, {
             if (useCache) {
                 this._vaoMap.set(key, vao);
             }
+
+            // #ifdef DEBUG
+            if (!locZero) {
+                console.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
+            }
+            // #endif
         }
 
         return vao;
