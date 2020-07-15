@@ -8,8 +8,8 @@ mat4 getBoneMatrix(const in float i) {
     float dx = texture_poseMapSize.z;
     float dy = texture_poseMapSize.w;
 
-    float x = mod(j, float(texture_poseMapSize.x));
     float y = floor(j * dx);
+    float x = j - (y * texture_poseMapSize.x);
     y = dy * (y + 0.5);
 
     // read elements of 4x3 matrix
