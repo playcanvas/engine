@@ -9,7 +9,7 @@ import './polyfill/string.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
-export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';
+export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
