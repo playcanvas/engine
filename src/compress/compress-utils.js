@@ -1,11 +1,15 @@
-import { Decompress } from './decompress.js';
-
 var CompressUtils = {
-    decompressEntities: function (data, compressed) {
-        if (compressed) {
-            data.entities = new Decompress(data.entities, compressed).run();
-        }
-    },
+    /**
+     * @private
+     * @function
+     * @name pc.CompressUtils#decompressEntities
+     * @description Delay execution of the callback until collapsedInstances
+     * are expanded (if present). For expansion we need to wait for template assets
+     * to load.
+     * @param {object} data - Raw scene data from the database.
+     * @param {pc.AssetRegistry} assets - The application's asset registry.
+     * @param {Function} callback - The callback to execute after template assets are loaded.
+     */
 
     setCompressedPRS: function (entity, data, compressed) {
         var a = compressed.singleVecs;
