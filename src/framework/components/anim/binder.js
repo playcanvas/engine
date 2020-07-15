@@ -41,7 +41,7 @@ Object.assign(AnimComponentBinder.prototype, {
                 propertyComponent = entity;
                 break;
             case 'graph':
-                if (!this.nodes[entityHierarchy[0]]) {
+                if (!this.nodes || !this.nodes[entityHierarchy[0]]) {
                     return null;
                 }
                 propertyComponent = this.nodes[entityHierarchy[0]].node;
