@@ -2,15 +2,13 @@ var CompressUtils = {
     /**
      * @private
      * @function
-     * @name pc.CompressUtils#decompressEntities
-     * @description Delay execution of the callback until collapsedInstances
-     * are expanded (if present). For expansion we need to wait for template assets
-     * to load.
-     * @param {object} data - Raw scene data from the database.
-     * @param {pc.AssetRegistry} assets - The application's asset registry.
-     * @param {Function} callback - The callback to execute after template assets are loaded.
+     * @name pc.CompressUtils#setCompressedPRS
+     * @description Set position, rotation and scale of an entity
+     *   using compressed scene format
+     * @param {pc.Entity} entity - The entity
+     * @param {object} data - Json entity data from a compressed scene
+     * @param {object} compressed - Compression metadata
      */
-
     setCompressedPRS: function (entity, data, compressed) {
         var a = compressed.singleVecs;
 
@@ -37,12 +35,32 @@ var CompressUtils = {
         entity.setLocalScale(a[n], a[n + 1], a[n + 2]);
     },
 
+    /**
+     * @private
+     * @function
+     * @name pc.CompressUtils#oneCharToKey
+     * @description Retrieve the original field name (key) for a
+     *   single character key from a compressed entity
+     * @param {string} s - The compressed key string
+     * @param {object} data - Compression metadata
+     * @returns {string} The original key
+     */
     oneCharToKey: function (s, data) {
         var i = s.charCodeAt(0) - data.fieldFirstCode;
 
         return data.fieldArray[i];
     },
 
+    /**
+     * @private
+     * @function
+     * @name pc.CompressUtils#multCharToKey
+     * @description Retrieve the original field name (key) for a
+     *   multi-character key from a compressed entity
+     * @param {string} s - The compressed key string
+     * @param {object} data - Compression metadata
+     * @returns {string} The original key
+     */
     multCharToKey: function (s, data) {
         var ind = 0;
 
