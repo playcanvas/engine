@@ -12,7 +12,7 @@ function SceneParser(app, isTemplate) {
 Object.assign(SceneParser.prototype, {
     parse: function (data) {
         var entities = {};
-        var id, i;
+        var id, i, curEnt;
         var parent = null;
 
         var compressed = data.compressedFormat;
@@ -25,7 +25,7 @@ Object.assign(SceneParser.prototype, {
         // instantiate entities
         for (id in data.entities) {
             var curData = data.entities[id];
-            var curEnt = this._createEntity(curData, compressed);
+            curEnt = this._createEntity(curData, compressed);
             entities[id] = curEnt;
             if (curData.parent === null) {
                 parent = curEnt;
@@ -34,7 +34,7 @@ Object.assign(SceneParser.prototype, {
 
         // put entities into hierarchy
         for (id in data.entities) {
-            var curEnt = entities[id];
+            curEnt = entities[id];
             var children = data.entities[id].children;
             var len = children.length;
             for (i = 0; i < len; i++) {

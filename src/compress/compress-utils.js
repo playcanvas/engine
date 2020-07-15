@@ -22,15 +22,15 @@ var CompressUtils = {
 
         var n = v ? v[0] : b[i];
 
-        entity.setLocalPosition(a[n], a[n+1], a[n+2]);
+        entity.setLocalPosition(a[n], a[n + 1], a[n + 2]);
 
-        n = v ? v[1] : b[i+1];
+        n = v ? v[1] : b[i + 1];
 
-        entity.setLocalEulerAngles(a[n], a[n+1], a[n+2]);
+        entity.setLocalEulerAngles(a[n], a[n + 1], a[n + 2]);
 
-        n = v ? v[2] : b[i+2];
+        n = v ? v[2] : b[i + 2];
 
-        entity.setLocalScale(a[n], a[n+1], a[n+2]);
+        entity.setLocalScale(a[n], a[n + 1], a[n + 2]);
     },
 
     oneCharToKey: function (s, data) {
