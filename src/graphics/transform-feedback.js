@@ -150,6 +150,11 @@ Object.assign(TransformFeedback.prototype, {
             var tmp = this._inputBuffer.bufferId;
             this._inputBuffer.bufferId = this._outputBuffer.bufferId;
             this._outputBuffer.bufferId = tmp;
+
+            // swap VAO
+            tmp = this._inputBuffer._vao;
+            this._inputBuffer._vao = this._outputBuffer._vao;
+            this._outputBuffer._vao = tmp;
         }
     }
 });

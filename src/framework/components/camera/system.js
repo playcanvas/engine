@@ -1,4 +1,3 @@
-import { type } from '../../../core/core.js';
 import { Color } from '../../../core/color.js';
 
 import { Vec4 } from '../../../math/vec4.js';
@@ -113,21 +112,21 @@ Object.assign(CameraComponentSystem.prototype, {
             data[property] = _data[property];
         }
 
-        if (data.layers && type(data.layers) === 'array') {
+        if (data.layers && Array.isArray(data.layers)) {
             data.layers = data.layers.slice(0);
         }
 
-        if (data.clearColor && type(data.clearColor) === 'array') {
+        if (data.clearColor && Array.isArray(data.clearColor)) {
             var c = data.clearColor;
             data.clearColor = new Color(c[0], c[1], c[2], c[3]);
         }
 
-        if (data.rect && type(data.rect) === 'array') {
+        if (data.rect && Array.isArray(data.rect)) {
             var rect = data.rect;
             data.rect = new Vec4(rect[0], rect[1], rect[2], rect[3]);
         }
 
-        if (data.scissorRect && type(data.scissorRect) === 'array') {
+        if (data.scissorRect && Array.isArray(data.scissorRect)) {
             var scissorRect = data.scissorRect;
             data.scissorRect = new Vec4(scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
         }
