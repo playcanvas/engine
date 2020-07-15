@@ -129,6 +129,13 @@ export function inherits(Self, Super) {
     return Func;
 }
 
+export function makeArray(arr) {
+    // #ifdef DEBUG
+    console.warn('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
+    // #endif
+    return Array.prototype.slice.call(arr);
+}
+
 // MATH
 import { math } from './math/math.js';
 import { Vec2 } from './math/vec2.js';
