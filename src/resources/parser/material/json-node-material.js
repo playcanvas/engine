@@ -8,7 +8,7 @@ import { Texture } from '../../../graphics/texture.js';
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
 import { NodeMaterial } from '../../../scene/materials/node-material.js';
-import { ShaderGraphNode } from '../scene/materials/shader-node.js';
+import { ShaderGraphNode } from '../../../scene/materials/shader-node.js';
 
 /**
  * @private

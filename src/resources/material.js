@@ -20,8 +20,9 @@ function MaterialHandler(app) {
 
     this._placeholderTextures = null;
    
-    this._binder = null;
-    this._parser = null;
+    this._parsers = [];
+    this._binders = [];
+
     this.retryRequests = false;
 }
 
@@ -51,26 +52,31 @@ Object.assign(MaterialHandler.prototype, {
         });
     },
 
-    _assignParserAndBinderBasedOnSubClass: function (data) {
-        if (data.shaderGraph) //maybe there is a better way to tell if node material path should be taken?
+    _getSubClass: function (data) {
+        //maybe there is a better way to tell if node material path should be taken?
+        var subclass = 'Standard'
+        if (data.shaderGraph) 
         {
-            this._parser = new JsonNodeMaterialParser();
-            this._binder = new NodeMaterialBinder(this._assets, this._device, this._parser);
+            subclass = 'Node';
+
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser();
+            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
         }
         else
         {
-            this._parser = new JsonStandardMaterialParser();
-            this._binder = new StandardMaterialBinder(this._assets, this._device, this._parser);
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser();
+            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
+
         }
+
+        return subclass;
     },
 
     open: function (url, data) {
-        if (!this._parser || !this._binder) 
-        {
-            this._assignParserAndBinderBasedOnSubClass(data);
-        }
+        
+        var subclass = this._getSubClass(data);
 
-        var material = this._parser.parse(data);
+        var material = this._parsers[subclass].parse(data);
 
         // temp storage for engine-only as we need this during patching
         if (data._engine) {
@@ -93,15 +99,12 @@ Object.assign(MaterialHandler.prototype, {
         asset.data.name = asset.name;
         asset.resource.name = asset.name;
 
-        if (!this._parser || !this._binder) 
-        {
-            this._assignParserAndBinderBasedOnSubClass(asset.data);
-        }        
+        var subclass = this._getSubClass(data);
 
-        this._binder.bindAndAssignAssets(asset, assets);
+        this._binders[subclass].bindAndAssignAssets(asset, assets);
 
-        asset.off('unload', this._binder.onAssetUnload, this);
-        asset.on('unload', this._binder.onAssetUnload, this);
+        asset.off('unload', this._binders[subclass].onAssetUnload, this);
+        asset.on('unload', this._binders[subclass].onAssetUnload, this);
     },
 
 });
