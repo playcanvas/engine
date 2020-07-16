@@ -254,7 +254,6 @@ var GraphicsDevice = function (canvas, options) {
     this.autoInstancingMaxObjects = 16384;
     this.defaultFramebuffer = null;
     this.boundVao = null;
-    this.boundElementBuffer = null;
     this.transformFeedbackBuffer = null;
     this.activeFramebuffer = null;
     this.textureUnit = 0;
@@ -990,7 +989,6 @@ Object.assign(GraphicsDevice.prototype, {
             this.buffers[i].unlock();
         }
         this.boundVao = null;
-        this.boundElementBuffer = null;
         this.indexBuffer = null;
         this.vertexBuffers = [];
 
@@ -1442,7 +1440,6 @@ Object.assign(GraphicsDevice.prototype, {
      */
     updateBegin: function () {
         this.boundVao = null;
-        this.boundElementBuffer = null;
 
         // clear texture units once a frame on desktop safari
         if (this._tempEnableSafariTextureUnitWorkaround) {
@@ -2164,7 +2161,6 @@ Object.assign(GraphicsDevice.prototype, {
 
             // don't capture index buffer in VAO
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-            this.boundElementBuffer = null;
 
             // #ifdef DEBUG
             var locZero = false;
@@ -2221,7 +2217,7 @@ Object.assign(GraphicsDevice.prototype, {
 
     setBuffers: function () {
         var gl = this.gl;
-        var vertexBuffer, bufferId, vao;
+        var vertexBuffer, vao;
 
         // create VAO for specified vertex buffers
         if (this.vertexBuffers.length === 1) {
@@ -2247,11 +2243,10 @@ Object.assign(GraphicsDevice.prototype, {
         this.vertexBuffers.length = 0;
 
         // Set the active index buffer object
-        bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
-        if (this.boundElementBuffer !== bufferId) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
-            this.boundElementBuffer = bufferId;
-        }
+        // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
+        // and so we don't know what VAO sets it to.
+        var bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     },
 
     /**
