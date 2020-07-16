@@ -8,11 +8,12 @@ import { Texture } from '../../../graphics/texture.js';
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
 import { NodeMaterial } from '../../../scene/materials/node-material.js';
+import { ShaderGraphNode } from '../scene/materials/shader-node.js';
 
 /**
  * @private
  * @name pc.JsonNodeMaterialParser
- * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
+ * @description Convert incoming JSON data into a {@link pc.NodeMaterial}.
  */
 function JsonNodeMaterialParser() {
     this._validator = null;
@@ -22,7 +23,7 @@ JsonNodeMaterialParser.prototype.parse = function (input) {
     var migrated = this.migrate(input);
     var validated = this._validate(migrated);
 
-    var material = new StandardMaterial();
+    var material = new NodeMaterial();
     this.initialize(material, validated);
 
     return material;
@@ -43,21 +44,23 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     for (var key in data) {
         var value = data[key];
 
-        var isTexture = (value.indexOf('tex_')===0);
-        var isVec2 = (value.indexOf('vec2_')===0);
-        var isRgb = (value.indexOf('rgb_')===0);
-        var isBoundingbox = (value.indexOf('bb_')===0);
+        var isGraph = (key=='shaderGraph');
+
+        var isTexture = (key.indexOf('tex_')===0);
+        var isVec2 = (key.indexOf('vec2_')===0);
+        var isRgb = (key.indexOf('rgb_')===0);
+        var isBoundingbox = (key.indexOf('bb_')===0);
 
         if (isVec2) {
             material[key] = new Vec2(value[0], value[1]);
         } else if (isRgb) {
             material[key] = new Color(value[0], value[1], value[2]);
-        } else if (isTexture) {
-            if (value instanceof Texture) {
+        } else if (isTexture || isGraph) {
+            if (value instanceof Texture || value instanceof ShaderGraphNode) {
                 material[key] = value;
             } else if (material[key] instanceof Texture && typeof(value) === 'number' && value > 0) {
-                // material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
-                // leave current texture (probably a placeholder) until the asset is loaded
+                // material already has a texture or graph assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
+                // leave current texture/graph (probably a placeholder) until the asset is loaded
             } else {
                 material[key] = null;
             }
