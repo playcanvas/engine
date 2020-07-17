@@ -207,14 +207,14 @@ BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
 
 Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMatrix instead.');
+    console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
     // #endif
 
     var viewProj = new Mat4();
 
     viewProj.mul2(projectionMatrix, viewMatrix);
 
-    this.setFromMatrix(viewProj);
+    this.setFromMat4(viewProj);
 };
 
 // GRAPHICS

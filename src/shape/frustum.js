@@ -27,11 +27,11 @@ function Frustum(projectionMatrix, viewMatrix) {
 Object.assign(Frustum.prototype, {
     /**
      * @function
-     * @name pc.Frustum#setFromMatrix
+     * @name pc.Frustum#setFromMat4
      * @description Updates the frustum shape based on the supplied 4x4 matrix.
      * @param {pc.Mat4} matrix - The matrix describing the shape of the frustum.
      */
-    setFromMatrix: function (matrix) {
+    setFromMat4: function (matrix) {
         var vpm = matrix.data;
 
         var plane;

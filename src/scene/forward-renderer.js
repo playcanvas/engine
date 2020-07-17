@@ -615,12 +615,12 @@ Object.assign(ForwardRenderer.prototype, {
             viewInvMat.copy(viewMat).invert();
             this.viewInvId.setValue(viewInvMat.data);
             viewProjMat.mul2(projMat, viewMat);
-            camera.frustum.setFromMatrix(viewProjMat);
+            camera.frustum.setFromMat4(viewProjMat);
         } else if (camera.xr && camera.xr.views.length) {
             // calculate frustum based on XR view
             var view = camera.xr.views[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);
-            camera.frustum.setFromMatrix(viewProjMat);
+            camera.frustum.setFromMat4(viewProjMat);
             return;
         }
 
@@ -638,7 +638,7 @@ Object.assign(ForwardRenderer.prototype, {
         viewMat.copy(viewInvMat).invert();
 
         viewProjMat.mul2(projMat, viewMat);
-        camera.frustum.setFromMatrix(viewProjMat);
+        camera.frustum.setFromMat4(viewProjMat);
     },
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
@@ -711,7 +711,7 @@ Object.assign(ForwardRenderer.prototype, {
             viewPosR.z = viewInvR.data[14];
 
             viewProjMat.mul2(projMat, viewMat);
-            camera.frustum.setFromMatrix(viewProjMat);
+            camera.frustum.setFromMat4(viewProjMat);
         } else if (camera.xr && camera.xr.session) {
             parent = camera._node.parent;
             if (parent) transform = parent.getWorldTransform();
@@ -736,7 +736,7 @@ Object.assign(ForwardRenderer.prototype, {
                 view.position[1] = view.viewInvOffMat.data[13];
                 view.position[2] = view.viewInvOffMat.data[14];
 
-                camera.frustum.setFromMatrix(view.projViewOffMat);
+                camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
             // Projection Matrix
@@ -777,7 +777,7 @@ Object.assign(ForwardRenderer.prototype, {
 
             this.viewPosId.setValue(this.viewPos);
 
-            camera.frustum.setFromMatrix(viewProjMat);
+            camera.frustum.setFromMat4(viewProjMat);
         }
 
         // Near and far clip values
