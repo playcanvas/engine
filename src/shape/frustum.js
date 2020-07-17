@@ -1,27 +1,17 @@
-import { Mat4 } from '../math/mat4.js';
-
 /**
  * @class
  * @name pc.Frustum
- * @classdesc A frustum is a shape that defines the viewing space of a camera.
+ * @classdesc A frustum is a shape that defines the viewing space of a camera. It can be
+ * use to determine visibility of points and bounding spheres. Typically, you would not
+ * create a Frustum shape directly, but instead query {@link pc.CameraComponent#frustum}.
  * @description Creates a new frustum shape.
  * @example
- * // Create a new frustum equivalent to one held by a camera component
- * var projectionMatrix = entity.camera.projectionMatrix;
- * var viewMatrix = entity.camera.viewMatrix;
- * var frustum = new pc.Frustum(projectionMatrix, viewMatrix);
- * @param {pc.Mat4} projectionMatrix - The projection matrix describing the shape of the frustum.
- * @param {pc.Mat4} viewMatrix - The inverse of the world transformation matrix for the frustum.
+ * var frustum = new pc.Frustum();
  */
-function Frustum(projectionMatrix, viewMatrix) {
-    projectionMatrix = projectionMatrix || new Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
-    viewMatrix = viewMatrix || new Mat4();
-
+function Frustum() {
     this.planes = [];
     for (var i = 0; i < 6; i++)
         this.planes[i] = [];
-
-    this.update(projectionMatrix, viewMatrix);
 }
 
 Object.assign(Frustum.prototype, {
@@ -30,6 +20,14 @@ Object.assign(Frustum.prototype, {
      * @name pc.Frustum#setFromMat4
      * @description Updates the frustum shape based on the supplied 4x4 matrix.
      * @param {pc.Mat4} matrix - The matrix describing the shape of the frustum.
+     * @example
+     * // Create a perspective projection matrix
+     * var projMat = pc.Mat4();
+     * projMat.setPerspective(45, 16 / 9, 1, 1000);
+     *
+     * // Create a frustum shape that is represented by the matrix
+     * var frustum = new pc.Frustum();
+     * frustum.setFromMat4(projMat);
      */
     setFromMat4: function (matrix) {
         var vpm = matrix.data;
