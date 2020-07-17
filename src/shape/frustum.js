@@ -2,7 +2,7 @@
  * @class
  * @name pc.Frustum
  * @classdesc A frustum is a shape that defines the viewing space of a camera. It can be
- * use to determine visibility of points and bounding spheres. Typically, you would not
+ * used to determine visibility of points and bounding spheres. Typically, you would not
  * create a Frustum shape directly, but instead query {@link pc.CameraComponent#frustum}.
  * @description Creates a new frustum shape.
  * @example
