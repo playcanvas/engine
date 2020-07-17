@@ -83,6 +83,7 @@ var standardMaterialParameterTypes = {
     clearCoatGlossMapUv: 'number',
     clearCoatGlossMapTiling: 'vec2',
     clearCoatGlossMapOffset: 'vec2',
+    clearCoatBumpiness: 'number',
     clearCoatNormalMap: 'texture',
     clearCoatNormalMapUv: 'number',
     clearCoatNormalMapTiling: 'vec2',

@@ -766,6 +766,7 @@ Object.assign(StandardMaterial.prototype, {
             this._setParameter('material_clearCoat', this.clearCoat);
             this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
             this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
+            this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
         uniform = this.getUniform("shininess", this.shininess, true);
@@ -1034,6 +1035,7 @@ var _defineMaterialProps = function (obj) {
     _defineFloat(obj, "anisotropy", 0);
     _defineFloat(obj, "clearCoat", 0);
     _defineFloat(obj, "clearCoatGlossiness", 1);
+    _defineFloat(obj, "clearCoatBumpiness", 1);
     _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
     _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
