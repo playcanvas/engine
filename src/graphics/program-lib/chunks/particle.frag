@@ -27,11 +27,11 @@ float unpackFloat(vec4 rgbaDepth) {
 #endif
 
 void main(void) {
-    vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
-    vec4 ramp     = texture2DSRGB(colorParam, vec2(texCoordsAlphaLife.w, 0.0));
+    vec4 tex  = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
+    vec4 ramp = texture2DSRGB(colorParam, vec2(texCoordsAlphaLife.w, 0.0));
     ramp.rgb *= colorMult;
 
     ramp.a += texCoordsAlphaLife.z;
 
-    vec3 rgb =     tex.rgb * ramp.rgb;
-    float a =         tex.a * ramp.a;
+    vec3 rgb = tex.rgb * ramp.rgb;
+    float a  = tex.a * ramp.a;

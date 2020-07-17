@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <script src="../wasm-loader.js"></script>
     <style>
         body { 
@@ -43,35 +44,32 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // Set the gravity for our rigid bodies
         app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
-        function createMaterial (color) {
+        function createMaterial(color) {
             var material = new pc.StandardMaterial();
             material.diffuse = color;
             // we need to call material.update when we change its properties
-            material.update()
+            material.update();
             return material;
         }
 
         // create a few materials for our objects
-        var white = createMaterial(new pc.Color(1, 1, 1));
-        var red = createMaterial(new pc.Color(1, 0, 0));
-        var green = createMaterial(new pc.Color(0, 1, 0));
-        var blue = createMaterial(new pc.Color(0, 0, 1));
-        var yellow = createMaterial(new pc.Color(1, 1, 0));
+        var red = createMaterial(new pc.Color(1, 0.3, 0.3));
+        var gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
         // ***********    Create our floor   *******************
 
         var floor = new pc.Entity();
         floor.addComponent("model", {
-            type: "box"
+            type: "box",
+            material: gray
         });
-
-        // make the floor white
-        floor.model.material = white;
 
         // scale it
         floor.setLocalScale(10, 1, 10);
@@ -134,7 +132,8 @@
         var boxTemplate = new pc.Entity();
         boxTemplate.addComponent("model", {
             type: "box",
-            castShadows: true
+            castShadows: true,
+            material: gray
         });
 
          // ...a rigidbody component of type 'dynamic' so that it is simulated
@@ -151,16 +150,14 @@
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
 
-        // make the box red
-        boxTemplate.model.material = red;
-
         // Create other shapes too for variety...
 
         // A sphere...
         var sphereTemplate = new pc.Entity();
         sphereTemplate.addComponent("model", {
             type: "sphere",
-            castShadows: true
+            castShadows: true,
+            material: gray
         });
 
         sphereTemplate.addComponent("rigidbody", {
@@ -174,15 +171,12 @@
             radius: 0.5
         });
 
-
-        // make the sphere green
-        sphereTemplate.model.material = green;
-
         // A capsule...
         var capsuleTemplate = new pc.Entity();
         capsuleTemplate.addComponent("model", {
             type: "capsule",
-            castShadows: true
+            castShadows: true,
+            material: gray
         });
 
         capsuleTemplate.addComponent("rigidbody", {
@@ -197,15 +191,12 @@
             height: 2
         });
 
-
-        // make the capsule blue
-        capsuleTemplate.model.material = blue;
-
         // A cylinder...
         var cylinderTemplate = new pc.Entity();
         cylinderTemplate.addComponent("model", {
             type: "cylinder",
-            castShadows: true
+            castShadows: true,
+            material: gray
         });
 
         cylinderTemplate.addComponent("rigidbody", {
@@ -220,10 +211,6 @@
             height: 1
         });
 
-
-        // make the cylinder yellow
-        cylinderTemplate.model.material = yellow;
-
         // add all the templates to an array so that
         // we can randomly spawn them
         var templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate];
@@ -232,7 +219,7 @@
         // we'll just use them to clone other Entities
         templates.forEach(function (template) {
             template.enabled = false;
-        })
+        });
 
         // ***********    Update Function   *******************
 
@@ -260,6 +247,11 @@
                     clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
                 }
             }
+
+            // Show active bodies in red and frozen bodies in gray
+            app.root.findComponents('rigidbody').forEach(function (body) {
+                body.entity.model.material = body.isActive() ? red : gray;
+            });
         });
     }
     </script>

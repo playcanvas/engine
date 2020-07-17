@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -50,6 +51,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
         // Generate some materials to assigm to scene objects
@@ -58,22 +61,22 @@
             diffuse: new pc.Color(0.5, 0.5, 0.5)
         });
         var white = createMaterial({
-            emissive: new pc.Color(1,1,1)
+            emissive: new pc.Color(1, 1, 1)
         });
         var blue = createMaterial({
-            diffuse: new pc.Color(0,0,0),
-            emissive: new pc.Color(0,0,1)
+            diffuse: new pc.Color(0, 0, 0),
+            emissive: new pc.Color(0, 0, 1)
         });
 
         var entity, light, camera;
 
         // Load a model file and create a Entity with a model component
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
             entity = new pc.Entity();
             entity.addComponent("model", {
                 type: "asset",
-                asset: asset,
+                asset: asset.resource.model,
                 castShadows: true
             });
             app.root.addChild(entity);
@@ -85,7 +88,7 @@
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
         camera.translate(0, 7, 24);
-        camera.rotate(0, 0, 0)
+        camera.rotate(0, 0, 0);
 
         // Create an Entity for the ground
         var ground = new pc.Entity();
@@ -164,12 +167,11 @@
         var hasEffects = true;
         var onKeyDown = function (e) {
             if (e.key === pc.KEY_SPACE) {
-                if(hasEffects) {
+                if (hasEffects) {
                     camera.camera.postEffects.removeEffect(bokeh);
                     camera.camera.postEffects.removeEffect(sepia);
                     camera.camera.postEffects.removeEffect(vignette);
-                }
-                else {
+                } else {
                     camera.camera.postEffects.addEffect(sepia);
                     camera.camera.postEffects.addEffect(vignette);
                     camera.camera.postEffects.addEffect(bokeh);
@@ -182,17 +184,17 @@
         keyboard.on("keydown", onKeyDown, this);
 
         app.on("update", function (dt) {
-            angle += 20*dt;
+            angle += 20 * dt;
             if (angle > 360) {
                 angle -= 360;
             }
             if (entity) {
                 light.lookAt(entity.getPosition());
                 light.rotateLocal(90, 0, 0);
-                light.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
+                light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
                 // light.enabled = false;
 
-                pointlight.setLocalPosition(pointRadius * Math.sin(-2*angle*pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2*angle*pc.math.DEG_TO_RAD));
+                pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
             }
 
         });

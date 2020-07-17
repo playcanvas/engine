@@ -5,7 +5,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-        <script src="../../build/output/playcanvas.js"></script>
+        <script src="../../build/playcanvas.js"></script>
+        <script src="../../build/playcanvas-extras.js"></script>
         <style>
             body {
                 margin: 0;
@@ -32,6 +33,8 @@
                 app.resizeCanvas(canvas.width, canvas.height);
             });
 
+            var miniStats = new pcx.MiniStats(app);
+
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
@@ -40,21 +43,21 @@
             // create camera
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
                 farClip: 10000
             });
-            c.translate(1,1,1);
-            c.lookAt(0,0,0);
+            c.translate(1, 1, 1);
+            c.lookAt(0, 0, 0);
             app.root.addChild(c);
 
             // Load Assets
             var assetsToLoad = [
-                new pc.Asset('red_button_atlas.json', "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
-                new pc.Asset('red_button_sprite', "sprite", {url: "../assets/button/red_button_sprite.json"}),
-                new pc.Asset('snowflake.png', "texture", {url: "../assets/textures/snowflake.png"})
-            ]
+                new pc.Asset('red_button_atlas.json', "textureatlas", { url: "../assets/button/red_button_atlas.json" }),
+                new pc.Asset('red_button_sprite', "sprite", { url: "../assets/button/red_button_sprite.json" }),
+                new pc.Asset('snowflake.png', "texture", { url: "../assets/textures/snowflake.png" })
+            ];
 
-            var count =0;
+            var count = 0;
             app.assets.on('load', function () {
                 count++;
                 if (count === assetsToLoad.length) {
@@ -80,13 +83,13 @@
             // create the menu screen, panel and list items
             function createScreen() {
                 screenEntity = new pc.Entity();
-                screenEntity.name = "Menu"+c;
-                screenEntity.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true, priority: 10-c});
+                screenEntity.name = "Menu" + c;
+                screenEntity.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true, priority: 10 - c });
                 screenEntity.screen.scaleMode = "blend";
-                screenEntity.screen.referenceResolution = new pc.Vec2(1280,720);
+                screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
                 container = new pc.Entity();
-                container.name = "Container"+c;
+                container.name = "Container" + c;
                 container.addComponent("element", {
                     type: "group",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -99,10 +102,10 @@
                 });
 
                 app.root.addChild(screenEntity);
-                screenEntity.addChild(container)
+                screenEntity.addChild(container);
 
                 return container;
-            };
+            }
 
             function createPanel(menu) {
                 c++;
@@ -110,7 +113,7 @@
 
                 // create a panel
                 panel = new pc.Entity();
-                panel.name = "Panel"+c;
+                panel.name = "Panel" + c;
                 panel.addComponent("element", {
                     type: "groups",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -122,20 +125,20 @@
 
                 // create a mask (fills the panel)
                 mask = new pc.Entity();
-                mask.name = "Mask"+c;
+                mask.name = "Mask" + c;
                 mask.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0, 0, 1, 1),
                     pivot: new pc.Vec2(0.5, 0.5),
-                    margin: new pc.Vec4(0,0,0,0),
-                    color: new pc.Color(1,0.5,0.5),
+                    margin: new pc.Vec4(0, 0, 0, 0),
+                    color: new pc.Color(1, 0.5, 0.5),
                     opacity: 1,
                     mask: true
                 });
 
                 // create a grey subpanel
                 subpanel = new pc.Entity();
-                subpanel.name = "Subpanel"+c;
+                subpanel.name = "Subpanel" + c;
                 subpanel.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -143,15 +146,15 @@
                     width: 200,
                     height: 200,
                     opacity: 1,
-                    color: [0.5,0.5,0.5]
+                    color: [0.5, 0.5, 0.5]
                 });
 
                 // sub-mask
                 submask = new pc.Entity();
-                submask.name = "Submask"+c;
+                submask.name = "Submask" + c;
                 submask.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
                     pivot: new pc.Vec2(0.5, 0.5),
                     width: 150,
                     height: 150,
@@ -160,7 +163,7 @@
                 });
 
                 redBlock = new pc.Entity();
-                redBlock.name = "RedBlock"+c;
+                redBlock.name = "RedBlock" + c;
                 redBlock.addComponent("element", {
                     type: "image",
                     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
@@ -168,7 +171,7 @@
                     width: 600,
                     height: 100,
                     opacity: 1,
-                    color: new pc.Color(1,0,0)
+                    color: new pc.Color(1, 0, 0)
                 });
 
                 panel.addChild(mask);
@@ -178,8 +181,7 @@
                 menu.addChild(panel);
 
                 return panel;
-            };
-
+            }
 
             // called when all assets are loaded
             function onLoadComplete() {
@@ -195,10 +197,10 @@
             //
             setTimeout(function () {
                 var parent2 = createScreen();
-                parent2.translate(0.15,0.25,0)
+                parent2.translate(0.15, 0.25, 0);
                 var p = createPanel(parent2);
                 var panel2 = app.root.findByName("Panel2");
-            }, 1000)
+            }, 1000);
         </script>
     </body>
 </html>

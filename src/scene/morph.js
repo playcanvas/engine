@@ -1,343 +1,300 @@
-Object.assign(pc, function () {
-    var _morphMin = new pc.Vec3();
-    var _morphMax = new pc.Vec3();
+import { Vec3 } from '../math/vec3.js';
+import { math } from '../math/math.js';
+import { BoundingBox } from '../shape/bounding-box.js';
+import { Texture } from '../graphics/texture.js';
+import { VertexBuffer } from '../graphics/vertex-buffer.js';
+import { VertexFormat } from '../graphics/vertex-format.js';
+import { Application } from '../framework/application.js';
 
-    /**
-     * @private
-     * @class
-     * @name pc.MorphTarget
-     * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
-     * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
-     * @param {object} options - Object for passing optional arguments.
-     * @param {number[]} options.deltaPositions - An array of 3-dimensional vertex position offsets.
-     * @param {number[]} [options.deltaNormals] - An array of 3-dimensional vertex normal offsets.
-     * @param {number[]} [options.deltaTangents] - An array of 4-dimensional vertex normal tangents.
-     * @param {number[]} [options.indices] - A morph target doesn't have to contain a full copy of the original mesh with added deformations.
-     * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
-     * as other arrays.
-     * @param {string} [options.name] - Name.
-     * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
-     */
-    var MorphTarget = function (options) {
-        if (options.indices) {
-            this.indices = options.indices;
-        } else {
-            var arr = options.deltaPositions;
-            this.indices = [];
-            this.indices.length = arr.length;
-            for (var i = 0; i < arr.length; i++) {
-                this.indices[i] = i;
-            }
+import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/graphics.js';
+
+/**
+ * @class
+ * @name pc.Morph
+ * @classdesc Contains a list of pc.MorphTarget, a combined delta AABB and some associated data.
+ * @param {pc.MorphTarget[]} targets - A list of morph targets.
+ * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
+ * from the {@link pc.Application}.
+ */
+function Morph(targets, graphicsDevice) {
+
+    this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+    this._targets = targets;
+
+    // default to texture based morphing if available
+    if (this.device.supportsMorphTargetTexturesCore) {
+
+        // pick renderable format - prefer half-float
+        if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
+            this._renderTextureFormat = Morph.FORMAT_HALF_FLOAT;
+        } else if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
+            this._renderTextureFormat = Morph.FORMAT_FLOAT;
         }
-        this.deltaPositions = options.deltaPositions;
-        this.deltaNormals = options.deltaNormals;
-        this.deltaTangents = options.deltaTangents;
-        this.name = options.name;
-        this.aabb = options.aabb;
-    };
 
-    /**
-     * @private
-     * @class
-     * @name pc.Morph
-     * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
-     * @param {pc.MoprhTarget[]} targets - A list of morph targets.
-     */
-    var Morph = function (targets) {
-        this.aabb = new pc.BoundingBox();
+        // pick texture format - prefer half-float
+        if (this.device.extTextureHalfFloat && this.device.textureHalfFloatUpdatable) {
+            this._textureFormat = Morph.FORMAT_HALF_FLOAT;
+        } else  if (this.device.extTextureFloat) {
+            this._textureFormat = Morph.FORMAT_FLOAT;
+        }
 
-        this._baseBuffer = null;
-        this._baseAabb = null;
-        this._targets = targets;
-        this._dirty = true;
-        this._aabbDirty = true;
+        // if both available, enable texture morphing
+        if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
+            this._useTextureMorph = true;
+        }
+    }
 
-        this._baseData = null;
-        this._offsetPF = 0;
-        this._offsetNF = 0;
-        this._offsetTF = 0;
-        this._vertSizeF = 0;
-    };
+    this._init();
+    this._updateMorphFlags();
+    this._calculateAabb();
+}
 
-    Object.assign(Morph.prototype, {
+Object.defineProperties(Morph, {
+    FORMAT_FLOAT: { value: 0 },
+    FORMAT_HALF_FLOAT: { value: 1 }
+});
 
-        // called if the mesh is changed
-        _setBaseMesh: function (baseMesh) {
-            this._baseBuffer = baseMesh.vertexBuffer;
-            this._baseAabb = baseMesh._aabb;
+Object.defineProperties(Morph.prototype, {
+    'morphPositions': {
+        get: function () {
+            return this._morphPositions;
+        }
+    },
 
-            this._baseData = new Float32Array(this._baseBuffer.storage);
+    'morphNormals': {
+        get: function () {
+            return this._morphNormals;
+        }
+    },
 
-            var offsetP = -1;
-            var offsetN = -1;
-            var offsetT = -1;
-            var elems = this._baseBuffer.format.elements;
-            var vertSize = this._baseBuffer.format.size;
-            for (var j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
-                    offsetP = elems[j].offset;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
-                    offsetN = elems[j].offset;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
-                    offsetT = elems[j].offset;
-                }
-            }
-            this._offsetPF = offsetP / 4;
-            this._offsetNF = offsetN / 4;
-            this._offsetTF = offsetT / 4;
-            this._vertSizeF = vertSize / 4;
+    'maxActiveTargets': {
+        get: function () {
 
-            this._dirty = true;
-        },
+            // no limit when texture morph based
+            if (this._useTextureMorph)
+                return this._targets.length;
 
-        // called when changing the target list
-        _calculateAabb: function () {
-            if (!this._baseBuffer) return;
+            return (this._morphPositions && this._morphNormals) ? 4 : 8;
+        }
+    },
 
-            this.aabb.copy(this._baseAabb);
+    'useTextureMorph': {
+        get: function () {
+            return this._useTextureMorph;
+        }
+    }
+});
 
-            var numIndices;
-            var i, j, target, index, id;
-            var x, y, z;
+Object.assign(Morph.prototype, {
 
-            var vertSizeF = this._vertSizeF;
-            var offsetPF = this._offsetPF;
-            var baseData = this._baseData;
+    _init: function () {
 
+        // try to init texture based morphing
+        if (this._useTextureMorph) {
+            this._useTextureMorph = this._initTextureBased();
+        }
+
+        // if texture morphing is not set up, use attribute based morphing
+        var i;
+        if (!this._useTextureMorph) {
             for (i = 0; i < this._targets.length; i++) {
-                target = this._targets[i];
-
-                if (!target.aabb && target.indices.length > 0) {
-                    target.aabb = this.aabb.clone();
-                    _morphMin.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-                    _morphMax.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-
-                    numIndices = target.indices.length;
-                    for (j = 0; j < numIndices; j++) {
-                        index = target.indices[j];
-                        id = index * vertSizeF + offsetPF;
-
-                        x = baseData[id] + target.deltaPositions[j * 3];
-                        y = baseData[id + 1] + target.deltaPositions[j * 3 + 1];
-                        z = baseData[id + 2] + target.deltaPositions[j * 3 + 2];
-
-                        if (_morphMin.x > x) _morphMin.x = x;
-                        if (_morphMin.y > y) _morphMin.y = y;
-                        if (_morphMin.z > z) _morphMin.z = z;
-
-                        if (_morphMax.x < x) _morphMax.x = x;
-                        if (_morphMax.y < y) _morphMax.y = y;
-                        if (_morphMax.z < z) _morphMax.z = z;
-                    }
-                    target.aabb.setMinMax(_morphMin, _morphMax);
-                }
-                if (target.aabb) this.aabb.add(target.aabb);
+                this._targets[i]._initVertexBuffers(this.device);
             }
-            this._aabbDirty = false;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Morph#addTarget
-         * @description Adds a new morph target to the list.
-         * @param {pc.MoprhTarget} target - A new morph target.
-         */
-        addTarget: function (target) {
-            this._targets.push(target);
-            this._aabbDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Morph#removeTarget
-         * @description Remove the specified morph target from the list.
-         * @param {pc.MoprhTarget} target - A morph target to delete.
-         */
-        removeTarget: function (target) {
-            var index = this._targets.indexOf(target);
-            if (index !== -1) {
-                this._targets.splice(index, 1);
-                this._aabbDirty = true;
-            }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Morph#getTarget
-         * @description Gets the morph target by index.
-         * @param {number} index - An index of morph target.
-         * @returns {pc.MorphTarget} A morph target object.
-         */
-        getTarget: function (index) {
-            return this._targets[index];
         }
-    });
 
-    /**
-     * @private
-     * @class
-     * @name pc.MorphInstance
-     * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
-     * @param {pc.Morph} morph - The pc.Morph to instance.
-     */
-    var MorphInstance = function (morph) {
-        this.morph = morph;
+        // finalize init
+        for (i = 0; i < this._targets.length; i++) {
+            this._targets[i]._postInit();
+        }
+    },
 
-        this._vertexBuffer = null;
-        this._vertexData = null;
-        this._weights = [];
-        this._dirty = true;
-    };
+    _initTextureBased: function () {
+        var target, i, v;
 
-    Object.assign(MorphInstance.prototype, {
-
-        // called if the mesh is changed
-        _setBaseMesh: function (baseMesh) {
-            this.destroy();
-            this._vertexBuffer = new pc.VertexBuffer(this.morph._baseBuffer.device, this.morph._baseBuffer.format,
-                                                     this.morph._baseBuffer.numVertices, pc.BUFFER_DYNAMIC, this.morph._baseBuffer.storage.slice(0));
-            this._vertexData = new Float32Array(this._vertexBuffer.storage);
-            this._weights = [];
-            this._weights.length = this.morph._targets.length;
-            for (var i = 0; i < this.morph._targets.length; i++) {
-                this._weights[i] = 0;
+        // collect all source delta arrays to find sparse set of vertices
+        var deltaArrays = [], deltaInfos = [];
+        for (i = 0; i < this._targets.length; i++) {
+            target = this._targets[i];
+            if (target.options.deltaPositions) {
+                deltaArrays.push(target.options.deltaPositions);
+                deltaInfos.push( { target: target, name: 'texturePositions' } );
             }
-            this._dirty = true;
-        },
+            if (target.options.deltaNormals) {
+                deltaArrays.push(target.options.deltaNormals);
+                deltaInfos.push( { target: target, name: 'textureNormals' } );
+            }
+        }
+
+        // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
+        var ids = [], usedDataIndices = [];
+        var vertexUsed, data;
+        var freeIndex = 1;  // reserve slot 0 for zero delta
+        var dataCount = deltaArrays[0].length;
+        for (v = 0; v < dataCount; v += 3) {
+
+            // find if vertex is morphed by any target
+            vertexUsed = false;
+            for (i = 0; i < deltaArrays.length; i++) {
+                data = deltaArrays[i];
+
+                // if non-zero delta
+                if (data[v] !== 0 || data[v + 1] !== 0 || data[v + 2] !== 0) {
+                    vertexUsed = true;
+                    break;
+                }
+            }
+
+            if (vertexUsed) {
+                ids.push(freeIndex);
+                usedDataIndices.push(v / 3);
+                freeIndex++;
+            } else {
+                // non morphed vertices would be all mapped to pixel 0 of texture
+                ids.push(0);
+            }
+        }
+
+        // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
+        // TODO: on webgl2 we could store this in uint32 format and remove this limit
+        var maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
+
+        // texture size for freeIndex pixels - roughly square
+        var morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
+        morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
+        var morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
+
+        // if data cannot fit into max size texture, fail this set up
+        if (morphTextureHeight > maxTextureSize) {
+            return false;
+        }
+
+        this.morphTextureWidth = morphTextureWidth;
+        this.morphTextureHeight = morphTextureHeight;
+
+        // texture format based vars
+        var halfFloat = false;
+        var numComponents = 3;  // RGB32 is used
+        var float2Half = math.float2Half;
+        if (this._textureFormat === Morph.FORMAT_HALF_FLOAT) {
+            halfFloat = true;
+            numComponents = 4;  // RGBA16 is used, RGB16 does not work
+        }
+
+        // build texture for each delta array, all textures are the same size
+        var arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
+        var packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
+        for (i = 0; i < deltaArrays.length; i++) {
+            data = deltaArrays[i];
+
+            // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
+            for (v = 0; v < usedDataIndices.length; v++) {
+                var index = usedDataIndices[v];
+
+                if (halfFloat) {
+                    packedDeltas[v * numComponents + numComponents] = float2Half(data[index * 3]);
+                    packedDeltas[v * numComponents + numComponents + 1] = float2Half(data[index * 3 + 1]);
+                    packedDeltas[v * numComponents + numComponents + 2] = float2Half(data[index * 3 + 2]);
+                } else {
+                    packedDeltas[v * numComponents + numComponents] = data[index * 3];
+                    packedDeltas[v * numComponents + numComponents + 1] = data[index * 3 + 1];
+                    packedDeltas[v * numComponents + numComponents + 2] = data[index * 3 + 2];
+                }
+            }
+
+            // create texture and assign it to target
+            target = deltaInfos[i].target;
+            var format = this._textureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
+            target._setTexture(deltaInfos[i].name, this._createTexture("MorphTarget", format, packedDeltas));
+        }
+
+        // create vertex stream with vertex_id used to map vertex to texture
+        var formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_FLOAT32 }];
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc), ids.length, BUFFER_STATIC, new Float32Array(ids));
+
+        return true;
+    },
 
         /**
-         * @private
          * @function
-         * @name pc.MorphInstance#destroy
+         * @name pc.Morph#destroy
          * @description Frees video memory allocated by this object.
          */
-        destroy: function () {
-            if (this._vertexBuffer) {
-                this._vertexBuffer.destroy();
-                this._vertexBuffer = null;
-            }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.MorphInstance#getWeight
-         * @description Gets current weight of the specified morph target.
-         * @param {number} index - An index of morph target.
-         * @returns {number} Weight.
-         */
-        getWeight: function (index) {
-            return this._weights[index];
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.MorphInstance#setWeight
-         * @description Sets weight of the specified morph target.
-         * @param {number} index - An index of morph target.
-         * @param {number} weight - Weight.
-         */
-        setWeight: function (index, weight) {
-            this._weights[index] = weight;
-            this._dirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.MorphInstance#updateBounds
-         * @param {pc.Mesh} mesh - Base mesh for the morph.
-         * @description Calculates AABB for this morph instance. Called automatically by renderer.
-         */
-        updateBounds: function (mesh) {
-            if (this.morph._baseBuffer !== mesh.vertexBuffer) {
-                this.morph._setBaseMesh(mesh);
-            }
-            if (!this._vertexData) {
-                this._setBaseMesh(mesh);
-            }
-
-            if (this.morph._aabbDirty) {
-                this.morph._calculateAabb();
-            }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.MorphInstance#update
-         * @param {pc.Mesh} mesh - Base mesh for the morph.
-         * @description Performs morphing. Called automatically by renderer.
-         */
-        update: function (mesh) {
-            if (this.morph._baseBuffer !== mesh.vertexBuffer) {
-                this.morph._setBaseMesh(mesh);
-            }
-            if (!this._vertexData) {
-                this._setBaseMesh(mesh);
-            }
-
-            var numIndices, index;
-
-            var targets = this.morph._targets;
-            var weights = this._weights;
-            var target, weight, j, id, j3, j4;
-            var vertSizeF = this.morph._vertSizeF;
-            var offsetPF = this.morph._offsetPF;
-            var offsetNF = this.morph._offsetNF;
-            var offsetTF = this.morph._offsetTF;
-
-            var vdata = this._vertexData;
-            vdata.set(this.morph._baseData);
-
-            for (var i = 0; i < targets.length; i++) {
-                weight = weights[i];
-                if (weight === 0) continue;
-                target = targets[i];
-                numIndices = target.indices.length;
-
-                for (j = 0; j < numIndices; j++) {
-
-                    j3 = j * 3;
-                    index = target.indices[j];
-
-                    id = index * vertSizeF + offsetPF;
-                    vdata[id] += target.deltaPositions[j3] * weight;
-                    vdata[id + 1] += target.deltaPositions[j3 + 1] * weight;
-                    vdata[id + 2] += target.deltaPositions[j3 + 2] * weight;
-
-                    if (target.deltaNormals) {
-                        id = index * vertSizeF + offsetNF;
-                        vdata[id] += target.deltaNormals[j3] * weight;
-                        vdata[id + 1] += target.deltaNormals[j3 + 1] * weight;
-                        vdata[id + 2] += target.deltaNormals[j3 + 2] * weight;
-
-                        if (target.deltaTangents) {
-                            // TODO: skip when not needed (depends on shaders using this mesh)
-                            j4 = j * 4;
-                            id = index * vertSizeF + offsetTF;
-                            vdata[id] += target.deltaTangents[j4] * weight;
-                            vdata[id + 1] += target.deltaTangents[j4 + 1] * weight;
-                            vdata[id + 2] += target.deltaTangents[j4 + 2] * weight;
-                            vdata[id + 3] += target.deltaTangents[j4 + 3] * weight;
-                            vdata[id + 3] = vdata[id + 3] > 0 ? 1 : -1;
-                        }
-                    }
-
-                }
-            }
-
-            this._vertexBuffer.unlock();
+    destroy: function () {
+        if (this.vertexBufferIds) {
+            this.vertexBufferIds.destroy();
+            this.vertexBufferIds = null;
         }
-    });
 
-    return {
-        MorphTarget: MorphTarget,
-        Morph: Morph,
-        MorphInstance: MorphInstance
-    };
-}());
+        for (var i = 0; i < this._targets.length; i++) {
+            this._targets[i].destroy();
+        }
+        this._targets.length = 0;
+    },
+
+    /**
+     * @function
+     * @name pc.Morph#getTarget
+     * @description Gets the morph target by index.
+     * @param {number} index - An index of morph target.
+     * @returns {pc.MorphTarget} A morph target object.
+     */
+    getTarget: function (index) {
+        return this._targets[index];
+    },
+
+    _updateMorphFlags: function () {
+
+        // find out if this morph needs to morph positions and normals
+        this._morphPositions = false;
+        this._morphNormals = false;
+        var target;
+        for (var i = 0; i < this._targets.length; i++) {
+            target = this._targets[i];
+            if (target.morphPositions) {
+                this._morphPositions = true;
+            }
+            if (target.morphNormals) {
+                this._morphNormals = true;
+            }
+        }
+    },
+
+    _calculateAabb: function () {
+
+        this.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
+        var target;
+
+        // calc bounding box of the relative change this morph can add
+        for (var i = 0; i < this._targets.length; i++) {
+            target = this._targets[i];
+            this.aabb._expand(target.aabb.getMin(), target.aabb.getMax());
+        }
+    },
+
+    // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
+    _createTexture: function (name, format, pixelData) {
+
+        var texture = new Texture(this.device, {
+            width: this.morphTextureWidth,
+            height: this.morphTextureHeight,
+            format: format,
+            cubemap: false,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+        texture.name = name;
+
+        if (pixelData) {
+            var pixels = texture.lock();
+            pixels.set(pixelData);
+            texture.unlock();
+        }
+
+        return texture;
+    }
+});
+
+export { Morph };

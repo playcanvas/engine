@@ -1,5 +1,6 @@
 uniform sampler2D texture_heightMap;
 uniform float material_heightMapFactor;
+
 void getParallax() {
     float parallaxScale = material_heightMapFactor;
 
@@ -10,4 +11,3 @@ void getParallax() {
     viewDirT.z += 0.42;
     dUvOffset = height * (viewDirT.xy / viewDirT.z);
 }
-

@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -34,6 +35,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         // Create a camera
         var camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -54,10 +57,10 @@
         // Create a text element with drop shadow enabled
         var text = new pc.Entity();
         text.addComponent("element", {
-            anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+            anchor: [0.5, 0.5, 0.5, 0.5],
             autoWidth: false,
             fontSize: 96,
-            pivot: [ 0.5, 0.5 ],
+            pivot: [0.5, 0.5],
             shadowColor: new pc.Color(1, 0, 0),
             shadowOffset: new pc.Vec2(0.25, -0.25),
             text: "Drop Shadow",
@@ -67,7 +70,7 @@
         screen.addChild(text);
 
         // Load a font
-        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
         fontAsset.on('load', function () {
             // Apply the font to the text element
             text.element.fontAsset = fontAsset;

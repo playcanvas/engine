@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -34,12 +35,14 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // Create a Entity with a Box model component
         var box = new pc.Entity();
         box.addComponent("model", {
-            type: "box",
+            type: "box"
         });
 
         // Create an Entity with a point light component and a sphere model component.
@@ -81,7 +84,7 @@
             light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
 
             // Rotate the box
-            box.setEulerAngles(angle*2, angle*4, angle*8);
+            box.setEulerAngles(angle * 2, angle * 4, angle * 8);
         });
     </script>
 </body>

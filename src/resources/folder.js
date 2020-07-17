@@ -1,20 +1,13 @@
-Object.assign(pc, function () {
-    'use strict';
+function FolderHandler() {}
 
-    var FolderHandler = function () {
-    };
+Object.assign(FolderHandler.prototype, {
+    load: function (url, callback) {
+        callback(null, null);
+    },
 
-    Object.assign(FolderHandler.prototype, {
-        load: function (url, callback) {
-            callback(null, null);
-        },
+    open: function (url, data) {
+        return data;
+    }
+});
 
-        open: function (url, data) {
-            return data;
-        }
-    });
-
-    return {
-        FolderHandler: FolderHandler
-    };
-}());
+export { FolderHandler };

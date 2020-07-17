@@ -9,17 +9,16 @@ uniform samplerCube texture_prefilteredCubeMap4;
 #endif
 uniform float material_reflectivity;
 
-void addReflection() {
-
+vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.
     // We fix mip0 to 128x128, so code is rather static.
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
 
-    float bias = saturate(1.0 - dGlossiness) * 5.0; // multiply by max mip level
+    float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
     int index1 = int(bias);
     int index2 = int(min(bias + 1.0, 7.0));
 
-    vec3 fixedReflDir = fixSeams(cubeMapProject(dReflDirW), bias);
+    vec3 fixedReflDir = fixSeams(cubeMapProject(tReflDirW), bias);
     fixedReflDir.x *= -1.0;
 
     vec4 cubes[6];
@@ -59,6 +58,9 @@ void addReflection() {
     vec4 cubeFinal = mix(cube[0], cube[1], fract(bias));
     vec3 refl = processEnvironment($DECODE(cubeFinal).rgb);
 
-    dReflection += vec4(refl, material_reflectivity);
+    return refl;
 }
 
+void addReflection() {   
+    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
+}

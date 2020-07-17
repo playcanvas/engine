@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -31,10 +32,10 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         // use device pixel ratio
         app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
-
-        app.start();
     </script>
 
     <script>
@@ -63,11 +64,11 @@
         // create camera
         var c = new pc.Entity();
         c.addComponent('camera', {
-            clearColor: new pc.Color(44/255, 62/255, 80/255),
+            clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
             farClip: 10000
         });
-        c.translate(500,500,500);
-        c.lookAt(0,0,0);
+        c.translate(500, 500, 500);
+        c.lookAt(0, 0, 0);
         app.root.addChild(c);
 
         var scr = new pc.Entity();
@@ -81,11 +82,11 @@
         var backing = new pc.Entity();
         backing.addComponent('element', {
             type: "image",
-            anchor: [0.5,1,0.5,1],
+            anchor: [0.5, 1, 0.5, 1],
             pivot: [0.5, 1],
             width: 768,
             height: 500,
-            color: [0.1,0.1,0.1]
+            color: [0.1, 0.1, 0.1]
         });
         scr.addChild(backing);
         backing.translateLocal(0, -100, 0);
@@ -106,8 +107,8 @@
             wrapLines: true,
             autoWidth: true,
             autoHeight: true,
-            margin: [0,0,0,0],
-            anchor: [0,1,1,1],
+            margin: [0, 0, 0, 0],
+            anchor: [0, 1, 1, 1],
             pivot: [0, 1],
             alignment: [1, 0]
         });
@@ -122,8 +123,8 @@
             wrapLines: true,
             autoWidth: true,
             autoHeight: true,
-            margin: [0,0,0,0],
-            anchor: [0,1,1,1],
+            margin: [0, 0, 0, 0],
+            anchor: [0, 1, 1, 1],
             pivot: [0, 1],
             alignment: [1, 0]
         });
@@ -137,7 +138,7 @@
             wrapLines: true,
             autoWidth: true,
             autoHeight: true,
-            margin: [0,0,0,0],
+            margin: [0, 0, 0, 0],
             anchor: [0, 1, 1, 1],
             pivot: [0, 1],
             alignment: [1, 0]
@@ -149,9 +150,9 @@
         backing.addChild(canvasElementEntity2);
         canvasElementEntity2.translateLocal(0, -elSize, 0);
         backing.addChild(msdfElementEntity);
-        msdfElementEntity.translateLocal(0, -elSize*3, 0);
+        msdfElementEntity.translateLocal(0, -elSize * 3, 0);
 
-        function renderAtlases () {
+        function renderAtlases() {
             var wrapper = document.createElement('div');
             for (var i = 0; i < cf.textures.length; i++) {
                 var canvas = cf.textures[i].getSource();
@@ -167,6 +168,8 @@
         var showCanvasAtlasForDebug = false;
         renderAtlases();
 
+        // start the application
+        app.start();
     </script>
 </body>
 </html>

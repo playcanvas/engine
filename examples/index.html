@@ -14,11 +14,17 @@
         <div class="sidenav closed"></div>
         <iframe id="example"></iframe>
 
+        <div class="sourcenav">
+            <div class="btn">View Source</div>
+        </div>
+
         <script src="examples.js"></script>
         <script>
+            let currentExampleRelativeUrl;
+
             function titleCase(string) {
                 let sentence = string.toLowerCase().split('-');
-                for(let i = 0; i < sentence.length; i++){
+                for (let i = 0; i < sentence.length; i++){
                     sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
                 }
                 return sentence.join(' ');
@@ -27,11 +33,13 @@
             function loadExample(example) {
                 let iframe = document.getElementById('example');
                 iframe.src = example;
-                location.href = location.protocol +'//' +
+                location.href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
                                 '#' +
                                 example;
+
+                currentExampleRelativeUrl = example;
             }
 
             // Load the initial example (loading the first one if none is specified)
@@ -74,7 +82,12 @@
             let navigationToggle = document.querySelector(".sidenav-toggle");
             navigationToggle.addEventListener("click", function (event){
                 sidenav.classList.toggle("closed");
-            })
+            });
+
+            let sourceButton = document.querySelector(".sourcenav > .btn");
+            sourceButton.addEventListener("click", function (event){
+                window.open("https://github.com/playcanvas/playcanvas.github.io/blob/master/" + currentExampleRelativeUrl);
+            });
         </script>
     </body>
 </html>

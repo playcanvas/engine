@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var categories = [
     {
         name: "animation",
@@ -14,27 +15,44 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "batching-dynamic",
             "hardware-instancing",
+            "hierarchy",
             "layers",
             "lights",
             "lights-baked",
-            "loader-obj",
+            "material-anisotropic",
+            "material-clear-coat",
             "material-physical",
+            "mesh-decals",
+            "mesh-deformation",
+            "mesh-generation",
+            "mesh-morph",
+            "mesh-morph-many",
             "model-asset",
             "model-box",
+            "model-outline",
             "model-shapes",
             "model-textured-box",
-            "point-cloud",
-            "portal",
+            "particles-anim-index",
+            "particles-random-sprites",
             "particles-snow",
             "particles-sparks",
-            "particles-start-frame",
+            "point-cloud",
+            "point-cloud-simulation",
+            "portal",
             "post-effects",
+            "render-to-texture",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis",
-            "virtual-reality"
+            "texture-basis"
+        ]
+    }, {
+        name: "loaders",
+        examples: [
+            "loader-glb",
+            "loader-obj"
         ]
     }, {
         name: "input",
@@ -51,7 +69,9 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "compound-collision",
+            "falling-shapes",
+            "raycast"
         ]
     }, {
         name: "sound",
@@ -62,6 +82,7 @@ var categories = [
         name: "user-interface",
         examples: [
             "button-basic",
+            "button-particle",
             "button-sprite",
             "text-basic",
             "text-canvas-font",
@@ -76,8 +97,12 @@ var categories = [
     }, {
         name: "xr",
         examples: [
-            'augmented-reality-basic',
-            'virtual-reality-basic'
+            'ar-basic',
+            'ar-hit-test',
+            'vr-basic',
+            'vr-controllers',
+            'vr-movement',
+            'xr-picking'
         ]
     }
 ];

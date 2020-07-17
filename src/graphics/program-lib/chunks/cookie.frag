@@ -31,4 +31,3 @@ vec4 getCookie2DClipXform(sampler2D tex, mat4 transform, float intensity, vec4 c
 vec4 getCookieCube(samplerCube tex, mat4 transform, float intensity) {
     return mix(vec4(1.0), textureCube(tex, dLightDirNormW * mat3(transform)), intensity);
 }
-
