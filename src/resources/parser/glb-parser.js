@@ -805,6 +805,36 @@ var createMaterial = function (gltfMaterial, textures) {
         "}"
     ].join('\n');
 
+    var clearCoatGlossChunk = [
+        "#ifdef MAPFLOAT",
+        "uniform float material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "uniform sampler2D texture_clearCoatGlossMap;",
+        "#endif",
+        "",
+        "void getClearCoatGlossiness() {",
+        "    ccGlossiness = 1.0;",
+        "",
+        "#ifdef MAPFLOAT",
+        "    ccGlossiness *= material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;",
+        "#endif",
+        "",
+        "#ifdef MAPVERTEX",
+        "    ccGlossiness *= saturate(vVertexColor.$VC);",
+        "#endif",
+        "",
+        "    ccGlossiness = 1.0 - ccGlossiness;",
+        "",
+        "    ccGlossiness += 0.0000001;",
+        "}"
+    ].join('\n');
+
     var extractTextureTransform = function (source, material, maps) {
         var map;
 
@@ -1006,6 +1036,48 @@ var createMaterial = function (gltfMaterial, textures) {
     } else {
         material.twoSidedLighting = false;
         material.cull = CULLFACE_BACK;
+    }
+
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_clearcoat')) {
+        var ccData = gltfMaterial.extensions.KHR_materials_clearcoat;
+
+        if (ccData.hasOwnProperty('clearcoatFactor')) {
+            material.clearCoat = ccData.clearcoatFactor;
+        } else {
+            material.clearCoat = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatTexture')) {
+            var clearcoatTexture = ccData.clearcoatTexture;
+            material.clearCoatMap = textures[clearcoatTexture.index];
+            material.clearCoatMapChannel = 'r';
+
+            extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
+            material.clearCoatGlossiness = ccData.clearcoatRoughnessFactor;
+        } else {
+            material.clearCoatGlossiness = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessTexture')) {
+            var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
+            material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
+            material.clearCoatGlossMapChannel = 'g';
+
+            extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
+        }
+        if (ccData.hasOwnProperty('clearcoatNormalTexture')) {
+            var clearcoatNormalTexture = ccData.clearcoatNormalTexture;
+            material.clearCoatNormalMap = textures[clearcoatNormalTexture.index];
+
+            extractTextureTransform(clearcoatNormalTexture, material, ['clearCoatNormal']);
+
+            if (clearcoatNormalTexture.hasOwnProperty('scale')) {
+                material.clearCoatBumpiness = clearcoatNormalTexture.scale;
+            }
+        }
+
+        material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
     }
 
     // handle unlit material by disabling lighting and copying diffuse colours
