@@ -195,6 +195,7 @@ Object.defineProperty(Vec4.prototype, "data", {
 // SHAPE
 import { BoundingBox } from './shape/bounding-box.js';
 import { BoundingSphere } from './shape/bounding-sphere.js';
+import { Frustum } from './shape/frustum.js';
 import { Plane } from './shape/plane.js';
 
 export var shape = {
