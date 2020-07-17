@@ -205,6 +205,18 @@ export var shape = {
 
 BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
 
+Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMatrix instead.');
+    // #endif
+
+    var viewProj = new Mat4();
+
+    viewProj.mul2(projectionMatrix, viewMatrix);
+
+    this.setFromMatrix(viewProj);
+};
+
 // GRAPHICS
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
