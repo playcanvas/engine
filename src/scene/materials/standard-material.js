@@ -77,8 +77,28 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
- * @property {number} clearCoat Defines the strength of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
- * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+ * @property {pc.Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
+ * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
+ * @property {pc.Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
+ * @property {pc.Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each component is between 0 and 1.
+ * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can be "r", "g", "b" or "a".
+ * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat intensity. Can be "r", "g", "b" or "a".
+ * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {pc.Texture|null} clearCoatGlossMap Monochrome clear coat glossiness map (default is null). If specified, will be multiplied by normalized 'clearCoatGlossiness' value and/or vertex colors.
+ * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
+ * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use. Can be "r", "g", "b" or "a".
+ * @property {pc.Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
+ * @property {pc.Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map. Each component is between 0 and 1.
+ * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat glossiness. Can be "r", "g", "b" or "a".
+ * @property {pc.Texture|null} clearCoatNormalMap The clear coat normal map of the material (default is null). The texture must contains normalized, tangent space normals.
+ * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
+ * @property {pc.Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
+ * @property {pc.Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
+ * @property {number} clearCoatbumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
+ * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
  * @property {boolean} useMetalness Use metalness properties instead of specular.
  * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
