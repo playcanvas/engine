@@ -173,7 +173,7 @@ Picker.prototype.prepare = function (camera, scene, arg) {
         }
 
         // #endif
-        camera = camera._component;
+        camera = camera._node.camera;
     }
 
     this.scene = scene;

@@ -351,11 +351,10 @@ Object.assign(PostEffectQueue.prototype, {
                     var len = self.effects.length;
                     if (len) {
                         self.layer.renderTarget = self.effects[0].inputTarget;
-                        // self.depthTarget = self.camera.camera._depthTarget;
 
                         for (var i = 0; i < len; i++) {
                             var fx = self.effects[i];
-                            // if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
+
                             if (i === len - 1) {
                                 rect = self.camera.rect;
                             }
