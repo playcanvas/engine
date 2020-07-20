@@ -685,7 +685,7 @@ Object.assign(StandardMaterial.prototype, {
 
     _updateMapTransform: function (transform, tiling, offset) {
         if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
-           return null;
+            return null;
         }
 
         transform = transform || new Vec4();

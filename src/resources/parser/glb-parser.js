@@ -1182,7 +1182,7 @@ var createMeshes = function (device, gltf, buffers, callback) {
     });
 };
 
-var createMaterials = function (gltf, textures, options, disableFlipV) {
+var createMaterials = function (gltf, textures, options) {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
