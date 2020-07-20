@@ -78,14 +78,14 @@ Object.assign(CameraComponentSystem.prototype, {
                     case 'rect':
                     case 'scissorRect':
                         if (Array.isArray(value)) {
-                            component[property] = new pc.Vec4(value[0], value[1], value[2], value[3]);
+                            component[property] = new Vec4(value[0], value[1], value[2], value[3]);
                         } else {
                             component[property] = value;
                         }
                         break;
                     case 'clearColor':
                         if (Array.isArray(value)) {
-                            component[property] = new pc.Color(value[0], value[1], value[2], value[3]);
+                            component[property] = new Color(value[0], value[1], value[2], value[3]);
                         } else {
                             component[property] = value;
                         }
@@ -102,7 +102,7 @@ Object.assign(CameraComponentSystem.prototype, {
 
     cloneComponent: function (entity, clone) {
         var c = entity.camera;
-        var component = this.addComponent(clone, {
+        this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
             aspectRatioMode: c.aspectRatioMode,
             calculateProjection: c.calculateProjection,

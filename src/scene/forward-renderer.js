@@ -739,7 +739,7 @@ Object.assign(ForwardRenderer.prototype, {
             // Projection Matrix
             projMat = camera.getProjectionMatrix();
             if (camera.calculateProjection) {
-                camera.calculateProjection(projMat, VIEW_CENTER);   
+                camera.calculateProjection(projMat, VIEW_CENTER);
             }
             this.projId.setValue(projMat.data);
 
@@ -806,7 +806,7 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
         if (clear) {
             device.clear({
-                color: [ camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a ],
+                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
                 flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
                        (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
@@ -2675,7 +2675,7 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
 
         device.clear(options ? options : {
-            color: [ camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a ],
+            color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
             depth: camera._clearDepth,
             flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
                    (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |

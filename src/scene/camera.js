@@ -329,7 +329,7 @@ Object.assign(Camera.prototype, {
         return new this.constructor().copy(this);
     },
 
-    copy: function(other) {
+    copy: function (other) {
         this.aspectRatio = other.aspectRatio;
         this.aspectRatioMode = other.aspectRatioMode;
         this.clearColor = other.clearColor;

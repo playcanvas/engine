@@ -50,7 +50,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * * {@link pc.ASPECT_AUTO}: aspect ratio will be calculated from the current render
  * target's width divided by height.
  * * {@link pc.ASPECT_MANUAL}: use the aspectRatio value.
- * 
+ *
  * Defaults to pc.ASPECT_AUTO.
  * @property {pc.Color} clearColor The color used to clear the canvas to before the
  * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
