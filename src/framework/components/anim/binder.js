@@ -59,7 +59,7 @@ Object.assign(AnimComponentBinder.prototype, {
         // flag active nodes as dirty
         var activeNodes = this.activeNodes;
         if (activeNodes) {
-            for (var i = 0; i < activeNodes.length; ++i) {
+            for (var i = 0; i < activeNodes.length; i++) {
                 activeNodes[i]._dirtifyLocal();
             }
         }
