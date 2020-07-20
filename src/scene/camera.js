@@ -46,6 +46,7 @@ function Camera() {
     this._orthoHeight = 10;
     this._projection = PROJECTION_PERSPECTIVE;
     this._rect = new Vec4(0, 0, 1, 1);
+    this._renderTarget = null;
     this._scissorRect = new Vec4(0, 0, 1, 1);
 
     this._renderDepthRequests = 0;
@@ -295,6 +296,15 @@ Object.defineProperty(Camera.prototype, 'rect', {
     },
     set: function (newValue) {
         this._rect.copy(newValue);
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'renderTarget', {
+    get: function () {
+        return this._renderTarget;
+    },
+    set: function (newValue) {
+        this._renderTarget = newValue;
     }
 });
 

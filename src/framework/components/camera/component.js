@@ -159,6 +159,7 @@ CameraComponent.prototype.constructor = CameraComponent;
     { name: 'projection', readonly: false },
     { name: 'projectionMatrix', readonly: true },
     { name: 'rect', readonly: false },
+    { name: 'renderTarget', readonly: false },
     { name: 'scissorRect', readonly: false },
     { name: 'viewMatrix', readonly: true }
 ].forEach(function (property) {

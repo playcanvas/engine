@@ -825,20 +825,6 @@ Object.defineProperty(CameraComponent.prototype, "node", {
     }
 });
 
-Object.defineProperty(CameraComponent.prototype, "renderTarget", {
-    get: function () {
-        // #ifdef DEBUG
-        console.warn("DEPRECATED: pc.CameraComponent#renderTarget is deprecated. Use pc.Layer#renderTarget instead.");
-        // #endif
-        return null;
-    },
-    set: function (newValue) {
-        // #ifdef DEBUG
-        console.warn("DEPRECATED: pc.CameraComponent#renderTarget is deprecated. Use pc.Layer#renderTarget instead.");
-        // #endif
-    }
-});
-
 Object.defineProperty(LightComponent.prototype, "enable", {
     get: function () {
         // #ifdef DEBUG

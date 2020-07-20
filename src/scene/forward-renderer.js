@@ -127,7 +127,7 @@ for (var fp = 0; fp < 8; fp++) {
 function _getFrustumPoints(camera, farClip, points) {
     var nearClip = camera._nearClip;
     var fov = camera._fov * Math.PI / 180.0;
-    var aspect = camera._aspect;
+    var aspect = camera._aspectRatio;
     var projection = camera._projection;
 
     var x, y;
@@ -328,12 +328,10 @@ function createShadowCamera(device, shadowType, type) {
     }
 
     shadowCam.clearColorBuffer = !hwPcf;
-    shadowCam.clearDepth = 1;
     shadowCam.clearDepthBuffer = true;
-    shadowCam.clearStencil = 0;
     shadowCam.clearStencilBuffer = false;
 
-    shadowCam._node = new GraphNode();
+    shadowCam.node = new GraphNode();
 
     return shadowCam;
 }
@@ -810,9 +808,9 @@ Object.assign(ForwardRenderer.prototype, {
             device.clear({
                 color: [ camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a ],
                 depth: camera._clearDepth,
-                flags: camera._clearColorBuffer ? CLEARFLAG_COLOR : 0 |
-                       camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0 |
-                       camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0,
+                flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
+                       (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
+                       (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
             });
         }
@@ -2659,7 +2657,6 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     clearView: function (camera, target, options) {
-        camera = camera.camera;
         var device = this.device;
         device.setRenderTarget(target);
         device.updateBegin();
@@ -2677,7 +2674,14 @@ Object.assign(ForwardRenderer.prototype, {
         device.setViewport(x, y, w, h);
         device.setScissor(x, y, w, h);
 
-        device.clear(options ? options : camera._clearOptions); // clear full RT
+        device.clear(options ? options : {
+            color: [ camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a ],
+            depth: camera._clearDepth,
+            flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
+                   (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
+                   (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
+            stencil: camera._clearStencil
+        }); // clear full RT
     },
 
     setSceneConstants: function () {
@@ -2896,7 +2900,7 @@ Object.assign(ForwardRenderer.prototype, {
 
             // #ifdef DEBUG
             this.device.pushMarker(layer.name);
-            this.device.pushMarker(((camera && camera.node) ? camera.node.name : "noname"));
+            this.device.pushMarker(camera ? camera.entity.name : "noname");
             // #endif
 
             // #ifdef PROFILER
@@ -2917,7 +2921,7 @@ Object.assign(ForwardRenderer.prototype, {
                 if (layer.onPreRender) layer.onPreRender(cameraPass);
                 layer._preRenderCalledForCameras |= 1 << cameraPass;
                 if (layer.overrideClear) {
-                    this.clearView(camera, layer.renderTarget, layer._clearOptions);
+                    this.clearView(camera.camera, layer.renderTarget, layer._clearOptions);
                 }
             }
 
@@ -2934,7 +2938,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
-                    if (!layer.overrideClear) this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
+                    if (!layer.overrideClear) this.clearView(camera.camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
@@ -2954,7 +2958,7 @@ Object.assign(ForwardRenderer.prototype, {
                 sortTime = now();
                 // #endif
 
-                layer._sortVisible(transparent, camera.node, cameraPass);
+                layer._sortVisible(transparent, camera.camera.node, cameraPass);
 
                  // #ifdef PROFILER
                 this._sortTime += now() - sortTime;

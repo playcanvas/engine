@@ -413,12 +413,10 @@ Object.assign(Lightmapper.prototype, {
             lmCamera = new Camera();
             lmCamera.clearColor = new Color(0, 0, 0, 0);
             lmCamera.clearColorBuffer = true;
-            lmCamera.clearDepth = 1;
-            lmCamera.clearDepthBuffer = true;
-            lmCamera.clearStencil = 0;
+            lmCamera.clearDepthBuffer = false;
             lmCamera.clearStencilBuffer = false;
-            lmCamera._node = new GraphNode();
             lmCamera.frustumCulling = false;
+            lmCamera.node = new GraphNode();
         }
 
         var node;
@@ -595,8 +593,8 @@ Object.assign(Lightmapper.prototype, {
                     tempVec.copy(bounds.center);
                     tempVec.y += bounds.halfExtents.y;
 
-                    lmCamera._node.setPosition(tempVec);
-                    lmCamera._node.setEulerAngles(-90, 0, 0);
+                    lmCamera.node.setPosition(tempVec);
+                    lmCamera.node.setEulerAngles(-90, 0, 0);
 
                     var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
