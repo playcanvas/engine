@@ -43,13 +43,12 @@ function Camera() {
     this._horizontalFov = false;
     this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
     this._nearClip = 0.1;
+    this._node = null;
     this._orthoHeight = 10;
     this._projection = PROJECTION_PERSPECTIVE;
     this._rect = new Vec4(0, 0, 1, 1);
     this._renderTarget = null;
     this._scissorRect = new Vec4(0, 0, 1, 1);
-
-    this._renderDepthRequests = 0;
 
     this._projMat = new Mat4();
     this._projMatDirty = true;
@@ -60,8 +59,6 @@ function Camera() {
     this._viewProjMatDirty = true;
 
     this.frustum = new Frustum(this._projMat, this._viewMat);
-
-    this._node = null;
 
     this.vrDisplay = null;
 }
@@ -488,14 +485,6 @@ Object.assign(Camera.prototype, {
     getProjectionMatrixSkybox: function () {
         this._evaluateProjectionMatrix();
         return this._projMatSkybox;
-    },
-
-    requestDepthMap: function () {
-        this._renderDepthRequests++;
-    },
-
-    releaseDepthMap: function () {
-        this._renderDepthRequests--;
     }
 });
 
