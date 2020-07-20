@@ -332,6 +332,8 @@ Object.assign(Camera.prototype, {
     copy: function (other) {
         this.aspectRatio = other.aspectRatio;
         this.aspectRatioMode = other.aspectRatioMode;
+        this.calculateProjection = other.calculateProjection;
+        this.calculateTransform = other.calculateTransform;
         this.clearColor = other.clearColor;
         this.clearColorBuffer = other.clearColorBuffer;
         this.clearDepth = other.clearDepth;
@@ -339,15 +341,18 @@ Object.assign(Camera.prototype, {
         this.clearStencil = other.clearStencil;
         this.clearStencilBuffer = other.clearStencilBuffer;
         this.cullFaces = other.cullFaces;
+        this.cullingMask = other.cullingMask;
         this.farClip = other.farClip;
         this.flipFaces = other.flipFaces;
         this.fov = other.fov;
         this.frustumCulling = other.frustumCulling;
         this.horizontalFov = other.horizontalFov;
+        this.layers = other.layers;
         this.nearClip = other.nearClip;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;
         this.rect = other.rect;
+        this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
     },
 
