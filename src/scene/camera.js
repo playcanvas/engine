@@ -77,6 +77,18 @@ Object.defineProperty(Camera.prototype, 'aspectRatio', {
     }
 });
 
+Object.defineProperty(Camera.prototype, 'aspectRatioMode', {
+    get: function () {
+        return this._aspectRatioMode;
+    },
+    set: function (newValue) {
+        if (this._aspectRatioMode !== v) {
+            this._aspectRatioMode = newValue;
+            this._projMatDirty = true;
+        }
+    }
+});
+
 Object.defineProperty(Camera.prototype, "calculateProjection", {
     get: function () {
         return this._calculateProjection;
@@ -105,12 +117,30 @@ Object.defineProperty(Camera.prototype, 'clearColor', {
     }
 });
 
+Object.defineProperty(Camera.prototype, 'clearColorBuffer', {
+    get: function () {
+        return this._clearColorBuffer;
+    },
+    set: function (newValue) {
+        this._clearColorBuffer = newValue;
+    }
+});
+
 Object.defineProperty(Camera.prototype, 'clearDepth', {
     get: function () {
         return this._clearDepth;
     },
     set: function (newValue) {
         this._clearDepth = newValue;
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'clearDepthBuffer', {
+    get: function () {
+        return this._clearDepthBuffer;
+    },
+    set: function (newValue) {
+        this._clearDepthBuffer = newValue;
     }
 });
 
@@ -123,6 +153,33 @@ Object.defineProperty(Camera.prototype, 'clearStencil', {
     }
 });
 
+Object.defineProperty(Camera.prototype, 'clearStencilBuffer', {
+    get: function () {
+        return this._clearStencilBuffer;
+    },
+    set: function (newValue) {
+        this._clearStencilBuffer = newValue;
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'cullingMask', {
+    get: function () {
+        return this._cullingMask;
+    },
+    set: function (newValue) {
+        this._cullingMask = newValue;
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'cullFaces', {
+    get: function () {
+        return this._cullFaces;
+    },
+    set: function (newValue) {
+        this._cullFaces = newValue;
+    }
+});
+
 Object.defineProperty(Camera.prototype, 'farClip', {
     get: function () {
         return this._farClip;
@@ -132,6 +189,15 @@ Object.defineProperty(Camera.prototype, 'farClip', {
             this._farClip = v;
             this._projMatDirty = true;
         }
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'flipFaces', {
+    get: function () {
+        return this._flipFaces;
+    },
+    set: function (newValue) {
+        this._flipFaces = newValue;
     }
 });
 
@@ -242,20 +308,6 @@ Object.defineProperty(Camera.prototype, 'scissorRect', {
 });
 
 Object.assign(Camera.prototype, {
-    calculateTransform: function (mat, mode) {
-        if (!this._calculateTransform)
-            return null;
-
-        return this._calculateTransform(mat, mode);
-    },
-
-    calculateProjection: function (mat, mode) {
-        if (!this._calculateProjection)
-            return null;
-
-        return this._calculateProjection(mat, mode);
-    },
-
     /**
      * @private
      * @function
