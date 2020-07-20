@@ -69,9 +69,9 @@ Object.defineProperty(Camera.prototype, 'aspectRatio', {
     get: function () {
         return this._aspectRatio;
     },
-    set: function (v) {
-        if (this._aspectRatio !== v) {
-            this._aspectRatio = v;
+    set: function (newValue) {
+        if (this._aspectRatio !== newValue) {
+            this._aspectRatio = newValue;
             this._projMatDirty = true;
         }
     }
@@ -82,7 +82,7 @@ Object.defineProperty(Camera.prototype, 'aspectRatioMode', {
         return this._aspectRatioMode;
     },
     set: function (newValue) {
-        if (this._aspectRatioMode !== v) {
+        if (this._aspectRatioMode !== newValue) {
             this._aspectRatioMode = newValue;
             this._projMatDirty = true;
         }
@@ -184,9 +184,9 @@ Object.defineProperty(Camera.prototype, 'farClip', {
     get: function () {
         return this._farClip;
     },
-    set: function (v) {
-        if (this._farClip !== v) {
-            this._farClip = v;
+    set: function (newValue) {
+        if (this._farClip !== newValue) {
+            this._farClip = newValue;
             this._projMatDirty = true;
         }
     }
@@ -205,9 +205,9 @@ Object.defineProperty(Camera.prototype, 'fov', {
     get: function () {
         return this._fov;
     },
-    set: function (v) {
-        if (this._fov !== v) {
-            this._fov = v;
+    set: function (newValue) {
+        if (this._fov !== newValue) {
+            this._fov = newValue;
             this._projMatDirty = true;
         }
     }
@@ -226,9 +226,9 @@ Object.defineProperty(Camera.prototype, 'horizontalFov', {
     get: function () {
         return this._horizontalFov;
     },
-    set: function (v) {
-        if (this._horizontalFov !== v) {
-            this._horizontalFov = v;
+    set: function (newValue) {
+        if (this._horizontalFov !== newValue) {
+            this._horizontalFov = newValue;
             this._projMatDirty = true;
         }
     }
@@ -248,9 +248,9 @@ Object.defineProperty(Camera.prototype, 'nearClip', {
     get: function () {
         return this._nearClip;
     },
-    set: function (v) {
-        if (this._nearClip !== v) {
-            this._nearClip = v;
+    set: function (newValue) {
+        if (this._nearClip !== newValue) {
+            this._nearClip = newValue;
             this._projMatDirty = true;
         }
     }
@@ -269,9 +269,9 @@ Object.defineProperty(Camera.prototype, 'orthoHeight', {
     get: function () {
         return this._orthoHeight;
     },
-    set: function (v) {
-        if (this._orthoHeight !== v) {
-            this._orthoHeight = v;
+    set: function (newValue) {
+        if (this._orthoHeight !== newValue) {
+            this._orthoHeight = newValue;
             this._projMatDirty = true;
         }
     }
@@ -281,9 +281,9 @@ Object.defineProperty(Camera.prototype, 'projection', {
     get: function () {
         return this._projection;
     },
-    set: function (v) {
-        if (this._projection !== v) {
-            this._projection = v;
+    set: function (newValue) {
+        if (this._projection !== newValue) {
+            this._projection = newValue;
             this._projMatDirty = true;
         }
     }
