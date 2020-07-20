@@ -198,7 +198,7 @@ Object.defineProperty(CameraComponent.prototype, "layers", {
             layer.removeCamera(this);
         }
 
-        this._camera.layers = newValue.slice(0);
+        this._camera.layers = newValue;
 
         if (!this.enabled || !this.entity.enabled) return;
 
