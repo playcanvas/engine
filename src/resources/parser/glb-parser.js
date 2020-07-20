@@ -203,54 +203,7 @@ var generateNormals = function (sourceDesc, indices) {
     };
 };
 
-var flipTexCoordVs = function (vertexBuffer) {
-    var i, j;
-
-    var floatOffsets = [];
-    var shortOffsets = [];
-    var byteOffsets = [];
-    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
-        var element = vertexBuffer.format.elements[i];
-        if (element.name === SEMANTIC_TEXCOORD0 ||
-            element.name === SEMANTIC_TEXCOORD1) {
-            switch (element.dataType) {
-                case TYPE_FLOAT32:
-                    floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
-                    break;
-                case TYPE_UINT16:
-                    shortOffsets.push({ offset: element.offset / 2 + 1, stride: element.stride / 2 });
-                    break;
-                case TYPE_UINT8:
-                    byteOffsets.push({ offset: element.offset + 1, stride: element.stride });
-                    break;
-            }
-        }
-    }
-
-    var flip = function (offsets, type, one) {
-        var typedArray = new type(vertexBuffer.storage);
-        for (i = 0; i < offsets.length; ++i) {
-            var index = offsets[i].offset;
-            var stride = offsets[i].stride;
-            for (j = 0; j < vertexBuffer.numVertices; ++j) {
-                typedArray[index] = one - typedArray[index];
-                index += stride;
-            }
-        }
-    };
-
-    if (floatOffsets.length > 0) {
-        flip(floatOffsets, Float32Array, 1.0);
-    }
-    if (shortOffsets.length > 0) {
-        flip(shortOffsets, Uint16Array, 65535);
-    }
-    if (byteOffsets.length > 0) {
-        flip(byteOffsets, Uint8Array, 255);
-    }
-};
-
-var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
+var createVertexBufferInternal = function (device, sourceDesc) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
     var numVertices = positionDesc.count;
 
@@ -345,16 +298,12 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
         }
     }
 
-    if (!disableFlipV) {
-        flipTexCoordVs(vertexBuffer);
-    }
-
     vertexBuffer.unlock();
 
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap) {
 
     // build vertex buffer format desc and source
     var sourceDesc = {};
@@ -389,10 +338,10 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
         generateNormals(sourceDesc, indices);
     }
 
-    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
+    return createVertexBufferInternal(device, sourceDesc);
 };
 
-var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV) {
+var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices) {
 
     var numPoints = outputGeometry.num_points();
 
@@ -473,7 +422,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
         generateNormals(sourceDesc, indices);
     }
 
-    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
+    return createVertexBufferInternal(device, sourceDesc);
 };
 
 var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buffers) {
@@ -522,7 +471,7 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buff
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback, disableFlipV) {
+var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
     var meshes = [];
 
     var semanticMap = {
@@ -605,7 +554,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -626,7 +575,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -746,7 +695,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
     return meshes;
 };
 
-var createMaterial = function (gltfMaterial, textures) {
+var createMaterial = function (gltfMaterial, textures, disableFlipV) {
     // TODO: integrate these shader chunks into the native engine
     var glossChunk = [
         "#ifdef MAPFLOAT",
@@ -805,6 +754,9 @@ var createMaterial = function (gltfMaterial, textures) {
         "}"
     ].join('\n');
 
+    var uvONE = [1, 1];
+    var uvZERO = [0, 0];
+
     var extractTextureTransform = function (source, material, maps) {
         var map;
 
@@ -815,24 +767,25 @@ var createMaterial = function (gltfMaterial, textures) {
             }
         }
 
+        var scale = uvONE;
+        var offset = uvZERO;
+
         var extensions = source.extensions;
         if (extensions) {
             var textureTransformData = extensions.KHR_texture_transform;
             if (textureTransformData) {
-                var scale = textureTransformData.scale;
-                if (scale) {
-                    for (map = 0; map < maps.length; ++map) {
-                        material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
-                    }
+                if (textureTransformData.scale) {
+                    scale = textureTransformData.scale;
                 }
-
-                var offset = textureTransformData.offset;
-                if (offset) {
-                    for (map = 0; map < maps.length; ++map) {
-                        material[maps[map] + 'MapOffset'] = new Vec2(offset[0], offset[1]);
-                    }
+                if (textureTransformData.offset) {
+                    offset = textureTransformData.offset;
                 }
             }
+        }
+
+        for (map = 0; map < maps.length; ++map) {
+            material[maps[map] + 'MapTiling'] = new Vec2(scale[0], disableFlipV ? scale[1] : -scale[1]);
+            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? offset[1] : 1.0 - offset[1]);
         }
     };
 
@@ -1224,20 +1177,20 @@ var createMeshes = function (device, gltf, buffers, callback) {
         return [];
     }
 
+    return gltf.meshes.map(function (gltfMesh) {
+        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
+    });
+};
+
+var createMaterials = function (gltf, textures, options, disableFlipV) {
+    if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
+        return [];
+    }
+
     // The original version of FACT generated incorrectly flipped V texture
     // coordinates. We must compensate by -not- flipping V in this case. Once
     // all models have been re-exported we can remove this flag.
     var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
-
-    return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback, disableFlipV);
-    });
-};
-
-var createMaterials = function (gltf, textures, options) {
-    if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
-        return [];
-    }
 
     var preprocess = options && options.material && options.material.preprocess;
     var process = options && options.material && options.material.process || createMaterial;
@@ -1247,7 +1200,7 @@ var createMaterials = function (gltf, textures, options) {
         if (preprocess) {
             preprocess(gltfMaterial);
         }
-        var material = process(gltfMaterial, textures);
+        var material = process(gltfMaterial, textures, disableFlipV);
         if (postprocess) {
             postprocess(gltfMaterial, material);
         }
