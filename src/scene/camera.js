@@ -290,6 +290,13 @@ Object.defineProperty(Camera.prototype, 'projection', {
     }
 });
 
+Object.defineProperty(Camera.prototype, 'projectionMatrix', {
+    get: function () {
+        this._evaluateProjectionMatrix();
+        return this._projMat;
+    }
+});
+
 Object.defineProperty(Camera.prototype, 'rect', {
     get: function () {
         return this._rect;
@@ -314,6 +321,17 @@ Object.defineProperty(Camera.prototype, 'scissorRect', {
     },
     set: function (newValue) {
         this._scissorRect.copy(newValue);
+    }
+});
+
+Object.defineProperty(Camera.prototype, 'viewMatrix', {
+    get: function () {
+        if (this._viewMatDirty) {
+            var wtm = this._node.getWorldTransform();
+            this._viewMat.copy(wtm).invert();
+            this._viewMatDirty = false;
+        }
+        return this._viewMat;
     }
 });
 
@@ -373,8 +391,8 @@ Object.assign(Camera.prototype, {
         }
 
         if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
-            var projMat = this.getProjectionMatrix();
-            var viewMat = this.getViewMatrix();
+            var projMat = this.projectionMatrix;
+            var viewMat = this.viewMatrix;
             this._viewProjMat.mul2(projMat, viewMat);
             this._viewProjMatDirty = false;
         }
@@ -412,8 +430,8 @@ Object.assign(Camera.prototype, {
         }
 
         if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
-            var projMat = this.getProjectionMatrix();
-            var viewMat = this.getViewMatrix();
+            var projMat = this.projectionMatrix;
+            var viewMat = this.viewMatrix;
             this._viewProjMat.mul2(projMat, viewMat);
             this._viewProjMatDirty = false;
         }
@@ -467,37 +485,9 @@ Object.assign(Camera.prototype, {
         }
     },
 
-    /**
-     * @private
-     * @function
-     * @name pc.Camera#getProjectionMatrix
-     * @description Retrieves the projection matrix for the specified camera.
-     * @returns {pc.Mat4} The camera's projection matrix.
-     */
-    getProjectionMatrix: function () {
-        this._evaluateProjectionMatrix();
-        return this._projMat;
-    },
-
     getProjectionMatrixSkybox: function () {
         this._evaluateProjectionMatrix();
         return this._projMatSkybox;
-    },
-
-    /**
-     * @private
-     * @function
-     * @name pc.Camera#getViewMatrix
-     * @description Retrieves the view matrix for the specified camera based on the entity world transformation.
-     * @returns {pc.Mat4} The camera's view matrix.
-     */
-    getViewMatrix: function () {
-        if (this._viewMatDirty) {
-            var wtm = this._node.getWorldTransform();
-            this._viewMat.copy(wtm).invert();
-            this._viewMatDirty = false;
-        }
-        return this._viewMat;
     },
 
     requestDepthMap: function () {

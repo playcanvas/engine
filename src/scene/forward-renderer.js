@@ -621,7 +621,7 @@ Object.assign(ForwardRenderer.prototype, {
             return;
         }
 
-        projMat = camera.getProjectionMatrix();
+        projMat = camera.projectionMatrix;
         if (camera.calculateProjection) {
             camera.calculateProjection(projMat, VIEW_CENTER);
         }
@@ -737,7 +737,7 @@ Object.assign(ForwardRenderer.prototype, {
             }
         } else {
             // Projection Matrix
-            projMat = camera.getProjectionMatrix();
+            projMat = camera.projectionMatrix;
             if (camera.calculateProjection) {
                 camera.calculateProjection(projMat, VIEW_CENTER);
             }
@@ -1033,7 +1033,7 @@ Object.assign(ForwardRenderer.prototype, {
                 shadowCam.fov = spot._outerConeAngle * 2;
 
                 shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
                 spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
             }
             this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
@@ -1391,7 +1391,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                 if (type !== LIGHTTYPE_POINT) {
                     shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-                    shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                    shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
                     light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                 }
 
