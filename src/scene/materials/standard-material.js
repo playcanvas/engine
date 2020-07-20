@@ -684,12 +684,13 @@ Object.assign(StandardMaterial.prototype, {
     },
 
     _updateMapTransform: function (transform, tiling, offset) {
-        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+        if (!this._flipV && (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0)) {
             return null;
         }
 
         transform = transform || new Vec4();
-        transform.set(tiling.x, tiling.y, offset.x, offset.y);
+        transform.set(tiling.x, tiling.y * (this._flipV ? -1 : 1),
+                      offset.x, (this._flipV ? 1.0 - offset.y : offset.y));
         return transform;
     },
 
@@ -729,12 +730,12 @@ Object.assign(StandardMaterial.prototype, {
                 if (!uniform) {
                     uniform = new Float32Array(4);
                     this[uname] = uniform;
-                    this._setParameter('texture_' + tname, uniform);
                 }
                 uniform[0] = transform.x;
                 uniform[1] = transform.y;
                 uniform[2] = transform.z;
                 uniform[3] = transform.w;
+                this._setParameter('texture_' + tname, uniform);
             }
         }
     },

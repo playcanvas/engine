@@ -784,8 +784,12 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         }
 
         for (map = 0; map < maps.length; ++map) {
-            material[maps[map] + 'MapTiling'] = new Vec2(scale[0], disableFlipV ? scale[1] : -scale[1]);
-            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? offset[1] : 1.0 - offset[1]);
+            material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
+            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], offset[1]);
+        }
+
+        if (!disableFlipV) {
+            material._flipV = true;
         }
     };
 
