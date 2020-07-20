@@ -1,99 +1,5 @@
 
-
-var ShaderNodeIO = function ShaderNodeIO(node) {
-    this.inputName = [];
-    this.inputType = [];
-    this.outputName = [];
-    this.outputType = [];
-
-    if (node.nodes)
-    {
-        this.genFromNodes(node.nodes); //this can be recursive
-    }
-    else if (node.shaderFunctionString)
-    {
-        this.genFromString(node.shaderFunctionString);
-    }
-    else
-    {
-        this.genFromParam(node.paramType, node.paramName); //for constants
-    }
-    
-};
-
-ShaderNodeIO.prototype.genFromParam = function (inType, inName) {
-    this.outputName.push(inName);
-    this.outputType.push(inType);
-    
-    //this.defineOuputGetter(this.outputName[0], 0);
-};
-
-ShaderNodeIO.prototype.genFromString = function (shaderGlsl) {
-    var decl_func=shaderGlsl.split("_DECL_FUNC_");
-    var functionString = decl_func[1].trim();
-
-    var head = functionString.split(")")[0];
-    var rettype_funcname = head.split("(")[0];
-    var rettype = rettype_funcname.split(" ")[0];
-    var params = head.split("(")[1].split(",");
-
-    this.funcName = rettype_funcname.split(" ")[1];
-    // TODO check for function name clashes - maybe replace func name in function string with hash key?
-
-    if (rettype != "void") {
-        this.outputName.push('ret');
-        this.outputType.push(rettype);
-        this.outputTempVarIndex.push(-1);
-        this.ret = (this.outputName.length - 1);
-
-        this.defineOuputGetter(this.outputName[0], 0);
-    }
-
-    for (var p = 0; p < params.length; p++) {
-        var io_type_name = params[p].split(" ");
-
-        if (io_type_name[0] === "") io_type_name.shift();
-
-        if (io_type_name[0] === "out") {
-            this.outputName.push(io_type_name[2]);
-            this.outputType.push(io_type_name[1]);
-    
-            //this.defineOuputGetter(this.outputName[this.outputName.length - 1], this.outputName.length - 1);
-        }
-        if (io_type_name[0] === "in") {
-            this.inputName.push(io_type_name[2]);
-            this.inputType.push(io_type_name[1]);
-
-            //this.defineInputSetter(this.inputName[this.inputName.length - 1], this.inputName.length - 1);
-        } else {
-            // unsupported parameter !!! TODO add support for more parameter types?
-        }
-    }
-};
-
-ShaderNodeIO.prototype.genFromNodes = function (nodes) {
-    //loop through all nodes look for param and outputs nodes
-    for (var i=0;i<nodes.length;i++)
-    {
-        if (!nodes[i]._io)
-        {
-            nodes[i]._io=new ShaderNodeIO(nodes[i]);
-        } 
-
-        if (nodes[i]._shaderNode.outputName[0].indexOf(`param_`)===0)
-        {
-            this.inputName.push(nodes[i]._io.outputName[0]);
-            this.inputType.push(nodes[i]._io.outputType[0]);
-        }
-        if (nodes[i]._io.inputName[0].indexOf(`outpt_`)===0)
-        {
-            this.outputName.push(nodes[i]._io.inputName[0]);
-            this.outputType.push(nodes[i]._io.inputType[0]);
-        }
-    }
-};
-
-var ShaderConnection = function ShaderConnection(type, i0, i1, i2, i3) {
+var ShaderGraphConnection = function ShaderGraphConnection(type, i0, i1, i2, i3) {
     //TODO: validate types and names?
     this.type=type;
 
@@ -107,7 +13,7 @@ var ShaderConnection = function ShaderConnection(type, i0, i1, i2, i3) {
     }
     else if (type==='i2n')
     {
-        this.iocName=i0;
+        this.iocVarName=i0;
     
         this.inNodeIndex=i1;
         this.inInputIndex=i2;
@@ -117,14 +23,8 @@ var ShaderConnection = function ShaderConnection(type, i0, i1, i2, i3) {
         this.outNodeIndex=i0;
         this.outOuputIndex=i1;
 
-        this.iocName=i2;
+        this.iocVarName=i2;
     }   
-};
-
-var ShaderIOC = function ShaderIOC(type, name, value) {
-    this.type=type;
-    this.name=name;
-    this.value=value;
 };
 
 var id = 0;
@@ -138,13 +38,13 @@ var ShaderGraph = function ShaderGraph(funcGlsl, declGlsl) {
     this.name = "shadergraph";
     this.id = id++;
 
-    this.iocs = {}; //inputs outputs or constants
+    this.iocVars = {}; //input, output or constant variables
 
     if (funcGlsl)
     {
         this.funcGlsl=funcGlsl;
         this.declGlsl=declGlsl;
-        this._genIOCs();
+        this._genIocVars();
     }
     else
     {
@@ -153,28 +53,28 @@ var ShaderGraph = function ShaderGraph(funcGlsl, declGlsl) {
     }
 };
 
-ShaderGraph.prototype._addIOC= function (type, name, value) {
-    if (!this.iocs[name])
+ShaderGraph.prototype._addIocVar= function (type, name, value) {
+    if (!this.iocVars[name])
     {
-        this.iocs[name]=new ShaderIOC(type, name, value);
+        this.iocVars[name]={type:type, name:name, value:value};
     }
 
-    return this.iocs[name];
+    return this.iocVars[name];
 };
 
 ShaderGraph.prototype.addInput = function (type, name, value) {
-    return this._addIOC(type, 'IN_'+name, value);
+    return this._addIocVar(type, 'IN_'+name, value);
 };
 
 ShaderGraph.prototype.addOutput = function (type, name, value) {
-    return this._addIOC(type, 'OUT_'+name, value);
+    return this._addIocVar(type, 'OUT_'+name, value);
 };
 
 ShaderGraph.prototype.addConstant = function (type, value) {
-    return this._addIOC(type, 'CONST_'+type+'_'+this.iocs.length, value); //create a unique name
+    return this._addIocVar(type, 'CONST_'+type+'_'+this.iocVars.length, value); //create a unique name
 };
 
-ShaderGraph.prototype._genIOCs= function () {
+ShaderGraph.prototype._genIocVars= function () {
     var functionString = this.funcGlsl.trim();
 
     var head = functionString.split(")")[0];
@@ -215,19 +115,19 @@ ShaderGraph.prototype.addSubGraph = function (graph) {
 };
 
 ShaderGraph.prototype.connectNodeToNode = function (outNodeIndex, outIndex, inNodeIndex, inIndex) {
-    var connection = new ShaderConnection("n2n", outNodeIndex, outIndex, inNodeIndex, inIndex);
+    var connection = new ShaderGraphConnection("n2n", outNodeIndex, outIndex, inNodeIndex, inIndex);
 
     this.connections.push(connection);
 };
 
-ShaderGraph.prototype.connectIocToNode = function (iocName, inNodeIndex, inIndex) {
-    var connection = new ShaderConnection("i2n",iocName, inNodeIndex, inIndex);
+ShaderGraph.prototype.connectIocVarToNode = function (iocVarName, inNodeIndex, inIndex) {
+    var connection = new ShaderGraphConnection("i2n",iocVarName, inNodeIndex, inIndex);
 
     this.connections.push(connection);
 };
 
-ShaderGraph.prototype.connectNodeToIoc = function (outNodeIndex, outIndex, iocName) {
-    var connection = new ShaderConnection("i2n", outNodeIndex, outIndex, iocName);
+ShaderGraph.prototype.connectNodeToIocVar = function (outNodeIndex, outIndex, iocVarName) {
+    var connection = new ShaderGraphConnection("i2n", outNodeIndex, outIndex, iocVarName);
 
     this.connections.push(connection);
 };
@@ -252,7 +152,7 @@ ShaderGraph.prototype.clone = function () {
     return clone;
 };
 
-ShaderGraph.prototype.generateSgCall = function (sg, inNames, outNames)
+ShaderGraph.prototype._generateSubGraphCall = function (sg, inNames, outNames)
 {
     var callString='';
 
@@ -291,21 +191,21 @@ ShaderGraph.prototype.generateGlsl = function () {
         //function head
         this.funcGlsl='void '+this.name+'_'+this.id+'( ';
 
-        for (var ioc in this.iocs) 
+        for (var iocVar in this.iocVars) 
         {
-            if (ioc.name.startsWith('IN_'))
+            if (iocVar.name.startsWith('IN_'))
             {
-                iocInputMap[ioc]
+                iocVarInputMap[iocVar]
 
-                this.funcGlsl+='in '+ioc.type+' '+ioc.name+', ';
+                this.funcGlsl+='in '+iocVar.type+' '+iocVar.name+', ';
             }
         };
 
-        for (var ioc in this.iocs) 
+        for (var iocVar in this.iocVars) 
         {
-            if (ioc.name.startsWith('OUT_'))
+            if (iocVar.name.startsWith('OUT_'))
             {
-                this.funcGlsl+='out '+ioc.type+' '+ioc.name+', ';
+                this.funcGlsl+='out '+iocVar.type+' '+iocVar.name+', ';
             }
         }
 
@@ -314,11 +214,11 @@ ShaderGraph.prototype.generateGlsl = function () {
         this.funcGlsl+=' ) {\n';
 
         // constants
-        for (var ioc in this.iocs) 
+        for (var iocVar in this.iocVars) 
         {
-            if (ioc.name.startsWith('CONST_'))
+            if (iocVar.name.startsWith('CONST_'))
             {
-                this.funcGlsl+=ioc.type+' '+ioc.name+' = '+ioc.value+';\n';
+                this.funcGlsl+=iocVar.type+' '+iocVar.name+' = '+iocVar.value+';\n';
             }
         }
 
@@ -326,7 +226,7 @@ ShaderGraph.prototype.generateGlsl = function () {
         var tmpVarCounter = 0;
         var outsgTmpVarMap = {};
         var insgTmpVarMap = {};
-        var outIocTmpVarMap = {};
+        var outIocVarTmpVarMap = {};
         
         var outsgConnectedsgMap = {};
         var insgConnectedsgMap = {};
@@ -349,8 +249,8 @@ ShaderGraph.prototype.generateGlsl = function () {
 
                 if (!outsgTmpVarMap[outsgIndex][con.outOuputIndex])
                 {
-                    this.funcGlsl+=ioc.type+' '+ioc.name+'_'+tmpVarCounter+' = '+ioc.value+';\n';
-                    outsgTmpVarMap[outsgIndex][con.outOuputIndex]=ioc.name+'_'+tmpVarCounter;
+                    this.funcGlsl+=iocVar.type+' '+iocVar.name+'_'+tmpVarCounter+' = '+iocVar.value+';\n';
+                    outsgTmpVarMap[outsgIndex][con.outOuputIndex]=iocVar.name+'_'+tmpVarCounter;
                     //tmpVarFlag[tmpVarCounter]=0;
                     tmpVarCounter++;
                 }
@@ -368,11 +268,11 @@ ShaderGraph.prototype.generateGlsl = function () {
             }
             else if (con.type=='i2n')
             {
-                var iocName=con.iocName;
+                var iocVarName=con.iocVarName;
                 
                 var insgIndex=con.inNodeIndex;
                 if (!insgTmpVarMap[insgIndex]) insgTmpVarMap[insgIndex]=[];
-                insgTmpVarMap[insgIndex][con.inInputIndex]=iocName;
+                insgTmpVarMap[insgIndex][con.inInputIndex]=iocVarName;
                 
                 sgList.push(insgIndex);
                 sgFlag[insgIndex]=1; //1 means on the list
@@ -385,14 +285,14 @@ ShaderGraph.prototype.generateGlsl = function () {
 
                 if (!outsgTmpVarMap[outsgIndex][con.outOuputIndex])
                 {
-                    this.funcGlsl+=ioc.type+' '+ioc.name+'_'+tmpVarCounter+' = '+ioc.value+';\n';
-                    outsgTmpVarMap[outsgIndex][con.outOuputIndex]=ioc.name+'_'+tmpVarCounter;
+                    this.funcGlsl+=iocVar.type+' '+iocVar.name+'_'+tmpVarCounter+' = '+iocVar.value+';\n';
+                    outsgTmpVarMap[outsgIndex][con.outOuputIndex]=iocVar.name+'_'+tmpVarCounter;
                     //tmpVarFlag[tmpVarCounter]=0;
                     tmpVarCounter++;
                 }
                 
-                var iocName=con.iocName;
-                outIocTmpVarMap[iocName]=outsgTmpVarMap[outsgIndex][con.outOuputIndex];
+                var iocVarName=con.iocVarName;
+                outIocVarTmpVarMap[iocVarName]=outsgTmpVarMap[outsgIndex][con.outOuputIndex];
             }    
         }
 
@@ -401,7 +301,7 @@ ShaderGraph.prototype.generateGlsl = function () {
         {
             var sgIndex=sgList[i];
 
-            this.funcGlsl+=this.generateSubGraphCall(sgIndex, insgTmpVarMap[sgIndex], outsgTmpVarMap[sgIndex]);
+            this.funcGlsl+=this._generateSubGraphCall(sgIndex, insgTmpVarMap[sgIndex], outsgTmpVarMap[sgIndex]);
 
             var splicedcount=0;
             //run through all nodes that connect to this node's outputs and splice in if all dependent nodes are before it on the list
@@ -431,11 +331,11 @@ ShaderGraph.prototype.generateGlsl = function () {
         }
 
         //output assignment
-        for (var ioc in this.iocs) 
+        for (var iocVar in this.iocVars) 
         {
-            if (ioc.name.startsWith('OUT_'))
+            if (iocVar.name.startsWith('OUT_') && !iocVar.name.startsWith('OUT_ret'))
             {
-                this.funcGlsl+=ioc.name+' = '+outIocTmpVarMap[ioc.name]+';\n';
+                this.funcGlsl+=iocVar.name+' = '+outIocVarTmpVarMap[iocVar.name]+';\n';
             }
         }
 
@@ -444,7 +344,7 @@ ShaderGraph.prototype.generateGlsl = function () {
 };
 
 
-ShaderGraph.prototype.generateShader = function (graphParamList, graphFuncList, graphTmpVarList, graphNodeStringList) {
+ShaderGraph.prototype.generateShaderCode = function (graphParamList, graphFuncList, graphTmpVarList, graphNodeStringList) {
     var isRoot = false;
     var i;
 
