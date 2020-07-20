@@ -2275,7 +2275,7 @@ Object.assign(GraphicsDevice.prototype, {
      *     indexed: false
      * });
      */
-    draw: function (primitive, numInstances) {
+    draw: function (primitive, numInstances, keepBuffers) {
         var gl = this.gl;
 
         var i, j, len; // Loop counting
@@ -2286,7 +2286,9 @@ Object.assign(GraphicsDevice.prototype, {
         var uniforms = shader.uniforms;
 
         // vertex buffers
-        this.setBuffers();
+        if (!keepBuffers) {
+            this.setBuffers();
+        }
 
         // Commit the shader program variables
         var textureUnit = 0;

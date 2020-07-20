@@ -1302,7 +1302,7 @@ Object.assign(ForwardRenderer.prototype, {
             }
         } else {
             // matrices are already set
-            device.draw(mesh.primitive[style]);
+            device.draw(mesh.primitive[style], null, true);
         }
         return 0;
     },
