@@ -100,6 +100,34 @@ Object.assign(CameraComponentSystem.prototype, {
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, ['enabled']);
     },
 
+    cloneComponent: function (entity, clone) {
+        var c = entity.camera;
+        var component = this.addComponent(clone, {
+            aspectRatio: c.aspectRatio,
+            aspectRatioMode: c.aspectRatioMode,
+            calculateProjection: c.calculateProjection,
+            calculateTransform: c.calculateTransform,
+            clearColor: c.clearColor,
+            clearColorBuffer: c.clearColorBuffer,
+            clearDepthBuffer: c.clearDepthBuffer,
+            clearStencilBuffer: c.clearStencilBuffer,
+            cullFaces: c.cullFaces,
+            farClip: c.farClip,
+            flipFaces: c.flipFaces,
+            fov: c.fov,
+            frustumCulling: c.frustumCulling,
+            horizontalFov: c.horizontalFov,
+            layers: c.layers,
+            renderTarget: c.renderTarget,
+            nearClip: c.nearClip,
+            orthoHeight: c.orthoHeight,
+            projection: c.projection,
+            priority: c.priority,
+            rect: c.rect,
+            scissorRect: c.scissorRect
+        });
+    },
+
     onBeforeRemove: function (entity, component) {
         this.removeCamera(component);
     },
