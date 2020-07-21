@@ -259,16 +259,16 @@ Object.assign(ContainerHandler.prototype, {
             }
         });
 
-        container.data = null;              // since assets are created, release GLB data
-        container.scene = data.scene;       // scenes are not wrapped in an Asset
-        container.scenes = data.scenes;     // scenes are not wrapped in an Asset
-        container.nodes = data.nodes;       // nodes are not wrapped in an Asset
+        container.data = null;                      // since assets are created, release GLB data
+        container.scene = data.scene;               // scenes are not wrapped in an Asset
+        container.scenes = data.scenes;             // scenes are not wrapped in an Asset
+        container.nodes = data.nodes;               // nodes are not wrapped in an Asset
         container.materials = materialAssets;
-        container.textures = data.textures; // texture assets are created directly
+        container.textures = data.textures;         // texture assets are created directly
         container.animations = animationAssets;
         container.nodeAnimations = nodeAnimations;
         container.models = modelAssets;
-        container._nodeModels = nodeModelAssets;
+        container._nodeModels = nodeModelAssets;    // keep model refs for when container is destroyed
         container.registry = assets;
     }
 });
