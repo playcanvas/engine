@@ -161,7 +161,8 @@ CameraComponent.prototype.constructor = CameraComponent;
     { name: 'rect', readonly: false },
     { name: 'renderTarget', readonly: false },
     { name: 'scissorRect', readonly: false },
-    { name: 'viewMatrix', readonly: true }
+    { name: 'viewMatrix', readonly: true },
+    { name: 'vrDisplay', readonly: false }
 ].forEach(function (property) {
     var name = property.name;
     var options = {};
@@ -228,41 +229,6 @@ Object.defineProperty(CameraComponent.prototype, "priority", {
             var layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (!layer) continue;
             layer._sortCameras();
-        }
-    }
-});
-
-/**
- * @private
- * @deprecated
- * @name pc.CameraComponent#vrDisplay
- * @type {pc.VrDisplay}
- * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is
- * set automatically by calls to {@link pc.CameraComponent#enterVr} or
- * {@link pc.CameraComponent#exitVr}. Setting this property to a display directly enables
- * the camera to use the transformation information from a display without rendering
- * stereo to it, e.g. for "magic window" style experiences.
- * @example
- * // enable magic window style interface
- * var display = this.app.vr.display;
- * if (display) {
- *     this.entity.camera.vrDisplay = display;
- * }
- *
- * var camera = this.entity.camera;
- * camera.enterVr(function (err) {
- *     if (err) return;
- *     var display = camera.vrDisplay; // access presenting pc.VrDisplay
- * });
- */
-Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
-    get: function () {
-        return this._camera.vrDisplay;
-    },
-    set: function (newValue) {
-        this._camera.vrDisplay = newValue;
-        if (newValue) {
-            newValue._camera = this._camera;
         }
     }
 });

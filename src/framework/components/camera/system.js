@@ -133,23 +133,24 @@ Object.assign(CameraComponentSystem.prototype, {
     },
 
     onUpdate: function (dt) {
-        var components = this.store;
-        var component, cam, vrDisplay;
-
         if (this.app.vr) {
-            for (var id in components) {
-                component = components[id];
-                cam = component.camera;
-                vrDisplay = cam.vrDisplay;
-                if (component.enabled && component.entity.enabled && vrDisplay) {
-                    // Change WebVR near/far planes based on the stereo camera
-                    vrDisplay.setClipPlanes(cam._nearClip, cam._farClip);
+            var components = this.store;
 
-                    // update camera node transform from VrDisplay
-                    if (component.entity) {
-                        component.entity.localTransform.copy(vrDisplay.combinedViewInv);
-                        component.entity._dirtyLocal = false;
-                        component.entity._dirtifyWorld();
+            for (var id in components) {
+                var component = components[id];
+
+                if (component.enabled && component.entity.enabled) {
+                    var vrDisplay = component.vrDisplay;
+                    if (vrDisplay) {
+                        // Change WebVR near/far planes based on the stereo camera
+                        vrDisplay.setClipPlanes(component.nearClip, component.farClip);
+
+                        // update camera node transform from VrDisplay
+                        if (component.entity) {
+                            component.entity.localTransform.copy(vrDisplay.combinedViewInv);
+                            component.entity._dirtyLocal = false;
+                            component.entity._dirtifyWorld();
+                        }
                     }
                 }
             }

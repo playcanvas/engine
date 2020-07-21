@@ -49,6 +49,7 @@ function Camera() {
     this._rect = new Vec4(0, 0, 1, 1);
     this._renderTarget = null;
     this._scissorRect = new Vec4(0, 0, 1, 1);
+    this._vrDisplay = null;
 
     this._projMat = new Mat4();
     this._projMatDirty = true;
@@ -59,8 +60,6 @@ function Camera() {
     this._viewProjMatDirty = true;
 
     this.frustum = new Frustum(this._projMat, this._viewMat);
-
-    this.vrDisplay = null;
 }
 
 Object.defineProperty(Camera.prototype, 'aspectRatio', {
@@ -332,6 +331,18 @@ Object.defineProperty(Camera.prototype, 'viewMatrix', {
     }
 });
 
+Object.defineProperty(Camera.prototype, 'vrDisplay', {
+    get: function () {
+        return this._vrDisplay;
+    },
+    set: function (newValue) {
+        this._vrDisplay = newValue;
+        if (newValue) {
+            newValue._camera = this;
+        }
+    }
+});
+
 Object.assign(Camera.prototype, {
     /**
      * @private
@@ -369,6 +380,7 @@ Object.assign(Camera.prototype, {
         this.rect = other.rect;
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
+        this.vrDisplay = other.vrDisplay;
     },
 
     /**
