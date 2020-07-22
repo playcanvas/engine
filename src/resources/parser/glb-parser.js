@@ -2,6 +2,7 @@ import { path } from '../../core/path.js';
 
 import { http } from '../../net/http.js';
 
+import { math } from '../../math/math.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
@@ -24,7 +25,7 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
 import {
-    BLEND_NONE, BLEND_NORMAL
+    BLEND_NONE, BLEND_NORMAL, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,  ASPECT_MANUAL, ASPECT_AUTO
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -1222,6 +1223,42 @@ var createModel = function (name, meshGroup, materials, defaultMaterial) {
     return model;
 };
 
+var createCamera = function (gltfCamera, node) {
+    var cameraProps = {
+        enabled: false
+    };
+
+    if (gltfCamera.type === "orthographic") {
+        const orthographic = gltfCamera.orthographic;
+        const xMag = orthographic.xmag;
+        const yMag = orthographic.ymag;
+        const aspectRatio = xMag !== undefined ? xMag / yMag  : undefined;
+
+        Object.assign(cameraProps, {
+            projection: PROJECTION_ORTHOGRAPHIC,
+            aspectRatioMode: aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO,
+            aspectRatio: aspectRatio,
+            orthoHeight: yMag,
+            farClip: orthographic.zfar,
+            nearClip: orthographic.znear
+        });
+    } else {
+        const perspective = gltfCamera.perspective;
+        const aspectRatio = perspective.aspectRatio;
+
+        Object.assign(cameraProps, {
+            projection: PROJECTION_PERSPECTIVE,
+            aspectRatioMode: aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO,
+            aspectRatio: aspectRatio,
+            fov: perspective.yfov * math.RAD_TO_DEG,
+            farClip: perspective.zfar,
+            nearClip: perspective.znear
+        });
+    }
+
+    return node.addComponent("camera", cameraProps);
+};
+
 var createSkinInstances = function (model, skin) {
     return model.meshInstances.map(function (meshInstance) {
         meshInstance.mesh.skin = skin;
@@ -1422,6 +1459,38 @@ var createNodeModels = function (gltf, nodeComponents, models, skins) {
     return nodeModels;
 };
 
+var createCameras = function (gltf, nodes, options) {
+    if (!gltf.hasOwnProperty('cameras') || gltf.cameras.length === 0) {
+        return [];
+    }
+
+    var preprocess = options && options.cameras && options.cameras.preprocess;
+    var process = options && options.cameras && options.cameras.process || createCamera;
+    var postprocess = options && options.cameras && options.cameras.postprocess;
+
+    var cameras = [];
+
+    gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+        if (!gltfNode.hasOwnProperty('camera')) {
+            return;
+        }
+        var gltfCamera = gltf.cameras[gltfNode.camera];
+        if (!gltfCamera) {
+            return;
+        }
+        if (preprocess) {
+            preprocess(gltfCamera);
+        }
+        var camera = process(gltfCamera, nodes[nodeIndex]);
+        if (postprocess) {
+            postprocess(gltfCamera, camera);
+        }
+        cameras.push(camera);
+    });
+
+    return cameras;
+};
+
 // create engine resources from the downloaded GLB data
 var createResources = function (device, gltf, buffers, textures, defaultMaterial, options, callback) {
 
@@ -1436,6 +1505,7 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var nodeComponents = createEmptyNodeComponents(nodes);
     var scenes = createScenes(gltf, nodes, options);
     var scene = getDefaultScene(gltf, scenes);
+    var cameras = createCameras(gltf, nodes, options);
     var animations = createAnimations(gltf, nodes, nodeComponents, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
@@ -1454,7 +1524,8 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
         'scenes': scenes,
         'scene': scene,
         'textures': textures,
-        'materials': materials
+        'materials': materials,
+        'cameras': cameras
     };
 
     if (postprocess) {

@@ -24,6 +24,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @param {object} data - The loaded GLB data.
  * @property {pc.Entity|null} scene The root entity of the default scene.
  * @property {pc.Entity[]} scenes The root entities of all scenes.
+ * @property {pc.CameraComponent[]} cameras Camera components.
  * @property {pc.Entity[]} nodes Entity per GLB node.
  * @property {pc.Asset[]} materials Material assets.
  * @property {pc.Asset[]} textures Texture assets per GLB image.
@@ -36,6 +37,7 @@ function ContainerResource(data) {
     this.data = data;
     this.scene = null;
     this.scenes = [];
+    this.cameras = [];
     this.nodes = [];
     this.materials = [];
     this.textures = [];
@@ -71,6 +73,10 @@ Object.assign(ContainerResource.prototype, {
                 scene.destroy();
             });
             this.scenes = null;
+        }
+
+        if (this.cameras) {
+            this.cameras = null;
         }
 
         if (this.nodes) {
@@ -130,6 +136,7 @@ Object.assign(ContainerResource.prototype, {
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
  * | scene       |      x      |      x      |             |      x      |
+ * | camera      |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | texture     |      x      |             |      x      |      x      |
@@ -262,6 +269,7 @@ Object.assign(ContainerHandler.prototype, {
         container.data = null;                      // since assets are created, release GLB data
         container.scene = data.scene;               // scenes are not wrapped in an Asset
         container.scenes = data.scenes;             // scenes are not wrapped in an Asset
+        container.cameras = data.cameras;           // camera components are not wrapped in an Asset
         container.nodes = data.nodes;               // nodes are not wrapped in an Asset
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created directly
