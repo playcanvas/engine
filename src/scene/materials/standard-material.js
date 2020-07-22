@@ -684,13 +684,12 @@ Object.assign(StandardMaterial.prototype, {
     },
 
     _updateMapTransform: function (transform, tiling, offset) {
-        if (!this._flipV && (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0)) {
+        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
             return null;
         }
 
         transform = transform || new Vec4();
-        transform.set(tiling.x, tiling.y * (this._flipV ? -1 : 1),
-                      offset.x, (this._flipV ? 1.0 - offset.y : offset.y));
+        transform.set(tiling.x, tiling.y, offset.x, offset.y);
         return transform;
     },
 

@@ -31,7 +31,7 @@
 
         void main(void)
         {
-            vUv0 = vec2(aUv0.x, 1.0 - aUv0.y);
+            vUv0 = aUv0;
             gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
         }
     </script>
