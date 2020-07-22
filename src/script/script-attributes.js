@@ -184,6 +184,8 @@ function ScriptAttributes(scriptType) {
  * @param {string} [args.color] - String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
  * Defining this property will render Gradient in Editor's field UI.
  * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
+ * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
+ * but with an added 'name' field to specify the name of each attribute in the JSON.
  * @example
  * PlayerController.attributes.add('fullName', {
  *     type: 'string'
@@ -204,6 +206,26 @@ function ScriptAttributes(scriptType) {
  *         { '64x64': 64 },
  *         { '128x128': 128 }
  *     ]
+ * });
+ * @example
+ * PlayerController.attributes.add('config', {
+ *     type: 'json',
+ *     schema: [{
+ *         name: 'speed',
+ *         type: 'number',
+ *         title: 'Speed',
+ *         placeholder: 'km/h',
+ *         default: 22.2
+ *     }, {
+ *         name: 'resolution',
+ *         type: 'number',
+ *         default: 32,
+ *         enum: [
+ *             { '32x32': 32 },
+ *             { '64x64': 64 },
+ *             { '128x128': 128 }
+ *         ]
+ *     }]
  * });
  */
 ScriptAttributes.prototype.add = function (name, args) {
