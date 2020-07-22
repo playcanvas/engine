@@ -1,7 +1,7 @@
 import { hashCode } from '../../../core/hash.js';
 
 import {
-    SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_ATTR5, SEMANTIC_ATTR6, SEMANTIC_ATTR7,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL
@@ -681,7 +681,7 @@ var standard = {
                 }
 
                 // vertex ids attributes
-                attributes.morph_vertex_id = SEMANTIC_ATTR0;
+                attributes.morph_vertex_id = SEMANTIC_ATTR15;
                 code += "attribute float morph_vertex_id;\n";
 
             } else {
@@ -691,10 +691,10 @@ var standard = {
 
                 // first 4 slots are either position or normal
                 if (options.useMorphPosition) {
-                    attributes.morph_pos0 = SEMANTIC_ATTR0;
-                    attributes.morph_pos1 = SEMANTIC_ATTR1;
-                    attributes.morph_pos2 = SEMANTIC_ATTR2;
-                    attributes.morph_pos3 = SEMANTIC_ATTR3;
+                    attributes.morph_pos0 = SEMANTIC_ATTR8;
+                    attributes.morph_pos1 = SEMANTIC_ATTR9;
+                    attributes.morph_pos2 = SEMANTIC_ATTR10;
+                    attributes.morph_pos3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_POS03\n";
                     code += "attribute vec3 morph_pos0;\n";
@@ -703,10 +703,10 @@ var standard = {
                     code += "attribute vec3 morph_pos3;\n";
 
                 } else if (options.useMorphNormal) {
-                    attributes.morph_nrm0 = SEMANTIC_ATTR0;
-                    attributes.morph_nrm1 = SEMANTIC_ATTR1;
-                    attributes.morph_nrm2 = SEMANTIC_ATTR2;
-                    attributes.morph_nrm3 = SEMANTIC_ATTR3;
+                    attributes.morph_nrm0 = SEMANTIC_ATTR8;
+                    attributes.morph_nrm1 = SEMANTIC_ATTR9;
+                    attributes.morph_nrm2 = SEMANTIC_ATTR10;
+                    attributes.morph_nrm3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_NRM03\n";
                     code += "attribute vec3 morph_nrm0;\n";
@@ -717,10 +717,10 @@ var standard = {
 
                 // next 4 slots are either position or normal
                 if (!options.useMorphNormal) {
-                    attributes.morph_pos4 = SEMANTIC_ATTR4;
-                    attributes.morph_pos5 = SEMANTIC_ATTR5;
-                    attributes.morph_pos6 = SEMANTIC_ATTR6;
-                    attributes.morph_pos7 = SEMANTIC_ATTR7;
+                    attributes.morph_pos4 = SEMANTIC_ATTR12;
+                    attributes.morph_pos5 = SEMANTIC_ATTR13;
+                    attributes.morph_pos6 = SEMANTIC_ATTR14;
+                    attributes.morph_pos7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_POS47\n";
                     code += "attribute vec3 morph_pos4;\n";
@@ -728,10 +728,10 @@ var standard = {
                     code += "attribute vec3 morph_pos6;\n";
                     code += "attribute vec3 morph_pos7;\n";
                 } else {
-                    attributes.morph_nrm4 = SEMANTIC_ATTR4;
-                    attributes.morph_nrm5 = SEMANTIC_ATTR5;
-                    attributes.morph_nrm6 = SEMANTIC_ATTR6;
-                    attributes.morph_nrm7 = SEMANTIC_ATTR7;
+                    attributes.morph_nrm4 = SEMANTIC_ATTR12;
+                    attributes.morph_nrm5 = SEMANTIC_ATTR13;
+                    attributes.morph_nrm6 = SEMANTIC_ATTR14;
+                    attributes.morph_nrm7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_NRM47\n";
                     code += "attribute vec3 morph_nrm4;\n";

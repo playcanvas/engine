@@ -1,4 +1,4 @@
-import { extend, makeArray } from '../../../core/core.js';
+import { extend } from '../../../core/core.js';
 import { events } from '../../../core/events.js';
 import { Color } from '../../../core/color.js';
 
@@ -268,12 +268,13 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
     },
 
     broadcast: function (name, functionName) {
+        // #ifdef DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        var args = makeArray(arguments).slice(2);
+        // #endif
+        var args = Array.prototype.slice.call(arguments, 2);
 
         var id, data, fn;
         var dataStore = this.store;
-        // var results = [];
 
         for (id in dataStore) {
             if (dataStore.hasOwnProperty(id)) {

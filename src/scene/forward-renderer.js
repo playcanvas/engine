@@ -1302,7 +1302,7 @@ Object.assign(ForwardRenderer.prototype, {
             }
         } else {
             // matrices are already set
-            device.draw(mesh.primitive[style]);
+            device.draw(mesh.primitive[style], null, true);
         }
         return 0;
     },
@@ -1654,8 +1654,8 @@ Object.assign(ForwardRenderer.prototype, {
                     vb = morphInstance._activeVertexBuffers[t];
                     if (vb) {
 
-                        // patch semantic for the buffer to current ATTR slot
-                        semantic = SEMANTIC_ATTR + t;
+                        // patch semantic for the buffer to current ATTR slot (using ATTR8 - ATTR15 range)
+                        semantic = SEMANTIC_ATTR + (t + 8);
                         vb.format.elements[0].name = semantic;
                         vb.format.elements[0].scopeId = device.scope.resolve(semantic);
                         vb.format.update();
