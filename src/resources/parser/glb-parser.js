@@ -203,7 +203,55 @@ var generateNormals = function (sourceDesc, indices) {
     };
 };
 
-var createVertexBufferInternal = function (device, sourceDesc) {
+var flipTexCoordVs = function (vertexBuffer) {
+    var i, j;
+
+    var floatOffsets = [];
+    var shortOffsets = [];
+    var byteOffsets = [];
+    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
+        var element = vertexBuffer.format.elements[i];
+        if (element.name === SEMANTIC_TEXCOORD0 ||
+            element.name === SEMANTIC_TEXCOORD1) {
+            switch (element.dataType) {
+                case TYPE_FLOAT32:
+                    floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
+                    break;
+                case TYPE_UINT16:
+                    shortOffsets.push({ offset: element.offset / 2 + 1, stride: element.stride / 2 });
+                    break;
+                case TYPE_UINT8:
+                    byteOffsets.push({ offset: element.offset + 1, stride: element.stride });
+                    break;
+            }
+        }
+    }
+
+    var flip = function (offsets, type, one) {
+        var typedArray = new type(vertexBuffer.storage);
+        for (i = 0; i < offsets.length; ++i) {
+            var index = offsets[i].offset;
+            var stride = offsets[i].stride;
+            for (j = 0; j < vertexBuffer.numVertices; ++j) {
+                typedArray[index] = one - typedArray[index];
+                index += stride;
+            }
+        }
+    };
+
+    if (floatOffsets.length > 0) {
+        flip(floatOffsets, Float32Array, 1.0);
+    }
+    if (shortOffsets.length > 0) {
+        flip(shortOffsets, Uint16Array, 65535);
+    }
+    if (byteOffsets.length > 0) {
+        flip(byteOffsets, Uint8Array, 255);
+    }
+};
+
+
+var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
     var numVertices = positionDesc.count;
 
@@ -298,12 +346,16 @@ var createVertexBufferInternal = function (device, sourceDesc) {
         }
     }
 
+    if (!disableFlipV) {
+        flipTexCoordVs(vertexBuffer);
+    }
+
     vertexBuffer.unlock();
 
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV) {
 
     // build vertex buffer format desc and source
     var sourceDesc = {};
@@ -338,10 +390,10 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
         generateNormals(sourceDesc, indices);
     }
 
-    return createVertexBufferInternal(device, sourceDesc);
+    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices) {
+var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV) {
 
     var numPoints = outputGeometry.num_points();
 
@@ -422,7 +474,7 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
         generateNormals(sourceDesc, indices);
     }
 
-    return createVertexBufferInternal(device, sourceDesc);
+    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
 var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buffers) {
@@ -471,7 +523,7 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, buff
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback) {
+var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, callback, disableFlipV) {
     var meshes = [];
 
     var semanticMap = {
@@ -554,7 +606,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -575,7 +627,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, buffers, semanticMap, disableFlipV);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -783,13 +835,11 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             }
         }
 
+        // NOTE: we construct the texture transform specially to compensate for the fact we flip
+        // texture coordinate V at load time.
         for (map = 0; map < maps.length; ++map) {
             material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
-            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], offset[1]);
-        }
-
-        if (!disableFlipV) {
-            material._flipV = true;
+            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? offset[1] : 1.0 - scale[1] - offset[1]);
         }
     };
 
@@ -1174,7 +1224,7 @@ var createSkins = function (device, gltf, nodes, buffers) {
     });
 };
 
-var createMeshes = function (device, gltf, buffers, callback) {
+var createMeshes = function (device, gltf, buffers, callback, disableFlipV) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1182,19 +1232,14 @@ var createMeshes = function (device, gltf, buffers, callback) {
     }
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback);
+        return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback, disableFlipV);
     });
 };
 
-var createMaterials = function (gltf, textures, options) {
+var createMaterials = function (gltf, textures, options, disableFlipV) {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
-
-    // The original version of FACT generated incorrectly flipped V texture
-    // coordinates. We must compensate by -not- flipping V in this case. Once
-    // all models have been re-exported we can remove this flag.
-    var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
 
     var preprocess = options && options.material && options.material.preprocess;
     var process = options && options.material && options.material.process || createMaterial;
@@ -1307,13 +1352,18 @@ var createResources = function (device, gltf, buffers, textures, options, callba
         preprocess(gltf);
     }
 
+    // The original version of FACT generated incorrectly flipped V texture
+    // coordinates. We must compensate by -not- flipping V in this case. Once
+    // all models have been re-exported we can remove this flag.
+    var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
+
     var nodes = createNodes(gltf, options);
     var scenes = createScenes(gltf, nodes);
     var animations = createAnimations(gltf, nodes, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
-    }) : [], options);
-    var meshes = createMeshes(device, gltf, buffers, callback);
+    }) : [], options, disableFlipV);
+    var meshes = createMeshes(device, gltf, buffers, callback, disableFlipV);
     var skins = createSkins(device, gltf, nodes, buffers);
 
     var result = {
