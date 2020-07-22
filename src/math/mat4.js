@@ -1,3 +1,4 @@
+import { math } from './math.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
@@ -653,7 +654,7 @@ Object.assign(Mat4.prototype, {
     setFromAxisAngle: function (axis, angle) {
         var x, y, z, c, s, t, tx, ty, m;
 
-        angle *= pc.math.DEG_TO_RAD;
+        angle *= math.DEG_TO_RAD;
 
         x = axis.x;
         y = axis.y;
@@ -1187,9 +1188,9 @@ Object.assign(Mat4.prototype, {
     setFromEulerAngles: function (ex, ey, ez) {
         var s1, c1, s2, c2, s3, c3, m;
 
-        ex *= pc.math.DEG_TO_RAD;
-        ey *= pc.math.DEG_TO_RAD;
-        ez *= pc.math.DEG_TO_RAD;
+        ex *= math.DEG_TO_RAD;
+        ey *= math.DEG_TO_RAD;
+        ez *= math.DEG_TO_RAD;
 
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
         s1 = Math.sin(-ex);
@@ -1271,7 +1272,7 @@ Object.assign(Mat4.prototype, {
                 x = Math.atan2(m[4] / sy, m[5] / sy);
             }
 
-            return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
+            return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
         };
     }()),
 
@@ -1320,5 +1321,8 @@ Object.defineProperties(Mat4, {
     ZERO: { value: new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) },
     IDENTITY: { value: new Mat4() }
 });
+
+Object.freeze(Mat4.ZERO);
+Object.freeze(Mat4.IDENTITY);
 
 export { Mat4 };

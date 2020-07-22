@@ -1,4 +1,3 @@
-import { makeArray } from '../../../core/core.js';
 import { path } from '../../../core/path.js';
 
 import { Component } from '../component.js';
@@ -13,8 +12,10 @@ ScriptLegacyComponent.prototype.constructor = ScriptLegacyComponent;
 
 Object.assign(ScriptLegacyComponent.prototype, {
     send: function (name, functionName) {
+        // #ifdef DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        var args = makeArray(arguments).slice(2);
+        // #endif
+        var args = Array.prototype.slice.call(arguments, 2);
         var instances = this.entity.script.instances;
         var fn;
 

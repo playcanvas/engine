@@ -1,5 +1,9 @@
+import { http } from '../../../net/http.js';
+
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/graphics.js';
 import { Texture } from '../../../graphics/texture.js';
+
+import { basisTargetFormat, basisTranscode } from '../../basis.js';
 
 /**
  * @class
@@ -18,7 +22,7 @@ Object.assign(BasisParser.prototype, {
             responseType: "arraybuffer",
             retry: this.retryRequests
         };
-        pc.http.get(
+        http.get(
             url.load,
             options,
             function (err, result) {
@@ -29,7 +33,7 @@ Object.assign(BasisParser.prototype, {
                     // the quality of GGGR normal maps under PVR compression is still terrible
                     // so here we instruct the basis transcoder to unswizzle the normal map data
                     // and pack to 565
-                    var unswizzleGGGR = pc.basisTargetFormat() === 'pvr' &&
+                    var unswizzleGGGR = basisTargetFormat() === 'pvr' &&
                                         asset && asset.file && asset.file.variants &&
                                         asset.file.variants.basis &&
                                         ((asset.file.variants.basis.opt & 8) !== 0);
@@ -37,7 +41,7 @@ Object.assign(BasisParser.prototype, {
                         // remove the swizzled flag from the asset
                         asset.file.variants.basis.opt &= ~8;
                     }
-                    pc.basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
+                    basisTranscode(url.load, result, callback, { unswizzleGGGR: unswizzleGGGR });
                 }
             }
         );

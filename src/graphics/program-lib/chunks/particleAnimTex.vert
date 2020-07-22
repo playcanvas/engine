@@ -1,4 +1,3 @@
-
     float animationIndex;
 
     if (animTexIndexParams.y == 1.0) {
@@ -13,4 +12,3 @@
 
     texCoordsAlphaLife.xy *= animTexTilesParams.xy;
     texCoordsAlphaLife.xy += vec2(atlasX, atlasY);
-

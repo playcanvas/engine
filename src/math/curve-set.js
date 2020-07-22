@@ -25,7 +25,7 @@ function CurveSet() {
             this.curves.push(new Curve());
         } else {
             var arg = arguments[0];
-            if (pc.type(arg) === 'number') {
+            if (typeof arg === 'number') {
                 for (i = 0; i < arg; i++) {
                     this.curves.push(new Curve());
                 }

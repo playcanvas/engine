@@ -129,6 +129,13 @@ export function inherits(Self, Super) {
     return Func;
 }
 
+export function makeArray(arr) {
+    // #ifdef DEBUG
+    console.warn('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
+    // #endif
+    return Array.prototype.slice.call(arr);
+}
+
 // MATH
 import { math } from './math/math.js';
 import { Vec2 } from './math/vec2.js';
@@ -220,7 +227,7 @@ import {
 } from './graphics/graphics.js';
 import { drawQuadWithShader } from './graphics/simple-post-effect.js';
 import { programlib } from './graphics/program-lib/program-lib.js';
-import { shaderChunks } from './graphics/chunks.js';
+import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 import { GraphicsDevice } from './graphics/device.js';
 import { IndexBuffer } from './graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';

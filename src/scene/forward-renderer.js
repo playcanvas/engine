@@ -20,8 +20,9 @@ import {
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP
 } from '../graphics/graphics.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
@@ -487,8 +488,7 @@ function ForwardRenderer(graphicsDevice) {
     this.sourceId = scope.resolve("source");
     this.pixelOffsetId = scope.resolve("pixelOffset");
     this.weightId = scope.resolve("weight[0]");
-    var chunks = shaderChunks;
-    this.blurVsmShaderCode = [chunks.blurVSMPS, "#define GAUSS\n" + chunks.blurVSMPS];
+    this.blurVsmShaderCode = [shaderChunks.blurVSMPS, "#define GAUSS\n" + shaderChunks.blurVSMPS];
     var packed = "#define PACKED\n";
     this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
     this.blurVsmShader = [{}, {}];
@@ -500,9 +500,6 @@ function ForwardRenderer(graphicsDevice) {
 
     this.fogColor = new Float32Array(3);
     this.ambientColor = new Float32Array(3);
-
-    // temp arrays to avoid allocations
-    this.tempSemanticArray = [];
 }
 
 function mat3FromMat4(m3, m4) {
@@ -1263,7 +1260,7 @@ Object.assign(ForwardRenderer.prototype, {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
                     meshInstance.instancingData = null;
@@ -1296,7 +1293,7 @@ Object.assign(ForwardRenderer.prototype, {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
                     meshInstance.instancingData = null;
@@ -1305,7 +1302,7 @@ Object.assign(ForwardRenderer.prototype, {
             }
         } else {
             // matrices are already set
-            device.draw(mesh.primitive[style]);
+            device.draw(mesh.primitive[style], null, true);
         }
         return 0;
     },
@@ -1538,7 +1535,7 @@ Object.assign(ForwardRenderer.prototype, {
                                 blurFS += this.blurVsmShaderCode[blurMode];
                             }
                             var blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
-                            blurShader = shaderChunks.createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+                            blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
 
                             if (isVsm8) {
                                 this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
@@ -1629,8 +1626,8 @@ Object.assign(ForwardRenderer.prototype, {
 
     setVertexBuffers: function (device, mesh) {
 
-            // main vertex buffer
-        device.setVertexBuffer(mesh.vertexBuffer, 0);
+        // main vertex buffer
+        device.setVertexBuffer(mesh.vertexBuffer);
     },
 
     setMorphing: function (device, morphInstance) {
@@ -1639,40 +1636,32 @@ Object.assign(ForwardRenderer.prototype, {
 
             if (morphInstance.morph.useTextureMorph) {
 
-                    // vertex buffer with vertex ids
-                device.setVertexBuffer(morphInstance.morph.vertexBufferIds, 1);
+                // vertex buffer with vertex ids
+                device.setVertexBuffer(morphInstance.morph.vertexBufferIds);
 
-                    // textures
+                // textures
                 this.morphPositionTex.setValue(morphInstance.texturePositions);
                 this.morphNormalTex.setValue(morphInstance.textureNormals);
 
-                    // texture params
+                // texture params
                 this.morphTexParams.setValue(morphInstance._textureParams);
 
             } else {    // vertex attributes based morphing
 
-                this.tempSemanticArray.length = 0;
-                var tempVertexBuffer;
+                var vb, semantic;
                 for (var t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
 
-                    var semantic = SEMANTIC_ATTR + t;
-                    tempVertexBuffer = morphInstance._activeVertexBuffers[t];
+                    vb = morphInstance._activeVertexBuffers[t];
+                    if (vb) {
 
-                    if (tempVertexBuffer) {
-                        // patch semantic for the buffer to current ATTR slot
-                        tempVertexBuffer.format.elements[0].name = semantic;
-                        tempVertexBuffer.format.elements[0].scopeId = device.scope.resolve(semantic);
+                        // patch semantic for the buffer to current ATTR slot (using ATTR8 - ATTR15 range)
+                        semantic = SEMANTIC_ATTR + (t + 8);
+                        vb.format.elements[0].name = semantic;
+                        vb.format.elements[0].scopeId = device.scope.resolve(semantic);
+                        vb.format.update();
 
-                        device.setVertexBuffer(tempVertexBuffer, t + 1);
-                    } else {
-                        // for null morph buffers set attributes to default constant value
-                        device.setVertexBuffer(null, t + 1);
-                        this.tempSemanticArray.push(semantic);
+                        device.setVertexBuffer(vb);
                     }
-                }
-
-                if (this.tempSemanticArray.length) {
-                    device.disableVertexBufferElements(this.tempSemanticArray);
                 }
 
                 // set all 8 weights
@@ -1762,14 +1751,12 @@ Object.assign(ForwardRenderer.prototype, {
                         drawCall._lightHash = lightHash;
                     }
 
-                    // #ifdef DEBUG
-                    if (!device.setShader(drawCall._shader[pass])) {
+                    if (! drawCall._shader[pass].failed && ! device.setShader(drawCall._shader[pass])) {
+                        // #ifdef DEBUG
                         console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                        drawCall.material = scene.defaultMaterial;
+                        // #endif
+                        drawCall._shader[pass].failed = true;
                     }
-                    // #else
-                    device.setShader(drawCall._shader[pass]);
-                    // #endif
 
                     // Uniforms I: material
                     parameters = material.parameters;

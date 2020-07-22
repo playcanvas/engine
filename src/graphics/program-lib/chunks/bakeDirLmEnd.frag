@@ -1,4 +1,3 @@
-
     vec4 dirLm = texture2D(texture_dirLightMap, vUv1);
 
     if (bakeDir > 0.5) {
@@ -15,4 +14,3 @@
         gl_FragColor.rgb = dirLm.xyz;
         gl_FragColor.a = max(dirLm.w, dAtten > 0.00001? (1.0/255.0) : 0.0);
     }
-

@@ -476,4 +476,7 @@ Object.defineProperties(Vec4, {
     ONE: { value: new Vec4(1, 1, 1, 1) }
 });
 
+Object.freeze(Vec4.ZERO);
+Object.freeze(Vec4.ONE);
+
 export { Vec4 };

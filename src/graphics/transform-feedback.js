@@ -1,6 +1,6 @@
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './graphics.js';
+import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
-import { shaderChunks } from './chunks.js';
 
 /* eslint-disable jsdoc/check-examples */
 /**
@@ -105,7 +105,7 @@ function TransformFeedback(inputBuffer, usage) {
  * @returns {pc.Shader} A shader to use in the process() function.
  */
 TransformFeedback.createShader = function (graphicsDevice, vsCode, name) {
-    return shaderChunks.createShaderFromCode(graphicsDevice, vsCode, null, name, true);
+    return createShaderFromCode(graphicsDevice, vsCode, null, name, true);
 };
 
 Object.assign(TransformFeedback.prototype, {
@@ -150,6 +150,11 @@ Object.assign(TransformFeedback.prototype, {
             var tmp = this._inputBuffer.bufferId;
             this._inputBuffer.bufferId = this._outputBuffer.bufferId;
             this._outputBuffer.bufferId = tmp;
+
+            // swap VAO
+            tmp = this._inputBuffer._vao;
+            this._inputBuffer._vao = this._outputBuffer._vao;
+            this._outputBuffer._vao = tmp;
         }
     }
 });
