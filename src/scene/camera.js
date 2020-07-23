@@ -59,7 +59,7 @@ function Camera() {
     this._viewProjMat = new Mat4();
     this._viewProjMatDirty = true;
 
-    this.frustum = new Frustum(this._projMat, this._viewMat);
+    this.frustum = new Frustum();
 }
 
 Object.defineProperty(Camera.prototype, 'aspectRatio', {

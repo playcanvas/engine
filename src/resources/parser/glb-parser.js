@@ -250,6 +250,7 @@ var flipTexCoordVs = function (vertexBuffer) {
     }
 };
 
+
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
     var numVertices = positionDesc.count;
@@ -746,7 +747,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, buffers, ca
     return meshes;
 };
 
-var createMaterial = function (gltfMaterial, textures) {
+var createMaterial = function (gltfMaterial, textures, disableFlipV) {
     // TODO: integrate these shader chunks into the native engine
     var glossChunk = [
         "#ifdef MAPFLOAT",
@@ -805,6 +806,9 @@ var createMaterial = function (gltfMaterial, textures) {
         "}"
     ].join('\n');
 
+    var uvONE = [1, 1];
+    var uvZERO = [0, 0];
+
     var extractTextureTransform = function (source, material, maps) {
         var map;
 
@@ -815,24 +819,27 @@ var createMaterial = function (gltfMaterial, textures) {
             }
         }
 
+        var scale = uvONE;
+        var offset = uvZERO;
+
         var extensions = source.extensions;
         if (extensions) {
             var textureTransformData = extensions.KHR_texture_transform;
             if (textureTransformData) {
-                var scale = textureTransformData.scale;
-                if (scale) {
-                    for (map = 0; map < maps.length; ++map) {
-                        material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
-                    }
+                if (textureTransformData.scale) {
+                    scale = textureTransformData.scale;
                 }
-
-                var offset = textureTransformData.offset;
-                if (offset) {
-                    for (map = 0; map < maps.length; ++map) {
-                        material[maps[map] + 'MapOffset'] = new Vec2(offset[0], offset[1]);
-                    }
+                if (textureTransformData.offset) {
+                    offset = textureTransformData.offset;
                 }
             }
+        }
+
+        // NOTE: we construct the texture transform specially to compensate for the fact we flip
+        // texture coordinate V at load time.
+        for (map = 0; map < maps.length; ++map) {
+            material[maps[map] + 'MapTiling'] = new Vec2(scale[0], scale[1]);
+            material[maps[map] + 'MapOffset'] = new Vec2(offset[0], disableFlipV ? offset[1] : 1.0 - scale[1] - offset[1]);
         }
     };
 
@@ -1217,24 +1224,19 @@ var createSkins = function (device, gltf, nodes, buffers) {
     });
 };
 
-var createMeshes = function (device, gltf, buffers, callback) {
+var createMeshes = function (device, gltf, buffers, callback, disableFlipV) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
         return [];
     }
 
-    // The original version of FACT generated incorrectly flipped V texture
-    // coordinates. We must compensate by -not- flipping V in this case. Once
-    // all models have been re-exported we can remove this flag.
-    var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
-
     return gltf.meshes.map(function (gltfMesh) {
         return createMesh(device, gltfMesh, gltf.accessors, gltf.bufferViews, buffers, callback, disableFlipV);
     });
 };
 
-var createMaterials = function (gltf, textures, options) {
+var createMaterials = function (gltf, textures, options, disableFlipV) {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
@@ -1247,7 +1249,7 @@ var createMaterials = function (gltf, textures, options) {
         if (preprocess) {
             preprocess(gltfMaterial);
         }
-        var material = process(gltfMaterial, textures);
+        var material = process(gltfMaterial, textures, disableFlipV);
         if (postprocess) {
             postprocess(gltfMaterial, material);
         }
@@ -1350,13 +1352,18 @@ var createResources = function (device, gltf, buffers, textures, options, callba
         preprocess(gltf);
     }
 
+    // The original version of FACT generated incorrectly flipped V texture
+    // coordinates. We must compensate by -not- flipping V in this case. Once
+    // all models have been re-exported we can remove this flag.
+    var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
+
     var nodes = createNodes(gltf, options);
     var scenes = createScenes(gltf, nodes);
     var animations = createAnimations(gltf, nodes, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
-    }) : [], options);
-    var meshes = createMeshes(device, gltf, buffers, callback);
+    }) : [], options, disableFlipV);
+    var meshes = createMeshes(device, gltf, buffers, callback, disableFlipV);
     var skins = createSkins(device, gltf, nodes, buffers);
 
     var result = {

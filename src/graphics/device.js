@@ -2266,6 +2266,8 @@ Object.assign(GraphicsDevice.prototype, {
      * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @param {number} [numInstances=1] - The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
+     * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex buffers / VAO. This is used when rendering of
+     * multiple views, for example under WebXR.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
@@ -2275,7 +2277,7 @@ Object.assign(GraphicsDevice.prototype, {
      *     indexed: false
      * });
      */
-    draw: function (primitive, numInstances) {
+    draw: function (primitive, numInstances, keepBuffers) {
         var gl = this.gl;
 
         var i, j, len; // Loop counting
@@ -2286,7 +2288,9 @@ Object.assign(GraphicsDevice.prototype, {
         var uniforms = shader.uniforms;
 
         // vertex buffers
-        this.setBuffers();
+        if (!keepBuffers) {
+            this.setBuffers();
+        }
 
         // Commit the shader program variables
         var textureUnit = 0;
