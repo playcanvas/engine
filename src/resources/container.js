@@ -25,6 +25,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @property {pc.Entity|null} scene The root entity of the default scene.
  * @property {pc.Entity[]} scenes The root entities of all scenes.
  * @property {pc.CameraComponent[]} cameras Camera components.
+ * @property {pc.LightComponent[]} lights Light components.
  * @property {pc.Entity[]} nodes Entity per GLB node.
  * @property {pc.Asset[]} materials Material assets.
  * @property {pc.Asset[]} textures Texture assets per GLB image.
@@ -38,6 +39,7 @@ function ContainerResource(data) {
     this.scene = null;
     this.scenes = [];
     this.cameras = [];
+    this.lights = [];
     this.nodes = [];
     this.materials = [];
     this.textures = [];
@@ -77,6 +79,10 @@ Object.assign(ContainerResource.prototype, {
 
         if (this.cameras) {
             this.cameras = null;
+        }
+
+        if (this.lights) {
+            this.lights = null;
         }
 
         if (this.nodes) {
@@ -270,6 +276,7 @@ Object.assign(ContainerHandler.prototype, {
         container.scene = data.scene;               // scenes are not wrapped in an Asset
         container.scenes = data.scenes;             // scenes are not wrapped in an Asset
         container.cameras = data.cameras;           // camera components are not wrapped in an Asset
+        container.lights = data.lights;             // light components are not wrapped in an Asset
         container.nodes = data.nodes;               // nodes are not wrapped in an Asset
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created directly

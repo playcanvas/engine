@@ -1,4 +1,5 @@
 import { path } from '../../core/path.js';
+import { Color } from '../../core/color.js';
 
 import { http } from '../../net/http.js';
 
@@ -25,7 +26,7 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 
 import {
-    BLEND_NONE, BLEND_NORMAL, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,  ASPECT_MANUAL, ASPECT_AUTO
+    BLEND_NONE, BLEND_NORMAL, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC, ASPECT_MANUAL, ASPECT_AUTO, LIGHTFALLOFF_INVERSESQUARED
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -1259,6 +1260,49 @@ var createCamera = function (gltfCamera, node) {
     return node.addComponent("camera", cameraProps);
 };
 
+var createLight = function (gltfLight, node) {
+    var lightProps = {
+        type: gltfLight.type,
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED
+    };
+
+    if (gltfLight.hasOwnProperty('color')) {
+        lightProps.color = new Color(...gltfLight.color);
+    }
+
+    if (gltfLight.hasOwnProperty('intensity')) {
+        // TODO: Tweak intensity to match glTF specification. Point and spot lights use luminous
+        // intensity in candela (lm/sr) while directional lights use illuminance in lux (lm/m2).
+        lightProps.intensity = gltfLight.intensity;
+    } else {
+        lightProps.intensity = 1;
+    }
+
+    if (gltfLight.hasOwnProperty('range')) {
+        lightProps.range = gltfLight.range;
+    } else {
+        // TODO: Better way of representing infinite range
+        lightProps.range = 99999999;
+    }
+
+    if (gltfLight.hasOwnProperty('spot') && gltfLight.spot.hasOwnProperty('innerConeAngle')) {
+        lightProps.innerConeAngle = gltfLight.spot.innerConeAngle * math.RAD_TO_DEG;
+    } else {
+        lightProps.innerConeAngle = 0;
+    }
+
+    if (gltfLight.hasOwnProperty('spot') && gltfLight.spot.hasOwnProperty('outerConeAngle')) {
+        lightProps.outerConeAngle = gltfLight.spot.outerConeAngle * math.RAD_TO_DEG;
+    }
+
+    // Rotate to match light orientation in glTF specification
+    const cameraNode = new Entity(node.name);
+    cameraNode.rotateLocal(90, 0, 0);
+    node.addChild(cameraNode);
+
+    return cameraNode.addComponent("light", lightProps);
+};
+
 var createSkinInstances = function (model, skin) {
     return model.meshInstances.map(function (meshInstance) {
         meshInstance.mesh.skin = skin;
@@ -1460,7 +1504,7 @@ var createNodeModels = function (gltf, nodeComponents, models, skins) {
 };
 
 var createCameras = function (gltf, nodes, options) {
-    if (!gltf.hasOwnProperty('cameras') || gltf.cameras.length === 0) {
+    if (!gltf.hasOwnProperty('nodes') || !gltf.hasOwnProperty('cameras') || gltf.cameras.length === 0) {
         return [];
     }
 
@@ -1491,6 +1535,40 @@ var createCameras = function (gltf, nodes, options) {
     return cameras;
 };
 
+var createLights = function (gltf, nodes) {
+    if (!gltf.hasOwnProperty('nodes') ||
+        !gltf.hasOwnProperty('extensions') ||
+        !gltf.extensions.hasOwnProperty('KHR_lights_punctual') ||
+        !gltf.extensions.KHR_lights_punctual.hasOwnProperty('lights')) {
+        return [];
+    }
+
+    var gltfLights = gltf.extensions.KHR_lights_punctual.lights;
+    if (gltfLights.length === 0) {
+        return [];
+    }
+
+    var lights = [];
+
+    gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+        if (!gltfNode.hasOwnProperty('extensions') ||
+            !gltfNode.extensions.hasOwnProperty('KHR_lights_punctual') ||
+            !gltfNode.extensions.KHR_lights_punctual.hasOwnProperty('light')) {
+            return;
+        }
+
+        var lightIndex = gltfNode.extensions.KHR_lights_punctual.light;
+        var gltfLight = gltfLights[lightIndex];
+        if (!gltfLight) {
+            return;
+        }
+
+        lights.push(createLight(gltfLight, nodes[nodeIndex]));
+    });
+
+    return lights;
+};
+
 // create engine resources from the downloaded GLB data
 var createResources = function (device, gltf, buffers, textures, defaultMaterial, options, callback) {
 
@@ -1506,6 +1584,7 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var scenes = createScenes(gltf, nodes, options);
     var scene = getDefaultScene(gltf, scenes);
     var cameras = createCameras(gltf, nodes, options);
+    var lights = createLights(gltf, nodes);
     var animations = createAnimations(gltf, nodes, nodeComponents, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
@@ -1525,7 +1604,8 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
         'scene': scene,
         'textures': textures,
         'materials': materials,
-        'cameras': cameras
+        'cameras': cameras,
+        'lights': lights
     };
 
     if (postprocess) {
