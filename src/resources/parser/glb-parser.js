@@ -1677,6 +1677,12 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
 
     var result = [];
 
+    var preprocess = options && options.bufferView && options.bufferView.preprocess;
+    var processAsync = (options && options.bufferView && options.bufferView.processAsync) || function (gltfBufferView, buffers, callback) {
+        callback(null, null);
+    };
+    var postprocess = options && options.bufferView && options.bufferView.postprocess;
+
     var remaining = gltf.bufferViews.length;
     var onLoad = function (index, bufferView) {
         var gltfBufferView = gltf.bufferViews[index];
@@ -1685,17 +1691,20 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
         }
 
         result[index] = bufferView;
+        if (postprocess) {
+            postprocess(gltfBufferView, bufferView);
+        }
         if (--remaining === 0) {
             callback(null, result);
         }
     };
 
-    var processAsync = (options && options.bufferView && options.bufferView.processAsync) || function (gltfBufferView, buffers, callback) {
-        callback(null, null);
-    };
-
     for (var i = 0; i < gltf.bufferViews.length; ++i) {
         var gltfBufferView = gltf.bufferViews[i];
+
+        if (preprocess) {
+            preprocess(gltfBufferView);
+        }
 
         processAsync(gltfBufferView, buffers, function (i, gltfBufferView, err, result) {       // eslint-disable-line no-loop-func
             if (err) {
