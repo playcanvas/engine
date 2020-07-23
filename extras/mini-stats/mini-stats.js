@@ -311,8 +311,9 @@ Object.assign(Graph.prototype, {
             }
 
             // write latest sample to the texture
-            var gl = this.device.gl;
             this.device.bindTexture(this.texture);
+
+            var gl = this.device.gl;
             gl.texSubImage2D(gl.TEXTURE_2D,
                              0,
                              this.cursor,
@@ -387,6 +388,9 @@ function MiniStats(app) {
         dest.set([0, 0, 0, 255], i * 4);
     }
     texture.unlock();
+
+    // ensure texture is uploaded
+    device.setTexture(texture, 0);
 
     // create graphs
     var graphs = [
