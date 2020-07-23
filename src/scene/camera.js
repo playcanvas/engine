@@ -58,7 +58,7 @@ function Camera() {
         height: 1
     };
 
-    this.frustum = new Frustum(this._projMat, this._viewMat);
+    this.frustum = new Frustum();
 
     // Create a full size viewport onto the backbuffer
     this.renderTarget = null;

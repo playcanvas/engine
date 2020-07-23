@@ -16,7 +16,7 @@ import { Vec3 } from '../math/vec3.js';
  * @property {pc.Vec3} origin The starting point of the ray.
  * @property {pc.Vec3} direction The direction of the ray.
  */
-export function Ray(origin, direction) {
+function Ray(origin, direction) {
     this.origin = origin || new Vec3(0, 0, 0);
     this.direction = direction || new Vec3(0, 0, -1);
 }
@@ -34,3 +34,5 @@ Ray.prototype.set = function (origin, direction) {
     this.direction.copy(direction);
     return this;
 };
+
+export { Ray };
