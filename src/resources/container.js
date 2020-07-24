@@ -268,11 +268,11 @@ Object.assign(ContainerHandler.prototype, {
         });
 
         container.data = null;                      // since assets are created, release GLB data
-        container.scene = data.scene;               // scenes are not wrapped in an Asset
-        container.scenes = data.scenes;             // scenes are not wrapped in an Asset
-        container.cameras = data.cameras;           // camera components are not wrapped in an Asset
-        container.lights = data.lights;             // light components are not wrapped in an Asset
-        container.nodes = data.nodes;               // nodes are not wrapped in an Asset
+        container.scene = data.scene;
+        container.scenes = data.scenes;
+        container.cameras = data.cameras;
+        container.lights = data.lights;
+        container.nodes = data.nodes;
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created in parser
         container.animations = animationAssets;
