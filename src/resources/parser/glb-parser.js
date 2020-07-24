@@ -1627,7 +1627,7 @@ var createLights = function (gltf, nodes) {
 };
 
 // create engine resources from the downloaded GLB data
-var createResources = function (device, gltf, buffers, textures, defaultMaterial, options, callback) {
+var createResources = function (device, gltf, buffers, imageTextures, defaultMaterial, options, callback) {
 
     var preprocess = options && options.global && options.global.preprocess;
     var postprocess = options && options.global && options.global.postprocess;
@@ -1635,6 +1635,10 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     if (preprocess) {
         preprocess(gltf);
     }
+
+    var textures = gltf.textures ? gltf.textures.map(function (t) {
+        return imageTextures[t.source];
+    }) : [];
 
     // The original version of FACT generated incorrectly flipped V texture
     // coordinates. We must compensate by -not- flipping V in this case. Once
@@ -1647,9 +1651,9 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var cameras = createCameras(gltf, nodes, options);
     var lights = createLights(gltf, nodes);
     var animations = createAnimations(gltf, nodes, buffers, options);
-    var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
-        return textures[t.source].resource;
-    }) : [], options, disableFlipV);
+    var materials = createMaterials(gltf, textures.map(function (textureAsset) {
+        return textureAsset.resource;
+    }), options, disableFlipV);
     var meshGroups = createMeshGroups(device, gltf, buffers, callback, disableFlipV);
     var skins = createSkins(device, gltf, nodes, buffers);
     var skinInstances = createSkinInstances(skins);
@@ -1664,6 +1668,7 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
         'nodeAnimations': animations.nodeAnimations,
         'scenes': scenes,
         'scene': scene,
+        'images': imageTextures,
         'textures': textures,
         'materials': materials,
         'cameras': cameras,
@@ -2025,13 +2030,13 @@ GlbParser.parseAsync = function (filename, urlBase, data, device, defaultMateria
                 }
 
                 // async load images
-                loadTexturesAsync(gltf, buffers, urlBase, registry, options, function (err, textures) {
+                loadTexturesAsync(gltf, buffers, urlBase, registry, options, function (err, imageTextures) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    createResources(device, gltf, buffers, textures, defaultMaterial, options, callback);
+                    createResources(device, gltf, buffers, imageTextures, defaultMaterial, options, callback);
                 });
             });
         });
@@ -2053,10 +2058,10 @@ GlbParser.parse = function (filename, data, device, defaultMaterial, options) {
                     console.error(err);
                 } else {
                     var buffers = [chunks.binaryChunk];
-                    var textures = [];
+                    var imageTextures = [];
 
                     // create resources
-                    createResources(device, gltf, buffers, textures, defaultMaterial, options || { }, function (err, result_) {
+                    createResources(device, gltf, buffers, imageTextures, defaultMaterial, options || { }, function (err, result_) {
                         if (err) {
                             console.error(err);
                         } else {

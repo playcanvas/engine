@@ -34,6 +34,7 @@ function ContainerResource(data) {
     this.nodes = [];
     this.materials = [];
     this.textures = [];
+    this.images = [];
     this.animations = [];
     this.nodeAnimations = [];
     this.models = [];
@@ -107,8 +108,10 @@ Object.assign(ContainerResource.prototype, {
             this._nodeModels = null;
         }
 
-        if (this.textures) {
-            destroyAssets(this.textures);
+        if (this.images) {
+            // This will destroy all textures as well, since they are a subset of images
+            destroyAssets(this.images);
+            this.images = null;
             this.textures = null;
         }
 
@@ -127,7 +130,7 @@ Object.assign(ContainerResource.prototype, {
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
- * textures, scenes and animations.
+ * textures, scenes, animations and more.
  * The asset options object can be used for passing in load time callbacks to handle the various resources
  * at different stages of loading as follows:
  * ```
@@ -275,6 +278,7 @@ Object.assign(ContainerHandler.prototype, {
         container.nodes = data.nodes;
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created in parser
+        container.images = data.images;             // texture assets are created in parser
         container.animations = animationAssets;
         container.nodeAnimations = data.nodeAnimations;
         container.models = modelAssets;
