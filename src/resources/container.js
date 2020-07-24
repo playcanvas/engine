@@ -61,7 +61,11 @@ Object.assign(ContainerResource.prototype, {
         };
 
         var destroyAssets = function (assets) {
-            assets.forEach(destroyAsset);
+            assets.forEach(function (asset) {
+                if (asset) {
+                    destroyAsset(asset);
+                }
+            });
         };
 
         // destroy entities
@@ -248,7 +252,7 @@ Object.assign(ContainerHandler.prototype, {
 
         // create node model assets
         var nodeModelAssets = data.nodeModels.map(function (model, index) {
-            return createAsset('model', model, index);
+            return model !== null ? createAsset('model', model, index) : null;
         });
 
         // create material assets
@@ -274,11 +278,11 @@ Object.assign(ContainerHandler.prototype, {
 
         // add model components to nodes
         data.nodes.forEach(function (node, nodeIndex) {
-            var components = data.nodeComponents[nodeIndex];
-            if (components.model !== null) {
+            var modelAsset = nodeModelAssets[nodeIndex];
+            if (modelAsset !== null) {
                 node.addComponent('model', {
                     type: 'asset',
-                    asset: nodeModelAssets[components.model]
+                    asset: modelAsset
                 });
             }
         });
@@ -290,7 +294,7 @@ Object.assign(ContainerHandler.prototype, {
         container.lights = data.lights;             // light components are not wrapped in an Asset
         container.nodes = data.nodes;               // nodes are not wrapped in an Asset
         container.materials = materialAssets;
-        container.textures = data.textures;         // texture assets are created directly
+        container.textures = data.textures;         // texture assets are created in parser
         container.animations = animationAssets;
         container.nodeAnimations = nodeAnimations;
         container.models = modelAssets;

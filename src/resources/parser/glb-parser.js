@@ -1493,7 +1493,6 @@ var createNodes = function (gltf, options) {
 var createEmptyNodeComponents = function (nodes) {
     return nodes.map(function () {
         return {
-            model: null,
             animations: []
         };
     });
@@ -1537,16 +1536,14 @@ var createModels = function (meshGroups, materials, defaultMaterial) {
     });
 };
 
-var createNodeModels = function (gltf, nodeComponents, models, skins, skinInstances) {
+var createNodeModels = function (gltf, models, skins, skinInstances) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
 
-    var nodeModels = [];
-
-    gltf.nodes.forEach(function (gltfNode, nodeIndex) {
+    return gltf.nodes.map(function (gltfNode) {
         if (!gltfNode.hasOwnProperty('mesh')) {
-            return;
+            return null;
         }
 
         var model = models[gltfNode.mesh].clone();
@@ -1561,15 +1558,8 @@ var createNodeModels = function (gltf, nodeComponents, models, skins, skinInstan
             });
         }
 
-        var nodeModelIndex = nodeModels.push(model) - 1;
-
-        if (!nodeComponents[nodeIndex]) {
-            nodeComponents[nodeIndex] = {};
-        }
-        nodeComponents[nodeIndex].model = nodeModelIndex;
+        return model;
     });
-
-    return nodeModels;
 };
 
 var createCameras = function (gltf, nodes, options) {
@@ -1667,7 +1657,7 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var skins = createSkins(device, gltf, nodes, buffers);
     var skinInstances = createSkinInstances(skins);
     var models = createModels(meshGroups, materials, defaultMaterial);
-    var nodeModels = createNodeModels(gltf, nodeComponents, models, skins, skinInstances);
+    var nodeModels = createNodeModels(gltf, models, skins, skinInstances);
 
     var result = {
         'nodes': nodes,
