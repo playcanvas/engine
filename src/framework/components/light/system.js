@@ -1,4 +1,3 @@
-import { type } from '../../../core/core.js';
 import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
@@ -29,7 +28,6 @@ function LightComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'light';
-    this.description = "Enables the Entity to emit light.";
 
     this.ComponentType = LightComponent;
     this.DataType = LightComponentData;
@@ -55,11 +53,11 @@ Object.assign(LightComponentSystem.prototype, {
 
         component.data.type = data.type;
 
-        if (data.layers && type(data.layers) === 'array') {
+        if (data.layers && Array.isArray(data.layers)) {
             data.layers = data.layers.slice(0);
         }
 
-        if (data.color && type(data.color) === 'array')
+        if (data.color && Array.isArray(data.color))
             data.color = new Color(data.color[0], data.color[1], data.color[2]);
 
         if (data.cookieOffset && data.cookieOffset instanceof Array)

@@ -4,4 +4,3 @@ void normalOffsetPointShadow(vec4 shadowParams) {
     vec3 dir = wPos - dLightPosW;
     dLightDirW = dir;
 }
-

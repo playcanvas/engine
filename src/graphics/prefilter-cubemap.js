@@ -6,8 +6,9 @@ import {
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from './graphics.js';
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
 
@@ -44,16 +45,19 @@ function prefilterCubemap(options) {
         return;
     }
 
-    var chunks = shaderChunks;
     var sourceType = sourceCubemap.type;
     var rgbmSource = sourceType === TEXTURETYPE_RGBM;
-    var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
-        chunks.prefilterCubemapPS
-            .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
-            .replace(/\$NUMSAMPLES/g, samples)
-            .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
-                                             "prefilter" + method + "" + samples + "" + rgbmSource);
-    var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
+    var shader = createShaderFromCode(device,
+                                      shaderChunks.fullscreenQuadVS,
+                                      shaderChunks.rgbmPS + shaderChunks.prefilterCubemapPS
+                                          .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
+                                          .replace(/\$NUMSAMPLES/g, samples)
+                                          .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
+                                      "prefilter" + method + "" + samples + "" + rgbmSource);
+    var shader2 = createShaderFromCode(device,
+                                       shaderChunks.fullscreenQuadVS,
+                                       shaderChunks.outputCubemapPS,
+                                       "outputCubemap");
     var constantTexSource = device.scope.resolve("source");
     var constantParams = device.scope.resolve("params");
     var params = new Vec4();
@@ -321,8 +325,10 @@ function shFromCubemap(source, dontFlipX) {
             // Cubemap is made of imgs - convert to arrays
             var device = Application.getApplication().graphicsDevice;
             var gl = device.gl;
-            var chunks = shaderChunks;
-            var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
+            var shader = createShaderFromCode(device,
+                                              shaderChunks.fullscreenQuadVS,
+                                              shaderChunks.fullscreenQuadPS,
+                                              "fsQuadSimple");
             var constantTexSource = device.scope.resolve("source");
             for (face = 0; face < 6; face++) {
                 var img = source._levels[0][face];

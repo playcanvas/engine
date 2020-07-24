@@ -34,4 +34,3 @@ void getShadowCoordOrthoNormalOffset(mat4 shadowMatrix, vec3 shadowParams) {
 
     _getShadowCoordOrtho(shadowMatrix, shadowParams, wPos);
 }
-

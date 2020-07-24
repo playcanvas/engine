@@ -30,27 +30,6 @@ var data = { }; // Storage for exported entity data
 /**
  * @private
  * @function
- * @name pc.makeArray
- * @description Convert an array-like object into a normal array.
- * For example, this is useful for converting the arguments object into an array.
- * @param {object} arr - The array to convert.
- * @returns {Array} An array.
- */
-function makeArray(arr) {
-    var i,
-        ret = [],
-        length = arr.length;
-
-    for (i = 0; i < length; ++i) {
-        ret.push(arr[i]);
-    }
-
-    return ret;
-}
-
-/**
- * @private
- * @function
  * @name pc.type
  * @description Extended typeof() function, returns the type of the object.
  * @param {object} obj - The object to get the type of.
@@ -127,4 +106,4 @@ function isDefined(o) {
     return (o !== a);
 }
 
-export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version };
+export { apps, common, config, data, extend, isDefined, revision, type, version };

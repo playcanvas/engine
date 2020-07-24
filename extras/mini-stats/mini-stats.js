@@ -332,14 +332,16 @@ Object.assign(Graph.prototype, {
     },
 
     render: function (render2d, x, y, w, h) {
-        render2d.quad(this.texture,
-                      x + w,
-                      y,
-                      -w,
-                      h,
-                      this.cursor,
-                      0.5 + (this.enabled ? this.yOffset : 0),
-                      -w, 0);
+        if (this.enabled) {
+            render2d.quad(this.texture,
+                          x + w,
+                          y,
+                          -w,
+                          h,
+                          this.cursor,
+                          0.5 + this.yOffset,
+                          -w, 0);
+        }
     }
 });
 
@@ -419,7 +421,7 @@ function MiniStats(app) {
 
     div.addEventListener('click', function (event) {
         event.preventDefault();
-        if (self.enabled) {
+        if (self._enabled) {
             size = (size + 1) % sizes.length;
             self.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
         }
@@ -430,7 +432,7 @@ function MiniStats(app) {
     });
 
     app.on('postrender', function () {
-        if (self.enabled) {
+        if (self._enabled) {
             self.render();
         }
     });
@@ -447,7 +449,7 @@ function MiniStats(app) {
     this.gspacing = 2;
     this.clr = [1, 1, 1, 0.5];
 
-    this.enabled = true;
+    this._enabled = true;
 
     this.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
 }
@@ -466,6 +468,21 @@ Object.defineProperties(MiniStats.prototype, {
         get: function () {
             var graphs = this.graphs;
             return this.height * graphs.length + this.gspacing * (graphs.length - 1);
+        }
+    },
+
+    enabled: {
+        get: function () {
+            return this._enabled;
+        },
+        set: function (value) {
+            if (value !== this._enabled) {
+                this._enabled = value;
+                for (var i = 0; i < this.graphs.length; ++i) {
+                    this.graphs[i].enabled = value;
+                    this.graphs[i].timer.enabled = value;
+                }
+            }
         }
     }
 });

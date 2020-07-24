@@ -5,8 +5,7 @@ import { Vec4 } from '../../math/vec4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
-import { programlib } from '../../graphics/program-lib/program-lib.js';
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -685,10 +684,12 @@ Object.assign(StandardMaterial.prototype, {
     },
 
     _updateMapTransform: function (transform, tiling, offset) {
+        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+            return null;
+        }
+
         transform = transform || new Vec4();
         transform.set(tiling.x, tiling.y, offset.x, offset.y);
-
-        if ((transform.x === 1) && (transform.y === 1) && (transform.z === 0) && (transform.w === 0)) return null;
         return transform;
     },
 
@@ -708,25 +709,32 @@ Object.assign(StandardMaterial.prototype, {
 
     _updateMap: function (p) {
         var mname = p + "Map";
-        if (this[mname]) {
-            this._setParameter("texture_" + mname, this[mname]);
+        var map = this[mname];
+        if (map) {
+            this._setParameter("texture_" + mname, map);
+
+            // update transform
             var tname = mname + "Transform";
-            var uname = mname + "TransformUniform";
-            if (!this[tname]) {
-                this[uname] = new Float32Array(4);
-            }
             this[tname] = this._updateMapTransform(
                 this[tname],
                 this[mname + "Tiling"],
                 this[mname + "Offset"]
             );
 
-            if (this[tname]) {
-                this[uname][0] = this[tname].x;
-                this[uname][1] = this[tname].y;
-                this[uname][2] = this[tname].z;
-                this[uname][3] = this[tname].w;
-                this._setParameter('texture_' + tname, this[uname]);
+            // update uniform
+            var transform = this[tname];
+            if (transform) {
+                var uname = mname + "TransformUniform";
+                var uniform = this[uname];
+                if (!uniform) {
+                    uniform = new Float32Array(4);
+                    this[uname] = uniform;
+                }
+                uniform[0] = transform.x;
+                uniform[1] = transform.y;
+                uniform[2] = transform.z;
+                uniform[3] = transform.w;
+                this._setParameter('texture_' + tname, uniform);
             }
         }
     },
@@ -971,10 +979,9 @@ Object.assign(StandardMaterial.prototype, {
             }
         }
 
-        var generator = programlib.standard;
-       // Minimal options for Depth and Shadow passes
+        // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
-        var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
+        var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);

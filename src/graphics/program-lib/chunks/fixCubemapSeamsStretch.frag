@@ -24,4 +24,3 @@ vec3 fixSeamsStatic(vec3 vec, float invRecMipSize) {
     if (abs(vec.z) != M) vec.z *= scale;
     return vec;
 }
-

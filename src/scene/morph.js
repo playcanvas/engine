@@ -6,7 +6,7 @@ import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 import { Application } from '../framework/application.js';
 
-import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR0, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/graphics.js';
+import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/graphics.js';
 
 /**
  * @class
@@ -208,7 +208,7 @@ Object.assign(Morph.prototype, {
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
-        var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 1, type: TYPE_FLOAT32 }];
+        var formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_FLOAT32 }];
         this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc), ids.length, BUFFER_STATIC, new Float32Array(ids));
 
         return true;

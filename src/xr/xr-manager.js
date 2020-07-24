@@ -6,7 +6,7 @@ import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
-import { XRTYPE_AR } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
@@ -37,11 +37,12 @@ function XrManager(app) {
 
     this._supported = !! navigator.xr;
 
-    this._available = {
-        XRTYPE_AR: false,
-        XRTYPE_VR: false,
-        XRTYPE_INLINE: false
-    };
+    this._available = { };
+
+    // Add all the supported session types
+    this._available[XRTYPE_INLINE] = false;
+    this._available[XRTYPE_VR] = false;
+    this._available[XRTYPE_AR] = false;
 
     this._type = null;
     this._spaceType = null;
@@ -123,16 +124,16 @@ XrManager.prototype.constructor = XrManager;
  * });
  */
 
- /**
-  * @event
-  * @name pc.XrManager#error
-  * @param {Error} error - Error object related to failure of session start or check of session type support.
-  * @description Fired when XR session is failed to start or failed to check for session type support.
-  * @example
-  * app.xr.on('error', function (ex) {
-  *     // XR session has failed to start, or failed to check for session type support
-  * });
-  */
+/**
+ * @event
+ * @name pc.XrManager#error
+ * @param {Error} error - Error object related to failure of session start or check of session type support.
+ * @description Fired when XR session is failed to start or failed to check for session type support.
+ * @example
+ * app.xr.on('error', function (ex) {
+ *     // XR session has failed to start, or failed to check for session type support
+ * });
+ */
 
 /**
  * @function

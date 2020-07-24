@@ -1,4 +1,3 @@
-
 attribute vec3 vertex_position;
 attribute vec3 vertex_normal;
 attribute vec4 vertex_tangent;
@@ -16,4 +15,3 @@ mat3 dNormalMatrix;
 vec3 dLightPosW;
 vec3 dLightDirNormW;
 vec3 dNormalW;
-

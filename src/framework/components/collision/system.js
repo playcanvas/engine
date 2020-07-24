@@ -1,5 +1,3 @@
-import { type } from '../../../core/core.js';
-
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -591,7 +589,6 @@ var CollisionComponentSystem = function CollisionComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = "collision";
-    this.description = "Specifies a collision volume.";
 
     this.ComponentType = CollisionComponent;
     this.DataType = CollisionComponentData;
@@ -642,7 +639,7 @@ Object.assign(CollisionComponentSystem.prototype, {
         }
         component.data.type = data.type;
 
-        if (data.halfExtents && type(data.halfExtents) === 'array') {
+        if (data.halfExtents && Array.isArray(data.halfExtents)) {
             data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
         }
 

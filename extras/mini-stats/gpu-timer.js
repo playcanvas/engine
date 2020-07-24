@@ -9,6 +9,8 @@ function GpuTimer(app) {
     this._timings = [];
     this._prevTimings = [];
 
+    this.enabled = true;
+
     app.on('frameupdate', this.begin.bind(this, 'update'));
     app.on('framerender', this.mark.bind(this, 'render'));
     app.on('frameend', this.end.bind(this));
@@ -17,6 +19,10 @@ function GpuTimer(app) {
 Object.assign(GpuTimer.prototype, {
     // mark the beginning of the frame
     begin: function (name) {
+        if (!this.enabled) {
+            return;
+        }
+
         // store previous frame's queries
         if (this._frameQueries.length > 0) {
             this.end();
@@ -43,6 +49,10 @@ Object.assign(GpuTimer.prototype, {
 
     // mark
     mark: function (name) {
+        if (!this.enabled) {
+            return;
+        }
+
         // end previous query
         if (this._frameQueries.length > 0) {
             this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
@@ -57,6 +67,10 @@ Object.assign(GpuTimer.prototype, {
 
     // end of frame
     end: function () {
+        if (!this.enabled) {
+            return;
+        }
+
         this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
         this._frames.push(this._frameQueries);
         this._frameQueries = [];

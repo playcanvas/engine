@@ -1,5 +1,3 @@
-import { type } from '../../../core/core.js';
-
 import { Curve } from '../../../math/curve.js';
 import { CurveSet } from '../../../math/curve-set.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -44,6 +42,7 @@ var _schema = [
     'wrap',
     'wrapBounds',
     'localSpace',
+    'screenSpace',
     'colorMapAsset',
     'normalMapAsset',
     'mesh',
@@ -90,7 +89,6 @@ function ParticleSystemComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'particlesystem';
-    this.description = "Updates and renders particle system in the scene.";
 
     this.ComponentType = ParticleSystemComponent;
     this.DataType = ParticleSystemComponentData;
@@ -151,7 +149,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
             }
 
             if (types[prop] === 'vec3') {
-                if (type(data[prop]) === 'array') {
+                if (Array.isArray(data[prop])) {
                     data[prop] = new Vec3(data[prop][0], data[prop][1], data[prop][2]);
                 }
             } else if (types[prop] === 'curve') {
@@ -169,7 +167,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
             }
 
             // duplicate layer list
-            if (data.layers && type(data.layers) === 'array') {
+            if (data.layers && Array.isArray(data.layers)) {
                 data.layers = data.layers.slice(0);
             }
         }

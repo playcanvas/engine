@@ -63,11 +63,13 @@ var instanceOptions = {
 function SoundSlot(component, name, options) {
     EventHandler.call(this);
 
-    options = options || {};
     this._component = component;
     this._assets = component.system.app.assets;
     this._manager = component.system.manager;
-    this._name = name || 'Untitled';
+
+    this.name = name || 'Untitled';
+
+    options = options || {};
     this._volume = options.volume !== undefined ? math.clamp(Number(options.volume) || 0, 0, 1) : 1;
     this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
     this._loop = !!(options.loop !== undefined ? options.loop : false);
@@ -111,7 +113,7 @@ Object.assign(SoundSlot.prototype, {
         // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
         if (!this.isLoaded && !this._hasAsset()) {
             // #ifdef DEBUG
-            console.warn("Trying to play SoundSlot " + this._name + " but it is not loaded and doesn't have an asset.");
+            console.warn("Trying to play SoundSlot " + this.name + " but it is not loaded and doesn't have an asset.");
             // #endif
             return;
         }
@@ -437,15 +439,6 @@ Object.assign(SoundSlot.prototype, {
         for (var i = 0, len = instances.length; i < len; i++) {
             instances[i].position = position;
         }
-    }
-});
-
-Object.defineProperty(SoundSlot.prototype, 'name', {
-    get: function () {
-        return this._name;
-    },
-    set: function (value) {
-        this._name = value;
     }
 });
 

@@ -129,6 +129,13 @@ export function inherits(Self, Super) {
     return Func;
 }
 
+export function makeArray(arr) {
+    // #ifdef DEBUG
+    console.warn('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
+    // #endif
+    return Array.prototype.slice.call(arr);
+}
+
 // MATH
 import { math } from './math/math.js';
 import { Vec2 } from './math/vec2.js';
@@ -188,6 +195,7 @@ Object.defineProperty(Vec4.prototype, "data", {
 // SHAPE
 import { BoundingBox } from './shape/bounding-box.js';
 import { BoundingSphere } from './shape/bounding-sphere.js';
+import { Frustum } from './shape/frustum.js';
 import { Plane } from './shape/plane.js';
 
 export var shape = {
@@ -197,6 +205,18 @@ export var shape = {
 };
 
 BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
+
+Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
+    // #endif
+
+    var viewProj = new Mat4();
+
+    viewProj.mul2(projectionMatrix, viewMatrix);
+
+    this.setFromMat4(viewProj);
+};
 
 // GRAPHICS
 import {
@@ -220,7 +240,7 @@ import {
 } from './graphics/graphics.js';
 import { drawQuadWithShader } from './graphics/simple-post-effect.js';
 import { programlib } from './graphics/program-lib/program-lib.js';
-import { shaderChunks } from './graphics/chunks.js';
+import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 import { GraphicsDevice } from './graphics/device.js';
 import { IndexBuffer } from './graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
@@ -710,6 +730,7 @@ import { ComponentData } from './framework/components/data.js';
 import { ComponentSystem } from './framework/components/system.js';
 import { Entity } from './framework/entity.js';
 import { LightComponent } from './framework/components/light/component.js';
+import { ModelComponent } from './framework/components/model/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
@@ -821,6 +842,13 @@ Object.defineProperty(LightComponent.prototype, "enable", {
         this.enabled = value;
     }
 });
+
+ModelComponent.prototype.setVisible = function (visible) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.");
+    // #endif
+    this.enabled = visible;
+};
 
 Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
     get: function () {

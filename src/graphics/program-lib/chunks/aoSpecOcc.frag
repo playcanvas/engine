@@ -1,4 +1,5 @@
 uniform float material_occludeSpecularIntensity;
+
 void occludeSpecular() {
     // approximated specular occlusion from AO
     float specPow = exp2(dGlossiness * 11.0);
@@ -9,4 +10,3 @@ void occludeSpecular() {
     dSpecularLight *= specOcc;
     dReflection *= specOcc;
 }
-
