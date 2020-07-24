@@ -1419,19 +1419,26 @@ var createMaterials = function (gltf, textures, options, disableFlipV) {
     });
 };
 
-var createAnimations = function (gltf, nodes, nodeComponents, buffers, options) {
-    if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
+var createAnimations = function (gltf, nodes, buffers, options) {
+    var nodeAnimations = nodes.map(function () {
         return [];
+    });
+
+    if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
+        return {
+            animations: [],
+            nodeAnimations: nodeAnimations
+        };
     }
 
     var preprocess = options && options.animation && options.animation.preprocess;
     var postprocess = options && options.animation && options.animation.postprocess;
 
-    return gltf.animations.map(function (gltfAnimation, index) {
+    var animations = gltf.animations.map(function (gltfAnimation, animationIndex) {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        var animation = createAnimation(gltfAnimation, index, gltf.accessors, gltf.bufferViews, gltf.nodes, nodes, buffers);
+        var animation = createAnimation(gltfAnimation, animationIndex, gltf.accessors, gltf.bufferViews, gltf.nodes, nodes, buffers);
         if (postprocess) {
             postprocess(gltfAnimation, animation.track);
         }
@@ -1440,17 +1447,16 @@ var createAnimations = function (gltf, nodes, nodeComponents, buffers, options) 
         // animation track since the locator path in animation curves is relative
         // to its targets root node
         animation.targetRootNodes.forEach(function (rootNode) {
-            if (!nodeComponents[rootNode]) {
-                nodeComponents[rootNode] = {};
-            }
-            if (!nodeComponents[rootNode].animations) {
-                nodeComponents[rootNode].animations = [];
-            }
-            nodeComponents[rootNode].animations.push(index);
+            nodeAnimations[rootNode].push(animationIndex);
         });
 
         return animation.track;
     });
+
+    return {
+        animations: animations,
+        nodeAnimations: nodeAnimations
+    };
 };
 
 var createNodes = function (gltf, options) {
@@ -1488,14 +1494,6 @@ var createNodes = function (gltf, options) {
     }
 
     return nodes;
-};
-
-var createEmptyNodeComponents = function (nodes) {
-    return nodes.map(function () {
-        return {
-            animations: []
-        };
-    });
 };
 
 var createScenes = function (gltf, nodes, options) {
@@ -1644,12 +1642,11 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     var disableFlipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
 
     var nodes = createNodes(gltf, options);
-    var nodeComponents = createEmptyNodeComponents(nodes);
     var scenes = createScenes(gltf, nodes, options);
     var scene = getDefaultScene(gltf, scenes);
     var cameras = createCameras(gltf, nodes, options);
     var lights = createLights(gltf, nodes);
-    var animations = createAnimations(gltf, nodes, nodeComponents, buffers, options);
+    var animations = createAnimations(gltf, nodes, buffers, options);
     var materials = createMaterials(gltf, gltf.textures ? gltf.textures.map(function (t) {
         return textures[t.source].resource;
     }) : [], options, disableFlipV);
@@ -1661,10 +1658,10 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
 
     var result = {
         'nodes': nodes,
-        'nodeComponents': nodeComponents,
         'models': models,
         'nodeModels': nodeModels,
-        'animations': animations,
+        'animations': animations.animations,
+        'nodeAnimations': animations.nodeAnimations,
         'scenes': scenes,
         'scene': scene,
         'textures': textures,

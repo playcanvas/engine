@@ -7,15 +7,6 @@ import { Asset } from '../asset/asset.js';
 import { GlbParser } from './parser/glb-parser.js';
 
 /**
- * Maps an entity to a number of animation assets. Animations can be added to the node with either
- * pc.AnimationComponent or pc.AnimComponent.
- *
- * @typedef {object} pc.ContainerResourceAnimationMapping
- * @property {pc.Entity} node Entity that should be animated.
- * @property {number[]} animations Indexes of animations assets to be assigned to node.
- */
-
-/**
  * @class
  * @name pc.ContainerResource
  * @classdesc Container for a list of animations, textures, materials, models, scenes (as entities)
@@ -30,7 +21,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @property {pc.Asset[]} materials Material assets.
  * @property {pc.Asset[]} textures Texture assets per GLB image.
  * @property {pc.Asset[]} animations Animation assets.
- * @property {pc.ContainerResourceAnimationMapping[]} nodeAnimations Mapping of animations to node entities.
+ * @property {number[][]} nodeAnimations Animation asset indices per node.
  * @property {pc.Asset[]} models Model assets per GLB mesh.
  * @property {pc.AssetRegistry} registry The asset registry.
  */
@@ -265,17 +256,6 @@ Object.assign(ContainerHandler.prototype, {
             return createAsset('animation', animation, index);
         });
 
-        // create mapping from nodes to animations
-        var nodeAnimations = data.nodes
-            .map(function (node, nodeIndex) {
-                return {
-                    node: node,
-                    animations: data.nodeComponents[nodeIndex].animations
-                };
-            }).filter(function (mapping) {
-                return mapping.animations.length > 0;
-            });
-
         // add model components to nodes
         data.nodes.forEach(function (node, nodeIndex) {
             var modelAsset = nodeModelAssets[nodeIndex];
@@ -296,7 +276,7 @@ Object.assign(ContainerHandler.prototype, {
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created in parser
         container.animations = animationAssets;
-        container.nodeAnimations = nodeAnimations;
+        container.nodeAnimations = data.nodeAnimations;
         container.models = modelAssets;
         container._nodeModels = nodeModelAssets;    // keep model refs for when container is destroyed
         container.registry = assets;
