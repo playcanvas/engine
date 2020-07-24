@@ -3,4 +3,3 @@ float antiAliasGlossiness(float power) {
     float toksvig = 1.0 / (1.0 + power * (rlen - 1.0));
     return power * toksvig;
 }
-

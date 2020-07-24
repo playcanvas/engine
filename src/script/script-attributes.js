@@ -2,6 +2,9 @@ import { Color } from '../core/color.js';
 
 import { Curve } from '../math/curve.js';
 import { CurveSet } from '../math/curve-set.js';
+import { Vec2 } from '../math/vec2.js';
+import { Vec3 } from '../math/vec3.js';
+import { Vec4 } from '../math/vec4.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
@@ -10,6 +13,7 @@ import { Asset } from '../asset/asset.js';
 import { createScript } from './script.js';
 
 var components = ['x', 'y', 'z', 'w'];
+var vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 var rawToValue = function (app, args, value, old) {
     var i;
@@ -86,9 +90,10 @@ var rawToValue = function (app, args, value, old) {
         case 'vec3':
         case 'vec4':
             var len = parseInt(args.type.slice(3), 10);
+            var vecType = vecLookup[len];
 
-            if (value instanceof pc['Vec' + len]) {
-                if (old instanceof pc['Vec' + len]) {
+            if (value instanceof vecType) {
+                if (old instanceof vecType) {
                     old.copy(value);
                     return old;
                 }
@@ -98,7 +103,7 @@ var rawToValue = function (app, args, value, old) {
                     if (typeof value[i] !== 'number')
                         return null;
                 }
-                if (!old) old = new pc['Vec' + len]();
+                if (!old) old = new vecType();
 
                 for (i = 0; i < len; i++)
                     old[components[i]] = value[i];

@@ -14,4 +14,3 @@ void main(void) {
     float diff = abs(c - 2147483648.0) / 2147483648.0;
     gl_FragColor = packFloat(diff);
 }
-

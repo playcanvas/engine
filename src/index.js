@@ -6,9 +6,10 @@ import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
+import './polyfill/OESVertexArrayObject.js';
 
 // CORE
-export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';
+export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
@@ -49,8 +50,9 @@ export { Ray } from './shape/ray.js';
 export * from './graphics/graphics.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
+export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
-export { shaderChunks } from './graphics/chunks.js';
+export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';

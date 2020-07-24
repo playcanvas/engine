@@ -17,6 +17,7 @@ var categories = [
         examples: [
             "batching-dynamic",
             "hardware-instancing",
+            "hierarchy",
             "layers",
             "lights",
             "lights-baked",
@@ -81,6 +82,7 @@ var categories = [
         name: "user-interface",
         examples: [
             "button-basic",
+            "button-particle",
             "button-sprite",
             "text-basic",
             "text-canvas-font",

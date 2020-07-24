@@ -1,4 +1,3 @@
-import { type } from '../../../core/core.js';
 import { Color } from '../../../core/color.js';
 
 import {
@@ -144,7 +143,7 @@ Object.assign(SpriteComponentSystem.prototype, {
 
         component.type = data.type;
 
-        if (data.layers && type(data.layers) === 'array') {
+        if (data.layers && Array.isArray(data.layers)) {
             component.layers = data.layers.slice(0);
         }
 

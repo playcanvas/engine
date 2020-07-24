@@ -38,7 +38,6 @@ function AudioSourceComponentSystem(app, manager) {
     ComponentSystem.call(this, app);
 
     this.id = "audiosource";
-    this.description = "Specifies audio assets that can be played at the position of the Entity.";
 
     this.ComponentType = AudioSourceComponent;
     this.DataType = AudioSourceComponentData;

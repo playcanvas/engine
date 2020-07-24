@@ -26,4 +26,3 @@ void getTBN() {
 
     dTBN = mat3(normalize(T), normalize(B), normalize(dVertexNormalW));
 }
-

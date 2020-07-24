@@ -16,7 +16,7 @@ var tmpVecE = new Vec3();
  * @property {pc.Vec3} center Center of box.
  * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
  */
-export function BoundingBox(center, halfExtents) {
+function BoundingBox(center, halfExtents) {
     this.center = center || new Vec3(0, 0, 0);
     this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
     this._min = new Vec3();
@@ -395,3 +395,5 @@ Object.assign(BoundingBox.prototype, {
         this.setMinMax(tmpVecA, tmpVecB);
     }
 });
+
+export { BoundingBox };

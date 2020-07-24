@@ -1,13 +1,13 @@
-attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
-attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
-attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
-attribute float particle_vertexData4;     // particle id
+attribute vec4 particle_vertexData;   // XYZ = world pos, W = life
+attribute vec4 particle_vertexData2;  // X = angle, Y = scale, Z = alpha, W = velocity.x
+attribute vec4 particle_vertexData3;  // XYZ = particle local pos, W = velocity.y
+attribute float particle_vertexData4; // particle id
 #ifndef USE_MESH
 #define VDATA5TYPE vec2
 #else
 #define VDATA5TYPE vec4
 #endif
-attribute VDATA5TYPE particle_vertexData5;     // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
+attribute VDATA5TYPE particle_vertexData5; // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -24,8 +24,6 @@ uniform float numParticles;
 uniform float lifetime;
 uniform float stretch;
 uniform float seed;
-//uniform float graphSampleSize;
-//uniform float graphNumSamples;
 uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform highp sampler2D internalTex0;
@@ -34,7 +32,6 @@ uniform highp sampler2D internalTex2;
 uniform vec3 emitterPos;
 
 varying vec4 texCoordsAlphaLife;
-
 
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix)
 {
@@ -88,4 +85,3 @@ void main(void)
     float inAngle = particle_vertexData2.x;
     vec3 particlePosMoved = vec3(0.0);
     vec3 meshLocalPos = particle_vertexData3.xyz;
-

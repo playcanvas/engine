@@ -1,4 +1,4 @@
-import { extend, makeArray, type } from '../../../core/core.js';
+import { extend } from '../../../core/core.js';
 import { events } from '../../../core/events.js';
 import { Color } from '../../../core/color.js';
 
@@ -36,7 +36,6 @@ var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
     ComponentSystem.call(this, app);
 
     this.id = 'script';
-    this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
 
     this.ComponentType = ScriptLegacyComponent;
     this.DataType = ScriptLegacyComponentData;
@@ -72,7 +71,7 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
         // convert attributes array to dictionary
         if (data.scripts && data.scripts.length) {
             data.scripts.forEach(function (script) {
-                if (script.attributes && type(script.attributes) === 'array') {
+                if (script.attributes && Array.isArray(script.attributes)) {
                     var dict = {};
                     for (var i = 0; i < script.attributes.length; i++) {
                         dict[script.attributes[i].name] = script.attributes[i];
@@ -269,12 +268,13 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
     },
 
     broadcast: function (name, functionName) {
+        // #ifdef DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        var args = makeArray(arguments).slice(2);
+        // #endif
+        var args = Array.prototype.slice.call(arguments, 2);
 
         var id, data, fn;
         var dataStore = this.store;
-        // var results = [];
 
         for (id in dataStore) {
             if (dataStore.hasOwnProperty(id)) {
@@ -493,21 +493,21 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
 
     _convertAttributeValue: function (attribute) {
         if (attribute.type === 'rgb' || attribute.type === 'rgba') {
-            if (type(attribute.value) === 'array') {
+            if (Array.isArray(attribute.value)) {
                 attribute.value = attribute.value.length === 3 ?
                     new Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
                     new Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
             }
         } else if (attribute.type === 'vec2') {
-            if (type(attribute.value) === 'array')
+            if (Array.isArray(attribute.value))
                 attribute.value = new Vec2(attribute.value[0], attribute.value[1]);
 
         } else if (attribute.type === 'vec3' || attribute.type === 'vector') {
-            if (type(attribute.value) === 'array')
+            if (Array.isArray(attribute.value))
                 attribute.value = new Vec3(attribute.value[0], attribute.value[1], attribute.value[2]);
 
         } else if (attribute.type === 'vec4') {
-            if (type(attribute.value) === 'array')
+            if (Array.isArray(attribute.value))
                 attribute.value = new Vec4(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
 
         } else if (attribute.type === 'entity') {

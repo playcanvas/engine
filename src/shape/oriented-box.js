@@ -19,7 +19,7 @@ var tmpMat4 = new Mat4();
  * @param {pc.Mat4} [worldTransform] - Transform that has the orientation and position of the box. Scale is assumed to be one.
  * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
  */
-export function OrientedBox(worldTransform, halfExtents) {
+function OrientedBox(worldTransform, halfExtents) {
     this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
 
     worldTransform = worldTransform || tmpMat4.setIdentity();
@@ -91,3 +91,5 @@ Object.defineProperty(OrientedBox.prototype, 'worldTransform', {
         this._modelTransform.copy(value).invert();
     }
 });
+
+export { OrientedBox };

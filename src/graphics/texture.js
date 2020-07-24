@@ -1,3 +1,5 @@
+import { math } from '../math/math.js';
+
 import {
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -561,7 +563,7 @@ Object.defineProperties(Texture.prototype, {
      */
     pot: {
         get: function () {
-            return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+            return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
         }
     }
 });
@@ -782,9 +784,7 @@ Object.assign(Texture.prototype, {
                     if (!face ||                  // face is missing
                         face.width !== width ||   // face is different width
                         face.height !== height || // face is different height
-                        !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
-                          (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
-                          (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement))) {  // video
+                        !this.device._isBrowserInterface(face)) {            // new image bitmap
                         invalid = true;
                         break;
                     }
@@ -803,9 +803,7 @@ Object.assign(Texture.prototype, {
             }
         } else {
             // check if source is valid type of element
-            if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
-                  (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
-                  (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
+            if (!this.device._isBrowserInterface(source))
                 invalid = true;
 
             if (!invalid) {

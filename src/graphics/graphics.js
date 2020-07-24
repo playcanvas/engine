@@ -1071,6 +1071,9 @@ export var UNIFORMTYPE_FLOATARRAY = 17;
 export var UNIFORMTYPE_TEXTURE2D_SHADOW = 18;
 export var UNIFORMTYPE_TEXTURECUBE_SHADOW = 19;
 export var UNIFORMTYPE_TEXTURE3D = 20;
+export var UNIFORMTYPE_VEC2ARRAY = 21;
+export var UNIFORMTYPE_VEC3ARRAY = 22;
+export var UNIFORMTYPE_VEC4ARRAY = 23;
 
 // map of engine pc.TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
@@ -1090,3 +1093,39 @@ export var typedArrayToType = {
 // map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export var typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export var typedArrayIndexFormatsByteSize = [1, 2, 4];
+
+// map of engine semantics into location on device in range 0..15 (note - semantics mapping to
+// the same location cannot be used at the same time)
+// organized in a way that ATTR0-ATTR7 do not overlap with common important semantics
+export var semanticToLocation = {};
+semanticToLocation[SEMANTIC_POSITION] = 0;
+semanticToLocation[SEMANTIC_NORMAL] = 1;
+semanticToLocation[SEMANTIC_BLENDWEIGHT] = 2;
+semanticToLocation[SEMANTIC_BLENDINDICES] = 3;
+semanticToLocation[SEMANTIC_COLOR] = 4;
+semanticToLocation[SEMANTIC_TEXCOORD0] = 5;
+semanticToLocation[SEMANTIC_TEXCOORD1] = 6;
+semanticToLocation[SEMANTIC_TEXCOORD2] = 7;
+semanticToLocation[SEMANTIC_TEXCOORD3] = 8;
+semanticToLocation[SEMANTIC_TEXCOORD4] = 9;
+semanticToLocation[SEMANTIC_TEXCOORD5] = 10;
+semanticToLocation[SEMANTIC_TEXCOORD6] = 11;
+semanticToLocation[SEMANTIC_TEXCOORD7] = 12;
+semanticToLocation[SEMANTIC_TANGENT] = 13;
+
+semanticToLocation[SEMANTIC_ATTR0] = 0;
+semanticToLocation[SEMANTIC_ATTR1] = 1;
+semanticToLocation[SEMANTIC_ATTR2] = 2;
+semanticToLocation[SEMANTIC_ATTR3] = 3;
+semanticToLocation[SEMANTIC_ATTR4] = 4;
+semanticToLocation[SEMANTIC_ATTR5] = 5;
+semanticToLocation[SEMANTIC_ATTR6] = 6;
+semanticToLocation[SEMANTIC_ATTR7] = 7;
+semanticToLocation[SEMANTIC_ATTR8] = 8;
+semanticToLocation[SEMANTIC_ATTR9] = 9;
+semanticToLocation[SEMANTIC_ATTR10] = 10;
+semanticToLocation[SEMANTIC_ATTR11] = 11;
+semanticToLocation[SEMANTIC_ATTR12] = 12;
+semanticToLocation[SEMANTIC_ATTR13] = 13;
+semanticToLocation[SEMANTIC_ATTR14] = 14;
+semanticToLocation[SEMANTIC_ATTR15] = 15;

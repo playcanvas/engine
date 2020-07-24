@@ -1,8 +1,9 @@
-import { Morph } from './morph.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { shaderChunks } from '../graphics/chunks.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/graphics.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
+import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
+import { RenderTarget } from '../graphics/render-target.js';
+
+import { Morph } from './morph.js';
 
 // vertex shader used to add morph targets from textures into render target
 var textureMorphVertexShader =
@@ -189,7 +190,7 @@ Object.assign(MorphInstance.prototype, {
         // if shader is not in cache, generate one
         if (!shader) {
             var fs = this._getFragmentShader(count);
-            shader = shaderChunks.createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
             this.shaderCache[count] = shader;
         }
 

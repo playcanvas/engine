@@ -5,4 +5,3 @@ void writeOutput() {
         gl_FragColor = vec4(outVel, outLife);
     }
 }
-
