@@ -141,6 +141,7 @@ import { math } from './math/math.js';
 import { Vec2 } from './math/vec2.js';
 import { Vec3 } from './math/vec3.js';
 import { Vec4 } from './math/vec4.js';
+import { Mat4 } from './math/mat4.js';
 
 math.INV_LOG2 = Math.LOG2E;
 
