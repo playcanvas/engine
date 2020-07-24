@@ -9,7 +9,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
-    typedArrayTypes, typedArrayToType,
+    typedArrayTypes,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BUFFER_STATIC,
     CULLFACE_NONE, CULLFACE_BACK,
@@ -686,10 +686,9 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 var options = {};
 
                 if (target.hasOwnProperty('POSITION')) {
-
                     accessor = accessors[target.POSITION];
                     options.deltaPositions = getAccessorData(accessor, bufferViews);
-                    options.deltaPositionsType = typedArrayToType[getComponentDataType(accessor.componentType).name];
+                    options.deltaPositionsType = getComponentType(accessor.componentType);
                     if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
                         options.aabb = new BoundingBox();
                         options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
@@ -697,10 +696,9 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 }
 
                 if (target.hasOwnProperty('NORMAL')) {
-
                     accessor = accessors[target.NORMAL];
                     options.deltaNormals = getAccessorData(accessor, bufferViews);
-                    options.deltaNormalsType = typedArrayToType[getComponentDataType(accessor.componentType).name];
+                    options.deltaNormalsType = getComponentType(accessor.componentType);
                 }
 
                 if (gltfMesh.hasOwnProperty('extras') &&
