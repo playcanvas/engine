@@ -137,6 +137,7 @@ export function makeArray(arr) {
 }
 
 // MATH
+import { Mat4 } from './math/mat4.js';
 import { math } from './math/math.js';
 import { Vec2 } from './math/vec2.js';
 import { Vec3 } from './math/vec3.js';
