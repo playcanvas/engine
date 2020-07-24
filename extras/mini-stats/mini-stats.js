@@ -388,6 +388,9 @@ function MiniStats(app) {
     }
     texture.unlock();
 
+    // ensure texture is uploaded
+    device.setTexture(texture, 0);
+
     // create graphs
     var graphs = [
         new Graph('Frame', app, new FrameTimer(app), texture, 1),
