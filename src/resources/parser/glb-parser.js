@@ -1369,24 +1369,20 @@ var createLight = function (gltfLight, node) {
     return cameraNode.addComponent("light", lightProps);
 };
 
-var createSkinInstances = function (model, skin) {
-    return model.meshInstances.map(function (meshInstance) {
-        meshInstance.mesh.skin = skin;
-
-        var skinInstance = new SkinInstance(skin);
-        skinInstance.bones = skin.bones;
-
-        meshInstance.skinInstance = skinInstance;
-        return skinInstance;
-    });
-};
-
 var createSkins = function (device, gltf, nodes, buffers) {
     if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
         return [];
     }
     return gltf.skins.map(function (gltfSkin) {
         return createSkin(device, gltfSkin, gltf.accessors, gltf.bufferViews, nodes, buffers);
+    });
+};
+
+var createSkinInstances = function (skins) {
+    return skins.map(function (skin) {
+        var skinInstance = new SkinInstance(skin);
+        skinInstance.bones = skin.bones;
+        return skinInstance;
     });
 };
 
@@ -1541,7 +1537,7 @@ var createModels = function (meshGroups, materials, defaultMaterial) {
     });
 };
 
-var createNodeModels = function (gltf, nodeComponents, models, skins) {
+var createNodeModels = function (gltf, nodeComponents, models, skins, skinInstances) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
@@ -1555,8 +1551,14 @@ var createNodeModels = function (gltf, nodeComponents, models, skins) {
 
         var model = models[gltfNode.mesh].clone();
         var skin = gltfNode.hasOwnProperty('skin') ? skins[gltfNode.skin] : null;
-        if (skin !== null) {
-            model.skinInstances = createSkinInstances(model, skin);
+        var skinInstance = gltfNode.hasOwnProperty('skin') ? skinInstances[gltfNode.skin] : null;
+
+        if (skin !== null && skinInstance !== null) {
+            model.skinInstances = model.meshInstances.map(function (meshInstance) {
+                meshInstance.mesh.skin = skin;
+                meshInstance.skinInstance = skinInstance;
+                return skinInstance;
+            });
         }
 
         var nodeModelIndex = nodeModels.push(model) - 1;
@@ -1663,8 +1665,9 @@ var createResources = function (device, gltf, buffers, textures, defaultMaterial
     }) : [], options, disableFlipV);
     var meshGroups = createMeshGroups(device, gltf, buffers, callback, disableFlipV);
     var skins = createSkins(device, gltf, nodes, buffers);
+    var skinInstances = createSkinInstances(skins);
     var models = createModels(meshGroups, materials, defaultMaterial);
-    var nodeModels = createNodeModels(gltf, nodeComponents, models, skins);
+    var nodeModels = createNodeModels(gltf, nodeComponents, models, skins, skinInstances);
 
     var result = {
         'nodes': nodes,
