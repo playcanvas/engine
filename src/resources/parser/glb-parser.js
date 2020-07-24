@@ -105,27 +105,64 @@ var getComponentDataType = function (componentType) {
     }
 };
 
+// get accessor data, making a copy and patching in the case of a sparse accessor
 var getAccessorData = function (gltfAccessor, bufferViews) {
-    var bufferView = bufferViews[gltfAccessor.bufferView];
+    var numComponents = getNumComponents(gltfAccessor.type);
     var dataType = getComponentDataType(gltfAccessor.componentType);
     if (!dataType) {
         return null;
     }
-    return new dataType(bufferView.buffer,
-                        bufferView.byteOffset + (gltfAccessor.hasOwnProperty('byteOffset') ? gltfAccessor.byteOffset : 0),
-                        gltfAccessor.count * getNumComponents(gltfAccessor.type));
-};
+    var result;
 
-var getSparseAccessorIndices = function (gltfAccessor, bufferViews) {
-    var bufferView = bufferViews[gltfAccessor.sparse.indices.bufferView];
-    var dataType = getComponentDataType(gltfAccessor.sparse.indices.componentType);
-    if (!dataType) {
-        return null;
+    if (gltfAccessor.sparse) {
+        // handle sparse data
+        var sparse = gltfAccessor.sparse;
+
+        // get indices data
+        var indicesAccessor = {
+            count: sparse.count,
+            type: "SCALAR"
+        };
+        var indices = getAccessorData(Object.assign(indicesAccessor, sparse.indices), bufferViews);
+
+        // data values data
+        var valuesAccessor = {
+            count: sparse.count,
+            type: gltfAccessor.scalar,
+            componentType: gltfAccessor.componentType
+        };
+        var values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews);
+
+        // get base data
+        if (gltfAccessor.hasOwnProperty('bufferView')) {
+            var baseAccessor = {
+                bufferView: gltfAccessor.bufferView,
+                byteOffset: gltfAccessor.byteOffset,
+                componentType: gltfAccessor.componentType,
+                count: gltfAccessor.count,
+                type: gltfAccessor.type
+            };
+            // make a copy of the base data since we'll patch the values
+            result = getAccessorData(baseAccessor, bufferViews).slice();
+        } else {
+            // there is no base data, create empty 0'd out data
+            result = new dataType(gltfAccessor.count * numComponents);
+        }
+
+        for (var i = 0; i < sparse.count; ++i) {
+            var targetIndex = indices[i];
+            for (var j = 0; j < numComponents; ++j) {
+                result[targetIndex * numComponents + j] = values[i * numComponents + j];
+            }
+        }
+    } else {
+        var bufferView = bufferViews[gltfAccessor.bufferView];
+        result = new dataType(bufferView.buffer,
+                              bufferView.byteOffset + (gltfAccessor.hasOwnProperty('byteOffset') ? gltfAccessor.byteOffset : 0),
+                              gltfAccessor.count * numComponents);
     }
 
-    return new dataType(bufferView.buffer,
-                        bufferView.byteOffset + (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0),
-                        gltfAccessor.sparse.count);
+    return result;
 };
 
 var getPrimitiveType = function (primitive) {
@@ -641,22 +678,9 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
         );
         mesh.aabb = aabb;
 
-        // convert sparse morph target vertex data to full format
-        var sparseToFull = function (data, indices, dataType, totalCount) {
-            var full = new dataType(totalCount * 3);
-            for (var s = 0; s < indices.length; s++) {
-                var dstIndex = indices[s] * 3;
-                full[dstIndex] = data[s * 3];
-                full[dstIndex + 1] = data[s * 3 + 1];
-                full[dstIndex + 2] = data[s * 3 + 2];
-            }
-            return full;
-        };
-
         // morph targets
         if (canUseMorph && primitive.hasOwnProperty('targets')) {
             var targets = [];
-            var dataType;
 
             primitive.targets.forEach(function (target, index) {
                 var options = {};
@@ -664,19 +688,8 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 if (target.hasOwnProperty('POSITION')) {
 
                     accessor = accessors[target.POSITION];
-                    dataType = getComponentDataType(accessor.componentType);
-
                     options.deltaPositions = getAccessorData(accessor, bufferViews);
-                    options.deltaPositionsType = typedArrayToType[dataType.name];
-
-                    if (accessor.sparse) {
-                        options.deltaPositions = sparseToFull(options.deltaPositions,
-                                                              getSparseAccessorIndices(accessor, bufferViews),
-                                                              dataType,
-                                                              mesh.vertexBuffer.numVertices);
-
-                    }
-
+                    options.deltaPositionsType = typedArrayToType[getComponentDataType(accessor.componentType).name];
                     if (accessor.hasOwnProperty('min') && accessor.hasOwnProperty('max')) {
                         options.aabb = new BoundingBox();
                         options.aabb.setMinMax(new Vec3(accessor.min), new Vec3(accessor.max));
@@ -686,17 +699,8 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                 if (target.hasOwnProperty('NORMAL')) {
 
                     accessor = accessors[target.NORMAL];
-                    dataType = getComponentDataType(accessor.componentType);
-
                     options.deltaNormals = getAccessorData(accessor, bufferViews);
-                    options.deltaNormalsType = typedArrayToType[dataType.name];
-
-                    if (accessor.sparse) {
-                        options.deltaNormals = sparseToFull(options.deltaNormals,
-                                                            getSparseAccessorIndices(accessor, bufferViews),
-                                                            dataType,
-                                                            mesh.vertexBuffer.numVertices);
-                    }
+                    options.deltaNormalsType = typedArrayToType[getComponentDataType(accessor.componentType).name];
                 }
 
                 if (gltfMesh.hasOwnProperty('extras') &&
