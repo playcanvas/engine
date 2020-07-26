@@ -6,6 +6,8 @@ import { Vec3 } from '../math/vec3.js';
 
 import { Ray } from '../shape/ray.js';
 
+import { XrHand } from './xr-hand.js';
+
 var quat = new Quat();
 var ids = 0;
 
@@ -33,6 +35,7 @@ var ids = 0;
  *
  * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
  * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
+ * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null. Then ray related to input source should be ignored.
  * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
  * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
  * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
@@ -50,6 +53,10 @@ function XrInputSource(manager, xrInputSource) {
     this._ray = new Ray();
     this._rayLocal = new Ray();
     this._grip = false;
+    this._hand = null;
+
+    if (xrInputSource.hand)
+        this._hand = new XrHand(this);
 
     this._localTransform = null;
     this._worldTransform = null;
@@ -148,31 +155,36 @@ XrInputSource.prototype.update = function (frame) {
     var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
     if (! targetRayPose) return;
 
-    // grip
-    if (this._xrInputSource.gripSpace) {
-        var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
-        if (gripPose) {
-            if (! this._grip) {
-                this._grip = true;
+    // hand
+    if (this._hand) {
+        this._hand.update(frame);
+    } else {
+        // grip
+        if (this._xrInputSource.gripSpace) {
+            var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+            if (gripPose) {
+                if (! this._grip) {
+                    this._grip = true;
 
-                this._localTransform = new Mat4();
-                this._worldTransform = new Mat4();
+                    this._localTransform = new Mat4();
+                    this._worldTransform = new Mat4();
 
-                this._localPosition = new Vec3();
-                this._localRotation = new Quat();
+                    this._localPosition = new Vec3();
+                    this._localRotation = new Quat();
+                }
+                this._dirtyLocal = true;
+                this._localPosition.copy(gripPose.transform.position);
+                this._localRotation.copy(gripPose.transform.orientation);
             }
-            this._dirtyLocal = true;
-            this._localPosition.copy(gripPose.transform.position);
-            this._localRotation.copy(gripPose.transform.orientation);
         }
-    }
 
-    // ray
-    this._dirtyRay = true;
-    this._rayLocal.origin.copy(targetRayPose.transform.position);
-    this._rayLocal.direction.set(0, 0, -1);
-    quat.copy(targetRayPose.transform.orientation);
-    quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
+        // ray
+        this._dirtyRay = true;
+        this._rayLocal.origin.copy(targetRayPose.transform.position);
+        this._rayLocal.direction.set(0, 0, -1);
+        quat.copy(targetRayPose.transform.orientation);
+        quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
+    }
 };
 
 XrInputSource.prototype._updateTransforms = function () {
@@ -187,11 +199,7 @@ XrInputSource.prototype._updateTransforms = function () {
     var parent = this._manager.camera.parent;
     if (parent) {
         dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
-
-        if (dirty) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
-            this._worldTransform.mul2(parentTransform, this._localTransform);
-        }
+        if (dirty) this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
     } else {
         this._worldTransform.copy(this._localTransform);
     }
@@ -395,6 +403,12 @@ Object.defineProperty(XrInputSource.prototype, 'profiles', {
 Object.defineProperty(XrInputSource.prototype, 'grip', {
     get: function () {
         return this._grip;
+    }
+});
+
+Object.defineProperty(XrInputSource.prototype, 'hand', {
+    get: function () {
+        return this._hand;
     }
 });
 
