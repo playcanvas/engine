@@ -239,6 +239,7 @@ export function makeArray(arr) {
 }
 
 // MATH
+
 math.INV_LOG2 = Math.LOG2E;
 
 math.intToBytes = math.intToBytes32;
