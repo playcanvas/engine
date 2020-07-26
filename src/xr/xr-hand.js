@@ -4,22 +4,22 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var fingerJointIds = [ ];
-var tipJointIds = [ ];
-var tipJointIdsIndex = { };
+var fingerJointIds = [];
+var tipJointIds = [];
+var tipJointIdsIndex = {};
 
 if (window.XRHand) {
     fingerJointIds = [
-       [ XRHand.THUMB_METACARPAL, XRHand.THUMB_PHALANX_PROXIMAL, XRHand.THUMB_PHALANX_DISTAL, XRHand.THUMB_PHALANX_TIP ],
-       [ XRHand.INDEX_METACARPAL, XRHand.INDEX_PHALANX_PROXIMAL, XRHand.INDEX_PHALANX_INTERMEDIATE, XRHand.INDEX_PHALANX_DISTAL, XRHand.INDEX_PHALANX_TIP ],
-       [ XRHand.MIDDLE_METACARPAL, XRHand.MIDDLE_PHALANX_PROXIMAL, XRHand.MIDDLE_PHALANX_INTERMEDIATE, XRHand.MIDDLE_PHALANX_DISTAL, XRHand.MIDDLE_PHALANX_TIP ],
-       [ XRHand.RING_METACARPAL, XRHand.RING_PHALANX_PROXIMAL, XRHand.RING_PHALANX_INTERMEDIATE, XRHand.RING_PHALANX_DISTAL, XRHand.RING_PHALANX_TIP ],
-       [ XRHand.LITTLE_METACARPAL, XRHand.LITTLE_PHALANX_PROXIMAL, XRHand.LITTLE_PHALANX_INTERMEDIATE, XRHand.LITTLE_PHALANX_DISTAL, XRHand.LITTLE_PHALANX_TIP ]
+        [XRHand.THUMB_METACARPAL, XRHand.THUMB_PHALANX_PROXIMAL, XRHand.THUMB_PHALANX_DISTAL, XRHand.THUMB_PHALANX_TIP],
+        [XRHand.INDEX_METACARPAL, XRHand.INDEX_PHALANX_PROXIMAL, XRHand.INDEX_PHALANX_INTERMEDIATE, XRHand.INDEX_PHALANX_DISTAL, XRHand.INDEX_PHALANX_TIP],
+        [XRHand.MIDDLE_METACARPAL, XRHand.MIDDLE_PHALANX_PROXIMAL, XRHand.MIDDLE_PHALANX_INTERMEDIATE, XRHand.MIDDLE_PHALANX_DISTAL, XRHand.MIDDLE_PHALANX_TIP],
+        [XRHand.RING_METACARPAL, XRHand.RING_PHALANX_PROXIMAL, XRHand.RING_PHALANX_INTERMEDIATE, XRHand.RING_PHALANX_DISTAL, XRHand.RING_PHALANX_TIP],
+        [XRHand.LITTLE_METACARPAL, XRHand.LITTLE_PHALANX_PROXIMAL, XRHand.LITTLE_PHALANX_INTERMEDIATE, XRHand.LITTLE_PHALANX_DISTAL, XRHand.LITTLE_PHALANX_TIP]
     ];
-    tipJointIds = [ XRHand.THUMB_PHALANX_TIP, XRHand.INDEX_PHALANX_TIP, XRHand.MIDDLE_PHALANX_TIP, XRHand.RING_PHALANX_TIP, XRHand.LITTLE_PHALANX_TIP ];
+    tipJointIds = [XRHand.THUMB_PHALANX_TIP, XRHand.INDEX_PHALANX_TIP, XRHand.MIDDLE_PHALANX_TIP, XRHand.RING_PHALANX_TIP, XRHand.LITTLE_PHALANX_TIP];
 }
 
-for(var i = 0; i < tipJointIds.length; i++) {
+for (var i = 0; i < tipJointIds.length; i++) {
     tipJointIdsIndex[tipJointIds[i]] = true;
 }
 
@@ -39,7 +39,7 @@ function XrFinger(index, hand) {
     this._index = index;
     this._hand = hand;
     this._hand._fingers.push(this);
-    this._joints = [ ];
+    this._joints = [];
     this._tip = null;
 }
 
@@ -110,23 +110,23 @@ function XrJoint(index, id, hand, finger) {
     this._worldTransform = new Mat4();
     this._worldTransform.setIdentity();
 
-    this._localPosition = new pc.Vec3();
-    this._localRotation = new pc.Quat();
+    this._localPosition = new Vec3();
+    this._localRotation = new Quat();
 
-    this._position = new pc.Vec3();
-    this._rotation = new pc.Quat();
+    this._position = new Vec3();
+    this._rotation = new Quat();
 
     this._dirtyLocal = true;
 }
 
-XrJoint.prototype.update = function(pose) {
+XrJoint.prototype.update = function (pose) {
     this._dirtyLocal = true;
     this._radius = pose.radius;
     this._localPosition.copy(pose.transform.position);
     this._localRotation.copy(pose.transform.orientation);
 };
 
-XrJoint.prototype._updateTransforms = function() {
+XrJoint.prototype._updateTransforms = function () {
     var dirty;
 
     if (this._dirtyLocal) {
@@ -152,7 +152,7 @@ XrJoint.prototype._updateTransforms = function() {
  * @description Get the world space position of a joint
  * @returns {pc.Vec3} The world space position of a joint
  */
-XrJoint.prototype.getPosition = function() {
+XrJoint.prototype.getPosition = function () {
     this._updateTransforms();
     this._worldTransform.getTranslation(this._position);
     return this._position;
@@ -164,7 +164,7 @@ XrJoint.prototype.getPosition = function() {
  * @description Get the world space rotation of a joint
  * @returns {pc.Quat} The world space rotation of a joint
  */
-XrJoint.prototype.getRotation = function() {
+XrJoint.prototype.getRotation = function () {
     this._updateTransforms();
     this._rotation.setFromMat4(this._worldTransform);
     return this._rotation;
@@ -176,7 +176,7 @@ XrJoint.prototype.getRotation = function() {
  * @description Get the radius of a joint, which is a distance from joint to the edge of a skin
  * @returns {number} Radius of a joint
  */
-XrJoint.prototype.getRadius = function() {
+XrJoint.prototype.getRadius = function () {
     return this._radius || 0.005;
 };
 
@@ -233,9 +233,9 @@ function XrHand(inputSource) {
 
     this._tracking = false;
 
-    this._fingers = [ ];
-    this._joints = [ ];
-    this._tips = [ ];
+    this._fingers = [];
+    this._joints = [];
+    this._tips = [];
 
     this._wrist = null;
     if (xrHand[XRHand.WRIST]) {
@@ -243,10 +243,10 @@ function XrHand(inputSource) {
         this._joints.push(this._wrist);
     }
 
-    for(var f = 0; f < fingerJointIds.length; f++) {
+    for (var f = 0; f < fingerJointIds.length; f++) {
         var finger = new XrFinger(f, this);
 
-        for(var j = 0; j < fingerJointIds[f].length; j++) {
+        for (var j = 0; j < fingerJointIds[f].length; j++) {
             var jointId = fingerJointIds[f][j];
             if (! xrHand[jointId]) continue;
             new XrJoint(j, jointId, this, finger);
@@ -268,10 +268,10 @@ XrHand.prototype.constructor = XrHand;
   * @description Fired when tracking is lost.
   */
 
-XrHand.prototype.update = function(frame) {
+XrHand.prototype.update = function (frame) {
     var xrInputSource = this._inputSource._xrInputSource;
 
-    for(var j = 0; j < this._joints.length; j++) {
+    for (var j = 0; j < this._joints.length; j++) {
         var joint = this._joints[j];
         var jointSpace = xrInputSource.hand[joint._id];
         if (jointSpace) {
