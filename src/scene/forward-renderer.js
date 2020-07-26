@@ -795,9 +795,29 @@ Object.assign(ForwardRenderer.prototype, {
         this.cameraParams[3] = (1 + f / n) * 0.5;
         this.cameraParamsId.setValue(this.cameraParams);
 
+        this.clearView(camera, target, clear, false);
+
+        var device = this.device;
+
+        var scissorRect = camera.scissorRect;
+        x = Math.floor(scissorRect.x * pixelWidth);
+        y = Math.floor(scissorRect.y * pixelHeight);
+        w = Math.floor(scissorRect.z * pixelWidth);
+        h = Math.floor(scissorRect.w * pixelHeight);
+        device.setScissor(x, y, w, h);
+
+        if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
+    },
+
+    clearView: function (camera, target, clear, forceWrite, options) {
         var device = this.device;
         device.setRenderTarget(target);
         device.updateBegin();
+
+        if (forceWrite) {
+            device.setColorWrite(true, true, true, true);
+            device.setDepthWrite(true);
+        }
 
         var rect = camera.rect;
         var pixelWidth = target ? target.width : device.width;
@@ -808,25 +828,17 @@ Object.assign(ForwardRenderer.prototype, {
         var h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
         device.setScissor(x, y, w, h);
+
         if (clear) {
-            device.clear({
+            device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
                 flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
                        (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
                        (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
-            });
+            }); // clear full RT
         }
-
-        var scissorRect = camera.scissorRect;
-        x = Math.floor(scissorRect.x * pixelWidth);
-        y = Math.floor(scissorRect.y * pixelHeight);
-        w = Math.floor(scissorRect.z * pixelWidth);
-        h = Math.floor(scissorRect.w * pixelHeight);
-        device.setScissor(x, y, w, h);
-
-        if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
     },
 
     dispatchGlobalLights: function (scene) {
@@ -2660,34 +2672,6 @@ Object.assign(ForwardRenderer.prototype, {
         this.updateMorphing(drawCalls);
     },
 
-    clearView: function (camera, target, options) {
-        var device = this.device;
-        device.setRenderTarget(target);
-        device.updateBegin();
-
-        device.setColorWrite(true, true, true, true);
-        device.setDepthWrite(true);
-
-        var rect = camera.rect;
-        var pixelWidth = target ? target.width : device.width;
-        var pixelHeight = target ? target.height : device.height;
-        var x = Math.floor(rect.x * pixelWidth);
-        var y = Math.floor(rect.y * pixelHeight);
-        var w = Math.floor(rect.z * pixelWidth);
-        var h = Math.floor(rect.w * pixelHeight);
-        device.setViewport(x, y, w, h);
-        device.setScissor(x, y, w, h);
-
-        device.clear(options ? options : {
-            color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-            depth: camera._clearDepth,
-            flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
-                   (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
-                   (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
-            stencil: camera._clearStencil
-        }); // clear full RT
-    },
-
     setSceneConstants: function () {
         var i;
         var device = this.device;
@@ -2925,7 +2909,7 @@ Object.assign(ForwardRenderer.prototype, {
                 if (layer.onPreRender) layer.onPreRender(cameraPass);
                 layer._preRenderCalledForCameras |= 1 << cameraPass;
                 if (layer.overrideClear) {
-                    this.clearView(camera.camera, layer.renderTarget, layer._clearOptions);
+                    this.clearView(camera.camera, layer.renderTarget, true, true, layer._clearOptions);
                 }
             }
 
@@ -2942,7 +2926,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
-                    if (!layer.overrideClear) this.clearView(camera.camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
+                    if (!layer.overrideClear) this.clearView(camera.camera, layer.renderTarget, true, true); // TODO: deprecate camera.renderTarget?
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
