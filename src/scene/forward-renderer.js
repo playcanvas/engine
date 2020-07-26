@@ -798,12 +798,14 @@ Object.assign(ForwardRenderer.prototype, {
         this.clearView(camera, target, clear, false);
 
         var device = this.device;
+        var pixelWidth = target ? target.width : device.width;
+        var pixelHeight = target ? target.height : device.height;
 
         var scissorRect = camera.scissorRect;
-        x = Math.floor(scissorRect.x * pixelWidth);
-        y = Math.floor(scissorRect.y * pixelHeight);
-        w = Math.floor(scissorRect.z * pixelWidth);
-        h = Math.floor(scissorRect.w * pixelHeight);
+        var x = Math.floor(scissorRect.x * pixelWidth);
+        var y = Math.floor(scissorRect.y * pixelHeight);
+        var w = Math.floor(scissorRect.z * pixelWidth);
+        var h = Math.floor(scissorRect.w * pixelHeight);
         device.setScissor(x, y, w, h);
 
         if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
