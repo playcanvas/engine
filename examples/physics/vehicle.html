@@ -82,6 +82,7 @@
         });
 
         function run() {
+            // Create a static ground shape for our car to drive on
             var ground = new pc.Entity('Ground');
             ground.addComponent('rigidbody', {
                 type: 'static'
@@ -93,28 +94,7 @@
             ground.setLocalPosition(0, -0.5, 0);
             app.root.addChild(ground);
 
-            var vehicle = new pc.Entity('Vehicle');
-            vehicle.addComponent('rigidbody', {
-                mass: 800,
-                type: 'dynamic'
-            });
-            vehicle.addComponent('collision', {
-                type: 'compound'
-            });
-            vehicle.addComponent('script');
-            vehicle.script.create('vehicleControls');
-            vehicle.setLocalPosition(0, 2, 0);
-            app.root.addChild(vehicle);
-
-            // Create the car chassis, offset upwards in Y from the compound body
-            var chassis = new pc.Entity('Chassis');
-            chassis.addComponent('collision', {
-                type: 'box',
-                halfExtents: [0.6, 0.35, 1.65]
-            });
-            chassis.setLocalPosition(0, 0.65, -0.05);
-            vehicle.addChild(chassis);
-
+            // Create 4 wheels for our vehicle
             var wheels = [];
             [
                 { name: 'Front Left Wheel', pos: new pc.Vec3(0.8, 0.4, 1.2), front: true },
@@ -132,16 +112,43 @@
                     }
                 });
                 wheel.setLocalPosition(wheelDef.pos);
-                vehicle.addChild(wheel);
                 wheels.push(wheel);
             });
 
+            // Create a physical vehicle
+            var vehicle = new pc.Entity('Vehicle');
+            vehicle.addComponent('rigidbody', {
+                mass: 800,
+                type: 'dynamic'
+            });
+            vehicle.addComponent('collision', {
+                type: 'compound'
+            });
+            vehicle.addComponent('script');
             vehicle.script.create('vehicle', {
                 attributes: {
                     wheels: wheels
                 }
             });
+            vehicle.script.create('vehicleControls');
+            vehicle.setLocalPosition(0, 2, 0);
 
+            // Create the car chassis, offset upwards in Y from the compound body
+            var chassis = new pc.Entity('Chassis');
+            chassis.addComponent('collision', {
+                type: 'box',
+                halfExtents: [0.6, 0.35, 1.65]
+            });
+            chassis.setLocalPosition(0, 0.65, -0.05);
+
+            // Add the vehicle to the hierarchy
+            wheels.forEach(function (wheel) {
+                vehicle.addChild(wheel);
+            });
+            vehicle.addChild(chassis);
+            app.root.addChild(vehicle);
+
+            // Build a wall of blocks for the car to smash through
             for (var i = 0; i < 10; i++) {
                 for (var j = 0; j < 5; j++) {
                     var block = new pc.Entity('Block');
@@ -163,7 +170,7 @@
                 color: new pc.Color(1, 1, 1),
                 castShadows: true,
                 shadowBias: 0.2,
-                shadowDistance: 16,
+                shadowDistance: 40,
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
@@ -183,7 +190,7 @@
             camera.lookAt(0, 0, 0);
             app.root.addChild(camera);
 
-            // Enable rendering of all rigid bodies in the scene
+            // Enable rendering and resetting of all rigid bodies in the scene
             app.root.addComponent('script');
             app.root.script.create('renderPhysics', {
                 attributes: {

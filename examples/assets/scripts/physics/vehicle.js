@@ -17,7 +17,7 @@ Vehicle.attributes.add('maxBrakingForce', {
 });
 Vehicle.attributes.add('maxSteering', {
     type: 'number',
-    default: 0.2,
+    default: 0.3,
     title: 'Max Steering'
 });
 
@@ -155,7 +155,7 @@ VehicleWheel.attributes.add('isFront', {
 });
 VehicleWheel.attributes.add('radius', {
     type: 'number',
-    default: 0.5,
+    default: 0.4,
     title: 'Radius'
 });
 VehicleWheel.attributes.add('width', {
@@ -165,7 +165,7 @@ VehicleWheel.attributes.add('width', {
 });
 VehicleWheel.attributes.add('suspensionStiffness', {
     type: 'number',
-    default: 20,
+    default: 10,
     title: 'Suspension Stiffness'
 });
 VehicleWheel.attributes.add('suspensionDamping', {
@@ -180,7 +180,7 @@ VehicleWheel.attributes.add('suspensionCompression', {
 });
 VehicleWheel.attributes.add('suspensionRestLength', {
     type: 'number',
-    default: 0.6,
+    default: 0.2,
     title: 'Suspension Rest Length'
 });
 VehicleWheel.attributes.add('rollInfluence', {
