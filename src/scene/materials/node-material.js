@@ -8,13 +8,16 @@ import {
     //SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW
  } from '../constants.js';
 
+import { Texture } from '../../graphics/texture.js';
+import { Vec2 } from '../../math/vec2.js';
+import { Vec3 } from '../../math/vec3.js';
+import { Vec4 } from '../../math/vec4.js';
+
 /**
  *
  *
- * @param {object} shaderGraph - shader graph
  * @class
  * @name NodeMaterial
- * @augments ShaderGraphNode
  * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
  * @example
  * // Create a new Node material
@@ -24,15 +27,33 @@ import {
  * // Notify the material that it has been modified
  * material.update();
  */
-var NodeMaterial = function (shaderGraph) {
+var NodeMaterial = function (funcGlsl, declGlsl) {
     Material.call(this);
 
-    this.shaderGraph = shaderGraph;
+    // storage for asset references
+    this._iocVarAssetReferences = [];
+    this._glslAssetReferences = {};
+    this._subGraphAssetReferences = [];
+
+
+    this.iocVars = []; //input, output or constant variables
+
+    if (funcGlsl)
+    {
+        this.customFuncGlsl=funcGlsl;
+        this.customDeclGlsl=declGlsl;
+        this._genIocVars();
+    }
+    else
+    {
+        this.subGraphs = [];
+        this.connections = []; 
+    }
     
     this.shaderVariants = [];
-
-    // this.paramValues=[];
+ 
 };
+
 NodeMaterial.prototype = Object.create(Material.prototype);
 NodeMaterial.prototype.constructor = NodeMaterial;
 
@@ -49,9 +70,14 @@ Object.assign(NodeMaterial.prototype, {
 
         Material.prototype._cloneInternal.call(this, clone);
 
-        clone.shaderGraph = this.shaderGraph;
+        clone.iocVars=this.iocVars.slice(0);
+        clone.subGraphs=this.subGraphs.slice(0);
+        clone.connections=this.connections.slice(0);
 
-        // clone.nodeInputs.copy(this.nodeInputs);
+        clone.customDeclGlsl=this.customDeclGlsl;
+        clone.customFuncGlsl=this.customFuncGlsl;
+
+        clone.shaderVariants=this.shaderVariants.slice(0);
 
         return clone;
     },
@@ -128,7 +154,7 @@ Object.assign(NodeMaterial.prototype, {
             {
                 var options = {
                     skin: !!this.meshInstances[0].skinInstance,
-                    shaderGraph: this.shaderGraph,
+                    shaderGraph: this,
                     pass: passes[i],
                     maxPixelLights: (this.maxPixelLights) ? this.maxPixelLights : 4,
                     maxVertexLights: (this.maxVertexLights) ? this.maxVertexLights : 8
@@ -138,7 +164,424 @@ Object.assign(NodeMaterial.prototype, {
                 this.shaderVariants[passes[i]] = new Shader(device, shaderDefinition);
             }
         }
+    },
+
+    _addIocVar: function (type, name, value) {
+        
+        var iocVar
+        if (value instanceof Texture)
+        {
+            iocVar={type:type, name:name, valueTex:value};
+        }
+        else if (value instanceof Vec4)
+        {
+            iocVar={type:type, name:name, valueVec4:value};
+        }
+        else if (value instanceof Vec3)
+        {
+            iocVar={type:type, name:name, valueVec3:value};
+        }
+        else if (value instanceof Vec2)
+        {
+            iocVar={type:type, name:name, valueVec2:value};
+        }
+        else
+        {
+            iocVar={type:type, name:name, valueFloat:value};
+        }
+
+        this.iocVars.push(iocVar);
+    
+        return iocVar;
+    },
+    
+    addInput: function (type, name, value) {
+        return this._addIocVar(type, 'IN_'+name, value);
+    },
+    
+    addOutput: function (type, name, value) {
+        return this._addIocVar(type, 'OUT_'+name, value);
+    },
+    
+    addConstant: function (type, value) {
+        return this._addIocVar(type, 'CONST_'+type+'_'+this.iocVars.length, value); //create a unique name
+    },
+    
+    _genIocVars: function () {
+        var functionString = this.customFuncGlsl.trim();
+    
+        var head = functionString.split(")")[0];
+        var rettype_funcname = head.split("(")[0];
+        var rettype = rettype_funcname.split(" ")[0];
+        var params = head.split("(")[1].split(",");
+    
+        this.funcName = rettype_funcname.split(" ")[1];
+        // TODO check for function name clashes - maybe replace func name in function string with hash key?
+    
+        if (rettype != "void") {
+            this.addOutput(rettype,'ret');
+            //this.defineOuputGetter(this.outputName[0], 0);
+        }
+    
+        for (var p = 0; p < params.length; p++) {
+            var io_type_name = params[p].split(" ");
+    
+            if (io_type_name[0] === "") io_type_name.shift();
+    
+            if (io_type_name[0] === "out") {
+                this.addOutput(io_type_name[1],io_type_name[2]);
+                //this.defineOuputGetter(this.outputName[this.outputName.length - 1], this.outputName.length - 1);
+            }
+            if (io_type_name[0] === "in") {
+                this.addInput(io_type_name[1],io_type_name[2]);    
+                //this.defineInputSetter(this.inputName[this.inputName.length - 1], this.inputName.length - 1);
+            } else {
+                // unsupported parameter !!! TODO add support for more parameter types?
+            }
+        }
+    },
+    
+    addSubGraph: function (graph) {
+        this.subGraphs.push(graph);
+    
+        return graph;
+    },
+    
+    connectNodeToNode: function (outNodeIndex, outVarName, inNodeIndex, inVarName) {
+        var connection = { outNodeIndex: outNodeIndex, outVarName: outVarName, inNodeIndex: inNodeIndex, inVarName: inVarName };
+    
+        this.connections.push(connection);
+    },
+    
+    connectIocVarToNode: function (iocVarIndex, iocVarName, inNodeIndex, inIndex) {
+        var connection = { iocVarIndex: iocVarIndex, iocVarName: iocVarName, inNodeIndex: inNodeIndex, inVarName: inVarName };
+    
+        this.connections.push(connection);
+    },
+    
+    connectNodeToIocVar: function (outNodeIndex, outIndex, iocVarIndex, iocVarName) {
+        var connection = { outNodeIndex: outNodeIndex, outVarName: outVarName, iocVarIndex: iocVarIndex, iocVarName: iocVarName };
+ 
+        this.connections.push(connection);
+    },
+    
+    _generateSubGraphCall: function (inNames, outNames)
+    {
+        var callString='';
+    
+        for (var name in outNames) 
+        {
+            if (name.startsWith("OUT_ret"))
+            {
+                callString+=outNames[name]+' = ';
+            }
+        }
+
+        callString+=this.name+'_'+this.id+'( ';
+    
+        for (var name in inNames) 
+        {
+            callString+=inNames[name]+', ';
+        };
+    
+        for (var name in outNames) 
+        {
+            if (!name.startsWith("OUT_ret"))
+            {
+                callString+=outNames[name]+', ';
+            }
+        };
+    
+        if (callString.endsWith(', ')) callString=callString.slice(0,-2);
+                
+        callString+=' );\n';
+    
+        return callString;
+    },
+    
+    _getIocVarByName: function (name)
+    {
+        //convienient but not fast - TODO: optimize?
+        return this.iocVars.filter(function(iocVar) { return iocVar.name === name; })[0];
+    },
+
+    generateRootDeclGlsl: function () 
+    {
+        var generatedGlsl='';
+         //run through inputs to declare uniforms
+
+        generatedGlsl+=this.generateFuncGlsl();
+
+    },
+
+    generateRootCallGlsl: function () 
+    {
+        var generatedGlsl='';
+        //run through outputs to declare variables
+        //generate input and output names for function call
+        var inNames;
+        var outNames;
+
+        generatedGlsl+=this._generateSubGraphCall(inNames, outNames);
+
+        //NB the pass (or layer) will decide which output is used and how
+    },
+
+    generateFuncGlsl: function () {
+    
+        var generatedGlsl;
+
+        if (!this.customFuncGlsl && this.subGraphs)
+        {
+            //function head
+            var ret_used=false;
+
+            for (var i=0; i<this.iocVars.length;i++) 
+            {
+                var iocVar = this.iocVars[i];
+                if (iocVar.name.startsWith('OUT_RET'))
+                {
+                    iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
+                    generatedGlsl=iocVar.type+' ';
+                    ret_used = true;
+                }
+            }
+
+            if (ret_used === true)
+            {
+                generatedGlsl+=this.name+'_'+this.id+'( ';
+            }
+            else
+            {
+                generatedGlsl='void '+this.name+'_'+this.id+'( ';
+            }
+    
+            //temporary structures - with temp scope only in parsing function
+            var iocVarNameToIndexMap = [];
+
+            for (var i=0; i<this.iocVars.length;i++) 
+            {
+                var iocVar = this.iocVars[i];
+                if (iocVar.name.startsWith('IN_'))
+                {
+                    iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
+
+                    generatedGlsl+='in '+iocVar.type+' '+iocVar.name+', ';
+                }
+            };
+    
+            for (var i=0; i<this.iocVars.length;i++) 
+            {
+                var iocVar = this.iocVars[i];
+                if (iocVar.name.startsWith('OUT_'))
+                {
+                    if (!iocVar.name.startsWith('OUT_RET'))
+                    {
+                        iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
+                        generatedGlsl+='out '+iocVar.type+' '+iocVar.name+', ';
+                    }
+                }
+            }
+    
+            if (generatedGlsl.endsWith(', ')) generatedGlsl=generatedGlslslice(0,-2);
+                
+            generatedGlsl+=' ) {\n';
+    
+            // constants
+            for (var i=0; i<this.iocVars.length;i++) 
+            {
+                var iocVar = this.iocVars[i];
+                if (iocVar.name.startsWith('CONST_'))
+                {
+                    iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
+
+                    generatedGlsl+=iocVar.type+' '+iocVar.name+' = '+iocVar.value+';\n';
+                }
+            }
+    
+            //temporary structures - with temp scope only in parsing function
+            var tmpVarCounter = 0;
+            var outsgTmpVarMap = [];
+            var insgTmpVarMap = [];
+            var outIocVarTmpVarMap = {};
+            
+            var outsgConnectedsgMap = [];
+            var insgConnectedsgMap = [];
+    
+            //var tmpVarFlag=[];
+    
+            var sgFlag=[];
+            var sgList=[];
+    
+            //create temp vars and graph traversal data
+            for (var i=0; i<this.connections.length; i++) 
+            {
+                var con=this.connections[i];
+    
+                if (con.outNodeIndex && con.inNodeIndex)
+                {
+                    if (!outsgTmpVarMap[con.outNodeIndex]) outsgTmpVarMap[con.outNodeIndex]={};
+    
+                    if (!outsgTmpVarMap[con.outNodeIndex][con.outVarName])
+                    {
+                        var iocVar=this.subGraphs[con.outNodeIndex].getIocVarByName(con.outVarName);  
+
+                        generatedGlsl+=iocVar.type+' '+iocVar.name+'_'+tmpVarCounter+' = '+iocVar.value+';\n';
+                        outsgTmpVarMap[con.outNodeIndex][con.outVarName]=iocVar.name+'_'+tmpVarCounter;
+                        //tmpVarFlag[tmpVarCounter]=0;
+                        tmpVarCounter++;
+                    }
+                    
+                    if (!outsgConnectedsgMap[outsgIndex]) outsgConnectedsgMap[outsgIndex]=[];
+                    outsgConnectedsgMap[outsgIndex].push(con.inNodeIndex);
+    
+                    var insgIndex=con.inNodeIndex;
+                    if (!insgTmpVarMap[insgIndex]) insgTmpVarMap[insgIndex]=[];
+                    
+                    insgTmpVarMap[insgIndex][con.inVarName]=outsgTmpVarMap[outsgIndex][con.outVarName];
+    
+                    if (!insgConnectedsgMap[insgIndex]) insgConnectedsgMap[insgIndex]={};
+                    insgConnectedsgMap[insgIndex][con.inVarName]=con.outNodeIndex;
+                }
+                else if (con.iocVarName && con.inNodeIndex)
+                {
+                    var iocVarName=con.iocVarName;
+                    
+                    var insgIndex=con.inNodeIndex;
+                    if (!insgTmpVarMap[insgIndex]) insgTmpVarMap[insgIndex]=[];
+                    insgTmpVarMap[insgIndex][con.inVarName]=iocVarName;
+                    
+                    sgList.push(insgIndex);
+                    sgFlag[insgIndex]=1; //1 means on the list
+                }       
+                else if (con.outNodeIndex && con.iocVarName)
+                {
+                    var outsgIndex=con.outNodeIndex;
+                    
+                    if (!outsgTmpVarMap[outsgIndex]) outsgTmpVarMap[outsgIndex]={};
+    
+                    if (!outsgTmpVarMap[outsgIndex][con.outVarName])
+                    {
+                        var iocVar=this.subGraphs[con.outNodeIndex].getIocVarByName(con.outVarName);  
+
+                        generatedGlsl+=iocVar.type+' '+iocVar.name+'_'+tmpVarCounter+' = '+iocVar.value+';\n';
+                        outsgTmpVarMap[outsgIndex][con.outVarName]=iocVar.name+'_'+tmpVarCounter;
+                        tmpVarCounter++;
+                    }
+                    
+                    var iocVarName=con.iocVarName;
+                    outIocVarTmpVarMap[iocVarName]=outsgTmpVarMap[outsgIndex][con.outVarName];
+                }    
+            }
+    
+            // sub graph function calls     
+            for (var i=0; i<sgList.length; i++) 
+            {
+                var sgIndex=sgList[i];
+    
+                generatedGlsl+=this.subGraphs[sgIndex]._generateSubGraphCall(insgTmpVarMap[sgIndex], outsgTmpVarMap[sgIndex]);
+    
+                var splicedcount=0;
+                //run through all nodes that connect to this node's outputs and splice in if all dependent nodes are before it on the list
+                for (var n=0; n<outsgConnectedsgMap[sgIndex].length; n++) 
+                {
+                    var consgIndex=outsgConnectedsgMap[sgIndex][n];
+                    if (sgFlag[consgIndex]===0)
+                    {
+                        var depflag=1;
+                        //for (var j=0; j<insgConnectedsgMap[consgIndex].length; j++)
+                        for (const depsgIndex in insgConnectedsgMap[consgIndex])
+                        {
+                            //var depsgIndex=insgConnectedsgMap[consgIndex][j]
+                            if (!(sgFlag[depsgIndex]>0 && sgFlag[depsgIndex]<=(i+splicedcount)))
+                            {
+                                depflag=0;
+                            }
+                        }
+                        if (depflag===1)
+                        {
+                            //sgList.push(consgIndex);
+                            sgList.splice(i+splicedcount,0,consgIndex);
+                            sgFlag[consgIndex]=i+splicedcount+1;
+                            splicedcount++;
+                        }
+                    }
+                }
+            }
+    
+            //output assignment
+            for (var i=0; i<this.iocVars.length;i++) 
+            {
+                var iocVar = this.iocVars[i];
+                if (iocVar.name.startsWith('OUT_') && !iocVar.name.startsWith('OUT_ret'))
+                {
+                    generatedGlsl+=iocVar.name+' = '+outIocVarTmpVarMap[iocVar.name]+';\n';
+                }
+            }
+    
+            generatedGlsl+='}\n';
+        }
+
+        return generatedGlsl;
+    }
+
+});
+
+var shadergraph = {};
+
+shadergraph.textureSample2D = function (texture, uv) {
+    var texSampleNode = new NodeMaterial('void texSample(in sampler2D tex, in vec2 uv, out vec4 rgba, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n rgba=samp;\n color=samp.rgb;\n alpha=samp.a;\n}');
+//    texSampleNode.tex = new ShaderGraphNode('sampler2D', 'tex', texture);
+//    texSampleNode.uv = uv;
+    return texSampleNode;
+};
+
+Object.defineProperty(shadergraph, 'uv0', {
+    get: function () {
+        return new NodeMaterial('vec2 uv0() { return vUv0; }');
     }
 });
 
-export { NodeMaterial };
+shadergraph.customNode = function (f,d) {
+    var customNode = new NodeMaterial(f,d);
+    return customNode;
+};
+
+Object.defineProperty(shadergraph, 'worldPosPS', {
+    get: function () {
+        return new NodeMaterial('vec3 wpPS() { return vPosition; }');
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldNormPS', {
+    get: function () {
+        return new NodeMaterial('vec3 wnPS() { return vNormal; }');
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldPosVS', {
+    get: function () {
+        return new NodeMaterial('vec3 wpVS() { return getWorldPositionNM(); }');
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldNormVS', {
+    get: function () {
+        return new NodeMaterial('vec3 wnVS() { return getWorldNormalNM(); }');
+    }
+});
+
+shadergraph.param = function (type, name, value) {
+//    var paramNode = new NodeMaterial(type, name, value);
+//    return paramNode;
+};
+
+shadergraph.root = function (color, alpha, vertOff) {
+    var rootNode = new NodeMaterial('void root(in vec4 rgba, in vec3 color, in float alpha, in vec3 vertexOffset){}');
+//    rootNode.color = color;
+//    rootNode.alpha = alpha;
+//    rootNode.vertexOffset = vertOff;
+    return rootNode;
+};
+
+export { NodeMaterial, shadergraph };

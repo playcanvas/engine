@@ -93,7 +93,7 @@
             var rootNode = pc.shadergraph.root(texSampleNode.color, texSampleNode.alpha, wobbleVSNode);
 
             //create NodeMaterial
-            var material = new pc.NodeMaterial(rootNode);
+            var material = rootNode;//new pc.NodeMaterial(rootNode); // TODO make this work (create instance of rootNode material)
 
             //assign material to all model meshInstances
             model.meshInstances.forEach(function (meshInstance) {

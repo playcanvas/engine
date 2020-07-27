@@ -8,7 +8,7 @@ import { Texture } from '../../../graphics/texture.js';
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
 import { NodeMaterial } from '../../../scene/materials/node-material.js';
-import { ShaderGraphNode } from '../../../scene/materials/shader-node.js';
+//import { ShaderGraphNode } from '../../../scene/materials/shader-node.js';
 
 /**
  * @private
@@ -39,42 +39,108 @@ JsonNodeMaterialParser.prototype.parse = function (input) {
  */
 JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
-    // initialize material values from the input data
-    // no predefined list of properties - apart from shaderGraph
-    for (var key in data) {
-        var value = data[key];
+    var material_ready=true;
 
-        var isGraph = (key=='shaderGraph');
-
-        var isTexture = (key.indexOf('tex_')===0);
-        var isVec2 = (key.indexOf('vec2_')===0);
-        var isRgb = (key.indexOf('rgb_')===0);
-        var isBoundingbox = (key.indexOf('bb_')===0);
-
-        if (isVec2) {
-            material[key] = new Vec2(value[0], value[1]);
-        } else if (isRgb) {
-            material[key] = new Color(value[0], value[1], value[2]);
-        } else if (isTexture || isGraph) {
-            if (value instanceof Texture || value instanceof ShaderGraphNode) {
-                material[key] = value;
-            } else if (material[key] instanceof Texture && typeof(value) === 'number' && value > 0) {
-                // material already has a texture or graph assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
-                // leave current texture/graph (probably a placeholder) until the asset is loaded
-            } else {
-                material[key] = null;
+    //input or output or constant variables - all node material types have this block
+    for (var i=0;i<data.iocVars.length;i++)
+    {
+        if (data.iocVars[i].valueTex)
+        {
+            if (typeof(data.iocVars[i].valueTex) === 'number' && value > 0)
+            {
+                //texture asset not loaded yet - deal with in node material binder
+                if (!material.iocVars[i].valueTex) 
+                {   
+                    //seems no placeholder is set yet
+                    material_ready = false;
+                }
             }
-        } else if (isBoundingbox) {
-            var center = new Vec3(value.center[0], value.center[1], value.center[2]);
-            var halfExtents = new Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
-            material[key] = new BoundingBox(center, halfExtents);
-        } else {
-            // number, boolean and enum types don't require type creation
-            material[key] = data[key];
+            else
+            {
+                //texture asset loaded - assign
+                Object.assign(material.iocVars[i], data.iocVars[i]);
+            }
+        }
+        else
+        {
+            //assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
+            Object.assign(material.iocVars[i], data.iocVars[i]);
         }
     }
+    
+    if (data.customFuncGlsl)
+    {
+        //this means this is a custom node (often also has a decl shader)
+        if (data.customDeclGlsl)
+        {
+            if (typeof(data.customDeclGlsl) === 'number' && value > 0)
+            {
+                //this means asset is not loaded yet - cannot assign
+                material_ready = false;
+            }
+            else
+            {
+                //shader asset loaded - assign!
+                material.customDeclGlsl=data.customDeclGlsl;
+            }
+        }
 
-    material.update();
+        if (data.customFuncGlsl) 
+        {
+            if (typeof(data.customFuncGlsl) === 'number' && value > 0)
+            {
+                //this means asset is not loaded yet - cannot assign
+                material_ready = false;
+            }
+            else
+            {
+                //shader asset loaded - assign!
+                material.customFuncGlsl=data.customFuncGlsl;
+            }
+        }
+    }
+    else if (data.subGraphs)
+    {
+        // graph node material
+        
+        if (data.connections)
+        {
+            // sub graph connections - only graph node materials have this
+            material.connections=[];
+
+            for (var i=0;i<data.connections.length;i++)
+            {
+                //connections are indices and names - just assign
+                Object.assign(material.connections[i], data.connections[i]);
+            }
+        }
+
+        if (data.subGraphs)
+        {
+            material.subGraphs=[];
+
+            for (var i=0;i<data.subGraphs.length;i++)
+            {
+                if (typeof(data.subGraphs[i]) === 'number' && value > 0)
+                {
+                    //this means sub graph asset is not loaded yet - cannot assign
+                    material_ready = false;
+                }
+                else
+                {
+                    //sub graph asset loaded - assign!
+                    material.subGraphs[i]=data.subGraphs[i];
+                }
+            }
+        }
+    }
+    else
+    {
+        //no custom glsl or sub graphs - this means this is a node material instance
+    }
+
+    //only mark for update if ready dependent assets (with no placeholders) are loaded
+    if (material_ready) material.update();
 };
 
 // convert any properties that are out of date
@@ -89,7 +155,7 @@ JsonNodeMaterialParser.prototype.migrate = function (data) {
 // check for invalid properties
 JsonNodeMaterialParser.prototype._validate = function (data) {
     
-    //no conversion needed (yet)
+    //no validation needed (yet)
 
     return data;
 };

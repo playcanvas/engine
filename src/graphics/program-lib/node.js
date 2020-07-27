@@ -23,7 +23,8 @@ var node = {
         var n;
 
         // generate graph
-        options.shaderGraph.generateShaderGraph();
+        var rootDeclGLSL=options.shaderGraph.generateRootDeclGlsl();
+        var rootCallGLSL=options.shaderGraph.generateRootCallGlsl();
 
         // GENERATE ATTRIBUTES
         var attributes = {
@@ -97,14 +98,14 @@ var node = {
         if (options.shaderGraph) {
             code += "#define MAX_VS_LIGHTS "+Math.floor(options.maxVertexLights)+"\n";
             code += "#define SG_VS\n";
-            code += options.shaderGraph.shaderGraphFuncString;
+            code += rootDeclGLSL;
         }
 
         // VERTEX SHADER BODY
         code += programlib.begin();
 
         if (options.shaderGraph) {
-            code += options.shaderGraph.shaderGraphNodeString;
+            code += rootCallGLSL;
             code += "   vPosition = getWorldPositionNM()+shaderGraphVertexOffset;\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";            
         } else {
@@ -217,7 +218,7 @@ var node = {
             }
             code += "#define MAX_PS_LIGHTS "+Math.floor(options.maxPixelLights)+"\n";
             code += "#define SG_PS\n";
-            code += options.shaderGraph.shaderGraphFuncString;
+            code += rootDeclGLSL;
         }
 //        if (options.nodeInputs.emissiveColor) code += options.nodeInputs.emissiveColor;
 //        if (options.nodeInputs.baseColor) code += options.nodeInputs.baseColor;
@@ -230,7 +231,7 @@ var node = {
         code += programlib.begin();
 
         if (options.shaderGraph) {
-            code += options.shaderGraph.shaderGraphNodeString;
+            code += rootCallGLSL;
         }
         // code += NodeMaterial.generateLightingCode(options);
 

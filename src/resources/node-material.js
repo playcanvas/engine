@@ -3,7 +3,7 @@ import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
 import { Texture } from '../graphics/texture.js';
 
 import { AssetReference } from '../asset/asset-reference.js';
-import { ShaderGraphNode } from '../scene/materials/shader-node.js';
+import { NodeMaterial } from '../scene/materials/node-material.js';
 
 /**
  * @class
@@ -16,11 +16,12 @@ function NodeMaterialBinder(assets, device, parser) {
     this._parser = parser;
 
     this._placeholderGraph = null;
+    this._placeholderGlsl = null;
 
     this._placeholderTextures = null;
 }
 
-Object.assign(NodeMaterialHandler.prototype, {
+Object.assign(NodeMaterialBinder.prototype, {
 
     // creates placeholders for textures and shader graph
     // that are used while texture is loading
@@ -56,12 +57,9 @@ Object.assign(NodeMaterialHandler.prototype, {
             this._placeholderTextures[key].unlock();
         }
 
-        var rootNode = new ShaderGraphNode('void root(in vec4 rgba, in vec3 color, in float alpha, in vec3 vertexOffset){}');
-        rootNode.color = new ShaderGraphNode('vec3 v3_pink() { return vec3(1,0,1); }');
-        rootNode.alpha = new ShaderGraphNode('float f_one() { return 1.0; }');
-        rootNode.vertexOffset = new ShaderGraphNode('vec3 v3_zero() { return vec3(0); }');
+        this._placeholderGraph = new NodeMaterial('vec4 v4_zero() { return vec4(0); }');
 
-        this._placeholderGraph = rootNode;
+        this._placeholderGlsl = 'vec4 v4_zero() { return vec4(0); }';
     },
 
     onAssetUnload: function (asset) {
@@ -71,50 +69,107 @@ Object.assign(NodeMaterialHandler.prototype, {
         delete asset.data.name;
     },
 
-    _assignResource: function (parameterName, materialAsset, resource) {
-        materialAsset.data[parameterName] = resource;
-        materialAsset.resource[parameterName] = resource;
+    _assignTexture: function (iocVarIndex, materialAsset, resource) {
+        materialAsset.data.iocVars[iocVarIndex].valueTex = resource;
+        materialAsset.resource.iocVars[iocVarIndex].valueTex = resource;
     },
+    
+    _assignSubGraph: function (subGraphIndex, materialAsset, resource) {
+        materialAsset.data.subGraphs[subGraphIndex] = resource;
+        materialAsset.resource.subGraphs[subGraphIndex] = resource;
+    },
+
+    _assignGlsl: function (propertyName, materialAsset, resource) {
+        materialAsset.data[propertyName] = resource;
+        materialAsset.resource[propertyName] = resource;
+    },    
 
     // assign a placeholder texture and graph while waiting for one to load
     // placeholder textures and graph do not replace the data[parameterName] value
     // in the asset.data thus preserving the final asset id until it is loaded
-    _assignPlaceholderTexture: function (parameterName, materialAsset) {
-        // create placeholder textures on-demand
-        if (!this._placeholderTextures && !_placeholderGraph) {
+    _assignPlaceholderTexture: function (iocVarIndex, materialAsset) {
+        // create placeholders on-demand
+        if (!this._placeholderTextures) {
             this._createPlaceholders();
         }
 
         var texture = this._placeholderTextures['white'];
 
-        materialAsset.resource[parameterName] = texture;
+        materialAsset.resource.iocVars[iocVarIndex].valueTex = texture;
     },
 
-    _assignPlaceholderGraph: function (parameterName, materialAsset) {
-        // create placeholder textures on-demand
+    _assignPlaceholderSubGraph: function (subGraphIndex, materialAsset) {
+        // create placeholders on-demand
         if (!this._placeholderGraph) {
             this._createPlaceholders();
         }
 
         var graph = this._placeholderGraph;
 
-        materialAsset.resource[parameterName] = graph;
+        materialAsset.resource.subGraphs[subGraphIndex] = graph;
     },
 
-    _onResourceLoad: function (parameterName, materialAsset, textureAsset) {
-        this._assignResource(parameterName, materialAsset, textureAsset.resource);
+    _assignPlaceholderCustomGlsl: function (propertyName, materialAsset) {
+        // create placeholders on-demand
+        if (!this._placeholderGlsl) {
+            this._createPlaceholders();
+        }
+
+        var glsl = this._placeholderGlsl;
+
+        materialAsset.resource[propertyName] = glsl;
+    },
+
+    _onGlslLoad: function (parameterName, materialAsset, glslAsset) {
+        this._assignGlsl(parameterName, materialAsset, glslAsset.resource);
         materialAsset.resource.update();
     },
 
-    _onResourceAdd: function (parameterName, materialAsset, textureAsset) {
+    _onGlslAdd: function (parameterName, materialAsset, glslAsset) {
+        this._assets.load(glslAsset);
+    },
+
+    _onGlslRemove: function (parameterName, materialAsset, glslAsset) {
+        var material = materialAsset.resource;
+
+        if (material[parameterName] === glslAsset.resource) {
+            this._assignGlsl(parameterName, materialAsset, null);
+            material.update();
+        }
+    },
+
+    _onIocVarTexLoad: function (i, materialAsset, textureAsset) {
+        this._assignTexture(i, materialAsset, textureAsset.resource);
+        materialAsset.resource.update();
+    },
+
+    _onIocVarTexAdd: function (i, materialAsset, textureAsset) {
         this._assets.load(textureAsset);
     },
 
-    _onResourceRemove: function (parameterName, materialAsset, textureAsset) {
+    _onIocVarTexRemove: function (i, materialAsset, textureAsset) {
         var material = materialAsset.resource;
 
-        if (material[parameterName] === textureAsset.resource) {
-            this._assignResource(parameterName, materialAsset, null);
+        if (materialAsset.data.iocVars[i].valueTex === textureAsset.resource) {
+            this._assignTexture(i, materialAsset, null);
+            material.update();
+        }
+    },
+
+    _onSubGraphLoad: function (i, materialAsset, subGraphAsset) {
+        this._assignSubGraph(i, materialAsset, subGraphAsset.resource);
+        materialAsset.resource.update();
+    },
+
+    _onSubGraphAdd: function (i, materialAsset, subGraphAsset) {
+        this._assets.load(subGraphAsset);
+    },
+
+    _onSubGraphRemove: function (i, materialAsset, subGraphAsset) {
+        var material = materialAsset.resource;
+
+        if (materialAsset.subGraphs[i] === subGraphAsset.resource) {
+            this._assignSubGraph(i, materialAsset, null);
             material.update();
         }
     },
@@ -127,31 +182,73 @@ Object.assign(NodeMaterialHandler.prototype, {
 
         var pathMapping = (data.mappingFormat === "path");
 
-        var i, name, assetReference;
+        var assetReference;
         
-        for (var prop in data) 
+        //deal with textures (which are only in the iocVars block)
+        for (var i=0;i<data.iocVars.length;i++)
         {
-            name = prop;
-
-            var isTexture = (name.indexOf('tex_')===0);
-            var isShaderGraph = (name==='shaderGraph');
-
-            if (isTexture|| isShaderGraph)
+            if (data.iocVars[i].valueTex)
             {
-                assetReference = material._assetReferences[name];
+                assetReference = material._iocVarAssetReferences[i];
 
-                // data[name] contains an asset id for a texture
-                if ( (isTexture && data[name] && !(data[name] instanceof Texture)) || (isShaderGraph && data[name] && !(data[name] instanceof ShaderNodeGraph)) ) 
+                if (!(data.iocVars[i].valueTex instanceof Texture))
+                {
+                    if (!assetReference) 
+                    {
+                        assetReference = new AssetReference(i, materialAsset, assets, {
+                            load: this._onIocVarTexLoad,
+                            add: this._onIocVarTexAdd,
+                            remove: this._onIocVarTexRemove
+                        }, this);
+                        
+                        material._iocVarAssetReferences[i] = assetReference;
+                    }
+
+                    if (pathMapping) {
+                        // texture paths are measured from the material directory
+                        assetReference.url = materialAsset.getAbsoluteUrl(data.iocVars[i].valueTex);
+                    } else {
+                        assetReference.id = data.iocVars[i].valueTex;
+                    }    
+                    
+                    if (assetReference.asset) 
+                    {
+                        if (assetReference.asset.resource) 
+                        {
+                            // asset is already loaded
+                            this._assignIocVarTex(i, materialAsset, assetReference.asset.resource);
+                        } 
+                        else 
+                        {
+                            //assign placeholder texture
+                            this._assignPlaceholderTexture(i, materialAsset);
+                        }
+                    }
+                }
+            }
+        }
+
+        //custom / built-in shaders
+        var customGlslNames=[customFuncGlsl, customDeclGlsl];
+
+        for (var i=0;i<customGlslNames.length;i++)
+        {
+            var name = customGlslNames[i];
+            if (data[name])
+            {
+                assetReference = material._glslAssetReferences[name];
+
+                if (!(data[name] instanceof String))
                 {
                     if (!assetReference) 
                     {
                         assetReference = new AssetReference(name, materialAsset, assets, {
-                            load: this._onResourceLoad,
-                            add: this._onResourceAdd,
-                            remove: this._onResourceRemove
+                            load: this._onGlslLoad,
+                            add: this._onGlslAdd,
+                            remove: this._onGlslRemove
                         }, this);
                         
-                        material._assetReferences[name] = assetReference;
+                        material._glslAssetReferences[name] = assetReference;
                     }
 
                     if (pathMapping) {
@@ -159,36 +256,64 @@ Object.assign(NodeMaterialHandler.prototype, {
                         assetReference.url = materialAsset.getAbsoluteUrl(data[name]);
                     } else {
                         assetReference.id = data[name];
-                    }
-
-                    if (assetReference.asset) {
-                        if (assetReference.asset.resource) {
+                    }    
+                    
+                    if (assetReference.asset) 
+                    {
+                        if (assetReference.asset.resource) 
+                        {
                             // asset is already loaded
-                            this._assignResource(name, materialAsset, assetReference.asset.resource);
-                        } else {
-                            if (isTexture) 
-                            {   
-                                this._assignPlaceholderTexture(name, materialAsset);
-                            }
-                            else
-                            {
-                                this._assignPlaceholderGraph(name, materialAsset);
-                            }
+                            this._assignCustomGlsl(name, materialAsset, assetReference.asset.resource);
+                        } 
+                        else 
+                        {
+                            //assign placeholder glsl
+                            this._assignPlaceholderCustomGlsl(name, materialAsset);
                         }
-
-                        assets.load(assetReference.asset);
                     }
-                } else {
-                    if (assetReference) {
-                        // texture has been removed
-                        if (pathMapping) {
-                            assetReference.url = null;
-                        } else {
-                            assetReference.id = null;
-                        }
+                }           
+            }
+        }
+
+        //deal with sub graphs 
+        for (var i=0;i<data.subGraphs.length;i++)
+        {
+            if (data.subGraphs[i])
+            {
+                assetReference = material._subGraphAssetReferences[i];
+
+                if (!(data.subGraphs[i] instanceof NodeMaterial))
+                {
+                    if (!assetReference) 
+                    {
+                        assetReference = new AssetReference(i, materialAsset, assets, {
+                            load: this._onSubGraphLoad,
+                            add: this._onSubGraphAdd,
+                            remove: this._onSubGraphRemove
+                        }, this);
+                        
+                        material._subGraphAssetReferences[i] = assetReference;
+                    }
+
+                    if (pathMapping) {
+                        // texture paths are measured from the material directory
+                        assetReference.url = materialAsset.getAbsoluteUrl(data.subGraphs[i]);
                     } else {
-                        // no asset reference and no data field
-                        // do nothing
+                        assetReference.id = data.subGraphs[i];
+                    }    
+                    
+                    if (assetReference.asset) 
+                    {
+                        if (assetReference.asset.resource) 
+                        {
+                            // asset is already loaded
+                            this._assignSubGraph(i, materialAsset, assetReference.asset.resource);
+                        } 
+                        else 
+                        {
+                            //assign placeholder texture
+                            this._assignPlaceholderSubGraph(i, materialAsset);
+                        }
                     }
                 }
             }
