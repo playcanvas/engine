@@ -145,6 +145,7 @@ Object.assign(StandardMaterialBinder.prototype, {
         this._assets.load(cubemapAsset);
     },
 
+    
     _onCubemapRemove: function (parameterName, materialAsset, cubemapAsset) {
         var material = materialAsset.resource;
 
@@ -242,7 +243,7 @@ Object.assign(StandardMaterialBinder.prototype, {
                 }
 
                 if (assetReference.asset) {
-                    if (assetReference.asset.resource) {
+                    if (assetReference.asset.loaded) {
                         // asset loaded
                         this._assignCubemap(name, materialAsset, assetReference.asset.resources);
                     }
