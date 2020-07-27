@@ -480,7 +480,6 @@ Object.assign(ScriptComponent.prototype, {
                 }
             }
 
-            
             newAttributes[attributeName] = newGuidArray;
         } else {
             // handle regular entity attribute
@@ -792,6 +791,7 @@ Object.assign(ScriptComponent.prototype, {
      */
     resolveDuplicatedEntityReferenceProperties: function (oldScriptComponent, duplicatedIdsMap) {
         var newScriptComponent = this.entity.script;
+        var i, j;
 
         // for each script in the old compononent
         for (var scriptName in oldScriptComponent._scriptsIndex) {
@@ -837,9 +837,9 @@ Object.assign(ScriptComponent.prototype, {
                 if (attribute.type === 'entity') {
                     // entity attributes
                     this._resolveEntityScriptAttribute(
-                        attribute, 
-                        attributeName, 
-                        oldAttributes[attributeName], 
+                        attribute,
+                        attributeName,
+                        oldAttributes[attributeName],
                         useGuid,
                         newAttributesRaw || newAttributes,
                         duplicatedIdsMap
@@ -851,21 +851,21 @@ Object.assign(ScriptComponent.prototype, {
                     if (attribute.array) {
                         newJsonValue = oldValue.slice();
 
-                        for (var j = 0; j < oldValue.length; j++) {
+                        for (j = 0; j < oldValue.length; j++) {
                             newJsonValue[j] = Object.assign({}, oldValue[j]);
                         }
                     } else {
                         newJsonValue = Object.assign({}, oldValue);
                     }
 
-                    for (var i = 0; i < attribute.schema.length; i++) {
+                    for (i = 0; i < attribute.schema.length; i++) {
                         var field = attribute.schema[i];
                         if (field.type !== 'entity') {
                             continue;
                         }
 
                         if (attribute.array) {
-                            for (var j = 0; j < oldValue.length; j++) {
+                            for (j = 0; j < oldValue.length; j++) {
                                 this._resolveEntityScriptAttribute(
                                     field,
                                     field.name,
@@ -876,7 +876,7 @@ Object.assign(ScriptComponent.prototype, {
                                 );
                             }
 
-                            
+
                         } else {
                             this._resolveEntityScriptAttribute(
                                 field,
