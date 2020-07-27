@@ -7,11 +7,12 @@ import {
     ANIM_STATE_START, ANIM_STATE_END
 } from './constants.js';
 
-function AnimState(controller, name, speed) {
+function AnimState(controller, name, speed, loop) {
     this._controller = controller;
     this._name = name;
     this._animations = [];
     this._speed = speed || 1.0;
+    this._loop = loop === undefined ? true : loop;
 }
 
 Object.defineProperties(AnimState.prototype, {
@@ -31,6 +32,11 @@ Object.defineProperties(AnimState.prototype, {
     speed: {
         get: function () {
             return this._speed;
+        }
+    },
+    loop: {
+        get: function () {
+            return this._loop;
         }
     },
     playable: {
@@ -177,7 +183,8 @@ function AnimController(animEvaluator, states, transitions, parameters, activate
         this._states[states[i].name] = new AnimState(
             this,
             states[i].name,
-            states[i].speed
+            states[i].speed,
+            states[i].loop
         );
         this._stateNames.push(states[i].name);
     }
@@ -267,6 +274,36 @@ Object.defineProperties(AnimController.prototype, {
     activeStateProgress: {
         get: function () {
             return this._getActiveStateProgressForTime(this._timeInState);
+        }
+    },
+    activeStateDuration: {
+        get: function () {
+            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+                return 0.0;
+
+            var maxDuration = 0.0;
+            for (var i = 0; i < this.activeState.animations.length; i++) {
+                var activeClip = this._animEvaluator.findClip(this.activeState.animations[i].name);
+                if (activeClip && activeClip.track.duration > maxDuration) {
+                    maxDuration = activeClip.track.duration;
+                }
+            }
+            return maxDuration;
+        }
+    },
+    activeStateCurrentTime: {
+        get: function () {
+            return this._timeInState;
+        },
+        set: function (time) {
+            this._timeInStateBefore = time;
+            this._timeInState = time;
+            for (var i = 0; i < this.activeState.animations.length; i++) {
+                var clip = this.animEvaluator.findClip(this.activeState.animations[i].name);
+                if (clip) {
+                    clip.time = time;
+                }
+            }
         }
     },
     transitioning: {
@@ -475,7 +512,7 @@ Object.assign(AnimController.prototype, {
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, true);
+                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, activeState.loop);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             }

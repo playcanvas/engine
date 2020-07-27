@@ -164,6 +164,33 @@ Object.defineProperties(AnimComponentLayer.prototype, {
     /**
      * @private
      * @readonly
+     * @name pc.AnimComponentLayer#activeStateDuration
+     * @type {number}
+     * @description Returns the currently active states duration.
+     */
+    activeStateDuration: {
+        get: function () {
+            return this._controller.activeStateDuration;
+        }
+    },
+    /**
+     * @private
+     * @readonly
+     * @name pc.AnimComponentLayer#activeStateCurrentTime
+     * @type {number}
+     * @description The active states time in seconds
+     */
+    activeStateCurrentTime: {
+        get: function () {
+            return this._controller.activeStateCurrentTime;
+        },
+        set: function (time) {
+            this._controller.activeStateCurrentTime = time;
+        }
+    },
+    /**
+     * @private
+     * @readonly
      * @name pc.AnimComponentLayer#transitioning
      * @type {boolean}
      * @description Returns whether the anim component layer is currently transitioning between states.
