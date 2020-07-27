@@ -71,7 +71,8 @@ var categories = [
         examples: [
             "compound-collision",
             "falling-shapes",
-            "raycast"
+            "raycast",
+            "vehicle"
         ]
     }, {
         name: "sound",
@@ -82,6 +83,7 @@ var categories = [
         name: "user-interface",
         examples: [
             "button-basic",
+            "button-particle",
             "button-sprite",
             "text-basic",
             "text-canvas-font",

@@ -64,8 +64,8 @@ Object.assign(MaterialHandler.prototype, {
         }
         else
         {
-            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser();
-            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonStandardMaterialParser();
+            if (!this._binders[subclass]) this._binders[subclass] = new StandardMaterialBinder(this._assets, this._device, this._parsers[subclass]);
 
         }
 
@@ -105,7 +105,7 @@ Object.assign(MaterialHandler.prototype, {
 
         asset.off('unload', this._binders[subclass].onAssetUnload, this);
         asset.on('unload', this._binders[subclass].onAssetUnload, this);
-    },
+    }
 
 });
 

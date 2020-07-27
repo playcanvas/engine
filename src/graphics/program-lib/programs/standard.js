@@ -1,12 +1,12 @@
-import { hashCode } from '../../core/hash.js';
+import { hashCode } from '../../../core/hash.js';
 
 import {
-    SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_ATTR5, SEMANTIC_ATTR6, SEMANTIC_ATTR7,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL
-} from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+} from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -18,9 +18,9 @@ import {
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
-} from '../../scene/constants.js';
+} from '../../../scene/constants.js';
 
-import { programlib } from './program-lib.js';
+import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
@@ -681,7 +681,7 @@ var standard = {
                 }
 
                 // vertex ids attributes
-                attributes.morph_vertex_id = SEMANTIC_ATTR0;
+                attributes.morph_vertex_id = SEMANTIC_ATTR15;
                 code += "attribute float morph_vertex_id;\n";
 
             } else {
@@ -691,10 +691,10 @@ var standard = {
 
                 // first 4 slots are either position or normal
                 if (options.useMorphPosition) {
-                    attributes.morph_pos0 = SEMANTIC_ATTR0;
-                    attributes.morph_pos1 = SEMANTIC_ATTR1;
-                    attributes.morph_pos2 = SEMANTIC_ATTR2;
-                    attributes.morph_pos3 = SEMANTIC_ATTR3;
+                    attributes.morph_pos0 = SEMANTIC_ATTR8;
+                    attributes.morph_pos1 = SEMANTIC_ATTR9;
+                    attributes.morph_pos2 = SEMANTIC_ATTR10;
+                    attributes.morph_pos3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_POS03\n";
                     code += "attribute vec3 morph_pos0;\n";
@@ -703,10 +703,10 @@ var standard = {
                     code += "attribute vec3 morph_pos3;\n";
 
                 } else if (options.useMorphNormal) {
-                    attributes.morph_nrm0 = SEMANTIC_ATTR0;
-                    attributes.morph_nrm1 = SEMANTIC_ATTR1;
-                    attributes.morph_nrm2 = SEMANTIC_ATTR2;
-                    attributes.morph_nrm3 = SEMANTIC_ATTR3;
+                    attributes.morph_nrm0 = SEMANTIC_ATTR8;
+                    attributes.morph_nrm1 = SEMANTIC_ATTR9;
+                    attributes.morph_nrm2 = SEMANTIC_ATTR10;
+                    attributes.morph_nrm3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_NRM03\n";
                     code += "attribute vec3 morph_nrm0;\n";
@@ -717,10 +717,10 @@ var standard = {
 
                 // next 4 slots are either position or normal
                 if (!options.useMorphNormal) {
-                    attributes.morph_pos4 = SEMANTIC_ATTR4;
-                    attributes.morph_pos5 = SEMANTIC_ATTR5;
-                    attributes.morph_pos6 = SEMANTIC_ATTR6;
-                    attributes.morph_pos7 = SEMANTIC_ATTR7;
+                    attributes.morph_pos4 = SEMANTIC_ATTR12;
+                    attributes.morph_pos5 = SEMANTIC_ATTR13;
+                    attributes.morph_pos6 = SEMANTIC_ATTR14;
+                    attributes.morph_pos7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_POS47\n";
                     code += "attribute vec3 morph_pos4;\n";
@@ -728,10 +728,10 @@ var standard = {
                     code += "attribute vec3 morph_pos6;\n";
                     code += "attribute vec3 morph_pos7;\n";
                 } else {
-                    attributes.morph_nrm4 = SEMANTIC_ATTR4;
-                    attributes.morph_nrm5 = SEMANTIC_ATTR5;
-                    attributes.morph_nrm6 = SEMANTIC_ATTR6;
-                    attributes.morph_nrm7 = SEMANTIC_ATTR7;
+                    attributes.morph_nrm4 = SEMANTIC_ATTR12;
+                    attributes.morph_nrm5 = SEMANTIC_ATTR13;
+                    attributes.morph_nrm6 = SEMANTIC_ATTR14;
+                    attributes.morph_nrm7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_NRM47\n";
                     code += "attribute vec3 morph_nrm4;\n";
@@ -745,7 +745,7 @@ var standard = {
         if (options.skin) {
             attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += programlib.skinCode(device, chunks);
+            code += skinCode(device, chunks);
             code += "#define SKIN\n";
         } else if (options.useInstancing) {
             code += "#define INSTANCING\n";
@@ -786,7 +786,7 @@ var standard = {
 
         var startCode = "";
         if (device.webgl2) {
-            startCode = programlib.versionCode(device);
+            startCode = versionCode(device);
             if (chunks.extensionVS) {
                 startCode += chunks.extensionVS + "\n";
             }
@@ -812,7 +812,7 @@ var standard = {
         code = '';
 
         if (device.webgl2) {
-            code += programlib.versionCode(device);
+            code += versionCode(device);
         }
 
         if (device.extStandardDerivatives && !device.webgl2) {
@@ -826,7 +826,7 @@ var standard = {
             code += chunks.gles3PS;
         }
 
-        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : programlib.precisionCode(device);
+        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : precisionCode(device);
 
         if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
@@ -837,13 +837,13 @@ var standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += programlib.begin();
+            code += begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = uColor;\n";
-            code += programlib.end();
+            code += end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -860,13 +860,13 @@ var standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += programlib.begin();
+            code += begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = packFloat(vDepth);\n";
-            code += programlib.end();
+            code += end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -917,7 +917,7 @@ var standard = {
                 code += "}\n\n";
             }
 
-            code += programlib.begin();
+            code += begin();
 
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
@@ -948,7 +948,7 @@ var standard = {
                 code += chunks.storeEVSMPS;
             }
 
-            code += programlib.end();
+            code += end();
 
             return {
                 attributes: attributes,
@@ -1085,9 +1085,9 @@ var standard = {
             }
         }
 
-        code += programlib.gammaCode(options.gamma, chunks);
-        code += programlib.tonemapCode(options.toneMap, chunks);
-        code += programlib.fogCode(options.fog, chunks);
+        code += gammaCode(options.gamma, chunks);
+        code += tonemapCode(options.toneMap, chunks);
+        code += fogCode(options.fog, chunks);
 
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
@@ -1556,7 +1556,7 @@ var standard = {
         }
 
         code += "\n";
-        code += programlib.end();
+        code += end();
 
         if (hasPointLights) {
             code = chunks.lightDirPointPS + code;

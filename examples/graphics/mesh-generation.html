@@ -132,7 +132,7 @@
             }
 
             // Let mesh update Vertex and Index buffer as needed
-            self.mesh.update(pc.PRIMITIVE_TRIANGLES);
+            mesh.update(pc.PRIMITIVE_TRIANGLES);
         }
 
         // Create a mesh with dynamic vertex buffer and static index buffer
@@ -181,11 +181,12 @@
 
             // Move the lights along circles, also keep separate list of their position for faster update in next block of code
             var lightPositions = [];
-            lights.forEach(element => {
+            for (var l = 0; l < lights.length; l++) {
+                var element = lights[l];
                 var lightPos = new pc.Vec2(element.radius * Math.sin(time * element.speed), element.radius * Math.cos(time * element.speed));
                 lightPositions.push(lightPos);
                 element.light.setLocalPosition(lightPos.x, 3, lightPos.y);
-            });
+            }
 
             // animate .y coordinate of grid vertices by moving them up when lights are close
             var index = 0;

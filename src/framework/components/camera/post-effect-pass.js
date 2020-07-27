@@ -1,8 +1,9 @@
 import { Vec4 } from '../../../math/vec4.js';
 
+import { shaderChunks } from '../../../graphics/program-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../../graphics/program-lib/utils.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F } from '../../../graphics/graphics.js';
 import { drawQuadWithShader } from '../../../graphics/simple-post-effect.js';
-import { shaderChunks } from '../../../graphics/chunks.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -335,10 +336,10 @@ function PostEffectPass(app, options) {
                                     mainCode += "main" + j + "();\n";
                                 }
                                 mainCode += "gl_FragColor = shaderOutput;\n}\n";
-                                shader = shaderChunks.createShaderFromCode(device,
-                                                                           shaderChunks.fullscreenQuadVS,
-                                                                           code + mainCode,
-                                                                           cachedName);
+                                shader = createShaderFromCode(device,
+                                                              shaderChunks.fullscreenQuadVS,
+                                                              code + mainCode,
+                                                              cachedName);
                                 // #ifdef DEBUG
                                 console.log("Combined " + cachedName);
                                 // #endif

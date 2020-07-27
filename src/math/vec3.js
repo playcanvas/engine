@@ -574,4 +574,13 @@ Object.defineProperties(Vec3, {
     BACK: { value: new Vec3(0, 0, 1) }
 });
 
+Object.freeze(Vec3.ZERO);
+Object.freeze(Vec3.ONE);
+Object.freeze(Vec3.UP);
+Object.freeze(Vec3.DOWN);
+Object.freeze(Vec3.RIGHT);
+Object.freeze(Vec3.LEFT);
+Object.freeze(Vec3.FORWARD);
+Object.freeze(Vec3.BACK);
+
 export { Vec3 };

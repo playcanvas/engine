@@ -224,4 +224,7 @@ Object.defineProperties(Mat3, {
     IDENTITY: { value: new Mat3() }
 });
 
+Object.freeze(Mat3.ZERO);
+Object.freeze(Mat3.IDENTITY);
+
 export { Mat3 };

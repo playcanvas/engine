@@ -1,5 +1,3 @@
-import { type } from '../core/core.js';
-
 import { CURVE_SMOOTHSTEP } from './constants.js';
 import { Curve } from './curve.js';
 import { CurveEvaluator } from './curve-evaluator.js';
@@ -27,7 +25,7 @@ function CurveSet() {
             this.curves.push(new Curve());
         } else {
             var arg = arguments[0];
-            if (type(arg) === 'number') {
+            if (typeof arg === 'number') {
                 for (i = 0; i < arg; i++) {
                     this.curves.push(new Curve());
                 }

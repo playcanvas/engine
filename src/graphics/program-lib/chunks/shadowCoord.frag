@@ -3,7 +3,7 @@ void _getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams, vec3 wPos) {
     dShadowCoord.z = saturate(dShadowCoord.z) - 0.0001;
 
     #ifdef SHADOWBIAS
-        dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
     #endif
 }
 
@@ -14,7 +14,7 @@ void _getShadowCoordPersp(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
     dShadowCoord.z = length(dLightDirW) * shadowParams.w;
 
     #ifdef SHADOWBIAS
-        dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
     #endif
 }
 
@@ -38,4 +38,3 @@ void getShadowCoordOrthoNormalOffset(mat4 shadowMatrix, vec3 shadowParams) {
 
     _getShadowCoordOrtho(shadowMatrix, shadowParams, wPos);
 }
-

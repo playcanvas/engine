@@ -321,6 +321,7 @@ Material.prototype.updateShader = function (device, scene, objDefs) {
  */
 Material.prototype.update = function () {
     this.dirty = true;
+    if (this._shader) this._shader.failed = false;
 };
 
 // Parameter management
