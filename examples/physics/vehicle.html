@@ -139,13 +139,22 @@
                 type: 'box',
                 halfExtents: [0.6, 0.35, 1.65]
             });
-            chassis.setLocalPosition(0, 0.65, -0.05);
+            chassis.setLocalPosition(0, 0.65, 0);
+
+            // Create the car chassis, offset upwards in Y from the compound body
+            var cab = new pc.Entity('Cab');
+            cab.addComponent('collision', {
+                type: 'box',
+                halfExtents: [0.5, 0.2, 1]
+            });
+            cab.setLocalPosition(0, 1.2, -0.25);
 
             // Add the vehicle to the hierarchy
             wheels.forEach(function (wheel) {
                 vehicle.addChild(wheel);
             });
             vehicle.addChild(chassis);
+            vehicle.addChild(cab);
             app.root.addChild(vehicle);
 
             // Build a wall of blocks for the car to smash through
@@ -186,7 +195,7 @@
                     target: vehicle
                 }
             });
-            camera.translate(0, 10, 25);
+            camera.translate(0, 10, 15);
             camera.lookAt(0, 0, 0);
             app.root.addChild(camera);
 

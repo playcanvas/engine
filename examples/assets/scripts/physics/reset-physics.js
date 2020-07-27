@@ -1,7 +1,7 @@
 var ResetPhysics = pc.createScript('resetPhysics');
 
 // initialize code called once per entity
-ResetPhysics.prototype.postInitialize = function() {
+ResetPhysics.prototype.postInitialize = function () {
     // Record the start state of all dynamic rigid bodies
     this.bodies = [];
     this.app.root.findComponents('rigidbody').forEach(function (bodyComponent) {
@@ -16,7 +16,7 @@ ResetPhysics.prototype.postInitialize = function() {
 };
 
 // update code called every frame
-ResetPhysics.prototype.update = function(dt) {
+ResetPhysics.prototype.update = function (dt) {
     if (this.app.keyboard.wasPressed(pc.KEY_R)) {
         this.bodies.forEach(function (body) {
             // Reset all dynamic bodies to their initial state

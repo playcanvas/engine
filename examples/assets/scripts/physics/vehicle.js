@@ -120,6 +120,10 @@ Vehicle.prototype.update = function (dt) {
     var vehicle = this.vehicle;
     var i;
 
+    var body = this.entity.rigidbody.body;
+    var DISABLE_DEACTIVATION = 4;
+    body.setActivationState(DISABLE_DEACTIVATION);
+
     // Apply steering to the front wheels
     vehicle.setSteeringValue(this.steering, 0);
     vehicle.setSteeringValue(this.steering, 1);
@@ -180,7 +184,7 @@ VehicleWheel.attributes.add('suspensionCompression', {
 });
 VehicleWheel.attributes.add('suspensionRestLength', {
     type: 'number',
-    default: 0.2,
+    default: 0.4,
     title: 'Suspension Rest Length'
 });
 VehicleWheel.attributes.add('rollInfluence', {
