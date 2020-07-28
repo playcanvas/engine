@@ -308,7 +308,7 @@ XrHand.prototype.update = function (frame) {
     var j6 = this._jointsById[XRHand.INDEX_PHALANX_PROXIMAL];
     var j9 = this._jointsById[XRHand.INDEX_PHALANX_TIP];
     var j16 = this._jointsById[XRHand.RING_PHALANX_PROXIMAL];
-    var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];;
+    var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];
 
     // ray
     if (j1 && j4 && j6 && j9 && j16 && j21) {
