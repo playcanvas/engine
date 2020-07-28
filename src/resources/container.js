@@ -9,7 +9,7 @@ import { GlbParser } from './parser/glb-parser.js';
 /**
  * @class
  * @name pc.ContainerResource
- * @classdesc Container for a list of animations, images, textures, materials, models, nodes, scenes, default scene
+ * @classdesc Container for a list of animations, textures, materials, models, nodes, scenes, default scene
  * cameras and lights. Entities in scene hierarchies will have model, camera and light components attached to them.
  * Animation components have to be added manually (using nodeAnimations) as either pc.AnimComponent or pc.AnimationComponent.
  * @param {object} data - The loaded GLB data.
@@ -20,7 +20,6 @@ import { GlbParser } from './parser/glb-parser.js';
  * @property {pc.Entity[]} nodes Entities indexed by GLB nodes.
  * @property {pc.Asset[]} materials Material assets indexed by GLB materials.
  * @property {pc.Asset[]} textures Texture assets indexed by GLB textures.
- * @property {pc.Asset[]} images Texture assets indexed by GLB images.
  * @property {pc.Asset[]} animations Animation assets indexed by GLB animations.
  * @property {number[][]} nodeAnimations Animation asset indices indexed by GLB nodes.
  * @property {pc.Asset[]} models Model assets indexed by GLB meshes.
@@ -35,7 +34,6 @@ function ContainerResource(data) {
     this.nodes = [];
     this.materials = [];
     this.textures = [];
-    this.images = [];
     this.animations = [];
     this.nodeAnimations = [];
     this.models = [];
@@ -109,10 +107,8 @@ Object.assign(ContainerResource.prototype, {
             this._nodeModels = null;
         }
 
-        if (this.images) {
-            // This will destroy all textures as well, since they are a subset of images
-            destroyAssets(this.images);
-            this.images = null;
+        if (this.textures) {
+            destroyAssets(this.textures);
             this.textures = null;
         }
 
@@ -145,6 +141,7 @@ Object.assign(ContainerResource.prototype, {
  * | camera      |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
+ * | image       |      x      |             |      x      |      x      |
  * | texture     |      x      |             |      x      |      x      |
  * | buffer      |      x      |             |      x      |      x      |
  * | bufferView  |      x      |             |      x      |      x      |
@@ -281,7 +278,6 @@ Object.assign(ContainerHandler.prototype, {
         container.nodes = data.nodes;
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created in parser
-        container.images = data.images;             // texture assets are created in parser
         container.animations = animationAssets;
         container.nodeAnimations = data.nodeAnimations;
         container.models = modelAssets;
