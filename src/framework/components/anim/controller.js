@@ -44,11 +44,6 @@ Object.defineProperties(AnimState.prototype, {
             return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
         }
     },
-    loop: {
-        get: function () {
-            return this._loop;
-        }
-    },
     looping: {
         get: function () {
             if (this.animations.length > 0) {
