@@ -84,7 +84,7 @@ Object.assign(NodeMaterial.prototype, {
 
     updateUniforms: function () {
         this.clearParameters();
-
+/*
         for (var n = 0; n < this.shaderGraph.params.length; n++) {
             // if (!this.paramValues[n])
             // {
@@ -104,7 +104,7 @@ Object.assign(NodeMaterial.prototype, {
                     // error
                     break;
             }
-        }
+        }*/
     },
 
     updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights)
@@ -215,7 +215,7 @@ Object.assign(NodeMaterial.prototype, {
         var rettype = rettype_funcname.split(" ")[0];
         var params = head.split("(")[1].split(",");
     
-        this.funcName = rettype_funcname.split(" ")[1];
+        this.name = rettype_funcname.split(" ")[1];
         // TODO check for function name clashes - maybe replace func name in function string with hash key?
     
         if (rettype != "void") {
@@ -276,9 +276,15 @@ Object.assign(NodeMaterial.prototype, {
                 callString+=outNames[name]+' = ';
             }
         }
+        if (this.customFuncGlsl) 
+        {
+            callString+=this.name+'( ';
+        }
+        else
+        {
+            callString+=this.name+'_'+this.id+'( ';
+        }
 
-        callString+=this.name+'_'+this.id+'( ';
-    
         for (var name in inNames) 
         {
             callString+=inNames[name]+', ';
@@ -308,31 +314,61 @@ Object.assign(NodeMaterial.prototype, {
     generateRootDeclGlsl: function () 
     {
         var generatedGlsl='';
-         //run through inputs to declare uniforms
+        //run through inputs to declare uniforms - (default) values are set elsewhere
+        for (var i=0; i<this.iocVars.length;i++) 
+        {
+            var iocVar = this.iocVars[i];
+            if (iocVar.name.startsWith('IN_'))
+            {
+                generatedGlsl += 'uniform ' + iocVar.type + ' ' + iocVar.name + ';\n';
+            }
+        }
 
-        generatedGlsl+=this.generateFuncGlsl();
+        generatedGlsl+=this._generateFuncGlsl();
 
+        return generatedGlsl;
     },
 
     generateRootCallGlsl: function () 
     {
         var generatedGlsl='';
-        //run through outputs to declare variables
-        //generate input and output names for function call
-        var inNames;
-        var outNames;
+        
+        //generate input and output names for function call and run through outputs to declare variables
+        var inNames = {};
+        var outNames = {};
+
+        for (var i=0; i<this.iocVars.length;i++) 
+        {
+            var iocVar = this.iocVars[i];
+            if (iocVar.name.startsWith('IN_'))
+            {
+                inNames[iocVar.name]=iocVar.name;
+            }
+            if (iocVar.name.startsWith('OUT_'))
+            {
+                generatedGlsl += iocVar.type + ' ' + iocVar.name + ';\n';
+                outNames[iocVar.name]=iocVar.name;
+            }
+        }
 
         generatedGlsl+=this._generateSubGraphCall(inNames, outNames);
 
+        return generatedGlsl;
         //NB the pass (or layer) will decide which output is used and how
     },
 
-    generateFuncGlsl: function () {
+    _generateFuncGlsl: function () {
     
         var generatedGlsl;
 
-        if (!this.customFuncGlsl && this.subGraphs)
+        if (this.customFuncGlsl) 
         {
+            //custom and built-in
+            generatedGlsl = this.customFuncGlsl.trim();
+        }
+        else if (this.subGraphs) 
+        {
+            //graph
             //function head
             var ret_used=false;
 
@@ -387,15 +423,32 @@ Object.assign(NodeMaterial.prototype, {
                 
             generatedGlsl+=' ) {\n';
     
-            // constants
+            //run through constants values are set here (except for textures - which have to be uniforms)
             for (var i=0; i<this.iocVars.length;i++) 
             {
                 var iocVar = this.iocVars[i];
                 if (iocVar.name.startsWith('CONST_'))
                 {
-                    iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
-
-                    generatedGlsl+=iocVar.type+' '+iocVar.name+' = '+iocVar.value+';\n';
+                    if (iocVar.valueTex)
+                    {
+                        generatedGlsl += 'uniform ' + iocVar.type + ' ' + iocVar.name + ';\n';
+                    }
+                    else if (iocVar.valueFloat)
+                    {
+                        generatedGlsl += iocVar.type + ' ' + iocVar.name + ' = float('+ iocVar.valueFloat +');\n';
+                    }
+                    else if (iocVar.valueVec2)
+                    {
+                        generatedGlsl += iocVar.type + ' ' + iocVar.name + ' = float('+ iocVar.valueVec2[0] +', ' + iocVar.valueVec2[1] +');\n';
+                    }                
+                    else if (iocVar.valueVec3)
+                    {
+                        generatedGlsl += iocVar.type + ' ' + iocVar.name + ' = float('+ iocVar.valueVec3[0] +', ' + iocVar.valueVec3[1] +', ' + iocVar.valueVec3[2] +');\n';
+                    }        
+                    else if (iocVar.valueVec4)
+                    {
+                        generatedGlsl += iocVar.type + ' ' + iocVar.name + ' = float('+ iocVar.valueVec4[0] +', ' + iocVar.valueVec4[1] +', ' + iocVar.valueVec4[2] +', ' + iocVar.valueVec4[3] +');\n';
+                    }                                        
                 }
             }
     

@@ -1,13 +1,14 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
-} from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+} from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
  //import {
  //   SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW
  //} from '../../scene/constants.js';
 
-import { programlib } from './program-lib.js';
+//import { programlib } from './program-lib.js';
+import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
 
 var node = {
     generateKey: function (options) {
@@ -47,7 +48,7 @@ var node = {
         code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += programlib.skinCode(device);
+            code += skinCode(device);
             code += chunks.transformSkinnedVS;
         } else {
             code += chunks.transformVS;
@@ -88,9 +89,11 @@ var node = {
      //     code += 'uniform vec4 camera_params;\n\n';
      //     code += '#endif\n';
      // }
-        for (n = 0; n < options.shaderGraph.params.length; n++) {
-            code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
-        }
+     /*   if (options.shaderGraph) {
+            for (n = 0; n < options.shaderGraph.params.length; n++) {
+                code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
+            }
+        }*/
 
         code += 'vec3 getWorldPositionNM(){return (getModelMatrix()*vec4(vertex_position, 1.0)).xyz;}\n';
         code += 'vec3 getWorldNormalNM(){return (getModelMatrix()*vec4(vertex_normal, 0.0)).xyz;}\n';
@@ -102,7 +105,7 @@ var node = {
         }
 
         // VERTEX SHADER BODY
-        code += programlib.begin();
+        code += begin();
 
         if (options.shaderGraph) {
             code += rootCallGLSL;
@@ -142,13 +145,13 @@ var node = {
 
         code += '   calcVertexLightingVS(vPosition, vNormal);\n';
 
-        code += programlib.end();
+        code += end();
 
         var vshader = code;
 
         var startCode = "";
         if (device.webgl2) {
-            startCode = programlib.versionCode(device);
+            startCode = versionCode(device);
             if (chunks.extensionVS) {
                 startCode += chunks.extensionVS + "\n";
             }
@@ -174,7 +177,7 @@ var node = {
         code = '';
 
         if (device.webgl2) {
-            code += programlib.versionCode(device);
+            code += versionCode(device);
         }
 
         if (device.extStandardDerivatives && !device.webgl2) {
@@ -188,7 +191,7 @@ var node = {
             code += chunks.gles3PS;
         }
 
-        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : programlib.precisionCode(device);
+        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
 
@@ -200,7 +203,7 @@ var node = {
         code += 'varying vec2 vUv0;\n';
 
         if (options.fog) {
-            code += programlib.fogCode(options.fog);
+            code += fogCode(options.fog);
         }
         if (options.alphatest) {
             code += chunks.alphaTestPS;
@@ -213,9 +216,9 @@ var node = {
         // }
 
         if (options.shaderGraph) {
-            for (n = 0; n < options.shaderGraph.params.length; n++) {
+            /*for (n = 0; n < options.shaderGraph.params.length; n++) {
                 code += 'uniform ' + options.shaderGraph.params[n].type + ' ' + options.shaderGraph.params[n].name + ';\n';
-            }
+            }*/
             code += "#define MAX_PS_LIGHTS "+Math.floor(options.maxPixelLights)+"\n";
             code += "#define SG_PS\n";
             code += rootDeclGLSL;
@@ -228,7 +231,7 @@ var node = {
 //        if (options.nodeInputs.roughness) code += options.nodeInputs.roughness;
 
         // FRAGMENT SHADER BODY
-        code += programlib.begin();
+        code += begin();
 
         if (options.shaderGraph) {
             code += rootCallGLSL;
@@ -256,7 +259,7 @@ var node = {
         }
         // }
 
-        code += programlib.end();
+        code += end();
 
         var fshader = code;
 
