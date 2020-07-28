@@ -35,7 +35,7 @@ var ids = 0;
  *
  * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
  * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
- * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null. Then ray related to input source should be ignored.
+ * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null.
  * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
  * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
  * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
@@ -152,9 +152,6 @@ XrInputSource.prototype.constructor = XrInputSource;
  */
 
 XrInputSource.prototype.update = function (frame) {
-    var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
-    if (! targetRayPose) return;
-
     // hand
     if (this._hand) {
         this._hand.update(frame);
@@ -179,11 +176,14 @@ XrInputSource.prototype.update = function (frame) {
         }
 
         // ray
-        this._dirtyRay = true;
-        this._rayLocal.origin.copy(targetRayPose.transform.position);
-        this._rayLocal.direction.set(0, 0, -1);
-        quat.copy(targetRayPose.transform.orientation);
-        quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
+        var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+        if (targetRayPose) {
+            this._dirtyRay = true;
+            this._rayLocal.origin.copy(targetRayPose.transform.position);
+            this._rayLocal.direction.set(0, 0, -1);
+            quat.copy(targetRayPose.transform.orientation);
+            quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
+        }
     }
 };
 

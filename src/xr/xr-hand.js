@@ -1,5 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
+import { XRHAND_LEFT, XRHAND_RIGHT } from './constants.js';
+
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
@@ -7,6 +9,10 @@ import { Vec3 } from '../math/vec3.js';
 var fingerJointIds = [];
 var tipJointIds = [];
 var tipJointIdsIndex = {};
+
+var vecA = new Vec3();
+var vecB = new Vec3();
+var vecC = new Vec3();
 
 if (window.XRHand) {
     fingerJointIds = [
@@ -89,6 +95,7 @@ function XrJoint(index, id, hand, finger) {
 
     this._hand = hand;
     this._hand._joints.push(this);
+    this._hand._jointsById[id] = this;
 
     this._finger = finger || null;
     if (this._finger) this._finger._joints.push(this);
@@ -235,13 +242,13 @@ function XrHand(inputSource) {
 
     this._fingers = [];
     this._joints = [];
+    this._jointsById = {};
     this._tips = [];
 
     this._wrist = null;
-    if (xrHand[XRHand.WRIST]) {
+
+    if (xrHand[XRHand.WRIST])
         this._wrist = new XrJoint(0, XRHand.WRIST, this, null);
-        this._joints.push(this._wrist);
-    }
 
     for (var f = 0; f < fingerJointIds.length; f++) {
         var finger = new XrFinger(f, this);
@@ -271,6 +278,7 @@ XrHand.prototype.constructor = XrHand;
 XrHand.prototype.update = function (frame) {
     var xrInputSource = this._inputSource._xrInputSource;
 
+    // joints
     for (var j = 0; j < this._joints.length; j++) {
         var joint = this._joints[j];
         var jointSpace = xrInputSource.hand[joint._id];
@@ -294,6 +302,80 @@ XrHand.prototype.update = function (frame) {
             }
         }
     }
+
+    var j1 = this._jointsById[XRHand.THUMB_METACARPAL];
+    var j4 = this._jointsById[XRHand.THUMB_PHALANX_TIP];
+    var j6 = this._jointsById[XRHand.INDEX_PHALANX_PROXIMAL];
+    var j9 = this._jointsById[XRHand.INDEX_PHALANX_TIP];
+    var j16 = this._jointsById[XRHand.RING_PHALANX_PROXIMAL];
+    var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];;
+
+    // ray
+    if (j1 && j4 && j6 && j9 && j16 && j21) {
+        this._inputSource._dirtyRay = true;
+
+        // ray origin
+        // get point between thumb tip and index tip
+        this._inputSource._rayLocal.origin.lerp(j4._localPosition, j9._localPosition, 0.5);
+
+        // ray direction
+        var jointL = j1;
+        var jointR = j21;
+
+        if (this._inputSource.handedness === XRHAND_LEFT) {
+            var t = jointL;
+            jointL = jointR;
+            jointR = t;
+        }
+
+        // (A) calculate normal vector between 3 joints: wrist, thumb metacarpal, little phalanx proximal
+        vecA.sub2(jointL._localPosition, this._wrist._localPosition);
+        vecB.sub2(jointR._localPosition, this._wrist._localPosition);
+        vecC.cross(vecA, vecB).normalize();
+
+        // get point between: index phalanx proximal and right phalanx proximal
+        vecA.lerp(j6._localPosition, j16._localPosition, 0.5);
+        // (B) get vector between that point and a wrist
+        vecA.sub(this._wrist._localPosition).normalize();
+
+        // mix normal vector (A) with hand directional vector (B)
+        this._inputSource._rayLocal.direction.lerp(vecC, vecA, 0.5).normalize();
+    }
+
+    // emulate select events by touching thumb tip and index tips
+    if (j4 && j9) {
+        vecA.copy(j4._localPosition);
+        var d = vecA.distance(j9._localPosition);
+
+        if (d < 0.015) { // 15 mm
+            if (! this._inputSource._selecting) {
+                this._inputSource._selecting = true;
+                this._inputSource.fire('selectstart');
+                this._manager.input.fire('selectstart', this._inputSource);
+            }
+        } else {
+            if (this._inputSource._selecting) {
+                this._inputSource._selecting = false;
+
+                this._inputSource.fire('select');
+                this._manager.input.fire('select', this._inputSource);
+
+                this._inputSource.fire('selectend');
+                this._manager.input.fire('selectend', this._inputSource);
+            }
+        }
+    }
+};
+
+/**
+ * @function
+ * @name pc.XrHand#getJointById
+ * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
+ * @param {number} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
+ * @returns {pc.XrJoint|null} Joint or null if not available
+ */
+XrHand.prototype.getJointById = function (id) {
+    return this._jointsById[id] || null;
 };
 
 Object.defineProperty(XrHand.prototype, 'fingers', {
