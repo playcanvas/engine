@@ -71,7 +71,8 @@ var categories = [
         examples: [
             "compound-collision",
             "falling-shapes",
-            "raycast"
+            "raycast",
+            "vehicle"
         ]
     }, {
         name: "sound",
