@@ -20,6 +20,7 @@ function AnimStateGraph(data) {
         //         "1": {
         //             "name": "New State",
         //             "speed": 1,
+        //             "loop": true,
         //             "defaultState": true
         //         }
         //     },
@@ -79,7 +80,8 @@ function AnimStateGraph(data) {
         //                 {
         //                     "name": "New State",
         //                     "speed": 1,
-        //                     "defaultState": true
+        //                     "loop": true,
+        //                     "defaultState": true,
         //                 }
         //             ],
         //             "transitions": [
