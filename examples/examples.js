@@ -46,7 +46,8 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis"
+            "texture-basis",
+            "transform-feedback"
         ]
     }, {
         name: "loaders",
