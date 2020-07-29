@@ -84,7 +84,7 @@ function TransformFeedback(inputBuffer, usage) {
 
     // #ifdef DEBUG
     if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
-        console.error("Vertex buffer used by TransformFeedback needs to be inverleaved.");
+        console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
     }
     // #endif
 
