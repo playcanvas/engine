@@ -1174,7 +1174,7 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
 var createNode = function (gltfNode, nodeIndex) {
     var entity = new GraphNode();
 
-    if (gltfNode.hasOwnProperty('name')) {
+    if (gltfNode.hasOwnProperty('name') && gltfNode.name.length > 0) {
         entity.name = gltfNode.name;
     } else {
         entity.name = "node_" + nodeIndex;
