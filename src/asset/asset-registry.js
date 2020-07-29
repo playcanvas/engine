@@ -462,6 +462,8 @@ Object.assign(AssetRegistry.prototype, {
             callback(null, asset);
         } else if (type === 'model') {
             self._loadModel(asset, startLoad);
+        } else  if (type === 'material') {
+            self._loadTextures(asset, startLoad);
         } else {
             startLoad(asset);
         }
