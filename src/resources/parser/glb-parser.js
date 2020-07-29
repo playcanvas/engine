@@ -9,7 +9,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
-    typedArrayTypes,
+    typedArrayTypes, typedArrayTypesByteSize,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BUFFER_STATIC,
     CULLFACE_NONE, CULLFACE_BACK,
@@ -105,6 +105,17 @@ var getComponentDataType = function (componentType) {
     }
 };
 
+var gltfToEngineSemanticMap = {
+    'POSITION': SEMANTIC_POSITION,
+    'NORMAL': SEMANTIC_NORMAL,
+    'TANGENT': SEMANTIC_TANGENT,
+    'COLOR_0': SEMANTIC_COLOR,
+    'JOINTS_0': SEMANTIC_BLENDINDICES,
+    'WEIGHTS_0': SEMANTIC_BLENDWEIGHT,
+    'TEXCOORD_0': SEMANTIC_TEXCOORD0,
+    'TEXCOORD_1': SEMANTIC_TEXCOORD1
+};
+
 // get accessor data, making a copy and patching in the case of a sparse accessor
 var getAccessorData = function (gltfAccessor, bufferViews) {
     var numComponents = getNumComponents(gltfAccessor.type);
@@ -193,12 +204,26 @@ var generateIndices = function (numVertices) {
 var generateNormals = function (sourceDesc, indices) {
     // get positions
     var p = sourceDesc[SEMANTIC_POSITION];
-    if (!p || p.components !== 3 || p.size !== p.stride) {
-        // NOTE: normal generation only works on tightly packed positions
+    if (!p || p.components !== 3) {
         return;
     }
 
-    var positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
+    var positions;
+    if (p.size !== p.stride) {
+        // extract positions which aren't tightly packed
+        var srcStride = p.stride / typedArrayTypesByteSize[p.type];
+        var src = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * srcStride);
+        positions = new typedArrayTypes[p.type](p.count * 3);
+        for (var i = 0; i < p.count; ++i) {
+            positions[i * 3 + 0] = src[i * srcStride + 0];
+            positions[i * 3 + 1] = src[i * srcStride + 1];
+            positions[i * 3 + 2] = src[i * srcStride + 2];
+        }
+    } else {
+        // position data is tightly packed so we can use it directly
+        positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
+    }
+
     var numVertices = p.count;
 
     // generate indices if necessary
@@ -355,8 +380,9 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
 
             var src = 0;
             var dst = target.offset / 4;
+            var kend = Math.floor((source.size + 3) / 4);
             for (j = 0; j < numVertices; ++j) {
-                for (k = 0; k < source.size / 4; ++k) {
+                for (k = 0; k < kend; ++k) {
                     targetArray[dst + k] = sourceArray[src + k];
                 }
                 src += sourceStride;
@@ -374,15 +400,15 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, semanticMap, disableFlipV) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, disableFlipV) {
     // build vertex buffer format desc and source
     var sourceDesc = {};
     for (var attrib in attributes) {
-        if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
+        if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
             var accessor = accessors[attributes[attrib]];
             var accessorData = getAccessorData(accessor, bufferViews);
             var bufferView = bufferViews[accessor.bufferView];
-            var semantic = semanticMap[attrib].semantic;
+            var semantic = gltfToEngineSemanticMap[attrib];
             var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
             var stride = bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
@@ -406,7 +432,7 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV) {
+var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV) {
 
     var numPoints = outputGeometry.num_points();
 
@@ -461,9 +487,8 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     var sourceDesc = {};
     var attributes = extDraco.attributes;
     for (var attrib in attributes) {
-        if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
-            var semanticInfo = semanticMap[attrib];
-            var semantic = semanticInfo.semantic;
+        if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
+            var semantic = gltfToEngineSemanticMap[attrib];
             var attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
 
             // store the info we'll need to copy this data into the vertex buffer
@@ -539,17 +564,6 @@ var tempVec = new Vec3();
 var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, disableFlipV) {
     var meshes = [];
 
-    var semanticMap = {
-        'POSITION': { semantic: SEMANTIC_POSITION },
-        'NORMAL': { semantic: SEMANTIC_NORMAL },
-        'TANGENT': { semantic: SEMANTIC_TANGENT },
-        'COLOR_0': { semantic: SEMANTIC_COLOR },
-        'JOINTS_0': { semantic: SEMANTIC_BLENDINDICES },
-        'WEIGHTS_0': { semantic: SEMANTIC_BLENDWEIGHT },
-        'TEXCOORD_0': { semantic: SEMANTIC_TEXCOORD0 },
-        'TEXCOORD_1': { semantic: SEMANTIC_TEXCOORD1 }
-    };
-
     gltfMesh.primitives.forEach(function (primitive) {
 
         var primitiveType, vertexBuffer, numIndices;
@@ -617,7 +631,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -638,7 +652,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, semanticMap, disableFlipV);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, disableFlipV);
             primitiveType = getPrimitiveType(primitive);
         }
 
