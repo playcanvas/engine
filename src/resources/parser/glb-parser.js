@@ -294,6 +294,42 @@ var flipTexCoordVs = function (vertexBuffer) {
     }
 };
 
+// given a texture, clone it
+// NOTE: CPU-side texture data will be shared but GPU memory will be duplicated
+var cloneTexture = function (texture) {
+    var shallowCopyLevels = function (texture) {
+        var result = [];
+        for (var mip = 0; mip < texture._levels.length; ++mip) {
+            var level = [];
+            if (texture.cubemap) {
+                for (var face = 0; face < 6; ++face) {
+                    level.push(texture._levels[mip][face]);
+                }
+            } else {
+                level = texture._levels[mip];
+            }
+            result.push(level);
+        }
+        return result;
+    };
+
+    var result = new pc.Texture(texture.device, texture);   // duplicate texture
+    result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
+    return result;
+};
+
+// given a texture asset, clone it
+var cloneTextureAsset = function (src) {
+    var result = new pc.Asset(src.name + '_clone',
+                              src.type,
+                              src.file,
+                              src.data,
+                              src.options);
+    result.loaded = true;
+    result.resource = cloneTexture(src.resource);
+    src.registry.add(result);
+    return result;
+};
 
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
@@ -1309,7 +1345,6 @@ var createNodes = function (gltf, options) {
 };
 
 var createScenes = function (gltf, nodes) {
-
     var scenes = [];
     var count = gltf.scenes.length;
 
@@ -1338,7 +1373,6 @@ var createScenes = function (gltf, nodes) {
 
 // create engine resources from the downloaded GLB data
 var createResources = function (device, gltf, bufferViews, textureAssets, options, callback) {
-
     var preprocess = options && options.global && options.global.preprocess;
     var postprocess = options && options.global && options.global.postprocess;
 
@@ -1495,11 +1529,9 @@ var loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registry,
 
 // load textures using the asset system
 var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options, callback) {
-    var result = [];
-
     if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
         !gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
-        callback(null, result);
+        callback(null, []);
         return;
     }
 
@@ -1509,15 +1541,28 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
     };
     var postprocess = options && options.texture && options.texture.postprocess;
 
+    var assets = [];        // one per image
+    var textures = [];      // list per image
+
     var remaining = gltf.textures.length;
-    var onLoad = function (index, textureAsset) {
-        // apply sampler state to the loaded texture
-        applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[index].sampler]);
-        result[index] = textureAsset;
-        if (postprocess) {
-            postprocess(gltf.textures[index], textureAsset);
+    var onLoad = function (textureIndex, imageIndex) {
+        if (!textures[imageIndex]) {
+            textures[imageIndex] = [];
         }
+        textures[imageIndex].push(textureIndex);
+
         if (--remaining === 0) {
+            var result = [];
+            textures.forEach(function (textureList, imageIndex) {
+                textureList.forEach(function (textureIndex, index) {
+                    var textureAsset = (index === 0) ? assets[imageIndex] : cloneTextureAsset(assets[imageIndex]);
+                    applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[textureIndex].sampler]);
+                    result[textureIndex] = textureAsset;
+                    if (postprocess) {
+                        postprocess(gltf.textures[index], textureAsset);
+                    }
+                });
+            })
             callback(null, result);
         }
     };
@@ -1529,21 +1574,29 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
             preprocess(gltfTexture);
         }
 
-        processAsync(gltfTexture, gltf.images, function (i, gltfTexture, err, gltfImage) {
+        processAsync(gltfTexture, gltf.images, function (i, gltfTexture, err, gltfImageIndex) {
             if (err) {
                 callback(err);
             } else {
-                if (!gltfImage) {
-                    gltfImage = gltf.images[gltfTexture.source];
+                if (gltfImageIndex === undefined || gltfImageIndex === null) {
+                    gltfImageIndex = gltfTexture.source;
                 }
 
-                loadImageAsync(gltfImage, i, bufferViews, urlBase, registry, options, function (err, textureAsset) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        onLoad(i, textureAsset);
-                    }
-                });
+                if (assets[gltfImageIndex]) {
+                    // image has already been loaded
+                    onLoad(i, gltfImageIndex);
+                } else {
+                    // first occcurrence, load it
+                    var gltfImage = gltf.images[gltfImageIndex];
+                    loadImageAsync(gltfImage, i, bufferViews, urlBase, registry, options, function (err, textureAsset) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            assets[gltfImageIndex] = textureAsset;
+                            onLoad(i, gltfImageIndex);
+                        }
+                    });
+                }
             }
         }.bind(null, i, gltfTexture));
     }
