@@ -1187,7 +1187,7 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
 var createNode = function (gltfNode, nodeIndex) {
     var entity = new Entity();
 
-    if (gltfNode.hasOwnProperty('name')) {
+    if (gltfNode.hasOwnProperty('name') && gltfNode.name.length > 0) {
         // Remove slashes since they interfere with animation curve paths
         entity.name = gltfNode.name.replace(/\//g, '_');
     } else {

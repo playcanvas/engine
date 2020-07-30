@@ -1263,10 +1263,10 @@ Object.assign(ForwardRenderer.prototype, {
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
+                    this._removedByInstancing += instancingData.count;
                     meshInstance.instancingData = null;
                     return instancingData.count - 1;
                 }
@@ -1296,17 +1296,17 @@ Object.assign(ForwardRenderer.prototype, {
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
+                    this._removedByInstancing += instancingData.count;
                     meshInstance.instancingData = null;
                     return instancingData.count - 1;
                 }
             }
         } else {
             // matrices are already set
-            device.draw(mesh.primitive[style], null, true);
+            device.draw(mesh.primitive[style], undefined, true);
         }
         return 0;
     },
@@ -1911,7 +1911,7 @@ Object.assign(ForwardRenderer.prototype, {
                         if (v === 0) {
                             i += this.drawInstance(device, drawCall, mesh, style, true);
                         } else {
-                            i += this.drawInstance2(device, drawCall, mesh, style, true);
+                            i += this.drawInstance2(device, drawCall, mesh, style);
                         }
 
                         this._forwardDrawCalls++;
