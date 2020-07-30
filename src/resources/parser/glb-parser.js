@@ -1562,7 +1562,7 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
                         postprocess(gltf.textures[index], textureAsset);
                     }
                 });
-            })
+            });
             callback(null, result);
         }
     };
