@@ -1543,9 +1543,9 @@ var createCameras = function (gltf, nodes, options) {
         return [];
     }
 
-    var preprocess = options && options.cameras && options.cameras.preprocess;
-    var process = options && options.cameras && options.cameras.process || createCamera;
-    var postprocess = options && options.cameras && options.cameras.postprocess;
+    var preprocess = options && options.camera && options.camera.preprocess;
+    var process = options && options.camera && options.camera.process || createCamera;
+    var postprocess = options && options.camera && options.camera.postprocess;
 
     var cameras = [];
 
