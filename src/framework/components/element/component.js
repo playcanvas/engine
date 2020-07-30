@@ -914,8 +914,8 @@ Object.assign(ElementComponent.prototype, {
             var sw = this.system.app.graphicsDevice.width;
             var sh = this.system.app.graphicsDevice.height;
 
-            var cameraWidth = camera._rect.width * sw;
-            var cameraHeight = camera._rect.height * sh;
+            var cameraWidth = camera._rect.z * sw;
+            var cameraHeight = camera._rect.w * sh;
             clipL = camera._rect.x * sw;
             clipR = clipL + cameraWidth;
             clipT = (1 - camera._rect.y) * sh;
