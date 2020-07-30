@@ -36,18 +36,15 @@ import { VertexBuffer } from './vertex-buffer.js';
  * attribute vec3 vertex_position;
  * attribute vec3 vertex_normal;
  * attribute vec2 vertex_texCoord0;
- * attribute vec4 vertex_tangent;
  * out vec3 out_vertex_position;
  * out vec3 out_vertex_normal;
  * out vec2 out_vertex_texCoord0;
- * out vec4 out_vertex_tangent;
  * void main(void) {
  *     // read position and normal, write new position (push away)
  *     out_vertex_position = vertex_position + vertex_normal * 0.01;
  *     // pass other attributes unchanged
  *     out_vertex_normal = vertex_normal;
  *     out_vertex_texCoord0 = vertex_texCoord0;
- *     out_vertex_tangent = vertex_tangent;
  * }
  * @example
  * // *** script asset ***
@@ -84,6 +81,12 @@ function TransformFeedback(inputBuffer, usage) {
     usage = usage || BUFFER_GPUDYNAMIC;
     this.device = inputBuffer.device;
     var gl = this.device.gl;
+
+    // #ifdef DEBUG
+    if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
+        console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
+    }
+    // #endif
 
     this._inputBuffer = inputBuffer;
     if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
@@ -129,6 +132,11 @@ Object.assign(TransformFeedback.prototype, {
         if (swap === undefined) swap = true;
 
         var device = this.device;
+
+        // #ifdef DEBUG
+        this.device.pushMarker("TransformFeedback");
+        // #endif
+
         device.setRenderTarget(null);
         device.updateBegin();
         device.setVertexBuffer(this._inputBuffer, 0);
@@ -144,6 +152,10 @@ Object.assign(TransformFeedback.prototype, {
         device.setTransformFeedbackBuffer(null);
         device.setRaster(true);
         device.updateEnd();
+
+        // #ifdef DEBUG
+        this.device.popMarker();
+        // #endif
 
         // swap buffers
         if (swap) {
