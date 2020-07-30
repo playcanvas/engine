@@ -1,6 +1,6 @@
 {
   "name": "playcanvas", 
-  "version": "1.32.4", 
+  "version": "1.33.0-dev", 
   "author": "PlayCanvas <support@playcanvas.com>", 
   "homepage": "https://playcanvas.com", 
   "description": "PlayCanvas WebGL game engine", 
