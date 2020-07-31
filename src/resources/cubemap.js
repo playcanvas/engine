@@ -1,7 +1,7 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR
+    PIXELFORMAT_R8_G8_B8_A8
 } from '../graphics/graphics.js';
 
 import { Asset } from '../asset/asset.js';
@@ -118,7 +118,7 @@ Object.assign(CubemapHandler.prototype, {
                     var prelit = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
-                        type: getType() || pc.TEXTURETYPE_RGBM,
+                        type: getType() || TEXTURETYPE_RGBM,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
@@ -157,9 +157,9 @@ Object.assign(CubemapHandler.prototype, {
                 }
 
                 var identifyType = function (texture) {
-                    return (texture.type === pc.TEXTURETYPE_DEFAULT &&
-                        texture.format === pc.PIXELFORMAT_R8_G8_B8_A8) ?
-                        pc.TEXTURETYPE_RGBM :
+                    return (texture.type === TEXTURETYPE_DEFAULT &&
+                        texture.format === PIXELFORMAT_R8_G8_B8_A8) ?
+                        TEXTURETYPE_RGBM :
                         texture.type;
                 };
 
