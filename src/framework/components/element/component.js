@@ -101,7 +101,7 @@ var matD = new Mat4();
  * @property {number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
- * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types. The only supported tag is `[color]` with a hex color value. E.g `[color="#ff0000"]red text[/color]`
  * @property {number} rangeStart Index of the first character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} rangeEnd Index of the last character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  */
@@ -914,8 +914,8 @@ Object.assign(ElementComponent.prototype, {
             var sw = this.system.app.graphicsDevice.width;
             var sh = this.system.app.graphicsDevice.height;
 
-            var cameraWidth = camera._rect.width * sw;
-            var cameraHeight = camera._rect.height * sh;
+            var cameraWidth = camera._rect.z * sw;
+            var cameraHeight = camera._rect.w * sh;
             clipL = camera._rect.x * sw;
             clipR = clipL + cameraWidth;
             clipT = (1 - camera._rect.y) * sh;

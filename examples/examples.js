@@ -46,7 +46,8 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis"
+            "texture-basis",
+            "transform-feedback"
         ]
     }, {
         name: "loaders",
@@ -71,7 +72,8 @@ var categories = [
         examples: [
             "compound-collision",
             "falling-shapes",
-            "raycast"
+            "raycast",
+            "vehicle"
         ]
     }, {
         name: "sound",

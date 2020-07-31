@@ -7,7 +7,6 @@ import { Vec3 } from '../math/vec3.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
 import {
-    CLEARFLAG_COLOR,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
@@ -412,15 +411,12 @@ Object.assign(Lightmapper.prototype, {
         // Create pseudo-camera
         if (!lmCamera) {
             lmCamera = new Camera();
-            lmCamera._node = new GraphNode();
-            lmCamera.clearColor[0] = 0;
-            lmCamera.clearColor[1] = 0;
-            lmCamera.clearColor[2] = 0;
-            lmCamera.clearColor[3] = 0;
-            lmCamera.clearDepth = 1;
-            lmCamera.clearFlags = CLEARFLAG_COLOR;
-            lmCamera.clearStencil = null;
+            lmCamera.clearColor = new Color(0, 0, 0, 0);
+            lmCamera.clearColorBuffer = true;
+            lmCamera.clearDepthBuffer = false;
+            lmCamera.clearStencilBuffer = false;
             lmCamera.frustumCulling = false;
+            lmCamera.node = new GraphNode();
         }
 
         var node;
@@ -597,8 +593,8 @@ Object.assign(Lightmapper.prototype, {
                     tempVec.copy(bounds.center);
                     tempVec.y += bounds.halfExtents.y;
 
-                    lmCamera._node.setPosition(tempVec);
-                    lmCamera._node.setEulerAngles(-90, 0, 0);
+                    lmCamera.node.setPosition(tempVec);
+                    lmCamera.node.setEulerAngles(-90, 0, 0);
 
                     var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 

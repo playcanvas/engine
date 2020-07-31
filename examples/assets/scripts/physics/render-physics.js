@@ -1,12 +1,12 @@
-var DebugPhysics = pc.createScript('debugPhysics');
+var RenderPhysics = pc.createScript('renderPhysics');
 
-DebugPhysics.attributes.add('drawShapes', {
+RenderPhysics.attributes.add('drawShapes', {
     type: 'boolean',
     default: false,
     title: 'Draw Shapes',
     description: 'Draw representations of physics collision shapes'
 });
-DebugPhysics.attributes.add('opacity', {
+RenderPhysics.attributes.add('opacity', {
     type: 'number',
     default: 0.5,
     min: 0,
@@ -14,7 +14,7 @@ DebugPhysics.attributes.add('opacity', {
     title: 'Opacity',
     description: 'Opacity of physics collision shapes'
 });
-DebugPhysics.attributes.add('castShadows', {
+RenderPhysics.attributes.add('castShadows', {
     type: 'boolean',
     default: true,
     title: 'Cast Shadows',
@@ -22,7 +22,7 @@ DebugPhysics.attributes.add('castShadows', {
 });
 
 // initialize code called once per entity
-DebugPhysics.prototype.initialize = function () {
+RenderPhysics.prototype.initialize = function () {
     // Handle attribute change events
     this.on('attr:castShadows', function (value, prev) {
         this.debugRoot.children.forEach(function (child) {
@@ -59,7 +59,7 @@ DebugPhysics.prototype.initialize = function () {
     });
 };
 
-DebugPhysics.prototype.createModel = function (mesh, material) {
+RenderPhysics.prototype.createModel = function (mesh, material) {
     var node = new pc.GraphNode();
     var meshInstance = new pc.MeshInstance(node, mesh, material);
     var model = new pc.Model();
@@ -68,7 +68,7 @@ DebugPhysics.prototype.createModel = function (mesh, material) {
     return model;
 };
 
-DebugPhysics.prototype.postUpdate = function (dt) {
+RenderPhysics.prototype.postUpdate = function (dt) {
     // For any existing debug shapes, mark them as not updated (yet)
     this.debugRoot.children.forEach(function (child) {
         child.updated = false;
