@@ -109,7 +109,7 @@ var node = {
 
         if (options.shaderGraph) {
             code += rootCallGLSL;
-            code += "   vPosition = getWorldPositionNM()+shaderGraphVertexOffset;\n";
+            code += "   vPosition = getWorldPositionNM()+OUT_vertOff;\n";
             code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";            
         } else {
             code += "   vPosition = getWorldPositionNM();\n";
@@ -143,7 +143,7 @@ var node = {
         code += '    vColor = vertex_color;\n';
         code += '    vUv0 = vertex_texCoord0;\n';
 
-        code += '   calcVertexLightingVS(vPosition, vNormal);\n';
+        //code += '   calcVertexLightingVS(vPosition, vNormal);\n';
 
         code += end();
 
@@ -235,6 +235,11 @@ var node = {
 
         if (options.shaderGraph) {
             code += rootCallGLSL;
+            code += 'gl_FragColor=OUT_fragOut;\n';
+        }
+        else
+        {
+
         }
         // code += NodeMaterial.generateLightingCode(options);
 

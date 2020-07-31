@@ -99,7 +99,7 @@ Object.assign(MaterialHandler.prototype, {
         asset.data.name = asset.name;
         asset.resource.name = asset.name;
 
-        var subclass = this._getSubClass(data);
+        var subclass = this._getSubClass(asset.data);
 
         this._binders[subclass].bindAndAssignAssets(asset, assets);
 
