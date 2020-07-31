@@ -91,9 +91,13 @@ Object.assign(CubemapHandler.prototype, {
         // texture type used for faces and prelit cubemaps are both taken from
         // cubemap.data.rgbm
         var getType = function () {
-            return assetData.hasOwnProperty('type') ?
-                assetData.type :
-                (assetData.hasOwnProperty('rgbm') && assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
+            if (assetData.hasOwnProperty('type')) {
+                return assetData.type;
+            }
+            if (assetData.hasOwnProperty('rgbm')) {
+                return assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+            }
+            return null;
         };
 
         // handle the prelit data
@@ -114,7 +118,7 @@ Object.assign(CubemapHandler.prototype, {
                     var prelit = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
-                        type: getType(),
+                        type: getType() || pc.TEXTURETYPE_RGBM,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
@@ -152,16 +156,23 @@ Object.assign(CubemapHandler.prototype, {
                     }));
                 }
 
+                var identifyType = function (texture) {
+                    return (texture.type === pc.TEXTURETYPE_DEFAULT &&
+                        texture.format === pc.PIXELFORMAT_R8_G8_B8_A8) ?
+                        pc.TEXTURETYPE_RGBM :
+                        texture.type;
+                };
+
                 var faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
-                    type: getType(),
-                    width: faceAssets[0].resource.width,
-                    height: faceAssets[0].resource.height,
-                    format: faceAssets[0].resource.format,
+                    type: getType() || identifyType(faceTextures[0]),
+                    width: faceTextures[0].width,
+                    height: faceTextures[0].height,
+                    format: faceTextures[0].format,
                     levels: faceLevels,
-                    minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : FILTER_LINEAR_MIPMAP_LINEAR,
-                    magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : FILTER_LINEAR,
+                    minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : faceTextures[0].minFilter,
+                    magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,
                     anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
                     addressV: ADDRESS_CLAMP_TO_EDGE,
