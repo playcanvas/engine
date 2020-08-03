@@ -205,7 +205,7 @@
                             // update each hand joint
                             for(var j = 0; j < controllers[i].joints.length; j++) {
                                 var joint = controllers[i].joints[j].joint;
-                                var r = joint.getRadius() * 2;
+                                var r = joint.radius * 2;
                                 controllers[i].joints[j].setLocalScale(r, r, r);
                                 controllers[i].joints[j].setPosition(joint.getPosition());
                                 controllers[i].joints[j].setRotation(joint.getRotation());
