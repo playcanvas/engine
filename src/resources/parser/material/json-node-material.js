@@ -24,7 +24,7 @@ JsonNodeMaterialParser.prototype.parse = function (input) {
     var validated = this._validate(migrated);
 
     var material = new NodeMaterial();
-    this.initialize(material, validated);
+    this.initialize(material, validated.graphData);
 
     return material;
 };
@@ -42,38 +42,49 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     var material_ready=true;
 
     //input or output or constant variables - all node material types have this block
-    for (var i=0;i<data.iocVars.length;i++)
+    if (!data.iocVars)
     {
-        if (data.iocVars[i].valueTex)
+        if (data.customFuncGlsl && (typeof(data.customFuncGlsl) === 'number' && data.customFuncGlsl > 0))
         {
-            if (typeof(data.iocVars[i].valueTex) === 'number' && value > 0)
+            material_ready = false
+        }
+    }
+
+    if (data.iocVars)
+    {
+        for (var i=0;i<data.iocVars.length;i++)
+        {
+            if (data.iocVars[i].valueTex)
             {
-                //texture asset not loaded yet - deal with in node material binder
-                if (!material.iocVars[i].valueTex) 
-                {   
-                    //seems no placeholder is set yet
-                    material_ready = false;
+                if (typeof(data.iocVars[i].valueTex) === 'number' && data.iocVars[i].valueTex > 0)
+                {
+                    //texture asset not loaded yet - deal with in node material binder
+                    if (!material.iocVars[i].valueTex) 
+                    {   
+                        //seems no placeholder is set yet
+                        material_ready = false;
+                    }
+                }
+                else
+                {
+                    //texture asset loaded - assign
+                    Object.assign(material.iocVars[i], data.iocVars[i]);
                 }
             }
             else
             {
-                //texture asset loaded - assign
+                //assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
                 Object.assign(material.iocVars[i], data.iocVars[i]);
             }
         }
-        else
-        {
-            //assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
-            Object.assign(material.iocVars[i], data.iocVars[i]);
-        }
     }
-    
+
     if (data.customFuncGlsl)
     {
         //this means this is a custom node (often also has a decl shader)
         if (data.customDeclGlsl)
         {
-            if (typeof(data.customDeclGlsl) === 'number' && value > 0)
+            if (typeof(data.customDeclGlsl) === 'number' && data.customDeclGlsl > 0)
             {
                 //this means asset is not loaded yet - cannot assign
                 material_ready = false;
@@ -87,7 +98,7 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
         if (data.customFuncGlsl) 
         {
-            if (typeof(data.customFuncGlsl) === 'number' && value > 0)
+            if (typeof(data.customFuncGlsl) === 'number' && data.customFuncGlsl > 0)
             {
                 //this means asset is not loaded yet - cannot assign
                 material_ready = false;
@@ -97,6 +108,11 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 //shader asset loaded - assign!
                 material.customFuncGlsl=data.customFuncGlsl;
             }
+        }
+
+        if (material_ready && !data.iocVars)
+        {
+            material._genIocVars();
         }
     }
     else if (data.subGraphs)
@@ -121,7 +137,7 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
             for (var i=0;i<data.subGraphs.length;i++)
             {
-                if (typeof(data.subGraphs[i]) === 'number' && value > 0)
+                if (typeof(data.subGraphs[i]) === 'number' && data.subGraphs[i] > 0)
                 {
                     //this means sub graph asset is not loaded yet - cannot assign
                     material_ready = false;

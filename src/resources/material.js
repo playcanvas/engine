@@ -6,6 +6,8 @@ import { JsonStandardMaterialParser } from './parser/material/json-standard-mate
 import { NodeMaterialBinder } from './node-material.js';
 import { JsonNodeMaterialParser } from './parser/material/json-node-material.js';
 
+import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { NodeMaterial } from '../scene/materials/node-material.js';
 
 /**
  * @class
@@ -20,8 +22,8 @@ function MaterialHandler(app) {
 
     this._placeholderTextures = null;
    
-    this._parsers = [];
-    this._binders = [];
+    this._parsers = {};
+    this._binders = {};
 
     this.retryRequests = false;
 }
@@ -55,7 +57,7 @@ Object.assign(MaterialHandler.prototype, {
     _getSubClass: function (data) {
         //maybe there is a better way to tell if node material path should be taken?
         var subclass = 'Standard'
-        if (data.shaderGraph) 
+        if (data.graphData) 
         {
             subclass = 'Node';
 
@@ -100,6 +102,18 @@ Object.assign(MaterialHandler.prototype, {
         asset.resource.name = asset.name;
 
         var subclass = this._getSubClass(asset.data);
+
+        //this should only happen in the editor?
+        if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial))
+        {
+            //TODO clean up old material nicely?
+            asset.resource = this._parsers[subclass].parse(asset.data);
+        }
+        else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial))
+        {
+            //TODO clean up old material nicely?
+            asset.resource = this._parsers[subclass].parse(asset.data);
+        }
 
         this._binders[subclass].bindAndAssignAssets(asset, assets);
 

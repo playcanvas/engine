@@ -176,7 +176,7 @@ Object.assign(NodeMaterialBinder.prototype, {
 
     bindAndAssignAssets: function (materialAsset, assets) {
         // always migrate before updating material from asset data
-        var data = this._parser.migrate(materialAsset.data);
+        var data = this._parser.migrate(materialAsset.data).graphData;
 
         var material = materialAsset.resource;
 
@@ -185,43 +185,46 @@ Object.assign(NodeMaterialBinder.prototype, {
         var assetReference;
         
         //deal with textures (which are only in the iocVars block)
-        for (var i=0;i<data.iocVars.length;i++)
+        if (data.iocVars)
         {
-            if (data.iocVars[i].valueTex)
+            for (var i=0;i<data.iocVars.length;i++)
             {
-                assetReference = material._iocVarAssetReferences[i];
-
-                if (!(data.iocVars[i].valueTex instanceof Texture))
+                if (data.iocVars[i].valueTex)
                 {
-                    if (!assetReference) 
-                    {
-                        assetReference = new AssetReference(i, materialAsset, assets, {
-                            load: this._onIocVarTexLoad,
-                            add: this._onIocVarTexAdd,
-                            remove: this._onIocVarTexRemove
-                        }, this);
-                        
-                        material._iocVarAssetReferences[i] = assetReference;
-                    }
+                    assetReference = material._iocVarAssetReferences[i];
 
-                    if (pathMapping) {
-                        // texture paths are measured from the material directory
-                        assetReference.url = materialAsset.getAbsoluteUrl(data.iocVars[i].valueTex);
-                    } else {
-                        assetReference.id = data.iocVars[i].valueTex;
-                    }    
-                    
-                    if (assetReference.asset) 
+                    if (!(data.iocVars[i].valueTex instanceof Texture))
                     {
-                        if (assetReference.asset.resource) 
+                        if (!assetReference) 
                         {
-                            // asset is already loaded
-                            this._assignIocVarTex(i, materialAsset, assetReference.asset.resource);
-                        } 
-                        else 
+                            assetReference = new AssetReference(i, materialAsset, assets, {
+                                load: this._onIocVarTexLoad,
+                                add: this._onIocVarTexAdd,
+                                remove: this._onIocVarTexRemove
+                            }, this);
+                            
+                            material._iocVarAssetReferences[i] = assetReference;
+                        }
+
+                        if (pathMapping) {
+                            // texture paths are measured from the material directory
+                            assetReference.url = materialAsset.getAbsoluteUrl(data.iocVars[i].valueTex);
+                        } else {
+                            assetReference.id = data.iocVars[i].valueTex;
+                        }    
+                        
+                        if (assetReference.asset) 
                         {
-                            //assign placeholder texture
-                            this._assignPlaceholderTexture(i, materialAsset);
+                            if (assetReference.asset.resource) 
+                            {
+                                // asset is already loaded
+                                this._assignIocVarTex(i, materialAsset, assetReference.asset.resource);
+                            } 
+                            else 
+                            {
+                                //assign placeholder texture
+                                this._assignPlaceholderTexture(i, materialAsset);
+                            }
                         }
                     }
                 }
@@ -229,7 +232,7 @@ Object.assign(NodeMaterialBinder.prototype, {
         }
 
         //custom / built-in shaders
-        var customGlslNames=[customFuncGlsl, customDeclGlsl];
+        var customGlslNames=['customFuncGlsl', 'customDeclGlsl'];
 
         for (var i=0;i<customGlslNames.length;i++)
         {
@@ -276,43 +279,46 @@ Object.assign(NodeMaterialBinder.prototype, {
         }
 
         //deal with sub graphs 
-        for (var i=0;i<data.subGraphs.length;i++)
+        if (data.subGraphs)
         {
-            if (data.subGraphs[i])
+            for (var i=0;i<data.subGraphs.length;i++)
             {
-                assetReference = material._subGraphAssetReferences[i];
-
-                if (!(data.subGraphs[i] instanceof NodeMaterial))
+                if (data.subGraphs[i])
                 {
-                    if (!assetReference) 
-                    {
-                        assetReference = new AssetReference(i, materialAsset, assets, {
-                            load: this._onSubGraphLoad,
-                            add: this._onSubGraphAdd,
-                            remove: this._onSubGraphRemove
-                        }, this);
-                        
-                        material._subGraphAssetReferences[i] = assetReference;
-                    }
+                    assetReference = material._subGraphAssetReferences[i];
 
-                    if (pathMapping) {
-                        // texture paths are measured from the material directory
-                        assetReference.url = materialAsset.getAbsoluteUrl(data.subGraphs[i]);
-                    } else {
-                        assetReference.id = data.subGraphs[i];
-                    }    
-                    
-                    if (assetReference.asset) 
+                    if (!(data.subGraphs[i] instanceof NodeMaterial))
                     {
-                        if (assetReference.asset.resource) 
+                        if (!assetReference) 
                         {
-                            // asset is already loaded
-                            this._assignSubGraph(i, materialAsset, assetReference.asset.resource);
-                        } 
-                        else 
+                            assetReference = new AssetReference(i, materialAsset, assets, {
+                                load: this._onSubGraphLoad,
+                                add: this._onSubGraphAdd,
+                                remove: this._onSubGraphRemove
+                            }, this);
+                            
+                            material._subGraphAssetReferences[i] = assetReference;
+                        }
+
+                        if (pathMapping) {
+                            // texture paths are measured from the material directory
+                            assetReference.url = materialAsset.getAbsoluteUrl(data.subGraphs[i]);
+                        } else {
+                            assetReference.id = data.subGraphs[i];
+                        }    
+                        
+                        if (assetReference.asset) 
                         {
-                            //assign placeholder texture
-                            this._assignPlaceholderSubGraph(i, materialAsset);
+                            if (assetReference.asset.resource) 
+                            {
+                                // asset is already loaded
+                                this._assignSubGraph(i, materialAsset, assetReference.asset.resource);
+                            } 
+                            else 
+                            {
+                                //assign placeholder texture
+                                this._assignPlaceholderSubGraph(i, materialAsset);
+                            }
                         }
                     }
                 }
