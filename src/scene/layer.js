@@ -145,7 +145,7 @@ InstanceList.prototype.clearVisibleLists = function (cameraPass) {
  * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
  * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).
  * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
- * @property {Function} onPostCull Custom function that is called after visibiliy culling is performed for this layer.
+ * @property {Function} onPostCull Custom function that is called after visibility culling is performed for this layer.
  * Useful for reverting changes done in {@link pc.Layer#onPreCull} and determining final mesh instance visibility (see {@link pc.MeshInstance#visibleThisFrame}).
  * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
  * @property {Function} onPreRender Custom function that is called before this layer is rendered.

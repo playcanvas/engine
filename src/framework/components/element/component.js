@@ -1617,7 +1617,7 @@ _define("rangeEnd");
 /**
  * @event
  * @name pc.ElementComponent#touchcancel
- * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+ * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
  * @param {pc.ElementTouchEvent} event - The event.
  */
 

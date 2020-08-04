@@ -263,7 +263,7 @@ Object.assign(ButtonComponent.prototype, {
     },
 
     _onTouchEnd: function (event) {
-        // The default behaviour of the browser is to simulate a series of
+        // The default behavior of the browser is to simulate a series of
         // `mouseenter/down/up` events immediately after the `touchend` event,
         // in order to ensure that websites that don't explicitly listen for
         // touch events will still work on mobile (see https://www.html5rocks.com/en/mobile/touchandmouse/
@@ -563,7 +563,7 @@ function toColor3(color4) {
 /**
  * @event
  * @name pc.ButtonComponent#touchcancel
- * @description Fired when a touch is cancelled on the component.
+ * @description Fired when a touch is canceled on the component.
  * @param {pc.ElementTouchEvent} event - The event.
  */
 

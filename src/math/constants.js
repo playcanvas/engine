@@ -39,6 +39,6 @@ export var CURVE_SPLINE = 4;
  * @constant
  * @type {number}
  * @name pc.CURVE_STEP
- * @description A stepped interpolater, free from the shackles of blending.
+ * @description A stepped interpolator, free from the shackles of blending.
  */
 export var CURVE_STEP = 5;

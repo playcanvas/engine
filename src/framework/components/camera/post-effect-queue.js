@@ -157,7 +157,7 @@ Object.assign(PostEffectQueue.prototype, {
                     }
                 }
             });
-            // insert it after the last occurence of this camera
+            // insert it after the last occurrence of this camera
             var layerList = this.app.scene.layers.layerList;
             var order = 0;
             var i;
