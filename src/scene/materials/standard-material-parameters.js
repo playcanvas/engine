@@ -164,7 +164,7 @@ var standardMaterialParameterTypes = {
     // msdfMapTiling
     // msdfMapOffset
     // msdfVertexColor
-    // msdfVexterColorChannel
+    // msdfVertexColorChannel
 };
 
 var key, type;

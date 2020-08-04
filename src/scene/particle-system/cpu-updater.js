@@ -85,7 +85,7 @@ ParticleCPUUpdater.prototype.calcSpawnPosition = function (particleTex, spawnMat
     if (emitter.emitterShape === EMITTERSHAPE_BOX) {
         var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
 
-        // let's find a contour sourface level coresponding to max random component
+        // let's find a contour surface level corresponding to max random component
         // and translate 2 other random components to that surface
         // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
         var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];

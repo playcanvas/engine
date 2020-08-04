@@ -1328,9 +1328,9 @@ Object.assign(Application.prototype, {
      * @name pc.Application#start
      * @description Start the application. This function does the following:
      * 1. Fires an event on the application named 'start'
-     * 2. Calls initialize for all components on entities in the hierachy
+     * 2. Calls initialize for all components on entities in the hierarchy
      * 3. Fires an event on the application named 'initialize'
-     * 4. Calls postInitialize for all components on entities in the hierachy
+     * 4. Calls postInitialize for all components on entities in the hierarchy
      * 5. Fires an event on the application named 'postinitialize'
      * 6. Starts executing the main loop of the application
      * This function is called internally by PlayCanvas applications made in the Editor

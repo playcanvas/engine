@@ -628,7 +628,7 @@ BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, 
                 break;
             }
 
-            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlaping UI
+            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlapping UI
             if ((material !== mi.material) ||
                 (layer !== mi.layer) ||
                 (vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash) ||
