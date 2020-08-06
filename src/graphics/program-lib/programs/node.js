@@ -8,7 +8,7 @@ import { shaderChunks } from '../chunks/chunks.js';
  //} from '../../scene/constants.js';
 
 //import { programlib } from './program-lib.js';
-import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
+import { begin, end, fogCode, precisionCode, skinCode, versionCode } from './common.js';
 
 var node = {
     generateKey: function (options) {

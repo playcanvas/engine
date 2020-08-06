@@ -7,7 +7,7 @@ import { NodeMaterialBinder } from './node-material.js';
 import { JsonNodeMaterialParser } from './parser/material/json-node-material.js';
 
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { NodeMaterial } from '../scene/materials/node-material.js';
+import { NodeMaterial, shadergraph } from '../scene/materials/node-material.js';
 
 /**
  * @class
@@ -54,6 +54,33 @@ Object.assign(MaterialHandler.prototype, {
         });
     },
 
+    _genPlacholderNodeMat: function ()
+    {
+        //start building shader graph
+        shadergraph.start();
+    
+        //create a blank PS shader graph node 
+        var blankPSNode = shadergraph.customNode('blankPS', 'vec4 blankPS() { return vec4(0,0,1,1); }');
+    
+        //hook up PS outputs
+        shadergraph.connectFragOut(blankPSNode);
+    
+        //create a blank vertex offset shader graph node
+        var blankVSNode = shadergraph.customNode('blankVS', 'vec3 blankVS() { return vec3(0,0,0); }');
+    
+        //hook up VS output
+        shadergraph.connectVertexOffset(blankVSNode);
+    
+        //end graph and assign built graph to material
+        var material = shadergraph.end();
+    
+        //initialize shader and update uniforms
+        material.initShader(this._device);
+        material.updateUniforms();
+    
+        return material;
+    },        
+
     _getSubClass: function (data) {
         //maybe there is a better way to tell if node material path should be taken?
         var subclass = 'Standard'
@@ -61,7 +88,7 @@ Object.assign(MaterialHandler.prototype, {
         {
             subclass = 'Node';
 
-            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser();
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device, this._genPlacholderNodeMat());
             if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
         }
         else

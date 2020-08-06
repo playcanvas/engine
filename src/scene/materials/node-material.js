@@ -35,19 +35,20 @@ var NodeMaterial = function (funcGlsl, declGlsl) {
     this._glslAssetReferences = {};
     this._subGraphAssetReferences = [];
 
+    this.graphData = {};
 
-    this.iocVars = []; //input, output or constant variables
+    this.graphData.iocVars = []; //input, output or constant variables
 
     if (funcGlsl)
     {
-        this.customFuncGlsl=funcGlsl;
-        this.customDeclGlsl=declGlsl;
+        this.graphData.customFuncGlsl=funcGlsl;
+        this.graphData.customDeclGlsl=declGlsl;
         this._genIocVars();
     }
     else
     {
-        this.subGraphs = [];
-        this.connections = []; 
+        this.graphData.subGraphs = [];
+        this.graphData.connections = []; 
     }
     
     this.shaderVariants = [];
@@ -70,12 +71,14 @@ Object.assign(NodeMaterial.prototype, {
 
         Material.prototype._cloneInternal.call(this, clone);
 
-        clone.iocVars=this.iocVars.slice(0);
-        clone.subGraphs=this.subGraphs.slice(0);
-        clone.connections=this.connections.slice(0);
+        clone.graphData = {};
 
-        clone.customDeclGlsl=this.customDeclGlsl;
-        clone.customFuncGlsl=this.customFuncGlsl;
+        clone.graphData.iocVars=this.graphData.iocVars.slice(0);
+        clone.graphData.subGraphs=this.graphData.subGraphs.slice(0);
+        clone.graphData.connections=this.graphData.connections.slice(0);
+
+        clone.graphData.customDeclGlsl=this.graphData.customDeclGlsl;
+        clone.graphData.customFuncGlsl=this.graphData.customFuncGlsl;
 
         clone.shaderVariants=this.shaderVariants.slice(0);
 
@@ -85,25 +88,25 @@ Object.assign(NodeMaterial.prototype, {
     updateUniforms: function () {
         this.clearParameters();
 
-        for (var n = 0; n < this.iocVars.length; n++) {
+        for (var n = 0; n < this.graphData.iocVars.length; n++) {
 
-            if (this.iocVars[n].name.startsWith('IN_') || (this.iocVars[n].name.startsWith('CONST_') && this.iocVars[n].type==='sampler2D'))
+            if (this.graphData.iocVars[n].name.startsWith('IN_') || (this.graphData.iocVars[n].name.startsWith('CONST_') && this.graphData.iocVars[n].type==='sampler2D'))
             {
-                switch (this.iocVars[n].type) {
+                switch (this.graphData.iocVars[n].type) {
                     case 'sampler2D':
-                        this.setParameter(this.iocVars[n].name, this.iocVars[n].valueTex);
+                        this.setParameter(this.graphData.iocVars[n].name, this.graphData.iocVars[n].valueTex);
                         break;
                     case 'float':
-                        this.setParameter(this.iocVars[n].name, this.iocVars[n].valueFloat);
+                        this.setParameter(this.graphData.iocVars[n].name, this.graphData.iocVars[n].valueFloat);
                         break;
                     case 'vec2':
-                        this.setParameter(this.iocVars[n].name, this.iocVars[n].valueVec2);
+                        this.setParameter(this.graphData.iocVars[n].name, this.graphData.iocVars[n].valueVec2);
                         break;
                     case 'vec3':
-                        this.setParameter(this.iocVars[n].name, this.iocVars[n].valueVec3);
+                        this.setParameter(this.graphData.iocVars[n].name, this.graphData.iocVars[n].valueVec3);
                         break;                    
                     case 'vec4':
-                        this.setParameter(this.iocVars[n].name, this.iocVars[n].valueVec4);
+                        this.setParameter(this.graphData.iocVars[n].name, this.graphData.iocVars[n].valueVec4);
                         break;
                     case 'samplerCube':
                     default:
@@ -163,10 +166,12 @@ Object.assign(NodeMaterial.prototype, {
         }
         else
         {
-            //new variant - maybe new layer that this material has a special output for?
-            //TODO: 
-            this.shader = this.shaderVariants[SHADER_FORWARD];//pass];
+            this.shader = this._placeHolderShader;
         }
+    },
+
+    setPlaceHolderShader: function (placeHolderMat) {   
+        this._placeHolderShader=placeHolderMat.shaderVariants[SHADER_FORWARD];
     },
 
     //initShaderVariants: function (device) {
@@ -180,8 +185,15 @@ Object.assign(NodeMaterial.prototype, {
         {
             if (!this.shaderVariants[passes[i]]) 
             {
+                var useSkin = false;
+
+                if (this.meshInstances && this.meshInstances[0] && this.meshInstances[0].skinInstance) 
+                {
+                    useSkin = true; //TODO make this a variant?
+                }
+
                 var options = {
-                    skin: !!this.meshInstances[0].skinInstance,
+                    skin: useSkin,
                     shaderGraph: this,
                     pass: passes[i],
                     maxPixelLights: (this.maxPixelLights) ? this.maxPixelLights : 4,
@@ -231,7 +243,7 @@ Object.assign(NodeMaterial.prototype, {
             iocVar={type:type, name:name, valueFloat:value};
         }
 
-        this.iocVars.push(iocVar);
+        this.graphData.iocVars.push(iocVar);
     
         return iocVar;
     },
@@ -245,11 +257,11 @@ Object.assign(NodeMaterial.prototype, {
     },
     
     addConstant: function (type, value) {
-        return this._addIocVar(type, 'CONST_'+type+'_'+this.iocVars.length, value); //create a unique name
+        return this._addIocVar(type, 'CONST_'+type+'_'+this.graphData.iocVars.length, value); //create a unique name
     },
     
     _genIocVars: function () {
-        var functionString = this.customFuncGlsl.trim();
+        var functionString = this.graphData.customFuncGlsl.trim();
     
         var head = functionString.split(")")[0];
         var rettype_funcname = head.split("(")[0];
@@ -283,27 +295,27 @@ Object.assign(NodeMaterial.prototype, {
     },
     
     addSubGraph: function (graph) {
-        var ret=this.subGraphs.length;
-        this.subGraphs.push(graph);
+        var ret=this.graphData.subGraphs.length;
+        this.graphData.subGraphs.push(graph);
         return ret;
     },
     
     connectNodeToNode: function (outNodeIndex, outVarName, inNodeIndex, inVarName) {
         var connection = { outNodeIndex: outNodeIndex, outVarName: 'OUT_'+outVarName, inNodeIndex: inNodeIndex, inVarName: 'IN_'+inVarName };
     
-        this.connections.push(connection);
+        this.graphData.connections.push(connection);
     },
 
     connectIocVarToNode: function (iocVarName, inNodeIndex, inVarName) {
         var connection = { iocVarName: iocVarName, inNodeIndex: inNodeIndex, inVarName: 'IN_'+inVarName };
     
-        this.connections.push(connection);
+        this.graphData.connections.push(connection);
     },    
     
     connectNodeToIocVar: function (outNodeIndex, outVarName, iocVarName) {
         var connection = { outNodeIndex: outNodeIndex, outVarName: 'OUT_'+outVarName, iocVarName: iocVarName };
  
-        this.connections.push(connection);
+        this.graphData.connections.push(connection);
     },
 
     _getIocVarValueString: function (iocVar)
@@ -334,9 +346,9 @@ Object.assign(NodeMaterial.prototype, {
     {
         var callString='';
     
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('OUT_ret'))
             {
                 if (outNames[iocVar.name]!=undefined)
@@ -351,7 +363,7 @@ Object.assign(NodeMaterial.prototype, {
         }
 
 
-        if (this.customFuncGlsl) 
+        if (this.graphData.customFuncGlsl) 
         {
             callString+=this.name+'( ';
         }
@@ -360,9 +372,9 @@ Object.assign(NodeMaterial.prototype, {
             callString+=this.name+'_'+this.id+'( ';
         }
 
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('IN_'))
             {
                 if (inNames[iocVar.name]!=undefined)
@@ -377,9 +389,9 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('OUT_') && !iocVar.name.startsWith('OUT_ret'))
             {
                 if (outNames[iocVar.name]!=undefined)
@@ -404,20 +416,20 @@ Object.assign(NodeMaterial.prototype, {
     _getIocVarByName: function (name)
     {
         //convienient but not fast - TODO: optimize?
-        return this.iocVars.filter(function(iocVar) { return iocVar.name === name; })[0];
+        return this.graphData.iocVars.filter(function(iocVar) { return iocVar.name === name; })[0];
     },
 
     _generateSubGraphFuncs: function (depGraphFuncs)
     {
-        if (this.subGraphs!=undefined)
+        if (this.graphData.subGraphs!=undefined)
         {
-            for (var i=0; i<this.subGraphs.length; i++) 
+            for (var i=0; i<this.graphData.subGraphs.length; i++) 
             {
-                var name = this.subGraphs[i].name;
+                var name = this.graphData.subGraphs[i].name;
                 if (depGraphFuncs[name]===undefined)
                 {
-                    depGraphFuncs[name]=this.subGraphs[i]._generateFuncGlsl();
-                    this.subGraphs[i]._generateSubGraphFuncs(depGraphFuncs);
+                    depGraphFuncs[name]=this.graphData.subGraphs[i]._generateFuncGlsl();
+                    this.graphData.subGraphs[i]._generateSubGraphFuncs(depGraphFuncs);
                 }
             }
         }
@@ -427,18 +439,18 @@ Object.assign(NodeMaterial.prototype, {
     {
         var generatedGlsl='';
         //run through inputs to declare uniforms - (default) values are set elsewhere
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('IN_'))
             {
                 generatedGlsl += 'uniform ' + iocVar.type + ' ' + iocVar.name + ';\n';
             }
         }
         //run through constants values are set here (except for textures - which have to be uniforms)
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('CONST_'))
             {
                 if (iocVar.type === 'sampler2D' )
@@ -496,9 +508,9 @@ Object.assign(NodeMaterial.prototype, {
         var inNames = {};
         var outNames = {};
 
-        for (var i=0; i<this.iocVars.length;i++) 
+        for (var i=0; i<this.graphData.iocVars.length;i++) 
         {
-            var iocVar = this.iocVars[i];
+            var iocVar = this.graphData.iocVars[i];
             if (iocVar.name.startsWith('IN_'))
             {
                 inNames[iocVar.name]=iocVar.name;
@@ -519,20 +531,20 @@ Object.assign(NodeMaterial.prototype, {
     _generateFuncGlsl: function () {
         var generatedGlsl;
 
-        if (this.customFuncGlsl) 
+        if (this.graphData.customFuncGlsl) 
         {
             //custom and built-in
-            generatedGlsl = this.customFuncGlsl.trim();
+            generatedGlsl = this.graphData.customFuncGlsl.trim();
         }
-        else if (this.subGraphs) 
+        else if (this.graphData.subGraphs) 
         {
             //graph
             //function head
             var ret_used=false;
 
-            for (var i=0; i<this.iocVars.length;i++) 
+            for (var i=0; i<this.graphData.iocVars.length;i++) 
             {
-                var iocVar = this.iocVars[i];
+                var iocVar = this.graphData.iocVars[i];
                 if (iocVar.name.startsWith('OUT_ret'))
                 {
                     //iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
@@ -553,9 +565,9 @@ Object.assign(NodeMaterial.prototype, {
             //temporary structures - with temp scope only in parsing function
             //var iocVarNameToIndexMap = [];
 
-            for (var i=0; i<this.iocVars.length;i++) 
+            for (var i=0; i<this.graphData.iocVars.length;i++) 
             {
-                var iocVar = this.iocVars[i];
+                var iocVar = this.graphData.iocVars[i];
                 if (iocVar.name.startsWith('IN_'))
                 {
                     //iocVarNameToIndexMap[iocVar.name]={type:iocVar.type, value:iocVar.value};
@@ -564,9 +576,9 @@ Object.assign(NodeMaterial.prototype, {
                 }
             };
     
-            for (var i=0; i<this.iocVars.length;i++) 
+            for (var i=0; i<this.graphData.iocVars.length;i++) 
             {
-                var iocVar = this.iocVars[i];
+                var iocVar = this.graphData.iocVars[i];
                 if (iocVar.name.startsWith('OUT_'))
                 {
                     if (!iocVar.name.startsWith('OUT_ret'))
@@ -591,9 +603,9 @@ Object.assign(NodeMaterial.prototype, {
             var insgConnectedsgMap = [];
     
             //create temp vars and graph traversal data
-            for (var i=0; i<this.connections.length; i++) 
+            for (var i=0; i<this.graphData.connections.length; i++) 
             {
-                var con=this.connections[i];
+                var con=this.graphData.connections[i];
     
                 if (con.outNodeIndex!=undefined && con.inNodeIndex!=undefined)
                 {
@@ -603,9 +615,9 @@ Object.assign(NodeMaterial.prototype, {
                     {
                         outsgTmpVarMap[outsgIndex]={};
         
-                        for (var o=0; o<this.subGraphs[con.outNodeIndex].iocVars.length; o++)
+                        for (var o=0; o<this.graphData.subGraphs[con.outNodeIndex].graphData.iocVars.length; o++)
                         {
-                            var outIocVar=this.subGraphs[con.outNodeIndex].iocVars[o];//_getIocVarByName(con.outVarName);  
+                            var outIocVar=this.graphData.subGraphs[con.outNodeIndex].graphData.iocVars[o];//_getIocVarByName(con.outVarName);  
                             if (outIocVar.name.startsWith('OUT_'))
                             {
                                 //generatedGlsl+=iocVar.type+' temp_'+iocVar.type+'_'+tmpVarCounter+' = '+iocVar.value+';\n';
@@ -646,9 +658,9 @@ Object.assign(NodeMaterial.prototype, {
                     {
                         outsgTmpVarMap[outsgIndex]={};
         
-                        for (var o=0; o<this.subGraphs[con.outNodeIndex].iocVars.length; o++)
+                        for (var o=0; o<this.graphData.subGraphs[con.outNodeIndex].graphData.iocVars.length; o++)
                         {
-                            var outIocVar=this.subGraphs[con.outNodeIndex].iocVars[o];//_getIocVarByName(con.outVarName);  
+                            var outIocVar=this.graphData.subGraphs[con.outNodeIndex].graphData.iocVars[o];//_getIocVarByName(con.outVarName);  
 
                             if (outIocVar.name.startsWith('OUT_'))
                             {
@@ -671,11 +683,11 @@ Object.assign(NodeMaterial.prototype, {
 
             var while_loop_count=0; //it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
 
-            while (sgList.length<this.subGraphs.length || while_loop_count<this.connections.length) 
+            while (sgList.length<this.graphData.subGraphs.length || while_loop_count<this.graphData.connections.length) 
             {
                 while_loop_count++;
 
-                for (var i=0; i<this.subGraphs.length; i++) 
+                for (var i=0; i<this.graphData.subGraphs.length; i++) 
                 {
                     if (sgOnList[i]!=true)
                     {
@@ -706,7 +718,7 @@ Object.assign(NodeMaterial.prototype, {
             {
                 var sgIndex=sgList[i];
     
-                var func=this.subGraphs[sgIndex].name;
+                var func=this.graphData.subGraphs[sgIndex].name;
 
                 if ( func.endsWith('PS') ) {
                     generatedGlsl += '#ifdef SG_PS\n';
@@ -714,7 +726,7 @@ Object.assign(NodeMaterial.prototype, {
                     generatedGlsl += '#ifdef SG_VS\n';
                 }
         
-                generatedGlsl+=this.subGraphs[sgIndex]._generateSubGraphCall(insgTmpVarMap[sgIndex], outsgTmpVarMap[sgIndex]);
+                generatedGlsl+=this.graphData.subGraphs[sgIndex]._generateSubGraphCall(insgTmpVarMap[sgIndex], outsgTmpVarMap[sgIndex]);
 
                 if ( func.endsWith('PS')  ) {
                     generatedGlsl += '#endif //SG_PS\n';
@@ -724,9 +736,9 @@ Object.assign(NodeMaterial.prototype, {
             }
     
             //output assignment
-            for (var i=0; i<this.iocVars.length;i++) 
+            for (var i=0; i<this.graphData.iocVars.length;i++) 
             {
-                var iocVar = this.iocVars[i];
+                var iocVar = this.graphData.iocVars[i];
                 if (iocVar.name.startsWith('OUT_') && !iocVar.name.startsWith('OUT_ret'))
                 {
                     generatedGlsl+=iocVar.name+' = '+outIocVarTmpVarMap[iocVar.name]+';\n';
