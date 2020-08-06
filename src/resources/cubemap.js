@@ -118,7 +118,7 @@ Object.assign(CubemapHandler.prototype, {
                     var prelit = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
-                        type: getType() || TEXTURETYPE_RGBM,
+                        type: getType() || tex.type,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
