@@ -14,6 +14,7 @@ var vecB = new Vec3();
 var vecC = new Vec3();
 
 if (window.XRHand) {
+    var XRHand = window.XRHand;
     fingerJointIds = [
         [XRHand.THUMB_METACARPAL, XRHand.THUMB_PHALANX_PROXIMAL, XRHand.THUMB_PHALANX_DISTAL, XRHand.THUMB_PHALANX_TIP],
         [XRHand.INDEX_METACARPAL, XRHand.INDEX_PHALANX_PROXIMAL, XRHand.INDEX_PHALANX_INTERMEDIATE, XRHand.INDEX_PHALANX_DISTAL, XRHand.INDEX_PHALANX_TIP],
