@@ -2,12 +2,15 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var tipJointIds = [];
-var tipJointIdsIndex = {};
+var tipJointIds = window.XRHand ? [
+    XRHand.THUMB_PHALANX_TIP,
+    XRHand.INDEX_PHALANX_TIP,
+    XRHand.MIDDLE_PHALANX_TIP,
+    XRHand.RING_PHALANX_TIP,
+    XRHand.LITTLE_PHALANX_TIP
+] : [];
 
-if (window.XRHand) {
-    tipJointIds = [XRHand.THUMB_PHALANX_TIP, XRHand.INDEX_PHALANX_TIP, XRHand.MIDDLE_PHALANX_TIP, XRHand.RING_PHALANX_TIP, XRHand.LITTLE_PHALANX_TIP];
-}
+var tipJointIdsIndex = {};
 
 for (var i = 0; i < tipJointIds.length; i++) {
     tipJointIdsIndex[tipJointIds[i]] = true;
@@ -40,7 +43,7 @@ function XrJoint(index, id, hand, finger) {
     this._finger = finger || null;
     if (this._finger) this._finger._joints.push(this);
 
-    this._wrist = id == XRHand.WRIST;
+    this._wrist = id === XRHand.WRIST;
     if (this._wrist) this._hand._wrist = this;
 
     this._tip = this._finger && !! tipJointIdsIndex[id];
@@ -52,10 +55,7 @@ function XrJoint(index, id, hand, finger) {
     this._radius = null;
 
     this._localTransform = new Mat4();
-    this._localTransform.setIdentity();
-
     this._worldTransform = new Mat4();
-    this._worldTransform.setIdentity();
 
     this._localPosition = new Vec3();
     this._localRotation = new Quat();
