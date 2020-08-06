@@ -109,14 +109,17 @@ Object.assign(SoundComponentSystem.prototype, {
             if (store.hasOwnProperty(id)) {
                 var item = store[id];
                 var entity = item.entity;
-                var componentData = item.data;
 
                 // Update slot position if this is a 3d sound
-                if (componentData.enabled && entity.enabled && componentData.positional) {
-                    var position = entity.getPosition();
-                    var slots = componentData.slots;
-                    for (var key in slots) {
-                        slots[key].updatePosition(position);
+                if (entity.enabled) {
+                    var component = entity.sound;
+
+                    if (component.enabled && component.positional) {
+                        var position = entity.getPosition();
+                        var slots = component.slots;
+                        for (var key in slots) {
+                            slots[key].updatePosition(position);
+                        }
                     }
                 }
             }
