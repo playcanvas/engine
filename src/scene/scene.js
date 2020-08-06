@@ -139,7 +139,7 @@ function Scene() {
     this._shaderVersion = 0;
     this._statsUpdated = false;
 
-    // backwards compatibilty only
+    // backwards compatibility only
     this._models = [];
 
     // default material used in case no other material is available

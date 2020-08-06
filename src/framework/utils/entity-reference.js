@@ -13,7 +13,7 @@ import { Entity } from '../entity.js';
  * with the runtime addition or removal of components, and addition/removal of associated event listeners.
  * ## Usage Scenario ##
  * Imagine that you're creating a Checkbox component, which has a reference to an entity representing
- * the checkmark/tickmark that is rendered in the Checkbox. The reference is modelled as an entity guid
+ * the checkmark/tickmark that is rendered in the Checkbox. The reference is modeled as an entity guid
  * property on the Checkbox component, called simply 'checkmark'. We have to implement a basic piece of
  * functionality whereby when the 'checkmark' entity reference is set, the Checkbox component must toggle
  * the tint of an ImageElementComponent present on the checkmark entity to indicate whether the Checkbox

@@ -760,7 +760,7 @@ Object.assign(ScriptComponent.prototype, {
     resolveDuplicatedEntityReferenceProperties: function (oldScriptComponent, duplicatedIdsMap) {
         var newScriptComponent = this.entity.script;
 
-        // for each script in the old compononent
+        // for each script in the old component
         for (var scriptName in oldScriptComponent._scriptsIndex) {
             // get the script type from the script registry
             var scriptType = this.system.app.scripts.get(scriptName);
