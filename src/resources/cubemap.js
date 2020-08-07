@@ -1,7 +1,6 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
-    PIXELFORMAT_R8_G8_B8_A8
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../graphics/graphics.js';
 
 import { Asset } from '../asset/asset.js';
@@ -156,17 +155,10 @@ Object.assign(CubemapHandler.prototype, {
                     }));
                 }
 
-                var identifyType = function (texture) {
-                    return (texture.type === TEXTURETYPE_DEFAULT &&
-                        texture.format === PIXELFORMAT_R8_G8_B8_A8) ?
-                        TEXTURETYPE_RGBM :
-                        texture.type;
-                };
-
                 var faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
-                    type: getType() || identifyType(faceTextures[0]),
+                    type: getType() || faceTextures[0].type,
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
                     format: faceTextures[0].format,
