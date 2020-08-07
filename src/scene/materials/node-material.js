@@ -43,7 +43,7 @@ var NodeMaterial = function (funcGlsl, declGlsl) {
     {
         this.graphData.customFuncGlsl=funcGlsl;
         this.graphData.customDeclGlsl=declGlsl;
-        this._genIocVars();
+        this.genCustomFuncIocVars();
     }
     else
     {
@@ -88,8 +88,8 @@ Object.assign(NodeMaterial.prototype, {
     updateUniforms: function () {
         this.clearParameters();
 
-        for (var n = 0; n < this.graphData.iocVars.length; n++) {
-
+        for (var n = 0; n < this.graphData.iocVars.length; n++) 
+        {
             if (this.graphData.iocVars[n].name.startsWith('IN_') || (this.graphData.iocVars[n].name.startsWith('CONST_') && this.graphData.iocVars[n].type==='sampler2D'))
             {
                 switch (this.graphData.iocVars[n].type) {
@@ -115,27 +115,11 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
         }
-/*
-        for (var n = 0; n < this.shaderGraph.params.length; n++) {
-            // if (!this.paramValues[n])
-            // {
-            //     this.paramValues[n] = (this.shaderGraph.params[n].value.clone) ? this.shaderGraph.params[n].value.clone() : this.shaderGraph.params[n].value;
-            // }
 
-            switch (this.shaderGraph.params[n].type) {
-                case 'sampler2D':
-                case 'samplerCube':
-                case 'float':
-                case 'vec2':
-                case 'vec3':
-                case 'vec4':
-                    this.setParameter(this.shaderGraph.params[n].name, this.shaderGraph.params[n].value);
-                    break;
-                default:
-                    // error
-                    break;
-            }
-        }*/
+        if (this.dirtyShader || !this._scene) {
+            this.shader = null;
+            this.clearVariants();
+        }
     },
 
     updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights)
@@ -160,6 +144,9 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 */
+        this.initShader(device);
+        //material.updateUniforms(); 
+
         if (this.shaderVariants[pass])
         {
             this.shader = this.shaderVariants[pass];
@@ -168,6 +155,8 @@ Object.assign(NodeMaterial.prototype, {
         {
             this.shader = this._placeHolderShader;
         }
+
+        this.dirtyShader = false;
     },
 
     setPlaceHolderShader: function (placeHolderMat) {   
@@ -183,7 +172,7 @@ Object.assign(NodeMaterial.prototype, {
 
         for (var i=0;i<passes.length; i++)
         {
-            if (!this.shaderVariants[passes[i]]) 
+            //if (!this.shaderVariants[passes[i]]) 
             {
                 var useSkin = false;
 
@@ -260,7 +249,7 @@ Object.assign(NodeMaterial.prototype, {
         return this._addIocVar(type, 'CONST_'+type+'_'+this.graphData.iocVars.length, value); //create a unique name
     },
     
-    _genIocVars: function () {
+    genCustomFuncIocVars: function () {
         var functionString = this.graphData.customFuncGlsl.trim();
     
         var head = functionString.split(")")[0];

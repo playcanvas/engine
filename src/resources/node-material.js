@@ -123,7 +123,7 @@ Object.assign(NodeMaterialBinder.prototype, {
 
     _onGlslLoad: function (parameterName, materialAsset, glslAsset) {
         this._assignGlsl(parameterName, materialAsset, glslAsset.resource);
-        materialAsset.resource.update();
+        this._parser.initialize(materialAsset.resource, materialAsset.data);
     },
 
     _onGlslAdd: function (parameterName, materialAsset, glslAsset) {
@@ -133,15 +133,15 @@ Object.assign(NodeMaterialBinder.prototype, {
     _onGlslRemove: function (parameterName, materialAsset, glslAsset) {
         var material = materialAsset.resource;
 
-        if (material[parameterName] === glslAsset.resource) {
+        if (material.graphData[parameterName] === glslAsset.resource) {
             this._assignGlsl(parameterName, materialAsset, null);
-            material.update();
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
         }
     },
 
     _onIocVarTexLoad: function (i, materialAsset, textureAsset) {
         this._assignTexture(i, materialAsset, textureAsset.resource);
-        materialAsset.resource.update();
+        this._parser.initialize(materialAsset.resource, materialAsset.data);
     },
 
     _onIocVarTexAdd: function (i, materialAsset, textureAsset) {
@@ -151,15 +151,15 @@ Object.assign(NodeMaterialBinder.prototype, {
     _onIocVarTexRemove: function (i, materialAsset, textureAsset) {
         var material = materialAsset.resource;
 
-        if (materialAsset.data.iocVars[i].valueTex === textureAsset.resource) {
+        if (material.graphData.iocVars[i].valueTex === textureAsset.resource) {
             this._assignTexture(i, materialAsset, null);
-            //material.update();
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
         }
     },
 
     _onSubGraphLoad: function (i, materialAsset, subGraphAsset) {
         this._assignSubGraph(i, materialAsset, subGraphAsset.resource);
-        materialAsset.resource.update();
+        this._parser.initialize(materialAsset.resource, materialAsset.data);
     },
 
     _onSubGraphAdd: function (i, materialAsset, subGraphAsset) {
@@ -169,9 +169,9 @@ Object.assign(NodeMaterialBinder.prototype, {
     _onSubGraphRemove: function (i, materialAsset, subGraphAsset) {
         var material = materialAsset.resource;
 
-        if (materialAsset.subGraphs[i] === subGraphAsset.resource) {
+        if (material.graphData.subGraphs[i] === subGraphAsset.resource) {
             this._assignSubGraph(i, materialAsset, null);
-            //material.update();
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
         }
     },
 
@@ -219,13 +219,15 @@ Object.assign(NodeMaterialBinder.prototype, {
                             if (assetReference.asset.resource) 
                             {
                                 // asset is already loaded
-                                this._assignIocVarTex(i, materialAsset, assetReference.asset.resource);
+                                this._assignTexture(i, materialAsset, assetReference.asset.resource);
                             } 
                             else 
                             {
                                 //assign placeholder texture
                                 this._assignPlaceholderTexture(i, materialAsset);
                             }
+                            
+                            assets.load(assetReference.asset);
                         }
                     }
                 }
@@ -242,7 +244,8 @@ Object.assign(NodeMaterialBinder.prototype, {
             {
                 assetReference = material._glslAssetReferences[name];
 
-                if (!(data.graphData[name] instanceof String))
+                //if (!(data.graphData[name] instanceof String))
+                if (typeof(data.graphData[name]) === 'number' && data.graphData[name] > 0)
                 {
                     if (!assetReference) 
                     {
@@ -259,7 +262,7 @@ Object.assign(NodeMaterialBinder.prototype, {
                         // texture paths are measured from the material directory
                         assetReference.url = materialAsset.getAbsoluteUrl(data[name]);
                     } else {
-                        assetReference.id = data[name];
+                        assetReference.id = data.graphData[name];
                     }    
                     
                     if (assetReference.asset) 
@@ -267,13 +270,15 @@ Object.assign(NodeMaterialBinder.prototype, {
                         if (assetReference.asset.resource) 
                         {
                             // asset is already loaded
-                            this._assignCustomGlsl(name, materialAsset, assetReference.asset.resource);
+                            this._assignGlsl(name, materialAsset, assetReference.asset.resource);
                         } 
                         else 
                         {
                             //assign placeholder glsl
                             this._assignPlaceholderCustomGlsl(name, materialAsset);
                         }
+
+                        assets.load(assetReference.asset);
                     }
                 }           
             }
@@ -320,6 +325,8 @@ Object.assign(NodeMaterialBinder.prototype, {
                                 //assign placeholder texture
                                 this._assignPlaceholderSubGraph(i, materialAsset);
                             }
+
+                            assets.load(assetReference.asset);
                         }
                     }
                 }

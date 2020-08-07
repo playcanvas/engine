@@ -45,16 +45,6 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     var material_ready=true;
 
     //input or output or constant variables - all node material types have this block
-    if (!data.iocVars)
-    {
-        material_ready = false;
-
-        //if (data.customFuncGlsl && (typeof(data.customFuncGlsl) === 'number' && data.customFuncGlsl > 0))
-        //{
-        //    material_ready = false;
-        //}
-    }
-
     if (data.graphData.iocVars)
     {
         for (var i=0;i<data.graphData.iocVars.length;i++)
@@ -83,8 +73,8 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
             }
         }
     }
-
-    if (data.customFuncGlsl)
+    
+    if (data.graphData.customFuncGlsl)
     {
         //this means this is a custom node (often also has a decl shader)
         if (data.graphData.customDeclGlsl)
@@ -110,20 +100,16 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
             }
             else
             {
-                //shader asset loaded - assign!
+                //shader asset loaded - assign and generate matching iocVars
                 material.graphData.customFuncGlsl=data.graphData.customFuncGlsl;
+                material.graphData.iocVars.length=0;
+                material.genCustomFuncIocVars();
             }
-        }
-
-        if (material_ready && !data.iocVars)
-        {
-            material._genIocVars();
         }
     }
     else if (data.graphData.subGraphs)
     {
         // graph node material
-        
         if (data.graphData.connections)
         {
             // sub graph connections - only graph node materials have this
@@ -131,7 +117,7 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
             for (var i=0;i<data.graphData.connections.length;i++)
             {
-                //connections are indices and names - just assign
+                //connections are indices and names - no asset refs - so just assign
                 Object.assign(material.graphData.connections[i], data.graphData.connections[i]);
             }
         }
@@ -157,15 +143,22 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     }
     else
     {
-        //no custom glsl or sub graphs - this means this is a node material instance
+        if (data.graphData.iocVars)
+        {
+            //no custom glsl or sub graphs - this means this is a node material instance?
+        }
+        else
+        {
+            //completely empty?
+            material_ready=false;
+        }        
     }
 
     //only mark for update if ready dependent assets (with no placeholders) are loaded
     if (material_ready)
     {
-        material.initShader(this._device);
-        material.updateUniforms(); 
-        //material.update();
+        material.dirtyShader = true;
+        material.update();
     }
     else
     {
