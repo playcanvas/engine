@@ -1,7 +1,6 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
-    PIXELFORMAT_R8_G8_B8_A8
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../graphics/graphics.js';
 
 import { Asset } from '../asset/asset.js';
