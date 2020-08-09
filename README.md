@@ -182,6 +182,10 @@ And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%
 
 The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, code editing, hosting and publishing services.
 
+## Testing powered by 
+<a target="_blank" href="https://www.browserstack.com/"><img width="200" src="https://www.browserstack.com/images/layout/browserstack-logo-600x315.png"></a><br>
+[BrowserStack Open-Source Program](https://www.browserstack.com/open-source)
+
 ## License
 
 The PlayCanvas Engine is released under the [MIT](https://opensource.org/licenses/MIT) license. See LICENSE file.
