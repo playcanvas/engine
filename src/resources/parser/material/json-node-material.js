@@ -47,14 +47,15 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     //input or output or constant variables - all node material types have this block
     if (data.graphData.iocVars)
     {
-        for (var i=0;i<data.graphData.iocVars.length;i++)
+        //for (var i=0;i<data.graphData.iocVars.length;i++)
+        for (var i=0;i<Object.keys(data.graphData.iocVars).length;i++)        
         {
             if (data.graphData.iocVars[i].valueTex)
             {
                 if (typeof(data.graphData.iocVars[i].valueTex) === 'number' && data.graphData.iocVars[i].valueTex > 0)
                 {
                     //texture asset not loaded yet - deal with in node material binder
-                    if (!material.graphData.iocVars[i].valueTex) 
+                    if (!(material.graphData.iocVars[i] && material.graphData.iocVars[i].valueTex))
                     {   
                         //seems no placeholder is set yet
                         material_ready = false;
@@ -63,12 +64,14 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 else
                 {
                     //texture asset loaded - assign
+                    material.graphData.iocVars[i]={};
                     Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
                 }
             }
             else
             {
                 //assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
+                material.graphData.iocVars[i]={};
                 Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
             }
         }
@@ -104,6 +107,27 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 material.graphData.customFuncGlsl=data.graphData.customFuncGlsl;
                 material.graphData.iocVars.length=0;
                 material.genCustomFuncIocVars();
+
+                //copy values that match into new iocVars - if not matching reset
+                //TODO: make this more robust (match even if index doesn't match)?
+                if (material.graphData.iocVars)
+                {
+                    for (var i=0;i<material.graphData.iocVars.length;i++)
+                    {
+                        //if (data.graphData.iocVars && i<data.graphData.iocVars.length && material.graphData.iocVars[i].name===data.graphData.iocVars[i].name && material.graphData.iocVars[i].type===data.graphData.iocVars[i].type )
+                        if (data.graphData.iocVars && i<Object.keys(data.graphData.iocVars).length && material.graphData.iocVars[i].name===data.graphData.iocVars[i].name && material.graphData.iocVars[i].type===data.graphData.iocVars[i].type )
+                        {
+                            //exists and matches copy what is already set in the asset 
+                            Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
+                        }
+                        else
+                        {
+                            //reset and copy material into data.graphData
+                            //data.graphData.iocVars[i]={};
+                            //Object.assign(data.graphData.iocVars[i], material.graphData.iocVars[i]);
+                        }
+                    }
+                }
             }
         }
     }
@@ -115,9 +139,11 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
             // sub graph connections - only graph node materials have this
             material.graphData.connections=[];
 
-            for (var i=0;i<data.graphData.connections.length;i++)
+            //for (var i=0;i<data.graphData.connections.length;i++)
+            for (var i=0;i<Object.keys(data.graphData.connections).length;i++)              
             {
                 //connections are indices and names - no asset refs - so just assign
+                material.graphData.connections[i]={};
                 Object.assign(material.graphData.connections[i], data.graphData.connections[i]);
             }
         }
@@ -126,7 +152,8 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
         {
             material.graphData.subGraphs=[];
 
-            for (var i=0;i<data.graphData.subGraphs.length;i++)
+            //for (var i=0;i<data.graphData.subGraphs.length;i++)
+            for (var i=0;i<Object.keys(data.graphData.subGraphs).length;i++)                  
             {
                 if (typeof(data.graphData.subGraphs[i]) === 'number' && data.graphData.subGraphs[i] > 0)
                 {
@@ -146,6 +173,8 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
         if (data.graphData.iocVars)
         {
             //no custom glsl or sub graphs - this means this is a node material instance?
+            //TODO: support material instances properly
+            material_ready=false;
         }
         else
         {

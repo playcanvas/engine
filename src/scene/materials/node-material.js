@@ -227,9 +227,13 @@ Object.assign(NodeMaterial.prototype, {
         {
             iocVar={type:type, name:name, valueVec2:value};
         }
-        else
+        else if (typeof(value) === 'number')
         {
             iocVar={type:type, name:name, valueFloat:value};
+        }
+        else
+        {
+            iocVar={type:type, name:name};
         }
 
         this.graphData.iocVars.push(iocVar);

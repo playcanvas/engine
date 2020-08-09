@@ -187,8 +187,9 @@ Object.assign(NodeMaterialBinder.prototype, {
         
         //deal with textures (which are only in the iocVars block)
         if (data.graphData.iocVars)
-        {
-            for (var i=0;i<data.graphData.iocVars.length;i++)
+        {            
+            //for (var i=0;i<data.graphData.iocVars.length;i++)
+            for (var i=0;i<Object.keys(data.graphData.iocVars).length;i++)
             {
                 if (data.graphData.iocVars[i].valueTex)
                 {
@@ -219,11 +220,15 @@ Object.assign(NodeMaterialBinder.prototype, {
                             if (assetReference.asset.resource) 
                             {
                                 // asset is already loaded
+                                material.graphData.iocVars[i]={};
+                                Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
                                 this._assignTexture(i, materialAsset, assetReference.asset.resource);
                             } 
                             else 
                             {
                                 //assign placeholder texture
+                                material.graphData.iocVars[i]={};
+                                Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);                                
                                 this._assignPlaceholderTexture(i, materialAsset);
                             }
                             
@@ -287,7 +292,8 @@ Object.assign(NodeMaterialBinder.prototype, {
         //deal with sub graphs 
         if (data.graphData.subGraphs)
         {
-            for (var i=0;i<data.graphData.subGraphs.length;i++)
+            for (var i=0;i<Object.keys(data.graphData.subGraphs).length;i++)            
+            //for (var i=0;i<data.graphData.subGraphs.length;i++)
             {
                 if (data.graphData.subGraphs[i])
                 {
