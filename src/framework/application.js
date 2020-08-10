@@ -99,6 +99,7 @@ import { LayoutChildComponentSystem } from './components/layout-child/system.js'
 import { LayoutGroupComponentSystem } from './components/layout-group/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ModelComponentSystem } from './components/model/system.js';
+import { RenderComponentSystem } from './components/render/system.js';
 import { ParticleSystemComponentSystem } from './components/particle-system/system.js';
 import { RigidBodyComponentSystem } from './components/rigid-body/system.js';
 import { ScreenComponentSystem } from './components/screen/system.js';
@@ -734,6 +735,7 @@ function Application(canvas, options) {
     this.systems.add(new AnimationComponentSystem(this));
     this.systems.add(new AnimComponentSystem(this));
     this.systems.add(new ModelComponentSystem(this));
+    this.systems.add(new RenderComponentSystem(this));
     this.systems.add(new CameraComponentSystem(this));
     this.systems.add(new LightComponentSystem(this));
     if (script.legacy) {

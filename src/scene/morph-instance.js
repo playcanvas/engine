@@ -134,6 +134,17 @@ Object.assign(MorphInstance.prototype, {
 
     /**
      * @function
+     * @name pc.MorphInstance#clone
+     * @description Clones a MorphInstance. The returned clone uses the same {@link pc.Morph} and weights are set to defaults.
+     * @returns {pc.MorphInstance} A clone of the specified MorphInstance.
+     */
+    clone: function () {
+        var clone = new MorphInstance(this.morph);
+        return clone;
+    },
+
+    /**
+     * @function
      * @name pc.MorphInstance#getWeight
      * @description Gets current weight of the specified morph target.
      * @param {number} index - An index of morph target.

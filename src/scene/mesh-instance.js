@@ -3,11 +3,11 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import {
     BLEND_NONE, BLEND_NORMAL,
     LAYER_WORLD,
-    MASK_DYNAMIC,
+    MASK_DYNAMIC, MASK_LIGHTMAP, MASK_BAKED,
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -454,6 +454,17 @@ Object.assign(MeshInstance.prototype, {
         for (var paramName in this.parameters) {
             var parameter = this.parameters[paramName];
             parameter.scopeId.setValue(parameter.data);
+        }
+    },
+
+    setLightmapped: function (value) {
+        if (value) {
+            this.mask = (this.mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
+        } else {
+            this.deleteParameter("texture_lightMap");
+            this.deleteParameter("texture_dirLightMap");
+            this._shaderDefs &= ~SHADERDEF_LM;
+            this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }
 });

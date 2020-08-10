@@ -72,13 +72,15 @@ function BatchGroup(id, name, dynamic, maxAabbSize, layers) {
     this._obj = {
         model: [],
         element: [],
-        sprite: []
+        sprite: [],
+        render: []
     };
 }
 
 BatchGroup.MODEL = 'model';
 BatchGroup.ELEMENT = 'element';
 BatchGroup.SPRITE = 'sprite';
+BatchGroup.RENDER = 'render';
 
 // Class derived from SkinInstance with changes to make it suitable for batching
 function SkinBatchInstance(device, nodes, rootNode) {
@@ -288,6 +290,9 @@ BatchManager.prototype._removeModelsFromBatchGroup = function (node, id) {
     if (node.model && node.model.batchGroupId === id) {
         node.model.batchGroupId = -1;
     }
+    if (node.render && node.render.batchGroupId === id) {
+        node.render.batchGroupId = -1;
+    }
     if (node.element && node.element.batchGroupId === id) {
         node.element.batchGroupId = -1;
     }
@@ -329,34 +334,63 @@ BatchManager.prototype.remove = function (type, groupId, node) {
     }
 };
 
-BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
-    if (!node.model || !node.model.model) return arr;
+BatchManager.prototype._extractRender = function (node, arr, group, groupMeshInstances) {
+    if (node.render) {
 
-    var i;
-    if (node.model.isStatic) {
-        // static mesh instances can be in both drawCall array with _staticSource linking to original
-        // and in the original array as well, if no triangle splitting was done
-        var drawCalls = this.scene.drawCalls;
-        var nodeMeshInstances = node.model.meshInstances;
-        for (i = 0; i < drawCalls.length; i++) {
-            if (!drawCalls[i]._staticSource) continue;
-            if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-            arr.push(drawCalls[i]);
-        }
-        for (i = 0; i < nodeMeshInstances.length; i++) {
-            if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                arr.push(nodeMeshInstances[i]);
+        if (node.render.isStatic) {
+            // static mesh instances can be in both drawCall array with _staticSource linking to original
+            // and in the original array as well, if no triangle splitting was done
+            var i, drawCalls = this.scene.drawCalls;
+            var nodeMeshInstances = node.render.meshInstances;
+            for (i = 0; i < drawCalls.length; i++) {
+                if (!drawCalls[i]._staticSource) continue;
+                if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
+                arr.push(drawCalls[i]);
             }
+            for (i = 0; i < nodeMeshInstances.length; i++) {
+                if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
+                    arr.push(nodeMeshInstances[i]);
+                }
+            }
+        } else {
+            arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
         }
-    } else {
-        arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+
+        node.render.removeFromLayers();
     }
 
-    node.model.removeModelFromLayers();
+    return arr;
+};
 
-    // #ifdef DEBUG
-    node.model._batchGroup = group;
-    // #endif
+BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
+    if (node.model && node.model.model) {
+        var i;
+        if (node.model.isStatic) {
+            // static mesh instances can be in both drawCall array with _staticSource linking to original
+            // and in the original array as well, if no triangle splitting was done
+            var drawCalls = this.scene.drawCalls;
+            var nodeMeshInstances = node.model.meshInstances;
+            for (i = 0; i < drawCalls.length; i++) {
+                if (!drawCalls[i]._staticSource) continue;
+                if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
+                arr.push(drawCalls[i]);
+            }
+            for (i = 0; i < nodeMeshInstances.length; i++) {
+                if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
+                    arr.push(nodeMeshInstances[i]);
+                }
+            }
+        } else {
+            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+        }
+
+        node.model.removeModelFromLayers();
+
+        // #ifdef DEBUG
+        node.model._batchGroup = group;
+        // #endif
+    }
+
     return arr;
 };
 
@@ -396,7 +430,7 @@ BatchManager.prototype._extractElement = function (node, arr, group) {
 // with a batch group id. Remove from layers any models that these components contains.
 // Fill the `groupMeshInstances` with all the mesh instances to be included in the batch groups,
 // indexed by batch group id.
-BatchManager.prototype._collectAndRemoveModels = function (groupMeshInstances, groupIds) {
+BatchManager.prototype._collectAndRemoveMeshInstances = function (groupMeshInstances, groupIds) {
     var node, group, arr, id;
     for (var g = 0; g < groupIds.length; g++) {
         id = groupIds[g];
@@ -407,6 +441,10 @@ BatchManager.prototype._collectAndRemoveModels = function (groupMeshInstances, g
 
         for (var m = 0; m < group._obj.model.length; m++) {
             arr = this._extractModel(group._obj.model[m], arr, group, groupMeshInstances);
+        }
+
+        for (var r = 0; r < group._obj.render.length; r++) {
+            arr = this._extractRender(group._obj.render[r], arr, group, groupMeshInstances);
         }
 
         for (var e = 0; e < group._obj.element.length; e++) {
@@ -453,7 +491,7 @@ BatchManager.prototype.generate = function (groupIds) {
     this._batchList = newBatchList;
 
     // collect
-    this._collectAndRemoveModels(groupMeshInstances, groupIds);
+    this._collectAndRemoveMeshInstances(groupMeshInstances, groupIds);
 
     if (groupIds === this._dirtyGroups) {
         this._dirtyGroups.length = 0;
