@@ -488,10 +488,12 @@ Object.assign(Lightmapper.prototype, {
         var origCastShadows = [];
         var casters = [];
         var meshes;
+        var rom;
         for (node = 0; node < allNodes.length; node++) {
-            origCastShadows[node] = renderOrModel(allNodes[node]).castShadows;
-            renderOrModel(allNodes[node]).castShadows = renderOrModel(allNodes[node]).castShadowsLightmap;
-            if (renderOrModel(allNodes[node]).castShadowsLightmap) {
+            rom = renderOrModel(allNodes[node]);
+            origCastShadows[node] = rom.castShadows;
+            rom.castShadows = rom.castShadowsLightmap;
+            if (rom.castShadowsLightmap) {
                 meshes = renderOrModelMeshInstances(allNodes[node]);
                 for (i = 0; i < meshes.length; i++) {
                     meshes[i].visibleThisFrame = true;
