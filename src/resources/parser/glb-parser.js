@@ -706,10 +706,25 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
             } else if (indices instanceof Uint16Array) {
                 indexFormat = INDEXFORMAT_UINT16;
             } else {
-                // TODO: these indices may need conversion since some old WebGL 1.0 devices
-                // don't support 32bit index data
                 indexFormat = INDEXFORMAT_UINT32;
             }
+
+            // 32bit index buffer is used but not supported
+            if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
+
+                // #ifdef DEBUG
+                if (vertexBuffer.numVertices > 0xFFFF) {
+                    console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
+                }
+                // #endif
+
+                // convert to 16bit
+                indexFormat = INDEXFORMAT_UINT16;
+                var oldIndices = indices;
+                indices = new Uint16Array(oldIndices.length);
+                indices.set(oldIndices);
+            }
+
             var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
             mesh.indexBuffer[0] = indexBuffer;
             mesh.primitive[0].count = indices.length;
