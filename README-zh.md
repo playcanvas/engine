@@ -31,7 +31,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 
 许多行业龙头公司在不同领域（广告，电子游戏以及产品可视化等）均适用了 PlayCanvas：
 
-**Animech, ARM, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
+**Animech, Arm, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
 
 ## 特点
 
