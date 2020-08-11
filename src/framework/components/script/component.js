@@ -847,16 +847,7 @@ Object.assign(ScriptComponent.prototype, {
                 } else if (attribute.type === 'json' && Array.isArray(attribute.schema)) {
                     // json attributes
                     var oldValue = oldAttributes[attributeName];
-                    var newJsonValue;
-                    if (attribute.array) {
-                        newJsonValue = oldValue.slice();
-
-                        for (j = 0; j < oldValue.length; j++) {
-                            newJsonValue[j] = Object.assign({}, oldValue[j]);
-                        }
-                    } else {
-                        newJsonValue = Object.assign({}, oldValue);
-                    }
+                    var newJsonValue = (newAttributesRaw ? newAttributesRaw[attributeName] : newAttributes[attributeName]);
 
                     for (i = 0; i < attribute.schema.length; i++) {
                         var field = attribute.schema[i];
@@ -876,7 +867,6 @@ Object.assign(ScriptComponent.prototype, {
                                 );
                             }
 
-
                         } else {
                             this._resolveEntityScriptAttribute(
                                 field,
@@ -887,12 +877,6 @@ Object.assign(ScriptComponent.prototype, {
                                 duplicatedIdsMap
                             );
                         }
-                    }
-
-                    if (newAttributesRaw) {
-                        newAttributesRaw[attributeName] = newJsonValue;
-                    } else {
-                        newAttributes[attributeName] = newJsonValue;
                     }
                 }
             }

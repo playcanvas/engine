@@ -1136,7 +1136,7 @@ describe("pc.ScriptComponent", function () {
             ],
             "scripts": {
                 "scriptWithAttributes": {
-                    "enabled": false,
+                    "enabled": true,
                     "attributes": {
                         "attribute3": {
                             fieldNumber: 1
@@ -1168,6 +1168,9 @@ describe("pc.ScriptComponent", function () {
 
     it('json script attributes are cloned correctly', function () {
         var e = new pc.Entity();
+        var child = new pc.Entity('child');
+        e.addChild(child);
+
         e.addComponent('script', {
             "enabled": true,
             "order": [
@@ -1175,13 +1178,15 @@ describe("pc.ScriptComponent", function () {
             ],
             "scripts": {
                 "scriptWithAttributes": {
-                    "enabled": false,
+                    "enabled": true,
                     "attributes": {
                         "attribute3": {
-                            fieldNumber: 1
+                            fieldNumber: 1,
+                            fieldEntity: child.getGuid()
                         },
                         "attribute4": [{
-                            fieldNumber: 2
+                            fieldNumber: 2,
+                            fieldEntity: child.getGuid()
                         }]
                     }
                 }
@@ -1199,10 +1204,19 @@ describe("pc.ScriptComponent", function () {
 
         expect(e2.script.scriptWithAttributes.attribute4[0]).to.be.an('object');
         expect(e2.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
+        expect(e2.script.scriptWithAttributes.attribute4).to.not.equal(e.script.scriptWithAttributes.attribute4);
+
+        var clonedChild = e2.findByName('child');
+        expect(clonedChild).to.not.equal(null);
+
+        // check for 'true' instead of perform actual equals test because when it's false it's terribly slow
+        expect(e2.script.scriptWithAttributes.attribute3.fieldEntity === clonedChild).to.equal(true);
+        expect(e2.script.scriptWithAttributes.attribute4[0].fieldEntity === clonedChild).to.equal(true);
 
         e2.script.scriptWithAttributes.attribute3.fieldNumber = 4;
         expect(e2.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(4);
         expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+
 
         e2.script.scriptWithAttributes.attribute4 = [{
             fieldNumber: 3
