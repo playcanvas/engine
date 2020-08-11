@@ -720,9 +720,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
 
                 // convert to 16bit
                 indexFormat = INDEXFORMAT_UINT16;
-                var oldIndices = indices;
-                indices = new Uint16Array(oldIndices.length);
-                indices.set(oldIndices);
+                indices = new Uint16Array(indices);
             }
 
             var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
