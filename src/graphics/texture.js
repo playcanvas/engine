@@ -500,14 +500,7 @@ Object.defineProperties(Texture.prototype, {
 
     gpuSize: {
         get: function () {
-            var mips = this.pot &&
-                    (this._mipmaps ||
-                        this._minFilter === FILTER_NEAREST_MIPMAP_NEAREST ||
-                        this._minFilter === FILTER_NEAREST_MIPMAP_LINEAR ||
-                        this._minFilter === FILTER_LINEAR_MIPMAP_NEAREST ||
-                        this._minFilter === FILTER_LINEAR_MIPMAP_LINEAR) &&
-                        !(this._compressed && this._levels.length === 1);
-
+            var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
             return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
         }
     },
@@ -591,7 +584,7 @@ Object.assign(Texture, {
             _pixelSizeTable = [];
             _pixelSizeTable[PIXELFORMAT_A8] = 1;
             _pixelSizeTable[PIXELFORMAT_L8] = 1;
-            _pixelSizeTable[PIXELFORMAT_L8_A8] = 1;
+            _pixelSizeTable[PIXELFORMAT_L8_A8] = 2;
             _pixelSizeTable[PIXELFORMAT_R5_G6_B5] = 2;
             _pixelSizeTable[PIXELFORMAT_R5_G5_B5_A1] = 2;
             _pixelSizeTable[PIXELFORMAT_R4_G4_B4_A4] = 2;
