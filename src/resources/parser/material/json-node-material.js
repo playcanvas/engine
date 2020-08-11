@@ -50,7 +50,7 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
         //for (var i=0;i<data.graphData.iocVars.length;i++)
         for (var i=0;i<Object.keys(data.graphData.iocVars).length;i++)        
         {
-            if (data.graphData.iocVars[i].valueTex)
+            if (data.graphData.iocVars[i].type==='sampler2D' && data.graphData.iocVars[i].valueTex)
             {
                 if (typeof(data.graphData.iocVars[i].valueTex) === 'number' && data.graphData.iocVars[i].valueTex > 0)
                 {
@@ -73,6 +73,13 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 //assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
                 material.graphData.iocVars[i]={};
                 Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
+
+                //deal with 0 being undefined (TODO: find better way?)
+                var var_type=material.graphData.iocVars[i].type;
+                if (material.graphData.iocVars[i].valueW===undefined && var_type==='vec4') material.graphData.iocVars[i].valueW=0;
+                if (material.graphData.iocVars[i].valueZ===undefined && (var_type==='vec4' || var_type==='vec3' )) material.graphData.iocVars[i].valueZ=0;
+                if (material.graphData.iocVars[i].valueY===undefined && (var_type==='vec4' || var_type==='vec3' || var_type==='vec2' )) material.graphData.iocVars[i].valueY=0;
+                if (material.graphData.iocVars[i].valueX===undefined && (var_type==='vec4' || var_type==='vec3' || var_type==='vec2' || var_type==='float' )) material.graphData.iocVars[i].valueX=0;
             }
         }
     }
@@ -145,25 +152,41 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 //connections are indices and names - no asset refs - so just assign
                 material.graphData.connections[i]={};
                 Object.assign(material.graphData.connections[i], data.graphData.connections[i]);
+
+                //deal with 0 index problem
+                if (material.graphData.connections[i].inVarName && material.graphData.connections[i].inNodeIndex===undefined) material.graphData.connections[i].inNodeIndex=0;
+                if (material.graphData.connections[i].outVarName && material.graphData.connections[i].outNodeIndex===undefined) material.graphData.connections[i].outNodeIndex=0;
             }
         }
 
         if (data.graphData.subGraphs)
         {
-            material.graphData.subGraphs=[];
+            if (material.graphData.subGraphs.length!=Object.keys(data.graphData.subGraphs).length)
+            {
+                material.graphData.subGraphs.length=Object.keys(data.graphData.subGraphs).length;
+            }
 
             //for (var i=0;i<data.graphData.subGraphs.length;i++)
             for (var i=0;i<Object.keys(data.graphData.subGraphs).length;i++)                  
             {
                 if (typeof(data.graphData.subGraphs[i]) === 'number' && data.graphData.subGraphs[i] > 0)
                 {
+                    material.graphData.subGraphs[i]=data.graphData.subGraphs[i];
                     //this means sub graph asset is not loaded yet - cannot assign
                     material_ready = false;
                 }
                 else
                 {
-                    //sub graph asset loaded - assign!
-                    material.graphData.subGraphs[i]=data.graphData.subGraphs[i];
+                    //check if ready
+                    //if (data.graphData.subGraphs[i]._material_ready===true)
+                    {
+                        //sub graph asset loaded and ready - assign!
+                        material.graphData.subGraphs[i]=data.graphData.subGraphs[i];
+                    }
+                    //else
+                    //{
+                    //    material_ready = false;
+                    //}
                 }
             }
         }
@@ -186,11 +209,13 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     //only mark for update if ready dependent assets (with no placeholders) are loaded
     if (material_ready)
     {
+        //data._material_ready=true;
         material.dirtyShader = true;
         material.update();
     }
     else
     {
+        //data._material_ready = false;
         material.setPlaceHolderShader(this._placeholderNodeMat);
     }
 };

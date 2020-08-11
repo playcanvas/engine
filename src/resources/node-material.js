@@ -65,9 +65,9 @@ Object.assign(NodeMaterialBinder.prototype, {
 
     onAssetUnload: function (asset) {
         // remove the parameter block we created which includes texture references
-        delete asset.data.parameters;
+        //delete asset.data.parameters;
         //delete asset.data.chunks;
-        delete asset.data.name;
+        //delete asset.data.name;
     },
 
     _assignTexture: function (iocVarIndex, materialAsset, resource) {
@@ -191,7 +191,7 @@ Object.assign(NodeMaterialBinder.prototype, {
             //for (var i=0;i<data.graphData.iocVars.length;i++)
             for (var i=0;i<Object.keys(data.graphData.iocVars).length;i++)
             {
-                if (data.graphData.iocVars[i].valueTex)
+                if (data.graphData.iocVars[i].type==='sampler2D' && data.graphData.iocVars[i].valueTex)
                 {
                     assetReference = material._iocVarAssetReferences[i];
 
@@ -280,7 +280,7 @@ Object.assign(NodeMaterialBinder.prototype, {
                         else 
                         {
                             //assign placeholder glsl
-                            this._assignPlaceholderCustomGlsl(name, materialAsset);
+                            //this._assignPlaceholderCustomGlsl(name, materialAsset);
                         }
 
                         assets.load(assetReference.asset);
@@ -293,7 +293,6 @@ Object.assign(NodeMaterialBinder.prototype, {
         if (data.graphData.subGraphs)
         {
             for (var i=0;i<Object.keys(data.graphData.subGraphs).length;i++)            
-            //for (var i=0;i<data.graphData.subGraphs.length;i++)
             {
                 if (data.graphData.subGraphs[i])
                 {
@@ -329,7 +328,7 @@ Object.assign(NodeMaterialBinder.prototype, {
                             else 
                             {
                                 //assign placeholder texture
-                                this._assignPlaceholderSubGraph(i, materialAsset);
+                                //this._assignPlaceholderSubGraph(i, materialAsset);
                             }
 
                             assets.load(assetReference.asset);

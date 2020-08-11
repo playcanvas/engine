@@ -21,7 +21,7 @@ var node = {
     },
 
     createShaderDefinition: function (device, options) {
-        var n;
+        //var n;
 
         // generate graph
         var rootDeclGLSL=options.shaderGraph.generateRootDeclGlsl();

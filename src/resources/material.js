@@ -54,7 +54,7 @@ Object.assign(MaterialHandler.prototype, {
         });
     },
 
-    _genPlacholderNodeMat: function ()
+    _genPlaceholderNodeMat: function ()
     {
         //start building shader graph
         shadergraph.start();
@@ -88,7 +88,7 @@ Object.assign(MaterialHandler.prototype, {
         {
             subclass = 'Node';
 
-            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device, this._genPlacholderNodeMat());
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device, this._genPlaceholderNodeMat());
             if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
         }
         else
@@ -130,15 +130,21 @@ Object.assign(MaterialHandler.prototype, {
 
         var subclass = this._getSubClass(asset.data);
 
+        //adjust name if node material
+        if (subclass == 'Node')
+        {
+            asset.resource.name = asset.name.replace(/[^A-Z0-9]+/ig, "_");
+        }
+
         //this should only happen in the editor?
         if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial))
         {
-            //TODO clean up old material nicely?
+            //TODO: clean up old material nicely?
             asset.resource = this._parsers[subclass].parse(asset.data);
         }
         else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial))
         {
-            //TODO clean up old material nicely?
+            //TODO: clean up old material nicely?
             asset.resource = this._parsers[subclass].parse(asset.data);
         }
 
