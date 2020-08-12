@@ -450,7 +450,13 @@ Object.assign(AssetRegistry.prototype, {
 
         var startLoad = function (asset) {
             asset.once("load", function (loadedAsset) {
-                callback(null, loadedAsset);
+                if (type === 'material') {
+                    self._loadTextures(loadedAsset, function (err, textures) {
+                        callback(err, loadedAsset);
+                    });
+                } else {
+                    callback(null, loadedAsset);
+                }
             });
             asset.once("error", function (err) {
                 callback(err);

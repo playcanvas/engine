@@ -199,7 +199,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * {@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
- * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+ * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter.
  * * {@link pc.FRESNEL_NONE}: No Fresnel.
  * * {@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
@@ -1018,7 +1018,7 @@ var _defineMaterialProps = function (obj) {
 
     _defineFloat(obj, "shininess", 25, function (mat, shininess) {
        // Shininess is 0-100 value
-       // which is actually a 0-1 glosiness value.
+       // which is actually a 0-1 glossiness value.
        // Can be converted to specular power using exp2(shininess * 0.01 * 11)
         var value;
         if (mat.shadingModel === SPECULAR_PHONG) {
