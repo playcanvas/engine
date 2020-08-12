@@ -15,6 +15,7 @@ var WebAssembly = {};
 // WebXR
 var XRWebGLLayer = {};
 var XRRay = {};
+var XRHand = {};
 var DOMPoint = {};
 
 // extras requires this

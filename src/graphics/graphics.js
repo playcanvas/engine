@@ -364,21 +364,21 @@ export var FUNC_ALWAYS = 7;
  * @constant
  * @name pc.INDEXFORMAT_UINT8
  * @type {number}
- * @description 8-bit unsigned vertex indices.
+ * @description 8-bit unsigned vertex indices (0 to 255).
  */
 export var INDEXFORMAT_UINT8 = 0;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT16
  * @type {number}
- * @description 16-bit unsigned vertex indices.
+ * @description 16-bit unsigned vertex indices (0 to 65,535).
  */
 export var INDEXFORMAT_UINT16 = 1;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT32
  * @type {number}
- * @description 32-bit unsigned vertex indices.
+ * @description 32-bit unsigned vertex indices (0 to 4,294,967,295).
  */
 export var INDEXFORMAT_UINT32 = 2;
 

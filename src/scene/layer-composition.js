@@ -413,7 +413,7 @@ LayerComposition.prototype.insert = function (layer, index) {
  * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
  */
 LayerComposition.prototype.remove = function (layer) {
-    // remove all occurences of a layer
+    // remove all occurrences of a layer
     var id = this.layerList.indexOf(layer);
 
     delete this._opaqueOrder[id];
@@ -486,7 +486,7 @@ LayerComposition.prototype.insertOpaque = function (layer, index) {
  * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
  */
 LayerComposition.prototype.removeOpaque = function (layer) {
-    // remove opaque occurences of a layer
+    // remove opaque occurrences of a layer
     for (var i = 0, len = this.layerList.length; i < len; i++) {
         if (this.layerList[i] === layer && !this.subLayerList[i]) {
             this.layerList.splice(i, 1);
@@ -555,7 +555,7 @@ LayerComposition.prototype.insertTransparent = function (layer, index) {
  * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
  */
 LayerComposition.prototype.removeTransparent = function (layer) {
-    // remove transparent occurences of a layer
+    // remove transparent occurrences of a layer
     for (var i = 0, len = this.layerList.length; i < len; i++) {
         if (this.layerList[i] === layer && this.subLayerList[i]) {
             this.layerList.splice(i, 1);

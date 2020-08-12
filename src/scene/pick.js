@@ -171,9 +171,10 @@ Picker.prototype.prepare = function (camera, scene, arg) {
             _getSelectionDeprecationWarning = true;
             console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
         }
-
         // #endif
-        camera = camera._component;
+
+        // Get the camera component
+        camera = camera.node.camera;
     }
 
     this.scene = scene;

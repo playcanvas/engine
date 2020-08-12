@@ -48,7 +48,7 @@ function Render2d(device, maxQuads) {
     }]);
 
     // generate quad indices
-    var indices = new Uint32Array(maxQuads * 6);
+    var indices = new Uint16Array(maxQuads * 6);
     for (var i = 0; i < maxQuads; ++i) {
         indices[i * 6 + 0] = i * 4;
         indices[i * 6 + 1] = i * 4 + 1;
@@ -66,7 +66,7 @@ function Render2d(device, maxQuads) {
     this.buffer = new pc.VertexBuffer(device, format, maxQuads * 4, pc.BUFFER_STREAM);
     this.data = new Float32Array(this.buffer.numBytes / 4);
 
-    this.indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT32, maxQuads * 6, pc.BUFFER_STATIC, indices);
+    this.indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT16, maxQuads * 6, pc.BUFFER_STATIC, indices);
 
     this.prims = [];
     this.prim = null;
@@ -387,6 +387,9 @@ function MiniStats(app) {
         dest.set([0, 0, 0, 255], i * 4);
     }
     texture.unlock();
+
+    // ensure texture is uploaded
+    device.setTexture(texture, 0);
 
     // create graphs
     var graphs = [

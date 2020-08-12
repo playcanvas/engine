@@ -793,7 +793,7 @@ Object.assign(ScriptComponent.prototype, {
         var newScriptComponent = this.entity.script;
         var i, j;
 
-        // for each script in the old compononent
+        // for each script in the old component
         for (var scriptName in oldScriptComponent._scriptsIndex) {
             // get the script type from the script registry
             var scriptType = this.system.app.scripts.get(scriptName);
