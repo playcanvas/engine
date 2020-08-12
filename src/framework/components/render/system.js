@@ -80,7 +80,7 @@ Object.assign(RenderComponentSystem.prototype, {
             isStatic: entity.render.isStatic,
             enabled: entity.render.enabled,
             layers: entity.render.layers,
-            batchGroupId: entity.render.batchGroupId,
+            batchGroupId: entity.render.batchGroupId
         };
 
         var component = this.addComponent(clone, data);
