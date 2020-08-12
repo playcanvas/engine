@@ -5,6 +5,7 @@ import { BatchGroup } from '../../../scene/batching.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
+import { getShapePrimitive } from '../../../scene/procedural.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -508,7 +509,7 @@ Object.defineProperty(ModelComponent.prototype, "type", {
         } else {
 
             // get / create mesh of type
-            var primData = this.system.getPrimitive(value);
+            var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
             this._area = primData.area;
             var mesh = primData.mesh;
 

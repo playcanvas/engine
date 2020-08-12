@@ -1,6 +1,7 @@
 import { LAYERID_WORLD } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { getShapePrimitive } from '../../../scene/procedural.js';
 
 import { Component } from '../component.js';
 
@@ -285,7 +286,7 @@ Object.defineProperty(RenderComponent.prototype, "type", {
 
             if (value !== 'asset') {
 
-                var primData = this.system.getPrimitive(value);
+                var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
                 this._meshInstances = [new MeshInstance(this.entity, primData.mesh, this._material)];
 

@@ -6,8 +6,6 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
-import { createBox, createCapsule, createCone, createCylinder, createPlane, createSphere } from '../../scene/procedural.js';
-
 /**
  * @class
  * @name pc.ComponentSystem
@@ -23,9 +21,6 @@ function ComponentSystem(app) {
     // The store where all pc.ComponentData objects are kept
     this.store = {};
     this.schema = [];
-
-    // cached mesh primitives
-    this.primitiveMap = new Map();
 }
 ComponentSystem.prototype = Object.create(EventHandler.prototype);
 ComponentSystem.prototype.constructor = ComponentSystem;
@@ -286,57 +281,6 @@ Object.assign(ComponentSystem.prototype, {
 
     destroy: function () {
         this.off();
-    },
-
-    // returns Primive data, used by ModelComponent and RenderComponent
-    getPrimitive: function (type) {
-
-        var primData = this.primitiveMap.get(type);
-        if (!primData) {
-
-            var mesh, area;
-            var gd = this.app.graphicsDevice;
-            switch (type) {
-
-                case 'box':
-                    mesh = createBox(gd, { halfExtents: new Vec3(0.5, 0.5, 0.5) });
-                    area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
-                    break;
-
-                case 'capsule':
-                    mesh = createCapsule(gd, { radius: 0.5, height: 2 });
-                    area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                    break;
-
-                case 'cone':
-                    mesh = createCone(gd, { baseRadius: 0.5, peakRadius: 0, height: 1 });
-                    area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
-                    break;
-
-                case 'cylinder':
-                    mesh = createCylinder(gd, { radius: 0.5, height: 1 });
-                    area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                    break;
-
-                case 'plane':
-                    mesh = createPlane(gd, { halfExtents: new Vec2(0.5, 0.5), widthSegments: 1, lengthSegments: 1 });
-                    area = { x: 0, y: 1, z: 0, uv: 1 };
-                    break;
-
-                case 'sphere':
-                    mesh = createSphere(gd, { radius: 0.5 });
-                    area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
-                    break;
-
-                default:
-                    throw new Error("Invalid primitive type: " + value);
-            }
-
-            primData = { mesh: mesh, area: area };
-            this.primitiveMap.set(type, primData);
-        }
-
-        return primData;
     }
 });
 
