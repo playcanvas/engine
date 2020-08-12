@@ -72,7 +72,6 @@ Object.assign(RenderComponentSystem.prototype, {
     cloneComponent: function (entity, clone) {
         var data = {
             type: entity.render.type,
-            asset: entity.render.asset,
             castShadows: entity.render.castShadows,
             receiveShadows: entity.render.receiveShadows,
             castShadowsLightmap: entity.render.castShadowsLightmap,
@@ -82,7 +81,6 @@ Object.assign(RenderComponentSystem.prototype, {
             enabled: entity.render.enabled,
             layers: entity.render.layers,
             batchGroupId: entity.render.batchGroupId,
-            mapping: extend({}, entity.render.mapping)
         };
 
         var component = this.addComponent(clone, data);
