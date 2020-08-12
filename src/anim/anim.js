@@ -642,7 +642,7 @@ function DefaultAnimBinder(graph) {
 
     var findMeshInstances = function (node) {
         var object = node;
-        while (object && object.constructor !== Entity) {
+        while (object && !(object instanceof Entity)) {
             object = object.parent;
         }
 
