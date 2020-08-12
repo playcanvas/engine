@@ -133,6 +133,7 @@ export { HierarchyHandler } from './resources/hierarchy.js';
 export { HtmlHandler } from './resources/html.js';
 export { ImgParser } from './resources/parser/texture/img.js';
 export { JsonHandler } from './resources/json.js';
+export { JsonNodeMaterialParser } from './resources/parser/material/json-node-material.js';
 export { JsonStandardMaterialParser } from './resources/parser/material/json-standard-material.js';
 export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
