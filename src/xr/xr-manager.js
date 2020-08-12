@@ -193,6 +193,9 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
     if (type === XRTYPE_AR)
         optionalFeatures.push('light-estimation');
 
+    if (type === XRTYPE_VR)
+        optionalFeatures.push('hand-tracking');
+
     navigator.xr.requestSession(type, {
         requiredFeatures: [spaceType],
         optionalFeatures: optionalFeatures
