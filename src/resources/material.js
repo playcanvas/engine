@@ -7,7 +7,7 @@ import { NodeMaterialBinder } from './node-material.js';
 import { JsonNodeMaterialParser } from './parser/material/json-node-material.js';
 
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { NodeMaterial, shadergraph } from '../scene/materials/node-material.js';
+import { NodeMaterial } from '../scene/materials/node-material.js';
 
 /**
  * @class
@@ -17,11 +17,10 @@ import { NodeMaterial, shadergraph } from '../scene/materials/node-material.js';
  * @param {pc.Application} app - The running {@link pc.Application}.
  */
 function MaterialHandler(app) {
+    this._app = app;
     this._assets = app.assets;
     this._device = app.graphicsDevice;
 
-    this._placeholderTextures = null;
-   
     this._parsers = {};
     this._binders = {};
 
@@ -54,47 +53,17 @@ Object.assign(MaterialHandler.prototype, {
         });
     },
 
-    _genPlaceholderNodeMat: function ()
-    {
-        //start building shader graph
-        shadergraph.start();
-    
-        //create a blank PS shader graph node 
-        var blankPSNode = shadergraph.customNode('blankPS', 'vec4 blankPS() { return vec4(0,0,1,1); }');
-    
-        //hook up PS outputs
-        shadergraph.connectFragOut(blankPSNode);
-    
-        //create a blank vertex offset shader graph node
-        var blankVSNode = shadergraph.customNode('blankVS', 'vec3 blankVS() { return vec3(0,0,0); }');
-    
-        //hook up VS output
-        shadergraph.connectVertexOffset(blankVSNode);
-    
-        //end graph and assign built graph to material
-        var material = shadergraph.end();
-    
-        //initialize shader and update uniforms
-        material.initShader(this._device);
-        material.updateUniforms();
-    
-        return material;
-    },        
-
     _getSubClass: function (data) {
-        //maybe there is a better way to tell if node material path should be taken?
-        var subclass = 'Standard'
-        if (data.graphData) 
-        {
+        // maybe there is a better way to tell if node material path should be taken?
+        var subclass = 'Standard';
+        if (data.graphData) {
             subclass = 'Node';
 
-            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device, this._genPlaceholderNodeMat());
-            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
-        }
-        else
-        {
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device);
+            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._app, this._parsers[subclass]);
+        } else {
             if (!this._parsers[subclass]) this._parsers[subclass] = new JsonStandardMaterialParser();
-            if (!this._binders[subclass]) this._binders[subclass] = new StandardMaterialBinder(this._assets, this._device, this._parsers[subclass]);
+            if (!this._binders[subclass]) this._binders[subclass] = new StandardMaterialBinder(this._app, this._parsers[subclass]);
 
         }
 
@@ -102,7 +71,7 @@ Object.assign(MaterialHandler.prototype, {
     },
 
     open: function (url, data) {
-        
+
         var subclass = this._getSubClass(data);
 
         var material = this._parsers[subclass].parse(data);
@@ -130,21 +99,17 @@ Object.assign(MaterialHandler.prototype, {
 
         var subclass = this._getSubClass(asset.data);
 
-        //adjust name if node material
-        if (subclass == 'Node')
-        {
+        // adjust name if node material
+        if (subclass == 'Node') {
             asset.resource.name = asset.name.replace(/[^A-Z0-9]+/ig, "_");
         }
 
-        //this should only happen in the editor?
-        if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial))
-        {
-            //TODO: clean up old material nicely?
+        // this should only happen in the editor?
+        if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial)) {
+            // TODO: clean up old material nicely?
             asset.resource = this._parsers[subclass].parse(asset.data);
-        }
-        else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial))
-        {
-            //TODO: clean up old material nicely?
+        } else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial)) {
+            // TODO: clean up old material nicely?
             asset.resource = this._parsers[subclass].parse(asset.data);
         }
 

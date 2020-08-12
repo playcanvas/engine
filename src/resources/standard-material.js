@@ -1,5 +1,3 @@
-import { http } from '../net/http.js';
-
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
 import { Texture } from '../graphics/texture.js';
 
@@ -27,10 +25,11 @@ var PLACEHOLDER_MAP = {
  * @name pc.StandardMaterialBinder
  * @classdesc Resource binder used for binding {@link pc.StandardMaterial} resources.
  * @param {pc.Application} app - The running {@link pc.Application}.
+ * @param {pc.JsonStandardMaterialParser} parser - JSON parser for {@link pc.StandardMaterial} owned by global {@link pc.MaterialHandler}
  */
-function StandardMaterialBinder(assets, device, parser) {
-    this._assets = assets;
-    this._device = device;
+function StandardMaterialBinder(app, parser) {
+    this._assets = app.assets;
+    this._device = app.graphicsDevice;
     this._parser = parser;
 
     this._placeholderTextures = null;
@@ -145,7 +144,7 @@ Object.assign(StandardMaterialBinder.prototype, {
         this._assets.load(cubemapAsset);
     },
 
-    
+
     _onCubemapRemove: function (parameterName, materialAsset, cubemapAsset) {
         var material = materialAsset.resource;
 

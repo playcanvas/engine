@@ -85,12 +85,10 @@
             var texSampleNode = pc.shadergraph.textureSample2D('diffSamp',diffuseMap, pc.shadergraph.uv0);
             
             //hook up PS outputs
-            //pc.shadergraph.connectFragColor(texSampleNode, 'color');
-            //pc.shadergraph.connectFragAlpha(texSampleNode, 'alpha');
             pc.shadergraph.connectFragOut(texSampleNode);
 
             //create a custom vertex offset shader graph node
-            var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);//'vec3 wobbleVS(in vec3 wp, in vec3 wn, in float t){ return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.3)*normalize(wn); }');
+            var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);
             
             //hook up custom node inputs
             pc.shadergraph.connectCustom(wobbleVSNode, 'wp', pc.shadergraph.worldPosVS);
@@ -115,7 +113,7 @@
             //update time parameter every frame
             app.on("update", function (dt) {
                 time += dt;
-                material.setParameter('IN_uTime', time);
+                material.setParameter('IN_uTime_'+material.id, time);
             });
 
             app.start();

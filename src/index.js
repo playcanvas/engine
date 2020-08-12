@@ -91,7 +91,6 @@ export { NodeMaterial, shadergraph } from './scene/materials/node-material.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
-//export { ShaderGraph } from './scene/materials/shader-graph.js';
 export { Skin, SkinInstance } from './scene/skin.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
