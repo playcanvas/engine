@@ -22,14 +22,12 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
  *
  * @example
- * var curve = new pc.Curve(
- *     [
- *         [0, 0],
- *         [0.33, 2],
- *         [0.66, 2.6],
- *         [1, 3]
- *     ]
- * );
+ * var curve = new pc.Curve([
+ *     [0, 0],
+ *     [0.33, 2],
+ *     [0.66, 2.6],
+ *     [1, 3]
+ * ]);
  */
 function Curve(data) {
     this.keys = [];
