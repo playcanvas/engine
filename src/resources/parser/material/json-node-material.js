@@ -1,7 +1,7 @@
 import { NodeMaterial, shadergraph } from '../../../scene/materials/node-material.js';
 
 /**
- * @private
+ * @class
  * @name pc.JsonNodeMaterialParser
  * @description Convert incoming JSON data into a {@link pc.NodeMaterial}.
  * @param {pc.GraphicsDevice} device - The graphics device of the application - required for creating placeholder
@@ -24,7 +24,6 @@ JsonNodeMaterialParser.prototype.parse = function (input) {
 };
 
 /**
- * @private
  * @function
  * @name pc.JsonNodeMaterialParser#initialize
  * @description  Initialize material properties from the material data block e.g. Loading from server.
