@@ -40,7 +40,7 @@ var rawToValue = function (app, args, value, old) {
             }
 
             if (Array.isArray(args.schema)) {
-                for (let i = 0; i < args.schema.length; i++) {
+                for (i = 0; i < args.schema.length; i++) {
                     var field = args.schema[i];
                     if (!field.name) continue;
 
