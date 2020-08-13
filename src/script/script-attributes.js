@@ -17,6 +17,7 @@ var vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 var rawToValue = function (app, args, value, old) {
     var i;
+    var j;
 
     switch (args.type) {
         case 'boolean':
@@ -47,7 +48,7 @@ var rawToValue = function (app, args, value, old) {
                     if (field.array) {
                         result[field.name] = [];
                         if (Array.isArray(value[field.name])) {
-                            for (let j = 0; j < value[field.name].length; j++) {
+                            for (j = 0; j < value[field.name].length; j++) {
                                 result[field.name].push(rawToValue(app, field, value[field.name][j]));
                             }
                         }
