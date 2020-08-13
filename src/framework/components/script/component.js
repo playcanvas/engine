@@ -464,7 +464,7 @@ Object.assign(ScriptComponent.prototype, {
         }
     },
 
-    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newAttributes, duplicatedIdsMap)  {
+    _resolveEntityScriptAttribute: function (attribute, attributeName, oldValue, useGuid, newAttributes, duplicatedIdsMap) {
         if (attribute.array) {
             // handle entity array attribute
             var len = oldValue.length;
@@ -493,7 +493,6 @@ Object.assign(ScriptComponent.prototype, {
                 newAttributes[attributeName] = duplicatedIdsMap[oldValue];
             }
         }
-
     },
 
     /* eslint-disable jsdoc/no-undefined-types */
