@@ -34,31 +34,31 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     var i = 0;
     var material_ready = true;
     // input or output or constant variables - all node material types have this block
-    if (data.graphData.iocVars) {
-        for (i = 0; i < Object.keys(data.graphData.iocVars).length; i++) {
-            if (data.graphData.iocVars[i].type === 'sampler2D' && data.graphData.iocVars[i].valueTex) {
-                if (typeof(data.graphData.iocVars[i].valueTex) === 'number' && data.graphData.iocVars[i].valueTex > 0) {
+    if (data.graphData.graphVars) {
+        for (i = 0; i < Object.keys(data.graphData.graphVars).length; i++) {
+            if (data.graphData.graphVars[i].type === 'sampler2D' && data.graphData.graphVars[i].valueTex) {
+                if (typeof(data.graphData.graphVars[i].valueTex) === 'number' && data.graphData.graphVars[i].valueTex > 0) {
                     // texture asset not loaded yet - deal with in node material binder
-                    if (!(material.graphData.iocVars[i] && material.graphData.iocVars[i].valueTex)) {
+                    if (!(material.graphData.graphVars[i] && material.graphData.graphVars[i].valueTex)) {
                         // seems no placeholder is set yet
                         material_ready = false;
                     }
                 } else {
                     // texture asset loaded - assign
-                    material.graphData.iocVars[i] = {};
-                    Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
+                    material.graphData.graphVars[i] = {};
+                    Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
                 }
             } else {
                 // assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
-                material.graphData.iocVars[i] = {};
-                Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
+                material.graphData.graphVars[i] = {};
+                Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
 
-                // deal with 0 being undefined (TODO: find better way?)
-                var var_type = material.graphData.iocVars[i].type;
-                if (material.graphData.iocVars[i].valueW === undefined && var_type === 'vec4') material.graphData.iocVars[i].valueW = 0;
-                if (material.graphData.iocVars[i].valueZ === undefined && (var_type === 'vec4' || var_type === 'vec3' )) material.graphData.iocVars[i].valueZ = 0;
-                if (material.graphData.iocVars[i].valueY === undefined && (var_type === 'vec4' || var_type === 'vec3' || var_type === 'vec2' )) material.graphData.iocVars[i].valueY = 0;
-                if (material.graphData.iocVars[i].valueX === undefined && (var_type === 'vec4' || var_type === 'vec3' || var_type === 'vec2' || var_type === 'float' )) material.graphData.iocVars[i].valueX = 0;
+                // deal with 0 being undefined if default or optional
+                var var_type = material.graphData.graphVars[i].type;
+                if (material.graphData.graphVars[i].valueW === undefined && var_type === 'vec4') material.graphData.graphVars[i].valueW = 0;
+                if (material.graphData.graphVars[i].valueZ === undefined && (var_type === 'vec4' || var_type === 'vec3' )) material.graphData.graphVars[i].valueZ = 0;
+                if (material.graphData.graphVars[i].valueY === undefined && (var_type === 'vec4' || var_type === 'vec3' || var_type === 'vec2' )) material.graphData.graphVars[i].valueY = 0;
+                if (material.graphData.graphVars[i].valueX === undefined && (var_type === 'vec4' || var_type === 'vec3' || var_type === 'vec2' || var_type === 'float' )) material.graphData.graphVars[i].valueX = 0;
             }
         }
     }
@@ -80,23 +80,19 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 // this means asset is not loaded yet - cannot assign
                 material_ready = false;
             } else {
-                // shader asset loaded - assign and generate matching iocVars
+                // shader asset loaded - assign and generate matching graphVars
                 material.graphData.customFuncGlsl = data.graphData.customFuncGlsl;
-                material.graphData.iocVars.length = 0;
-                material.genCustomFuncIocVars();
+                material.graphData.graphVars.length = 0;
+                material.genCustomFuncVars();
 
-                // copy values that match into new iocVars - if not matching reset
-                // TODO: make this more robust (match even if index doesn't match)?
-                if (material.graphData.iocVars) {
-                    for (i = 0; i < material.graphData.iocVars.length; i++) {
-                        // if (data.graphData.iocVars && i<data.graphData.iocVars.length && material.graphData.iocVars[i].name===data.graphData.iocVars[i].name && material.graphData.iocVars[i].type===data.graphData.iocVars[i].type )
-                        if (data.graphData.iocVars && i < Object.keys(data.graphData.iocVars).length && material.graphData.iocVars[i].name === data.graphData.iocVars[i].name && material.graphData.iocVars[i].type === data.graphData.iocVars[i].type ) {
+                // copy values that match into new graph variables - if not matching reset
+                // TODO: make this more robust (match name even if index doesn't match)?
+                if (material.graphData.graphVars) {
+                    for (i = 0; i < material.graphData.graphVars.length; i++) {
+                        // if (data.graphData.graphVars && i<data.graphData.graphVars.length && material.graphData.graphVars[i].name===data.graphData.graphVars[i].name && material.graphData.graphVars[i].type===data.graphData.graphVars[i].type )
+                        if (data.graphData.graphVars && i < Object.keys(data.graphData.graphVars).length && material.graphData.graphVars[i].name === data.graphData.graphVars[i].name && material.graphData.graphVars[i].type === data.graphData.graphVars[i].type ) {
                             // exists and matches copy what is already set in the asset
-                            Object.assign(material.graphData.iocVars[i], data.graphData.iocVars[i]);
-                        } else {
-                            // reset and copy material into data.graphData
-                            // data.graphData.iocVars[i]={};
-                            // Object.assign(data.graphData.iocVars[i], material.graphData.iocVars[i]);
+                            Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
                         }
                     }
                 }
@@ -113,9 +109,9 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 material.graphData.connections[i] = {};
                 Object.assign(material.graphData.connections[i], data.graphData.connections[i]);
 
-                // deal with 0 index problem
-                if (material.graphData.connections[i].inVarName && material.graphData.connections[i].inNodeIndex === undefined) material.graphData.connections[i].inNodeIndex = 0;
-                if (material.graphData.connections[i].outVarName && material.graphData.connections[i].outNodeIndex === undefined) material.graphData.connections[i].outNodeIndex = 0;
+                // deal with optional value problem (should no longer happen?)
+                // if (material.graphData.connections[i].dstVarName && material.graphData.connections[i].dstIndex === undefined) material.graphData.connections[i].dstIndex = -1;
+                // if (material.graphData.connections[i].srcVarName && material.graphData.connections[i].srcIndex === undefined) material.graphData.connections[i].srcIndex = -1;
             }
         }
 
@@ -126,18 +122,19 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
             for (i = 0; i < Object.keys(data.graphData.subGraphs).length; i++) {
                 if (typeof(data.graphData.subGraphs[i]) === 'number' && data.graphData.subGraphs[i] > 0) {
-                    material.graphData.subGraphs[i] = data.graphData.subGraphs[i];
-                    // this means sub graph asset is not loaded yet - cannot assign
+                    // this means sub graph asset is not loaded yet
                     material_ready = false;
+                    // set to something so that validation doesn't pass on all loaded sub graphs
+                    material.graphData.subGraphs[i] = i;
                 } else {
                     material.graphData.subGraphs[i] = data.graphData.subGraphs[i];
                 }
             }
         }
     } else {
-        if (data.graphData.iocVars) {
+        if (data.graphData.graphVars) {
             // no custom glsl or sub graphs - this means this is a node material instance?
-            // TODO: support material instances properly
+            // TODO: support material instances properly?
             material_ready = false;
         } else {
             // completely empty?
@@ -147,11 +144,9 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 
     // only mark for update if ready dependent assets (with no placeholders) are loaded
     if (material_ready) {
-        // data._material_ready=true;
         material.dirtyShader = true;
         material.update();
     } else {
-        // data._material_ready = false;
         material.setPlaceHolderShader(this._placeholderNodeMat);
     }
 };
@@ -159,17 +154,13 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
 // convert any properties that are out of date
 // or from old versions into current version
 JsonNodeMaterialParser.prototype.migrate = function (data) {
-
     // no conversion needed (yet)
-
     return data;
 };
 
 // check for invalid properties
 JsonNodeMaterialParser.prototype._validate = function (data) {
-
     // no validation needed (yet)
-
     return data;
 };
 
