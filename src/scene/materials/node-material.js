@@ -810,22 +810,22 @@ shadergraph.param = function (type, name, value) {
 shadergraph.connectFragOut = function (nodeIndex, name) {
     // assumes this is only called once per graph TODO: verify this
     var graphVar = this.graph.addOutput('vec4', 'fragOut', [0, 0, 0, 0]);
-    this.graph.connect(nodeIndex, (name) ? 'OUT_'+name : 'OUT_ret', -1, graphVar.name);
+    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
 shadergraph.connectVertexOffset = function (nodeIndex, name) {
     // assumes this is only called once per graph TODO: verify this
     var graphVar = this.graph.addOutput('vec3', 'vertOff', [0, 0, 0]);
-    this.graph.connect(nodeIndex, (name) ? 'OUT_'+name : 'OUT_ret', -1, graphVar.name);
+    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
 shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
     if (typeof(nodeIndex_or_param) === 'number') {
         var nodeIndex = nodeIndex_or_param;
-        this.graph.connect(nodeIndex, (name) ? 'OUT_'+name : 'OUT_ret', destNodeIndex, 'IN_'+destName);
+        this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
     } else {
         var graphVar = nodeIndex_or_param;
-        this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_'+destName);
+        this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_' + destName);
     }
 };
 
