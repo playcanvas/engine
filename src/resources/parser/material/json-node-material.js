@@ -1,4 +1,4 @@
-import { NodeMaterial, shadergraph } from '../../../scene/materials/node-material.js';
+import { NodeMaterial } from '../../../scene/materials/node-material.js';
 
 /**
  * @class
@@ -165,23 +165,7 @@ JsonNodeMaterialParser.prototype._validate = function (data) {
 };
 
 JsonNodeMaterialParser.prototype._genPlaceholderNodeMat = function () {
-    // start building shader graph
-    shadergraph.start();
-
-    // create a blank PS shader graph node
-    var blankPSNode = shadergraph.customNode('blankPS', 'vec4 blankPS() { return vec4(0,0,1,1); }');
-
-    // hook up PS outputs
-    shadergraph.connectFragOut(blankPSNode);
-
-    // create a blank vertex offset shader graph node
-    var blankVSNode = shadergraph.customNode('blankVS', 'vec3 blankVS() { return vec3(0,0,0); }');
-
-    // hook up VS output
-    shadergraph.connectVertexOffset(blankVSNode);
-
-    // end graph and assign built graph to material
-    var material = shadergraph.end();
+    var material = new NodeMaterial('void placeHolder(out vec3 vertOff, out vec4 fragOut){ vertOff=vec3(0); fragOut=vec4(0,0,1,1);}');
 
     // initialize shader and update uniforms
     material.initShader(this._device);
