@@ -91,31 +91,32 @@ Object.assign(AnimComponentBinder.prototype, {
         return setter.bind(this);
     },
     _colorSetter: function (propertyComponent, propertyHierarchy) {
-        var colorKeys = ['r', 'g', 'b', 'a'];
+        var color = this._getProperty(propertyComponent, propertyHierarchy);
         var setter = function (values) {
-            for (var i = 0; i < values.length; i++) {
-                this._setProperty(propertyComponent, propertyHierarchy.concat(colorKeys[i]), values[i]);
-            }
+            if (values[0]) color.r = values[0];
+            if (values[1]) color.g = values[1];
+            if (values[2]) color.b = values[2];
+            if (values[3]) color.a = values[3];
         };
         return setter.bind(this);
     },
     _vecSetter: function (propertyComponent, propertyHierarchy) {
-        var vectorKeys = ['x', 'y', 'z', 'w'];
+        var vector = this._getProperty(propertyComponent, propertyHierarchy);
         var setter = function (values) {
-            for (var i = 0; i < values.length; i++) {
-                this._setProperty(propertyComponent, propertyHierarchy.concat(vectorKeys[i]), values[i]);
-            }
+            if (values[0]) vector.x = values[0];
+            if (values[1]) vector.y = values[1];
+            if (values[2]) vector.z = values[2];
+            if (values[3]) vector.w = values[3];
         };
         return setter.bind(this);
     },
 
     _getProperty: function (propertyComponent, propertyHierarchy) {
-        if (propertyHierarchy.length === 1) {
-            return propertyComponent[propertyHierarchy[0]];
+        var property = propertyComponent[propertyHierarchy[0]];
+        for (var i = 1; i < propertyHierarchy.length; i++) {
+            property = property[propertyHierarchy[i]];
         }
-        var propertyObject = propertyComponent[propertyHierarchy[0]];
-        return propertyObject[propertyHierarchy[1]];
-
+        return property;
     },
 
     _setProperty: function (propertyComponent, propertyHierarchy, value) {
@@ -211,17 +212,19 @@ Object.assign(AnimComponentBinder.prototype, {
         // for entity properties we cannot just set their values, we must also call the values setter function.
         var entityProperty = this._getEntityProperty(propertyHierarchy);
         if (entityProperty) {
+            // create the function name of the entity properties setter
+            var entityPropertySetterFunctionName = "set" +
+                entityProperty.substring(0, 1).toUpperCase() +
+                entityProperty.substring(1);
+            // record the function for entities animatedproperty
+            var entityPropertySetterFunction = propertyComponent[entityPropertySetterFunctionName].bind(propertyComponent);
+
+            var propertyValue = this._getProperty(propertyComponent, [entityProperty]);
             var entityPropertySetter = function (values) {
                 // first set new values on the property as before
                 setter(values);
-
-                // create the function name of the entity properties setter
-                var entityPropertySetterFunctionName = "set" +
-                    entityProperty.substring(0, 1).toUpperCase() +
-                    entityProperty.substring(1);
-
-                // call the setter function for entities updated property using the newly set property value
-                propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
+                // call the setter function for entities animated property using the newly set property value
+                entityPropertySetterFunction(propertyValue);
             };
             return new AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
         } else if (propertyHierarchy.indexOf('material') !== -1) {
