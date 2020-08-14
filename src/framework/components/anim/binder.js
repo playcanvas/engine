@@ -216,15 +216,15 @@ Object.assign(AnimComponentBinder.prototype, {
             var entityPropertySetterFunctionName = "set" +
                 entityProperty.substring(0, 1).toUpperCase() +
                 entityProperty.substring(1);
-            // record the function for entities animatedproperty
+            // record the function for entities animated property
             var entityPropertySetterFunction = propertyComponent[entityPropertySetterFunctionName].bind(propertyComponent);
-
-            var propertyValue = this._getProperty(propertyComponent, [entityProperty]);
+            // store the property
+            var propertyObject = this._getProperty(propertyComponent, [entityProperty]);
             var entityPropertySetter = function (values) {
                 // first set new values on the property as before
                 setter(values);
                 // call the setter function for entities animated property using the newly set property value
-                entityPropertySetterFunction(propertyValue);
+                entityPropertySetterFunction(propertyObject);
             };
             return new AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
         } else if (propertyHierarchy.indexOf('material') !== -1) {
