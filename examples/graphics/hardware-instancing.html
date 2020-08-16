@@ -87,37 +87,39 @@
         // add the box entity to the hierarchy
         app.root.addChild(box);
 
-        // number of instances to render
-        var instanceCount = 1000;
+        if (this.app.graphicsDevice.supportsInstancing) {
+            // number of instances to render
+            var instanceCount = 1000;
 
-        // store matrices for individual instances into array
-        var matrices = new Float32Array(instanceCount * 16);
-        var matrixIndex = 0;
+            // store matrices for individual instances into array
+            var matrices = new Float32Array(instanceCount * 16);
+            var matrixIndex = 0;
 
-        var radius = 5;
-        var pos = new pc.Vec3();
-        var rot = new pc.Quat();
-        var scl = new pc.Vec3();
-        var matrix = new pc.Mat4();
+            var radius = 5;
+            var pos = new pc.Vec3();
+            var rot = new pc.Quat();
+            var scl = new pc.Vec3();
+            var matrix = new pc.Mat4();
 
-        for (var i = 0; i < instanceCount; i++) {
-            // generate random positions / scales and rotations
-            pos.set(Math.random() * radius - radius * 0.5, Math.random() * radius - radius * 0.5, Math.random() * radius - radius * 0.5);
-            scl.set(0.1 + Math.random() * 0.1, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.1);
-            rot.setFromEulerAngles(i * 30, i * 50, i * 70);
-            matrix.setTRS(pos, rot, scl);
+            for (var i = 0; i < instanceCount; i++) {
+                // generate random positions / scales and rotations
+                pos.set(Math.random() * radius - radius * 0.5, Math.random() * radius - radius * 0.5, Math.random() * radius - radius * 0.5);
+                scl.set(0.1 + Math.random() * 0.1, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.1);
+                rot.setFromEulerAngles(i * 30, i * 50, i * 70);
+                matrix.setTRS(pos, rot, scl);
 
-            // copy matrix elements into array of floats
-            for (var m = 0; m < 16; m++)
-                matrices[matrixIndex++] = matrix.data[m];
+                // copy matrix elements into array of floats
+                for (var m = 0; m < 16; m++)
+                    matrices[matrixIndex++] = matrix.data[m];
+            }
+
+            // create static vertex buffer containing the matrices
+            var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
+
+            // initialise instancing using the vertex buffer on meshInstance of the created box
+            var boxMeshInst = box.model.meshInstances[0];
+            boxMeshInst.setInstancing(vertexBuffer);
         }
-
-        // create static vertex buffer containing the matrices
-        var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
-
-        // initialise instancing using the vertex buffer on meshInstance of the created box
-        var boxMeshInst = box.model.meshInstances[0];
-        boxMeshInst.setInstancing(vertexBuffer);
 
         // Set an update function on the app's update event
         var angle = 0;

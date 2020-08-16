@@ -219,7 +219,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * {@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
- * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+ * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter.
  * * {@link pc.FRESNEL_NONE}: No Fresnel.
  * * {@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
@@ -704,10 +704,12 @@ Object.assign(StandardMaterial.prototype, {
     },
 
     _updateMapTransform: function (transform, tiling, offset) {
+        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+            return null;
+        }
+
         transform = transform || new Vec4();
         transform.set(tiling.x, tiling.y, offset.x, offset.y);
-
-        if ((transform.x === 1) && (transform.y === 1) && (transform.z === 0) && (transform.w === 0)) return null;
         return transform;
     },
 
@@ -727,25 +729,32 @@ Object.assign(StandardMaterial.prototype, {
 
     _updateMap: function (p) {
         var mname = p + "Map";
-        if (this[mname]) {
-            this._setParameter("texture_" + mname, this[mname]);
+        var map = this[mname];
+        if (map) {
+            this._setParameter("texture_" + mname, map);
+
+            // update transform
             var tname = mname + "Transform";
-            var uname = mname + "TransformUniform";
-            if (!this[tname]) {
-                this[uname] = new Float32Array(4);
-            }
             this[tname] = this._updateMapTransform(
                 this[tname],
                 this[mname + "Tiling"],
                 this[mname + "Offset"]
             );
 
-            if (this[tname]) {
-                this[uname][0] = this[tname].x;
-                this[uname][1] = this[tname].y;
-                this[uname][2] = this[tname].z;
-                this[uname][3] = this[tname].w;
-                this._setParameter('texture_' + tname, this[uname]);
+            // update uniform
+            var transform = this[tname];
+            if (transform) {
+                var uname = mname + "TransformUniform";
+                var uniform = this[uname];
+                if (!uniform) {
+                    uniform = new Float32Array(4);
+                    this[uname] = uniform;
+                }
+                uniform[0] = transform.x;
+                uniform[1] = transform.y;
+                uniform[2] = transform.z;
+                uniform[3] = transform.w;
+                this._setParameter('texture_' + tname, uniform);
             }
         }
     },
@@ -1030,7 +1039,7 @@ var _defineMaterialProps = function (obj) {
 
     _defineFloat(obj, "shininess", 25, function (mat, shininess) {
        // Shininess is 0-100 value
-       // which is actually a 0-1 glosiness value.
+       // which is actually a 0-1 glossiness value.
        // Can be converted to specular power using exp2(shininess * 0.01 * 11)
         var value;
         if (mat.shadingModel === SPECULAR_PHONG) {

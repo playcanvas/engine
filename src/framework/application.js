@@ -1328,9 +1328,9 @@ Object.assign(Application.prototype, {
      * @name pc.Application#start
      * @description Start the application. This function does the following:
      * 1. Fires an event on the application named 'start'
-     * 2. Calls initialize for all components on entities in the hierachy
+     * 2. Calls initialize for all components on entities in the hierarchy
      * 3. Fires an event on the application named 'initialize'
-     * 4. Calls postInitialize for all components on entities in the hierachy
+     * 4. Calls postInitialize for all components on entities in the hierarchy
      * 5. Fires an event on the application named 'postinitialize'
      * 6. Starts executing the main loop of the application
      * This function is called internally by PlayCanvas applications made in the Editor
@@ -2015,14 +2015,37 @@ Object.assign(Application.prototype, {
     /**
      * @function
      * @name pc.Application#renderLines
-     * @description Draw an array of lines.
-     * @param {pc.Vec3[]} position - An array of points to draw lines between.
-     * @param {pc.Color[]} color - An array of colors to color the lines. This must be the same size as the position array.
+     * @description Renders an arbitrary number of discrete line segments. The lines
+     * are not connected by each subsequent point in the array. Instead, they are
+     * individual segments specified by two points. Therefore, the lengths of the
+     * supplied position and color arrays must be the same and also must be a multiple
+     * of 2. The colors of the ends of each line segment will be interpolated along
+     * the length of each line.
+     * @param {pc.Vec3[]} position - An array of points to draw lines between. The
+     * length of the array must be a multiple of 2.
+     * @param {pc.Color[]} color - An array of colors to color the lines. This
+     * must be the same length as the position array. The length of the array must
+     * also be a multiple of 2.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the line into.
+     * @param {pc.Layer} [options.layer] - The layer to render the lines into.
      * @example
-     * var points = [new pc.Vec3(0, 0, 0), new pc.Vec3(1, 0, 0), new pc.Vec3(1, 1, 0), new pc.Vec3(1, 1, 1)];
-     * var colors = [new pc.Color(1, 0, 0), new pc.Color(1, 1, 0), new pc.Color(0, 1, 1), new pc.Color(0, 0, 1)];
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     new pc.Vec3(0, 0, 0),
+     *     new pc.Vec3(1, 0, 0),
+     *     // Line 2
+     *     new pc.Vec3(1, 1, 0),
+     *     new pc.Vec3(1, 1, 1)
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     pc.Color.RED,
+     *     pc.Color.YELLOW,
+     *     // Line 2
+     *     pc.Color.CYAN,
+     *     pc.Color.BLUE
+     * ];
      * app.renderLines(points, colors);
      */
     renderLines: function (position, color, options) {

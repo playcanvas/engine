@@ -11,7 +11,7 @@ var tmpVecA = new Vec3();
  * @param {pc.Vec3} [point] - Point position on the plane. The constructor takes a reference of this parameter.
  * @param {pc.Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
  */
-export function Plane(point, normal) {
+function Plane(point, normal) {
     this.normal = normal || new Vec3(0, 0, 1);
     this.point = point || new Vec3(0, 0, 0);
 }
@@ -60,3 +60,5 @@ Object.assign(Plane.prototype, {
         return intersects;
     }
 });
+
+export { Plane };

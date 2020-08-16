@@ -16,7 +16,7 @@ var tmpVecD = new Vec3();
  * @param {pc.Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
  * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
  */
-export function BoundingSphere(center, radius) {
+function BoundingSphere(center, radius) {
     this.center = center || new Vec3(0, 0, 0);
     this.radius = radius === undefined ? 0.5 : radius;
 }
@@ -120,3 +120,5 @@ Object.assign(BoundingSphere.prototype, {
         return false;
     }
 });
+
+export { BoundingSphere };

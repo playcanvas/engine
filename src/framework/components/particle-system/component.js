@@ -146,7 +146,7 @@ var depthLayer;
  *
  * @property {number} sort Sorting mode. Forces CPU simulation, so be careful.
  *
- * * {@link pc.PARTICLESORT_NONE}: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.
+ * * {@link pc.PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
  * * {@link pc.PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
  * * {@link pc.PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
  * * {@link pc.PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.

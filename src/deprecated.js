@@ -1,8 +1,110 @@
-// CORE
 import { revision, version } from './core/core.js';
 import { string } from './core/string.js';
 import { Color } from './core/color.js';
 import { Timer, now } from "../src/core/time";
+
+import { math } from './math/math.js';
+import { Mat4 } from './math/mat4.js';
+import { Vec2 } from './math/vec2.js';
+import { Vec3 } from './math/vec3.js';
+import { Vec4 } from './math/vec4.js';
+
+import { BoundingBox } from './shape/bounding-box.js';
+import { BoundingSphere } from './shape/bounding-sphere.js';
+import { Frustum } from './shape/frustum.js';
+import { Plane } from './shape/plane.js';
+
+import {
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
+    BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
+    BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_SRC_ALPHA_SATURATE,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_DST_ALPHA, BLENDMODE_ONE_MINUS_DST_ALPHA,
+    BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM,
+    CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK,
+    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
+    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
+    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
+    SEMANTIC_TEXCOORD1, SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3,
+    TEXTURELOCK_READ, TEXTURELOCK_WRITE,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+} from './graphics/graphics.js';
+import { drawQuadWithShader } from './graphics/simple-post-effect.js';
+import { programlib } from './graphics/program-lib/program-lib.js';
+import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
+import { GraphicsDevice } from './graphics/device.js';
+import { IndexBuffer } from './graphics/index-buffer.js';
+import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
+import { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
+import { ProgramLibrary } from './graphics/program-library.js';
+import { RenderTarget } from './graphics/render-target.js';
+import { ScopeId } from './graphics/scope-id.js';
+import { Shader } from './graphics/shader.js';
+import { ShaderInput } from './graphics/shader-input.js';
+import { Texture } from './graphics/texture.js';
+import { VertexBuffer } from './graphics/vertex-buffer.js';
+import { VertexFormat } from './graphics/vertex-format.js';
+import { VertexIterator } from './graphics/vertex-iterator.js';
+
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from './scene/constants.js';
+import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
+import { partitionSkin } from './scene/skin-partition.js';
+import { BasicMaterial } from './scene/materials/basic-material.js';
+import { DepthMaterial } from './scene/materials/depth-material.js';
+import { ForwardRenderer } from './scene/forward-renderer.js';
+import { GraphNode } from './scene/graph-node.js';
+import { Material } from './scene/materials/material.js';
+import { Mesh } from './scene/mesh.js';
+import { MeshInstance, Command } from './scene/mesh-instance.js';
+import { Model } from './scene/model.js';
+import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
+import { Picker } from './scene/pick.js';
+import { Scene } from './scene/scene.js';
+import { Skin, SkinInstance } from './scene/skin.js';
+import { StandardMaterial } from './scene/materials/standard-material.js';
+
+import { Animation, Key, Node } from './anim/animation.js';
+import { Skeleton } from './anim/skeleton.js';
+
+import { Channel } from './audio/channel.js';
+import { Channel3d } from './audio/channel3d.js';
+import { Listener } from './sound/listener.js';
+import { Sound } from './sound/sound.js';
+import { SoundManager } from './sound/manager.js';
+
+import { AssetRegistry } from './asset/asset-registry.js';
+
+import { XrInputSource } from './xr/xr-input-source.js';
+
+import { Controller } from './input/controller.js';
+import { ElementInput } from './input/element-input.js';
+import { GamePads } from './input/game-pads.js';
+import { Keyboard, KeyboardEvent } from './input/keyboard.js';
+import { Mouse, MouseEvent } from './input/mouse.js';
+import { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
+
+import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from './framework/constants.js';
+import { Application } from './framework/application.js';
+import { CameraComponent } from './framework/components/camera/component.js';
+import { Component } from './framework/components/component.js';
+import { ComponentData } from './framework/components/data.js';
+import { ComponentSystem } from './framework/components/system.js';
+import { Entity } from './framework/entity.js';
+import { LightComponent } from './framework/components/light/component.js';
+import { ModelComponent } from './framework/components/model/component.js';
+import {
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+} from './framework/components/rigid-body/constants.js';
+import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
+import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+
+// CORE
 
 export var log = {
     write: function (text) {
@@ -137,10 +239,6 @@ export function makeArray(arr) {
 }
 
 // MATH
-import { math } from './math/math.js';
-import { Vec2 } from './math/vec2.js';
-import { Vec3 } from './math/vec3.js';
-import { Vec4 } from './math/vec4.js';
 
 math.INV_LOG2 = Math.LOG2E;
 
@@ -193,9 +291,6 @@ Object.defineProperty(Vec4.prototype, "data", {
 });
 
 // SHAPE
-import { BoundingBox } from './shape/bounding-box.js';
-import { BoundingSphere } from './shape/bounding-sphere.js';
-import { Plane } from './shape/plane.js';
 
 export var shape = {
     Aabb: BoundingBox,
@@ -205,42 +300,19 @@ export var shape = {
 
 BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
 
+Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
+    // #endif
+
+    var viewProj = new Mat4();
+
+    viewProj.mul2(projectionMatrix, viewMatrix);
+
+    this.setFromMat4(viewProj);
+};
+
 // GRAPHICS
-import {
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
-    BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_SRC_ALPHA_SATURATE,
-    BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_DST_ALPHA, BLENDMODE_ONE_MINUS_DST_ALPHA,
-    BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM,
-    CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
-    PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1, SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3,
-    TEXTURELOCK_READ, TEXTURELOCK_WRITE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from './graphics/graphics.js';
-import { drawQuadWithShader } from './graphics/simple-post-effect.js';
-import { programlib } from './graphics/program-lib/program-lib.js';
-import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-import { GraphicsDevice } from './graphics/device.js';
-import { IndexBuffer } from './graphics/index-buffer.js';
-import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
-import { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
-import { ProgramLibrary } from './graphics/program-library.js';
-import { RenderTarget } from './graphics/render-target.js';
-import { ScopeId } from './graphics/scope-id.js';
-import { Shader } from './graphics/shader.js';
-import { ShaderInput } from './graphics/shader-input.js';
-import { Texture } from './graphics/texture.js';
-import { VertexBuffer } from './graphics/vertex-buffer.js';
-import { VertexFormat } from './graphics/vertex-format.js';
-import { VertexIterator } from './graphics/vertex-iterator.js';
 
 export var ELEMENTTYPE_INT8 = TYPE_INT8;
 export var ELEMENTTYPE_UINT8 = TYPE_UINT8;
@@ -386,22 +458,6 @@ Object.defineProperties(Texture.prototype, {
 });
 
 // SCENE
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from './scene/constants.js';
-import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
-import { partitionSkin } from './scene/skin-partition.js';
-import { BasicMaterial } from './scene/materials/basic-material.js';
-import { DepthMaterial } from './scene/materials/depth-material.js';
-import { ForwardRenderer } from './scene/forward-renderer.js';
-import { GraphNode } from './scene/graph-node.js';
-import { Material } from './scene/materials/material.js';
-import { Mesh } from './scene/mesh.js';
-import { MeshInstance, Command } from './scene/mesh-instance.js';
-import { Model } from './scene/model.js';
-import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
-import { Picker } from './scene/pick.js';
-import { Scene } from './scene/scene.js';
-import { Skin, SkinInstance } from './scene/skin.js';
-import { StandardMaterial } from './scene/materials/standard-material.js';
 
 export var PhongMaterial = StandardMaterial;
 
@@ -577,8 +633,6 @@ Material.prototype.setShader = function (shader) {
 };
 
 // ANIMATION
-import { Animation, Key, Node } from './anim/animation.js';
-import { Skeleton } from './anim/skeleton.js';
 
 export var anim = {
     Animation: Animation,
@@ -588,11 +642,6 @@ export var anim = {
 };
 
 // SOUND
-import { Channel } from './audio/channel.js';
-import { Channel3d } from './audio/channel3d.js';
-import { Listener } from './sound/listener.js';
-import { Sound } from './sound/sound.js';
-import { SoundManager } from './sound/manager.js';
 
 export var audio = {
     AudioManager: SoundManager,
@@ -624,7 +673,6 @@ SoundManager.prototype.setVolume = function (volume) {
 };
 
 // ASSET
-import { AssetRegistry } from './asset/asset-registry.js';
 
 export var asset = {
     ASSET_ANIMATION: 'animation',
@@ -647,7 +695,6 @@ AssetRegistry.prototype.getAssetById = function (id) {
 };
 
 // XR
-import { XrInputSource } from './xr/xr-input-source.js';
 
 Object.defineProperty(XrInputSource.prototype, 'ray', {
     get: function () {
@@ -677,12 +724,6 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 });
 
 // INPUT
-import { Controller } from './input/controller.js';
-import { ElementInput } from './input/element-input.js';
-import { GamePads } from './input/game-pads.js';
-import { Keyboard, KeyboardEvent } from './input/keyboard.js';
-import { Mouse, MouseEvent } from './input/mouse.js';
-import { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
 
 export var input = {
     getTouchTargetCoords: getTouchTargetCoords,
@@ -710,21 +751,6 @@ Object.defineProperty(MouseEvent.prototype, 'wheel', {
 });
 
 // FRAMEWORK
-import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from './framework/constants.js';
-import { Application } from './framework/application.js';
-import { Component } from './framework/components/component.js';
-import { ComponentData } from './framework/components/data.js';
-import { ComponentSystem } from './framework/components/system.js';
-import { Entity } from './framework/entity.js';
-import { LightComponent } from './framework/components/light/component.js';
-import { ModelComponent } from './framework/components/model/component.js';
-import {
-    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
-    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
-    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
-} from './framework/components/rigid-body/constants.js';
-import { RigidBodyComponent } from './framework/components/rigid-body/component.js';
-import { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
 
 export var RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
 export var RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
@@ -814,6 +840,15 @@ Application.prototype.disableFullscreen = function (success) {
 
     document.exitFullscreen();
 };
+
+Object.defineProperty(CameraComponent.prototype, "node", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: pc.CameraComponent#node is deprecated. Use pc.CameraComponent#entity instead.");
+        // #endif
+        return this.entity;
+    }
+});
 
 Object.defineProperty(LightComponent.prototype, "enable", {
     get: function () {

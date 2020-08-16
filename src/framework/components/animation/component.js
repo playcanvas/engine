@@ -461,7 +461,22 @@ Object.assign(AnimationComponent.prototype, {
 Object.defineProperties(AnimationComponent.prototype, {
     currentTime: {
         get: function () {
-            return this.data.skeleton._time;
+            var data = this.data;
+
+            if (data.skeleton) {
+                return this.data.skeleton._time;
+            }
+
+            if (data.animEvaluator) {
+                // Get the last clip's current time which will be the one
+                // that is currently being blended
+                var clips = data.animEvaluator.clips;
+                if (clips.length > 0) {
+                    return clips[clips.length - 1].time;
+                }
+            }
+
+            return 0;
         },
         set: function (currentTime) {
             var data = this.data;

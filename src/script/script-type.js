@@ -330,7 +330,7 @@ Object.defineProperty(ScriptType.prototype, 'enabled', {
         }
 
         // post initialize script if not post initialized yet and still enabled
-        // (initilize might have disabled the script so check this.enabled again)
+        // (initialize might have disabled the script so check this.enabled again)
         // Warning: Do not do this if the script component is currently being enabled
         // because in this case post initialize must be called after all the scripts
         // in the script component have been initialized first
