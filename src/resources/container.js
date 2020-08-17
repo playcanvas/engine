@@ -179,7 +179,7 @@ Object.assign(ContainerHandler.prototype, {
         var i;
 
         // create model asset
-        var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
         // create material assets
         var materials = [];
