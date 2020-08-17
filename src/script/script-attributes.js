@@ -36,11 +36,11 @@ var rawToValue = function (app, args, value, old) {
         case 'json':
             var result = {};
 
-            if (!value || typeof value !== 'object') {
-                value = {};
-            }
-
             if (Array.isArray(args.schema)) {
+                if (!value || typeof value !== 'object') {
+                    value = {};
+                }
+
                 for (i = 0; i < args.schema.length; i++) {
                     var field = args.schema[i];
                     if (!field.name) continue;
