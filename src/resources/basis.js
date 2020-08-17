@@ -480,7 +480,7 @@ function basisDownloadFromConfig(callback) {
                       downloadConfig.fallbackUrl,
                       callback);
     } else {
-        // grab config from global PC config structure
+        // get config from global PC config structure
         var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
         var wasmModule = modules.find(function (m) {
             return m.moduleName === 'BASIS';
@@ -491,6 +491,10 @@ function basisDownloadFromConfig(callback) {
                           urlBase + wasmModule.wasmUrl,
                           urlBase + wasmModule.fallbackUrl,
                           callback);
+        } else {
+            // #ifdef DEBUG
+            console.warn("WARNING: unable to load basis wasm module - no config was specified");
+            // #endif
         }
     }
 }
