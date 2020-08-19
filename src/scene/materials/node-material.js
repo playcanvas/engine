@@ -624,7 +624,7 @@ Object.assign(NodeMaterial.prototype, {
             var subGraphList = [];
 
             // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
-            var whileLoopCount = 0; 
+            var whileLoopCount = 0;
 
             while (subGraphList.length < this.graphData.subGraphs.length || whileLoopCount < this.graphData.connections.length) {
                 whileLoopCount++;
