@@ -36,7 +36,7 @@ var ids = 0;
  * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
  * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
  * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null.
- * @property {object|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this [Gamepad object]{@link https://developer.mozilla.org/en-US/docs/Web/API/Gamepad} provides access to its states.
+ * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
  * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
  * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
  * @property {pc.Entity} elementEntity If {@link pc.XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
