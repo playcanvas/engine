@@ -9,6 +9,21 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @description Creates a new curve set.
  * @param {Array<number[]>} [curveKeys] - An array of arrays of keys (pairs of numbers with
  * the time first and value second).
+ * @example
+ * var curveSet = new pc.CurveSet([
+ *     [
+ *         [0, 0],
+ *         [0.33, 2],
+ *         [0.66, 2.6],
+ *         [1, 3]
+ *     ],
+ *     [
+ *         [0, 34],
+ *         [0.33, 35],
+ *         [0.66, 36],
+ *         [1, 37]
+ *     ]
+ * ]);
  */
 function CurveSet() {
     var i;
