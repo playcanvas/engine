@@ -8,12 +8,13 @@ import { NodeMaterial } from '../scene/materials/node-material.js';
  * @class
  * @name pc.NodeMaterialBinder
  * @classdesc Resource binder used for binding {@link pc.NodeMaterial} resources.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @param {pc.AssetRegistry} assets - The asset registry.
+ * @param {pc.GraphicsDevice} device - The graphics device of the application.
  * @param {pc.JsonNodeMaterialParser} parser - JSON parser for {@link pc.NodeMaterial} owned by global {@link pc.MaterialHandler}
  */
-function NodeMaterialBinder(app, parser) {
-    this._assets = app.assets;
-    this._device = app.graphicsDevice;
+function NodeMaterialBinder(assets, device, parser) {
+    this._assets = assets;
+    this._device = device;
     this._parser = parser;
 
     this._placeholderGraph = null;

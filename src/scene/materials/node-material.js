@@ -254,7 +254,8 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             graphVar = { type: type, name: name, valueX: value };
         } else {
-            graphVar = { type: type, name: name };
+            // currently unsupported value type - should not be possible in editor 
+            // TODO: deal with this case when script interface is completed.
         }
 
         this.graphData.graphVars.push(graphVar);
@@ -389,12 +390,14 @@ Object.assign(NodeMaterial.prototype, {
         return callString;
     },
 
-    _getGraphVarByName: function (name) {
+    // this is currently not used - but will be used by the shadergraph script interface
+    // TODO: re-enable and optimize using transient name map
+    // _getGraphVarByName: function (name) {
         // convienient but not fast - TODO: optimize?
-        return this.graphData.graphVars.filter(function (graphVar) {
-            return graphVar.name === name;
-        })[0];
-    },
+        // return this.graphData.graphVars.filter(function (graphVar) {
+        //    return graphVar.name === name;
+        // })[0];
+    // },
 
     _generateSubGraphFuncs: function (depGraphFuncs, depGraphVarList) {
         var i;

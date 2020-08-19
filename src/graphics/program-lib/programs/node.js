@@ -21,23 +21,7 @@ var node = {
         return key;
     },
 
-    createShaderDefinition: function (device, options) {
-        // generate graph
-        var rootDeclGLSL = options.shaderGraph.generateRootDeclGlsl();
-        var rootCallGLSL = options.shaderGraph.generateRootCallGlsl();
-
-        // GENERATE ATTRIBUTES
-        var attributes = {
-            vertex_position: SEMANTIC_POSITION,
-            vertex_normal: SEMANTIC_NORMAL,
-            vertex_color: SEMANTIC_COLOR,
-            vertex_texCoord0: SEMANTIC_TEXCOORD0
-        };
-        if (options.skin) {
-            attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-        }
-
+    _generateVertexShader: function (device, options, rootDeclGLSL, rootCallGLSL) {
         var chunks = shaderChunks;
 
         // GENERATE VERTEX SHADER
@@ -109,6 +93,12 @@ var node = {
             vshader = startCode + vshader;
         }
 
+        return vshader;
+    },
+
+    _generateFragmentShader: function (device, options, rootDeclGLSL, rootCallGLSL) {
+        var chunks = shaderChunks;
+
         // GENERATE FRAGMENT SHADER
         if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
@@ -119,7 +109,7 @@ var node = {
             if (options.forceFragmentPrecision === "mediump" && device.maxPrecision === "lowp") options.forceFragmentPrecision = "lowp";
         }
 
-        code = '';
+        var code = '';
 
         if (device.webgl2) {
             code += versionCode(device);
@@ -179,7 +169,30 @@ var node = {
 
         code += end();
 
-        var fshader = code;
+        return code;
+    },
+
+    createShaderDefinition: function (device, options) {
+        // generate graph
+        // TODO: support generation of shader variants based on options
+        var rootDeclGLSL = options.shaderGraph.generateRootDeclGlsl();
+        var rootCallGLSL = options.shaderGraph.generateRootCallGlsl();
+
+        // GENERATE ATTRIBUTES
+        var attributes = {
+            vertex_position: SEMANTIC_POSITION,
+            vertex_normal: SEMANTIC_NORMAL,
+            vertex_color: SEMANTIC_COLOR,
+            vertex_texCoord0: SEMANTIC_TEXCOORD0
+        };
+        if (options.skin) {
+            attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
+        }
+
+        var vshader = this._generateVertexShader(device, options, rootDeclGLSL, rootCallGLSL);
+
+        var fshader = this._generateFragmentShader(device, options, rootDeclGLSL, rootCallGLSL);
 
         return {
             attributes: attributes,
