@@ -254,7 +254,7 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             graphVar = { type: type, name: name, valueX: value };
         } else {
-            // currently unsupported value type - should not be possible in editor 
+            // currently unsupported value type - should not be possible in editor
             // TODO: deal with this case when script interface is completed.
         }
 
@@ -469,7 +469,7 @@ Object.assign(NodeMaterial.prototype, {
 
         // add all the graph definitions
         var depGraphList = []; // reverse order
-        for (const func in depGraphFuncs) {
+        for (var func in depGraphFuncs) {
             var funcString = '';
 
             if ( func.endsWith('PS') ) {
