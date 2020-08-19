@@ -80,7 +80,7 @@ Object.assign(AnimComponentBinder.prototype, {
 
     _setComponentProperty: function (propertyComponent, propertyHierarchy) {
         // trigger the component property setter function
-        propertyComponent[propertyHierarchy[0]] = propertyComponent[propertyHierarchy[0]];
+        propertyComponent[propertyHierarchy[0]] = propertyComponent[propertyHierarchy[0]]; // eslint-disable-line no-self-assign
     },
 
     _floatSetter: function (propertyComponent, propertyHierarchy) {
