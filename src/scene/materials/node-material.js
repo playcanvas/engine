@@ -82,23 +82,23 @@ Object.assign(NodeMaterial.prototype, {
             var graphVar = this.graphData.graphVars[n];
 
             if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
-                var g_id = '_' + this.id;
+                var matId = '_' + this.id;
 
                 switch (graphVar.type) {
                     case 'sampler2D':
-                        this.setParameter(graphVar.name + g_id, graphVar.valueTex);
+                        this.setParameter(graphVar.name + matId, graphVar.valueTex);
                         break;
                     case 'float':
-                        this.setParameter(graphVar.name + g_id, graphVar.valueX);
+                        this.setParameter(graphVar.name + matId, graphVar.valueX);
                         break;
                     case 'vec2':
-                        this.setParameter(graphVar.name + g_id, [graphVar.valueX, graphVar.valueY]);
+                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY]);
                         break;
                     case 'vec3':
-                        this.setParameter(graphVar.name + g_id, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
+                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
                         break;
                     case 'vec4':
-                        this.setParameter(graphVar.name + g_id, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
+                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
                         break;
                     case 'samplerCube':
                     default:
@@ -107,16 +107,6 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
         }
-//
-//      if (this._depGraphTextureList)
-//      {
-//          for (var i = 0; i < this._depGraphTextureList.length; i++)
-//          {
-//              var depGraphTexture=this._depGraphTextureList[i];
-//
-//              this.setParameter(depGraphTexture.name, depGraphTexture.valueTex);
-//          }
-//      }
 
         if (this.dirtyShader || !this._scene) {
             this.shader = null;
@@ -125,26 +115,6 @@ Object.assign(NodeMaterial.prototype, {
     },
 
     updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-        // update dynamic lighting - for now main light is first directional light in slot 0 of 32 slots
- //
- //     var dynamicLightlist = [];
- //     var mainLight;
- //
- //     for (i = 0; i < sortedLights[LIGHTTYPE_DIRECTIONAL].length; i++)
- //     {
- //         var light = sortedLights[LIGHTTYPE_DIRECTIONAL][i];
- //         if (light.enabled && light. ) {
- //             if (light.mask & mask) {
- //                 if (lType !== LIGHTTYPE_DIRECTIONAL) {
- //                     if (light.isStatic) {
- //                         continue;
- //                     }
- //                 }
- //                 lightsFiltered.push(light);
- //             }
- //         }
- //     }
- //
         if (this.hasValidGraphData()) {
             this.initShader(device);
             this.dirtyShader = false;
@@ -308,28 +278,28 @@ Object.assign(NodeMaterial.prototype, {
         var functionString = this.graphData.customFuncGlsl.trim();
 
         var head = functionString.split(")")[0];
-        var rettype_funcname = head.split("(")[0];
-        var rettype = rettype_funcname.split(" ")[0];
+        var retTypeAndFuncName = head.split("(")[0];
+        var retType = retTypeAndFuncName.split(" ")[0];
         var params = head.split("(")[1].split(",");
 
-        this.name = rettype_funcname.split(" ")[1];
+        this.name = retTypeAndFuncName.split(" ")[1];
         // TODO check for function name clashes - maybe replace func name in function string with hash key?
 
-        if (rettype != "void") {
-            this.addOutput(rettype, 'ret');
+        if (retType != "void") {
+            this.addOutput(retType, 'ret');
         }
 
         for (var p = 0; p < params.length; p++) {
-            var io_type_name = params[p].split(" ");
+            var inOrOutAndTypeAndName = params[p].split(" ");
 
-            if (io_type_name[0] === "") io_type_name.shift();
+            if (inOrOutAndTypeAndName[0] === "") inOrOutAndTypeAndName.shift();
 
-            if (io_type_name[0] === "out") {
-                this.addOutput(io_type_name[1], io_type_name[2]);
+            if (inOrOutAndTypeAndName[0] === "out") {
+                this.addOutput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
                 // this.defineOuputGetter(this.outputName[this.outputName.length - 1], this.outputName.length - 1);
             }
-            if (io_type_name[0] === "in") {
-                this.addInput(io_type_name[1], io_type_name[2]);
+            if (inOrOutAndTypeAndName[0] === "in") {
+                this.addInput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
                 // this.defineInputSetter(this.inputName[this.inputName.length - 1], this.inputName.length - 1);
             } else {
                 // unsupported parameter !!! TODO add support for more parameter types?
@@ -462,10 +432,10 @@ Object.assign(NodeMaterial.prototype, {
         var generatedGlsl = '';
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
         for (i = 0; i < this.graphData.graphVars.length; i++) {
-            var g_id = '_' + this.id;
+            var matId = '_' + this.id;
             graphVar = this.graphData.graphVars[i];
             if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
-                generatedGlsl += 'uniform ' + graphVar.type + ' ' + graphVar.name + g_id + ';\n';
+                generatedGlsl += 'uniform ' + graphVar.type + ' ' + graphVar.name + matId + ';\n';
             }
         }
         // run through constants values are set here (except for textures - which have to be uniforms)
@@ -515,8 +485,8 @@ Object.assign(NodeMaterial.prototype, {
 
             depGraphList.push(funcString);
         }
-        var t_len = depGraphList.length; // need this because pop() reduces array length!
-        for (i = 0; i < t_len; i++) {
+        var tLen = depGraphList.length; // need this because pop() reduces array length!
+        for (i = 0; i < tLen; i++) {
             generatedGlsl += depGraphList.pop();
         }
 
@@ -531,10 +501,10 @@ Object.assign(NodeMaterial.prototype, {
         var outNames = {};
 
         for (var i = 0; i < this.graphData.graphVars.length; i++) {
-            var g_id = '_' + this.id;
+            var matId = '_' + this.id;
             var graphVar = this.graphData.graphVars[i];
             if (graphVar.name.startsWith('IN_')) {
-                inNames[graphVar.name] = graphVar.name + g_id;
+                inNames[graphVar.name] = graphVar.name + matId;
             }
             if (graphVar.name.startsWith('OUT_')) {
                 generatedGlsl += graphVar.type + ' ' + graphVar.name + ';\n';
@@ -559,18 +529,17 @@ Object.assign(NodeMaterial.prototype, {
         } else if (this.graphData.subGraphs) {
             // graph
             // function head
-            var ret_used = false;
+            var retUsed = false;
 
             for (i = 0; i < this.graphData.graphVars.length; i++) {
                 graphVar = this.graphData.graphVars[i];
                 if (graphVar.name.startsWith('OUT_ret')) {
-                    // graphVarNameToIndexMap[graphVar.name]={type:graphVar.type, value:graphVar.value};
                     generatedGlsl = graphVar.type + ' ';
-                    ret_used = true;
+                    retUsed = true;
                 }
             }
 
-            if (ret_used === true) {
+            if (retUsed === true) {
                 generatedGlsl += this.name + '_' + this.id + '( ';
             } else {
                 generatedGlsl = 'void ' + this.name + '_' + this.id + '( ';
@@ -579,8 +548,6 @@ Object.assign(NodeMaterial.prototype, {
             for (i = 0; i < this.graphData.graphVars.length; i++) {
                 graphVar = this.graphData.graphVars[i];
                 if (graphVar.name.startsWith('IN_')) {
-                    // graphVarNameToIndexMap[graphVar.name]={type:graphVar.type, value:graphVar.value};
-
                     generatedGlsl += 'in ' + graphVar.type + ' ' + graphVar.name + ', ';
                 }
             }
@@ -589,7 +556,6 @@ Object.assign(NodeMaterial.prototype, {
                 graphVar = this.graphData.graphVars[i];
                 if (graphVar.name.startsWith('OUT_')) {
                     if (!graphVar.name.startsWith('OUT_ret')) {
-                        // graphVarNameToIndexMap[graphVar.name]={type:graphVar.type, value:graphVar.value};
                         generatedGlsl += 'out ' + graphVar.type + ' ' + graphVar.name + ', ';
                     }
                 }
@@ -657,10 +623,11 @@ Object.assign(NodeMaterial.prototype, {
             var subGraphOnListFlags = [];
             var subGraphList = [];
 
-            var while_loop_count = 0; // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
+            // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
+            var whileLoopCount = 0; 
 
-            while (subGraphList.length < this.graphData.subGraphs.length || while_loop_count < this.graphData.connections.length) {
-                while_loop_count++;
+            while (subGraphList.length < this.graphData.subGraphs.length || whileLoopCount < this.graphData.connections.length) {
+                whileLoopCount++;
 
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
                     if (subGraphOnListFlags[i] != true) {
