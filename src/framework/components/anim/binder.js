@@ -77,7 +77,8 @@ Object.assign(AnimComponentBinder.prototype, {
         }
         return currEntity._parent.findByPath(entityHierarchy.join('/'));
     },
-    _setComponentProperty(propertyComponent, propertyHierarchy) {
+
+    _setComponentProperty: function (propertyComponent, propertyHierarchy) {
         // trigger the component property setter function
         propertyComponent[propertyHierarchy[0]] = propertyComponent[propertyHierarchy[0]];
     },
