@@ -106,12 +106,13 @@ Object.assign(MaterialHandler.prototype, {
 
         // this should only happen in the editor?
         if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial)) {
-            if (asset.resource instanceof StandardMaterial) {
+            // TODO: Migrate standard material data to node material data
+            // if (asset.resource instanceof StandardMaterial) {
                 // migrate from StandardMaterial
-                asset.resource = this._parsers[subclass].parse(asset.data, true);
-            } else {
-                asset.resource = this._parsers[subclass].parse(asset.data);
-            }
+                // asset.resource = this._parsers[subclass].parse(asset.data, true);
+            // } else {
+            asset.resource = this._parsers[subclass].parse(asset.data);
+            // }
         } else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial)) {
             asset.resource = this._parsers[subclass].parse(asset.data);
         }
