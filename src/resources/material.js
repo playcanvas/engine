@@ -60,10 +60,10 @@ Object.assign(MaterialHandler.prototype, {
             subclass = 'Node';
 
             if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device);
-            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._app, this._parsers[subclass]);
+            if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
         } else {
             if (!this._parsers[subclass]) this._parsers[subclass] = new JsonStandardMaterialParser();
-            if (!this._binders[subclass]) this._binders[subclass] = new StandardMaterialBinder(this._app, this._parsers[subclass]);
+            if (!this._binders[subclass]) this._binders[subclass] = new StandardMaterialBinder(this._assets, this._device, this._parsers[subclass]);
 
         }
 
@@ -106,10 +106,13 @@ Object.assign(MaterialHandler.prototype, {
 
         // this should only happen in the editor?
         if (subclass == 'Node' && !(asset.resource instanceof NodeMaterial)) {
-            // TODO: clean up old material nicely?
-            asset.resource = this._parsers[subclass].parse(asset.data);
+            if (asset.resource instanceof StandardMaterial) {
+                // migrate from StandardMaterial
+                asset.resource = this._parsers[subclass].parse(asset.data, true);
+            } else {
+                asset.resource = this._parsers[subclass].parse(asset.data);
+            }
         } else if (subclass == 'Standard' && !(asset.resource instanceof StandardMaterial)) {
-            // TODO: clean up old material nicely?
             asset.resource = this._parsers[subclass].parse(asset.data);
         }
 

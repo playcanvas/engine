@@ -24,12 +24,13 @@ var PLACEHOLDER_MAP = {
  * @class
  * @name pc.StandardMaterialBinder
  * @classdesc Resource binder used for binding {@link pc.StandardMaterial} resources.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @param {pc.AssetRegistry} assets - The asset registry.
+ * @param {pc.GraphicsDevice} device - The graphics device of the application.
  * @param {pc.JsonStandardMaterialParser} parser - JSON parser for {@link pc.StandardMaterial} owned by global {@link pc.MaterialHandler}
  */
-function StandardMaterialBinder(app, parser) {
-    this._assets = app.assets;
-    this._device = app.graphicsDevice;
+function StandardMaterialBinder(assets, device, parser) {
+    this._assets = assets;
+    this._device = device;
     this._parser = parser;
 
     this._placeholderTextures = null;

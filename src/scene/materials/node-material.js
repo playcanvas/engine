@@ -254,8 +254,9 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             graphVar = { type: type, name: name, valueX: value };
         } else {
-            // currently unsupported value type - should not be possible in editor
-            // TODO: deal with this case when script interface is completed.
+            // this is a needed when generating graph vars without default values (outputs)
+            // TODO: check if valid default values should be set?
+            graphVar = { type: type, name: name };
         }
 
         this.graphData.graphVars.push(graphVar);
