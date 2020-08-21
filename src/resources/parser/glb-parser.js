@@ -1325,8 +1325,7 @@ var createLight = function (gltfLight, node) {
     if (gltfLight.hasOwnProperty('range')) {
         lightProps.range = gltfLight.range;
     } else {
-        // TODO: Better way of representing infinite range
-        lightProps.range = 99999999;
+        lightProps.range = Number.POSITIVE_INFINITY;
     }
 
     if (gltfLight.hasOwnProperty('spot') && gltfLight.spot.hasOwnProperty('innerConeAngle')) {
