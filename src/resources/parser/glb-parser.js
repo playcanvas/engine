@@ -1279,26 +1279,22 @@ var createCamera = function (gltfCamera, node) {
         const yMag = orthographic.ymag;
         const aspectRatio = xMag !== undefined ? xMag / yMag  : undefined;
 
-        Object.assign(cameraProps, {
-            projection: PROJECTION_ORTHOGRAPHIC,
-            aspectRatioMode: aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO,
-            aspectRatio: aspectRatio,
-            orthoHeight: yMag,
-            farClip: orthographic.zfar,
-            nearClip: orthographic.znear
-        });
+        cameraProps.projection = PROJECTION_ORTHOGRAPHIC;
+        cameraProps.aspectRatioMode = aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO;
+        cameraProps.aspectRatio = aspectRatio;
+        cameraProps.orthoHeight = yMag;
+        cameraProps.farClip = orthographic.zfar;
+        cameraProps.nearClip = orthographic.znear;
     } else {
         const perspective = gltfCamera.perspective;
         const aspectRatio = perspective.aspectRatio;
 
-        Object.assign(cameraProps, {
-            projection: PROJECTION_PERSPECTIVE,
-            aspectRatioMode: aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO,
-            aspectRatio: aspectRatio,
-            fov: perspective.yfov * math.RAD_TO_DEG,
-            farClip: perspective.zfar,
-            nearClip: perspective.znear
-        });
+        cameraProps.projection = PROJECTION_PERSPECTIVE;
+        cameraProps.aspectRatioMode = aspectRatio !== undefined ? ASPECT_MANUAL : ASPECT_AUTO;
+        cameraProps.aspectRatio = aspectRatio;
+        cameraProps.fov = perspective.yfov * math.RAD_TO_DEG;
+        cameraProps.farClip = perspective.zfar;
+        cameraProps.nearClip = perspective.znear;
     }
 
     return node.addComponent("camera", cameraProps);
