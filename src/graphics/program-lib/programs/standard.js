@@ -1321,15 +1321,15 @@ var standard = {
 
         if (needsNormal) {
             if (options.twoSidedLighting) {
-                code += "   float normalSign = sign(dot(vNormalW, dViewDirW));\n";
-                code += "   dVertexNormalW = normalSign * vNormalW;\n";
+                code += "   float normalDirSign = sign(dot(vNormalW, dViewDirW));\n";
+                code += "   dVertexNormalW = normalDirSign * vNormalW;\n";
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = normalSign * vTangentW;\n";
-                    code += "   dBinormalW = normalSign * vBinormalW;\n";
+                    code += "   dTangentW = normalDirSign * vTangentW;\n";
+                    code += "   dBinormalW = normalDirSign * vBinormalW;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
