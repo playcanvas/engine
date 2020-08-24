@@ -1335,11 +1335,11 @@ var createLight = function (gltfLight, node) {
     }
 
     // Rotate to match light orientation in glTF specification
-    const cameraNode = new Entity(node.name);
-    cameraNode.rotateLocal(90, 0, 0);
-    node.addChild(cameraNode);
+    const lightNode = new Entity(node.name);
+    lightNode.rotateLocal(90, 0, 0);
+    node.addChild(lightNode);
 
-    return cameraNode.addComponent("light", lightProps);
+    return lightNode.addComponent("light", lightProps);
 };
 
 var createSkins = function (device, gltf, nodes, bufferViews) {
