@@ -1565,7 +1565,7 @@ var createCameras = function (gltf, nodes, options) {
     return cameras;
 };
 
-var createLights = function (gltf, nodes) {
+var createLights = function (gltf, nodes, options) {
     if (!gltf.hasOwnProperty('nodes') ||
         !gltf.hasOwnProperty('extensions') ||
         !gltf.extensions.hasOwnProperty('KHR_lights_punctual') ||
@@ -1578,6 +1578,10 @@ var createLights = function (gltf, nodes) {
         return [];
     }
 
+    var preprocess = options && options.light && options.light.preprocess;
+    var process = options && options.light && options.light.process || createLight;
+    var postprocess = options && options.light && options.light.postprocess;
+
     var lights = [];
 
     gltf.nodes.forEach(function (gltfNode, nodeIndex) {
@@ -1586,14 +1590,19 @@ var createLights = function (gltf, nodes) {
             !gltfNode.extensions.KHR_lights_punctual.hasOwnProperty('light')) {
             return;
         }
-
         var lightIndex = gltfNode.extensions.KHR_lights_punctual.light;
         var gltfLight = gltfLights[lightIndex];
         if (!gltfLight) {
             return;
         }
-
-        lights.push(createLight(gltfLight, nodes[nodeIndex]));
+        if (preprocess) {
+            preprocess(gltfLight);
+        }
+        var light = process(gltfLight, nodes[nodeIndex]);
+        if (postprocess) {
+            postprocess(gltfLight, light);
+        }
+        lights.push(light);
     });
 
     return lights;
@@ -1617,7 +1626,7 @@ var createResources = function (device, gltf, bufferViews, textureAssets, defaul
     var scenes = createScenes(gltf, nodes, options);
     var scene = getDefaultScene(gltf, scenes);
     var cameras = createCameras(gltf, nodes, options);
-    var lights = createLights(gltf, nodes);
+    var lights = createLights(gltf, nodes, options);
     var animations = createAnimations(gltf, nodes, bufferViews, options);
     var materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;

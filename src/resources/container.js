@@ -139,6 +139,7 @@ Object.assign(ContainerResource.prototype, {
  * | node        |      x      |      x      |             |      x      |
  * | scene       |      x      |      x      |             |      x      |
  * | camera      |      x      |      x      |             |      x      |
+ * | light       |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
