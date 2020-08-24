@@ -29,10 +29,10 @@ describe('Test Bundle Loader', function () {
                 filename: 'text.txt',
                 url: 'files/text/text.txt'
             }),
-            new pc.Asset('cubemap', 'cubemap', {
-                filename: 'cubemap.dds',
-                url: 'files/cubemap/cubemap.dds'
-            }),
+            // new pc.Asset('cubemap', 'cubemap', {
+            //     filename: 'cubemap.dds',
+            //     url: 'files/cubemap/cubemap.dds'
+            // }),
             new pc.Asset('model', 'model', {
                 filename: 'model.json',
                 url: 'files/model/model.json'
