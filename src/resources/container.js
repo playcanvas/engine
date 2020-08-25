@@ -231,6 +231,16 @@ Object.assign(ContainerHandler.prototype, {
         var data = container.data;
 
         if (data) {
+            var createAsset = function (type, resource, index) {
+                var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
+                    url: ''
+                });
+                subAsset.resource = resource;
+                subAsset.loaded = true;
+                assets.add(subAsset);
+                return subAsset;
+            };
+
             // create model assets
             var modelAssets = data.models.map(function (model, index) {
                 return createAsset('model', model, index);
