@@ -58,7 +58,9 @@ Object.assign(SceneParser.prototype, {
         entity.setLocalScale(s[0], s[1], s[2]);
         entity._enabled = data.enabled !== undefined ? data.enabled : true;
 
-        if (!this._isTemplate) {
+        if (this._isTemplate) {
+            entity._template = true;
+        } else {
             entity._enabledInHierarchy = entity._enabled;
         }
 
