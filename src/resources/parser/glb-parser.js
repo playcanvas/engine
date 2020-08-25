@@ -11,7 +11,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
-    typedArrayTypes,
+    typedArrayTypes, typedArrayTypesByteSize,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BUFFER_STATIC,
     CULLFACE_NONE, CULLFACE_BACK,
@@ -106,6 +106,17 @@ var getComponentDataType = function (componentType) {
         case 5126: return Float32Array;
         default: return null;
     }
+};
+
+var gltfToEngineSemanticMap = {
+    'POSITION': SEMANTIC_POSITION,
+    'NORMAL': SEMANTIC_NORMAL,
+    'TANGENT': SEMANTIC_TANGENT,
+    'COLOR_0': SEMANTIC_COLOR,
+    'JOINTS_0': SEMANTIC_BLENDINDICES,
+    'WEIGHTS_0': SEMANTIC_BLENDWEIGHT,
+    'TEXCOORD_0': SEMANTIC_TEXCOORD0,
+    'TEXCOORD_1': SEMANTIC_TEXCOORD1
 };
 
 // get accessor data, making a copy and patching in the case of a sparse accessor
@@ -206,12 +217,26 @@ var generateIndices = function (numVertices) {
 var generateNormals = function (sourceDesc, indices) {
     // get positions
     var p = sourceDesc[SEMANTIC_POSITION];
-    if (!p || p.components !== 3 || p.size !== p.stride) {
-        // NOTE: normal generation only works on tightly packed positions
+    if (!p || p.components !== 3) {
         return;
     }
 
-    var positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
+    var positions;
+    if (p.size !== p.stride) {
+        // extract positions which aren't tightly packed
+        var srcStride = p.stride / typedArrayTypesByteSize[p.type];
+        var src = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * srcStride);
+        positions = new typedArrayTypes[p.type](p.count * 3);
+        for (var i = 0; i < p.count; ++i) {
+            positions[i * 3 + 0] = src[i * srcStride + 0];
+            positions[i * 3 + 1] = src[i * srcStride + 1];
+            positions[i * 3 + 2] = src[i * srcStride + 2];
+        }
+    } else {
+        // position data is tightly packed so we can use it directly
+        positions = new typedArrayTypes[p.type](p.buffer, p.offset, p.count * 3);
+    }
+
     var numVertices = p.count;
 
     // generate indices if necessary
@@ -282,6 +307,42 @@ var flipTexCoordVs = function (vertexBuffer) {
     }
 };
 
+// given a texture, clone it
+// NOTE: CPU-side texture data will be shared but GPU memory will be duplicated
+var cloneTexture = function (texture) {
+    var shallowCopyLevels = function (texture) {
+        var result = [];
+        for (var mip = 0; mip < texture._levels.length; ++mip) {
+            var level = [];
+            if (texture.cubemap) {
+                for (var face = 0; face < 6; ++face) {
+                    level.push(texture._levels[mip][face]);
+                }
+            } else {
+                level = texture._levels[mip];
+            }
+            result.push(level);
+        }
+        return result;
+    };
+
+    var result = new pc.Texture(texture.device, texture);   // duplicate texture
+    result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
+    return result;
+};
+
+// given a texture asset, clone it
+var cloneTextureAsset = function (src) {
+    var result = new pc.Asset(src.name + '_clone',
+                              src.type,
+                              src.file,
+                              src.data,
+                              src.options);
+    result.loaded = true;
+    result.resource = cloneTexture(src.resource);
+    src.registry.add(result);
+    return result;
+};
 
 var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     var positionDesc = sourceDesc[SEMANTIC_POSITION];
@@ -368,8 +429,9 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
 
             var src = 0;
             var dst = target.offset / 4;
+            var kend = Math.floor((source.size + 3) / 4);
             for (j = 0; j < numVertices; ++j) {
-                for (k = 0; k < source.size / 4; ++k) {
+                for (k = 0; k < kend; ++k) {
                     targetArray[dst + k] = sourceArray[src + k];
                 }
                 src += sourceStride;
@@ -387,15 +449,15 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, semanticMap, disableFlipV) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, disableFlipV) {
     // build vertex buffer format desc and source
     var sourceDesc = {};
     for (var attrib in attributes) {
-        if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
+        if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
             var accessor = accessors[attributes[attrib]];
             var accessorData = getAccessorData(accessor, bufferViews);
             var bufferView = bufferViews[accessor.bufferView];
-            var semantic = semanticMap[attrib].semantic;
+            var semantic = gltfToEngineSemanticMap[attrib];
             var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
             var stride = bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
@@ -419,7 +481,7 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
     return createVertexBufferInternal(device, sourceDesc, disableFlipV);
 };
 
-var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV) {
+var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV) {
 
     var numPoints = outputGeometry.num_points();
 
@@ -474,9 +536,8 @@ var createVertexBufferDraco = function (device, outputGeometry, extDraco, decode
     var sourceDesc = {};
     var attributes = extDraco.attributes;
     for (var attrib in attributes) {
-        if (attributes.hasOwnProperty(attrib) && semanticMap.hasOwnProperty(attrib)) {
-            var semanticInfo = semanticMap[attrib];
-            var semantic = semanticInfo.semantic;
+        if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
+            var semantic = gltfToEngineSemanticMap[attrib];
             var attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
 
             // store the info we'll need to copy this data into the vertex buffer
@@ -552,17 +613,6 @@ var tempVec = new Vec3();
 var createMeshGroup = function (device, gltfMesh, accessors, bufferViews, callback, disableFlipV) {
     var meshes = [];
 
-    var semanticMap = {
-        'POSITION': { semantic: SEMANTIC_POSITION },
-        'NORMAL': { semantic: SEMANTIC_NORMAL },
-        'TANGENT': { semantic: SEMANTIC_TANGENT },
-        'COLOR_0': { semantic: SEMANTIC_COLOR },
-        'JOINTS_0': { semantic: SEMANTIC_BLENDINDICES },
-        'WEIGHTS_0': { semantic: SEMANTIC_BLENDWEIGHT },
-        'TEXCOORD_0': { semantic: SEMANTIC_TEXCOORD0 },
-        'TEXCOORD_1': { semantic: SEMANTIC_TEXCOORD1 }
-    };
-
     gltfMesh.primitives.forEach(function (primitive) {
 
         var primitiveType, vertexBuffer, numIndices;
@@ -630,7 +680,7 @@ var createMeshGroup = function (device, gltfMesh, accessors, bufferViews, callba
                         }
 
                         // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, semanticMap, indices, disableFlipV);
+                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV);
 
                         // clean up
                         decoderModule.destroy(outputGeometry);
@@ -651,7 +701,7 @@ var createMeshGroup = function (device, gltfMesh, accessors, bufferViews, callba
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, semanticMap, disableFlipV);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, disableFlipV);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -669,10 +719,23 @@ var createMeshGroup = function (device, gltfMesh, accessors, bufferViews, callba
             } else if (indices instanceof Uint16Array) {
                 indexFormat = INDEXFORMAT_UINT16;
             } else {
-                // TODO: these indices may need conversion since some old WebGL 1.0 devices
-                // don't support 32bit index data
                 indexFormat = INDEXFORMAT_UINT32;
             }
+
+            // 32bit index buffer is used but not supported
+            if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
+
+                // #ifdef DEBUG
+                if (vertexBuffer.numVertices > 0xFFFF) {
+                    console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
+                }
+                // #endif
+
+                // convert to 16bit
+                indexFormat = INDEXFORMAT_UINT16;
+                indices = new Uint16Array(indices);
+            }
+
             var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
             mesh.indexBuffer[0] = indexBuffer;
             mesh.primitive[0].count = indices.length;
@@ -1777,11 +1840,9 @@ var loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registry,
 
 // load textures using the asset system
 var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options, callback) {
-    var result = [];
-
     if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
         !gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
-        callback(null, result);
+        callback(null, []);
         return;
     }
 
@@ -1791,15 +1852,28 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
     };
     var postprocess = options && options.texture && options.texture.postprocess;
 
+    var assets = [];        // one per image
+    var textures = [];      // list per image
+
     var remaining = gltf.textures.length;
-    var onLoad = function (index, textureAsset) {
-        // apply sampler state to the loaded texture
-        applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[index].sampler]);
-        result[index] = textureAsset;
-        if (postprocess) {
-            postprocess(gltf.textures[index], textureAsset);
+    var onLoad = function (textureIndex, imageIndex) {
+        if (!textures[imageIndex]) {
+            textures[imageIndex] = [];
         }
+        textures[imageIndex].push(textureIndex);
+
         if (--remaining === 0) {
+            var result = [];
+            textures.forEach(function (textureList, imageIndex) {
+                textureList.forEach(function (textureIndex, index) {
+                    var textureAsset = (index === 0) ? assets[imageIndex] : cloneTextureAsset(assets[imageIndex]);
+                    applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[textureIndex].sampler]);
+                    result[textureIndex] = textureAsset;
+                    if (postprocess) {
+                        postprocess(gltf.textures[index], textureAsset);
+                    }
+                });
+            });
             callback(null, result);
         }
     };
@@ -1811,21 +1885,29 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
             preprocess(gltfTexture);
         }
 
-        processAsync(gltfTexture, gltf.images, function (i, gltfTexture, err, gltfImage) {
+        processAsync(gltfTexture, gltf.images, function (i, gltfTexture, err, gltfImageIndex) {
             if (err) {
                 callback(err);
             } else {
-                if (!gltfImage) {
-                    gltfImage = gltf.images[gltfTexture.source];
+                if (gltfImageIndex === undefined || gltfImageIndex === null) {
+                    gltfImageIndex = gltfTexture.source;
                 }
 
-                loadImageAsync(gltfImage, i, bufferViews, urlBase, registry, options, function (err, textureAsset) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        onLoad(i, textureAsset);
-                    }
-                });
+                if (assets[gltfImageIndex]) {
+                    // image has already been loaded
+                    onLoad(i, gltfImageIndex);
+                } else {
+                    // first occcurrence, load it
+                    var gltfImage = gltf.images[gltfImageIndex];
+                    loadImageAsync(gltfImage, i, bufferViews, urlBase, registry, options, function (err, textureAsset) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            assets[gltfImageIndex] = textureAsset;
+                            onLoad(i, gltfImageIndex);
+                        }
+                    });
+                }
             }
         }.bind(null, i, gltfTexture));
     }

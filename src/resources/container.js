@@ -227,63 +227,55 @@ Object.assign(ContainerHandler.prototype, {
 
     // Create assets to wrap the loaded engine resources - models, materials, textures and animations.
     patch: function (asset, assets) {
-        var createAsset = function (type, resource, index) {
-            var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
-                url: ''
-            });
-            subAsset.resource = resource;
-            subAsset.loaded = true;
-            assets.add(subAsset);
-            return subAsset;
-        };
-
         var container = asset.resource;
         var data = container.data;
 
-        // create model assets
-        var modelAssets = data.models.map(function (model, index) {
-            return createAsset('model', model, index);
-        });
+        if (data) {
+            // create model assets
+            var modelAssets = data.models.map(function (model, index) {
+                return createAsset('model', model, index);
+            });
 
-        // create node model assets
-        var modelAssetByNode = data.modelByNode.map(function (model, index) {
-            return model !== null ? createAsset('model', model, index) : null;
-        });
+            // create node model assets
+            var modelAssetByNode = data.modelByNode.map(function (model, index) {
+                return model !== null ? createAsset('model', model, index) : null;
+            });
 
-        // create material assets
-        var materialAssets = data.materials.map(function (material, index) {
-            return createAsset('material', material, index);
-        });
+            // create material assets
+            var materialAssets = data.materials.map(function (material, index) {
+                return createAsset('material', material, index);
+            });
 
-        // create animation assets
-        var animationAssets = data.animations.map(function (animation, index) {
-            return createAsset('animation', animation, index);
-        });
+            // create animation assets
+            var animationAssets = data.animations.map(function (animation, index) {
+                return createAsset('animation', animation, index);
+            });
 
-        // add model components to nodes
-        data.nodes.forEach(function (node, nodeIndex) {
-            var modelAsset = modelAssetByNode[nodeIndex];
-            if (modelAsset !== null) {
-                node.addComponent('model', {
-                    type: 'asset',
-                    asset: modelAsset
-                });
-            }
-        });
+            // add model components to nodes
+            data.nodes.forEach(function (node, nodeIndex) {
+                var modelAsset = modelAssetByNode[nodeIndex];
+                if (modelAsset !== null) {
+                    node.addComponent('model', {
+                        type: 'asset',
+                        asset: modelAsset
+                    });
+                }
+            });
 
-        container.data = null;                      // since assets are created, release GLB data
-        container.scene = data.scene;
-        container.scenes = data.scenes;
-        container.cameras = data.cameras;
-        container.lights = data.lights;
-        container.nodes = data.nodes;
-        container.materials = materialAssets;
-        container.textures = data.textures;         // texture assets are created in parser
-        container.animations = animationAssets;
-        container.animationIndicesByNode = data.animationIndicesByNode;
-        container.models = modelAssets;
-        container._modelByNode = modelAssetByNode;    // keep model refs for when container is destroyed
-        container.registry = assets;
+            container.data = null;                      // since assets are created, release GLB data
+            container.scene = data.scene;
+            container.scenes = data.scenes;
+            container.cameras = data.cameras;
+            container.lights = data.lights;
+            container.nodes = data.nodes;
+            container.materials = materialAssets;
+            container.textures = data.textures;         // texture assets are created in parser
+            container.animations = animationAssets;
+            container.animationIndicesByNode = data.animationIndicesByNode;
+            container.models = modelAssets;
+            container._modelByNode = modelAssetByNode;    // keep model refs for when container is destroyed
+            container.registry = assets;
+        }
     }
 });
 

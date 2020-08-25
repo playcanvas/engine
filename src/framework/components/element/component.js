@@ -104,6 +104,7 @@ var matD = new Mat4();
  * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types. The only supported tag is `[color]` with a hex color value. E.g `[color="#ff0000"]red text[/color]`
  * @property {number} rangeStart Index of the first character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} rangeEnd Index of the last character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene, but instead limit child elements to only be rendered where this element is rendered.
  */
 function ElementComponent(system, entity) {
     Component.call(this, system, entity);
@@ -914,8 +915,8 @@ Object.assign(ElementComponent.prototype, {
             var sw = this.system.app.graphicsDevice.width;
             var sh = this.system.app.graphicsDevice.height;
 
-            var cameraWidth = camera._rect.width * sw;
-            var cameraHeight = camera._rect.height * sh;
+            var cameraWidth = camera._rect.z * sw;
+            var cameraHeight = camera._rect.w * sh;
             clipL = camera._rect.x * sw;
             clipR = clipL + cameraWidth;
             clipT = (1 - camera._rect.y) * sh;
@@ -1617,7 +1618,7 @@ _define("rangeEnd");
 /**
  * @event
  * @name pc.ElementComponent#touchcancel
- * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+ * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
  * @param {pc.ElementTouchEvent} event - The event.
  */
 

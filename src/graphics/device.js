@@ -2427,7 +2427,7 @@ Object.assign(GraphicsDevice.prototype, {
      * // Clear color buffer to yellow and depth to 1.0
      * device.clear({
      *     color: [1, 1, 0, 1],
-     *     depth: 1.0,
+     *     depth: 1,
      *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
      * });
      */
