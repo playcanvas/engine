@@ -1759,7 +1759,9 @@ var loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registry,
                 if (isDataURI(gltfImage.uri)) {
                     loadTexture(gltfImage.uri, getDataURIMimeType(gltfImage.uri));
                 } else {
-                    loadTexture(path.join(urlBase, gltfImage.uri).replace(registry.prefix, ""), null, "anonymous");
+                    // remove registry prefix from urlBase since it is added again via AssetRegistry.load
+                    var urlBaseWithoutPrefix = registry.prefix ? urlBase.replace(registry.prefix, "") : urlBase;
+                    loadTexture(path.join(urlBaseWithoutPrefix, gltfImage.uri), null, "anonymous");
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
