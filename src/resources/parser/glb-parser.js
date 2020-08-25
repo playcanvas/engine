@@ -1393,14 +1393,14 @@ var createMaterials = function (gltf, textures, options, disableFlipV) {
 };
 
 var createAnimations = function (gltf, nodes, bufferViews, options) {
-    var nodeAnimations = nodes.map(function () {
+    var animationIndicesByNode = nodes.map(function () {
         return [];
     });
 
     if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
         return {
             animations: [],
-            nodeAnimations: nodeAnimations
+            animationIndicesByNode: animationIndicesByNode
         };
     }
 
@@ -1420,7 +1420,7 @@ var createAnimations = function (gltf, nodes, bufferViews, options) {
         // animation track since the locator path in animation curves is relative
         // to its targets root node
         animation.targetRootNodes.forEach(function (rootNode) {
-            nodeAnimations[rootNode].push(animationIndex);
+            animationIndicesByNode[rootNode].push(animationIndex);
         });
 
         return animation.track;
@@ -1428,7 +1428,7 @@ var createAnimations = function (gltf, nodes, bufferViews, options) {
 
     return {
         animations: animations,
-        nodeAnimations: nodeAnimations
+        animationIndicesByNode: animationIndicesByNode
     };
 };
 
@@ -1507,7 +1507,7 @@ var createModels = function (meshGroups, materials, defaultMaterial) {
     });
 };
 
-var createNodeModels = function (gltf, models, skins, skinInstances) {
+var createModelByNode = function (gltf, models, skins, skinInstances) {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
@@ -1635,14 +1635,14 @@ var createResources = function (device, gltf, bufferViews, textureAssets, defaul
     var skins = createSkins(device, gltf, nodes, bufferViews);
     var skinInstances = createSkinInstances(skins);
     var models = createModels(meshGroups, materials, defaultMaterial);
-    var nodeModels = createNodeModels(gltf, models, skins, skinInstances);
+    var modelByNode = createModelByNode(gltf, models, skins, skinInstances);
 
     var result = {
         'nodes': nodes,
         'models': models,
-        'nodeModels': nodeModels,
+        'modelByNode': modelByNode,
         'animations': animations.animations,
-        'nodeAnimations': animations.nodeAnimations,
+        'animationIndicesByNode': animations.animationIndicesByNode,
         'scenes': scenes,
         'scene': scene,
         'textures': textureAssets,

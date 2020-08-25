@@ -11,7 +11,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @name pc.ContainerResource
  * @classdesc Container for a list of animations, textures, materials, models, nodes, scenes, default scene
  * cameras and lights. Entities in scene hierarchies will have model, camera and light components attached to them.
- * Animation components have to be added manually (using nodeAnimations) as either pc.AnimComponent or pc.AnimationComponent.
+ * Animation components have to be added manually (using animationIndicesByNode) as either pc.AnimComponent or pc.AnimationComponent.
  * @param {object} data - The loaded GLB data.
  * @property {pc.Entity|null} scene Root entity of the default GLB scene.
  * @property {pc.Entity[]} scenes Root entities of scenes indexed by GLB scenes.
@@ -21,7 +21,7 @@ import { GlbParser } from './parser/glb-parser.js';
  * @property {pc.Asset[]} materials Material assets indexed by GLB materials.
  * @property {pc.Asset[]} textures Texture assets indexed by GLB textures.
  * @property {pc.Asset[]} animations Animation assets indexed by GLB animations.
- * @property {number[][]} nodeAnimations Animation asset indices indexed by GLB nodes.
+ * @property {number[][]} animationIndicesByNode Animation asset indices indexed by GLB nodes.
  * @property {pc.Asset[]} models Model assets indexed by GLB meshes.
  * @property {pc.AssetRegistry} registry The asset registry.
  */
@@ -35,9 +35,9 @@ function ContainerResource(data) {
     this.materials = [];
     this.textures = [];
     this.animations = [];
-    this.nodeAnimations = [];
+    this.animationIndicesByNode = [];
     this.models = [];
-    this._nodeModels = [];
+    this._modelByNode = []; // not public since it is only used to keep model refs for when container is destroyed
     this.registry = null;
 }
 
@@ -93,8 +93,8 @@ Object.assign(ContainerResource.prototype, {
             this.animations = null;
         }
 
-        if (this.nodeAnimations) {
-            this.nodeAnimations = null;
+        if (this.animationIndicesByNode) {
+            this.animationIndicesByNode = null;
         }
 
         if (this.models) {
@@ -102,9 +102,9 @@ Object.assign(ContainerResource.prototype, {
             this.models = null;
         }
 
-        if (this._nodeModels) {
-            destroyAssets(this._nodeModels);
-            this._nodeModels = null;
+        if (this._modelByNode) {
+            destroyAssets(this._modelByNode);
+            this._modelByNode = null;
         }
 
         if (this.textures) {
@@ -246,7 +246,7 @@ Object.assign(ContainerHandler.prototype, {
         });
 
         // create node model assets
-        var nodeModelAssets = data.nodeModels.map(function (model, index) {
+        var modelAssetByNode = data.modelByNode.map(function (model, index) {
             return model !== null ? createAsset('model', model, index) : null;
         });
 
@@ -262,7 +262,7 @@ Object.assign(ContainerHandler.prototype, {
 
         // add model components to nodes
         data.nodes.forEach(function (node, nodeIndex) {
-            var modelAsset = nodeModelAssets[nodeIndex];
+            var modelAsset = modelAssetByNode[nodeIndex];
             if (modelAsset !== null) {
                 node.addComponent('model', {
                     type: 'asset',
@@ -280,9 +280,9 @@ Object.assign(ContainerHandler.prototype, {
         container.materials = materialAssets;
         container.textures = data.textures;         // texture assets are created in parser
         container.animations = animationAssets;
-        container.nodeAnimations = data.nodeAnimations;
+        container.animationIndicesByNode = data.animationIndicesByNode;
         container.models = modelAssets;
-        container._nodeModels = nodeModelAssets;    // keep model refs for when container is destroyed
+        container._modelByNode = modelAssetByNode;    // keep model refs for when container is destroyed
         container.registry = assets;
     }
 });
