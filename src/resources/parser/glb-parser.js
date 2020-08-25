@@ -1370,7 +1370,7 @@ var createLight = function (gltfLight, node) {
     };
 
     if (gltfLight.hasOwnProperty('color')) {
-        lightProps.color = new Color(...gltfLight.color);
+        lightProps.color = new Color(gltfLight.color);
     }
 
     if (gltfLight.hasOwnProperty('intensity')) {
