@@ -115,7 +115,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';

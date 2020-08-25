@@ -133,7 +133,7 @@ Object.assign(KtxParser.prototype, {
         for (var mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
             var imageSizeInBytes = new Uint32Array(data.slice(offset, offset + 4))[0];
             offset += 4;
-            // Currently array textures not supported. Keeping this here for referance.
+            // Currently array textures not supported. Keeping this here for reference.
             // for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
             var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
             // Create array for cubemaps
@@ -142,7 +142,7 @@ Object.assign(KtxParser.prototype, {
                 levels.push([]);
             }
             for (var face = 0; face < header.numberOfFaces; face++) {
-                // Currently more than 1 pixel depth not supported. Keeping this here for referance.
+                // Currently more than 1 pixel depth not supported. Keeping this here for reference.
                 // for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
                 var mipData = new Uint8Array(data, offset, faceSizeInBytes);
                 // Handle cubemaps

@@ -68,7 +68,7 @@ import { Component } from '../component.js';
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded
  * to nothing. The angle is specified in degrees. Affects spot lights only. Defaults
  * to 45.
- * @property {number} falloffMode Controls the rate at which a light attentuates from
+ * @property {number} falloffMode Controls the rate at which a light attenuates from
  * its position. Can be:
  * * {@link pc.LIGHTFALLOFF_LINEAR}: Linear.
  * * {@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.

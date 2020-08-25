@@ -195,7 +195,7 @@ CanvasFont.prototype._renderAtlas = function (charsArray) {
 
     // generate a "transparent" color for the background
     // browsers seem to optimize away all color data if alpha=0
-    // so setting alpha to min value and hope this isn't noticable
+    // so setting alpha to min value and hope this isn't noticeable
     var a = this.color.a;
     this.color.a = 1 / 255;
     var transparent = this._colorToRgbString(this.color, true);

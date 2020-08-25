@@ -216,7 +216,7 @@ var ParticleEmitter = function (graphicsDevice, options) {
     setProperty("rate2", this.rate);
     setProperty("lifetime", 50);                             // Particle lifetime
     setProperty("emitterExtents", new Vec3(0, 0, 0));        // Spawn point divergence
-    setProperty("emitterExtentsInner", new Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from reneration
+    setProperty("emitterExtentsInner", new Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from regeneration
     setProperty("emitterRadius", 0);
     setProperty("emitterRadiusInner", 0);                       // Same as ExtentsInner but for spherical volume
     setProperty("emitterShape", EMITTERSHAPE_BOX);

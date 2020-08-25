@@ -267,7 +267,7 @@ export var BLUR_GAUSSIAN = 1;
  * @constant
  * @name pc.PARTICLESORT_NONE
  * @type {number}
- * @description No sorting, particles are drawn in arbitary order. Can be simulated on GPU.
+ * @description No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
  */
 export var PARTICLESORT_NONE = 0;
 /**

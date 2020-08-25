@@ -103,6 +103,7 @@ var categories = [
             'ar-hit-test',
             'vr-basic',
             'vr-controllers',
+            'vr-hands',
             'vr-movement',
             'xr-picking'
         ]

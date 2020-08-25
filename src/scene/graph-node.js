@@ -48,9 +48,9 @@ function GraphNode(name) {
     this._dirtyLocal = false;
     this._aabbVer = 0;
 
-    // _frozen flag marks the node to ignore hierarchy sync etirely (including children nodes)
+    // _frozen flag marks the node to ignore hierarchy sync entirely (including children nodes)
     // engine code automatically freezes and unfreezes objects whenever required
-    // segrigating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
+    // segregating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
     this._frozen = false;
 
     this.worldTransform = new Mat4();
