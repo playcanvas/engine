@@ -228,7 +228,7 @@ Object.assign(ContainerHandler.prototype, {
     // Create assets to wrap the loaded engine resources - models, materials, textures and animations.
     patch: function (asset, assets) {
         var container = asset.resource;
-        var data = container.data;
+        var data = container && container.data;
 
         if (data) {
             var createAsset = function (type, resource, index) {
