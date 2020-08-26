@@ -275,42 +275,30 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.Mat4} m - Transformation matrix to apply to source AABB.
      */
     setFromTransformedAabb: function (aabb, m) {
-        var bc = this.center;
-        var br = this.halfExtents;
         var ac = aabb.center;
         var ar = aabb.halfExtents;
 
-        m = m.data;
-        var mx0 = m[0];
-        var mx1 = m[4];
-        var mx2 = m[8];
-        var my0 = m[1];
-        var my1 = m[5];
-        var my2 = m[9];
-        var mz0 = m[2];
-        var mz1 = m[6];
-        var mz2 = m[10];
+        var d = m.data;
+        var mx0 = d[0];
+        var mx1 = d[4];
+        var mx2 = d[8];
+        var my0 = d[1];
+        var my1 = d[5];
+        var my2 = d[9];
+        var mz0 = d[2];
+        var mz1 = d[6];
+        var mz2 = d[10];
 
-        var mx0a = Math.abs(mx0);
-        var mx1a = Math.abs(mx1);
-        var mx2a = Math.abs(mx2);
-        var my0a = Math.abs(my0);
-        var my1a = Math.abs(my1);
-        var my2a = Math.abs(my2);
-        var mz0a = Math.abs(mz0);
-        var mz1a = Math.abs(mz1);
-        var mz2a = Math.abs(mz2);
-
-        bc.set(
-            m[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
-            m[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z,
-            m[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z
+        this.center.set(
+            d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
+            d[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z,
+            d[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z
         );
 
-        br.set(
-            mx0a * ar.x + mx1a * ar.y + mx2a * ar.z,
-            my0a * ar.x + my1a * ar.y + my2a * ar.z,
-            mz0a * ar.x + mz1a * ar.y + mz2a * ar.z
+        this.halfExtents.set(
+            Math.abs(mx0) * ar.x + Math.abs(mx1) * ar.y + Math.abs(mx2) * ar.z,
+            Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z,
+            Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z
         );
     },
 

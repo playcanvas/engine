@@ -13,6 +13,7 @@ import {
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
+var _tempSphere = { center: null, radius: 0 };
 
 /**
  * @class
@@ -370,6 +371,32 @@ Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
 Object.assign(MeshInstance.prototype, {
     syncAabb: function () {
         // Deprecated
+    },
+
+    // test if meshInstance is visible by camera. It requires the frustum of the camera to be up to date, which forward-renderer
+    // takes care of. This function should  not be called elsewhere.
+    _isVisible: function (camera) {
+
+        if (this.visible) {
+
+            // custom visibility method of MeshInstance
+            if (this.isVisibleFunc) {
+                return this.isVisibleFunc(camera);
+            }
+
+            var pos = this.aabb.center;
+            if (this._aabb._radiusVer !== this._aabbVer) {
+                this._aabb._radius = this._aabb.halfExtents.length();
+                this._aabb._radiusVer = this._aabbVer;
+            }
+
+            _tempSphere.radius = this._aabb._radius;
+            _tempSphere.center = pos;
+
+            return camera.frustum.containsSphere(_tempSphere);
+        }
+
+        return false;
     },
 
     updateKey: function () {
