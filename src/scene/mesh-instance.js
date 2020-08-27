@@ -14,7 +14,7 @@ import {
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
-var _tempSphere = new BoundingSphere(null, 0);
+var _tempSphere = new BoundingSphere();
 
 /**
  * @class
