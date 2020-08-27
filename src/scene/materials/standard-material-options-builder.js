@@ -145,6 +145,8 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {

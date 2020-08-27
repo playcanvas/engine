@@ -1061,9 +1061,22 @@ var standard = {
         }
 
         if (needsNormal) {
-            if (options.normalMap) {
+             // if normalMap is disabled, then so is normalDetailMap
+            if (options.normalMap || options.clearCoatNormalMap) {
+                // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently decide which unpackNormal to use.
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
+                if (!options.hasTangents) {
+                    // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
+                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    tbn = tbn.replace(/\$UV/g, normalMapUv);
+                }
+                code += tbn;
+            }
+        }
+
+        if (needsNormal) {
+            if (options.normalMap) {
                 if (options.normalDetail) {
                     code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
                 }
@@ -1074,8 +1087,6 @@ var standard = {
                 } else {
                     code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
-                code += tbn;
             } else {
                 code += chunks.normalVertexPS;
 
@@ -1127,6 +1138,12 @@ var standard = {
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
+        }
+
+        if (options.clearCoat > 0) {
+            code += this._addMap("clearCoat", "clearCoatPS", options, chunks);
+            code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, chunks);
+            code += this._addMap("clearCoatNormal", "clearCoatNormalPS", options, chunks);
         }
 
         if (options.heightMap) {
@@ -1354,7 +1371,7 @@ var standard = {
         var getGlossinessCalled = false;
 
         if (needsNormal) {
-            if (options.heightMap || options.normalMap || options.enableGGXSpecular) {
+            if (options.heightMap || options.normalMap || options.clearCoatNormalMap || options.enableGGXSpecular) {
                 code += "   getTBN();\n";
             }
             if (options.heightMap) {
@@ -1379,6 +1396,12 @@ var standard = {
         }
 
         code += "   getAlbedo();\n";
+
+        if (options.clearCoat > 0) {
+            code += "   getClearCoat();\n";
+            code += "   getClearCoatGlossiness();\n";
+            code += "   getClearCoatNormal();\n";
+        }
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
@@ -1607,8 +1630,8 @@ var standard = {
         if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
-        if (code.includes("ccSpecularity")) structCode += "vec3 ccSpecularity;\n";
-        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness=0.9;\n";
+        if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
+        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
 
