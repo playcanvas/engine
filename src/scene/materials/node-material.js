@@ -321,7 +321,7 @@ Object.assign(NodeMaterial.prototype, {
         this.graphData.connections.push(connection);
     },
 
-    _getioPortValueString: function (ioPort) {
+    _getIoPortValueString: function (ioPort) {
         var ret;
 
         if (ioPort.type === 'float') {
@@ -393,7 +393,7 @@ Object.assign(NodeMaterial.prototype, {
 
     // this is currently not used - but will be used by the shadergraph script interface
     // TODO: re-enable and optimize using transient name map
-    // _getioPortByName: function (name) {
+    // _getIoPortByName: function (name) {
         // convienient but not fast - TODO: optimize?
         // return this.graphData.ioPorts.filter(function (ioPort) {
         //    return ioPort.name === name;
@@ -446,7 +446,7 @@ Object.assign(NodeMaterial.prototype, {
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.name.startsWith('CONST_') && (ioPort.type != 'sampler2D' )) {
-                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getioPortValueString(ioPort) + ';\n';
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
             }
         }
 
