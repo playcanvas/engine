@@ -362,10 +362,8 @@ Material.prototype.getParameter = function (name) {
  * @description Sets a shader parameter on a material.
  * @param {string} name - The name of the parameter to set.
  * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
- * @param {number} [passFlags] - Mask describing which passes the material should be included in.
  */
-Material.prototype.setParameter = function (name, data, passFlags) {
-    if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
+Material.prototype.setParameter = function (name, data) {
 
     if (data === undefined && typeof name === 'object') {
         var uniformObject = name;
@@ -382,12 +380,10 @@ Material.prototype.setParameter = function (name, data, passFlags) {
     var param = this.parameters[name];
     if (param) {
         param.data = data;
-        param.passFlags = passFlags;
     } else {
         this.parameters[name] = {
             scopeId: null,
-            data: data,
-            passFlags: passFlags
+            data: data
         };
     }
 };
@@ -404,15 +400,14 @@ Material.prototype.deleteParameter = function (name) {
     }
 };
 
-/**
- * @function
- * @name pc.Material#setParameters
- * @description Pushes all material parameters into scope.
- */
-Material.prototype.setParameters = function () {
-    // Push each shader parameter into scope
-    for (var paramName in this.parameters) {
-        var parameter = this.parameters[paramName];
+// used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
+Material.prototype.setParameters = function (device) {
+    var parameter, parameters = this.parameters;
+    for (var paramName in parameters) {
+        parameter = parameters[paramName];
+        if (!parameter.scopeId) {
+            parameter.scopeId = device.scope.resolve(paramName);
+        }
         parameter.scopeId.setValue(parameter.data);
     }
 };
