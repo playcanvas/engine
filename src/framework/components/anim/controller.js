@@ -4,7 +4,7 @@ import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
 } from './constants.js';
 
 function AnimState(controller, name, speed, loop) {
@@ -383,28 +383,35 @@ Object.assign(AnimController.prototype, {
     _findTransition: function (from, to) {
         var transitions = [];
 
+        // If from and to is supplied, find transitions that include the required source and destination states
         if (from && to) {
-            // find transitions that include the required source and destination states if from and to is supplied
-            transitions.concat(this._findTransitionsBetweenStates(this._activeStateName));
+            transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
-            // otherwise look for transitions from the previous and active states based on the current interruption source
+            // If no transition is active, look for transitions from the active & any states.
             if (!this._isTransitioning) {
                 transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
             } else {
+                // Otherwise look for transitions from the previous and active states based on the current interruption source.
+                // Accept transitions from the any state unless the interruption source is set to none
                 switch (this._transitionInterruptionSource) {
                     case ANIM_INTERRUPTION_PREV:
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NEXT:
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_PREV_NEXT:
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NEXT_PREV:
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NONE:
                     default:
