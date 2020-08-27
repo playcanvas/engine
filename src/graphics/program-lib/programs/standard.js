@@ -1333,15 +1333,20 @@ var standard = {
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
+            code += "   getViewDir();\n";
+        }
+
+        if (needsNormal) {
             if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+                code += "   float normalDirSign = sign(dot(vNormalW, dViewDirW));\n";
+                code += "   dVertexNormalW = normalDirSign * vNormalW;\n";
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                    code += "   dTangentW = normalDirSign * vTangentW;\n";
+                    code += "   dBinormalW = normalDirSign * vBinormalW;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
@@ -1366,7 +1371,6 @@ var standard = {
         var getGlossinessCalled = false;
 
         if (needsNormal) {
-            code += "   getViewDir();\n";
             if (options.heightMap || options.normalMap || options.clearCoatNormalMap || options.enableGGXSpecular) {
                 code += "   getTBN();\n";
             }

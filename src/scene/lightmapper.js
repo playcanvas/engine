@@ -612,7 +612,7 @@ Object.assign(Lightmapper.prototype, {
                 if (lights[i]._type === LIGHTTYPE_SPOT) {
                     var nodeVisible = false;
                     for (j = 0; j < rcv.length; j++) {
-                        if (this.renderer._isVisible(shadowCam, rcv[j])) {
+                        if (rcv[j]._isVisible(shadowCam)) {
                             nodeVisible = true;
                             break;
                         }
