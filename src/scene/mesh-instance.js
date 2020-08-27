@@ -1,4 +1,5 @@
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -13,7 +14,7 @@ import {
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
-var _tempSphere = { center: null, radius: 0 };
+var _tempSphere = new BoundingSphere(null, 0);
 
 /**
  * @class
