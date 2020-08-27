@@ -71,9 +71,9 @@ Object.assign(NodeMaterialBinder.prototype, {
         // delete asset.data.name;
     },
 
-    _assignTexture: function (graphVarIndex, materialAsset, resource) {
-        materialAsset.data.graphData.graphVars[graphVarIndex].valueTex = resource;
-        materialAsset.resource.graphData.graphVars[graphVarIndex].valueTex = resource;
+    _assignTexture: function (ioPortIndex, materialAsset, resource) {
+        materialAsset.data.graphData.ioPorts[ioPortIndex].valueTex = resource;
+        materialAsset.resource.graphData.ioPorts[ioPortIndex].valueTex = resource;
     },
 
     _assignSubGraph: function (subGraphIndex, materialAsset, resource) {
@@ -89,7 +89,7 @@ Object.assign(NodeMaterialBinder.prototype, {
     // assign a placeholder texture and graph while waiting for one to load
     // placeholder textures and graph do not replace the data[parameterName] value
     // in the asset.data thus preserving the final asset id until it is loaded
-    _assignPlaceholderTexture: function (graphVarIndex, materialAsset) {
+    _assignPlaceholderTexture: function (ioPortIndex, materialAsset) {
         // create placeholders on-demand
         if (!this._placeholderTextures) {
             this._createPlaceholders();
@@ -97,7 +97,7 @@ Object.assign(NodeMaterialBinder.prototype, {
 
         var texture = this._placeholderTextures.white;
 
-        materialAsset.resource.graphData.graphVars[graphVarIndex].valueTex = texture;
+        materialAsset.resource.graphData.ioPorts[ioPortIndex].valueTex = texture;
     },
 
     _assignPlaceholderSubGraph: function (subGraphIndex, materialAsset) {
@@ -140,19 +140,19 @@ Object.assign(NodeMaterialBinder.prototype, {
         }
     },
 
-    _onGraphVarTexLoad: function (i, materialAsset, textureAsset) {
+    _onioPortTexLoad: function (i, materialAsset, textureAsset) {
         this._assignTexture(i, materialAsset, textureAsset.resource);
         this._parser.initialize(materialAsset.resource, materialAsset.data);
     },
 
-    _onGraphVarTexAdd: function (i, materialAsset, textureAsset) {
+    _onioPortTexAdd: function (i, materialAsset, textureAsset) {
         this._assets.load(textureAsset);
     },
 
-    _onGraphVarTexRemove: function (i, materialAsset, textureAsset) {
+    _onioPortTexRemove: function (i, materialAsset, textureAsset) {
         var material = materialAsset.resource;
 
-        if (material.graphData.graphVars[i].valueTex === textureAsset.resource) {
+        if (material.graphData.ioPorts[i].valueTex === textureAsset.resource) {
             this._assignTexture(i, materialAsset, null);
             this._parser.initialize(materialAsset.resource, materialAsset.data);
         }
@@ -187,40 +187,40 @@ Object.assign(NodeMaterialBinder.prototype, {
 
         var assetReference;
 
-        // deal with textures (which are only in the graphVars block)
-        if (data.graphData.graphVars) {
-            for (i = 0; i < Object.keys(data.graphData.graphVars).length; i++) {
-                if (data.graphData.graphVars[i].type === 'sampler2D' && data.graphData.graphVars[i].valueTex) {
-                    assetReference = material._graphVarAssetReferences[i];
+        // deal with textures (which are only in the ioPorts block)
+        if (data.graphData.ioPorts) {
+            for (i = 0; i < Object.keys(data.graphData.ioPorts).length; i++) {
+                if (data.graphData.ioPorts[i].type === 'sampler2D' && data.graphData.ioPorts[i].valueTex) {
+                    assetReference = material._ioPortAssetReferences[i];
 
-                    if (!(data.graphData.graphVars[i].valueTex instanceof Texture)) {
+                    if (!(data.graphData.ioPorts[i].valueTex instanceof Texture)) {
                         if (!assetReference) {
                             assetReference = new AssetReference(i, materialAsset, assets, {
-                                load: this._onGraphVarTexLoad,
-                                add: this._onGraphVarTexAdd,
-                                remove: this._onGraphVarTexRemove
+                                load: this._onioPortTexLoad,
+                                add: this._onioPortTexAdd,
+                                remove: this._onioPortTexRemove
                             }, this);
 
-                            material._graphVarAssetReferences[i] = assetReference;
+                            material._ioPortAssetReferences[i] = assetReference;
                         }
 
                         if (pathMapping) {
                             // texture paths are measured from the material directory
-                            assetReference.url = materialAsset.getAbsoluteUrl(data.graphVars[i].valueTex);
+                            assetReference.url = materialAsset.getAbsoluteUrl(data.ioPorts[i].valueTex);
                         } else {
-                            assetReference.id = data.graphData.graphVars[i].valueTex;
+                            assetReference.id = data.graphData.ioPorts[i].valueTex;
                         }
 
                         if (assetReference.asset) {
                             if (assetReference.asset.resource) {
                                 // asset is already loaded
-                                material.graphData.graphVars[i] = {};
-                                Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
+                                material.graphData.ioPorts[i] = {};
+                                Object.assign(material.graphData.ioPorts[i], data.graphData.ioPorts[i]);
                                 this._assignTexture(i, materialAsset, assetReference.asset.resource);
                             } else {
                                 // assign placeholder texture
-                                material.graphData.graphVars[i] = {};
-                                Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
+                                material.graphData.ioPorts[i] = {};
+                                Object.assign(material.graphData.ioPorts[i], data.graphData.ioPorts[i]);
                                 this._assignPlaceholderTexture(i, materialAsset);
                             }
 

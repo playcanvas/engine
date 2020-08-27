@@ -35,31 +35,31 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     var materialReady = true;
     var varType;
     // input or output or constant variables - all node material types have this block
-    if (data.graphData.graphVars) {
-        for (i = 0; i < Object.keys(data.graphData.graphVars).length; i++) {
-            if (data.graphData.graphVars[i].type === 'sampler2D' && data.graphData.graphVars[i].valueTex) {
-                if (typeof(data.graphData.graphVars[i].valueTex) === 'number' && data.graphData.graphVars[i].valueTex > 0) {
+    if (data.graphData.ioPorts) {
+        for (i = 0; i < Object.keys(data.graphData.ioPorts).length; i++) {
+            if (data.graphData.ioPorts[i].type === 'sampler2D' && data.graphData.ioPorts[i].valueTex) {
+                if (typeof(data.graphData.ioPorts[i].valueTex) === 'number' && data.graphData.ioPorts[i].valueTex > 0) {
                     // texture asset not loaded yet - deal with in node material binder
-                    if (!(material.graphData.graphVars[i] && material.graphData.graphVars[i].valueTex)) {
+                    if (!(material.graphData.ioPorts[i] && material.graphData.ioPorts[i].valueTex)) {
                         // seems no placeholder is set yet
                         materialReady = false;
                     }
                 } else {
                     // texture asset loaded - assign
-                    material.graphData.graphVars[i] = {};
-                    Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
+                    material.graphData.ioPorts[i] = {};
+                    Object.assign(material.graphData.ioPorts[i], data.graphData.ioPorts[i]);
                 }
             } else {
                 // assign directly - we (probably) don't need to convert to Vec2/3/4 objects?
-                material.graphData.graphVars[i] = {};
-                Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
+                material.graphData.ioPorts[i] = {};
+                Object.assign(material.graphData.ioPorts[i], data.graphData.ioPorts[i]);
 
                 // deal with 0 being undefined if default or optional
-                varType = material.graphData.graphVars[i].type;
-                if (material.graphData.graphVars[i].valueW === undefined && varType === 'vec4') material.graphData.graphVars[i].valueW = 0;
-                if (material.graphData.graphVars[i].valueZ === undefined && (varType === 'vec4' || varType === 'vec3' )) material.graphData.graphVars[i].valueZ = 0;
-                if (material.graphData.graphVars[i].valueY === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' )) material.graphData.graphVars[i].valueY = 0;
-                if (material.graphData.graphVars[i].valueX === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' || varType === 'float' )) material.graphData.graphVars[i].valueX = 0;
+                varType = material.graphData.ioPorts[i].type;
+                if (material.graphData.ioPorts[i].valueW === undefined && varType === 'vec4') material.graphData.ioPorts[i].valueW = 0;
+                if (material.graphData.ioPorts[i].valueZ === undefined && (varType === 'vec4' || varType === 'vec3' )) material.graphData.ioPorts[i].valueZ = 0;
+                if (material.graphData.ioPorts[i].valueY === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' )) material.graphData.ioPorts[i].valueY = 0;
+                if (material.graphData.ioPorts[i].valueX === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' || varType === 'float' )) material.graphData.ioPorts[i].valueX = 0;
             }
         }
     }
@@ -81,25 +81,25 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
                 // this means asset is not loaded yet - cannot assign
                 materialReady = false;
             } else {
-                // shader asset loaded - assign and generate matching graphVars
+                // shader asset loaded - assign and generate matching ioPorts
                 material.graphData.customFuncGlsl = data.graphData.customFuncGlsl;
-                material.graphData.graphVars.length = 0;
+                material.graphData.ioPorts.length = 0;
                 material.genCustomFuncVars();
 
                 // copy values that match into new graph variables - if not matching reset
                 // TODO: make this more robust (match name even if index doesn't match)?
-                if (material.graphData.graphVars) {
-                    for (i = 0; i < material.graphData.graphVars.length; i++) {
-                        // if (data.graphData.graphVars && i<data.graphData.graphVars.length && material.graphData.graphVars[i].name===data.graphData.graphVars[i].name && material.graphData.graphVars[i].type===data.graphData.graphVars[i].type )
-                        if (data.graphData.graphVars && i < Object.keys(data.graphData.graphVars).length && material.graphData.graphVars[i].name === data.graphData.graphVars[i].name && material.graphData.graphVars[i].type === data.graphData.graphVars[i].type ) {
+                if (material.graphData.ioPorts) {
+                    for (i = 0; i < material.graphData.ioPorts.length; i++) {
+                        // if (data.graphData.ioPorts && i<data.graphData.ioPorts.length && material.graphData.ioPorts[i].name===data.graphData.ioPorts[i].name && material.graphData.ioPorts[i].type===data.graphData.ioPorts[i].type )
+                        if (data.graphData.ioPorts && i < Object.keys(data.graphData.ioPorts).length && material.graphData.ioPorts[i].name === data.graphData.ioPorts[i].name && material.graphData.ioPorts[i].type === data.graphData.ioPorts[i].type ) {
                             // exists and matches copy what is already set in the asset
-                            Object.assign(material.graphData.graphVars[i], data.graphData.graphVars[i]);
+                            Object.assign(material.graphData.ioPorts[i], data.graphData.ioPorts[i]);
                             // deal with 0 being undefined if default or optional
-                            varType = material.graphData.graphVars[i].type;
-                            if (material.graphData.graphVars[i].valueW === undefined && varType === 'vec4') material.graphData.graphVars[i].valueW = 0;
-                            if (material.graphData.graphVars[i].valueZ === undefined && (varType === 'vec4' || varType === 'vec3' )) material.graphData.graphVars[i].valueZ = 0;
-                            if (material.graphData.graphVars[i].valueY === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' )) material.graphData.graphVars[i].valueY = 0;
-                            if (material.graphData.graphVars[i].valueX === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' || varType === 'float' )) material.graphData.graphVars[i].valueX = 0;
+                            varType = material.graphData.ioPorts[i].type;
+                            if (material.graphData.ioPorts[i].valueW === undefined && varType === 'vec4') material.graphData.ioPorts[i].valueW = 0;
+                            if (material.graphData.ioPorts[i].valueZ === undefined && (varType === 'vec4' || varType === 'vec3' )) material.graphData.ioPorts[i].valueZ = 0;
+                            if (material.graphData.ioPorts[i].valueY === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' )) material.graphData.ioPorts[i].valueY = 0;
+                            if (material.graphData.ioPorts[i].valueX === undefined && (varType === 'vec4' || varType === 'vec3' || varType === 'vec2' || varType === 'float' )) material.graphData.ioPorts[i].valueX = 0;
                         }
                     }
                 }
@@ -135,7 +135,7 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
             }
         }
     } else {
-        if (data.graphData.graphVars) {
+        if (data.graphData.ioPorts) {
             // no custom glsl or sub graphs - this means this is a node material instance?
             // TODO: support material instances properly?
             materialReady = false;

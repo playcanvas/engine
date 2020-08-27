@@ -24,13 +24,13 @@ var NodeMaterial = function (funcGlsl, declGlsl) {
     Material.call(this);
 
     // storage for asset references
-    this._graphVarAssetReferences = [];
+    this._ioPortAssetReferences = [];
     this._glslAssetReferences = {};
     this._subGraphAssetReferences = [];
 
     this.graphData = {};
 
-    this.graphData.graphVars = []; // input, output or constant variables
+    this.graphData.ioPorts = []; // input, output or constant variables
 
     if (funcGlsl) {
         this.graphData.customFuncGlsl = funcGlsl;
@@ -63,7 +63,7 @@ Object.assign(NodeMaterial.prototype, {
 
         clone.graphData = {};
 
-        clone.graphData.graphVars = this.graphData.graphVars.slice(0);
+        clone.graphData.ioPorts = this.graphData.ioPorts.slice(0);
         clone.graphData.subGraphs = this.graphData.subGraphs.slice(0);
         clone.graphData.connections = this.graphData.connections.slice(0);
 
@@ -78,27 +78,27 @@ Object.assign(NodeMaterial.prototype, {
     updateUniforms: function () {
         this.clearParameters();
 
-        for (var n = 0; n < this.graphData.graphVars.length; n++) {
-            var graphVar = this.graphData.graphVars[n];
+        for (var n = 0; n < this.graphData.ioPorts.length; n++) {
+            var ioPort = this.graphData.ioPorts[n];
 
-            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
+            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D')) {
                 var matId = '_' + this.id;
 
-                switch (graphVar.type) {
+                switch (ioPort.type) {
                     case 'sampler2D':
-                        this.setParameter(graphVar.name + matId, graphVar.valueTex);
+                        this.setParameter(ioPort.name + matId, ioPort.valueTex);
                         break;
                     case 'float':
-                        this.setParameter(graphVar.name + matId, graphVar.valueX);
+                        this.setParameter(ioPort.name + matId, ioPort.valueX);
                         break;
                     case 'vec2':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY]);
+                        this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY]);
                         break;
                     case 'vec3':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
+                        this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ]);
                         break;
                     case 'vec4':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
+                        this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW]);
                         break;
                     case 'samplerCube':
                     default:
@@ -133,33 +133,33 @@ Object.assign(NodeMaterial.prototype, {
 
     hasValidGraphData: function (graphRootTime) {
         var i;
-        if (this.graphData.graphVars && this.graphData.graphVars.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                if (this.graphData.graphVars[i] && this.graphData.graphVars[i].name && this.graphData.graphVars[i].type) {
-                    if (this.graphData.graphVars[i].type === 'sampler2D' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueTex && this.graphData.graphVars[i].valueTex instanceof Texture)) {
+        if (this.graphData.ioPorts && this.graphData.ioPorts.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                if (this.graphData.ioPorts[i] && this.graphData.ioPorts[i].name && this.graphData.ioPorts[i].type) {
+                    if (this.graphData.ioPorts[i].type === 'sampler2D' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueTex && this.graphData.ioPorts[i].valueTex instanceof Texture)) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'float' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number')) {
+                    } else if (this.graphData.ioPorts[i].type === 'float' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number')) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec2' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec2' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec3' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' &&
-                              this.graphData.graphVars[i].valueZ != undefined && typeof(this.graphData.graphVars[i].valueZ) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec3' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
+                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec4' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' &&
-                              this.graphData.graphVars[i].valueZ != undefined && typeof(this.graphData.graphVars[i].valueZ) === 'number' &&
-                              this.graphData.graphVars[i].valueW != undefined && typeof(this.graphData.graphVars[i].valueW) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec4' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
+                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' &&
+                              this.graphData.ioPorts[i].valueW != undefined && typeof(this.graphData.ioPorts[i].valueW) === 'number' )) {
                             return false;
                         }
                     }
@@ -175,7 +175,7 @@ Object.assign(NodeMaterial.prototype, {
             } else {
                 for (i = 0; i < this.graphData.connections.length; i++) {
                     if (this.graphData.connections[i]) {
-                        if (!(this.graphData.connections[i].srcVarName && this.graphData.connections[i].dstVarName && (this.graphData.connections[i].srcIndex >= 0 || this.graphData.connections[i].dstIndex >= 0 ))) {
+                        if (!(this.graphData.connections[i].srcPortName && this.graphData.connections[i].dstPortName && (this.graphData.connections[i].srcIndex >= 0 || this.graphData.connections[i].dstIndex >= 0 ))) {
                             return false;
                         }
                     } else {
@@ -241,39 +241,39 @@ Object.assign(NodeMaterial.prototype, {
         }
     },
 
-    _addGraphVar: function (type, name, value) {
-        var graphVar;
+    _addioPort: function (type, name, value) {
+        var ioPort;
         if (value instanceof Texture) {
-            graphVar = { type: type, name: name, valueTex: value };
+            ioPort = { type: type, name: name, valueTex: value };
         } else if (value instanceof Vec4) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z, valueW: value.w };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z, valueW: value.w };
         } else if (value instanceof Vec3) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z };
         } else if (value instanceof Vec2) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y };
         } else if (typeof(value) === 'number') {
-            graphVar = { type: type, name: name, valueX: value };
+            ioPort = { type: type, name: name, valueX: value };
         } else {
             // this is a needed when generating graph vars without default values (outputs)
             // TODO: check if valid default values should be set?
-            graphVar = { type: type, name: name };
+            ioPort = { type: type, name: name };
         }
 
-        this.graphData.graphVars.push(graphVar);
+        this.graphData.ioPorts.push(ioPort);
 
-        return graphVar;
+        return ioPort;
     },
 
     addInput: function (type, name, value) {
-        return this._addGraphVar(type, 'IN_' + name, value);
+        return this._addioPort(type, 'IN_' + name, value);
     },
 
     addOutput: function (type, name, value) {
-        return this._addGraphVar(type, 'OUT_' + name, value);
+        return this._addioPort(type, 'OUT_' + name, value);
     },
 
     addConstant: function (type, value) {
-        return this._addGraphVar(type, 'CONST_' + type + '_' + this.graphData.graphVars.length, value); // create a unique name
+        return this._addioPort(type, 'CONST_' + type + '_' + this.graphData.ioPorts.length, value); // create a unique name
     },
 
     genCustomFuncVars: function () {
@@ -315,23 +315,23 @@ Object.assign(NodeMaterial.prototype, {
         return ret;
     },
 
-    connect: function (srcIndex, srcVarName, dstIndex, dstVarName) {
-        var connection = { srcIndex: srcIndex, srcVarName: srcVarName, dstIndex: dstIndex, dstVarName: dstVarName };
+    connect: function (srcIndex, srcPortName, dstIndex, dstPortName) {
+        var connection = { srcIndex: srcIndex, srcPortName: srcPortName, dstIndex: dstIndex, dstPortName: dstPortName };
 
         this.graphData.connections.push(connection);
     },
 
-    _getGraphVarValueString: function (graphVar) {
+    _getioPortValueString: function (ioPort) {
         var ret;
 
-        if (graphVar.type === 'float') {
-            ret = 'float(' + graphVar.valueX + ')';
-        } else if (graphVar.type === 'vec2') {
-            ret = 'vec2(' + graphVar.valueX + ', ' + graphVar.valueY + ')';
-        } else if (graphVar.type === 'vec3') {
-            ret = 'vec3(' + graphVar.valueX + ', ' + graphVar.valueY + ', ' + graphVar.valueZ + ')';
-        } else if (graphVar.type === 'vec4') {
-            ret = 'vec4(' + graphVar.valueX + ', ' + graphVar.valueY + ', ' + graphVar.valueZ + ', ' + graphVar.valueW + ')';
+        if (ioPort.type === 'float') {
+            ret = 'float(' + ioPort.valueX + ')';
+        } else if (ioPort.type === 'vec2') {
+            ret = 'vec2(' + ioPort.valueX + ', ' + ioPort.valueY + ')';
+        } else if (ioPort.type === 'vec3') {
+            ret = 'vec3(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ')';
+        } else if (ioPort.type === 'vec4') {
+            ret = 'vec4(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ', ' + ioPort.valueW + ')';
         }
 
         return ret;
@@ -339,14 +339,14 @@ Object.assign(NodeMaterial.prototype, {
 
     _generateSubGraphCall: function (inNames, outNames) {
         var i;
-        var graphVar;
+        var ioPort;
         var callString = '';
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('OUT_ret')) {
-                if (outNames[graphVar.name] != undefined) {
-                    callString += outNames[graphVar.name] + ' = ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('OUT_ret')) {
+                if (outNames[ioPort.name] != undefined) {
+                    callString += outNames[ioPort.name] + ' = ';
                 } else {
                     // I guess this is actually valid (return value not assigned to anything)
                 }
@@ -360,23 +360,23 @@ Object.assign(NodeMaterial.prototype, {
             callString += this.name + '_' + this.id + '( ';
         }
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_')) {
-                if (inNames && inNames[graphVar.name] != undefined) {
-                    callString += inNames[graphVar.name] + ', ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_')) {
+                if (inNames && inNames[ioPort.name] != undefined) {
+                    callString += inNames[ioPort.name] + ', ';
                 } else {
                     // this is tricky - use varname and unique (temp) id
-                    callString += graphVar.name + '_' + this.id + ', ';
+                    callString += ioPort.name + '_' + this.id + ', ';
                 }
             }
         }
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('OUT_') && !graphVar.name.startsWith('OUT_ret')) {
-                if (outNames[graphVar.name] != undefined) {
-                    callString += outNames[graphVar.name] + ', ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('OUT_') && !ioPort.name.startsWith('OUT_ret')) {
+                if (outNames[ioPort.name] != undefined) {
+                    callString += outNames[ioPort.name] + ', ';
                 } else {
                     // this shouldn't be possible - all outputs from connected subgraphs will have a tmpVar declared.
                     // ERROR!!!!
@@ -393,14 +393,14 @@ Object.assign(NodeMaterial.prototype, {
 
     // this is currently not used - but will be used by the shadergraph script interface
     // TODO: re-enable and optimize using transient name map
-    // _getGraphVarByName: function (name) {
+    // _getioPortByName: function (name) {
         // convienient but not fast - TODO: optimize?
-        // return this.graphData.graphVars.filter(function (graphVar) {
-        //    return graphVar.name === name;
+        // return this.graphData.ioPorts.filter(function (ioPort) {
+        //    return ioPort.name === name;
         // })[0];
     // },
 
-    _generateSubGraphFuncs: function (depGraphFuncs, depGraphVarList) {
+    _generateSubGraphFuncs: function (depGraphFuncs, depioPortList) {
         var i;
         if (this.graphData.subGraphs != undefined) {
             for (i = 0; i < this.graphData.subGraphs.length; i++) {
@@ -412,19 +412,19 @@ Object.assign(NodeMaterial.prototype, {
                 }
 
                 if (depGraphFuncs[name] === undefined) {
-                    if (subGraph.graphData.graphVars) {
-                        for (var v = 0; v < subGraph.graphData.graphVars.length; v++) {
-                            var graphVar = subGraph.graphData.graphVars[v];
-                            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D') ) {
-                                var depGraphVar = 'uniform ' + graphVar.type + ' ' + graphVar.name + '_' + subGraph.id + ';\n';
+                    if (subGraph.graphData.ioPorts) {
+                        for (var v = 0; v < subGraph.graphData.ioPorts.length; v++) {
+                            var ioPort = subGraph.graphData.ioPorts[v];
+                            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D') ) {
+                                var depioPort = 'uniform ' + ioPort.type + ' ' + ioPort.name + '_' + subGraph.id + ';\n';
 
-                                depGraphVarList.push(depGraphVar);
+                                depioPortList.push(depioPort);
                             }
                         }
                     }
 
                     depGraphFuncs[name] = subGraph._generateFuncGlsl();
-                    subGraph._generateSubGraphFuncs(depGraphFuncs, depGraphVarList);
+                    subGraph._generateSubGraphFuncs(depGraphFuncs, depioPortList);
                 }
             }
         }
@@ -432,28 +432,28 @@ Object.assign(NodeMaterial.prototype, {
 
     generateRootDeclGlsl: function () {
         var i;
-        var graphVar;
+        var ioPort;
         var generatedGlsl = '';
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
             var matId = '_' + this.id;
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
-                generatedGlsl += 'uniform ' + graphVar.type + ' ' + graphVar.name + matId + ';\n';
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D')) {
+                generatedGlsl += 'uniform ' + ioPort.type + ' ' + ioPort.name + matId + ';\n';
             }
         }
         // run through constants values are set here (except for textures - which have to be uniforms)
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('CONST_') && (graphVar.type != 'sampler2D' )) {
-                generatedGlsl += graphVar.type + ' ' + graphVar.name + ' = ' + this._getGraphVarValueString(graphVar) + ';\n';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('CONST_') && (ioPort.type != 'sampler2D' )) {
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getioPortValueString(ioPort) + ';\n';
             }
         }
 
         // get all sub graph function definitions (including functions in sub graphs' sub graphs ...)
         // assumes names are unique - maybe should be id or key?
         var depGraphFuncs = {};
-        var depGraphVarList = [];
+        var depioPortList = [];
 
         var depName = this.name;
         if (!this.graphData.customFuncGlsl) {
@@ -461,11 +461,11 @@ Object.assign(NodeMaterial.prototype, {
         }
         depGraphFuncs[depName] = this._generateFuncGlsl(); // this should prevent infinite recursion?
 
-        this._generateSubGraphFuncs(depGraphFuncs, depGraphVarList);
+        this._generateSubGraphFuncs(depGraphFuncs, depioPortList);
 
         // declare all dependancy textures
-        for (i = 0; i < depGraphVarList.length; i++) {
-            generatedGlsl += depGraphVarList[i];// .declString;
+        for (i = 0; i < depioPortList.length; i++) {
+            generatedGlsl += depioPortList[i];// .declString;
         }
 
         // add all the graph definitions
@@ -504,15 +504,15 @@ Object.assign(NodeMaterial.prototype, {
         var inNames = {};
         var outNames = {};
 
-        for (var i = 0; i < this.graphData.graphVars.length; i++) {
+        for (var i = 0; i < this.graphData.ioPorts.length; i++) {
             var matId = '_' + this.id;
-            var graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_')) {
-                inNames[graphVar.name] = graphVar.name + matId;
+            var ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_')) {
+                inNames[ioPort.name] = ioPort.name + matId;
             }
-            if (graphVar.name.startsWith('OUT_')) {
-                generatedGlsl += graphVar.type + ' ' + graphVar.name + ';\n';
-                outNames[graphVar.name] = graphVar.name;
+            if (ioPort.name.startsWith('OUT_')) {
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ';\n';
+                outNames[ioPort.name] = ioPort.name;
             }
         }
 
@@ -524,7 +524,7 @@ Object.assign(NodeMaterial.prototype, {
 
     _generateFuncGlsl: function () {
         var i;
-        var graphVar;
+        var ioPort;
         var generatedGlsl;
 
         if (this.graphData.customFuncGlsl) {
@@ -535,10 +535,10 @@ Object.assign(NodeMaterial.prototype, {
             // function head
             var retUsed = false;
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_ret')) {
-                    generatedGlsl = graphVar.type + ' ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_ret')) {
+                    generatedGlsl = ioPort.type + ' ';
                     retUsed = true;
                 }
             }
@@ -549,18 +549,18 @@ Object.assign(NodeMaterial.prototype, {
                 generatedGlsl = 'void ' + this.name + '_' + this.id + '( ';
             }
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('IN_')) {
-                    generatedGlsl += 'in ' + graphVar.type + ' ' + graphVar.name + ', ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('IN_')) {
+                    generatedGlsl += 'in ' + ioPort.type + ' ' + ioPort.name + ', ';
                 }
             }
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_')) {
-                    if (!graphVar.name.startsWith('OUT_ret')) {
-                        generatedGlsl += 'out ' + graphVar.type + ' ' + graphVar.name + ', ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_')) {
+                    if (!ioPort.name.startsWith('OUT_ret')) {
+                        generatedGlsl += 'out ' + ioPort.type + ' ' + ioPort.name + ', ';
                     }
                 }
             }
@@ -586,8 +586,8 @@ Object.assign(NodeMaterial.prototype, {
                     var srcSubGraph = this.graphData.subGraphs[con.srcIndex];
                     if (srcTmpVarMap[con.srcIndex] === undefined) {
                         srcTmpVarMap[con.srcIndex] = {};
-                        for (var o = 0; o < srcSubGraph.graphData.graphVars.length; o++) {
-                            var outputVar = srcSubGraph.graphData.graphVars[o];
+                        for (var o = 0; o < srcSubGraph.graphData.ioPorts.length; o++) {
+                            var outputVar = srcSubGraph.graphData.ioPorts[o];
                             if (outputVar.name.startsWith('OUT_')) {
                                 generatedGlsl += outputVar.type + ' temp_' + outputVar.type + '_' + tmpVarCounter + ';\n';
                                 srcTmpVarMap[con.srcIndex][outputVar.name] = 'temp_' + outputVar.type + '_' + tmpVarCounter;
@@ -607,16 +607,16 @@ Object.assign(NodeMaterial.prototype, {
                         dstConnectedMap[con.dstIndex].push(con.srcIndex);
 
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstVarName] = srcTmpVarMap[con.srcIndex][con.srcVarName];
+                        dstTmpVarMap[con.dstIndex][con.dstPortName] = srcTmpVarMap[con.srcIndex][con.srcPortName];
                     } else {
                         // root graph input/const var
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstVarName] = con.srcVarName;
+                        dstTmpVarMap[con.dstIndex][con.dstPortName] = con.srcPortName;
                     }
                 } else {
                     if (con.srcIndex >= 0) {
                         // root graph output var
-                        graphOutputVarTmpVarMap[con.dstVarName] = srcTmpVarMap[con.srcIndex][con.srcVarName];
+                        graphOutputVarTmpVarMap[con.dstPortName] = srcTmpVarMap[con.srcIndex][con.srcPortName];
                     } else {
                         // invalid connection?!
                     }
@@ -678,10 +678,10 @@ Object.assign(NodeMaterial.prototype, {
             }
 
             // output assignment
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_') && !graphVar.name.startsWith('OUT_ret')) {
-                    generatedGlsl += graphVar.name + ' = ' + graphOutputVarTmpVarMap[graphVar.name] + ';\n';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_') && !ioPort.name.startsWith('OUT_ret')) {
+                    generatedGlsl += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
                 }
             }
 
