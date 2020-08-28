@@ -17,6 +17,9 @@ import baseNineSlicedVS from './baseNineSliced.vert';
 import baseNineSlicedTiledPS from './baseNineSlicedTiled.frag';
 import biasConstPS from './biasConst.frag';
 import blurVSMPS from './blurVSM.frag';
+import clearCoatPS from './clearCoat.frag';
+import clearCoatGlossPS from './clearCoatGloss.frag';
+import clearCoatNormalPS from './clearCoatNormal.frag';
 import combineClearCoatPS from './combineClearCoat.frag';
 import combineDiffusePS from './combineDiffuse.frag';
 import combineDiffuseSpecularPS from './combineDiffuseSpecular.frag';
@@ -216,6 +219,9 @@ var shaderChunks = {
     baseNineSlicedTiledPS: baseNineSlicedTiledPS,
     biasConstPS: biasConstPS,
     blurVSMPS: blurVSMPS,
+    clearCoatPS: clearCoatPS,
+    clearCoatGlossPS: clearCoatGlossPS,
+    clearCoatNormalPS: clearCoatNormalPS,
     combineClearCoatPS: combineClearCoatPS,
     combineDiffusePS: combineDiffusePS,
     combineDiffuseSpecularPS: combineDiffuseSpecularPS,

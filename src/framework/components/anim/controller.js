@@ -4,14 +4,15 @@ import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
 } from './constants.js';
 
-function AnimState(controller, name, speed) {
+function AnimState(controller, name, speed, loop) {
     this._controller = controller;
     this._name = name;
     this._animations = [];
     this._speed = speed || 1.0;
+    this._loop = loop === undefined ? true : loop;
 }
 
 Object.defineProperties(AnimState.prototype, {
@@ -31,6 +32,11 @@ Object.defineProperties(AnimState.prototype, {
     speed: {
         get: function () {
             return this._speed;
+        }
+    },
+    loop: {
+        get: function () {
+            return this._loop;
         }
     },
     playable: {
@@ -177,7 +183,8 @@ function AnimController(animEvaluator, states, transitions, parameters, activate
         this._states[states[i].name] = new AnimState(
             this,
             states[i].name,
-            states[i].speed
+            states[i].speed,
+            states[i].loop
         );
         this._stateNames.push(states[i].name);
     }
@@ -231,6 +238,11 @@ Object.defineProperties(AnimController.prototype, {
             return this._activeStateName;
         }
     },
+    activeStateAnimations: {
+        get: function () {
+            return this.activeState.animations;
+        }
+    },
     previousState: {
         get: function () {
             return this._findState(this._previousStateName);
@@ -269,6 +281,34 @@ Object.defineProperties(AnimController.prototype, {
             return this._getActiveStateProgressForTime(this._timeInState);
         }
     },
+    activeStateDuration: {
+        get: function () {
+            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+                return 0.0;
+
+            var maxDuration = 0.0;
+            for (var i = 0; i < this.activeStateAnimations.length; i++) {
+                var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+                maxDuration = Math.max(maxDuration, activeClip.track.duration);
+            }
+            return maxDuration;
+        }
+    },
+    activeStateCurrentTime: {
+        get: function () {
+            return this._timeInState;
+        },
+        set: function (time) {
+            this._timeInStateBefore = time;
+            this._timeInState = time;
+            for (var i = 0; i < this.activeStateAnimations.length; i++) {
+                var clip = this.animEvaluator.findClip(this.activeStateAnimations[i].name);
+                if (clip) {
+                    clip.time = time;
+                }
+            }
+        }
+    },
     transitioning: {
         get: function () {
             return this._isTransitioning;
@@ -296,7 +336,7 @@ Object.assign(AnimController.prototype, {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
             return 1.0;
 
-        var activeClip = this._animEvaluator.findClip(this.activeState.animations[0].name);
+        var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
             return time / activeClip.track.duration;
         }
@@ -343,28 +383,35 @@ Object.assign(AnimController.prototype, {
     _findTransition: function (from, to) {
         var transitions = [];
 
+        // If from and to is supplied, find transitions that include the required source and destination states
         if (from && to) {
-            // find transitions that include the required source and destination states if from and to is supplied
-            transitions.concat(this._findTransitionsBetweenStates(this._activeStateName));
+            transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
-            // otherwise look for transitions from the previous and active states based on the current interruption source
+            // If no transition is active, look for transitions from the active & any states.
             if (!this._isTransitioning) {
                 transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
             } else {
+                // Otherwise look for transitions from the previous and active states based on the current interruption source.
+                // Accept transitions from the any state unless the interruption source is set to none
                 switch (this._transitionInterruptionSource) {
                     case ANIM_INTERRUPTION_PREV:
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NEXT:
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_PREV_NEXT:
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NEXT_PREV:
                         transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
                         transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
+                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
                         break;
                     case ANIM_INTERRUPTION_NONE:
                     default:
@@ -475,20 +522,24 @@ Object.assign(AnimController.prototype, {
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, true);
+                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, activeState.loop);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
+            } else {
+                clip.reset();
             }
             if (transition.time > 0) {
                 clip.blendWeight = 0.0;
             } else {
                 clip.blendWeight = 1.0 / activeState.totalWeight;
             }
-            clip.reset();
+            clip.play();
             if (hasTransitionOffset) {
                 clip.time = activeState.timelineDuration * transition.transitionOffset;
+            } else {
+                var startTime = activeState.speed >= 0 ? 0 : this.activeStateDuration;
+                clip.time = startTime;
             }
-            clip.play();
         }
 
         // set the time in the new state to 0 or to a value based on transitionOffset if one was given
@@ -624,7 +675,7 @@ Object.assign(AnimController.prototype, {
             } else {
                 this._isTransitioning = false;
                 // when a transition ends, remove all previous state clips from the evaluator
-                var activeClips = this.activeState.animations.length;
+                var activeClips = this.activeStateAnimations.length;
                 var totalClips = this._animEvaluator.clips.length;
                 for (i = 0; i < totalClips - activeClips; i++) {
                     this._animEvaluator.removeClip(0);

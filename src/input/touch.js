@@ -163,7 +163,7 @@ Object.assign(TouchDevice.prototype, {
 /**
  * @function
  * @name pc.getTouchTargetCoords
- * @description Similiar to {@link pc.getTargetCoords} for the MouseEvents.
+ * @description Similar to {@link pc.getTargetCoords} for the MouseEvents.
  * This function takes a browser Touch object and returns the co-ordinates of the
  * touch relative to the target element.
  * @param {Touch} touch - The browser Touch object.

@@ -82,6 +82,10 @@ function Entity(name, app) {
 
     // used by component systems to speed up destruction
     this._destroying = false;
+
+    // used to differentiate between the entities of a template root instance,
+    // which have it set to true, and the cloned instance entities (set to false)
+    this._template = false;
 }
 Entity.prototype = Object.create(GraphNode.prototype);
 Entity.prototype.constructor = Entity;

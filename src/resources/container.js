@@ -69,8 +69,9 @@ Object.assign(ContainerResource.prototype, {
  * @implements {pc.ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
- * The asset options object can be used for passing in load time callbacks to handle the various resources
- * at different stages of loading as follows:
+ * The asset options object can be used to pass load time callbacks for handling the various resources
+ * at different stages of loading. The table below lists the resource types and the corresponding
+ * supported process functions.
  * ```
  * |---------------------------------------------------------------------|
  * |  resource   |  preprocess |   process   |processAsync | postprocess |
@@ -79,8 +80,10 @@ Object.assign(ContainerResource.prototype, {
  * | node        |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
+ * | image       |      x      |             |      x      |      x      |
  * | texture     |      x      |             |      x      |      x      |
  * | buffer      |      x      |             |      x      |      x      |
+ * | bufferView  |      x      |             |      x      |      x      |
  * |---------------------------------------------------------------------|
  * ```
  * For example, to receive a texture preprocess callback:
@@ -161,41 +164,44 @@ Object.assign(ContainerHandler.prototype, {
 
     // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
     patch: function (asset, assets) {
-        var createAsset = function (type, resource, index) {
-            var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
-                url: ''
-            });
-            subAsset.resource = resource;
-            subAsset.loaded = true;
-            assets.add(subAsset);
-            return subAsset;
-        };
-
         var container = asset.resource;
-        var data = container.data;
-        var i;
+        var data = container && container.data;
 
-        // create model asset
-        var model = (data.meshes.length === 0) ? null : createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+        if (data) {
+            var createAsset = function (type, resource, index) {
+                var subAsset = new Asset(asset.name + '/' + type + '/' + index, type, {
+                    url: ''
+                });
+                subAsset.resource = resource;
+                subAsset.loaded = true;
+                assets.add(subAsset);
+                return subAsset;
+            };
 
-        // create material assets
-        var materials = [];
-        for (i = 0; i < data.materials.length; ++i) {
-            materials.push(createAsset('material', data.materials[i], i));
+            var i;
+
+            // create model asset
+            var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+
+            // create material assets
+            var materials = [];
+            for (i = 0; i < data.materials.length; ++i) {
+                materials.push(createAsset('material', data.materials[i], i));
+            }
+
+            // create animation assets
+            var animations = [];
+            for (i = 0; i < data.animations.length; ++i) {
+                animations.push(createAsset('animation', data.animations[i], i));
+            }
+
+            container.data = null;              // since assets are created, release GLB data
+            container.model = model;
+            container.materials = materials;
+            container.textures = data.textures; // texture assets are created directly
+            container.animations = animations;
+            container.registry = assets;
         }
-
-        // create animation assets
-        var animations = [];
-        for (i = 0; i < data.animations.length; ++i) {
-            animations.push(createAsset('animation', data.animations[i], i));
-        }
-
-        container.data = null;              // since assets are created, release GLB data
-        container.model = model;
-        container.materials = materials;
-        container.textures = data.textures; // texture assets are created directly
-        container.animations = animations;
-        container.registry = assets;
     }
 });
 

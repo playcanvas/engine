@@ -18,3 +18,4 @@ export var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
 
 export var ANIM_STATE_START = 'START';
 export var ANIM_STATE_END = 'END';
+export var ANIM_STATE_ANY = 'ANY';

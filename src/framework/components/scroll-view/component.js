@@ -582,7 +582,7 @@ Object.assign(ScrollViewComponent.prototype, {
         }
     },
 
-    // re-enable useInput flag on any descendent that was disabled
+    // re-enable useInput flag on any descendant that was disabled
     _enableContentInput: function () {
         while (this._disabledContentInputEntities.length) {
             var e = this._disabledContentInputEntities.pop();
@@ -594,7 +594,7 @@ Object.assign(ScrollViewComponent.prototype, {
         this._disabledContentInput = false;
     },
 
-    // disable useInput flag on all descendents of this contentEntity
+    // disable useInput flag on all descendants of this contentEntity
     _disableContentInput: function () {
         var self = this;
         var _disableInput = function (e) {
