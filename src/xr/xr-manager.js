@@ -11,6 +11,8 @@ import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 
+import { CameraComponent } from '../framework/components/camera/component.js';
+
 /**
  * @class
  * @name pc.XrManager
@@ -139,14 +141,15 @@ XrManager.prototype.constructor = XrManager;
  * @function
  * @name pc.XrManager#start
  * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
- * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
- * @param {string} type - session type. Can be one of the following:
+ * @param {object} args - object with arguments for XR session initialization.
+ * @param {pc.CameraComponent} args.camera - it will be used to render XR session and manipulated based on pose tracking
+ * @param {string} args.type - session type. Can be one of the following:
  *
  * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
  * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
  * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
  *
- * @param {string} spaceType - reference space type. Can be one of the following:
+ * @param {string} args.spaceType - reference space type. Can be one of the following:
  *
  * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
  * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
@@ -156,11 +159,32 @@ XrManager.prototype.constructor = XrManager;
  *
  * @example
  * button.on('click', function () {
- *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
+ *     app.xr.start({ camera: camera, type: pc.XRTYPE_VR, spaceType: pc.XRSPACE_LOCAL });
  * });
- * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+ * @param {string[]} [args.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+ * @param {pc.callbacks.XrError} [args.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
  */
-XrManager.prototype.start = function (camera, type, spaceType, callback) {
+XrManager.prototype.start = function (args) {
+    var self = this;
+
+    if (args instanceof CameraComponent) {
+        // #ifdef DEBUG
+        console.warn("DEPRECATED: start with many arguments is deprecated. Use start with `args` object as only argument instead.");
+        // #endif
+        this.start({
+            camera: args,
+            type: arguments[1],
+            spaceType: arguments[2],
+            callback: arguments[3]
+        });
+        return;
+    }
+
+    var camera = args.camera;
+    var type = args.type;
+    var spaceType = args.spaceType;
+    var callback = args.callback;
+
     if (! this._available[type]) {
         if (callback) callback(new Error('XR is not available'));
         return;
@@ -170,8 +194,6 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
         if (callback) callback(new Error('XR session is already started'));
         return;
     }
-
-    var self = this;
 
     this._camera = camera;
     this._camera.camera.xr = this;
@@ -193,10 +215,13 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
     if (type === XRTYPE_AR) {
         optionalFeatures.push('light-estimation');
         optionalFeatures.push('hit-test');
+    } else if (type === XRTYPE_VR) {
+        optionalFeatures.push('hand-tracking');
     }
 
-    if (type === XRTYPE_VR)
-        optionalFeatures.push('hand-tracking');
+    if (args.optionalFeatures) {
+        optionalFeatures = optionalFeatures.concat(args.optionalFeatures);
+    }
 
     navigator.xr.requestSession(type, {
         requiredFeatures: [spaceType],

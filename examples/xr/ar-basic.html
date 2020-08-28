@@ -93,8 +93,12 @@
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, function (err) {
-                            if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                        c.camera.startXr({
+                            type: pc.XRTYPE_AR,
+                            spaceType: pc.XRSPACE_LOCALFLOOR,
+                            callback: function (err) {
+                                if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                            }
                         });
                     } else {
                         message("Immersive AR is not available");

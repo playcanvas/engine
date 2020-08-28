@@ -519,7 +519,8 @@ Object.assign(CameraComponent.prototype, {
      * @function
      * @name pc.CameraComponent#startXr
      * @description Attempt to start XR session with this camera
-     * @param {string} type - The type of session. Can be one of the following:
+     * @param {object} args - object with arguments for XR session initialization.
+     * @param {string} args.type - The type of session. Can be one of the following:
      *
      * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has
      * limited feature availability and is rendered into HTML element.
@@ -528,7 +529,7 @@ Object.assign(CameraComponent.prototype, {
      * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access
      * to the VR/AR device that is intended to be blended with the real-world environment.
      *
-     * @param {string} spaceType - reference space type. Can be one of the following:
+     * @param {string} args.spaceType - reference space type. Can be one of the following:
      *
      * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic
      * tracking capabilities.
@@ -546,21 +547,40 @@ Object.assign(CameraComponent.prototype, {
      * user is expected to move freely around their environment, potentially long
      * distances from their starting point.
      *
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once
+     * @param {string[]} [args.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {pc.callbacks.XrError} [args.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
-     *     if (err) {
-     *         // failed to start XR session
-     *     } else {
-     *         // in XR
+     * this.entity.camera.startXr({
+     *     type: pc.XRTYPE_VR,
+     *     spaceType: pc.XRSPACE_LOCAL,
+     *     callback: function (err) {
+     *         if (err) {
+     *             // failed to start XR session
+     *         } else {
+     *             // in XR
+     *         }
      *     }
      * });
      */
-    startXr: function (type, spaceType, callback) {
-        this.system.app.xr.start(this, type, spaceType, callback);
+    startXr: function (args) {
+        if (typeof(args) === 'string') {
+            // #ifdef DEBUG
+            console.warn("DEPRECATED: startXr with many arguments is deprecated. Use startXr with `args` object as only argument instead.");
+            // #endif
+            this.system.app.xr.start({
+                camera: this,
+                type: args,
+                spaceType: arguments[1],
+                callback: arguments[2]
+            });
+            return;
+        }
+
+        args.camera = this;
+        this.system.app.xr.start(args);
     },
 
     /**
