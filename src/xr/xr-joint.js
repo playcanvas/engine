@@ -86,8 +86,7 @@ XrJoint.prototype._updateTransforms = function () {
     var parent = manager.camera.parent;
 
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
-        if (dirty) this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
     } else {
         this._worldTransform.copy(this._localTransform);
     }
