@@ -188,10 +188,7 @@ XrInputSource.prototype.update = function (frame) {
 };
 
 XrInputSource.prototype._updateTransforms = function () {
-    var dirty;
-
     if (this._dirtyLocal) {
-        dirty = true;
         this._dirtyLocal = false;
         this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
     }
