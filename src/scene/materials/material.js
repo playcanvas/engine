@@ -401,14 +401,18 @@ Material.prototype.deleteParameter = function (name) {
 };
 
 // used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
-Material.prototype.setParameters = function (device) {
+// optional list of parameter names to be set can be specified, otherwise all parameters are set
+Material.prototype.setParameters = function (device, names) {
     var parameter, parameters = this.parameters;
-    for (var paramName in parameters) {
+    if (names === undefined) names = parameters;
+    for (var paramName in names) {
         parameter = parameters[paramName];
-        if (!parameter.scopeId) {
-            parameter.scopeId = device.scope.resolve(paramName);
+        if (parameter) {
+            if (!parameter.scopeId) {
+                parameter.scopeId = device.scope.resolve(paramName);
+            }
+            parameter.scopeId.setValue(parameter.data);
         }
-        parameter.scopeId.setValue(parameter.data);
     }
 };
 

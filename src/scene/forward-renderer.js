@@ -1701,7 +1701,6 @@ Object.assign(ForwardRenderer.prototype, {
 
         var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
         var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
-        var paramName, parameter, parameters;
         var stencilFront, stencilBack;
 
         var halfWidth = device.width * 0.5;
@@ -1917,15 +1916,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                 // Unset meshInstance overrides back to material values if next draw call will use the same material
                 if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
-                    for (paramName in parameters) {
-                        parameter = material.parameters[paramName];
-                        if (parameter) {
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
-                            }
-                            parameter.scopeId.setValue(parameter.data);
-                        }
-                    }
+                    material.setParameters(device, drawCall.parameters);
                 }
 
                 prevMaterial = material;
