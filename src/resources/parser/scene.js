@@ -63,7 +63,9 @@ Object.assign(SceneParser.prototype, {
         this._setPosRotScale(entity, data, compressed);
         entity._enabled = data.enabled !== undefined ? data.enabled : true;
 
-        if (!this._isTemplate) {
+        if (this._isTemplate) {
+            entity._template = true;
+        } else {
             entity._enabledInHierarchy = entity._enabled;
         }
 

@@ -384,7 +384,6 @@ Object.assign(TextElement.prototype, {
                 // destroy old mesh
                 if (meshInfo.meshInstance) {
                     this._removeMeshInstance(meshInfo.meshInstance);
-                    meshInfo.meshInstance.material = null;
                 }
 
                 // if there are no letters for this mesh continue
@@ -503,19 +502,12 @@ Object.assign(TextElement.prototype, {
     },
 
     _removeMeshInstance: function (meshInstance) {
-        var ib;
-        var iblen;
+
+        meshInstance.material = null;
 
         var oldMesh = meshInstance.mesh;
         if (oldMesh) {
-            if (oldMesh.vertexBuffer) {
-                oldMesh.vertexBuffer.destroy();
-            }
-
-            if (oldMesh.indexBuffer) {
-                for (ib = 0, iblen = oldMesh.indexBuffer.length; ib < iblen; ib++)
-                    oldMesh.indexBuffer[ib].destroy();
-            }
+            oldMesh.destroy();
         }
 
         var idx = this._model.meshInstances.indexOf(meshInstance);

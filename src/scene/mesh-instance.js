@@ -1,4 +1,5 @@
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -13,6 +14,7 @@ import {
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
+var _tempSphere = new BoundingSphere();
 
 /**
  * @class
@@ -372,6 +374,32 @@ Object.assign(MeshInstance.prototype, {
         // Deprecated
     },
 
+    // test if meshInstance is visible by camera. It requires the frustum of the camera to be up to date, which forward-renderer
+    // takes care of. This function should  not be called elsewhere.
+    _isVisible: function (camera) {
+
+        if (this.visible) {
+
+            // custom visibility method of MeshInstance
+            if (this.isVisibleFunc) {
+                return this.isVisibleFunc(camera);
+            }
+
+            var pos = this.aabb.center;
+            if (this._aabb._radiusVer !== this._aabbVer) {
+                this._aabb._radius = this._aabb.halfExtents.length();
+                this._aabb._radiusVer = this._aabbVer;
+            }
+
+            _tempSphere.radius = this._aabb._radius;
+            _tempSphere.center = pos;
+
+            return camera.frustum.containsSphere(_tempSphere);
+        }
+
+        return false;
+    },
+
     updateKey: function () {
         var material = this.material;
         this._key[SORTKEY_FORWARD] = getKey(this.layer,
@@ -486,7 +514,7 @@ function getKey(layer, blendType, isCommand, materialId) {
     // 27 - 30 : layer
     // 26      : translucency type (opaque/transparent)
     // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
+    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
     return ((layer & 0x0f) << 27) |
            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
            ((isCommand ? 1 : 0) << 25) |

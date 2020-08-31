@@ -9,7 +9,7 @@ import './polyfill/string.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
-export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';
+export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
@@ -52,7 +52,7 @@ export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.j
 export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
-export { shaderChunks } from './graphics/chunks.js';
+export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
@@ -115,7 +115,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';

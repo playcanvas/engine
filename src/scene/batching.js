@@ -11,7 +11,7 @@ import {
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 
 import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
 import { Mesh } from './mesh.js';
@@ -628,7 +628,7 @@ BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, 
                 break;
             }
 
-            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlaping UI
+            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlapping UI
             if ((material !== mi.material) ||
                 (layer !== mi.layer) ||
                 (vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash) ||

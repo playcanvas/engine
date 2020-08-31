@@ -364,21 +364,21 @@ export var FUNC_ALWAYS = 7;
  * @constant
  * @name pc.INDEXFORMAT_UINT8
  * @type {number}
- * @description 8-bit unsigned vertex indices.
+ * @description 8-bit unsigned vertex indices (0 to 255).
  */
 export var INDEXFORMAT_UINT8 = 0;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT16
  * @type {number}
- * @description 16-bit unsigned vertex indices.
+ * @description 16-bit unsigned vertex indices (0 to 65,535).
  */
 export var INDEXFORMAT_UINT16 = 1;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT32
  * @type {number}
- * @description 32-bit unsigned vertex indices.
+ * @description 32-bit unsigned vertex indices (0 to 4,294,967,295).
  */
 export var INDEXFORMAT_UINT32 = 2;
 
@@ -1113,19 +1113,19 @@ semanticToLocation[SEMANTIC_TEXCOORD6] = 11;
 semanticToLocation[SEMANTIC_TEXCOORD7] = 12;
 semanticToLocation[SEMANTIC_TANGENT] = 13;
 
-semanticToLocation[SEMANTIC_ATTR0] = 15;
-semanticToLocation[SEMANTIC_ATTR1] = 14;
-semanticToLocation[SEMANTIC_ATTR2] = 13;
-semanticToLocation[SEMANTIC_ATTR3] = 12;
-semanticToLocation[SEMANTIC_ATTR4] = 11;
-semanticToLocation[SEMANTIC_ATTR5] = 10;
-semanticToLocation[SEMANTIC_ATTR6] = 9;
-semanticToLocation[SEMANTIC_ATTR7] = 8;
-semanticToLocation[SEMANTIC_ATTR8] = 7;
-semanticToLocation[SEMANTIC_ATTR9] = 6;
-semanticToLocation[SEMANTIC_ATTR10] = 5;
-semanticToLocation[SEMANTIC_ATTR11] = 4;
-semanticToLocation[SEMANTIC_ATTR12] = 3;
-semanticToLocation[SEMANTIC_ATTR13] = 2;
-semanticToLocation[SEMANTIC_ATTR14] = 1;
-semanticToLocation[SEMANTIC_ATTR15] = 0;
+semanticToLocation[SEMANTIC_ATTR0] = 0;
+semanticToLocation[SEMANTIC_ATTR1] = 1;
+semanticToLocation[SEMANTIC_ATTR2] = 2;
+semanticToLocation[SEMANTIC_ATTR3] = 3;
+semanticToLocation[SEMANTIC_ATTR4] = 4;
+semanticToLocation[SEMANTIC_ATTR5] = 5;
+semanticToLocation[SEMANTIC_ATTR6] = 6;
+semanticToLocation[SEMANTIC_ATTR7] = 7;
+semanticToLocation[SEMANTIC_ATTR8] = 8;
+semanticToLocation[SEMANTIC_ATTR9] = 9;
+semanticToLocation[SEMANTIC_ATTR10] = 10;
+semanticToLocation[SEMANTIC_ATTR11] = 11;
+semanticToLocation[SEMANTIC_ATTR12] = 12;
+semanticToLocation[SEMANTIC_ATTR13] = 13;
+semanticToLocation[SEMANTIC_ATTR14] = 14;
+semanticToLocation[SEMANTIC_ATTR15] = 15;

@@ -1,8 +1,9 @@
-import { Morph } from './morph.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { shaderChunks } from '../graphics/chunks.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/graphics.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
+import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
+import { RenderTarget } from '../graphics/render-target.js';
+
+import { Morph } from './morph.js';
 
 // vertex shader used to add morph targets from textures into render target
 var textureMorphVertexShader =
@@ -40,7 +41,6 @@ function MorphInstance(morph) {
 
         // max number of morph targets rendered at a time (each uses single texture slot)
         this.maxSubmitCount = this.device.maxTextures;
-        this.maxSubmitCount = 2;
 
         // array for max number of weights
         this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
@@ -74,7 +74,10 @@ function MorphInstance(morph) {
             this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
         }
 
-        this.morphFactor =  this.device.scope.resolve("morphFactor[0]");
+        this.morphFactor = this.device.scope.resolve("morphFactor[0]");
+
+        // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
+        this.zeroTextures = false;
 
     } else {    // vertex attribute based morphing
 
@@ -189,7 +192,7 @@ Object.assign(MorphInstance.prototype, {
         // if shader is not in cache, generate one
         if (!shader) {
             var fs = this._getFragmentShader(count);
-            shader = shaderChunks.createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
             this.shaderCache[count] = shader;
         }
 
@@ -245,8 +248,8 @@ Object.assign(MorphInstance.prototype, {
             }
         }
 
-        // leftover batch
-        if (usedCount > 0) {
+        // leftover batch, or just to clear texture
+        if (usedCount > 0 || (count === 0 && !this.zeroTextures)) {
             submitBatch(usedCount, blending);
         }
     },
@@ -259,11 +262,15 @@ Object.assign(MorphInstance.prototype, {
         device.pushMarker("MorphUpdate");
         // #endif
 
-        if (this._activeTargets.length > 0) {
+        // update textures if active targets, or no active targets and textures need to be cleared
+        if (this._activeTargets.length > 0 || !this.zeroTextures) {
 
             // blend morph targets into render targets
             this._updateTextureRenderTarget(this.rtPositions, 'texturePositions');
             this._updateTextureRenderTarget(this.rtNormals, 'textureNormals');
+
+            // textures were cleared if no active targets
+            this.zeroTextures = this._activeTargets.length === 0;
         }
 
         // #ifdef DEBUG

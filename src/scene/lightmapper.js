@@ -7,14 +7,14 @@ import { Vec3 } from '../math/vec3.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
 import {
-    CLEARFLAG_COLOR,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { createShaderFromCode } from '../graphics/program-lib/utils.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
@@ -381,12 +381,11 @@ Object.assign(Lightmapper.prototype, {
 
 
         // Init shaders
-        var chunks = shaderChunks;
-        var xformUv1 = "#define UV1LAYOUT\n" + chunks.transformVS;
-        var bakeLmEnd = chunks.bakeLmEndPS;
-        var dilate = chunks.dilatePS;
+        var xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
+        var bakeLmEnd = shaderChunks.bakeLmEndPS;
+        var dilate = shaderChunks.dilatePS;
 
-        var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
+        var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, dilate, "lmDilate");
         var constantTexSource = device.scope.resolve("source");
         var constantPixelOffset = device.scope.resolve("pixelOffset");
         var constantBakeDir = device.scope.resolve("bakeDir");
@@ -412,15 +411,12 @@ Object.assign(Lightmapper.prototype, {
         // Create pseudo-camera
         if (!lmCamera) {
             lmCamera = new Camera();
-            lmCamera._node = new GraphNode();
-            lmCamera.clearColor[0] = 0;
-            lmCamera.clearColor[1] = 0;
-            lmCamera.clearColor[2] = 0;
-            lmCamera.clearColor[3] = 0;
-            lmCamera.clearDepth = 1;
-            lmCamera.clearFlags = CLEARFLAG_COLOR;
-            lmCamera.clearStencil = null;
+            lmCamera.clearColor = new Color(0, 0, 0, 0);
+            lmCamera.clearColorBuffer = true;
+            lmCamera.clearDepthBuffer = false;
+            lmCamera.clearStencilBuffer = false;
             lmCamera.frustumCulling = false;
+            lmCamera.node = new GraphNode();
         }
 
         var node;
@@ -487,8 +483,8 @@ Object.assign(Lightmapper.prototype, {
                     lmMaterial.ambientTint = true;
                     lmMaterial.lightMap = blackTex;
                 } else {
-                    lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
-                    lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
+                    lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
+                    lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
                 }
 
                 // avoid writing unrelated things to alpha
@@ -597,8 +593,8 @@ Object.assign(Lightmapper.prototype, {
                     tempVec.copy(bounds.center);
                     tempVec.y += bounds.halfExtents.y;
 
-                    lmCamera._node.setPosition(tempVec);
-                    lmCamera._node.setEulerAngles(-90, 0, 0);
+                    lmCamera.node.setPosition(tempVec);
+                    lmCamera.node.setEulerAngles(-90, 0, 0);
 
                     var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
@@ -616,7 +612,7 @@ Object.assign(Lightmapper.prototype, {
                 if (lights[i]._type === LIGHTTYPE_SPOT) {
                     var nodeVisible = false;
                     for (j = 0; j < rcv.length; j++) {
-                        if (this.renderer._isVisible(shadowCam, rcv[j])) {
+                        if (rcv[j]._isVisible(shadowCam)) {
                             nodeVisible = true;
                             break;
                         }

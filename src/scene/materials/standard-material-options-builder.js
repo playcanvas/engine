@@ -1,4 +1,4 @@
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
@@ -140,11 +140,13 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.msdf = !!stdMat.msdfMap;
     options.twoSidedLighting = stdMat.twoSidedLighting;
     options.pixelSnap = stdMat.pixelSnap;
-    options.aoMapUv = stdMat.aoUvSet; // backwards componen
+    options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
     options.diffuseDetail = !!stdMat.diffuseMap;
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {

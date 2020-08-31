@@ -1,12 +1,12 @@
-import { hashCode } from '../../core/hash.js';
+import { hashCode } from '../../../core/hash.js';
 
 import {
-    SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_ATTR5, SEMANTIC_ATTR6, SEMANTIC_ATTR7,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL
-} from '../graphics.js';
-import { shaderChunks } from '../chunks.js';
+} from '../../graphics.js';
+import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -18,9 +18,9 @@ import {
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
-} from '../../scene/constants.js';
+} from '../../../scene/constants.js';
 
-import { programlib } from './program-lib.js';
+import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
@@ -681,7 +681,7 @@ var standard = {
                 }
 
                 // vertex ids attributes
-                attributes.morph_vertex_id = SEMANTIC_ATTR0;
+                attributes.morph_vertex_id = SEMANTIC_ATTR15;
                 code += "attribute float morph_vertex_id;\n";
 
             } else {
@@ -691,10 +691,10 @@ var standard = {
 
                 // first 4 slots are either position or normal
                 if (options.useMorphPosition) {
-                    attributes.morph_pos0 = SEMANTIC_ATTR0;
-                    attributes.morph_pos1 = SEMANTIC_ATTR1;
-                    attributes.morph_pos2 = SEMANTIC_ATTR2;
-                    attributes.morph_pos3 = SEMANTIC_ATTR3;
+                    attributes.morph_pos0 = SEMANTIC_ATTR8;
+                    attributes.morph_pos1 = SEMANTIC_ATTR9;
+                    attributes.morph_pos2 = SEMANTIC_ATTR10;
+                    attributes.morph_pos3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_POS03\n";
                     code += "attribute vec3 morph_pos0;\n";
@@ -703,10 +703,10 @@ var standard = {
                     code += "attribute vec3 morph_pos3;\n";
 
                 } else if (options.useMorphNormal) {
-                    attributes.morph_nrm0 = SEMANTIC_ATTR0;
-                    attributes.morph_nrm1 = SEMANTIC_ATTR1;
-                    attributes.morph_nrm2 = SEMANTIC_ATTR2;
-                    attributes.morph_nrm3 = SEMANTIC_ATTR3;
+                    attributes.morph_nrm0 = SEMANTIC_ATTR8;
+                    attributes.morph_nrm1 = SEMANTIC_ATTR9;
+                    attributes.morph_nrm2 = SEMANTIC_ATTR10;
+                    attributes.morph_nrm3 = SEMANTIC_ATTR11;
 
                     code += "#define MORPHING_NRM03\n";
                     code += "attribute vec3 morph_nrm0;\n";
@@ -717,10 +717,10 @@ var standard = {
 
                 // next 4 slots are either position or normal
                 if (!options.useMorphNormal) {
-                    attributes.morph_pos4 = SEMANTIC_ATTR4;
-                    attributes.morph_pos5 = SEMANTIC_ATTR5;
-                    attributes.morph_pos6 = SEMANTIC_ATTR6;
-                    attributes.morph_pos7 = SEMANTIC_ATTR7;
+                    attributes.morph_pos4 = SEMANTIC_ATTR12;
+                    attributes.morph_pos5 = SEMANTIC_ATTR13;
+                    attributes.morph_pos6 = SEMANTIC_ATTR14;
+                    attributes.morph_pos7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_POS47\n";
                     code += "attribute vec3 morph_pos4;\n";
@@ -728,10 +728,10 @@ var standard = {
                     code += "attribute vec3 morph_pos6;\n";
                     code += "attribute vec3 morph_pos7;\n";
                 } else {
-                    attributes.morph_nrm4 = SEMANTIC_ATTR4;
-                    attributes.morph_nrm5 = SEMANTIC_ATTR5;
-                    attributes.morph_nrm6 = SEMANTIC_ATTR6;
-                    attributes.morph_nrm7 = SEMANTIC_ATTR7;
+                    attributes.morph_nrm4 = SEMANTIC_ATTR12;
+                    attributes.morph_nrm5 = SEMANTIC_ATTR13;
+                    attributes.morph_nrm6 = SEMANTIC_ATTR14;
+                    attributes.morph_nrm7 = SEMANTIC_ATTR15;
 
                     code += "#define MORPHING_NRM47\n";
                     code += "attribute vec3 morph_nrm4;\n";
@@ -745,7 +745,7 @@ var standard = {
         if (options.skin) {
             attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += programlib.skinCode(device, chunks);
+            code += skinCode(device, chunks);
             code += "#define SKIN\n";
         } else if (options.useInstancing) {
             code += "#define INSTANCING\n";
@@ -786,7 +786,7 @@ var standard = {
 
         var startCode = "";
         if (device.webgl2) {
-            startCode = programlib.versionCode(device);
+            startCode = versionCode(device);
             if (chunks.extensionVS) {
                 startCode += chunks.extensionVS + "\n";
             }
@@ -812,7 +812,7 @@ var standard = {
         code = '';
 
         if (device.webgl2) {
-            code += programlib.versionCode(device);
+            code += versionCode(device);
         }
 
         if (device.extStandardDerivatives && !device.webgl2) {
@@ -826,7 +826,7 @@ var standard = {
             code += chunks.gles3PS;
         }
 
-        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : programlib.precisionCode(device);
+        code += options.forceFragmentPrecision ? "precision " + options.forceFragmentPrecision + " float;\n\n" : precisionCode(device);
 
         if (options.pass === SHADER_PICK) {
             // ##### PICK PASS #####
@@ -837,13 +837,13 @@ var standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += programlib.begin();
+            code += begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = uColor;\n";
-            code += programlib.end();
+            code += end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -860,13 +860,13 @@ var standard = {
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
-            code += programlib.begin();
+            code += begin();
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = packFloat(vDepth);\n";
-            code += programlib.end();
+            code += end();
             return {
                 attributes: attributes,
                 vshader: vshader,
@@ -917,7 +917,7 @@ var standard = {
                 code += "}\n\n";
             }
 
-            code += programlib.begin();
+            code += begin();
 
             if (options.alphaTest) {
                 code += "   getOpacity();\n";
@@ -948,7 +948,7 @@ var standard = {
                 code += chunks.storeEVSMPS;
             }
 
-            code += programlib.end();
+            code += end();
 
             return {
                 attributes: attributes,
@@ -1061,9 +1061,22 @@ var standard = {
         }
 
         if (needsNormal) {
-            if (options.normalMap) {
+             // if normalMap is disabled, then so is normalDetailMap
+            if (options.normalMap || options.clearCoatNormalMap) {
+                // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently decide which unpackNormal to use.
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
+                if (!options.hasTangents) {
+                    // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
+                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    tbn = tbn.replace(/\$UV/g, normalMapUv);
+                }
+                code += tbn;
+            }
+        }
+
+        if (needsNormal) {
+            if (options.normalMap) {
                 if (options.normalDetail) {
                     code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
                 }
@@ -1074,8 +1087,6 @@ var standard = {
                 } else {
                     code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
-                code += tbn;
             } else {
                 code += chunks.normalVertexPS;
 
@@ -1085,9 +1096,9 @@ var standard = {
             }
         }
 
-        code += programlib.gammaCode(options.gamma, chunks);
-        code += programlib.tonemapCode(options.toneMap, chunks);
-        code += programlib.fogCode(options.fog, chunks);
+        code += gammaCode(options.gamma, chunks);
+        code += tonemapCode(options.toneMap, chunks);
+        code += fogCode(options.fog, chunks);
 
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
@@ -1127,6 +1138,12 @@ var standard = {
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
+        }
+
+        if (options.clearCoat > 0) {
+            code += this._addMap("clearCoat", "clearCoatPS", options, chunks);
+            code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, chunks);
+            code += this._addMap("clearCoatNormal", "clearCoatNormalPS", options, chunks);
         }
 
         if (options.heightMap) {
@@ -1316,15 +1333,20 @@ var standard = {
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
+            code += "   getViewDir();\n";
+        }
+
+        if (needsNormal) {
             if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+                code += "   float normalDirSign = sign(dot(vNormalW, dViewDirW));\n";
+                code += "   dVertexNormalW = normalDirSign * vNormalW;\n";
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                    code += "   dTangentW = normalDirSign * vTangentW;\n";
+                    code += "   dBinormalW = normalDirSign * vBinormalW;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
@@ -1349,8 +1371,7 @@ var standard = {
         var getGlossinessCalled = false;
 
         if (needsNormal) {
-            code += "   getViewDir();\n";
-            if (options.heightMap || options.normalMap || options.enableGGXSpecular) {
+            if (options.heightMap || options.normalMap || options.clearCoatNormalMap || options.enableGGXSpecular) {
                 code += "   getTBN();\n";
             }
             if (options.heightMap) {
@@ -1375,6 +1396,12 @@ var standard = {
         }
 
         code += "   getAlbedo();\n";
+
+        if (options.clearCoat > 0) {
+            code += "   getClearCoat();\n";
+            code += "   getClearCoatGlossiness();\n";
+            code += "   getClearCoatNormal();\n";
+        }
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
@@ -1408,7 +1435,7 @@ var standard = {
             }
 
             for (i = 0; i < options.lights.length; i++) {
-                // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
+                // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
@@ -1556,7 +1583,7 @@ var standard = {
         }
 
         code += "\n";
-        code += programlib.end();
+        code += end();
 
         if (hasPointLights) {
             code = chunks.lightDirPointPS + code;
@@ -1603,8 +1630,8 @@ var standard = {
         if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
-        if (code.includes("ccSpecularity")) structCode += "vec3 ccSpecularity;\n";
-        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness=0.9;\n";
+        if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
+        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
 

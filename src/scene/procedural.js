@@ -226,21 +226,23 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
  * @param {number[]} [opts.tangents] - An array of 3-dimensional vertex tangents.
- * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors.
+ * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors where each
+ * component is an integer in the range 0 to 255.
  * @param {number[]} [opts.uvs] - An array of 2-dimensional vertex texture coordinates.
  * @param {number[]} [opts.uvs1] - Same as opts.uvs, but for additional UV set
+ * @param {number[]} [opts.blendIndices] - An array of 4-dimensional bone indices where each
+ * component is an integer in the range 0 to 255.
+ * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
+ * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
- * @returns {pc.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
+ * @returns {pc.Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
- * // Create a new mesh supplying optional parameters using object literal notation
- * var mesh = pc.createMesh(
- *     graphicsDevice,
- *     positions,
- *     {
- *         normals: treeNormals,
- *         uvs: treeUvs,
- *         indices: treeIndices
- *     });
+ * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
+ * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
+ *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+ *     uvs: [0, 0, 1, 0, 0, 1],
+ *     indices: [0, 1, 2]
+ * });
  */
 function createMesh(device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -644,7 +646,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @description Creates a procedural cylinder-shaped mesh.
  *
  * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
- * By default, the function will create a cylinder standing vertically centred on the XZ-plane with a radius
+ * By default, the function will create a cylinder standing vertically centered on the XZ-plane with a radius
  * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.
  *
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
@@ -688,7 +690,7 @@ function createCylinder(device, opts) {
  * @description Creates a procedural capsule-shaped mesh.
  *
  * The size, shape and tesselation properties of the capsule can be controlled via function
- * parameters. By default, the function will create a capsule standing vertically centred
+ * parameters. By default, the function will create a capsule standing vertically centered
  * on the XZ-plane with a radius of 0.25, a height of 1.0, 1 height segment and 10 cap
  * segments.
  *
@@ -726,7 +728,7 @@ function createCapsule(device, opts) {
  * @description Creates a procedural cone-shaped mesh.
  *
  * The size, shape and tesselation properties of the cone can be controlled via function
- * parameters. By default, the function will create a cone standing vertically centred
+ * parameters. By default, the function will create a cone standing vertically centered
  * on the XZ-plane with a base radius of 0.5, a height of 1.0, 5 height segments and 20
  * cap segments.
  *
@@ -765,7 +767,7 @@ function createCone(device, opts) {
  * @description Creates a procedural sphere-shaped mesh.
  *
  * The size and tesselation properties of the sphere can be controlled via function
- * parameters. By default, the function will create a sphere centred on the object
+ * parameters. By default, the function will create a sphere centered on the object
  * space origin with a radius of 0.5 and 16 segments in both longitude and latitude.
  *
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
@@ -847,7 +849,7 @@ function createSphere(device, opts) {
  * @description Creates a procedural plane-shaped mesh.
  *
  * The size and tesselation properties of the plane can be controlled via function
- * parameters. By default, the function will create a plane centred on the object
+ * parameters. By default, the function will create a plane centered on the object
  * space origin with a width and length of 1.0 and 5 segments in either axis (50
  * triangles). The normal vector of the plane is aligned along the positive Y axis.
  *
@@ -927,7 +929,7 @@ function createPlane(device, opts) {
  * @description Creates a procedural box-shaped mesh.
  *
  * The size, shape and tesselation properties of the box can be controlled via function parameters. By
- * default, the function will create a box centred on the object space origin with a width, length and
+ * default, the function will create a box centered on the object space origin with a width, length and
  * height of 1.0 unit and 10 segments in either axis (50 triangles per face).
  *
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent

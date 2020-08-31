@@ -1,5 +1,4 @@
 import { now } from '../../../core/time.js';
-import { type } from '../../../core/core.js';
 import { AllocatePool } from '../../../core/object-pool.js';
 
 import { Vec3 } from '../../../math/vec3.js';
@@ -238,10 +237,10 @@ Object.assign(RigidBodyComponentSystem.prototype, {
             // #endif
         }
 
-        if (data.linearFactor && type(data.linearFactor) === 'array') {
+        if (data.linearFactor && Array.isArray(data.linearFactor)) {
             data.linearFactor = new Vec3(data.linearFactor[0], data.linearFactor[1], data.linearFactor[2]);
         }
-        if (data.angularFactor && type(data.angularFactor) === 'array') {
+        if (data.angularFactor && Array.isArray(data.angularFactor)) {
             data.angularFactor = new Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
         }
 

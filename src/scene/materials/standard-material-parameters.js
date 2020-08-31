@@ -48,8 +48,6 @@ var standardMaterialParameterTypes = {
     metalness: 'number',
     enableGGXSpecular: 'boolean',
     anisotropy: 'number',
-    clearCoat: 'number',
-    clearCoatGlossiness: 'number',
     metalnessTint: 'boolean',
     metalnessVertexColor: 'boolean',
     metalnessVertexColorChannel: 'string',
@@ -68,6 +66,28 @@ var standardMaterialParameterTypes = {
     glossMapUv: 'number',
     glossMapTiling: 'vec2',
     glossMapOffset: 'vec2',
+
+    clearCoat: 'number',
+    clearCoatVertexColor: 'boolean',
+    clearCoatVertexColorChannel: 'string',
+    clearCoatMap: 'texture',
+    clearCoatMapChannel: 'string',
+    clearCoatMapUv: 'number',
+    clearCoatMapTiling: 'vec2',
+    clearCoatMapOffset: 'vec2',
+    clearCoatGlossiness: 'number',
+    clearCoatGlossVertexColor: 'boolean',
+    clearCoatGlossVertexColorChannel: 'string',
+    clearCoatGlossMap: 'texture',
+    clearCoatGlossMapChannel: 'string',
+    clearCoatGlossMapUv: 'number',
+    clearCoatGlossMapTiling: 'vec2',
+    clearCoatGlossMapOffset: 'vec2',
+    clearCoatBumpiness: 'number',
+    clearCoatNormalMap: 'texture',
+    clearCoatNormalMapUv: 'number',
+    clearCoatNormalMapTiling: 'vec2',
+    clearCoatNormalMapOffset: 'vec2',
 
     fresnelModel: 'number',
 
@@ -164,7 +184,7 @@ var standardMaterialParameterTypes = {
     // msdfMapTiling
     // msdfMapOffset
     // msdfVertexColor
-    // msdfVexterColorChannel
+    // msdfVertexColorChannel
 };
 
 var key, type;

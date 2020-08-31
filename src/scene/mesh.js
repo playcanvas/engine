@@ -599,14 +599,13 @@ Object.assign(Mesh.prototype, {
 
     /**
      * @function
-     * @name pc.Mesh#getColors
+     * @name pc.Mesh#getIndices
      * @description Gets the index data.
      * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - An array to populate with the index data.
-     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
+     * When a typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of indices populated.
      */
     getIndices: function (indices) {
-
         var count = 0;
 
         // see if we have un-applied indices
