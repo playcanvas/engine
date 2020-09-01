@@ -1335,9 +1335,6 @@ Object.assign(ForwardRenderer.prototype, {
         var settings;
         var visibleList, visibleLength;
 
-        var passFlag = 1 << SHADER_SHADOW;
-        var paramName, parameter, parameters;
-
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
             type = light._type;
@@ -1471,30 +1468,14 @@ Object.assign(ForwardRenderer.prototype, {
                         }
 
                         if (material.chunks) {
-                            // Uniforms I (shadow): material
-                            parameters = material.parameters;
-                            for (paramName in parameters) {
-                                parameter = parameters[paramName];
-                                if (parameter.passFlags & passFlag) {
-                                    if (!parameter.scopeId) {
-                                        parameter.scopeId = device.scope.resolve(paramName);
-                                    }
-                                    parameter.scopeId.setValue(parameter.data);
-                                }
-                            }
+
                             this.setCullMode(true, false, meshInstance);
 
+                            // Uniforms I (shadow): material
+                            material.setParameters(device);
+
                             // Uniforms II (shadow): meshInstance overrides
-                            parameters = meshInstance.parameters;
-                            for (paramName in parameters) {
-                                parameter = parameters[paramName];
-                                if (parameter.passFlags & passFlag) {
-                                    if (!parameter.scopeId) {
-                                        parameter.scopeId = device.scope.resolve(paramName);
-                                    }
-                                    parameter.scopeId.setValue(parameter.data);
-                                }
-                            }
+                            meshInstance.setParameters(device);
                         }
 
                         // set shader
@@ -1691,8 +1672,6 @@ Object.assign(ForwardRenderer.prototype, {
         var device = this.device;
         var scene = this.scene;
         var vrDisplay = camera.vrDisplay;
-        var passFlag = 1 << pass;
-
         var lightHash = layer ? layer._lightHash : 0;
 
         // #ifdef PROFILER
@@ -1701,7 +1680,6 @@ Object.assign(ForwardRenderer.prototype, {
 
         var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
         var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
-        var paramName, parameter, parameters;
         var stencilFront, stencilBack;
 
         var halfWidth = device.width * 0.5;
@@ -1775,16 +1753,7 @@ Object.assign(ForwardRenderer.prototype, {
                     }
 
                     // Uniforms I: material
-                    parameters = material.parameters;
-                    for (paramName in parameters) {
-                        parameter = parameters[paramName];
-                        if (parameter.passFlags & passFlag) {
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
-                            }
-                            parameter.scopeId.setValue(parameter.data);
-                        }
-                    }
+                    material.setParameters(device);
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
@@ -1853,16 +1822,7 @@ Object.assign(ForwardRenderer.prototype, {
                 }
 
                 // Uniforms II: meshInstance overrides
-                parameters = drawCall.parameters;
-                for (paramName in parameters) {
-                    parameter = parameters[paramName];
-                    if (parameter.passFlags & passFlag) {
-                        if (!parameter.scopeId) {
-                            parameter.scopeId = device.scope.resolve(paramName);
-                        }
-                        parameter.scopeId.setValue(parameter.data);
-                    }
-                }
+                drawCall.setParameters(device);
 
                 this.setVertexBuffers(device, mesh);
                 this.setMorphing(device, drawCall.morphInstance);
@@ -1935,15 +1895,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                 // Unset meshInstance overrides back to material values if next draw call will use the same material
                 if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
-                    for (paramName in parameters) {
-                        parameter = material.parameters[paramName];
-                        if (parameter) {
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
-                            }
-                            parameter.scopeId.setValue(parameter.data);
-                        }
-                    }
+                    material.setParameters(device, drawCall.parameters);
                 }
 
                 prevMaterial = material;
