@@ -64,7 +64,8 @@ import { Model } from './scene/model.js';
 import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 import { Picker } from './scene/pick.js';
 import { Scene } from './scene/scene.js';
-import { Skin, SkinInstance } from './scene/skin.js';
+import { Skin } from './scene/skin.js';
+import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
 
 import { Animation, Key, Node } from './anim/animation.js';

@@ -34,7 +34,8 @@ import { Model } from '../../scene/model.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { Skin, SkinInstance } from '../../scene/skin.js';
+import { Skin } from '../../scene/skin.js';
+import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
 import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';

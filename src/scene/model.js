@@ -1,7 +1,7 @@
 import { RENDERSTYLE_WIREFRAME } from './constants.js';
 import { MeshInstance } from './mesh-instance.js';
 import { MorphInstance } from './morph-instance.js';
-import { SkinInstance } from './skin.js';
+import { SkinInstance } from './skin-instance.js';
 
 /**
  * @class
