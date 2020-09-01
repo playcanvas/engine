@@ -88,6 +88,8 @@ Object.assign(pc, function () {
 
             var textures2 = null;
 
+            var numLoaded2 = 0;
+
             var loadTexture = function (index) {
                 if (data.version >= 4) {
                     textures2 = new Array(numTextures);
@@ -102,6 +104,10 @@ Object.assign(pc, function () {
 
                         texture.upload();
                         textures2[index] = texture;
+                        numLoaded2++;
+                        if (numLoaded === numTextures && numLoaded2 === numTextures) {
+                            callback(null, [textures, textures2]);
+                        }
                     };
 
                     if (index === 0) {
@@ -122,7 +128,7 @@ Object.assign(pc, function () {
                     texture.upload();
                     textures[index] = texture;
                     numLoaded++;
-                    if (numLoaded === numTextures) {
+                    if (numLoaded === numTextures && (textures2 === null || numLoaded2 === numTextures)) {
                         callback(null, [textures, textures2]);
                     }
                 };
