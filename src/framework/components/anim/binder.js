@@ -178,18 +178,6 @@ Object.assign(AnimComponentBinder.prototype, {
         };
     },
 
-    _getProperty: function (propertyComponent, propertyHierarchy, returnParent) {
-        var property = propertyComponent;
-        var steps = propertyHierarchy.length;
-        if (returnParent) {
-            steps--;
-        }
-        for (var i = 0; i < steps; i++) {
-            property = property[propertyHierarchy[i]];
-        }
-        return property;
-    },
-
     _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
 
         if (this.handlers && propertyHierarchy[0] === 'weights') {
@@ -202,7 +190,7 @@ Object.assign(AnimComponentBinder.prototype, {
             }
         }
 
-        var property = this._getProperty(propertyComponent, propertyHierarchy);
+        var property = this._resolvePath(propertyComponent, propertyHierarchy);
 
         if (typeof property === 'undefined')
             return null;
