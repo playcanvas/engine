@@ -1,6 +1,9 @@
 import { math } from './math.js';
+import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
+
+var _halfSize = new Vec2();
 
 /**
  * @class
@@ -16,6 +19,17 @@ function Mat4() {
     data[0] = data[5] = data[10] = data[15] = 1;
     this.data = data;
 }
+
+// Static function which evaluates perspective projection matrix half size at the near plane
+Mat4._getPerspectiveHalfSize = function (halfSize, fov, aspect, znear, fovIsHorizontal) {
+    if (fovIsHorizontal) {
+        halfSize.x = znear * Math.tan(fov * Math.PI / 360);
+        halfSize.y = halfSize.x / aspect;
+    } else {
+        halfSize.y = znear * Math.tan(fov * Math.PI / 360);
+        halfSize.x = halfSize.y * aspect;
+    }
+};
 
 Object.assign(Mat4.prototype, {
     /**
@@ -587,17 +601,8 @@ Object.assign(Mat4.prototype, {
      * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
     setPerspective: function (fov, aspect, znear, zfar, fovIsHorizontal) {
-        var xmax, ymax;
-
-        if (!fovIsHorizontal) {
-            ymax = znear * Math.tan(fov * Math.PI / 360);
-            xmax = ymax * aspect;
-        } else {
-            xmax = znear * Math.tan(fov * Math.PI / 360);
-            ymax = xmax / aspect;
-        }
-
-        return this.setFrustum(-xmax, xmax, -ymax, ymax, znear, zfar);
+        Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
+        return this.setFrustum(-_halfSize.x, _halfSize.x, -_halfSize.y, _halfSize.y, znear, zfar);
     },
 
     /**
