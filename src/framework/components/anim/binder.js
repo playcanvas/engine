@@ -139,8 +139,8 @@ Object.assign(AnimComponentBinder.prototype, {
     },
 
     // resolve an object path
-    _resolvePath: function (object, path) {
-        var steps = path.length - 1;
+    _resolvePath: function (object, path, resolveLeaf) {
+        var steps = path.length - (resolveLeaf ? 0 : 1);
         for (var i = 0; i < steps; i++) {
             object = object[path[i]];
         }
@@ -166,7 +166,7 @@ Object.assign(AnimComponentBinder.prototype, {
         var prop = obj[key];
 
         // if the target property has a copy function, use it (vec3, color, quat)
-        if (prop.copy) {
+        if (typeof prop === 'object' && prop.hasOwnProperty('copy')) {
             return function (values) {
                 prop.copy(packFunc(values));
             };
@@ -190,7 +190,7 @@ Object.assign(AnimComponentBinder.prototype, {
             }
         }
 
-        var property = this._resolvePath(propertyComponent, propertyHierarchy);
+        var property = this._resolvePath(propertyComponent, propertyHierarchy, true);
 
         if (typeof property === 'undefined')
             return null;
