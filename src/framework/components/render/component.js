@@ -312,15 +312,13 @@ Object.defineProperty(RenderComponent.prototype, "meshInstances", {
 
         if (this._meshInstances) {
 
-            var meshInstances = this._meshInstances;
-            for (var i = 0; i < meshInstances.length; i++) {
-                meshInstances[i].castShadow = this._castShadows;
-                meshInstances[i].receiveShadow = this._receiveShadows;
-                meshInstances[i].isStatic = this._isStatic;
+            var mi = this._meshInstances;
+            for (var i = 0; i < mi.length; i++) {
+                mi[i].castShadow = this._castShadows;
+                mi[i].receiveShadow = this._receiveShadows;
+                mi[i].isStatic = this._isStatic;
+                mi[i].setLightmapped(this._lightmapped);
             }
-
-            // update meshInstances
-            this.lightmapped = this._lightmapped;
 
             if (this.enabled && this.entity.enabled) {
                 this.addToLayers();
