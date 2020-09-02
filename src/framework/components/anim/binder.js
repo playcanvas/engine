@@ -149,7 +149,7 @@ Object.assign(AnimComponentBinder.prototype, {
 
     // construct a setter function for the property located at 'path' from the base object. packFunc
     // is a function which takes the animation values array and packages them for the target property
-    // (in the correct format, i.e. vec2, quat, color etc).
+    // in the correct format (i.e. vec2, quat, color etc).
     _setter: function (object, path, packFunc) {
         var obj = this._resolvePath(object, path);
         var key = path[path.length - 1];
