@@ -362,7 +362,7 @@ Object.defineProperty(RenderComponent.prototype, "castShadows", {
                 var scene = this.system.app.scene;
                 if (this._castShadows && !value) {
                     for (i = 0; i < layers.length; i++) {
-                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        layer = scene.layers.getLayerById(this.layers[i]);
                         if (layer) {
                             layer.removeShadowCasters(mi);
                         }
@@ -401,7 +401,7 @@ Object.defineProperty(RenderComponent.prototype, 'receiveShadows', {
             var mi = this._meshInstances;
             if (mi) {
                 for (var i = 0; i < mi.length; i++) {
-                    meshInstances[i].receiveShadow = value;
+                    mi[i].receiveShadow = value;
                 }
             }
         }
