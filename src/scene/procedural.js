@@ -1100,7 +1100,7 @@ function getShapePrimitive(device, type) {
                 break;
 
             default:
-                throw new Error("Invalid primitive type: " + value);
+                throw new Error("Invalid primitive type: " + type);
         }
 
         primData = { mesh: mesh, area: area };

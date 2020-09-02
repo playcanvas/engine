@@ -1,4 +1,4 @@
-import { LAYERID_WORLD } from '../../../scene/constants.js';
+import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
