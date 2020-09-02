@@ -34,7 +34,8 @@ import { Model } from '../../scene/model.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { Skin, SkinInstance } from '../../scene/skin.js';
+import { Skin } from '../../scene/skin.js';
+import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
 import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';
@@ -706,10 +707,23 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
             } else if (indices instanceof Uint16Array) {
                 indexFormat = INDEXFORMAT_UINT16;
             } else {
-                // TODO: these indices may need conversion since some old WebGL 1.0 devices
-                // don't support 32bit index data
                 indexFormat = INDEXFORMAT_UINT32;
             }
+
+            // 32bit index buffer is used but not supported
+            if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
+
+                // #ifdef DEBUG
+                if (vertexBuffer.numVertices > 0xFFFF) {
+                    console.warn("Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.");
+                }
+                // #endif
+
+                // convert to 16bit
+                indexFormat = INDEXFORMAT_UINT16;
+                indices = new Uint16Array(indices);
+            }
+
             var indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
             mesh.indexBuffer[0] = indexBuffer;
             mesh.primitive[0].count = indices.length;
@@ -833,6 +847,36 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         "    #ifdef MAPVERTEX",
         "        dSpecularity *= saturate(vVertexColor.$VC);",
         "    #endif",
+        "}"
+    ].join('\n');
+
+    var clearCoatGlossChunk = [
+        "#ifdef MAPFLOAT",
+        "uniform float material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "uniform sampler2D texture_clearCoatGlossMap;",
+        "#endif",
+        "",
+        "void getClearCoatGlossiness() {",
+        "    ccGlossiness = 1.0;",
+        "",
+        "#ifdef MAPFLOAT",
+        "    ccGlossiness *= material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;",
+        "#endif",
+        "",
+        "#ifdef MAPVERTEX",
+        "    ccGlossiness *= saturate(vVertexColor.$VC);",
+        "#endif",
+        "",
+        "    ccGlossiness = 1.0 - ccGlossiness;",
+        "",
+        "    ccGlossiness += 0.0000001;",
         "}"
     ].join('\n');
 
@@ -1043,6 +1087,48 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
     } else {
         material.twoSidedLighting = false;
         material.cull = CULLFACE_BACK;
+    }
+
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_clearcoat')) {
+        var ccData = gltfMaterial.extensions.KHR_materials_clearcoat;
+
+        if (ccData.hasOwnProperty('clearcoatFactor')) {
+            material.clearCoat = ccData.clearcoatFactor * 0.25; // TODO: remove temporary workaround for replicating glTF clear-coat visuals
+        } else {
+            material.clearCoat = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatTexture')) {
+            var clearcoatTexture = ccData.clearcoatTexture;
+            material.clearCoatMap = textures[clearcoatTexture.index];
+            material.clearCoatMapChannel = 'r';
+
+            extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
+            material.clearCoatGlossiness = ccData.clearcoatRoughnessFactor;
+        } else {
+            material.clearCoatGlossiness = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessTexture')) {
+            var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
+            material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
+            material.clearCoatGlossMapChannel = 'g';
+
+            extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
+        }
+        if (ccData.hasOwnProperty('clearcoatNormalTexture')) {
+            var clearcoatNormalTexture = ccData.clearcoatNormalTexture;
+            material.clearCoatNormalMap = textures[clearcoatNormalTexture.index];
+
+            extractTextureTransform(clearcoatNormalTexture, material, ['clearCoatNormal']);
+
+            if (clearcoatNormalTexture.hasOwnProperty('scale')) {
+                material.clearCoatBumpiness = clearcoatNormalTexture.scale;
+            }
+        }
+
+        material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
     }
 
     // handle unlit material by disabling lighting and copying diffuse colours

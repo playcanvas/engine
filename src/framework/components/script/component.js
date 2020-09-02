@@ -464,6 +464,37 @@ Object.assign(ScriptComponent.prototype, {
         }
     },
 
+    _resolveEntityScriptAttribute: function (attribute, attributeName, oldValue, useGuid, newAttributes, duplicatedIdsMap) {
+        if (attribute.array) {
+            // handle entity array attribute
+            var len = oldValue.length;
+            if (! len) {
+                return;
+            }
+
+            var newGuidArray = oldValue.slice();
+            for (var i = 0; i < len; i++) {
+                var guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                if (duplicatedIdsMap[guid]) {
+                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                }
+            }
+
+            newAttributes[attributeName] = newGuidArray;
+        } else {
+            // handle regular entity attribute
+            if (oldValue instanceof Entity) {
+                oldValue = oldValue.getGuid();
+            } else if (typeof oldValue !== 'string') {
+                return;
+            }
+
+            if (duplicatedIdsMap[oldValue]) {
+                newAttributes[attributeName] = duplicatedIdsMap[oldValue];
+            }
+        }
+    },
+
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
@@ -759,6 +790,7 @@ Object.assign(ScriptComponent.prototype, {
      */
     resolveDuplicatedEntityReferenceProperties: function (oldScriptComponent, duplicatedIdsMap) {
         var newScriptComponent = this.entity.script;
+        var i, j;
 
         // for each script in the old component
         for (var scriptName in oldScriptComponent._scriptsIndex) {
@@ -785,6 +817,9 @@ Object.assign(ScriptComponent.prototype, {
                 continue;
             }
 
+            // if we are using attributesRaw then use the guid otherwise use the entity
+            var useGuid = !!newAttributesRaw;
+
             // get the old script attributes from the instance
             var oldAttributes = script.instance.__attributes;
             for (var attributeName in oldAttributes) {
@@ -794,53 +829,59 @@ Object.assign(ScriptComponent.prototype, {
 
                 // get the attribute definition from the script type
                 var attribute = scriptType.attributes.get(attributeName);
-                if (! attribute || attribute.type !== 'entity') {
+                if (!attribute) {
                     continue;
                 }
 
-                if (attribute.array) {
-                    // handle entity array attribute
-                    var oldGuidArray = oldAttributes[attributeName];
-                    var len = oldGuidArray.length;
-                    if (! len) {
-                        continue;
-                    }
+                if (attribute.type === 'entity') {
+                    // entity attributes
+                    this._resolveEntityScriptAttribute(
+                        attribute,
+                        attributeName,
+                        oldAttributes[attributeName],
+                        useGuid,
+                        newAttributesRaw || newAttributes,
+                        duplicatedIdsMap
+                    );
+                } else if (attribute.type === 'json' && Array.isArray(attribute.schema)) {
+                    // json attributes
+                    var oldValue = oldAttributes[attributeName];
+                    var newJsonValue = (newAttributesRaw ? newAttributesRaw[attributeName] : newAttributes[attributeName]);
 
-                    var newGuidArray = oldGuidArray.slice();
-                    for (var i = 0; i < len; i++) {
-                        var guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
-                        if (duplicatedIdsMap[guid]) {
-                            // if we are using attributesRaw then use the guid otherwise use the entity
-                            newGuidArray[i] = newAttributesRaw ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                    for (i = 0; i < attribute.schema.length; i++) {
+                        var field = attribute.schema[i];
+                        if (field.type !== 'entity') {
+                            continue;
                         }
-                    }
 
-                    if (newAttributesRaw) {
-                        newAttributesRaw[attributeName] = newGuidArray;
-                    } else {
-                        newAttributes[attributeName] = newGuidArray;
-                    }
-                } else {
-                    // handle regular entity attribute
-                    var oldGuid = oldAttributes[attributeName];
-                    if (oldGuid instanceof Entity) {
-                        oldGuid = oldGuid.getGuid();
-                    } else if (typeof oldGuid !== 'string') {
-                        continue;
-                    }
+                        if (attribute.array) {
+                            for (j = 0; j < oldValue.length; j++) {
+                                this._resolveEntityScriptAttribute(
+                                    field,
+                                    field.name,
+                                    oldValue[j][field.name],
+                                    useGuid,
+                                    newJsonValue[j],
+                                    duplicatedIdsMap
+                                );
+                            }
 
-                    if (duplicatedIdsMap[oldGuid]) {
-                        if (newAttributesRaw) {
-                            newAttributesRaw[attributeName] = duplicatedIdsMap[oldGuid].getGuid();
                         } else {
-                            newAttributes[attributeName] = duplicatedIdsMap[oldGuid];
+                            this._resolveEntityScriptAttribute(
+                                field,
+                                field.name,
+                                oldValue[field.name],
+                                useGuid,
+                                newJsonValue,
+                                duplicatedIdsMap
+                            );
                         }
                     }
-
                 }
             }
         }
     },
+
 
     /* eslint-disable jsdoc/no-undefined-types */
     /**
