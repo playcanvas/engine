@@ -7,5 +7,4 @@ void main(void) {
     #ifdef CLEARCOAT
     ccSpecularLight = vec3(0);
     ccReflection = vec4(0);
-    ccSpecularity = vec3(0);
     #endif
