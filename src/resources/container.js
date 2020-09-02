@@ -7,7 +7,7 @@ import { Asset } from '../asset/asset.js';
 import { GlbParser } from './parser/glb-parser.js';
 import { Entity } from '../framework/entity.js';
 import { MeshInstance } from '../scene/mesh-instance.js';
-import { SkinInstance } from '../scene/skin.js';
+import { SkinInstance } from '../scene/skin-instance.js';
 
 /**
  * @class
