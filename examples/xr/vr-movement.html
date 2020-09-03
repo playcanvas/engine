@@ -117,9 +117,7 @@
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                        c.camera.startXr({
-                            type: pc.XRTYPE_VR,
-                            spaceType: pc.XRSPACE_LOCAL,
+                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
                             callback: function (err) {
                                 if (err) message("Immersive VR failed to start: " + err.message);
                             }
