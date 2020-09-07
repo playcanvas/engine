@@ -1334,6 +1334,7 @@ Object.assign(ForwardRenderer.prototype, {
         var style;
         var settings;
         var visibleList, visibleLength;
+        var passFlag = 1 << SHADER_SHADOW;
 
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
@@ -1475,7 +1476,7 @@ Object.assign(ForwardRenderer.prototype, {
                             material.setParameters(device);
 
                             // Uniforms II (shadow): meshInstance overrides
-                            meshInstance.setParameters(device);
+                            meshInstance.setParameters(device, passFlag);
                         }
 
                         // set shader
@@ -1674,6 +1675,8 @@ Object.assign(ForwardRenderer.prototype, {
         var vrDisplay = camera.vrDisplay;
         var lightHash = layer ? layer._lightHash : 0;
 
+        var passFlag = 1 << pass;
+
         // #ifdef PROFILER
         var forwardStartTime = now();
         // #endif
@@ -1822,7 +1825,7 @@ Object.assign(ForwardRenderer.prototype, {
                 }
 
                 // Uniforms II: meshInstance overrides
-                drawCall.setParameters(device);
+                drawCall.setParameters(device, passFlag);
 
                 this.setVertexBuffers(device, mesh);
                 this.setMorphing(device, drawCall.morphInstance);
