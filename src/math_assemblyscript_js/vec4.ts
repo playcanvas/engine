@@ -2,7 +2,7 @@
 import { Vec4 as Vec4_AS } from "../../assembly/Vec4";
 
 class Vec4 extends Vec4_AS {
-    constructor(x, y, z, w) {
+    constructor(x?: any, y?: any, z?: any, w?: any) {
         if (x && x.length === 4) {
             super(
                 x[0],
@@ -19,15 +19,15 @@ class Vec4 extends Vec4_AS {
             );
         }
     }
+
+    toString () {
+        return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
+    }
+
+    toStringFixed(n) {
+        return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
+    }
 }
-
-Vec4.prototype.toString = function () {
-    return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
-};
-
-Vec4.prototype.toStringFixed = function (n) {
-    return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
-};
 
 /**
  * @field

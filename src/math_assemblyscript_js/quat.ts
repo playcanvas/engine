@@ -3,7 +3,7 @@ import { Vec3 } from "./vec3";
 import { Quat as Quat_AS } from "../../assembly/Quat";
 
 class Quat extends Quat_AS {
-    constructor(x, y, z, w) {
+    constructor(x?: any, y?: any, z?: any, w?: any) {
         if (x && x.length === 4) {
             super(
                 x[0],
@@ -34,16 +34,15 @@ class Quat extends Quat_AS {
         }
         return Quat_AS.prototype.transformVector.call(this, vec, res);
     }
+
+    toString() {
+        return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
+    }
+
+    toStringFixed(n) {
+        return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
+    }
 }
-
-
-Quat.prototype.toString = function () {
-    return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
-};
-
-Quat.prototype.toStringFixed = function (n) {
-    return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
-};
 
 Object.defineProperty(Quat, 'IDENTITY', {
     get: (function () {

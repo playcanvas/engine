@@ -2,7 +2,7 @@
 import { Vec3 as Vec3_AS } from "../../assembly/Vec3";
 
 class Vec3 extends Vec3_AS {
-    constructor(x, y, z) {
+    constructor(x?: any, y?: any, z?: any) {
         if (x && x.length === 3) {
             super(
                 x[0],
@@ -17,15 +17,15 @@ class Vec3 extends Vec3_AS {
             );
         }
     }
+
+    toString() {
+        return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
+    }
+    
+    toStringFixed(n) {
+        return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ']';
+    }
 }
-
-Vec3.prototype.toString = function () {
-    return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
-};
-
-Vec3.prototype.toStringFixed = function (n) {
-    return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ']';
-};
 
 /**
  * @static

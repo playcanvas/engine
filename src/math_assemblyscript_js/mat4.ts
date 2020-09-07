@@ -3,6 +3,8 @@ import { Vec3 } from "./vec3";
 import { Mat4 as Mat4_AS } from "../../assembly/Mat4";
 
 class Mat4 extends Mat4_AS {
+    data: Array<number>;
+
     constructor() {
         super();
     }
@@ -88,6 +90,28 @@ class Mat4 extends Mat4_AS {
         this.m14 = src[14];
         this.m15 = src[15];
         return this;
+    }
+
+    toString() {
+        var i, t;
+        t = '[';
+        for (i = 0; i < 16; i += 1) {
+            t += this.data[i];
+            t += (i !== 15) ? ', ' : '';
+        }
+        t += ']';
+        return t;
+    }
+
+    toStringFixed(n) {
+        var i, t;
+        t = '[';
+        for (i = 0; i < 16; i += 1) {
+            t += this.data[i].toFixed(n);
+            t += (i !== 15) ? ', ' : '';
+        }
+        t += ']';
+        return t;
     }
 }
 
@@ -196,28 +220,6 @@ Object.defineProperty(Mat4.prototype, 'data', {
         });
     }
 });
-
-Mat4.prototype.toString = function () {
-    var i, t;
-    t = '[';
-    for (i = 0; i < 16; i += 1) {
-        t += this.data[i];
-        t += (i !== 15) ? ', ' : '';
-    }
-    t += ']';
-    return t;
-};
-
-Mat4.prototype.toStringFixed = function (n) {
-    var i, t;
-    t = '[';
-    for (i = 0; i < 16; i += 1) {
-        t += this.data[i].toFixed(n);
-        t += (i !== 15) ? ', ' : '';
-    }
-    t += ']';
-    return t;
-};
 
 Object.defineProperty(Mat4, 'IDENTITY', {
     get: (function () {

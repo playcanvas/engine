@@ -2,6 +2,8 @@
 import { Mat3 as Mat3_AS } from "../../assembly/Mat3";
 
 class Mat3 extends Mat3_AS {
+    data: Array<number>;
+
     constructor() {
         super();
     }
@@ -18,27 +20,27 @@ class Mat3 extends Mat3_AS {
         this.m8 = src[8];
         return this;
     }
+
+    toString() {
+        var t = '[';
+        for (var i = 0; i < 9; i++) {
+            t += this.data[i];
+            t += (i !== 8) ? ', ' : '';
+        }
+        t += ']';
+        return t;
+    }
+
+    toStringFixed(n) {
+        var t = '[';
+        for (var i = 0; i < 9; i++) {
+            t += this.data[i].toFixed(n);
+            t += (i !== 8) ? ', ' : '';
+        }
+        t += ']';
+        return t;
+    }
 }
-
-Mat3.prototype.toString = function () {
-    var t = '[';
-    for (var i = 0; i < 9; i++) {
-        t += this.data[i];
-        t += (i !== 8) ? ', ' : '';
-    }
-    t += ']';
-    return t;
-};
-
-Mat3.prototype.toStringFixed = function (n) {
-    var t = '[';
-    for (var i = 0; i < 9; i++) {
-        t += this.data[i].toFixed(n);
-        t += (i !== 8) ? ', ' : '';
-    }
-    t += ']';
-    return t;
-};
 
 Object.defineProperty(Mat3.prototype, 'data', {
     get: function () {

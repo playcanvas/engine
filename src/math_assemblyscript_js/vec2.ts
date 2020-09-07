@@ -2,7 +2,7 @@
 import { Vec2 as Vec2_AS } from "../../assembly/Vec2";
 
 class Vec2 extends Vec2_AS {
-    constructor(x, y) {
+    constructor(x?: any, y?: any) {
         if (x && x.length === 2) {
             super(
                 x[0],
@@ -15,15 +15,15 @@ class Vec2 extends Vec2_AS {
             );
         }
     }
+
+    toString() {
+        return '[' + this.x + ', ' + this.y + ']';
+    }
+    
+    toStringFixed(n) {
+        return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ']';
+    }
 }
-
-Vec2.prototype.toString = function () {
-    return '[' + this.x + ', ' + this.y + ']';
-};
-
-Vec2.prototype.toStringFixed = function (n) {
-    return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ']';
-};
 
 Object.defineProperty(Vec2, 'ONE', {
     get: (function () {
