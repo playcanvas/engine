@@ -87,8 +87,19 @@
             value: function (x) {
                 return Math.sin(x);
             }
+        },
+        asin: {
+            value: function (x) {
+                return Math.asin(x);
+            }
+        },
+        atan2: {
+            value: function (x, y) {
+                return Math.atan2(x, y);
+            }
         }
     });
+    Mathf.PI = Math.PI;
 
         async function main() {            
             await fetch_script("../../build/playcanvas.assemblyscriptjs.js");
@@ -188,11 +199,8 @@
         main().then(function() {
             console.log("main()");
         }).catch(function(err) {
-            var msg = "Please run: npm run build:as";
-            alert(msg);
             alert(err);
-            console.error(msg);
-            console.log("err", err);
+            console.error(err);
         })
     </script>
 </body>

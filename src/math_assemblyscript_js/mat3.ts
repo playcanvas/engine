@@ -4,7 +4,6 @@ import { Mat3 as Mat3_AS } from "../../assembly/Mat3";
 class Mat3 extends Mat3_AS {
     constructor() {
         super();
-        console.log("HELLO FROM Mat3 AS JS")
     }
 
     set(src: any) {
@@ -20,46 +19,6 @@ class Mat3 extends Mat3_AS {
         return this;
     }
 }
-
-//Mat3.prototype.add = function (rhs) {
-//    mat3_add(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat3.prototype.add2 = function (lhs, rhs) {
-//    mat3_add(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat3.prototype.clone = function () {
-//    var ptr = mat3_clone(this.ptr);
-//    var tmp = Mat3.wrap(ptr);
-//    return tmp;
-//};
-//
-//Mat3.prototype.copy = function (rhs) {
-//    mat3_copy(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//
-//Mat3.prototype.equals = function (rhs) {
-//    return !!mat3_equals(this.ptr, rhs.ptr);
-//};
-//
-//Mat3.prototype.isIdentity = function () {
-//    return !!mat3_isIdentity(this.ptr);
-//};
-//
-//Mat3.prototype.setIdentity = function () {
-//    mat3_setIdentity(this.ptr);
-//    return this;
-//};
-//
-//Mat3.prototype.transpose = function () {
-//    mat3_transpose(this.ptr);
-//    return this;
-//};
 
 Mat3.prototype.toString = function () {
     var t = '[';
@@ -80,6 +39,59 @@ Mat3.prototype.toStringFixed = function (n) {
     t += ']';
     return t;
 };
+
+Object.defineProperty(Mat3.prototype, 'data', {
+    get: function () {
+        return new Proxy(this, {
+            get: function(target, p) {
+                switch (parseInt(p)) {
+                    case 0: return target.m0;
+                    case 1: return target.m1;
+                    case 2: return target.m2;
+                    case 3: return target.m3;
+                    case 4: return target.m4;
+                    case 5: return target.m5;
+                    case 6: return target.m6;
+                    case 7: return target.m7;
+                    case 8: return target.m8;
+                }
+                return 0;
+            },
+            set: function(target, p, value) {
+                switch (parseInt(p)) {
+                    case 0:
+                        target.m0 = value;
+                        break;
+                    case 1:
+                        target.m1 = value;
+                        break;
+                    case 2:
+                        target.m2 = value;
+                        break;
+                    case 3:
+                        target.m3 = value;
+                        break;
+                    case 4:
+                        target.m4 = value;
+                        break;
+                    case 5:
+                        target.m5 = value;
+                        break;
+                    case 6:
+                        target.m6 = value;
+                        break;
+                    case 7:
+                        target.m7 = value;
+                        break;
+                    case 8:
+                        target.m8 = value;
+                        break;
+                }
+                return true;
+            }
+        });
+    }
+});
 
 Object.defineProperty(Mat3, 'IDENTITY', {
     get: function () {

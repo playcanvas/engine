@@ -5,8 +5,70 @@ import { Mat4 as Mat4_AS } from "../../assembly/Mat4";
 class Mat4 extends Mat4_AS {
     constructor() {
         super();
-        console.log("HELLO FROM Mat4 AS JS")
     }
+
+    getEulerAngles(eulers) {
+        if (eulers === undefined) {
+            eulers = new Vec3();
+        }
+        return Mat4_AS.prototype.getEulerAngles.call(this, eulers);
+    }
+    
+    getScale(scale) {
+        if (scale === undefined) {
+            scale = new Vec3();
+        }
+        return Mat4_AS.prototype.getScale.call(this, scale);
+    }
+    
+    getTranslation(t) {
+        if (t === undefined) {
+            t = new Vec3();
+        }
+        return Mat4_AS.prototype.getTranslation.call(this, t);
+    }
+
+    getX(x) {
+        if (x === undefined) {
+            x = new Vec3();
+        }
+        return Mat4_AS.prototype.getX.call(this, x);
+    }
+
+    getY(y) {
+        if (y === undefined) {
+            y = new Vec3();
+        }
+        return Mat4_AS.prototype.getY.call(this, y);
+    }
+
+    getZ(z) {
+        if (z === undefined) {
+            z = new Vec3();
+        }
+        return Mat4_AS.prototype.getZ.call(this, z);
+    }
+
+    transformPoint(vec, res) {
+        if (res === undefined) {
+            res = new Vec3();
+        }
+        return Mat4_AS.prototype.transformPoint.call(this, vec, res);
+    }
+
+    transformVec4(vec, res) {
+        if (res === undefined) {
+            res = new Vec3();
+        }
+        return Mat4_AS.prototype.transformVec4.call(this, vec, res);
+    }
+
+    transformVector(vec, res) {
+        if (res === undefined) {
+            res = new Vec3();
+        }
+        return Mat4_AS.prototype.transformVector.call(this, vec, res);
+    };
 
     set(src: any) {
         this.m0 = src[0];
@@ -29,207 +91,111 @@ class Mat4 extends Mat4_AS {
     }
 }
 
-//Mat4.prototype.add = function (rhs) {
-//    mat4_add(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.add2 = function (lhs, rhs) {
-//    mat4_add2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.clone = function () {
-//    var ptr = mat4_clone(this.ptr);
-//    var tmp = Mat4.wrap(ptr);
-//    return tmp;
-//};
-//
-//Mat4.prototype.copy = function (rhs) {
-//    mat4_copy(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.equals = function (rhs) {
-//    return !!mat4_equals(this.ptr, rhs.ptr);
-//};
-//
-//Mat4.prototype.getEulerAngles = function (eulers) {
-//    if (eulers === undefined) {
-//        eulers = new Vec3();
-//    }
-//    mat4_getEulerAngles(this.ptr, eulers.ptr);
-//    return eulers;
-//};
-//
-//Mat4.prototype.getScale = function (scale) {
-//    if (scale === undefined) {
-//        scale = new Vec3();
-//    }
-//    mat4_getScale(this.ptr, scale.ptr);
-//    return scale;
-//};
-//
-//Mat4.prototype.getTranslation = function (t) {
-//    if (t === undefined) {
-//        t = new Vec3();
-//    }
-//    mat4_getTranslation(this.ptr, t.ptr);
-//    return t;
-//};
-//
-//Mat4.prototype.getX = function (x) {
-//    if (x === undefined) {
-//        x = new Vec3();
-//    }
-//    mat4_getX(this.ptr, x.ptr);
-//    return x;
-//};
-//
-//Mat4.prototype.getY = function (y) {
-//    if (y === undefined) {
-//        y = new Vec3();
-//    }
-//    mat4_getY(this.ptr, y.ptr);
-//    return y;
-//};
-//
-//Mat4.prototype.getZ = function (z) {
-//    if (z === undefined) {
-//        z = new Vec3();
-//    }
-//    mat4_getZ(this.ptr, z.ptr);
-//    return z;
-//};
-//
-//Mat4.prototype.invert = function () {
-//    mat4_invert(this.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.invertTo3x3 = function (mat3) {
-//    mat4_invertTo3x3(this.ptr, mat3.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.isIdentity = function () {
-//    return !!mat4_isIdentity(this.ptr);
-//};
-//
-//Mat4.prototype.mul = function (rhs) {
-//    mat4_mul(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.mul2 = function (lhs, rhs) {
-//    mat4_mul2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.mulAffine2 = function (lhs, rhs) {
-//    mat4_mulAffine2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.setFromAxisAngle = function (axis, angle) {
-//    mat4_setFromAxisAngle(this.ptr, axis.ptr, angle);
-//    return this;
-//};
-//
-//Mat4.prototype.setFromEulerAngles = function (ex, ey, ez) {
-//    mat4_setFromEulerAngles(this.ptr, ex, ey, ez);
-//    return this;
-//};
-//
-//Mat4.prototype.setFrustum = function (left, right, bottom, top, znear, zfar) {
-//    mat4_setFrustum(this.ptr, left, right, bottom, top, znear, zfar);
-//    return this;
-//};
-//
-//Mat4.prototype.setIdentity = function () {
-//    mat4_setIdentity(this.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.setLookAt = function (position, target, up) {
-//    mat4_setLookAt(this.ptr, position.ptr, target.ptr, up.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.setOrtho = function (left, right, bottom, top, near, far) {
-//    mat4_setOrtho(this.ptr, left, right, bottom, top, near, far);
-//    return this;
-//};
-//
-//Mat4.prototype.setPerspective = function (fov, aspect, znear, zfar, fovIsHorizontal) {
-//    mat4_setPerspective(this.ptr, fov, aspect, znear, zfar, fovIsHorizontal);
-//    return this;
-//};
-//
-//Mat4.prototype.setScale = function (x, y, z) {
-//    mat4_setScale(this.ptr, x, y, z);
-//    return this;
-//};
-//
-//Mat4.prototype.setTRS = function (t, r, s) {
-//    mat4_setTRS(this.ptr, t.ptr, r.ptr, s.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.setTranslate = function (x, y, z) {
-//    mat4_setTranslate(this.ptr, x, y, z);
-//    return this;
-//};
-//
-//Mat4.prototype.transformPoint = function (vec, res) {
-//    if (res === undefined) {
-//        res = new Vec3();
-//    }
-//    mat4_transformPoint(this.ptr, vec.ptr, res.ptr);
-//    return res;
-//};
-//
-//Mat4.prototype.transformVec4 = function (vec, res) {
-//    if (res === undefined) {
-//        res = new Vec3();
-//    }
-//    mat4_transformVec4(this.ptr, vec.ptr, res.ptr);
-//    return res;
-//};
-//
-//Mat4.prototype.transformVector = function (vec, res) {
-//    if (res === undefined) {
-//        res = new Vec3();
-//    }
-//    mat4_transformVector(this.ptr, vec.ptr, res.ptr);
-//    return res;
-//};
-//
-//Mat4.prototype.transpose = function () {
-//    mat4_transpose(this.ptr);
-//    return this;
-//};
-//
-//Mat4.prototype.set = function (src) {
-//    var dst = this.data;
-//    dst[0] = src[0];
-//    dst[1] = src[1];
-//    dst[2] = src[2];
-//    dst[3] = src[3];
-//    dst[4] = src[4];
-//    dst[5] = src[5];
-//    dst[6] = src[6];
-//    dst[7] = src[7];
-//    dst[8] = src[8];
-//    dst[9] = src[9];
-//    dst[10] = src[10];
-//    dst[11] = src[11];
-//    dst[12] = src[12];
-//    dst[13] = src[13];
-//    dst[14] = src[14];
-//    dst[15] = src[15];
-//    return this;
-//};
+Object.defineProperty(Mat4.prototype, 'data', {
+    get: function () {
+        return new Proxy(this, {
+            get: function(target, p) {
+                if (typeof p === "symbol") {
+                    return function*() {
+                        yield target.m0;
+                        yield target.m1;
+                        yield target.m2;
+                        yield target.m3;
+                        yield target.m4;
+                        yield target.m5;
+                        yield target.m6;
+                        yield target.m7;
+                        yield target.m8;
+                        yield target.m9;
+                        yield target.m10;
+                        yield target.m11;
+                        yield target.m12;
+                        yield target.m13;
+                        yield target.m14;
+                        yield target.m15;
+                    }
+                } else {
+                    try {
+                        switch (parseInt(p)) {
+                            case 0: return target.m0;
+                            case 1: return target.m1;
+                            case 2: return target.m2;
+                            case 3: return target.m3;
+                            case 4: return target.m4;
+                            case 5: return target.m5;
+                            case 6: return target.m6;
+                            case 7: return target.m7;
+                            case 8: return target.m8;
+                            case 9: return target.m9;
+                            case 10: return target.m10;
+                            case 11: return target.m11;
+                            case 12: return target.m12;
+                            case 13: return target.m13;
+                            case 14: return target.m14;
+                            case 15: return target.m15;
+                        } 
+                    } catch (e) {
+                        console.log("e", e, "p", p)
+                    }
+                }   
+                return 0;
+            },
+            set: function(target, p, value) {
+                switch (parseInt(p)) {
+                    case 0:
+                        target.m0 = value;
+                        break;
+                    case 1:
+                        target.m1 = value;
+                        break;
+                    case 2:
+                        target.m2 = value;
+                        break;
+                    case 3:
+                        target.m3 = value;
+                        break;
+                    case 4:
+                        target.m4 = value;
+                        break;
+                    case 5:
+                        target.m5 = value;
+                        break;
+                    case 6:
+                        target.m6 = value;
+                        break;
+                    case 7:
+                        target.m7 = value;
+                        break;
+                    case 8:
+                        target.m8 = value;
+                        break;
+                    case 9:
+                        target.m9 = value;
+                        break;
+                    case 10:
+                        target.m10 = value;
+                        break;
+                    case 11:
+                        target.m11 = value;
+                        break;
+                    case 12:
+                        target.m12 = value;
+                        break;
+                    case 13:
+                        target.m13 = value;
+                        break;
+                    case 14:
+                        target.m14 = value;
+                        break;
+                    case 15:
+                        target.m15 = value;
+                        break;
+                }
+                return true;
+            }
+        });
+    }
+});
 
 Mat4.prototype.toString = function () {
     var i, t;

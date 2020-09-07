@@ -3,6 +3,7 @@ import { createFilter } from '@rollup/pluginutils';
 import cleanup from 'rollup-plugin-cleanup';
 import { version } from './package.json';
 import Preprocessor from 'preprocessor';
+import typescript from 'rollup-plugin-typescript';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -101,6 +102,28 @@ function importAssemblyScriptInstead(options) {
             code = code.replace(/math\/vec2\.js/g, "math_assemblyscript/vec2.js");
             code = code.replace(/math\/vec3\.js/g, "math_assemblyscript/vec3.js");
             code = code.replace(/math\/vec4\.js/g, "math_assemblyscript/vec4.js");
+            return {
+                code: code,
+                map: { mappings: '' }
+            };
+        }
+    };
+}
+
+function importAssemblyScriptAsJavaScriptInstead(options) {
+    const filter = createFilter([
+        '**/*.js'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+            code = code.replace(/math\/quat\.js/g, "math_assemblyscript_js/Quat.js");
+            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript_js/Mat3.js");
+            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript_js/Mat4.js");
+            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript_js/Vec2.js");
+            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript_js/Vec3.js");
+            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript_js/Vec4.js");
             return {
                 code: code,
                 map: { mappings: '' }
@@ -235,6 +258,35 @@ var target_wasm = {
     ]
 };
 
+var target_as_js = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.assemblyscriptjs.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(false),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs(),
+        typescript(),
+        importAssemblyScriptAsJavaScriptInstead()
+    ]
+};
+
 var targets = [
     target_release,
     target_debug,
@@ -245,6 +297,13 @@ var targets = [
 if (process.env.AssemblyScript) {
     targets = [
         target_wasm,
+        target_extras
+    ];
+}
+
+if (process.env.AssemblyScriptJS) {
+    targets = [
+        target_as_js,
         target_extras
     ];
 }

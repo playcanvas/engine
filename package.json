@@ -57,12 +57,17 @@
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.7",
     "uglify-js": "^3.10.1",
-    "assemblyscript": "^0.14.9"
+    "assemblyscript": "^0.14.9",
+    "awesome-typescript-loader": "^5.2.1",
+    "rollup-plugin-typescript": "^1.0.1",
+    "tslib": "^2.0.1"
   },
   "scripts": {
     "build": "rollup -c",
     "build:all": "npm run build && npm run closure",
     "build:as": "npm run asbuild:optimized && rollup -c --environment AssemblyScript",
+    "build:asjs": "npm run asbuild:optimized && npm run build:rollup:asjs",
+    "build:rollup:asjs": "rollup -c --environment AssemblyScriptJS",
     "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint --ext .js examples extras src rollup.config.js",
@@ -76,6 +81,7 @@
     "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz",
     "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --measure --runtime none --debug",
-    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert"
+    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert",
+    "asbuild:js": "asc assembly/index.ts --jsFile build/optimized.js -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert"
   }
 }

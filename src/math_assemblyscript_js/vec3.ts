@@ -3,7 +3,6 @@ import { Vec3 as Vec3_AS } from "../../assembly/Vec3";
 
 class Vec3 extends Vec3_AS {
     constructor(x, y, z) {
-        console.log("HELLO FROM Vec3 AS JS");
         if (x && x.length === 3) {
             super(
                 x[0],
@@ -19,92 +18,6 @@ class Vec3 extends Vec3_AS {
         }
     }
 }
-
-//Vec3.prototype.add = function (rhs) {
-//    vec3_add(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.add2 = function (lhs, rhs) {
-//    vec3_add2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.clone = function () {
-//    var tmp = vec3_clone(this.ptr);
-//    return Vec3.wrap(tmp);
-//};
-//
-//Vec3.prototype.copy = function (rhs) {
-//    vec3_copy(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.cross = function (lhs, rhs) {
-//    vec3_cross(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.dot = function (rhs) {
-//    return vec3_dot(this.ptr, rhs.ptr);
-//};
-//
-//Vec3.prototype.equals = function (rhs) {
-//    return !!vec3_equals(this.ptr, rhs.ptr);
-//};
-//
-//Vec3.prototype.length = function () {
-//    return vec3_length(this.ptr);
-//};
-//
-//Vec3.prototype.lengthSq = function () {
-//    return vec3_lengthSq(this.ptr);
-//};
-//
-//Vec3.prototype.lerp = function (lhs, rhs, alpha) {
-//    vec3_lerp(this.ptr, lhs.ptr, rhs.ptr, alpha);
-//    return this;
-//};
-//
-//Vec3.prototype.mul = function (rhs) {
-//    vec3_mul(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.mul2 = function (lhs, rhs) {
-//    vec3_mul2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.normalize = function () {
-//    vec3_normalize(this.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.project = function (rhs) {
-//    vec3_project(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.scale = function (scalar) {
-//    vec3_scale(this.ptr, scalar);
-//    return this;
-//};
-//
-//Vec3.prototype.set = function (x, y, z) {
-//    vec3_set(this.ptr, x, y, z);
-//    return this;
-//};
-//
-//Vec3.prototype.sub = function (rhs) {
-//    vec3_sub(this.ptr, rhs.ptr);
-//    return this;
-//};
-//
-//Vec3.prototype.sub2 = function (lhs, rhs) {
-//    vec3_sub2(this.ptr, lhs.ptr, rhs.ptr);
-//    return this;
-//};
 
 Vec3.prototype.toString = function () {
     return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
