@@ -172,6 +172,18 @@ Object.assign(AnimComponentBinder.prototype, {
             };
         }
 
+        // when animating individual members of vec/colour/quaternion, we must also invoke the
+        // object's setter. this is required by some component properties which have custom
+        // handlers which propagate the changes correctly.
+        if ([Vec2, Vec3, Vec4, Color, Quat].indexOf(obj.constructor) !== -1 && path.length > 1) {
+            var parent = path.length > 2 ? this._resolvePath(object, path.slice(0, -1)) : object;
+            var objKey = path[path.length - 2];
+            return function (values) {
+                obj[key] = packFunc(values);
+                parent[objKey] = obj;
+            };
+        }
+
         // otherwise set the property directly (float, boolean)
         return function (values) {
             obj[key] = packFunc(values);
