@@ -59,9 +59,13 @@ global.window = {
     }
 };
 
-async function load_wasm() {
-    var wasmFile = fs.readFileSync(path.join(__dirname, "../build/untouched.wasm"));
-    var wasmFile = fs.readFileSync(path.join(__dirname, "../build/optimized.wasm"));
+function requireUncached(module) {
+    delete require.cache[require.resolve(module)];
+    return require(module);
+}
+
+async function load_wasm(filename) {
+    var wasmFile = fs.readFileSync(path.join(__dirname, filename));
     imports = {};
     var module = await Loader.instantiateBuffer(wasmFile, imports);
     window.module = module;
@@ -78,19 +82,38 @@ async function load_wasm() {
 }
 
 async function main() {
-    await load_wasm();
+    await load_wasm("../build/optimized_32.wasm");
     window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
     window.module.updateDataViews();
     global.instance = window.instance;
-    global.pc = require("../build/playcanvas.assemblyscript");
+    global.pc = require("../build/playcanvas.assemblyscript_32");
     
-    require("./math/test_mat4")
-    require("./math/test_quat")
-    require("./math/test_vec2")
-    require("./math/test_vec3")
-    require("./math/test_vec4")
+    requireUncached("./math/test_mat4")
+    requireUncached("./math/test_quat")
+    requireUncached("./math/test_vec2")
+    requireUncached("./math/test_vec3")
+    requireUncached("./math/test_vec4")
 
-    console.log(`${counter} tests (${success} succeeded, ${error} failed)`);
+    console.log(`32bit: ${counter} tests (${success} succeeded, ${error} failed)`);
+
+
+    counter = 0;
+    success = 0;
+    error = 0;
+
+    await load_wasm("../build/optimized_64.wasm");
+    window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
+    window.module.updateDataViews();
+    global.instance = window.instance;
+    global.pc = require("../build/playcanvas.assemblyscript_64");
+    
+    requireUncached("./math/test_mat4")
+    requireUncached("./math/test_quat")
+    requireUncached("./math/test_vec2")
+    requireUncached("./math/test_vec3")
+    requireUncached("./math/test_vec4")
+
+    console.log(`64bit: ${counter} tests (${success} succeeded, ${error} failed)`);
 }
 
 main();
