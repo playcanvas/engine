@@ -58,9 +58,13 @@ Mat4.wrap = function (ptr) {
 };
 
 Mat4.prototype.assignDataView = function () {
-    // this.wrap = assemblyscript.module.Mat4.wrap(this.ptr)
+    // #ifdef X32
     this.data = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 16);
-    // this.data.ptr = this.ptr;
+    // #endif
+
+    // #ifdef X64
+    this.data = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 16);
+    // #endif
 };
 
 Mat4.prototype.add = function (rhs) {

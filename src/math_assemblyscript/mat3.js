@@ -35,8 +35,13 @@ Mat3.wrap = function (ptr) {
 };
 
 Mat3.prototype.assignDataView = function () {
-    // this.wrap = assemblyscript.module.Mat3.wrap(this.ptr)
+    // #ifdef X32
     this.data = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 9);
+    // #endif
+
+    // #ifdef X64
+    this.data = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 9);
+    // #endif
 };
 
 Mat3.prototype.add = function (rhs) {

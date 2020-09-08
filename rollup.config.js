@@ -230,11 +230,11 @@ var target_extras = {
     ]
 };
 
-var target_wasm = {
+var target_assemblyscript_32 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
-        file: 'build/playcanvas.assemblyscript.js',
+        file: 'build/playcanvas.assemblyscript_32.js',
         format: 'umd',
         indent: '\t',
         name: 'pc'
@@ -243,7 +243,8 @@ var target_wasm = {
         preprocessor({
             PROFILER: false,
             DEBUG: false,
-            RELEASE: true
+            RELEASE: true,
+            X32: true
         }),
         shaderChunks(false),
         replace({
@@ -258,7 +259,36 @@ var target_wasm = {
     ]
 };
 
-var target_as_js = {
+var target_assemblyscript_64 = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.assemblyscript_64.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true,
+            X64: true
+        }),
+        shaderChunks(false),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs(),
+        importAssemblyScriptInstead()
+    ]
+};
+
+var target_assemblyscript_js = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -294,16 +324,23 @@ var targets = [
     target_extras
 ];
 
-if (process.env.AssemblyScript) {
+if (process.env.AssemblyScript32) {
     targets = [
-        target_wasm,
+        target_assemblyscript_32,
+        target_extras
+    ];
+}
+
+if (process.env.AssemblyScript64) {
+    targets = [
+        target_assemblyscript_64,
         target_extras
     ];
 }
 
 if (process.env.AssemblyScriptJS) {
     targets = [
-        target_as_js,
+        target_assemblyscript_js,
         target_extras
     ];
 }
