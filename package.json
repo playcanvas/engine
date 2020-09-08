@@ -33,7 +33,7 @@
     "examples/lib/*",
     "src/polyfill/*",
     "examples/animation/Loader.js",
-    "examples/animation/test.js"
+    "src/math_assemblyscript/*"
   ],
   "devDependencies": {
     "chai": "^4.2.0",
