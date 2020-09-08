@@ -1,10 +1,10 @@
 export class Vec4 {
-    x: f32;
-    y: f32;
-    z: f32;
-    w: f32;
+    x: number;
+    y: number;
+    z: number;
+    w: number;
 
-    constructor(x: f32, y: f32, z: f32, w: f32) {
+    constructor(x: number, y: number, z: number, w: number) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -41,7 +41,7 @@ export class Vec4 {
         return this;
     }
 
-    dot(rhs: Vec4): f32 {
+    dot(rhs: Vec4): number {
         return this.x * rhs.x + this.y * rhs.y + this.z * rhs.z + this.w * rhs.w;
     }
 
@@ -49,15 +49,15 @@ export class Vec4 {
         return this.x === rhs.x && this.y === rhs.y && this.z === rhs.z && this.w === rhs.w;
     }
 
-    length(): f32 {
-        return Mathf.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+    length(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
     }
 
-    lengthSq(): f32 {
+    lengthSq(): number {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
     }
 
-    lerp(lhs: Vec4, rhs: Vec4, alpha: f32): Vec4 {
+    lerp(lhs: Vec4, rhs: Vec4, alpha: number): Vec4 {
         this.x = lhs.x + alpha * (rhs.x - lhs.x);
         this.y = lhs.y + alpha * (rhs.y - lhs.y);
         this.z = lhs.z + alpha * (rhs.z - lhs.z);
@@ -84,7 +84,7 @@ export class Vec4 {
     normalize(): Vec4 {
         var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         if (lengthSq > 0.0) {
-            var invLength: f32 = 1.0 / Mathf.sqrt(lengthSq);
+            var invLength: number = 1.0 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
             this.z *= invLength;
@@ -93,7 +93,7 @@ export class Vec4 {
         return this;
     }
 
-    scale(scalar: f32): Vec4 {
+    scale(scalar: number): Vec4 {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
@@ -101,7 +101,7 @@ export class Vec4 {
         return this;
     }
 
-    set(x: f32, y: f32, z: f32, w: f32): Vec4 {
+    set(x: number, y: number, z: number, w: number): Vec4 {
         this.x = x;
         this.y = y;
         this.z = z;

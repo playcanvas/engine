@@ -3,12 +3,12 @@ import {Mat4} from "./Mat4";
 import {pc_math} from "./Math";
 
 export class Quat {
-    x: f32;
-    y: f32;
-    z: f32;
-    w: f32;
+    x: number;
+    y: number;
+    z: number;
+    w: number;
 
-    constructor(x: f32, y: f32, z: f32, w: f32) {
+    constructor(x: number, y: number, z: number, w: number) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -38,13 +38,13 @@ export class Quat {
         return this.x == rhs.x && this.y == rhs.y && this.z == rhs.z && this.w == rhs.w;
     }
 
-    getAxisAngle(axis: Vec3): f32 {
-        var rad = Mathf.acos(this.w) * 2;
-        var s = Mathf.sin(rad / 2);
+    getAxisAngle(axis: Vec3): number {
+        var rad = Math.acos(this.w) * 2;
+        var s = Math.sin(rad / 2);
         // If s is zero, return any axis (no rotation - axis does not matter)
-        let ax: f32 = 1;
-        let ay: f32 = 0;
-        let az: f32 = 0;
+        let ax: number = 1;
+        let ay: number = 0;
+        let az: number = 0;
         if (s !== 0) {
             s = 1.0 / s;
             ax = this.x * s;
@@ -65,28 +65,28 @@ export class Quat {
     }
 
     getEulerAngles(eulers: Vec3): Vec3 {
-        var x: f32;
-        var y: f32;
-        var z: f32;
+        var x: number;
+        var y: number;
+        var z: number;
 
         var qx = this.x;
         var qy = this.y;
         var qz = this.z;
         var qw = this.w;
 
-        var a2: f32 = 2.0 * (qw * qy - qx * qz);
+        var a2: number = 2.0 * (qw * qy - qx * qz);
         if (a2 <= -0.99999) {
-            x = 2 * Mathf.atan2(qx, qw);
-            y = -Mathf.PI / 2;
+            x = 2 * Math.atan2(qx, qw);
+            y = -Math.PI / 2;
             z = 0;
         } else if (a2 >= 0.99999) {
-            x = 2 * Mathf.atan2(qx, qw);
-            y = Mathf.PI / 2;
+            x = 2 * Math.atan2(qx, qw);
+            y = Math.PI / 2;
             z = 0;
         } else {
-            x = Mathf.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
-            y = Mathf.asin(a2);
-            z = Mathf.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+            x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
+            y = Math.asin(a2);
+            z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
         }
 
         return eulers.set(x, y, z).scale(pc_math.RAD_TO_DEG);
@@ -96,11 +96,11 @@ export class Quat {
         return this.conjugate().normalize();
     }
 
-    length(): f32 {
-        return Mathf.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+    length(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
     }
 
-    lengthSq(): f32 {
+    lengthSq(): number {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
     }
 
@@ -157,7 +157,7 @@ export class Quat {
         return this;
     }
 
-    set(x: f32, y: f32, z: f32, w: f32): Quat {
+    set(x: number, y: number, z: number, w: number): Quat {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -165,14 +165,14 @@ export class Quat {
         return this;
     }
 
-    setFromAxisAngle(axis: Vec3, angle: f32): Quat {
+    setFromAxisAngle(axis: Vec3, angle: number): Quat {
         angle *= 0.5 * pc_math.DEG_TO_RAD;
 
-        //var sa = Mathf.sin(angle);
-        //var ca = Mathf.cos(angle);
-        Mathf.sincos(angle);
-        var sa = Mathf.sincos_sin;
-        var ca = Mathf.sincos_cos;
+        //var sa = Math.sin(angle);
+        //var ca = Math.cos(angle);
+        Math.sincos(angle);
+        var sa = Math.sincos_sin;
+        var ca = Math.sincos_cos;
 
         this.x = sa * axis.x;
         this.y = sa * axis.y;
@@ -182,27 +182,27 @@ export class Quat {
         return this;
     }
 
-    setFromEulerAngles(ex: f32, ey: f32, ez: f32): Quat {
-        var halfToRad: f32 = 0.5 * pc_math.DEG_TO_RAD;
+    setFromEulerAngles(ex: number, ey: number, ez: number): Quat {
+        var halfToRad: number = 0.5 * pc_math.DEG_TO_RAD;
         ex *= halfToRad;
         ey *= halfToRad;
         ez *= halfToRad;
 
-        //var sx = Mathf.sin(ex);
-        //var cx = Mathf.cos(ex);
-        //var sy = Mathf.sin(ey);
-        //var cy = Mathf.cos(ey);
-        //var sz = Mathf.sin(ez);
-        //var cz = Mathf.cos(ez);
-        Mathf.sincos(ex);
-        var sx = Mathf.sincos_sin;
-        var cx = Mathf.sincos_cos;
-        Mathf.sincos(ey);
-        var sy = Mathf.sincos_sin;
-        var cy = Mathf.sincos_cos;
-        Mathf.sincos(ez);
-        var sz = Mathf.sincos_sin;
-        var cz = Mathf.sincos_cos;
+        //var sx = Math.sin(ex);
+        //var cx = Math.cos(ex);
+        //var sy = Math.sin(ey);
+        //var cy = Math.cos(ey);
+        //var sz = Math.sin(ez);
+        //var cz = Math.cos(ez);
+        Math.sincos(ex);
+        var sx = Math.sincos_sin;
+        var cx = Math.sincos_cos;
+        Math.sincos(ey);
+        var sy = Math.sincos_sin;
+        var cy = Math.sincos_cos;
+        Math.sincos(ez);
+        var sz = Math.sincos_sin;
+        var cz = Math.sincos_cos;
 
         this.x = sx * cy * cz - cx * sy * sz;
         this.y = cx * sy * cz + sx * cy * sz;
@@ -213,11 +213,11 @@ export class Quat {
     }
 
     setFromMat4(m_: Mat4): Quat {
-        var lx: f32;
-        var ly: f32;
-        var lz: f32;
-        var s: f32;
-        var rs: f32;
+        var lx: number;
+        var ly: number;
+        var lz: number;
+        var s: number;
+        var rs: number;
         
         // Cache matrix values for super-speed
         var m00 = m_.m0;
@@ -234,15 +234,15 @@ export class Quat {
         lx = m00 * m00 + m01 * m01 + m02 * m02;
         if (lx === 0)
             return this;
-        lx = 1 / Mathf.sqrt(lx);
+        lx = 1 / Math.sqrt(lx);
         ly = m10 * m10 + m11 * m11 + m12 * m12;
         if (ly === 0)
             return this;
-        ly = 1 / Mathf.sqrt(ly);
+        ly = 1 / Math.sqrt(ly);
         lz = m20 * m20 + m21 * m21 + m22 * m22;
         if (lz === 0)
             return this;
-        lz = 1 / Mathf.sqrt(lz);
+        lz = 1 / Math.sqrt(lz);
         
         m00 *= lx;
         m01 *= lx;
@@ -258,7 +258,7 @@ export class Quat {
 
         var tr = m00 + m11 + m22;
         if (tr >= 0.0) {
-            s = Mathf.sqrt(tr + 1.0);
+            s = Math.sqrt(tr + 1.0);
             this.w = s * 0.5;
             s = 0.5 / s;
             this.x = (m12 - m21) * s;
@@ -269,7 +269,7 @@ export class Quat {
                 if (m00 > m22) {
                     // XDiagDomMatrix
                     rs = (m00 - (m11 + m22)) + 1.0;
-                    rs = Mathf.sqrt(rs);
+                    rs = Math.sqrt(rs);
 
                     this.x = rs * 0.5;
                     rs = 0.5 / rs;
@@ -279,7 +279,7 @@ export class Quat {
                 } else {
                     // ZDiagDomMatrix
                     rs = (m22 - (m00 + m11)) + 1.0;
-                    rs = Mathf.sqrt(rs);
+                    rs = Math.sqrt(rs);
 
                     this.z = rs * 0.5;
                     rs = 0.5 / rs;
@@ -290,7 +290,7 @@ export class Quat {
             } else if (m11 > m22) {
                 // YDiagDomMatrix
                 rs = (m11 - (m22 + m00)) + 1.0;
-                rs = Mathf.sqrt(rs);
+                rs = Math.sqrt(rs);
 
                 this.y = rs * 0.5;
                 rs = 0.5 / rs;
@@ -300,7 +300,7 @@ export class Quat {
             } else {
                 // ZDiagDomMatrix
                 rs = (m22 - (m00 + m11)) + 1.0;
-                rs = Mathf.sqrt(rs);
+                rs = Math.sqrt(rs);
 
                 this.z = rs * 0.5;
                 rs = 0.5 / rs;
@@ -313,7 +313,7 @@ export class Quat {
         return this;
     }
 
-    slerp(lhs: Quat, rhs: Quat, alpha: f32): Quat {
+    slerp(lhs: Quat, rhs: Quat, alpha: number): Quat {
         // Algorithm sourced from:
         // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
 
@@ -338,7 +338,7 @@ export class Quat {
         }
 
         // If lhs == rhs or lhs == -rhs then theta == 0 and we can return lhs
-        if (Mathf.abs(cosHalfTheta) >= 1.0) {
+        if (Math.abs(cosHalfTheta) >= 1.0) {
             this.w = lw;
             this.x = lx;
             this.y = ly;
@@ -347,12 +347,12 @@ export class Quat {
         }
 
         // Calculate temporary values.
-        var halfTheta = Mathf.acos(cosHalfTheta);
-        var sinHalfTheta = Mathf.sqrt(1.0 - cosHalfTheta * cosHalfTheta);
+        var halfTheta = Math.acos(cosHalfTheta);
+        var sinHalfTheta = Math.sqrt(1.0 - cosHalfTheta * cosHalfTheta);
 
         // If theta = 180 degrees then result is not fully defined
         // we could rotate around any axis normal to qa or qb
-        if (Mathf.abs(sinHalfTheta) < 0.001) {
+        if (Math.abs(sinHalfTheta) < 0.001) {
             this.w = (lw * 0.5 + rw * 0.5);
             this.x = (lx * 0.5 + rx * 0.5);
             this.y = (ly * 0.5 + ry * 0.5);
@@ -361,8 +361,8 @@ export class Quat {
         }
 
         var angle = alpha * halfTheta;
-        var ratioA = Mathf.sin(halfTheta - angle) / sinHalfTheta;
-        var ratioB = Mathf.sin(angle) / sinHalfTheta;
+        var ratioA = Math.sin(halfTheta - angle) / sinHalfTheta;
+        var ratioB = Math.sin(angle) / sinHalfTheta;
 
         // Calculate Quaternion.
         this.w = (lw * ratioA + rw * ratioB);

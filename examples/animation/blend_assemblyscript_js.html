@@ -19,6 +19,13 @@
 
     <!-- The script -->
     <script>
+        // Little polyfill for AssemblyScript NativeMath/NativeMathf:
+        Math.sincos_sin = 0;
+        Math.sincos_cos = 0;
+        Math.sincos = function (x) {
+            Math.sincos_sin = Math.sin(x);
+            Math.sincos_cos = Math.cos(x);
+        }
 
         function fetch_script(url) {
             return new Promise(function(resolve, reject) {
@@ -35,71 +42,10 @@
             });
         }
 
-
         // Global variables
         var canvas;
         var app;
         var entity;
-
-    var globalScope = window;
-    globalScope.Mathf = {};
-
-    Object.defineProperties(globalScope["Mathf"], {
-        sincos_sin: { value: 0.0, writable: true },
-        sincos_cos: { value: 0.0, writable: true },
-        //signbit: {
-        //    value: function signbit(x) {
-        //        F64[0] = x; return Boolean((U64[1] >>> 31) & (x == x));
-        //    }
-        //},
-        sincos: {
-            value: function sincos(x) {
-                this.sincos_sin = Math.sin(x);
-                this.sincos_cos = Math.cos(x);
-            }
-        },
-        exp2: {
-            value: function (x) {
-                return Math.pow(2, x);
-            }
-        },
-        tan: {
-            value: function (x) {
-                return Math.tan(x);
-            }
-        },
-        sqrt: {
-            value: function (x) {
-                return Math.sqrt(x);
-            }
-        },
-        abs: {
-            value: function (x) {
-                return Math.abs(x);
-            }
-        },
-        acos: {
-            value: function (x) {
-                return Math.acos(x);
-            }
-        },
-        sin: {
-            value: function (x) {
-                return Math.sin(x);
-            }
-        },
-        asin: {
-            value: function (x) {
-                return Math.asin(x);
-            }
-        },
-        atan2: {
-            value: function (x, y) {
-                return Math.atan2(x, y);
-            }
-        }
-    });
-    Mathf.PI = Math.PI;
 
         async function main() {            
             await fetch_script("../../build/playcanvas.assemblyscriptjs.js");

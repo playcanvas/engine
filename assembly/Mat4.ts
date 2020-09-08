@@ -5,22 +5,22 @@ import {Quat} from "./Quat";
 import {pc_math} from "./Math"
 
 export class Mat4 {
-    m0: f32;
-    m1: f32;
-    m2: f32;
-    m3: f32;
-    m4: f32;
-    m5: f32;
-    m6: f32;
-    m7: f32;
-    m8: f32;
-    m9: f32;
-    m10: f32;
-    m11: f32;
-    m12: f32;
-    m13: f32;
-    m14: f32;
-    m15: f32;
+    m0: number;
+    m1: number;
+    m2: number;
+    m3: number;
+    m4: number;
+    m5: number;
+    m6: number;
+    m7: number;
+    m8: number;
+    m9: number;
+    m10: number;
+    m11: number;
+    m12: number;
+    m13: number;
+    m14: number;
+    m15: number;
 
     constructor() {
         this.m0 = 1;
@@ -120,8 +120,8 @@ export class Mat4 {
     }
 
     getEulerAngles(eulers: Vec3): Vec3 {
-        var x: f32;
-        var z: f32;
+        var x: number;
+        var z: number;
 
         var scale = PreallocatedVec3.getEulerAngles_scale;
 
@@ -130,22 +130,22 @@ export class Mat4 {
         var sy = scale.y;
         var sz = scale.z;
 
-        var y = Mathf.asin(-this.m2 / sx);
-        var halfPi = Mathf.PI * 0.5;
+        var y = Math.asin(-this.m2 / sx);
+        var halfPi = Math.PI * 0.5;
 
         if (y < halfPi) {
             if (y > -halfPi) {
-                x = Mathf.atan2(this.m6 / sy, this.m10 / sz);
-                z = Mathf.atan2(this.m1 / sx, this.m0 / sx);
+                x = Math.atan2(this.m6 / sy, this.m10 / sz);
+                z = Math.atan2(this.m1 / sx, this.m0 / sx);
             } else {
                 // Not a unique solution
                 z = 0;
-                x = -Mathf.atan2(this.m4 / sy, this.m5 / sy);
+                x = -Math.atan2(this.m4 / sy, this.m5 / sy);
             }
         } else {
             // Not a unique solution
             z = 0;
-            x = Mathf.atan2(this.m4 / sy, this.m5 / sy);
+            x = Math.atan2(this.m4 / sy, this.m5 / sy);
         }
 
         return eulers.set(x, y, z).scale(pc_math.RAD_TO_DEG);
@@ -198,24 +198,24 @@ export class Mat4 {
         var a32 = this.m14;
         var a33 = this.m15;
 
-        var b00: f32 = a00 * a11 - a01 * a10;
-        var b01: f32 = a00 * a12 - a02 * a10;
-        var b02: f32 = a00 * a13 - a03 * a10;
-        var b03: f32 = a01 * a12 - a02 * a11;
-        var b04: f32 = a01 * a13 - a03 * a11;
-        var b05: f32 = a02 * a13 - a03 * a12;
-        var b06: f32 = a20 * a31 - a21 * a30;
-        var b07: f32 = a20 * a32 - a22 * a30;
-        var b08: f32 = a20 * a33 - a23 * a30;
-        var b09: f32 = a21 * a32 - a22 * a31;
-        var b10: f32 = a21 * a33 - a23 * a31;
-        var b11: f32 = a22 * a33 - a23 * a32;
+        var b00: number = a00 * a11 - a01 * a10;
+        var b01: number = a00 * a12 - a02 * a10;
+        var b02: number = a00 * a13 - a03 * a10;
+        var b03: number = a01 * a12 - a02 * a11;
+        var b04: number = a01 * a13 - a03 * a11;
+        var b05: number = a02 * a13 - a03 * a12;
+        var b06: number = a20 * a31 - a21 * a30;
+        var b07: number = a20 * a32 - a22 * a30;
+        var b08: number = a20 * a33 - a23 * a30;
+        var b09: number = a21 * a32 - a22 * a31;
+        var b10: number = a21 * a33 - a23 * a31;
+        var b11: number = a22 * a33 - a23 * a32;
 
-        var det: f32 = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+        var det: number = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
         if (det === 0) {
             this.setIdentity();
         } else {
-            var invDet: f32 = 1.0 / det;
+            var invDet: number = 1.0 / det;
             this.m0  = ( a11 * b11 - a12 * b10 + a13 * b09) * invDet;
             this.m1  = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
             this.m2  = ( a31 * b05 - a32 * b04 + a33 * b03) * invDet;
@@ -261,12 +261,12 @@ export class Mat4 {
         var a23 = -m9  * m0 + m1 * m8;
         var a33 =  m5  * m0 - m1 * m4;
 
-        var det: f32 = m0 * a11 + m1 * a12 + m2 * a13;
+        var det: number = m0 * a11 + m1 * a12 + m2 * a13;
         if (det === 0) { // no inverse
             return this;
         }
 
-        var idet: f32 = 1 / det;
+        var idet: number = 1 / det;
 
         res.m0 = idet * a11;
         res.m1 = idet * a21;
@@ -375,11 +375,11 @@ export class Mat4 {
      * @returns {pc.Mat4} Self for chaining.
      */
     mulAffine2(lhs: Mat4, rhs: Mat4): Mat4 {
-        var a00: f32, a01: f32, a02: f32,
-            a10: f32, a11: f32, a12: f32,
-            a20: f32, a21: f32, a22: f32,
-            a30: f32, a31: f32, a32: f32,
-            b0:  f32, b1:  f32, b2:  f32;
+        var a00: number, a01: number, a02: number,
+            a10: number, a11: number, a12: number,
+            a20: number, a21: number, a22: number,
+            a30: number, a31: number, a32: number,
+             b0: number,  b1: number,  b2: number;
 
         a00 = lhs.m0;
         a01 = lhs.m1;
@@ -429,20 +429,20 @@ export class Mat4 {
         return this;
     }
 
-    setFromAxisAngle(axis: Vec3, angle: f32): Mat4 {
+    setFromAxisAngle(axis: Vec3, angle: number): Mat4 {
         angle *= pc_math.DEG_TO_RAD;
 
-        var x: f32 = axis.x;
-        var y: f32 = axis.y;
-        var z: f32 = axis.z;
-        //var c: f32 = Mathf.cos(angle);
-        //var s: f32 = Mathf.sin(angle);
-        Mathf.sincos(angle);
-        var c: f32 = Mathf.sincos_cos;
-        var s: f32 = Mathf.sincos_sin;
-        var t: f32 = 1.0 - c;
-        var tx: f32 = t * x;
-        var ty: f32 = t * y;
+        var x: number = axis.x;
+        var y: number = axis.y;
+        var z: number = axis.z;
+        //var c: number = Math.cos(angle);
+        //var s: number = Math.sin(angle);
+        Math.sincos(angle);
+        var c: number = Math.sincos_cos;
+        var s: number = Math.sincos_sin;
+        var t: number = 1.0 - c;
+        var tx: number = t * x;
+        var ty: number = t * y;
 
         this.m0 = tx * x + c;
         this.m1 = tx * y + s * z;
@@ -468,27 +468,27 @@ export class Mat4 {
     // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
     // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
     // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
-    setFromEulerAngles(ex: f32, ey: f32, ez: f32): Mat4 {
+    setFromEulerAngles(ex: number, ey: number, ez: number): Mat4 {
         ex *= pc_math.DEG_TO_RAD;
         ey *= pc_math.DEG_TO_RAD;
         ez *= pc_math.DEG_TO_RAD;
 
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-        //var s1 = Mathf.sin(-ex);
-        //var c1 = Mathf.cos(-ex);
-        //var s2 = Mathf.sin(-ey);
-        //var c2 = Mathf.cos(-ey);
-        //var s3 = Mathf.sin(-ez);
-        //var c3 = Mathf.cos(-ez);
-        Mathf.sincos(-ex);
-        var s1 = Mathf.sincos_sin;
-        var c1 = Mathf.sincos_cos;
-        Mathf.sincos(-ey);
-        var s2 = Mathf.sincos_sin;
-        var c2 = Mathf.sincos_cos;
-        Mathf.sincos(-ez);
-        var s3 = Mathf.sincos_sin;
-        var c3 = Mathf.sincos_cos;
+        //var s1 = Math.sin(-ex);
+        //var c1 = Math.cos(-ex);
+        //var s2 = Math.sin(-ey);
+        //var c2 = Math.cos(-ey);
+        //var s3 = Math.sin(-ez);
+        //var c3 = Math.cos(-ez);
+        Math.sincos(-ex);
+        var s1 = Math.sincos_sin;
+        var c1 = Math.sincos_cos;
+        Math.sincos(-ey);
+        var s2 = Math.sincos_sin;
+        var c2 = Math.sincos_cos;
+        Math.sincos(-ez);
+        var s3 = Math.sincos_sin;
+        var c3 = Math.sincos_cos;
 
 
         // Set rotation elements
@@ -515,11 +515,11 @@ export class Mat4 {
         return this;
     }
 
-    setFrustum(left: f32, right: f32, bottom: f32, top: f32, znear: f32, zfar: f32): Mat4 {
-        var temp1: f32 = 2 * znear;
-        var temp2: f32 = right - left;
-        var temp3: f32 = top - bottom;
-        var temp4: f32 = zfar - znear;
+    setFrustum(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): Mat4 {
+        var temp1: number = 2 * znear;
+        var temp2: number = right - left;
+        var temp3: number = top - bottom;
+        var temp4: number = zfar - znear;
 
         this.m0 = temp1 / temp2;
         this.m1 = 0;
@@ -591,7 +591,7 @@ export class Mat4 {
         return this;
     }
 
-    setOrtho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32): Mat4 {
+    setOrtho(left: number, right: number, bottom: number, top: number, near: number, far: number): Mat4 {
         this.m0 = 2 / (right - left);
         this.m1 = 0;
         this.m2 = 0;
@@ -611,22 +611,22 @@ export class Mat4 {
         return this;
     }
 
-    setPerspective(fov: f32, aspect: f32, znear: f32, zfar: f32, fovIsHorizontal: boolean): Mat4 {
-        var xmax: f32;
-        var ymax: f32;
+    setPerspective(fov: number, aspect: number, znear: number, zfar: number, fovIsHorizontal: boolean): Mat4 {
+        var xmax: number;
+        var ymax: number;
 
         if (!fovIsHorizontal) {
-            ymax = znear * Mathf.tan(fov * Mathf.PI / 360);
+            ymax = znear * Math.tan(fov * Math.PI / 360);
             xmax = ymax * aspect;
         } else {
-            xmax = znear * Mathf.tan(fov * Mathf.PI / 360);
+            xmax = znear * Math.tan(fov * Math.PI / 360);
             ymax = xmax / aspect;
         }
 
         return this.setFrustum(-xmax, xmax, -ymax, ymax, znear, zfar);
     }
 
-    setScale(x: f32, y: f32, z: f32): Mat4 {
+    setScale(x: number, y: number, z: number): Mat4 {
         this.m0 = x;
         this.m1 = 0;
         this.m2 = 0;
@@ -709,7 +709,7 @@ export class Mat4 {
         return this;
     }
     
-    setTranslate(x: f32, y: f32, z: f32): Mat4 {
+    setTranslate(x: number, y: number, z: number): Mat4 {
         this.m0 = 1;
         this.m1 = 0;
         this.m2 = 0;

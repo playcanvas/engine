@@ -1,9 +1,9 @@
 export class Vec3 {
-    x: f32;
-    y: f32;
-    z: f32;
+    x: number;
+    y: number;
+    z: number;
 
-    constructor(x: f32, y: f32, z: f32) {
+    constructor(x: number, y: number, z: number) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -50,7 +50,7 @@ export class Vec3 {
         return this;
     }
 
-    dot(rhs: Vec3): f32 {
+    dot(rhs: Vec3): number {
         return this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
     }
 
@@ -58,15 +58,15 @@ export class Vec3 {
         return this.x === rhs.x && this.y === rhs.y && this.z === rhs.z;
     }
 
-    length(): f32 {
-        return Mathf.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    length(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
-    lengthSq(): f32 {
+    lengthSq(): number {
         return this.x * this.x + this.y * this.y + this.z * this.z;
     }
 
-    lerp(lhs: Vec3, rhs: Vec3, alpha: f32): Vec3 {
+    lerp(lhs: Vec3, rhs: Vec3, alpha: number): Vec3 {
         this.x = lhs.x + alpha * (rhs.x - lhs.x);
         this.y = lhs.y + alpha * (rhs.y - lhs.y);
         this.z = lhs.z + alpha * (rhs.z - lhs.z);
@@ -93,7 +93,7 @@ export class Vec3 {
     normalize(): Vec3 {
         var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
         if (lengthSq > 0.0) {
-            var invLength: f32 = 1.0 / Mathf.sqrt(lengthSq);
+            var invLength: number = 1.0 / Math.sqrt(lengthSq);
             this.x *= invLength;
             this.y *= invLength;
             this.z *= invLength;
@@ -111,14 +111,14 @@ export class Vec3 {
         return this;
     }
 
-    scale(scalar: f32): Vec3 {
+    scale(scalar: number): Vec3 {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
         return this;
     }
 
-    set(x: f32, y: f32, z: f32): Vec3 {
+    set(x: number, y: number, z: number): Vec3 {
         this.x = x;
         this.y = y;
         this.z = z;

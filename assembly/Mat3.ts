@@ -1,13 +1,13 @@
 export class Mat3 {
-    m0: f32;
-    m1: f32;
-    m2: f32;
-    m3: f32;
-    m4: f32;
-    m5: f32;
-    m6: f32;
-    m7: f32;
-    m8: f32;
+    m0: number;
+    m1: number;
+    m2: number;
+    m3: number;
+    m4: number;
+    m5: number;
+    m6: number;
+    m7: number;
+    m8: number;
 
     constructor() {
         this.m0 = 1;
@@ -87,7 +87,7 @@ export class Mat3 {
     }
 
     transpose(): Mat3 {
-        var tmp: f32;
+        var tmp: number;
 
         tmp = this.m1;
         this.m1 = this.m3;
