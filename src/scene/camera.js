@@ -39,7 +39,7 @@ function Camera() {
     this._farClip = 1000;
     this._flipFaces = false;
     this._fov = 45;
-    this._frustumCulling = false;
+    this._frustumCulling = true;
     this._horizontalFov = false;
     this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
     this._nearClip = 0.1;
