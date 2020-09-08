@@ -90,5 +90,4 @@
     "asbuild:optimized_64": "asc assembly/index.ts -b build/optimized_64.wasm -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert --use number=f64,Math=NativeMath",
     "asbuild:js": "asc assembly/index.ts --jsFile build/optimized.js -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert"
   }
-  }
 }
