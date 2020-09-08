@@ -1,7 +1,5 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
-import { TemplateUtils } from './template-utils.js';
-
 /**
  * @private
  * @class
@@ -14,8 +12,6 @@ function Template(app, data) {
     this._app = app;
 
     this._data = data;
-
-    this._expandedData = {};
 
     this._templateRoot = null;
 }
@@ -35,29 +31,10 @@ Template.prototype.instantiate = function () {
     return this._templateRoot.clone();
 };
 
-
-/**
- * @private
- * @function
- * @name pc.Template#getExpandedData
- * @description Creates, if needed, and returns an object whose entities field contains
- * expanded entity data. This output format matches the format of raw scene data.
- * @returns {object} An object whose entities field contains
- * expanded entity data.
- */
-Template.prototype.getExpandedData = function () {
-    if (!this._expandedData.entities) {
-        this._expandedData.entities = TemplateUtils.expandTemplateEntities(
-            this._app, this._data.entities);
-    }
-
-    return this._expandedData;
-};
-
 Template.prototype._parseTemplate = function () {
     var parser = new SceneParser(this._app, true);
 
-    this._templateRoot = parser.parse(this.getExpandedData());
+    this._templateRoot = parser.parse(this._data);
 };
 
 export { Template };

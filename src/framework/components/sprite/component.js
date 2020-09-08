@@ -379,10 +379,9 @@ Object.assign(SpriteComponent.prototype, {
 
             // update outer scale
             if (this._meshInstance) {
-                // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
                 this._outerScaleUniform[0] = this._outerScale.x;
                 this._outerScaleUniform[1] = this._outerScale.y;
-                this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScaleUniform, 0xFFFFFFFF);
+                this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScaleUniform);
             }
         }
 

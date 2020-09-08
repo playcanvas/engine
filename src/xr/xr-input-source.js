@@ -188,18 +188,14 @@ XrInputSource.prototype.update = function (frame) {
 };
 
 XrInputSource.prototype._updateTransforms = function () {
-    var dirty;
-
     if (this._dirtyLocal) {
-        dirty = true;
         this._dirtyLocal = false;
         this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
     }
 
     var parent = this._manager.camera.parent;
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
-        if (dirty) this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
     } else {
         this._worldTransform.copy(this._localTransform);
     }
@@ -211,18 +207,14 @@ XrInputSource.prototype._updateRayTransforms = function () {
 
     var parent = this._manager.camera.parent;
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
+        var parentTransform = this._manager.camera.parent.getWorldTransform();
 
-        if (dirty) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
+        parentTransform.getTranslation(this._position);
+        this._rotation.setFromMat4(parentTransform);
 
-            parentTransform.getTranslation(this._position);
-            this._rotation.setFromMat4(parentTransform);
-
-            this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
-            this._ray.origin.add(this._position);
-            this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
-        }
+        this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
+        this._ray.origin.add(this._position);
+        this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
     } else if (dirty) {
         this._ray.origin.copy(this._rayLocal.origin);
         this._ray.direction.copy(this._rayLocal.direction);

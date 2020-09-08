@@ -74,10 +74,7 @@ XrJoint.prototype.update = function (pose) {
 };
 
 XrJoint.prototype._updateTransforms = function () {
-    var dirty;
-
     if (this._dirtyLocal) {
-        dirty = true;
         this._dirtyLocal = false;
         this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
     }
@@ -86,8 +83,7 @@ XrJoint.prototype._updateTransforms = function () {
     var parent = manager.camera.parent;
 
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
-        if (dirty) this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
     } else {
         this._worldTransform.copy(this._localTransform);
     }

@@ -439,11 +439,28 @@ Object.assign(MeshInstance.prototype, {
         return this.parameters;
     },
 
+    /**
+     * @function
+     * @name pc.MeshInstance#getParameter
+     * @description Retrieves the specified shader parameter from a mesh instance.
+     * @param {string} name - The name of the parameter to query.
+     * @returns {object} The named parameter.
+     */
     getParameter: function (name) {
         return this.parameters[name];
     },
 
+    /**
+     * @function
+     * @name pc.MeshInstance#setParameter
+     * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
+     * if set on Material this mesh instance uses for rendering.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number} [passFlags] - Mask describing which passes the material should be included in.
+     */
     setParameter: function (name, data, passFlags) {
+
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         if (data === undefined && typeof name === 'object') {
@@ -471,17 +488,29 @@ Object.assign(MeshInstance.prototype, {
         }
     },
 
+     /**
+      * @function
+      * @name pc.MeshInstance#deleteParameter
+      * @description Deletes a shader parameter on a mesh instance.
+      * @param {string} name - The name of the parameter to delete.
+      */
     deleteParameter: function (name) {
         if (this.parameters[name]) {
             delete this.parameters[name];
         }
     },
 
-    setParameters: function () {
-        // Push each shader parameter into scope
-        for (var paramName in this.parameters) {
-            var parameter = this.parameters[paramName];
-            parameter.scopeId.setValue(parameter.data);
+    // used to apply parameters from this mesh instance into scope of uniforms, called internally by forward-renderer
+    setParameters: function (device, passFlag) {
+        var parameter, parameters = this.parameters;
+        for (var paramName in parameters) {
+            parameter = parameters[paramName];
+            if (parameter.passFlags & passFlag) {
+                if (!parameter.scopeId) {
+                    parameter.scopeId = device.scope.resolve(paramName);
+                }
+                parameter.scopeId.setValue(parameter.data);
+            }
         }
     }
 });
