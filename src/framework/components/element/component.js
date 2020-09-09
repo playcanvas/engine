@@ -1445,8 +1445,8 @@ Object.defineProperty(ElementComponent.prototype, "useInput", {
                 this.system.app.elementInput.removeElement(this);
             }
         } else {
-            if (this._useInput === true){
-                console.warn("Elements will not get any input events because this.system.app.elementInput is not initialized")
+            if (this._useInput === true) {
+                console.warn("Elements will not get any input events because this.system.app.elementInput is not initialized");
             }
         }
 
