@@ -27,6 +27,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
+ * @property {object|null} session provides access to [XRSession](https://developer.mozilla.org/en-US/docs/Web/API/XRSession) of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
@@ -123,6 +124,18 @@ XrManager.prototype.constructor = XrManager;
  *     // XR session has ended
  * });
  */
+
+/**
+ * @event
+ * @name pc.XrManager#update
+ * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
+ * @description Fired when XR session is updated, providing relevant XRFrame object.
+ * @example
+ * app.xr.on('update', function (frame) {
+ *
+ * });
+ */
+
 
 /**
  * @event
@@ -457,7 +470,7 @@ XrManager.prototype.update = function (frame) {
         }
     }
 
-    this.fire('update');
+    this.fire('update', frame);
 };
 
 Object.defineProperty(XrManager.prototype, 'supported', {
