@@ -1,54 +1,57 @@
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
+import { StatsTimer } from './stats-timer.js';
 import { Graph } from './graph.js';
 import { WordAtlas } from './word-atlas.js';
-import { FrameTimer } from './frame-timer.js';
 import { Render2d } from './render2d.js';
+import { Color } from '../../src/core/color.js';
+import { math } from '../../src/math/math.js';
 
 // MiniStats rendering of CPU and GPU timing information
-function MiniStats(app) {
-    var device = app.graphicsDevice;
+function MiniStats(app, options) {
 
-    // create the texture for storing word atlas and graph data
-    var texture = new pc.Texture(device, {
-        name: 'mini-stats',
-        width: 256,
-        height: 32,
-        mipmaps: false,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST
+    var device = app.graphicsDevice;
+    options = options || MiniStats.getDefaultOptions();
+
+    // create graphs based on options
+    var graphs = this.initGraphs(app, device, options);
+
+    // extract words needed
+    var words = ["", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."];
+
+    // graph names
+    graphs.forEach(function (graph) {
+        words.push(graph.name);
     });
 
-    var wordAtlas = new WordAtlas(
-        texture,
-        ["Frame", "CPU", "GPU", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
-    );
-
-    // initialize data bottom 4 rows with black
-    var dest = texture.lock();
-    for (var i = 0; i < texture.width * 4; ++i) {
-        dest.set([0, 0, 0, 255], i * 4);
-    }
-    texture.unlock();
-
-    // ensure texture is uploaded
-    device.setTexture(texture, 0);
-
-    // create graphs
-    var graphs = [
-        new Graph('Frame', app, new FrameTimer(app), texture, 1),
-        new Graph('CPU', app, new CpuTimer(app), texture, 2)
-    ];
-    if (device.extDisjointTimerQuery) {
-        graphs.push(new Graph('GPU', app, new GpuTimer(app), texture, 3));
+    // stats units
+    if (options.stats) {
+        options.stats.forEach(function (stat) {
+            if (stat.unitsName)
+                words.push(stat.unitsName);
+        });
     }
 
-    var sizes = [
-        { width: 100, height: 16, graphs: false },
-        { width: 128, height: 32, graphs: true },
-        { width: 256, height: 64, graphs: true }
-    ];
-    var size = 0;
+    // remove duplicates
+    words = words.filter(function (item, index) {
+        return words.indexOf(item) >= index;
+    });
+
+    // create word atlas
+    var maxWidth = options.sizes.reduce(function (max, v) {
+        return v.width > max ? v.width : max;
+    }, 0);
+    var wordAtlasData = this.initWordAtlas(device, words, maxWidth, graphs.length);
+    var texture = wordAtlasData.texture;
+
+    // assign texture to graphs
+    graphs.forEach(function (graph, i) {
+        graph.texture = texture;
+        graph.yOffset = i;
+    });
+
+    this.sizes = options.sizes;
+    this._activeSizeIndex = options.startSizeIndex;
 
     var self = this;
 
@@ -68,8 +71,8 @@ function MiniStats(app) {
     div.addEventListener('click', function (event) {
         event.preventDefault();
         if (self._enabled) {
-            size = (size + 1) % sizes.length;
-            self.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
+            self.activeSizeIndex = (self.activeSizeIndex + 1) % self.sizes.length;
+            self.resize(self.sizes[self.activeSizeIndex].width, self.sizes[self.activeSizeIndex].height, self.sizes[self.activeSizeIndex].graphs);
         }
     });
 
@@ -85,22 +88,74 @@ function MiniStats(app) {
 
     this.device = device;
     this.texture = texture;
-    this.wordAtlas = wordAtlas;
-    this.render2d = new Render2d(device);
+    this.wordAtlas = wordAtlasData.atlas;
+    this.render2d = new Render2d(device, options.colors);
     this.graphs = graphs;
     this.div = div;
 
     this.width = 0;
     this.height = 0;
-    this.gspacing = 2;
+    this.gspacing = 0.1;  // in percentage of hight, 10%
     this.clr = [1, 1, 1, 0.5];
 
     this._enabled = true;
 
-    this.resize(sizes[size].width, sizes[size].height, sizes[size].graphs);
+    // initial resize
+    this.activeSizeIndex = this._activeSizeIndex;
 }
 
+MiniStats.getDefaultOptions = function () {
+    return {
+
+        sizes: [
+            { width: 100, height: 16, graphs: false },
+            { width: 128, height: 32, graphs: true },
+            { width: 256, height: 64, graphs: true }
+        ],
+
+        startSizeIndex: 0,
+
+        colors: {
+            graph0: new Color(0.7, 0.2, 0.2, 1),
+            graph1: new Color(0.2, 0.7, 0.2, 1),
+            graph2: new Color(0.2, 0.2, 0.7, 1),
+            watermark: new Color(0.4, 0.4, 0.2, 1),
+            background: new Color(0, 0, 0, 0.4)
+        },
+
+        cpu: {
+            enabled: true,
+            watermark: 33
+        },
+
+        gpu: {
+            enabled: true,
+            watermark: 33
+        },
+
+        stats: [
+            {
+                name: "Frame",
+                stats: ["frame.ms"],
+                decimalPlaces: 1,
+                unitsName: "ms",
+                watermark: 33
+            }
+        ]
+    };
+};
+
 Object.defineProperties(MiniStats.prototype, {
+    activeSizeIndex: {
+        get: function () {
+            return this._activeSizeIndex;
+        },
+        set: function (value) {
+            this._activeSizeIndex = value;
+            this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
+        }
+    },
+
     opacity: {
         get: function () {
             return this.clr[3];
@@ -113,7 +168,8 @@ Object.defineProperties(MiniStats.prototype, {
     overallHeight: {
         get: function () {
             var graphs = this.graphs;
-            return this.height * graphs.length + this.gspacing * (graphs.length - 1);
+            var spacing = this.height * this.gspacing;
+            return this.height * graphs.length + spacing * (graphs.length - 1);
         }
     },
 
@@ -134,13 +190,60 @@ Object.defineProperties(MiniStats.prototype, {
 });
 
 Object.assign(MiniStats.prototype, {
+
+    initWordAtlas: function (device, words, maxWidth, numGraphs) {
+
+        // create the texture for storing word atlas and graph data
+        var texture = new pc.Texture(device, {
+            name: 'mini-stats',
+            width: math.nextPowerOfTwo(maxWidth),
+            height: 64,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+
+        var wordAtlas = new WordAtlas(texture, words);
+
+        var dest = texture.lock();
+        for (var i = 0; i < texture.width * numGraphs; ++i) {
+            dest.set([0, 0, 0, 255], i * 4);
+        }
+        texture.unlock();
+
+        // ensure texture is uploaded
+        device.setTexture(texture, 0);
+
+        return { atlas: wordAtlas, texture: texture};
+    },
+
+    initGraphs: function (app, device, options) {
+
+        var graphs = [];
+        if (options.cpu.enabled) {
+            graphs.push(new Graph('CPU', app, options.cpu.watermark, new CpuTimer(app)));
+        }
+
+        if (options.gpu.enabled && device.extDisjointTimerQuery) {
+            graphs.push(new Graph('GPU', app, options.gpu.watermark, new GpuTimer(app)));
+        }
+
+        if (options.stats) {
+            options.stats.forEach(function (entry) {
+                graphs.push(new Graph(entry.name, app, entry.watermark, new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier)));
+            });
+        }
+
+        return graphs;
+    },
+
     render: function () {
         var graphs = this.graphs;
         var wordAtlas = this.wordAtlas;
         var render2d = this.render2d;
         var width = this.width;
         var height = this.height;
-        var gspacing = this.gspacing;
+        var gspacing = this.gspacing * height;
 
         var i, j, x, y, graph;
 
@@ -165,8 +268,11 @@ Object.assign(MiniStats.prototype, {
                 x += wordAtlas.render(render2d, timingText[j], x, y);
             }
 
-            // ms
-            wordAtlas.render(render2d, 'ms', x, y);
+            // units
+            if (graph.timer.unitsName) {
+                x += 3;
+                wordAtlas.render(render2d, graph.timer.unitsName, x, y);
+            }
         }
 
         render2d.render(this.clr);

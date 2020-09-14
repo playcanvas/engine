@@ -10,6 +10,8 @@ function GpuTimer(app) {
     this._prevTimings = [];
 
     this.enabled = true;
+    this.unitsName = "ms";
+    this.decimalPlaces = 1;
 
     app.on('frameupdate', this.begin.bind(this, 'update'));
     app.on('framerender', this.mark.bind(this, 'render'));

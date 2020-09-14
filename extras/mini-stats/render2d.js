@@ -1,6 +1,6 @@
 // render 2d textured quads
-function Render2d(device, maxQuads) {
-    maxQuads = maxQuads || 128;
+function Render2d(device, colors, maxQuads) {
+    maxQuads = maxQuads || 512;
 
     var vertexShader =
         'attribute vec2 vertex_position;\n' +       // unnormalized
@@ -14,22 +14,31 @@ function Render2d(device, maxQuads) {
         '}\n';
 
     // this fragment shader renders the bits required for text and graphs. The text is identified
-    // in the texture by its white color channel. The graph data is specified as a single row of
-    // pixels where the R channel denotes the height of the 1st graph and the G channel the height
-    // of the second graph (the B channel could also be used, but is currently not).
+    // in the texture by white color. The graph data is specified as a single row of pixels
+    // where the R channel denotes the height of the 1st graph and the G channel the height
+    // of the second graph and B channel the height of the last graph
     var fragmentShader =
         'varying vec4 uv0;\n' +
         'uniform vec4 clr;\n' +
+        'uniform vec4 col0;\n' +
+        'uniform vec4 col1;\n' +
+        'uniform vec4 col2;\n' +
+        'uniform vec4 watermark;\n' +
+        'uniform vec4 background;\n' +
         'uniform sampler2D source;\n' +
         'void main (void) {\n' +
         '    vec4 tex = texture2D(source, uv0.xy);\n' +
-        '    if (tex.rgb != vec3(1, 1, 1)) {\n' +
-        '       if (uv0.w < tex.r)\n' +
-        '           tex = vec4(1.0, 0.3, 0.3, 1.0);\n' +
+        '    if (!(tex.rgb == vec3(1.0, 1.0, 1.0))) {\n' +  // pure white is text
+        '       if (abs(uv0.w - tex.a) < 0.02)\n' +
+        '           tex = watermark;\n' +
+        '       else if (uv0.w < tex.r)\n' +
+        '           tex = col0;\n' +
         '       else if (uv0.w < tex.g)\n' +
-        '           tex = vec4(0.3, 1.0, 0.3, 1.0);\n' +
+        '           tex = col1;\n' +
+        '       else if (uv0.w < tex.b)\n' +
+        '           tex = col2;\n' +
         '       else\n' +
-        '           tex = vec4(0.0, 0.0, 0.0, 1.0);\n' +
+        '           tex = background;\n' +
         '    }\n' +
         '    gl_FragColor = tex * clr;\n' +
         '}\n';
@@ -69,6 +78,17 @@ function Render2d(device, maxQuads) {
     this.prim = null;
     this.primIndex = -1;
     this.quads = 0;
+
+    // colors
+    var setupColor = function (name, value) {
+        this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
+        this[name + "Id"] = device.scope.resolve(name);
+    }.bind(this);
+    setupColor("col0", colors.graph0);
+    setupColor("col1", colors.graph1);
+    setupColor("col2", colors.graph2);
+    setupColor("watermark", colors.watermark);
+    setupColor("background", colors.background);
 
     this.clrId = device.scope.resolve('clr');
     this.clr = new Float32Array(4);
@@ -146,6 +166,13 @@ Object.assign(Render2d.prototype, {
         this.clrId.setValue(this.clr);
         this.screenTextureSize[0] = device.width / pr;
         this.screenTextureSize[1] = device.height / pr;
+
+        // colors
+        this.col0Id.setValue(this.col0);
+        this.col1Id.setValue(this.col1);
+        this.col2Id.setValue(this.col2);
+        this.watermarkId.setValue(this.watermark);
+        this.backgroundId.setValue(this.background);
 
         for (var i = 0; i <= this.primIndex; ++i) {
             var prim = this.prims[i];

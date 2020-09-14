@@ -1,8 +1,9 @@
 // Realtime performance graph visual
-function Graph(name, app, timer, texture, yOffset) {
+function Graph(name, app, watermark, timer) {
     this.name = name;
     this.device = app.graphicsDevice;
     this.timer = timer;
+    this.watermark = watermark;
     this.enabled = false;
 
     this.avgTotal = 0;
@@ -10,11 +11,10 @@ function Graph(name, app, timer, texture, yOffset) {
     this.avgCount = 0;
     this.timingText = "";
 
-    this.texture = texture;
-    this.yOffset = yOffset;
+    this.texture = null;
+    this.yOffset = 0;
     this.cursor = 0;
-    this.sample = new Uint8Array(4);
-
+    this.sample = new Uint8ClampedArray(4);
     this.sample.set([0, 0, 0, 255]);
 
     app.on('frameupdate', this.update.bind(this));
@@ -35,8 +35,9 @@ Object.assign(Graph.prototype, {
         this.avgTotal += total;
         this.avgTimer += ms;
         this.avgCount++;
-        if (this.avgTimer > 1000) {
-            this.timingText = (this.avgTotal / this.avgCount).toFixed(1);
+
+        if (this.avgTimer > 250) {
+            this.timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
             this.avgTimer = 0;
             this.avgTotal = 0;
             this.avgCount = 0;
@@ -45,10 +46,16 @@ Object.assign(Graph.prototype, {
         if (this.enabled) {
             // update timings
             var value = 0;
+            var range = 1.5 * this.watermark;
             for (var i = 0; i < timings.length; ++i) {
-                value = Math.min(255, value + Math.floor(timings[i] * (255.0 / 48.0))); // full graph height represents 48ms
+
+                // scale the value into the range
+                value += Math.floor(timings[i] / range * 255);
                 this.sample[i] = value;
             }
+
+            // .a store watermark
+            this.sample[3] = this.watermark / range * 255;
 
             // write latest sample to the texture
             var gl = this.device.gl;

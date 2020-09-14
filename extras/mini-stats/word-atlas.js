@@ -35,6 +35,9 @@ function WordAtlas(texture, words) {
             y += 16;
         }
 
+        // digits and '.' are white, the rest grey
+        context.fillStyle = words[i].length === 1 ? "rgb(255, 255, 255)" : "rgb(100, 100, 100)";
+
         // render the word
         context.fillText(words[i], x - l, y + a);
 
@@ -59,13 +62,22 @@ function WordAtlas(texture, words) {
     // copy pixel data to target
     var source = context.getImageData(0, 0, canvas.width, canvas.height);
     var dest = texture.lock();
+    var red, alpha;
     for (y = 0; y < source.height; ++y) {
         for (x = 0; x < source.width; ++x) {
             var offset = (x + y * texture.width) * 4;
+
+            // set .rgb white to allow shader to identify text
             dest[offset] = 255;
             dest[offset + 1] = 255;
             dest[offset + 2] = 255;
-            dest[offset + 3] = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
+
+            // red red and alpha from image
+            red = source.data[(x + (source.height - 1 - y) * source.width) * 4];
+            alpha = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
+
+            // alpha contains greyscale letters, use red to make non-digits darker
+            dest[offset + 3] = alpha * (red > 150 ? 1 : 0.7);
         }
     }
 }
