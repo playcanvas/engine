@@ -214,7 +214,7 @@ Object.assign(MiniStats.prototype, {
         // ensure texture is uploaded
         device.setTexture(texture, 0);
 
-        return { atlas: wordAtlas, texture: texture};
+        return { atlas: wordAtlas, texture: texture };
     },
 
     initGraphs: function (app, device, options) {
