@@ -16,6 +16,7 @@ var categories = [
         name: "graphics",
         examples: [
             "batching-dynamic",
+            "grab-pass",
             "hardware-instancing",
             "hierarchy",
             "layers",
@@ -43,7 +44,6 @@ var categories = [
             "portal",
             "post-effects",
             "render-to-texture",
-            "refraction",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
