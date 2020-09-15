@@ -56,7 +56,7 @@ Object.assign(TagsCache.prototype, {
         }
 
         // by position in list
-        var ind = this._index[tag].indexOf(item);
+        var ind = this._index[tag].list.indexOf(item);
         if (ind === -1)
             return;
 

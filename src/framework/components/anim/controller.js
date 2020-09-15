@@ -4,16 +4,294 @@ import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY,
+    ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
 } from './constants.js';
 
-function AnimState(controller, name, speed, loop) {
+function AnimNode(parent, name, point, speed) {
+    this._parent = parent;
+    this._name = name;
+    this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
+    this._speed = speed || 1.0;
+    this._weight = 1.0;
+    this._animTrack = null;
+}
+
+Object.defineProperties(AnimNode.prototype, {
+    parent: {
+        get: function () {
+            return this._parent;
+        }
+    },
+    name: {
+        get: function () {
+            return this._name;
+        }
+    },
+    path: {
+        get: function () {
+            return this._parent ? this._parent.path + '.' + this._name : this._name;
+        }
+    },
+    point: {
+        get: function () {
+            return this._point;
+        }
+    },
+    weight: {
+        get: function () {
+            return this._parent ? this._parent.weight * this._weight : this._weight;
+        },
+        set: function (value) {
+            this._weight = value;
+        }
+    },
+    speed: {
+        get: function () {
+            return this._speed;
+        }
+    },
+    animTrack: {
+        get: function () {
+            return this._animTrack;
+        },
+        set: function (value) {
+            this._animTrack = value;
+        }
+    }
+});
+
+// Maths helper functions
+
+function between(num, a, b, inclusive) {
+    var min = Math.min(a, b),
+        max = Math.max(a, b);
+    return inclusive ? num >= min && num <= max : num > min && num < max;
+}
+
+function getAngleRad(a, b) {
+    return Math.atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
+}
+
+function clamp(num, min, max) {
+    return num <= min ? min : num >= max ? max : num;
+}
+
+function BlendTree(parent, name, point, type, parameters, children, findParameter) {
+    this._parent = parent;
+    this._name = name;
+    this._type = type;
+    this._parameters = parameters;
+    this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
+    this._parameterValues = null;
+    this._weight = 1.0;
+    this._children = [];
+    this._findParameter = findParameter;
+    for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        if (child.children) {
+            this._children.push(new BlendTree(this, child.name, child.point, child.type, child.parameter ? [child.parameter] : child.parameters, child.children, findParameter));
+        } else {
+            this._children.push(new AnimNode(this, child.name, child.point, child.speed));
+        }
+    }
+}
+
+Object.defineProperties(BlendTree.prototype, {
+    parent: {
+        get: function () {
+            return this._parent;
+        }
+    },
+    name: {
+        get: function () {
+            return this._name;
+        }
+    },
+    point: {
+        get: function () {
+            return this._point;
+        }
+    },
+    weight: {
+        get: function () {
+            this.calculateWeights();
+            return this._parent ? this._parent.weight * this._weight : this._weight;
+        },
+        set: function (value) {
+            this._weight = value;
+        }
+    },
+    speed: {
+        get: function () {
+            return this._speed;
+        }
+    }
+});
+
+Object.assign(BlendTree.prototype, AnimNode.prototype, {
+    getChild(name) {
+        for (var i = 0; i < this._children.length; i++) {
+            if (this._children[i].name === name) return this._children[i];
+        }
+    },
+    calculateWeights() {
+        var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
+        switch (this._type) {
+            case ANIM_BLEND_1D: {
+                parameterValue = this._findParameter(this._parameters[0]).value;
+                if (this._parameterValues && (this._parameterValues[0] === parameterValue)) {
+                    return;
+                }
+                this._parameterValues = [parameterValue];
+                this._children[0].weight = 0.0;
+                for (i = 0; i < this._children.length - 1; i++) {
+                    var child1 = this._children[i];
+                    var child2 = this._children[i + 1];
+                    if (between(parameterValue, child1.point, child2.point, true)) {
+                        var child2Distance = Math.abs(child1.point - child2.point);
+                        var parameterDistance = Math.abs(child1.point - parameterValue);
+                        var weight = (child2Distance - parameterDistance) / child2Distance;
+                        child1.weight = weight;
+                        child2.weight = (1.0 - weight);
+                    } else {
+                        child2.weight = 0.0;
+                    }
+                }
+                break;
+            }
+            case ANIM_BLEND_2D_CARTESIAN: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                p = new pc.Vec2(this._parameterValues);
+
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    pi = this._children[i].point.clone();
+                    minj = Number.MAX_VALUE;
+                    for (j = 0; j < this._children.length; j++) {
+                        if (i === j) continue;
+                        pj = this._children[j].point.clone();
+                        pipj = pj.clone().sub(pi);
+                        pip = p.clone().sub(pi);
+                        result = clamp(1.0 - (pip.clone().dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
+                        if (result < minj) minj = result;
+                    }
+                    this._children[i].weight = minj;
+                    weightSum += minj;
+                }
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = this._children[i]._weight / weightSum;
+                }
+                break;
+            }
+            case ANIM_BLEND_2D_DIRECTIONAL: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                p = new pc.Vec2(this._parameterValues);
+
+
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    pi = this._children[i].point.clone();
+                    minj = Number.MAX_VALUE;
+                    for (j = 0; j < this._children.length; j++) {
+                        if (i === j) continue;
+                        pj = this._children[j].point.clone();
+                        var pipAngle = getAngleRad(pi, p);
+                        var pipjAngle = getAngleRad(pi, pj);
+                        pipj = new pc.Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
+                        pip = new pc.Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
+                        result = clamp(1.0 - Math.abs((pip.clone().dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
+                        if (result < minj) minj = result;
+                    }
+                    this._children[i].weight = minj;
+                    weightSum += minj;
+                }
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = this._children[i]._weight / weightSum;
+                }
+                break;
+            }
+            case ANIM_BLEND_DIRECT: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues === parameterValues) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                var sum = this._parameterValues.reduce(function (a, b) {
+                    return a + b;
+                }, 0);
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = this._parameterValues[i] / sum;
+                }
+                break;
+            }
+        }
+    },
+    getNodeCount() {
+        var count = 0;
+        for (var i = 0; i < this._children.length; i++) {
+            var child = this._children[i];
+            if (child.constructor === BlendTree) {
+                count += this._children[i].getNodeCount();
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+});
+
+
+function AnimState(controller, name, speed, loop, blendTree) {
     this._controller = controller;
     this._name = name;
-    this._animations = [];
+    this._animations = {};
+    this._animationList = [];
     this._speed = speed || 1.0;
     this._loop = loop === undefined ? true : loop;
+    var findParameter = this._controller.findParameter.bind(this._controller);
+    if (blendTree) {
+        this._blendTree = new BlendTree(null, name, 1.0, blendTree.type, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, findParameter);
+    } else {
+        this._blendTree = new AnimNode(null, name, 1.0, speed);
+    }
 }
+
+Object.assign(AnimState.prototype, {
+    _getNodeFromPath(path) {
+        var currNode = this._blendTree;
+        for (var i = 1; i < path.length; i++) {
+            currNode = currNode.getChild(path[i]);
+        }
+        return currNode;
+    },
+    addAnimation(path, animTrack) {
+        var indexOfAnimation = this._animationList.findIndex(function (animation) {
+            return animation.path === path;
+        });
+        if (indexOfAnimation >= 0) {
+            this._animationList[indexOfAnimation].animTrack = animTrack;
+        } else {
+            var node = this._getNodeFromPath(path);
+            node.animTrack = animTrack;
+            this._animationList.push(node);
+        }
+    }
+});
 
 Object.defineProperties(AnimState.prototype, {
     name: {
@@ -23,10 +301,10 @@ Object.defineProperties(AnimState.prototype, {
     },
     animations: {
         get: function () {
-            return this._animations;
+            return this._animationList;
         },
         set: function (value) {
-            this._animations = value;
+            this._animationList = value;
         }
     },
     speed: {
@@ -39,9 +317,15 @@ Object.defineProperties(AnimState.prototype, {
             return this._loop;
         }
     },
+    nodeCount: {
+        get: function () {
+            if (!this._blendTree || !(this._blendTree.constructor === BlendTree)) return 1;
+            return this._blendTree.getNodeCount();
+        }
+    },
     playable: {
         get: function () {
-            return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
+            return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.animations.length === this.nodeCount);
         }
     },
     looping: {
@@ -184,7 +468,8 @@ function AnimController(animEvaluator, states, transitions, parameters, activate
             this,
             states[i].name,
             states[i].speed,
-            states[i].loop
+            states[i].loop,
+            states[i].blendTree
         );
         this._stateNames.push(states[i].name);
     }
@@ -482,10 +767,12 @@ Object.assign(AnimController.prototype, {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+            var interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
             for (i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
-                if (i !== this._transitionPreviousStates.length - 1) {
+                if (!this._isTransitioning) {
+                    this._transitionPreviousStates[i].weight = 1.0;
+                } else if (i !== this._transitionPreviousStates.length - 1) {
                     this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
                 } else {
                     this._transitionPreviousStates[i].weight = interpolatedTime;
@@ -501,9 +788,9 @@ Object.assign(AnimController.prototype, {
                         clip.name = animation.name + '.previous.' + i;
                     }
                     // // pause previous animation clips to reduce their impact on performance
-                    // if (i !== this._transitionPreviousStates.length - 1) {
-                    clip.pause();
-                    // }
+                    if (i !== this._transitionPreviousStates.length - 1) {
+                        clip.pause();
+                    }
                 }
             }
         }
@@ -522,7 +809,8 @@ Object.assign(AnimController.prototype, {
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, activeState.loop);
+                var speed = activeState.animations[i].speed ? activeState.animations[i].speed : activeState.speed;
+                clip = new AnimClip(activeState.animations[i].animTrack, 0, speed, true, activeState.loop);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -531,7 +819,7 @@ Object.assign(AnimController.prototype, {
             if (transition.time > 0) {
                 clip.blendWeight = 0.0;
             } else {
-                clip.blendWeight = 1.0 / activeState.totalWeight;
+                clip.blendWeight = activeState.animations[i].weight / activeState.totalWeight;
             }
             clip.play();
             if (hasTransitionOffset) {
@@ -572,27 +860,16 @@ Object.assign(AnimController.prototype, {
         this._updateStateFromTransition(transition);
     },
 
-    assignAnimation: function (stateName, animTrack) {
-        var state = this._findState(stateName);
+    assignAnimation: function (pathString, animTrack) {
+        const path = pathString.split('.');
+        var state = this._findState(path[0]);
         if (!state) {
             // #ifdef DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
         }
-
-        var animation = {
-            name: stateName + '.' + animTrack.name,
-            animTrack: animTrack,
-            weight: 1.0
-        };
-
-        // Currently the anim controller only supports single animations in a state
-        if (state.animations.length > 0) {
-            state.animations = [];
-            this.reset();
-        }
-        state.animations.push(animation);
+        state.addAnimation(path, animTrack);
 
         if (!this._playing && this._activate && this.playable) {
             this.play();
@@ -652,7 +929,8 @@ Object.assign(AnimController.prototype, {
             this._updateStateFromTransition(transition);
 
         if (this._isTransitioning) {
-            if (this._currTransitionTime < this._totalTransitionTime) {
+            this._currTransitionTime += dt;
+            if (this._currTransitionTime <= this._totalTransitionTime) {
                 var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (i = 0; i < this._transitionPreviousStates.length; i++) {
@@ -691,7 +969,17 @@ Object.assign(AnimController.prototype, {
                     }
                 }
             }
-            this._currTransitionTime += dt;
+        } else {
+            if (this.activeState._blendTree.constructor === BlendTree) {
+                state = this.activeState;
+                for (i = 0; i < state.animations.length; i++) {
+                    animation = state.animations[i];
+                    clip = this._animEvaluator.findClip(animation.name);
+                    if (clip) {
+                        clip.blendWeight = animation.weight / state.totalWeight;
+                    }
+                }
+            }
         }
         this._animEvaluator.update(dt);
     },
