@@ -36,8 +36,14 @@
     <script id="fshader" type="x-shader/x-fragment">
         precision mediump float;
 
-        uniform sampler2D uDiffuseMap;
+        // use the special texture_grabPass texture, which is a built-in texture. Each time this texture is used
+        // for rendering, the engine will copy color framebuffer to it which represents already rendered the scene
+        uniform sampler2D texture_grabPass;
+
+        // normal map providing offsets
         uniform sampler2D uOffsetMap;
+
+        // engine built-in costant storing render target size in .xy and inverse size in .zw
         uniform vec4 uScreenSize;
 
         varying vec2 vUv0;
@@ -51,7 +57,7 @@
             vec2 offset = texture2D(uOffsetMap, grab_uv).rg * 0.05;
 
             // get existing pixel color with distorted offset
-            vec3 grab_color = texture2D(uDiffuseMap, grab_uv + offset).rgb;
+            vec3 grab_color = texture2D(texture_grabPass, grab_uv + offset).rgb;
 
             // brighten the refracted texture a little bit
             gl_FragColor = vec4(grab_color * 1.2, 1.0);
@@ -146,10 +152,6 @@
         // reflection material using the shader
         var refractionMaterial = new pc.Material();
         refractionMaterial.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-
-        // assign the special grabPassTexture to diffuse slot. Each time this texture is used for rendering,
-        // the engine will copy color framebuffer to it which represents already rendered the scene
-        refractionMaterial.setParameter('uDiffuseMap', app.graphicsDevice.grabPassTexture);
         glass.model.material = refractionMaterial;
 
         // set up front to back sorting on opaque world layer - so when we get to render the glass,
