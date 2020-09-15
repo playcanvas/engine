@@ -54,7 +54,11 @@
             vec2 grab_uv = gl_FragCoord.xy * uScreenSize.zw;
 
             // sample offset texture
-            vec2 offset = texture2D(uOffsetMap, grab_uv).rg * 0.05;
+            vec2 offset = texture2D(uOffsetMap, grab_uv).rg;
+            offset = 2.0 * offset - 1.0;
+
+            // offset strength
+            offset *= 0.03;
 
             // get existing pixel color with distorted offset
             vec3 grab_color = texture2D(texture_grabPass, grab_uv + offset).rgb;
