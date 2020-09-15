@@ -16,6 +16,7 @@ var categories = [
         name: "graphics",
         examples: [
             "batching-dynamic",
+            "grab-pass",
             "hardware-instancing",
             "hierarchy",
             "layers",
