@@ -43,6 +43,7 @@ var categories = [
             "portal",
             "post-effects",
             "render-to-texture",
+            "refraction",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
