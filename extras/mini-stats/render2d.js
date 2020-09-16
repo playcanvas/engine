@@ -24,12 +24,13 @@ function Render2d(device, colors, maxQuads) {
         'uniform vec4 col1;\n' +
         'uniform vec4 col2;\n' +
         'uniform vec4 watermark;\n' +
+        'uniform float watermarkSize;\n' +
         'uniform vec4 background;\n' +
         'uniform sampler2D source;\n' +
         'void main (void) {\n' +
         '    vec4 tex = texture2D(source, uv0.xy);\n' +
         '    if (!(tex.rgb == vec3(1.0, 1.0, 1.0))) {\n' +  // pure white is text
-        '       if (abs(uv0.w - tex.a) < 0.02)\n' +
+        '       if (abs(uv0.w - tex.a) < watermarkSize)\n' +
         '           tex = watermark;\n' +
         '       else if (uv0.w < tex.r)\n' +
         '           tex = col0;\n' +
@@ -90,6 +91,7 @@ function Render2d(device, colors, maxQuads) {
     setupColor("watermark", colors.watermark);
     setupColor("background", colors.background);
 
+    this.watermarkSizeId = device.scope.resolve('watermarkSize');
     this.clrId = device.scope.resolve('clr');
     this.clr = new Float32Array(4);
 
@@ -138,7 +140,7 @@ Object.assign(Render2d.prototype, {
         ], 4 * 6 * quad);
     },
 
-    render: function (clr) {
+    render: function (clr, height) {
         var device = this.device;
         var buffer = this.buffer;
 
@@ -180,6 +182,7 @@ Object.assign(Render2d.prototype, {
             this.screenTextureSize[3] = prim.texture.height;
             this.screenTextureSizeId.setValue(this.screenTextureSize);
             device.constantTexSource.setValue(prim.texture);
+            this.watermarkSizeId.setValue(0.5 / height);
             device.draw(prim);
         }
 

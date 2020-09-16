@@ -1,10 +1,11 @@
 // Realtime performance graph visual
-function Graph(name, app, watermark, timer) {
+function Graph(name, app, watermark, textRefreshRate, timer) {
     this.name = name;
     this.device = app.graphicsDevice;
     this.timer = timer;
     this.watermark = watermark;
     this.enabled = false;
+    this.textRefreshRate = textRefreshRate;
 
     this.avgTotal = 0;
     this.avgTimer = 0;
@@ -36,7 +37,7 @@ Object.assign(Graph.prototype, {
         this.avgTimer += ms;
         this.avgCount++;
 
-        if (this.avgTimer > 250) {
+        if (this.avgTimer > this.textRefreshRate) {
             this.timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
             this.avgTimer = 0;
             this.avgTotal = 0;

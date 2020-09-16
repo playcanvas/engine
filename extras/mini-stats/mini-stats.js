@@ -95,7 +95,7 @@ function MiniStats(app, options) {
 
     this.width = 0;
     this.height = 0;
-    this.gspacing = 0.1;  // in percentage of hight, 10%
+    this.gspacing = options.spacingPercent * 0.01;
     this.clr = [1, 1, 1, 0.5];
 
     this._enabled = true;
@@ -107,38 +107,59 @@ function MiniStats(app, options) {
 MiniStats.getDefaultOptions = function () {
     return {
 
+        // sizes of area to render individual graphs in
         sizes: [
             { width: 100, height: 16, graphs: false },
             { width: 128, height: 32, graphs: true },
             { width: 256, height: 64, graphs: true }
         ],
 
+        // index into sizes array for initial setting
         startSizeIndex: 0,
 
+        // spacing between graphs, in percent of its height
+        spacingPercent: 7,
+
+        // refresh rate of text stats in ms
+        textRefreshRate: 500,
+
+        // colors used to render graphs
         colors: {
             graph0: new Color(0.7, 0.2, 0.2, 1),
             graph1: new Color(0.2, 0.7, 0.2, 1),
             graph2: new Color(0.2, 0.2, 0.7, 1),
             watermark: new Color(0.4, 0.4, 0.2, 1),
-            background: new Color(0, 0, 0, 0.4)
+            background: new Color(0, 0, 0, 0.5)
         },
 
+        // cpu graph options
         cpu: {
             enabled: true,
             watermark: 33
         },
 
+        // gpu graph options
         gpu: {
             enabled: true,
             watermark: 33
         },
 
+        // array of options to render additional graphs based on stats collected into pc.Application.stats
         stats: [
             {
+                // display name
                 name: "Frame",
+
+                // path to data inside pc.Application.stats
                 stats: ["frame.ms"],
+
+                // number of decimal places (defaults to none)
                 decimalPlaces: 1,
+
+                // units (defaults to "")
                 unitsName: "ms",
+
+                // watermark - shown as a line on the graph, useful for displaying a budget
                 watermark: 33
             }
         ]
@@ -221,16 +242,16 @@ Object.assign(MiniStats.prototype, {
 
         var graphs = [];
         if (options.cpu.enabled) {
-            graphs.push(new Graph('CPU', app, options.cpu.watermark, new CpuTimer(app)));
+            graphs.push(new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, new CpuTimer(app)));
         }
 
         if (options.gpu.enabled && device.extDisjointTimerQuery) {
-            graphs.push(new Graph('GPU', app, options.gpu.watermark, new GpuTimer(app)));
+            graphs.push(new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, new GpuTimer(app)));
         }
 
         if (options.stats) {
             options.stats.forEach(function (entry) {
-                graphs.push(new Graph(entry.name, app, entry.watermark, new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier)));
+                graphs.push(new Graph(entry.name, app, entry.watermark, options.textRefreshRate, new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier)));
             });
         }
 
@@ -275,7 +296,7 @@ Object.assign(MiniStats.prototype, {
             }
         }
 
-        render2d.render(this.clr);
+        render2d.render(this.clr, height);
     },
 
     resize: function (width, height, showGraphs) {
