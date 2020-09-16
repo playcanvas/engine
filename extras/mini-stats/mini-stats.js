@@ -161,6 +161,13 @@ MiniStats.getDefaultOptions = function () {
 
                 // watermark - shown as a line on the graph, useful for displaying a budget
                 watermark: 33
+            },
+
+            // total number of draw calls
+            {
+                name: "DrawCalls",
+                stats: ["drawCalls.total"],
+                watermark: 1000
             }
         ]
     };

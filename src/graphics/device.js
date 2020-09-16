@@ -2396,8 +2396,9 @@ Object.assign(GraphicsDevice.prototype, {
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
         }
 
-        // #ifdef PROFILER
         this._drawCallsPerFrame++;
+
+        // #ifdef PROFILER
         this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
         // #endif
     },
