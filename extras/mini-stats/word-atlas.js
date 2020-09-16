@@ -35,9 +35,6 @@ function WordAtlas(texture, words) {
             y += 16;
         }
 
-        // digits and '.' are white, the rest grey
-        context.fillStyle = words[i].length === 1 ? "rgb(255, 255, 255)" : "rgb(100, 100, 100)";
-
         // render the word
         context.fillText(words[i], x - l, y + a);
 

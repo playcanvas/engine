@@ -118,7 +118,7 @@ MiniStats.getDefaultOptions = function () {
         startSizeIndex: 0,
 
         // spacing between graphs, in percent of its height
-        spacingPercent: 7,
+        spacingPercent: 4,
 
         // refresh rate of text stats in ms
         textRefreshRate: 500,
@@ -129,7 +129,7 @@ MiniStats.getDefaultOptions = function () {
             graph1: new Color(0.2, 0.7, 0.2, 1),
             graph2: new Color(0.2, 0.2, 0.7, 1),
             watermark: new Color(0.4, 0.4, 0.2, 1),
-            background: new Color(0, 0, 0, 0.5)
+            background: new Color(0, 0, 0, 1.0)
         },
 
         // cpu graph options
