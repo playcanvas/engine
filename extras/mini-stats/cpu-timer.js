@@ -3,6 +3,8 @@ function CpuTimer(app) {
     this._frameTimings = [];
     this._timings = [];
     this._prevTimings = [];
+    this.unitsName = "ms";
+    this.decimalPlaces = 1;
 
     this.enabled = true;
 

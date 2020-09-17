@@ -66,6 +66,7 @@ var categories = [
     }, {
         name: "misc",
         examples: [
+            "mini-stats",
             "multi-application"
         ]
     }, {
