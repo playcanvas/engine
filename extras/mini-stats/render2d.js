@@ -3,14 +3,16 @@ function Render2d(device, colors, maxQuads) {
     maxQuads = maxQuads || 512;
 
     var vertexShader =
-        'attribute vec2 vertex_position;\n' +       // unnormalized
+        'attribute vec3 vertex_position;\n' +       // unnormalized
         'attribute vec4 vertex_texCoord0;\n' +      // unnormalized texture space uv, normalized uv
         'uniform vec4 screenAndTextureSize;\n' +    // xy: screen size, zw: texture size
         'varying vec4 uv0;\n' +
+        'varying float enabled;\n' +
         'void main(void) {\n' +
         '    vec2 pos = vertex_position.xy / screenAndTextureSize.xy;\n' +
         '    gl_Position = vec4(pos * 2.0 - 1.0, 0.5, 1.0);\n' +
         '    uv0 = vec4(vertex_texCoord0.xy / screenAndTextureSize.zw, vertex_texCoord0.zw);\n' +
+        '    enabled = vertex_position.z;\n' +
         '}\n';
 
     // this fragment shader renders the bits required for text and graphs. The text is identified
@@ -19,6 +21,7 @@ function Render2d(device, colors, maxQuads) {
     // of the second graph and B channel the height of the last graph
     var fragmentShader =
         'varying vec4 uv0;\n' +
+        'varying float enabled;\n' +
         'uniform vec4 clr;\n' +
         'uniform vec4 col0;\n' +
         'uniform vec4 col1;\n' +
@@ -30,7 +33,9 @@ function Render2d(device, colors, maxQuads) {
         'void main (void) {\n' +
         '    vec4 tex = texture2D(source, uv0.xy);\n' +
         '    if (!(tex.rgb == vec3(1.0, 1.0, 1.0))) {\n' +  // pure white is text
-        '       if (abs(uv0.w - tex.a) < watermarkSize)\n' +
+        '       if (enabled < 0.5)\n' +
+        '           tex = background;\n' +
+        '       else if (abs(uv0.w - tex.a) < watermarkSize)\n' +
         '           tex = watermark;\n' +
         '       else if (uv0.w < tex.r)\n' +
         '           tex = col0;\n' +
@@ -46,7 +51,7 @@ function Render2d(device, colors, maxQuads) {
 
     var format = new pc.VertexFormat(device, [{
         semantic: pc.SEMANTIC_POSITION,
-        components: 2,
+        components: 3,
         type: pc.TYPE_FLOAT32
     }, {
         semantic: pc.SEMANTIC_TEXCOORD0,
@@ -100,7 +105,7 @@ function Render2d(device, colors, maxQuads) {
 }
 
 Object.assign(Render2d.prototype, {
-    quad: function (texture, x, y, w, h, u, v, uw, uh) {
+    quad: function (texture, x, y, w, h, u, v, uw, uh, enabled) {
         var quad = this.quads++;
 
         // update primitive
@@ -132,12 +137,13 @@ Object.assign(Render2d.prototype, {
         var u1 = u + (uw === undefined ? w : uw);
         var v1 = v + (uh === undefined ? h : uh);
 
+        var colorize = enabled ? 1 : 0;
         this.data.set([
-            x,  y,  u,  v,  0, 0,
-            x1, y,  u1, v,  1, 0,
-            x1, y1, u1, v1, 1, 1,
-            x,  y1, u,  v1, 0, 1
-        ], 4 * 6 * quad);
+            x,  y,  colorize, u,  v,  0, 0,
+            x1, y,  colorize, u1, v,  1, 0,
+            x1, y1, colorize, u1, v1, 1, 1,
+            x,  y1, colorize, u,  v1, 0, 1
+        ], 4 * 7 * quad);
     },
 
     render: function (clr, height) {

@@ -80,16 +80,15 @@ Object.assign(Graph.prototype, {
     },
 
     render: function (render2d, x, y, w, h) {
-        if (this.enabled) {
-            render2d.quad(this.texture,
-                          x + w,
-                          y,
-                          -w,
-                          h,
-                          this.cursor,
-                          0.5 + this.yOffset,
-                          -w, 0);
-        }
+        render2d.quad(this.texture,
+                      x + w,
+                      y,
+                      -w,
+                      h,
+                      this.cursor,
+                      0.5 + this.yOffset,
+                      -w, 0,
+                      this.enabled);
     }
 });
 

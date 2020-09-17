@@ -93,7 +93,9 @@ Object.assign(WordAtlas.prototype, {
                           p.w + padding * 2,
                           p.h + padding * 2,
                           p.x - padding,
-                          64 - p.y - p.h - padding);
+                          64 - p.y - p.h - padding,
+                          undefined, undefined,
+                          true);
             return p.w;
         }
         return 0;
