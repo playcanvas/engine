@@ -95,7 +95,7 @@ function MiniStats(app, options) {
 
     this.width = 0;
     this.height = 0;
-    this.gspacing = options.spacingPercent * 0.01;
+    this.gspacing = 2;
     this.clr = [1, 1, 1, 0.5];
 
     this._enabled = true;
@@ -107,18 +107,15 @@ function MiniStats(app, options) {
 MiniStats.getDefaultOptions = function () {
     return {
 
-        // sizes of area to render individual graphs in
+        // sizes of area to render individual graphs in and spacing between indivudual graphs
         sizes: [
-            { width: 100, height: 16, graphs: false },
-            { width: 128, height: 32, graphs: true },
-            { width: 256, height: 64, graphs: true }
+            { width: 100, height: 16, spacing: 0, graphs: false },
+            { width: 128, height: 32, spacing: 2, graphs: true },
+            { width: 256, height: 64, spacing: 2, graphs: true }
         ],
 
         // index into sizes array for initial setting
         startSizeIndex: 0,
-
-        // spacing between graphs, in percent of its height
-        spacingPercent: 4,
 
         // refresh rate of text stats in ms
         textRefreshRate: 500,
@@ -180,6 +177,7 @@ Object.defineProperties(MiniStats.prototype, {
         },
         set: function (value) {
             this._activeSizeIndex = value;
+            this.gspacing = this.sizes[value].spacing;
             this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
         }
     },
@@ -196,7 +194,7 @@ Object.defineProperties(MiniStats.prototype, {
     overallHeight: {
         get: function () {
             var graphs = this.graphs;
-            var spacing = this.height * this.gspacing;
+            var spacing = this.gspacing;
             return this.height * graphs.length + spacing * (graphs.length - 1);
         }
     },
@@ -271,7 +269,7 @@ Object.assign(MiniStats.prototype, {
         var render2d = this.render2d;
         var width = this.width;
         var height = this.height;
-        var gspacing = this.gspacing * height;
+        var gspacing = this.gspacing;
 
         var i, j, x, y, graph;
 
