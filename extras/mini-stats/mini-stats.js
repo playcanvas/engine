@@ -109,7 +109,7 @@ MiniStats.getDefaultOptions = function () {
 
         // sizes of area to render individual graphs in and spacing between indivudual graphs
         sizes: [
-            { width: 128, height: 16, spacing: 0, graphs: false },
+            { width: 100, height: 16, spacing: 0, graphs: false },
             { width: 128, height: 32, spacing: 2, graphs: true },
             { width: 256, height: 64, spacing: 2, graphs: true }
         ],
