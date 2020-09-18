@@ -525,7 +525,7 @@ Object.assign(MeshInstance.prototype, {
         this._setupSkinUpdate();
     },
 
-    _setupSkinUpdate() {
+    _setupSkinUpdate: function () {
 
         // set if bones need to be updated before culling
         if (this._skinInstance) {
