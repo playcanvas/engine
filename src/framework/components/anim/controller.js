@@ -485,7 +485,9 @@ Object.assign(AnimController.prototype, {
             var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
             for (i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
-                if (i !== this._transitionPreviousStates.length - 1) {
+                if (!this._isTransitioning) {
+                    this._transitionPreviousStates[i].weight = 1.0;
+                } else if (i !== this._transitionPreviousStates.length - 1) {
                     this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
                 } else {
                     this._transitionPreviousStates[i].weight = interpolatedTime;
@@ -501,9 +503,9 @@ Object.assign(AnimController.prototype, {
                         clip.name = animation.name + '.previous.' + i;
                     }
                     // // pause previous animation clips to reduce their impact on performance
-                    // if (i !== this._transitionPreviousStates.length - 1) {
-                    clip.pause();
-                    // }
+                    if (i !== this._transitionPreviousStates.length - 1) {
+                        clip.pause();
+                    }
                 }
             }
         }
@@ -652,7 +654,8 @@ Object.assign(AnimController.prototype, {
             this._updateStateFromTransition(transition);
 
         if (this._isTransitioning) {
-            if (this._currTransitionTime < this._totalTransitionTime) {
+            this._currTransitionTime += dt;
+            if (this._currTransitionTime <= this._totalTransitionTime) {
                 var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (i = 0; i < this._transitionPreviousStates.length; i++) {
@@ -691,7 +694,6 @@ Object.assign(AnimController.prototype, {
                     }
                 }
             }
-            this._currTransitionTime += dt;
         }
         this._animEvaluator.update(dt);
     },

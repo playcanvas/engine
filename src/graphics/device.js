@@ -685,7 +685,7 @@ var GraphicsDevice = function (canvas, options) {
     this._spectorCurrentMarker = "";
     // #endif
 
-    this.createGrabPass(options.alpha);
+    this.createGrabPass();
 
     VertexFormat.init(this);
 };
@@ -1020,13 +1020,11 @@ Object.assign(GraphicsDevice.prototype, {
         this.transformFeedbackBuffer = null;
     },
 
-    createGrabPass: function (alpha) {
+    createGrabPass: function () {
         if (this.grabPassTexture) return;
 
-        var format = alpha ? PIXELFORMAT_R8_G8_B8_A8 : PIXELFORMAT_R8_G8_B8;
-
         var grabPassTexture = new Texture(this, {
-            format: format,
+            format: PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -1058,6 +1056,10 @@ Object.assign(GraphicsDevice.prototype, {
         var width = this.width;
         var height = this.height;
 
+        // #ifdef DEBUG
+        this.pushMarker("grabPass");
+        // #endif
+
         if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
             if (resolveRenderTarget) renderTarget.resolve(true);
 
@@ -1087,6 +1089,10 @@ Object.assign(GraphicsDevice.prototype, {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
             }
         }
+
+        // #ifdef DEBUG
+        this.popMarker();
+        // #endif
     },
 
     destroyGrabPass: function () {
@@ -2396,8 +2402,9 @@ Object.assign(GraphicsDevice.prototype, {
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
         }
 
-        // #ifdef PROFILER
         this._drawCallsPerFrame++;
+
+        // #ifdef PROFILER
         this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
         // #endif
     },

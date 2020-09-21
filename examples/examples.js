@@ -16,6 +16,7 @@ var categories = [
         name: "graphics",
         examples: [
             "batching-dynamic",
+            "grab-pass",
             "hardware-instancing",
             "hierarchy",
             "layers",
@@ -65,6 +66,7 @@ var categories = [
     }, {
         name: "misc",
         examples: [
+            "mini-stats",
             "multi-application"
         ]
     }, {

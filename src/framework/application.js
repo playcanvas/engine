@@ -1436,7 +1436,8 @@ Object.assign(Application.prototype, {
         // #endif
     },
 
-    _fillFrameStats: function (now, dt, ms) {
+    _fillFrameStatsBasic: function (now, dt, ms) {
+
         // Timing stats
         var stats = this.stats.frame;
         stats.dt = dt;
@@ -1448,6 +1449,15 @@ Object.assign(Application.prototype, {
         } else {
             stats._fpsAccum++;
         }
+
+        // total draw call
+        this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
+        this.graphicsDevice._drawCallsPerFrame = 0;
+    },
+
+    _fillFrameStats: function () {
+
+        var stats = this.stats.frame;
 
         // Render stats
         stats.cameras = this.renderer._camerasRendered;
@@ -1496,7 +1506,6 @@ Object.assign(Application.prototype, {
         stats.immediate = 0;
         stats.instanced = 0;
         stats.removedByInstancing = 0;
-        stats.total = this.graphicsDevice._drawCallsPerFrame;
         stats.misc = stats.total - (stats.forward + stats.shadow);
         this.renderer._depthDrawCalls = 0;
         this.renderer._shadowDrawCalls = 0;
@@ -1506,7 +1515,6 @@ Object.assign(Application.prototype, {
         this.renderer._immediateRendered = 0;
         this.renderer._instancedDrawCalls = 0;
         this.renderer._removedByInstancing = 0;
-        this.graphicsDevice._drawCallsPerFrame = 0;
 
         this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 
@@ -2414,8 +2422,10 @@ var makeTick = function (_app) {
         if (application.graphicsDevice.contextLost)
             return;
 
+        application._fillFrameStatsBasic(currentTime, dt, ms);
+
         // #ifdef PROFILER
-        application._fillFrameStats(currentTime, dt, ms);
+        application._fillFrameStats();
         // #endif
 
         application.fire("frameupdate", ms);

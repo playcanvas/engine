@@ -457,8 +457,11 @@ Object.assign(MeshInstance.prototype, {
      * if set on Material this mesh instance uses for rendering.
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number} [passFlags] - Mask describing which passes the material should be included in.
      */
-    setParameter: function (name, data) {
+    setParameter: function (name, data, passFlags) {
+
+        if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         if (data === undefined && typeof name === 'object') {
             var uniformObject = name;
@@ -475,10 +478,12 @@ Object.assign(MeshInstance.prototype, {
         var param = this.parameters[name];
         if (param) {
             param.data = data;
+            param.passFlags = passFlags;
         } else {
             this.parameters[name] = {
                 scopeId: null,
-                data: data
+                data: data,
+                passFlags: passFlags
             };
         }
     },
@@ -496,14 +501,16 @@ Object.assign(MeshInstance.prototype, {
     },
 
     // used to apply parameters from this mesh instance into scope of uniforms, called internally by forward-renderer
-    setParameters: function (device) {
+    setParameters: function (device, passFlag) {
         var parameter, parameters = this.parameters;
         for (var paramName in parameters) {
             parameter = parameters[paramName];
-            if (!parameter.scopeId) {
-                parameter.scopeId = device.scope.resolve(paramName);
+            if (parameter.passFlags & passFlag) {
+                if (!parameter.scopeId) {
+                    parameter.scopeId = device.scope.resolve(paramName);
+                }
+                parameter.scopeId.setValue(parameter.data);
             }
-            parameter.scopeId.setValue(parameter.data);
         }
     },
 

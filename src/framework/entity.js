@@ -200,7 +200,7 @@ Entity.prototype.findComponent = function (type) {
  * @name pc.Entity#findComponents
  * @description Search the entity and all of its descendants for all components of specified type.
  * @param {string} type - The name of the component type to retrieve.
- * @returns {pc.Component} All components of specified type in the entity or any of its descendants.
+ * @returns {pc.Component[]} All components of specified type in the entity or any of its descendants.
  * Returns empty array if none found.
  * @example
  * // Get all light components in the hierarchy tree that starts with this entity
