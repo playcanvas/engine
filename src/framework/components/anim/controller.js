@@ -139,7 +139,7 @@ Object.assign(BlendTree.prototype, AnimNode.prototype, {
         var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
         switch (this._type) {
             case ANIM_BLEND_1D: {
-                parameterValue = this._findParameter(this._parameters[0]).value;
+                var parameterValue = this._findParameter(this._parameters[0]).value;
                 if (this._parameterValues && (this._parameterValues[0] === parameterValue)) {
                     return;
                 }
