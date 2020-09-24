@@ -61,22 +61,6 @@ Object.defineProperties(AnimNode.prototype, {
     }
 });
 
-// Maths helper functions
-
-function between(num, a, b, inclusive) {
-    var min = Math.min(a, b),
-        max = Math.max(a, b);
-    return inclusive ? num >= min && num <= max : num > min && num < max;
-}
-
-function getAngleRad(a, b) {
-    return Math.atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
-}
-
-function clamp(num, min, max) {
-    return num <= min ? min : num >= max ? max : num;
-}
-
 function BlendTree(parent, name, point, type, parameters, children, findParameter) {
     this._parent = parent;
     this._name = name;
@@ -129,13 +113,29 @@ Object.defineProperties(BlendTree.prototype, {
     }
 });
 
+
+// Maths helper functions
+function between(num, a, b, inclusive) {
+    var min = Math.min(a, b),
+        max = Math.max(a, b);
+    return inclusive ? num >= min && num <= max : num > min && num < max;
+}
+
+function getAngleRad(a, b) {
+    return Math.atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
+}
+
+function clamp(num, min, max) {
+    return num <= min ? min : num >= max ? max : num;
+}
+
 Object.assign(BlendTree.prototype, AnimNode.prototype, {
-    getChild(name) {
+    getChild: function (name) {
         for (var i = 0; i < this._children.length; i++) {
             if (this._children[i].name === name) return this._children[i];
         }
     },
-    calculateWeights() {
+    calculateWeights: function () {
         var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
         switch (this._type) {
             case ANIM_BLEND_1D: {
@@ -241,7 +241,7 @@ Object.assign(BlendTree.prototype, AnimNode.prototype, {
             }
         }
     },
-    getNodeCount() {
+    getNodeCount: function () {
         var count = 0;
         for (var i = 0; i < this._children.length; i++) {
             var child = this._children[i];
@@ -272,14 +272,14 @@ function AnimState(controller, name, speed, loop, blendTree) {
 }
 
 Object.assign(AnimState.prototype, {
-    _getNodeFromPath(path) {
+    _getNodeFromPath: function (path) {
         var currNode = this._blendTree;
         for (var i = 1; i < path.length; i++) {
             currNode = currNode.getChild(path[i]);
         }
         return currNode;
     },
-    addAnimation(path, animTrack) {
+    addAnimation: function (path, animTrack) {
         var indexOfAnimation = this._animationList.findIndex(function (animation) {
             return animation.path === path;
         });
@@ -861,7 +861,7 @@ Object.assign(AnimController.prototype, {
     },
 
     assignAnimation: function (pathString, animTrack) {
-        const path = pathString.split('.');
+        var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
             // #ifdef DEBUG
