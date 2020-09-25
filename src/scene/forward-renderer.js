@@ -1308,8 +1308,7 @@ Object.assign(ForwardRenderer.prototype, {
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
-                device.setVertexBuffer(instancingData.vertexBuffer);
-                device.draw(mesh.primitive[style], instancingData.count);
+                device.draw(mesh.primitive[style], instancingData.count, true);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
                     this._removedByInstancing += instancingData.count;
                     meshInstance.instancingData = null;
