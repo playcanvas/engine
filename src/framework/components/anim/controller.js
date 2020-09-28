@@ -8,6 +8,18 @@ import {
     ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
 } from './constants.js';
 
+/**
+ * @private
+ * @component AnimNode
+ * @class
+ * @name pc.AnimNode
+ * @classdesc AnimNodes are used to represent a single animation track in the current state. Each state can contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will control the weight (contribution to the states final animation) of it's child AnimNodes.
+ * @description Create a new AnimNode.
+ * @param {pc.BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {string} name - The name of the AnimNode. Used when assigning a pc.AnimTrack to it.
+ * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
+ * @param {number} speed - The speed that it's pc.AnimTrack should play at.
+ */
 function AnimNode(parent, name, point, speed) {
     this._parent = parent;
     this._name = name;
@@ -61,14 +73,26 @@ Object.defineProperties(AnimNode.prototype, {
     }
 });
 
+/**
+ * @private
+ * @component BlendTree
+ * @class
+ * @name pc.BlendTree
+ * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other BlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
+ * @description Create a new BlendTree.
+ * @param {pc.BlendTree|null} parent - The parent of the BlendTree. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
+ * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
+ * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
+ * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
+ * @param {object[]]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
+ * @param {Function} findParameter - Used at runtime to get the current parameter values.
+ */
 function BlendTree(parent, name, point, type, parameters, children, findParameter) {
-    this._parent = parent;
-    this._name = name;
+    AnimNode.call(this, parent, name, point);
     this._type = type;
     this._parameters = parameters;
-    this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
     this._parameterValues = null;
-    this._weight = 1.0;
     this._children = [];
     this._findParameter = findParameter;
     for (var i = 0; i < children.length; i++) {
@@ -80,6 +104,9 @@ function BlendTree(parent, name, point, type, parameters, children, findParamete
         }
     }
 }
+
+BlendTree.prototype = Object.create(AnimNode.prototype);
+BlendTree.prototype.constructor = BlendTree;
 
 Object.defineProperties(BlendTree.prototype, {
     parent: {
@@ -129,7 +156,7 @@ function clamp(num, min, max) {
     return num <= min ? min : num >= max ? max : num;
 }
 
-Object.assign(BlendTree.prototype, AnimNode.prototype, {
+Object.assign(BlendTree.prototype, {
     getChild: function (name) {
         for (var i = 0; i < this._children.length; i++) {
             if (this._children[i].name === name) return this._children[i];
@@ -255,7 +282,19 @@ Object.assign(BlendTree.prototype, AnimNode.prototype, {
     }
 });
 
-
+/**
+ * @private
+ * @component AnimState
+ * @class
+ * @name pc.AnimState
+ * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a BlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
+ * @description Create a new AnimState.
+ * @param {pc.AnimController} controller - The controller this AnimState is associated with.
+ * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
+ * @param {number} speed - The speed animations in the state should play at. Individual pc.AnimNodes can override this value.
+ * @param {boolean} loop - Determines whether animations in this state should loop.
+ * @param {object|null} blendTree - If supplied, the AnimState will recursively build a pc.BlendTree hierarchy, used to store, blend and play multiple animations.
+ */
 function AnimState(controller, name, speed, loop, blendTree) {
     this._controller = controller;
     this._name = name;
@@ -365,6 +404,23 @@ Object.defineProperties(AnimState.prototype, {
     }
 });
 
+/**
+ * @private
+ * @component AnimTransition
+ * @class
+ * @name pc.AnimTransition
+ * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
+ * @description Create a new AnimTransition.
+ * @param {pc.AnimController} controller - The controller this AnimTransition is associated with.
+ * @param {string} from - The state that this transition will exit from.
+ * @param {string} to - The state that this transition will transition to.
+ * @param {number} time - The duration of the transition in seconds.
+ * @param {number} priority - Used to sort all matching transitions in ascending order. The first transition in the list will be selected.
+ * @param {object[]]} conditions - A list of conditions which must pass for this transition to be used.
+ * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop.
+ * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in seconds.
+ * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*.
+ */
 function AnimTransition(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource) {
     this._controller = controller;
     this._from = from;
@@ -458,6 +514,19 @@ Object.defineProperties(AnimTransition.prototype, {
     }
 });
 
+/**
+ * @private
+ * @component AnimController
+ * @class
+ * @name pc.AnimController
+ * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
+ * @description Create a new AnimController.
+ * @param {pc.animEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
+ * @param {object[]} states - The list of states used to form the controller state graph.
+ * @param {object[]} transitions - The list of transitions used to form the controller state graph.
+ * @param {object[]} parameters - The anim components parameters.
+ * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
+ */
 function AnimController(animEvaluator, states, transitions, parameters, activate) {
     this._animEvaluator = animEvaluator;
     this._states = {};
