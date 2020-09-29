@@ -269,12 +269,12 @@ Object.assign(BlendTree.prototype, {
                     return;
                 }
                 this._parameterValues = parameterValues;
-                var sum = 0.0;
-                for (i = 0; i < this._parameterValues.length; i++) {
-                    sum += clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE);
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    weightSum += clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE);
                 }
                 for (i = 0; i < this._children.length; i++) {
-                    this._children[i].weight = clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE) / sum;
+                    this._children[i].weight = clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE) / weightSum;
                 }
                 break;
             }
