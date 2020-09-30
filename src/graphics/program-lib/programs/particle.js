@@ -25,6 +25,7 @@ var particle = {
     createShaderDefinition: function (device, options) {
         var vshader = "";
         var fshader = precisionCode(device) + "\n";
+        fshader += '#define PARTICLE\n';
 
         if (device.webgl2) {
             vshader += "#define GL2\n";
