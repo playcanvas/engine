@@ -408,7 +408,7 @@ Object.defineProperties(AnimState.prototype, {
             for (i = 0; i < this.animations.length; i++) {
                 var animation = this.animations[i];
                 if (animation.animTrack.duration > duration) {
-                    duration = animation.animTrack.duration > duration;
+                    duration = animation.animTrack.duration;
                 }
             }
             return duration;
@@ -430,7 +430,7 @@ Object.defineProperties(AnimState.prototype, {
  * @param {number} priority - Used to sort all matching transitions in ascending order. The first transition in the list will be selected.
  * @param {object[]} conditions - A list of conditions which must pass for this transition to be used.
  * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop.
- * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in seconds.
+ * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
  * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*.
  */
 function AnimTransition(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource) {
