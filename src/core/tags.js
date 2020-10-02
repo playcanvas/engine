@@ -193,7 +193,7 @@ Object.assign(Tags.prototype, {
      * @function
      * @name pc.Tags#add
      * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-     * @param {string} name - Name of a tag, or array of tags.
+     * @param {string|string[]} name - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
      * tags.add('level-1');
