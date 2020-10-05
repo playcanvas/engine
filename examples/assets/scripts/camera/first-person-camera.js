@@ -8,7 +8,7 @@ CharacterController.attributes.add('jumpImpulse', { type: 'number', default: 400
 
 // initialize code called once per entity
 CharacterController.prototype.initialize = function () {
-    this.groundCheckRay = new pc.Vec3(0, -1.2, 0);
+    this.groundCheckRay = new pc.Vec3(0, -0.5, 0);
     this.rayEnd = new pc.Vec3();
 
     this.groundNormal = new pc.Vec3();
