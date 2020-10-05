@@ -282,7 +282,7 @@ function applyRadialDeadZone(pos, remappedPos, deadZoneLow, deadZoneHigh) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                 Dual Virtual Stick FPS Touch Controls                      //
+//                 Virtual Touch Pad FPS Touch Controls                      //
 ////////////////////////////////////////////////////////////////////////////////
 var TouchInput = pc.createScript('touchInput');
 
@@ -325,10 +325,9 @@ TouchInput.prototype.initialize = function () {
         center: new pc.Vec2(),
         pos: new pc.Vec2()
     };
-    this.rightStick = {
+    this.rightTouch = {
         identifier: -1,
-        center: new pc.Vec2(),
-        pos: new pc.Vec2()
+        pos: new pc.Vec2(),
     };
 
     this.lastRightTap = 0;
@@ -349,11 +348,10 @@ TouchInput.prototype.initialize = function () {
                 this.leftStick.center.set(touch.pageX, touch.pageY);
                 this.leftStick.pos.set(0, 0);
                 app.fire('leftjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
-            } else if (touch.pageX > canvas.clientWidth / 2 && this.rightStick.identifier === -1) {
+            } else if (touch.pageX > canvas.clientWidth / 2 && this.rightTouch.identifier === -1) {
                 // ...otherwise create a right virtual joystick
-                this.rightStick.identifier = touch.identifier;
-                this.rightStick.center.set(touch.pageX, touch.pageY);
-                this.rightStick.pos.set(0, 0);
+                this.rightTouch.identifier = touch.identifier;
+                this.rightTouch.pos.set(touch.pageX, touch.pageY);
                 app.fire('rightjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
 
                 // See how long since the last tap of the right virtual joystick to detect a double tap (jump)
@@ -382,11 +380,14 @@ TouchInput.prototype.initialize = function () {
                 this.leftStick.pos.sub(this.leftStick.center);
                 this.leftStick.pos.scale(1 / this.radius);
                 app.fire('leftjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
-            } else if (touch.identifier === this.rightStick.identifier) {
-                this.rightStick.pos.set(touch.pageX, touch.pageY);
-                this.rightStick.pos.sub(this.rightStick.center);
-                this.rightStick.pos.scale(1 / this.radius);
+            } else if (touch.identifier === this.rightTouch.identifier) {
                 app.fire('rightjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
+
+                var lookLeftRight = -(touch.pageX - this.rightTouch.pos.x) * this.turnSpeed / 500;
+                var lookUpDown = -(touch.pageY - this.rightTouch.pos.y) * this.turnSpeed / 500;
+
+                app.fire('firstperson:look', lookLeftRight, lookUpDown);
+                this.rightTouch.pos.set(touch.pageX, touch.pageY);
             }
         }
     }.bind(this);
@@ -404,8 +405,8 @@ TouchInput.prototype.initialize = function () {
                 app.fire('firstperson:forward', 0);
                 app.fire('firstperson:strafe', 0);
                 app.fire('leftjoystick:disable');
-            } else if (touch.identifier === this.rightStick.identifier) {
-                this.rightStick.identifier = -1;
+            } else if (touch.identifier === this.rightTouch.identifier) {
+                this.rightTouch.identifier = -1;
                 app.fire('rightjoystick:disable');
             }
         }
@@ -447,16 +448,6 @@ TouchInput.prototype.update = function (dt) {
             app.fire('firstperson:forward', forward);
             this.lastForward = forward;
         }
-    }
-
-    // Looking
-    if (this.rightStick.identifier !== -1) {
-        // Apply a lower radial dead zone. We don't need an upper zone like with a real joypad
-        applyRadialDeadZone(this.rightStick.pos, this.remappedPos, this.deadZone, 0);
-
-        var lookLeftRight = -this.remappedPos.x * this.turnSpeed * dt;
-        var lookUpDown = -this.remappedPos.y * this.turnSpeed * dt;
-        app.fire('firstperson:look', lookLeftRight, lookUpDown);
     }
 };
 
