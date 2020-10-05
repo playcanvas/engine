@@ -327,7 +327,7 @@ TouchInput.prototype.initialize = function () {
     };
     this.rightTouch = {
         identifier: -1,
-        pos: new pc.Vec2(),
+        pos: new pc.Vec2()
     };
 
     this.lastRightTap = 0;
