@@ -270,6 +270,13 @@ var tempGraphNode = new GraphNode();
  * }
  */
 
+
+/**
+ * @name pc.Application#lightmapper
+ * @type {pc.Lightmapper}
+ * @description The run-time lightmapper.
+ */
+
 /**
  * @name pc.Application#loader
  * @type {pc.ResourceLoader}
