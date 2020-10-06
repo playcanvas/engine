@@ -499,12 +499,12 @@ function prefilterCubemap2(cubemap) {
         return data;
     };
 
-    var levels = [[], [], [], [], [], []];
+    var levels = [];
     var level0 = null;
 
     // generate prefiltered lighting data
-    var sizes = [128, 64, 32, 16, 8, 4];
-    var specPower = [undefined, 512, 128, 32, 8, 2];
+    var sizes = [128, 64, 32, 16, 8, 4, 2, 1];
+    var specPower = [undefined, 512, 128, 32, 8, 2, 1, 1];
     for (var i = 0; i < sizes.length; ++i) {
         var level = new pc.Texture(device, {
             cubemap: true,
@@ -518,8 +518,9 @@ function prefilterCubemap2(cubemap) {
         pc.reprojectTexture(device, level0 || cubemap, level, specPower[i]);
 
         // download and store level data
+        levels[i] = [];
         for (var face = 0; face < 6; ++face) {
-            levels[face].push(readPixels(level, face));
+            levels[i].push(readPixels(level, face));
         }
 
         if (level0 === null) {
