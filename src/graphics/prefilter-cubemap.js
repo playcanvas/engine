@@ -14,6 +14,8 @@ import { Texture } from './texture.js';
 
 import { Application } from '../framework/application.js';
 
+import { reprojectTexture } from './reproject-texture.js';
+
 function syncToCpu(device, targ, face) {
     var tex = targ._colorBuffer;
     if (tex.format != PIXELFORMAT_R8_G8_B8_A8) return;
@@ -483,4 +485,58 @@ function shFromCubemap(source, dontFlipX) {
     return sh;
 }
 
-export { prefilterCubemap, shFromCubemap };
+function prefilterCubemap2(cubemap) {
+    var device = cubemap.device;
+
+    // read the pixel data of the given texture face
+    var readPixels = function (texture, face) {
+        var rt = new pc.RenderTarget({ colorBuffer: texture, depth: false, face: face });
+        var data = new Uint8ClampedArray(texture.width * texture.height * 4);
+        var device = texture.device;
+        device.setFramebuffer(rt._glFrameBuffer);
+        device.initRenderTarget(rt);
+        device.gl.readPixels(0, 0, texture.width, texture.height, device.gl.RGBA, device.gl.UNSIGNED_BYTE, data);
+        return data;
+    };
+
+    var levels = [[], [], [], [], [], []];
+    var level0 = null;
+
+    // generate prefiltered lighting data
+    var sizes = [128, 64, 32, 16, 8, 4];
+    var specPower = [undefined, 512, 128, 32, 8, 2];
+    for (var i = 0; i < sizes.length; ++i) {
+        var level = new pc.Texture(device, {
+            cubemap: true,
+            name: 'skyboxPrefilter' + i,
+            width: sizes[i],
+            height: sizes[i],
+            type: pc.TEXTURETYPE_RGBM,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        });
+        pc.reprojectTexture(device, level0 || cubemap, level, specPower[i]);
+
+        // download and store level data
+        for (var face = 0; face < 6; ++face) {
+            levels[face].push(readPixels(level, face));
+        }
+
+        if (level0 === null) {
+            level0 = level;
+        }
+    }
+
+    return new pc.Texture(device, {
+        cubemap: true,
+        name: 'filteredCubemap',
+        width: 128,
+        height: 128,
+        type: pc.TEXTURETYPE_RGBM,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        levels: levels
+    });
+}
+
+export { prefilterCubemap, shFromCubemap, prefilterCubemap2 };
