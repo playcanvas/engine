@@ -171,9 +171,17 @@ XrManager.prototype.constructor = XrManager;
  * button.on('click', function () {
  *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
  * });
- * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+ * @param {object} [options] - object with additional options for XR session initialization.
+ * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+ * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
  */
-XrManager.prototype.start = function (camera, type, spaceType, callback) {
+XrManager.prototype.start = function (camera, type, spaceType, options) {
+    var self = this;
+    var callback = options;
+
+    if (typeof(options) === 'object')
+        callback = options.callback;
+
     if (! this._available[type]) {
         if (callback) callback(new Error('XR is not available'));
         return;
@@ -183,8 +191,6 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
         if (callback) callback(new Error('XR session is already started'));
         return;
     }
-
-    var self = this;
 
     this._camera = camera;
     this._camera.camera.xr = this;
@@ -206,10 +212,13 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
     if (type === XRTYPE_AR) {
         optionalFeatures.push('light-estimation');
         optionalFeatures.push('hit-test');
+    } else if (type === XRTYPE_VR) {
+        optionalFeatures.push('hand-tracking');
     }
 
-    if (type === XRTYPE_VR)
-        optionalFeatures.push('hand-tracking');
+    if (options && options.optionalFeatures) {
+        optionalFeatures = optionalFeatures.concat(options.optionalFeatures);
+    }
 
     navigator.xr.requestSession(type, {
         requiredFeatures: [spaceType],

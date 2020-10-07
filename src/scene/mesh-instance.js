@@ -294,6 +294,8 @@ Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
         for (var i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
         }
+
+        this._setupSkinUpdate();
     }
 });
 
@@ -522,6 +524,23 @@ Object.assign(MeshInstance.prototype, {
             this.deleteParameter("texture_dirLightMap");
             this._shaderDefs &= ~SHADERDEF_LM;
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
+        }
+    },
+
+    setOverrideAabb: function (aabb) {
+        this._updateAabb = !aabb;
+        if (aabb) {
+            this.aabb.copy(aabb);
+        }
+
+        this._setupSkinUpdate();
+    },
+
+    _setupSkinUpdate: function () {
+
+        // set if bones need to be updated before culling
+        if (this._skinInstance) {
+            this._skinInstance._updateBeforeCull = this._updateAabb;
         }
     }
 });

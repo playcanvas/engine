@@ -4,16 +4,345 @@ import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY,
+    ANIM_BLEND_1D, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_DIRECT
 } from './constants.js';
 
-function AnimState(controller, name, speed, loop) {
+/**
+ * @private
+ * @component AnimNode
+ * @class
+ * @name pc.AnimNode
+ * @classdesc AnimNodes are used to represent a single animation track in the current state. Each state can contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will control the weight (contribution to the states final animation) of it's child AnimNodes.
+ * @description Create a new AnimNode.
+ * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.
+ * @param {pc.BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {string} name - The name of the AnimNode. Used when assigning a pc.AnimTrack to it.
+ * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
+ * @param {number} speed - The speed that it's pc.AnimTrack should play at.
+ */
+function AnimNode(state, parent, name, point, speed) {
+    this._state = state;
+    this._parent = parent;
+    this._name = name;
+    this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
+    this._speed = speed || 1.0;
+    this._weight = 1.0;
+    this._animTrack = null;
+}
+
+Object.defineProperties(AnimNode.prototype, {
+    parent: {
+        get: function () {
+            return this._parent;
+        }
+    },
+    name: {
+        get: function () {
+            return this._name;
+        }
+    },
+    path: {
+        get: function () {
+            return this._parent ? this._parent.path + '.' + this._name : this._name;
+        }
+    },
+    point: {
+        get: function () {
+            return this._point;
+        }
+    },
+    weight: {
+        get: function () {
+            return this._parent ? this._parent.weight * this._weight : this._weight;
+        },
+        set: function (value) {
+            this._weight = value;
+        }
+    },
+    normalizedWeight: {
+        get: function () {
+            var totalWeight = this._state.totalWeight;
+            if (totalWeight === 0.0) return 0.0;
+            return this.weight / totalWeight;
+        }
+
+    },
+    speed: {
+        get: function () {
+            return this._speed;
+        }
+    },
+    animTrack: {
+        get: function () {
+            return this._animTrack;
+        },
+        set: function (value) {
+            this._animTrack = value;
+        }
+    }
+});
+
+/**
+ * @private
+ * @component BlendTree
+ * @class
+ * @name pc.BlendTree
+ * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other BlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
+ * @description Create a new BlendTree.
+ * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.
+ * @param {pc.BlendTree|null} parent - The parent of the BlendTree. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
+ * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
+ * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
+ * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
+ * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
+ * @param {Function} findParameter - Used at runtime to get the current parameter values.
+ */
+function BlendTree(state, parent, name, point, type, parameters, children, findParameter) {
+    AnimNode.call(this, state, parent, name, point);
+    this._type = type;
+    this._parameters = parameters;
+    this._parameterValues = null;
+    this._children = [];
+    this._findParameter = findParameter;
+    for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        if (child.children) {
+            this._children.push(new BlendTree(state, this, child.name, child.point, child.type, child.parameter ? [child.parameter] : child.parameters, child.children, findParameter));
+        } else {
+            this._children.push(new AnimNode(state, this, child.name, child.point, child.speed));
+        }
+    }
+}
+
+BlendTree.prototype = Object.create(AnimNode.prototype);
+BlendTree.prototype.constructor = BlendTree;
+
+Object.defineProperties(BlendTree.prototype, {
+    parent: {
+        get: function () {
+            return this._parent;
+        }
+    },
+    name: {
+        get: function () {
+            return this._name;
+        }
+    },
+    point: {
+        get: function () {
+            return this._point;
+        }
+    },
+    weight: {
+        get: function () {
+            this.calculateWeights();
+            return this._parent ? this._parent.weight * this._weight : this._weight;
+        },
+        set: function (value) {
+            this._weight = value;
+        }
+    },
+    speed: {
+        get: function () {
+            return this._speed;
+        }
+    }
+});
+
+
+// Maths helper functions
+function between(num, a, b, inclusive) {
+    var min = Math.min(a, b),
+        max = Math.max(a, b);
+    return inclusive ? num >= min && num <= max : num > min && num < max;
+}
+
+function getAngleRad(a, b) {
+    return Math.atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
+}
+
+function clamp(num, min, max) {
+    return num <= min ? min : num >= max ? max : num;
+}
+
+Object.assign(BlendTree.prototype, {
+    getChild: function (name) {
+        for (var i = 0; i < this._children.length; i++) {
+            if (this._children[i].name === name) return this._children[i];
+        }
+    },
+    calculateWeights: function () {
+        var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
+        switch (this._type) {
+            case ANIM_BLEND_1D: {
+                var parameterValue = this._findParameter(this._parameters[0]).value;
+                if (this._parameterValues && (this._parameterValues[0] === parameterValue)) {
+                    return;
+                }
+                this._parameterValues = [parameterValue];
+                this._children[0].weight = 0.0;
+                for (i = 0; i < this._children.length - 1; i++) {
+                    var child1 = this._children[i];
+                    var child2 = this._children[i + 1];
+                    if (between(parameterValue, child1.point, child2.point, true)) {
+                        var child2Distance = Math.abs(child1.point - child2.point);
+                        var parameterDistance = Math.abs(child1.point - parameterValue);
+                        var weight = (child2Distance - parameterDistance) / child2Distance;
+                        child1.weight = weight;
+                        child2.weight = (1.0 - weight);
+                    } else {
+                        child2.weight = 0.0;
+                    }
+                }
+                break;
+            }
+            case ANIM_BLEND_2D_CARTESIAN: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                p = new pc.Vec2(this._parameterValues);
+
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    pi = this._children[i].point.clone();
+                    minj = Number.MAX_VALUE;
+                    for (j = 0; j < this._children.length; j++) {
+                        if (i === j) continue;
+                        pj = this._children[j].point.clone();
+                        pipj = pj.clone().sub(pi);
+                        pip = p.clone().sub(pi);
+                        result = clamp(1.0 - (pip.clone().dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
+                        if (result < minj) minj = result;
+                    }
+                    this._children[i].weight = minj;
+                    weightSum += minj;
+                }
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = this._children[i]._weight / weightSum;
+                }
+                break;
+            }
+            case ANIM_BLEND_2D_DIRECTIONAL: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                p = new pc.Vec2(this._parameterValues);
+
+
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    pi = this._children[i].point.clone();
+                    minj = Number.MAX_VALUE;
+                    for (j = 0; j < this._children.length; j++) {
+                        if (i === j) continue;
+                        pj = this._children[j].point.clone();
+                        var pipAngle = getAngleRad(pi, p);
+                        var pipjAngle = getAngleRad(pi, pj);
+                        pipj = new pc.Vec2((pj.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipjAngle * 2.0);
+                        pip = new pc.Vec2((p.length() - pi.length()) / ((pj.length() + pi.length()) / 2), pipAngle * 2.0);
+                        result = clamp(1.0 - Math.abs((pip.clone().dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
+                        if (result < minj) minj = result;
+                    }
+                    this._children[i].weight = minj;
+                    weightSum += minj;
+                }
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = this._children[i]._weight / weightSum;
+                }
+                break;
+            }
+            case ANIM_BLEND_DIRECT: {
+                parameterValues = this._parameters.map(function (param) {
+                    return this._findParameter(param).value;
+                }.bind(this));
+                if (this._parameterValues === parameterValues) {
+                    return;
+                }
+                this._parameterValues = parameterValues;
+                weightSum = 0.0;
+                for (i = 0; i < this._children.length; i++) {
+                    weightSum += clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE);
+                }
+                for (i = 0; i < this._children.length; i++) {
+                    this._children[i].weight = clamp(this._parameterValues[i], 0.0, Number.MAX_VALUE) / weightSum;
+                }
+                break;
+            }
+        }
+    },
+    getNodeCount: function () {
+        var count = 0;
+        for (var i = 0; i < this._children.length; i++) {
+            var child = this._children[i];
+            if (child.constructor === BlendTree) {
+                count += this._children[i].getNodeCount();
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+});
+
+/**
+ * @private
+ * @component AnimState
+ * @class
+ * @name pc.AnimState
+ * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a BlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
+ * @description Create a new AnimState.
+ * @param {pc.AnimController} controller - The controller this AnimState is associated with.
+ * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
+ * @param {number} speed - The speed animations in the state should play at. Individual pc.AnimNodes can override this value.
+ * @param {boolean} loop - Determines whether animations in this state should loop.
+ * @param {object|null} blendTree - If supplied, the AnimState will recursively build a pc.BlendTree hierarchy, used to store, blend and play multiple animations.
+ */
+function AnimState(controller, name, speed, loop, blendTree) {
     this._controller = controller;
     this._name = name;
-    this._animations = [];
+    this._animations = {};
+    this._animationList = [];
     this._speed = speed || 1.0;
     this._loop = loop === undefined ? true : loop;
+    var findParameter = this._controller.findParameter.bind(this._controller);
+    if (blendTree) {
+        this._blendTree = new BlendTree(this, null, name, 1.0, blendTree.type, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, findParameter);
+    } else {
+        this._blendTree = new AnimNode(this, null, name, 1.0, speed);
+    }
 }
+
+Object.assign(AnimState.prototype, {
+    _getNodeFromPath: function (path) {
+        var currNode = this._blendTree;
+        for (var i = 1; i < path.length; i++) {
+            currNode = currNode.getChild(path[i]);
+        }
+        return currNode;
+    },
+    addAnimation: function (path, animTrack) {
+        var indexOfAnimation = this._animationList.findIndex(function (animation) {
+            return animation.path === path;
+        });
+        if (indexOfAnimation >= 0) {
+            this._animationList[indexOfAnimation].animTrack = animTrack;
+        } else {
+            var node = this._getNodeFromPath(path);
+            node.animTrack = animTrack;
+            this._animationList.push(node);
+        }
+    }
+});
 
 Object.defineProperties(AnimState.prototype, {
     name: {
@@ -23,10 +352,10 @@ Object.defineProperties(AnimState.prototype, {
     },
     animations: {
         get: function () {
-            return this._animations;
+            return this._animationList;
         },
         set: function (value) {
-            this._animations = value;
+            this._animationList = value;
         }
     },
     speed: {
@@ -39,9 +368,15 @@ Object.defineProperties(AnimState.prototype, {
             return this._loop;
         }
     },
+    nodeCount: {
+        get: function () {
+            if (!this._blendTree || !(this._blendTree.constructor === BlendTree)) return 1;
+            return this._blendTree.getNodeCount();
+        }
+    },
     playable: {
         get: function () {
-            return (this.animations.length > 0 || this.name === ANIM_STATE_START || this.name === ANIM_STATE_END);
+            return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.animations.length === this.nodeCount);
         }
     },
     looping: {
@@ -73,7 +408,7 @@ Object.defineProperties(AnimState.prototype, {
             for (i = 0; i < this.animations.length; i++) {
                 var animation = this.animations[i];
                 if (animation.animTrack.duration > duration) {
-                    duration = animation.animTrack.duration > duration;
+                    duration = animation.animTrack.duration;
                 }
             }
             return duration;
@@ -81,6 +416,23 @@ Object.defineProperties(AnimState.prototype, {
     }
 });
 
+/**
+ * @private
+ * @component AnimTransition
+ * @class
+ * @name pc.AnimTransition
+ * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
+ * @description Create a new AnimTransition.
+ * @param {pc.AnimController} controller - The controller this AnimTransition is associated with.
+ * @param {string} from - The state that this transition will exit from.
+ * @param {string} to - The state that this transition will transition to.
+ * @param {number} time - The duration of the transition in seconds.
+ * @param {number} priority - Used to sort all matching transitions in ascending order. The first transition in the list will be selected.
+ * @param {object[]} conditions - A list of conditions which must pass for this transition to be used.
+ * @param {number} exitTime - If provided, this transition will only be active for the exact frame during which the source states progress passes the time specified. Given as a normalised value of the source states duration. Values less than 1 will be checked every animation loop.
+ * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
+ * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*.
+ */
 function AnimTransition(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource) {
     this._controller = controller;
     this._from = from;
@@ -174,6 +526,19 @@ Object.defineProperties(AnimTransition.prototype, {
     }
 });
 
+/**
+ * @private
+ * @component AnimController
+ * @class
+ * @name pc.AnimController
+ * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
+ * @description Create a new AnimController.
+ * @param {pc.animEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
+ * @param {object[]} states - The list of states used to form the controller state graph.
+ * @param {object[]} transitions - The list of transitions used to form the controller state graph.
+ * @param {object[]} parameters - The anim components parameters.
+ * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
+ */
 function AnimController(animEvaluator, states, transitions, parameters, activate) {
     this._animEvaluator = animEvaluator;
     this._states = {};
@@ -184,7 +549,8 @@ function AnimController(animEvaluator, states, transitions, parameters, activate
             this,
             states[i].name,
             states[i].speed,
-            states[i].loop
+            states[i].loop,
+            states[i].blendTree
         );
         this._stateNames.push(states[i].name);
     }
@@ -482,7 +848,7 @@ Object.assign(AnimController.prototype, {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            var interpolatedTime = this._currTransitionTime / this._totalTransitionTime;
+            var interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
             for (i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
@@ -524,7 +890,8 @@ Object.assign(AnimController.prototype, {
         for (i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                clip = new AnimClip(activeState.animations[i].animTrack, 0, activeState.speed, true, activeState.loop);
+                var speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
+                clip = new AnimClip(activeState.animations[i].animTrack, 0, speed, true, activeState.loop);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -533,7 +900,7 @@ Object.assign(AnimController.prototype, {
             if (transition.time > 0) {
                 clip.blendWeight = 0.0;
             } else {
-                clip.blendWeight = 1.0 / activeState.totalWeight;
+                clip.blendWeight = activeState.animations[i].normalizedWeight;
             }
             clip.play();
             if (hasTransitionOffset) {
@@ -574,27 +941,16 @@ Object.assign(AnimController.prototype, {
         this._updateStateFromTransition(transition);
     },
 
-    assignAnimation: function (stateName, animTrack) {
-        var state = this._findState(stateName);
+    assignAnimation: function (pathString, animTrack) {
+        var path = pathString.split('.');
+        var state = this._findState(path[0]);
         if (!state) {
             // #ifdef DEBUG
             console.error('Attempting to assign an animation track to an animation state that does not exist.');
             // #endif
             return;
         }
-
-        var animation = {
-            name: stateName + '.' + animTrack.name,
-            animTrack: animTrack,
-            weight: 1.0
-        };
-
-        // Currently the anim controller only supports single animations in a state
-        if (state.animations.length > 0) {
-            state.animations = [];
-            this.reset();
-        }
-        state.animations.push(animation);
+        state.addAnimation(path, animTrack);
 
         if (!this._playing && this._activate && this.playable) {
             this.play();
@@ -665,7 +1021,7 @@ Object.assign(AnimController.prototype, {
                         animation = state.animations[j];
                         clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
                         if (clip) {
-                            clip.blendWeight = (1.0 - interpolatedTime) * animation.weight / state.totalWeight * stateWeight;
+                            clip.blendWeight = (1.0 - interpolatedTime) * animation.normalizedWeight * stateWeight;
                         }
                     }
                 }
@@ -673,7 +1029,7 @@ Object.assign(AnimController.prototype, {
                 state = this.activeState;
                 for (i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
-                    this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.weight / state.totalWeight;
+                    this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.normalizedWeight;
                 }
             } else {
                 this._isTransitioning = false;
@@ -690,7 +1046,18 @@ Object.assign(AnimController.prototype, {
                     animation = state.animations[i];
                     clip = this._animEvaluator.findClip(animation.name);
                     if (clip) {
-                        clip.blendWeight = animation.weight / state.totalWeight;
+                        clip.blendWeight = animation.normalizedWeight;
+                    }
+                }
+            }
+        } else {
+            if (this.activeState._blendTree.constructor === BlendTree) {
+                state = this.activeState;
+                for (i = 0; i < state.animations.length; i++) {
+                    animation = state.animations[i];
+                    clip = this._animEvaluator.findClip(animation.name);
+                    if (clip) {
+                        clip.blendWeight = animation.normalizedWeight;
                     }
                 }
             }

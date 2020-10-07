@@ -337,6 +337,14 @@ ComponentSystem.destroy = function () {
     ComponentSystem.off('animationUpdate');
     ComponentSystem.off('fixedUpdate');
     ComponentSystem.off('postUpdate');
+
+    ComponentSystem._init = [];
+    ComponentSystem._postInit = [];
+    ComponentSystem._toolsUpdate = [];
+    ComponentSystem._update = [];
+    ComponentSystem._animationUpdate = [];
+    ComponentSystem._fixedUpdate = [];
+    ComponentSystem._postUpdate = [];
 };
 
 export { ComponentSystem };

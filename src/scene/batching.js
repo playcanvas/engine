@@ -100,10 +100,10 @@ SkinBatchInstance.prototype = Object.create(SkinBatchInstance.prototype);
 SkinBatchInstance.prototype.constructor = SkinBatchInstance;
 
 Object.assign(SkinBatchInstance.prototype, {
-    updateMatrices: function (rootNode) {
+    updateMatrices: function (rootNode, skinUpdateIndex) {
     },
 
-    updateMatrixPalette: function () {
+    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
         var pe;
         var mp = this.matrixPalette;
         var base;

@@ -231,14 +231,15 @@ Object.assign(Lightmapper.prototype, {
      * @function
      * @name pc.Lightmapper#bake
      * @description Generates and applies the lightmaps.
-     * @param {pc.Entity[]} nodes - An array of entities (with model components) to render
+     * @param {pc.Entity[]|null} nodes - An array of entities (with model components) to render
      * lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * * {@link pc.BAKE_COLOR}: single color lightmap
      * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * Only lights with bakeDir=true will be used for generating the dominant light direction.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
+     * pc.BAKE_COLORDIR.
      */
     bake: function (nodes, mode) {
 

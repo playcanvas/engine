@@ -57,8 +57,8 @@ Object.assign(FontHandler.prototype, {
                 retry: this.retryRequests
             }, function (err, response) {
                 // update asset data
-                var data = upgradeDataSchema(response);
                 if (!err) {
+                    var data = upgradeDataSchema(response);
                     self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
                         if (err) return callback(err);
 
