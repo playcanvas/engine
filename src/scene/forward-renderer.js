@@ -117,6 +117,8 @@ var skipRenderCamera = null;
 var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
 
+var _skinUpdateIndex = 0;
+
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
 for (var fp = 0; fp < 8; fp++) {
@@ -1180,6 +1182,9 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateCpuSkinMatrices: function (drawCalls) {
+
+        _skinUpdateIndex++;
+
         var drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
@@ -1187,12 +1192,12 @@ Object.assign(ForwardRenderer.prototype, {
         var skinTime = now();
         // #endif
 
-        var i, skin;
+        var i, si;
         for (i = 0; i < drawCallsCount; i++) {
-            skin = drawCalls[i].skinInstance;
-            if (skin) {
-                skin.updateMatrices(drawCalls[i].node);
-                skin._dirty = true;
+            si = drawCalls[i].skinInstance;
+            if (si) {
+                si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
+                si._dirty = true;
             }
         }
 
@@ -1213,7 +1218,7 @@ Object.assign(ForwardRenderer.prototype, {
             skin = drawCalls[i].skinInstance;
             if (skin) {
                 if (skin._dirty) {
-                    skin.updateMatrixPalette();
+                    skin.updateMatrixPalette(drawCalls[i].node, _skinUpdateIndex);
                     skin._dirty = false;
                 }
             }

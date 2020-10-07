@@ -47,6 +47,8 @@ import { Component } from '../component.js';
  * @property {boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark model as non-movable (optimization).
+ * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
@@ -77,6 +79,9 @@ function ModelComponent(system, entity)   {
 
     this._layers = [LAYERID_WORLD]; // assign to the default world layer
     this._batchGroupId = -1;
+
+    // bounding box which can be set to override bounding box based on mesh
+    this._aabb = null;
 
     this._area = null;
 
@@ -494,6 +499,26 @@ Object.defineProperty(ModelComponent.prototype, "meshInstances", {
     }
 });
 
+Object.defineProperties(ModelComponent.prototype, {
+
+    'aabb': {
+        get: function () {
+            return this._aabb;
+        },
+        set: function (value) {
+            this._aabb = value;
+
+            // set it on meshInstances
+            var mi = this._model.meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setOverrideAabb(this._aabb);
+                }
+            }
+        }
+    }
+});
+
 Object.defineProperty(ModelComponent.prototype, "type", {
     get: function () {
         return this._type;
@@ -683,6 +708,7 @@ Object.defineProperty(ModelComponent.prototype, "model", {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
                 meshInstances[i].isStatic = this._isStatic;
+                meshInstances[i].setOverrideAabb(this._aabb);
             }
 
             this.lightmapped = this._lightmapped; // update meshInstances
