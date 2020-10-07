@@ -30,6 +30,8 @@ import { Component } from '../component.js';
  * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark meshes as non-movable (optimization).
+ * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which the meshes should belong.
@@ -52,6 +54,9 @@ function RenderComponent(system, entity)   {
 
     this._material = system.defaultMaterial;
     this._materialEvents = null;
+
+    // bounding box which can be set to override bounding box based on mesh
+    this._aabb = null;
 
     // area - used by lightmapper
     this._area = null;
@@ -273,6 +278,26 @@ Object.assign(RenderComponent.prototype, {
     }
 });
 
+Object.defineProperties(RenderComponent.prototype, {
+
+    'aabb': {
+        get: function () {
+            return this._aabb;
+        },
+        set: function (value) {
+            this._aabb = value;
+
+            // set it on meshInstances
+            var mi = this._meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setOverrideAabb(this._aabb);
+                }
+            }
+        }
+    }
+});
+
 Object.defineProperty(RenderComponent.prototype, "type", {
     get: function () {
         return this._type;
@@ -318,6 +343,7 @@ Object.defineProperty(RenderComponent.prototype, "meshInstances", {
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].isStatic = this._isStatic;
                 mi[i].setLightmapped(this._lightmapped);
+                mi[i].setOverrideAabb(this._aabb);
             }
 
             if (this.enabled && this.entity.enabled) {
