@@ -12,7 +12,7 @@ function ShaderInput(graphicsDevice, name, type, locationId) {
     // Create the version
     this.version = new Version();
 
-    // custome data type for arrays
+    // custom data type for arrays
     if (name.substr(name.length - 3) === "[0]") {
         switch (type) {
             case UNIFORMTYPE_FLOAT: type = UNIFORMTYPE_FLOATARRAY; break;
