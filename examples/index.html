@@ -35,70 +35,55 @@
         <script src="examples.js"></script>
         <script>
             var lastExample = "";
-            var mode = "";
-            var build = "";
+            // Initially use normal JS build... neither Debug/Profiler nor anything AS related
+            var mode = "js";
+            var build = "normal";
             let iframe = document.getElementById('example');
 
             function mode_js() {
                 mode = "js";
-                document.getElementById("mode_js"  ).style.backgroundColor = "#f60";
-                document.getElementById("mode_as32").style.backgroundColor = "white";
-                document.getElementById("mode_as64").style.backgroundColor = "white";
-                document.getElementById("mode_asjs").style.backgroundColor = "white";
-                //loadExample("assemblyscript/example-loader.html", "?build=" + build + "&mode=" + mode + "&example=" + lastExample);
+                loadExample(lastExample);
             }
 
             function mode_as32() {
                 mode = "as32";
-                document.getElementById("mode_js"  ).style.backgroundColor = "white";
-                document.getElementById("mode_as32").style.backgroundColor = "#f60";
-                document.getElementById("mode_as64").style.backgroundColor = "white";
-                document.getElementById("mode_asjs").style.backgroundColor = "white";
-                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
+                loadExample(lastExample);
             }
 
             function mode_as64() {
                 mode = "as64";
-                document.getElementById("mode_js"  ).style.backgroundColor = "white";
-                document.getElementById("mode_as32").style.backgroundColor = "white";
-                document.getElementById("mode_as64").style.backgroundColor = "#f60";
-                document.getElementById("mode_asjs").style.backgroundColor = "white";
-                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
+                loadExample(lastExample);
             }
 
             function mode_asjs() {
                 mode = "asjs";
-                document.getElementById("mode_js"  ).style.backgroundColor = "white";
-                document.getElementById("mode_as32").style.backgroundColor = "white";
-                document.getElementById("mode_as64").style.backgroundColor = "white";
-                document.getElementById("mode_asjs").style.backgroundColor = "#f60";
-                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
+                loadExample(lastExample);
             }
 
             function build_normal() {
                 build = "normal";
-                document.getElementById("build_normal"  ).style.backgroundColor = "#f60";
-                document.getElementById("build_debug"   ).style.backgroundColor = "white";
-                document.getElementById("build_profiler").style.backgroundColor = "white";
+                loadExample(lastExample);
             }
 
             function build_debug() {
                 build = "debug";
-                document.getElementById("build_normal"  ).style.backgroundColor = "white";
-                document.getElementById("build_debug"   ).style.backgroundColor = "#f60";
-                document.getElementById("build_profiler").style.backgroundColor = "white";
+                loadExample(lastExample);
             }
 
             function build_profiler() {
                 build = "profiler";
-                document.getElementById("build_normal"  ).style.backgroundColor = "white";
-                document.getElementById("build_debug"   ).style.backgroundColor = "white";
-                document.getElementById("build_profiler").style.backgroundColor = "#f60";
+                loadExample(lastExample);
             }
 
-            // Initially use normal JS build... neither Debug/Profiler nor anything AS related
-            mode_js();
-            build_normal();
+            function update_background_color_for_build_and_mode() {
+                document.getElementById("mode_js"  ).style.backgroundColor = mode == "js" ? "#f60" : "white";
+                document.getElementById("mode_as32").style.backgroundColor = mode == "as32" ? "#f60" : "white";
+                document.getElementById("mode_as64").style.backgroundColor = mode == "as64" ? "#f60" : "white";
+                document.getElementById("mode_asjs").style.backgroundColor = mode == "asjs" ? "#f60" : "white";
+                document.getElementById("build_normal"  ).style.backgroundColor = build == "normal" ? "#f60" : "white";
+                document.getElementById("build_debug"   ).style.backgroundColor = build == "debug" ? "#f60" : "white";
+                document.getElementById("build_profiler").style.backgroundColor = build == "profiler" ? "#f60" : "white";
+            }
 
             let currentExampleRelativeUrl;
 
@@ -110,19 +95,20 @@
                 return sentence.join(' ');
             }
 
-            function loadExample(example, exampleQuery) {
+            function loadExample(example) {
+                update_background_color_for_build_and_mode();
+                var defaultMode = build == "normal" && mode == "js";
+                if (!defaultMode) {
+                    iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
+                    return;
+                }
                 lastExample = example;
-                console.log("exampleQuery", exampleQuery)
-                let iframe = document.getElementById('example');
                 iframe.src = example;
-                var href = location.protocol + '//' +
+                location.href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
                                 '#' +
                                 example;
-                if (exampleQuery)
-                    href += exampleQuery;
-                location.href = href;
                 currentExampleRelativeUrl = example;
             }
 
@@ -130,15 +116,12 @@
             let url = location.href;
             let hashIndex = url.indexOf('#');
             if (hashIndex === -1) {
-                loadExample(categories[0].name + '/' + categories[0].examples[0] + '.html');
+                lastExample = categories[0].name + '/' + categories[0].examples[0] + '.html';
             } else {
-                var example = url.substring(hashIndex + 1);
-                if (mode == "js") {
-                    loadExample(example);
-                } else {
-                    loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + example);
-                }
+                lastExample = url.substring(hashIndex + 1);
             }
+
+            loadExample(lastExample);
 
             // Procedurally build the navigation sidebar
             let sidenav = document.querySelector(".sidenav");

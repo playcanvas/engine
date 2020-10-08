@@ -102,7 +102,15 @@
             }
 
             if (mode == "js") {
-                await fetch_script("../../build/playcanvas.js");
+                if (build == "normal") {
+                    await fetch_script("../../build/playcanvas.js");
+                } else if (build == "debug") {
+                    await fetch_script("../../build/playcanvas.dbg.js");
+                } else if (build == "profiler") {
+                    await fetch_script("../../build/playcanvas.prf.js");
+                } else {
+                    throw Error("Build not supported: " + build);
+                }
             } else if (mode == "as32") {
                 await fetch_script("../../build/playcanvas.assemblyscript_32.js");
             } else if (mode == "as64") {
