@@ -97,13 +97,12 @@
 
             function loadExample(example) {
                 update_background_color_for_build_and_mode();
-                var defaultMode = build == "normal" && mode == "js";
-                if (!defaultMode) {
-                    iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
-                    return;
+                if (build == "normal" && mode == "js") {
+                    iframe.src = example;
+                } else {
+                    iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + example;
                 }
                 lastExample = example;
-                iframe.src = example;
                 location.href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
