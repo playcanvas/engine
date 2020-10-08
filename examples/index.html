@@ -61,7 +61,7 @@
                 document.getElementById("mode_as32").style.backgroundColor = "white";
                 document.getElementById("mode_as64").style.backgroundColor = "#f60";
                 document.getElementById("mode_asjs").style.backgroundColor = "white";
-                loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + lastExample);
+                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
             }
 
             function mode_asjs() {
@@ -70,7 +70,7 @@
                 document.getElementById("mode_as32").style.backgroundColor = "white";
                 document.getElementById("mode_as64").style.backgroundColor = "white";
                 document.getElementById("mode_asjs").style.backgroundColor = "#f60";
-                loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + lastExample);
+                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
             }
 
             function build_normal() {

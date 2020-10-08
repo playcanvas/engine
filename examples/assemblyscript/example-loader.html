@@ -35,6 +35,17 @@
         var mode    = _GET["mode"];
         var example = _GET["example"];
 
+        console.log(_GET);
+
+        // Little polyfill for the extended AssemblyScript standard object Math
+        // Only required for ASJS testing mode, otherwise this is done in the .wasm's
+        Math.sincos_sin = 0;
+        Math.sincos_cos = 0;
+        Math.sincos = function (x) {
+            Math.sincos_sin = Math.sin(x);
+            Math.sincos_cos = Math.cos(x);
+        }
+
         function fetch_script(url) {
             return new Promise(function(resolve, reject) {
                 var script = document.createElement("script");
@@ -80,19 +91,25 @@
         }
 
         async function main() {
-            await fetch_script("./Loader.js");
-            await load_wasm();
-            // Can use up to 10 MB without regrowth
-            // If the memory exceeds, dataviews need to be updated for every Vec/Mat/Quat
-            // (otherwise their dataviews are invalid)
-            module.memory.grow((10 * 1024 * 1024 ) / 65536);
-            module.updateDataViews();
+            if (mode == "as32" || mode == "as64") {
+                await fetch_script("./Loader.js");
+                await load_wasm();
+                // Can use up to 10 MB without regrowth
+                // If the memory exceeds, dataviews need to be updated for every Vec/Mat/Quat
+                // (otherwise their dataviews are invalid)
+                module.memory.grow((10 * 1024 * 1024 ) / 65536);
+                module.updateDataViews();
+            }
 
-            if (mode == "as32") {
+            if (mode == "js") {
+                await fetch_script("../../build/playcanvas.js");
+            } else if (mode == "as32") {
                 await fetch_script("../../build/playcanvas.assemblyscript_32.js");
             } else if (mode == "as64") {
                 await fetch_script("../../build/playcanvas.assemblyscript_64.js");
-            } else {
+            } else if (mode == "asjs") {
+                await fetch_script("../../build/playcanvas.assemblyscriptjs.js");
+            } else {                
                 throw Error("Mode not supported: " + mode);
             }
 
@@ -102,9 +119,8 @@
 
             var text = await response.text();
             window.text = text;
-            //console.log("text", text);
-            var matches = text.matchAll(/<script>([\s\S]*)<\/script>/g);
-            //console.log("matches", matches);
+            // [\s\S]* matches everything between script tags and ? makes it non-greedy
+            var matches = text.matchAll(/<script>([\s\S]*?)<\/script>/g);
             var scripts_code = [];
             for (var match of matches) {
                 scripts_code.push(match[1]);

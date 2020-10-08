@@ -6,14 +6,6 @@ var categories = [
             "blend"
         ]
     }, {
-        name: "assemblyscript",
-        examples: [
-            "animation-blend-32",
-            "animation-blend-64",
-            "animation-blend-js"
-        ]
-
-    }, {
         name: "camera",
         examples: [
             "first-person",
