@@ -94,10 +94,10 @@
             if (mode == "as32" || mode == "as64") {
                 await fetch_script("./Loader.js");
                 await load_wasm();
-                // Can use up to 10 MB without regrowth
+                // Can use up to 20 MB without regrowth
                 // If the memory exceeds, dataviews need to be updated for every Vec/Mat/Quat
                 // (otherwise their dataviews are invalid)
-                module.memory.grow((10 * 1024 * 1024 ) / 65536);
+                module.memory.grow((20 * 1024 * 1024 ) / 65536);
                 module.updateDataViews();
             }
 
@@ -113,29 +113,83 @@
                 throw Error("Mode not supported: " + mode);
             }
 
-            await fetch_script("../../build/playcanvas-extras.js");
+            //await fetch_script("../../build/playcanvas-extras.js");
             //await fetch_script("animation_blend.js");
             var response = await fetch("../" + example);
 
             var text = await response.text();
             window.text = text;
             // [\s\S]* matches everything between script tags and ? makes it non-greedy
-            var matches = text.matchAll(/<script>([\s\S]*?)<\/script>/g);
-            var scripts_code = [];
+            var matches = text.matchAll(/<script(.*?)>([\s\S]*?)<\/script>/g);
+            var scripts = [];
             for (var match of matches) {
-                scripts_code.push(match[1]);
+                var attributes = match[1];
+                var textContent = match[2];
+                var src  = null;
+                var id   = null;
+                var type = null;
+                // Extract the actual data
+                var match_src  = attributes.match(/src=\"(.*?)\"/ );
+                var match_id   = attributes.match(/id=\"(.*?)\"/  );
+                var match_type = attributes.match(/type=\"(.*?)\"/);
+                if (match_src) {
+                    src = match_src[1];
+                }
+                if (match_id) {
+                    id = match_id[1];
+                }
+                if (match_type) {
+                    type = match_type[1];
+                } else {
+                    type = "text/javascript";
+                }
+                scripts.push({src, id, type, textContent})
             }
-            var scripts_url = []; // todo for some examples
+
+            console.log("scripts", scripts);
+
+            for (var script of scripts) {
+                switch (script.type) {
+                    case "text/javascript": {
+                        if (script.src) {
+                            // Every example loads this by default, but we load whatever version required beforehand
+                            if (script.src == "../../build/playcanvas.js") {
+                                continue;
+                            }
+                            await fetch_script(script.src);
+                        }
+                        if (script.text) {
+                            try {
+                                // I don't know why, but `app` is undefined in eval
+                                // Adding a <script> to <head> works though
+                                //eval(script.text);
+                                var scriptdom = document.createElement("script");
+                                scriptdom.text = script.text;
+                                document.head.appendChild(scriptdom);
+                            } catch (e) {
+                                window.e = e;
+                                console.error(e);
+                            }
+                        }
+                    }
+                    case "x-shader/x-vertex":
+                    case "x-shader/x-fragment": {
+                        // Reattach shader script to our document, so the script can find it later
+                        var dom = document.createElement("script");
+                        dom.id = script.id;
+                        dom.type = script.type;
+                        dom.textContent = script.textContent;
+                        document.head.appendChild(dom);
+                    }
+
+                }
+
+            }
 
             Object.assign(window, {
-                scripts_code,
-                scripts_url,
+                scripts,
                 text
             });
-
-            for (var code of scripts_code) {
-                eval(code);
-            }
         }
         
         main().then(function() {
