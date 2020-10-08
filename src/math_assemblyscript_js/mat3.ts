@@ -46,18 +46,35 @@ Object.defineProperty(Mat3.prototype, 'data', {
     get: function () {
         return new Proxy(this, {
             get: function(target, p) {
-                switch (parseInt(p)) {
-                    case 0: return target.m0;
-                    case 1: return target.m1;
-                    case 2: return target.m2;
-                    case 3: return target.m3;
-                    case 4: return target.m4;
-                    case 5: return target.m5;
-                    case 6: return target.m6;
-                    case 7: return target.m7;
-                    case 8: return target.m8;
+                if (typeof p === "symbol") {
+                    return function*() {
+                        yield target.m0;
+                        yield target.m1;
+                        yield target.m2;
+                        yield target.m3;
+                        yield target.m4;
+                        yield target.m5;
+                        yield target.m6;
+                        yield target.m7;
+                        yield target.m8;
+                    }
+                } else {
+                    try {
+                        switch (parseInt(p)) {
+                            case 0: return target.m0;
+                            case 1: return target.m1;
+                            case 2: return target.m2;
+                            case 3: return target.m3;
+                            case 4: return target.m4;
+                            case 5: return target.m5;
+                            case 6: return target.m6;
+                            case 7: return target.m7;
+                            case 8: return target.m8;
+                        }
+                    } catch (e) {
+                        console.log("e", e, "p", p)
+                    }
                 }
-                return 0;
             },
             set: function(target, p, value) {
                 switch (parseInt(p)) {

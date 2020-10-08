@@ -157,12 +157,11 @@ Object.defineProperty(Mat4.prototype, 'data', {
                             case 13: return target.m13;
                             case 14: return target.m14;
                             case 15: return target.m15;
-                        } 
+                        }
                     } catch (e) {
                         console.log("e", e, "p", p)
                     }
-                }   
-                return 0;
+                }
             },
             set: function(target, p, value) {
                 switch (parseInt(p)) {
