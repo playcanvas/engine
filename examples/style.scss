@@ -131,3 +131,20 @@ iframe {
     width: 100%;
   }
 }
+
+#flexbuttons {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 5px 0;
+    border-bottom: 1px solid white;
+}
+
+button {
+    border: none;
+    outline: none;
+}
+
+button:focus {
+    border: none;
+    outline: none;
+}

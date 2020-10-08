@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Animation Blending</title>
+    <title>PlayCanvas AS</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -19,6 +19,21 @@
 
     <!-- The script -->
     <script>
+
+        // From: ?build=js&mode=js
+        // To:   {build: "js", mode: "js"}
+        var query = location.href.split("?").pop();
+        var parts = query.split("&");
+        var _GET = {};
+        for (var i=0; i<parts.length; i++) {
+            var part = parts[i];
+            var tmp = part.split("=");
+            _GET[tmp[0]] = tmp[1];
+        }
+
+        var build   = _GET["build"];
+        var mode    = _GET["mode"];
+        var example = _GET["example"];
 
         function fetch_script(url) {
             return new Promise(function(resolve, reject) {
@@ -41,7 +56,13 @@
 
         async function load_wasm() {
             //response = fetch("../../build/untouched.wasm");
-            response = fetch("../../build/optimized_32.wasm");
+            if (mode == "as32") {
+                response = fetch("../../build/optimized_32.wasm");
+            } else if (mode == "as64") {
+                response = fetch("../../build/optimized_64.wasm");
+            } else {
+                throw Error("Mode not supported: " + mode);
+            }
             //buffer = await response.arrayBuffer();
             imports = {};
             //module = Loader.instantiateBuffer(buffer, imports);
@@ -66,9 +87,39 @@
             // (otherwise their dataviews are invalid)
             module.memory.grow((10 * 1024 * 1024 ) / 65536);
             module.updateDataViews();
-            await fetch_script("../../build/playcanvas.assemblyscript_32.js");
+
+            if (mode == "as32") {
+                await fetch_script("../../build/playcanvas.assemblyscript_32.js");
+            } else if (mode == "as64") {
+                await fetch_script("../../build/playcanvas.assemblyscript_64.js");
+            } else {
+                throw Error("Mode not supported: " + mode);
+            }
+
             await fetch_script("../../build/playcanvas-extras.js");
-            await fetch_script("animation_blend.js");
+            //await fetch_script("animation_blend.js");
+            var response = await fetch("../" + example);
+
+            var text = await response.text();
+            window.text = text;
+            //console.log("text", text);
+            var matches = text.matchAll(/<script>([\s\S]*)<\/script>/g);
+            //console.log("matches", matches);
+            var scripts_code = [];
+            for (var match of matches) {
+                scripts_code.push(match[1]);
+            }
+            var scripts_url = []; // todo for some examples
+
+            Object.assign(window, {
+                scripts_code,
+                scripts_url,
+                text
+            });
+
+            for (var code of scripts_code) {
+                eval(code);
+            }
         }
         
         main().then(function() {

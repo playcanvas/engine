@@ -32,7 +32,7 @@
   "eslintIgnore": [
     "examples/lib/*",
     "src/polyfill/*",
-    "examples/animation/Loader.js",
+    "examples/assemblyscript/Loader.js",
     "src/math_assemblyscript/*"
   ],
   "devDependencies": {
@@ -88,6 +88,7 @@
     "asbuild:untouched_64": "asc assembly/index.ts -b build/untouched_64.wasm -t build/untouched.wat --sourceMap --measure --runtime none --debug --use number=f64,Math=NativeMath",
     "asbuild:optimized_32": "asc assembly/index.ts -b build/optimized_32.wasm -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert --use number=f32,Math=NativeMathf",
     "asbuild:optimized_64": "asc assembly/index.ts -b build/optimized_64.wasm -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert --use number=f64,Math=NativeMath",
-    "asbuild:js": "asc assembly/index.ts --jsFile build/optimized.js -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert"
+    "asbuild:js": "asc assembly/index.ts --jsFile build/optimized.js -t build/optimized.wat --sourceMap --measure --runtime none -O3 --noAssert",
+    "examples": "node-sass --output-style expanded examples/style.scss examples/style.css"
   }
 }

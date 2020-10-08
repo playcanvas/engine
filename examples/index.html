@@ -11,7 +11,19 @@
         <div class="sidenav-toggle">
             <svg fill="white" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
         </div>
-        <div class="sidenav closed"></div>
+        <div class="sidenav closed">
+            <div id="flexbuttons">
+                <button id="build_normal"   onclick="build_normal()  ">NORMAL</button>
+                <button id="build_debug"    onclick="build_debug()   ">DEBUG</button>
+                <button id="build_profiler" onclick="build_profiler()">PROFILER</button>
+            </div>
+            <div id="flexbuttons">
+                <button id="mode_js"   onclick="mode_js()  ">JS</button>
+                <button id="mode_as32" onclick="mode_as32()">AS32</button>
+                <button id="mode_as64" onclick="mode_as64()">AS64</button>
+                <button id="mode_asjs" onclick="mode_asjs()">ASJS</button>
+            </div>
+        </div>
         <iframe id="example"></iframe>
 
         <div class="sourcenav">
@@ -20,6 +32,72 @@
 
         <script src="examples.js"></script>
         <script>
+            var lastExample = "";
+            var mode = "";
+            var build = "";
+            let iframe = document.getElementById('example');
+
+            function mode_js() {
+                mode = "js";
+                document.getElementById("mode_js"  ).style.backgroundColor = "#f60";
+                document.getElementById("mode_as32").style.backgroundColor = "white";
+                document.getElementById("mode_as64").style.backgroundColor = "white";
+                document.getElementById("mode_asjs").style.backgroundColor = "white";
+                //loadExample("assemblyscript/example-loader.html", "?build=" + build + "&mode=" + mode + "&example=" + lastExample);
+            }
+
+            function mode_as32() {
+                mode = "as32";
+                document.getElementById("mode_js"  ).style.backgroundColor = "white";
+                document.getElementById("mode_as32").style.backgroundColor = "#f60";
+                document.getElementById("mode_as64").style.backgroundColor = "white";
+                document.getElementById("mode_asjs").style.backgroundColor = "white";
+                iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + lastExample;
+            }
+
+            function mode_as64() {
+                mode = "as64";
+                document.getElementById("mode_js"  ).style.backgroundColor = "white";
+                document.getElementById("mode_as32").style.backgroundColor = "white";
+                document.getElementById("mode_as64").style.backgroundColor = "#f60";
+                document.getElementById("mode_asjs").style.backgroundColor = "white";
+                loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + lastExample);
+            }
+
+            function mode_asjs() {
+                mode = "asjs";
+                document.getElementById("mode_js"  ).style.backgroundColor = "white";
+                document.getElementById("mode_as32").style.backgroundColor = "white";
+                document.getElementById("mode_as64").style.backgroundColor = "white";
+                document.getElementById("mode_asjs").style.backgroundColor = "#f60";
+                loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + lastExample);
+            }
+
+            function build_normal() {
+                build = "normal";
+                document.getElementById("build_normal"  ).style.backgroundColor = "#f60";
+                document.getElementById("build_debug"   ).style.backgroundColor = "white";
+                document.getElementById("build_profiler").style.backgroundColor = "white";
+            }
+
+            function build_debug() {
+                build = "debug";
+                document.getElementById("build_normal"  ).style.backgroundColor = "white";
+                document.getElementById("build_debug"   ).style.backgroundColor = "#f60";
+                document.getElementById("build_profiler").style.backgroundColor = "white";
+            }
+
+            function build_profiler() {
+                build = "profiler";
+                document.getElementById("build_normal"  ).style.backgroundColor = "white";
+                document.getElementById("build_debug"   ).style.backgroundColor = "white";
+                document.getElementById("build_profiler").style.backgroundColor = "#f60";
+            }
+
+            // Initially use normal JS build... neither Debug/Profiler nor anything AS related
+            mode_js();
+            build_normal();
+
             let currentExampleRelativeUrl;
 
             function titleCase(string) {
@@ -30,15 +108,19 @@
                 return sentence.join(' ');
             }
 
-            function loadExample(example) {
+            function loadExample(example, exampleQuery) {
+                lastExample = example;
+                console.log("exampleQuery", exampleQuery)
                 let iframe = document.getElementById('example');
                 iframe.src = example;
-                location.href = location.protocol + '//' +
+                var href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
                                 '#' +
                                 example;
-
+                if (exampleQuery)
+                    href += exampleQuery;
+                location.href = href;
                 currentExampleRelativeUrl = example;
             }
 
@@ -48,7 +130,12 @@
             if (hashIndex === -1) {
                 loadExample(categories[0].name + '/' + categories[0].examples[0] + '.html');
             } else {
-                loadExample(url.substring(hashIndex + 1));
+                var example = url.substring(hashIndex + 1);
+                if (mode == "js") {
+                    loadExample(example);
+                } else {
+                    loadExample("assemblyscript/example-loader.html", "#build=" + build + "&mode=" + mode + "&example=" + example);
+                }
             }
 
             // Procedurally build the navigation sidebar

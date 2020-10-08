@@ -25,6 +25,7 @@ body {
   background: #364346;
   transition: all 240ms ease-in-out;
 }
+
 @media screen and (max-width: 1024px) {
   .sidenav {
     background: rgba(54, 67, 70, 0.98);
@@ -49,9 +50,11 @@ body {
   border-radius: 300px;
   cursor: pointer;
 }
+
 .sidenav-toggle:hover {
   background: black;
 }
+
 @media screen and (max-width: 1024px) {
   .sidenav-toggle {
     display: block;
@@ -71,12 +74,15 @@ p {
   color: #b1b8ba;
   cursor: pointer;
 }
+
 .sidenav a:hover {
   color: #ffffff;
 }
+
 .sidenav a.active {
   color: #f60;
 }
+
 @media screen and (max-width: 1024px) {
   .sidenav a {
     font-size: 1.2rem;
@@ -117,12 +123,28 @@ iframe {
   height: 100%;
   overflow: auto;
 }
+
 @media screen and (max-width: 1024px) {
   #example,
-iframe {
+  iframe {
     padding-left: 0;
     width: 100%;
   }
 }
 
-/*# sourceMappingURL=style.css.map */
+#flexbuttons {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 5px 0;
+  border-bottom: 1px solid white;
+}
+
+button {
+  border: none;
+  outline: none;
+}
+
+button:focus {
+  border: none;
+  outline: none;
+}
