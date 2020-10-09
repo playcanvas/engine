@@ -118,12 +118,12 @@ function importAssemblyScriptAsJavaScriptInstead(options) {
     return {
         transform(code, id) {
             if (!filter(id)) return;
-            code = code.replace(/math\/quat\.js/g, "math_assemblyscript_js/Quat.js");
-            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript_js/Mat3.js");
-            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript_js/Mat4.js");
-            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript_js/Vec2.js");
-            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript_js/Vec3.js");
-            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript_js/Vec4.js");
+            code = code.replace(/math\/quat\.js/g, "math_assemblyscript_js/quat.ts");
+            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript_js/mat3.ts");
+            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript_js/mat4.ts");
+            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript_js/vec2.ts");
+            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript_js/vec3.ts");
+            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript_js/vec4.ts");
             return {
                 code: code,
                 map: { mappings: '' }
