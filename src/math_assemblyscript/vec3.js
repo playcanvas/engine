@@ -64,7 +64,21 @@ Vec3.prototype.add = function (rhs) {
 };
 
 Vec3.prototype.add2 = function (lhs, rhs) {
-    vec3_add2(this.ptr, lhs.ptr, rhs.ptr);
+    // WASM interop, slow:
+    // vec3_add2(this.ptr, lhs.ptr, rhs.ptr);
+
+    // Original, using getters/setters:
+    // this.x = lhs.x + rhs.x;
+    // this.y = lhs.y + rhs.y;
+    // this.z = lhs.z + rhs.z;
+
+    // Original, without using getters/setters:
+    var arr_this = this.arr;
+    var arr_lhs  = lhs.arr;
+    var arr_rhs  = rhs.arr;
+    arr_this[0] = arr_lhs[0] + arr_rhs[0];
+    arr_this[1] = arr_lhs[1] + arr_rhs[1];
+    arr_this[2] = arr_lhs[2] + arr_rhs[2];
     return this;
 };
 
@@ -84,7 +98,11 @@ Vec3.prototype.cross = function (lhs, rhs) {
 };
 
 Vec3.prototype.dot = function (rhs) {
-    return vec3_dot(this.ptr, rhs.ptr);
+    //return vec3_dot(this.ptr, rhs.ptr);
+    //return this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
+    var a = this.arr;
+    var a_r = rhs.arr;
+    return a[0] * a_r[0] + a[1] * a_r[1] + a[2] * a_r[2];
 };
 
 Vec3.prototype.equals = function (rhs) {
@@ -92,7 +110,10 @@ Vec3.prototype.equals = function (rhs) {
 };
 
 Vec3.prototype.length = function () {
-    return vec3_length(this.ptr);
+    //return vec3_length(this.ptr);
+    //return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    var a = this.arr;
+    return Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 };
 
 Vec3.prototype.lengthSq = function () {
@@ -130,7 +151,9 @@ Vec3.prototype.scale = function (scalar) {
 };
 
 Vec3.prototype.set = function (x, y, z) {
-    //vec3_set(this.ptr, x, y, z);
+    // WASM Interop:
+    // vec3_set(this.ptr, x, y, z);
+    // Direct access to memory as faster alternative:
     this.arr[0] = x;
     this.arr[1] = y;
     this.arr[2] = z;
@@ -143,7 +166,19 @@ Vec3.prototype.sub = function (rhs) {
 };
 
 Vec3.prototype.sub2 = function (lhs, rhs) {
-    vec3_sub2(this.ptr, lhs.ptr, rhs.ptr);
+    // WASM Interop:
+    //vec3_sub2(this.ptr, lhs.ptr, rhs.ptr);
+    // Original (getters/setters)
+    this.x = lhs.x - rhs.x;
+    this.y = lhs.y - rhs.y;
+    this.z = lhs.z - rhs.z;
+    // Original, without getters/setters    
+    var arr_this = this.arr;
+    var arr_lhs  = lhs.arr;
+    var arr_rhs  = rhs.arr;
+    arr_this[0] = arr_lhs[0] - arr_rhs[0];
+    arr_this[1] = arr_lhs[1] - arr_rhs[1];
+    arr_this[2] = arr_lhs[2] - arr_rhs[2];
     return this;
 };
 

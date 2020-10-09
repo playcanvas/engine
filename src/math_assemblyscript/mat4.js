@@ -120,24 +120,27 @@ Mat4.prototype.getX = function (x) {
     if (x === undefined) {
         x = new Vec3();
     }
-    mat4_getX(this.ptr, x.ptr);
-    return x;
+    //mat4_getX(this.ptr, x.ptr);
+    //return x;
+    return x.set(this.data[0], this.data[1], this.data[2]);
 };
 
 Mat4.prototype.getY = function (y) {
     if (y === undefined) {
         y = new Vec3();
     }
-    mat4_getY(this.ptr, y.ptr);
-    return y;
+    //mat4_getY(this.ptr, y.ptr);
+    //return y;
+    return y.set(this.data[4], this.data[5], this.data[6]);
 };
 
 Mat4.prototype.getZ = function (z) {
     if (z === undefined) {
         z = new Vec3();
     }
-    mat4_getZ(this.ptr, z.ptr);
-    return z;
+    //mat4_getZ(this.ptr, z.ptr);
+    //return z;
+    return z.set(this.data[8], this.data[9], this.data[10]);
 };
 
 Mat4.prototype.invert = function () {
