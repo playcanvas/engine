@@ -29,7 +29,7 @@ Mat3.wrap = function (ptr) {
     // if (assemblyscript.module.tlfs) {
     //     tmp.bufferByteLength = 0;
     // } else {
-    this.assignDataView();
+    tmp.assignDataView();
     // }
     return tmp;
 };

@@ -42,12 +42,24 @@ function Quat(x, y, z, w) {
             (w === undefined) ? 1 : w
         );
     }
+    this.assignDataView();
 }
 
 Quat.wrap = function (ptr) {
     var tmp = Object.create(Quat.prototype);
     tmp.ptr = ptr;
+    tmp.assignDataView();
     return tmp;
+};
+
+Quat.prototype.assignDataView = function () {
+    // #ifdef X32
+    this.arr = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 4);
+    // #endif
+
+    // #ifdef X64
+    this.arr = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 4);
+    // #endif
 };
 
 Quat.prototype.clone = function () {
@@ -112,7 +124,11 @@ Quat.prototype.normalize = function () {
 };
 
 Quat.prototype.set = function (x, y, z, w) {
-    quat_set(this.ptr, x, y, z, w);
+    //quat_set(this.ptr, x, y, z, w);
+    this.arr[0] = x;
+    this.arr[1] = y;
+    this.arr[2] = z;
+    this.arr[3] = w;
     return this;
 };
 
@@ -152,90 +168,39 @@ Quat.prototype.toStringFixed = function (n) {
     return '[' + this.x.toFixed(n) + ', ' + this.y.toFixed(n) + ', ' + this.z.toFixed(n) + ', ' + this.w.toFixed(n) + ']';
 };
 
-// `>> 2` is same as dividing by 4 (32 bit), used to quickly lookup the value in assemblyscript.module.F32
-// `>> 3` is same as dividing by 8 (64 bit), used to quickly lookup the value in assemblyscript.module.F64
-
 Object.defineProperty(Quat.prototype, 'x', {
     get: function () {
-        // #ifdef X32
-        return assemblyscript.module.F32[this.ptr >> 2];
-        // #endif
-
-        // #ifdef X64
-        return assemblyscript.module.F64[this.ptr >> 3];
-        // #endif
+        return this.arr[0];
     },
     set: function (newValue) {
-        // #ifdef X32
-        assemblyscript.module.F32[this.ptr >> 2] = newValue;
-        // #endif
-
-        // #ifdef X64
-        assemblyscript.module.F64[this.ptr >> 3] = newValue;
-        // #endif
+        this.arr[0] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'y', {
     get: function () {
-        // #ifdef X32
-        return assemblyscript.module.F32[(this.ptr >> 2) + 1];
-        // #endif
-
-        // #ifdef X64
-        return assemblyscript.module.F64[(this.ptr >> 3) + 1];
-        // #endif
+        return this.arr[1];
     },
     set: function (newValue) {
-        // #ifdef X32
-        assemblyscript.module.F32[(this.ptr >> 2) + 1] = newValue;
-        // #endif
-
-        // #ifdef X64
-        assemblyscript.module.F64[(this.ptr >> 3) + 1] = newValue;
-        // #endif
+        this.arr[1] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'z', {
     get: function () {
-        // #ifdef X32
-        return assemblyscript.module.F32[(this.ptr >> 2) + 2];
-        // #endif
-
-        // #ifdef X64
-        return assemblyscript.module.F64[(this.ptr >> 3) + 2];
-        // #endif
+        return this.arr[2];
     },
     set: function (newValue) {
-        // #ifdef X32
-        assemblyscript.module.F32[(this.ptr >> 2) + 2] = newValue;
-        // #endif
-
-        // #ifdef X64
-        assemblyscript.module.F64[(this.ptr >> 3) + 2] = newValue;
-        // #endif
+        this.arr[2] = newValue;
     }
 });
 
 Object.defineProperty(Quat.prototype, 'w', {
     get: function () {
-        // #ifdef X32
-        return assemblyscript.module.F32[(this.ptr >> 2) + 3];
-        // #endif
-
-        // #ifdef X64
-        return assemblyscript.module.F64[(this.ptr >> 3) + 3];
-        // #endif
+        return this.arr[3];
     },
     set: function (newValue) {
-        // #ifdef X32
-        assemblyscript.module.F32[(this.ptr >> 2) + 3] = newValue;
-        // #endif
-
-        // #ifdef X64
-        assemblyscript.module.F64[(this.ptr >> 3) + 3] = newValue;
-        // #endif
+        this.arr[3] = newValue;
     }
 });
 
