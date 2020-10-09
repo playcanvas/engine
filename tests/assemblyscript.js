@@ -1,7 +1,7 @@
 var chai = require("chai");
 var path = require("path");
 var fs = require("fs");
-require("../examples/animation/Loader");
+require("../examples/assemblyscript/Loader");
 
 function describe(name, func) {
     console.log(name);
