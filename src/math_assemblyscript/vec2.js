@@ -46,11 +46,11 @@ Vec2.wrap = function (ptr) {
 
 Vec2.prototype.assignDataView = function () {
     // #ifdef X32
-    this.arr = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 2);
+    this.arr = new Float32Array(assemblyscript.module.exports.memory.buffer, this.ptr, 2);
     // #endif
 
     // #ifdef X64
-    this.arr = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 2);
+    this.arr = new Float64Array(assemblyscript.module.exports.memory.buffer, this.ptr, 2);
     // #endif
 };
 

@@ -54,11 +54,11 @@ Quat.wrap = function (ptr) {
 
 Quat.prototype.assignDataView = function () {
     // #ifdef X32
-    this.arr = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 4);
+    this.arr = new Float32Array(assemblyscript.module.exports.memory.buffer, this.ptr, 4);
     // #endif
 
     // #ifdef X64
-    this.arr = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 4);
+    this.arr = new Float64Array(assemblyscript.module.exports.memory.buffer, this.ptr, 4);
     // #endif
 };
 

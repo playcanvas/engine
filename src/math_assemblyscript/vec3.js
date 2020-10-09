@@ -50,11 +50,11 @@ Vec3.wrap = function (ptr) {
 
 Vec3.prototype.assignDataView = function () {
     // #ifdef X32
-    this.arr = new Float32Array(assemblyscript.module.memory.buffer, this.ptr, 3);
+    this.arr = new Float32Array(assemblyscript.module.exports.memory.buffer, this.ptr, 3);
     // #endif
 
     // #ifdef X64
-    this.arr = new Float64Array(assemblyscript.module.memory.buffer, this.ptr, 3);
+    this.arr = new Float64Array(assemblyscript.module.exports.memory.buffer, this.ptr, 3);
     // #endif
 };
 

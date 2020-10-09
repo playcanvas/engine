@@ -97,8 +97,8 @@
                 // Can use up to 20 MB without regrowth
                 // If the memory exceeds, dataviews need to be updated for every Vec/Mat/Quat
                 // (otherwise their dataviews are invalid)
-                module.memory.grow((20 * 1024 * 1024 ) / 65536);
-                module.updateDataViews();
+                module.exports.memory.grow((20 * 1024 * 1024 ) / 65536);
+                //module.updateDataViews();
             }
 
             if (mode == "js") {
