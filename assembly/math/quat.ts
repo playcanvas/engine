@@ -1,6 +1,6 @@
-import {Vec3} from "./Vec3";
-import {Mat4} from "./Mat4";
-import {pc_math} from "./Math";
+import {Vec3} from "./vec3";
+import {Mat4} from "./mat4";
+import {pc_math} from "./math";
 
 export class Quat {
     x: number;

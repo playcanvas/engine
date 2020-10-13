@@ -1,8 +1,8 @@
-import {Vec3, PreallocatedVec3} from "./Vec3";
-import {Vec4} from "./Vec4";
-import {Mat3} from "./Mat3";
-import {Quat} from "./Quat";
-import {pc_math} from "./Math"
+import {Vec3, PreallocatedVec3} from "./vec3";
+import {Vec4} from "./vec4";
+import {Mat3} from "./mat3";
+import {Quat} from "./quat";
+import {pc_math} from "./math"
 
 export class Mat4 {
     m0: number;

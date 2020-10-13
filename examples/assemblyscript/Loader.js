@@ -1,3 +1,6 @@
+
+Loader = {};
+
 // Runtime header offsets
 const ID_OFFSET = -8;
 const SIZE_OFFSET = -4;
@@ -134,6 +137,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__allocString = __allocString;
+  Loader.allocString = __allocString;
 
   /** Reads a string from the module's memory by its pointer. */
   function __getString(ptr) {
@@ -144,6 +148,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__getString = __getString;
+  Loader.getString = __getString;
 
   /** Gets the view matching the specified alignment, signedness and floatness. */
   function getView(alignLog2, signed, float) {
@@ -192,6 +197,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__allocArray = __allocArray;
+  Loader.allocArray = __allocArray;
 
   /** Gets a live view on an array's values in the module's memory. Infers the array type from RTTI. */
   function __getArrayView(arr) {
@@ -209,6 +215,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__getArrayView = __getArrayView;
+  Loader.getArrayView = __getArrayView;
 
   /** Copies an array's values from the module's memory. Infers the array type from RTTI. */
   function __getArray(arr) {
@@ -220,6 +227,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__getArray = __getArray;
+  Loader.getArray = __getArray;
 
   /** Copies an ArrayBuffer's value from the module's memory. */
   function __getArrayBuffer(ptr) {
@@ -229,6 +237,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__getArrayBuffer = __getArrayBuffer;
+  Loader.getArrayBuffer = __getArrayBuffer;
 
   /** Copies a typed array's values from the module's memory. */
   function getTypedArray(Type, alignLog2, ptr) {
@@ -283,6 +292,7 @@ function postInstantiate(extendedExports, instance) {
   }
 
   extendedExports.__instanceof = __instanceof;
+  Loader.instanceof = __instanceof;
 
   // Pull basic exports to extendedExports so code in preInstantiate can use them
   extendedExports.memory = extendedExports.memory || memory;
@@ -310,7 +320,6 @@ async function instantiate(source, imports = {}) {
   return { module, instance, exports };
 }
 
-Loader = {}
 //exports.instantiate = instantiate;
 Loader.instantiate = instantiate;
 
