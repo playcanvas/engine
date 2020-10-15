@@ -48,7 +48,8 @@ function TextElement(element) {
 
     // public
     this._text = "";            // the original user-defined text
-    this._symbols = [];         // array of visible symbols with unicode processing and markup removed
+    this._symbols = [];         // array of symbols with unicode processing and markup removed
+    this._visibleSymbols = [];  // array of symbols that is visible to the user
     this._colorPalette = [];    // per-symbol color palette
     this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
     this._i18nKey = null;
@@ -145,6 +146,18 @@ function TextElement(element) {
 var LINE_BREAK_CHAR = /^[\r\n]$/;
 var WHITESPACE_CHAR = /^[ \t]$/;
 var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+var NON_VISIBLE_CHAR = new Set([
+    // Bidirectional text markers (https://www.w3.org/International/questions/qa-bidi-unicode-controls)
+    '\u2066', // left-to-right isolate
+    '\u2067', // right-to-left isolate
+    '\u2068', // first-strong isolate
+    '\u202A', // left-to-right embedding
+    '\u202B', // right-to-left embedding
+    '\u202D', // left-to-right override
+    '\u202E', // right-to-left override
+    '\u202C', // pop directional formatting
+    '\u2069', // pop directional isolate
+]);
 
 Object.assign(TextElement.prototype, {
     destroy: function () {
@@ -493,6 +506,13 @@ Object.assign(TextElement.prototype, {
             this._element.addModelToLayers(this._model);
         }
 
+        this._visibleSymbols.length = 0;
+        for (i = 0; i < this._symbols.length; i++) {
+            if (!NON_VISIBLE_CHAR.has(this._symbols[i])) {
+                this._visibleSymbols.push(this._symbols[i]);
+            }
+        }
+
         this._updateMeshes();
 
         // update render range
@@ -570,7 +590,7 @@ Object.assign(TextElement.prototype, {
         }
 
         var MAGIC = 32;
-        var l = this._symbols.length;
+        var l = this._visibleSymbols.length;
         var _x = 0; // cursors
         var _y = 0;
         var _z = 0;
@@ -681,7 +701,7 @@ Object.assign(TextElement.prototype, {
             // In right-to-left mode we loop through the symbols from end to the beginning
             // in order to wrap lines in the correct order
             for (i = 0; i < l; i++) {
-                char = this._symbols[i];
+                char = this._visibleSymbols[i];
 
                 var x = 0;
                 var y = 0;
@@ -708,9 +728,9 @@ Object.assign(TextElement.prototype, {
                     if (numCharsThisLine > 0) {
                         var kernTable = this._font.data.kerning;
                         if (kernTable) {
-                            var kernLeft = kernTable[string.getCodePoint(this._symbols[i - 1]) || 0];
+                            var kernLeft = kernTable[string.getCodePoint(this._visibleSymbols[i - 1]) || 0];
                             if (kernLeft) {
-                                kerning = kernLeft[string.getCodePoint(this._symbols[i]) || 0] || 0;
+                                kerning = kernLeft[string.getCodePoint(this._visibleSymbols[i]) || 0] || 0;
                             }
                         }
                     }
@@ -729,7 +749,7 @@ Object.assign(TextElement.prototype, {
                 if (isLineBreak) {
                     numBreaksThisLine++;
                     if (this._maxLines < 0 || lines < this._maxLines) {
-                        breakLine(this._symbols, i, _xMinusTrailingWhitespace);
+                        breakLine(this._visibleSymbols, i, _xMinusTrailingWhitespace);
                         wordStartIndex = i + 1;
                         lineStartIndex = i + 1;
                     }
@@ -751,7 +771,7 @@ Object.assign(TextElement.prototype, {
                         // broken onto multiple lines.
                         if (numWordsThisLine === 0) {
                             wordStartIndex = i;
-                            breakLine(this._symbols, i, _xMinusTrailingWhitespace);
+                            breakLine(this._visibleSymbols, i, _xMinusTrailingWhitespace);
                         } else {
                             // Move back to the beginning of the current word.
                             var backtrack = Math.max(i - wordStartIndex, 0);
@@ -764,7 +784,7 @@ Object.assign(TextElement.prototype, {
                                 var backtrackStart = wordStartIndex;
                                 var backtrackEnd = i;
                                 for (j = backtrackStart; j < backtrackEnd; j++) {
-                                    var backChar = this._symbols[j];
+                                    var backChar = this._visibleSymbols[j];
                                     var backCharData = json.chars[backChar];
                                     var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                     backMeshInfo.lines[lines - 1] -= 1;
@@ -774,7 +794,7 @@ Object.assign(TextElement.prototype, {
 
                             i -= backtrack + 1;
 
-                            breakLine(this._symbols, wordStartIndex, wordStartX);
+                            breakLine(this._visibleSymbols, wordStartIndex, wordStartX);
                             continue;
                         }
                     }
@@ -913,7 +933,7 @@ Object.assign(TextElement.prototype, {
             // there will almost always be some leftover text on the final line which has
             // not yet been pushed to _lineContents.
             if (lineStartIndex < l) {
-                breakLine(this._symbols, l, _x);
+                breakLine(this._visibleSymbols, l, _x);
             }
         }
 
