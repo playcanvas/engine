@@ -1,6 +1,6 @@
 /**
  * @license
- * PlayCanvas Engine v1.34.0-dev revision 7511574a
+ * PlayCanvas Engine v1.34.0-dev revision 7397d249
  * Copyright 2011-2020 PlayCanvas Ltd. All rights reserved.
  */
 (function (global, factory) {
@@ -447,7 +447,7 @@
 		return result;
 	}();
 	var version = "1.34.0-dev";
-	var revision = "7511574a";
+	var revision = "7397d249";
 	var config = { };
 	var common = { };
 	var apps = { };
@@ -23898,6 +23898,8 @@
 				graphVar = { type: type, name: name, valueX: value.x, valueY: value.y };
 			} else if (typeof(value) === 'number') {
 				graphVar = { type: type, name: name, valueX: value };
+			} else {
+				graphVar = { type: type, name: name};
 			}
 			this.graphData.graphVars.push(graphVar);
 			return graphVar;
@@ -24214,6 +24216,87 @@
 			return generatedGlsl;
 		}
 	});
+	var shadergraph = {};
+	shadergraph.graphCounter = 0;
+	shadergraph.nodeRegistry = {};
+	shadergraph._getNode = function (name, funcString, declString) {
+		if (!this.nodeRegistry[name]) {
+			this.nodeRegistry[name] = new NodeMaterial(funcString, declString);
+		}
+		return this.nodeRegistry[name];
+	};
+	shadergraph.start = function () {
+		shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
+		shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
+	};
+	shadergraph.end = function () {
+		var ret = shadergraph.graph;
+		shadergraph.graph = null;
+		shadergraph.graphCounter++;
+		return ret;
+	};
+	shadergraph.textureSample2D = function (name, texture, uv) {
+		var texSampNode = this.graph.addSubGraph(this._getNode('texSample', 'vec4 texSample(in sampler2D tex, in vec2 uv, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n color=samp.rgb;\n alpha=samp.a;\n return samp;\n}'));
+		var graphVar = this.graph.addInput('sampler2D', name, texture);
+		this.graph.connect(-1, graphVar.name, texSampNode, 'IN_tex');
+		this.graph.connect(uv, 'OUT_ret', texSampNode, 'IN_uv');
+		return texSampNode;
+	};
+	shadergraph.customNode = function (name, f, d) {
+		var nodeIndex = this.graph.addSubGraph(this._getNode(name, f, d));
+		return nodeIndex;
+	};
+	Object.defineProperty(shadergraph, 'uv0', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('uv0', 'vec2 uv0() { return vUv0; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldPosPS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosPS', 'vec3 wpPS() { return vPosition; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldNormPS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormPS', 'vec3 wnPS() { return vNormal; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldPosVS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosVS', 'vec3 wpVS() { return getWorldPositionNM(); }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldNormVS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormVS', 'vec3 wnVS() { return getWorldNormalNM(); }'));
+			return nodeIndex;
+		}
+	});
+	shadergraph.param = function (type, name, value) {
+		var graphVar = this.graph.addInput(type, name, value);
+		return graphVar;
+	};
+	shadergraph.connectFragOut = function (nodeIndex, name) {
+		var graphVar = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 1));
+		this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+	};
+	shadergraph.connectVertexOffset = function (nodeIndex, name) {
+		var graphVar = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
+		this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+	};
+	shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
+		if (typeof(nodeIndex_or_param) === 'number') {
+			var nodeIndex = nodeIndex_or_param;
+			this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
+		} else {
+			var graphVar = nodeIndex_or_param;
+			this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_' + destName);
+		}
+	};
 
 	function NodeMaterialBinder(assets, device, parser) {
 		this._assets = assets;
@@ -58278,6 +58361,7 @@
 	exports.semanticToLocation = semanticToLocation;
 	exports.shFromCubemap = shFromCubemap;
 	exports.shaderChunks = shaderChunks;
+	exports.shadergraph = shadergraph;
 	exports.shape = shape;
 	exports.string = string;
 	exports.time = time;

@@ -87,7 +87,7 @@ export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
-export { NodeMaterial } from './scene/materials/node-material.js';
+export { NodeMaterial, shadergraph } from './scene/materials/node-material.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
