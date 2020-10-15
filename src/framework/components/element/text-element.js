@@ -49,7 +49,6 @@ function TextElement(element) {
     // public
     this._text = "";            // the original user-defined text
     this._symbols = [];         // array of symbols with unicode processing and markup removed
-    this._visibleSymbols = [];  // array of symbols that is visible to the user
     this._colorPalette = [];    // per-symbol color palette
     this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
     this._i18nKey = null;
@@ -156,7 +155,7 @@ var NON_VISIBLE_CHAR = new Set([
     '\u202D', // left-to-right override
     '\u202E', // right-to-left override
     '\u202C', // pop directional formatting
-    '\u2069', // pop directional isolate
+    '\u2069'  // pop directional isolate
 ]);
 
 Object.assign(TextElement.prototype, {
@@ -506,12 +505,16 @@ Object.assign(TextElement.prototype, {
             this._element.addModelToLayers(this._model);
         }
 
-        this._visibleSymbols.length = 0;
+        // Remove the non visible symbols
+        var inputIndex = 0;
         for (i = 0; i < this._symbols.length; i++) {
             if (!NON_VISIBLE_CHAR.has(this._symbols[i])) {
-                this._visibleSymbols.push(this._symbols[i]);
+                this._symbols[inputIndex] = this._symbols[i];
+                inputIndex++;
             }
         }
+
+        this._symbols.length = inputIndex;
 
         this._updateMeshes();
 
@@ -590,7 +593,7 @@ Object.assign(TextElement.prototype, {
         }
 
         var MAGIC = 32;
-        var l = this._visibleSymbols.length;
+        var l = this._symbols.length;
         var _x = 0; // cursors
         var _y = 0;
         var _z = 0;
@@ -701,7 +704,7 @@ Object.assign(TextElement.prototype, {
             // In right-to-left mode we loop through the symbols from end to the beginning
             // in order to wrap lines in the correct order
             for (i = 0; i < l; i++) {
-                char = this._visibleSymbols[i];
+                char = this._symbols[i];
 
                 var x = 0;
                 var y = 0;
@@ -728,9 +731,9 @@ Object.assign(TextElement.prototype, {
                     if (numCharsThisLine > 0) {
                         var kernTable = this._font.data.kerning;
                         if (kernTable) {
-                            var kernLeft = kernTable[string.getCodePoint(this._visibleSymbols[i - 1]) || 0];
+                            var kernLeft = kernTable[string.getCodePoint(this._symbols[i - 1]) || 0];
                             if (kernLeft) {
-                                kerning = kernLeft[string.getCodePoint(this._visibleSymbols[i]) || 0] || 0;
+                                kerning = kernLeft[string.getCodePoint(this._symbols[i]) || 0] || 0;
                             }
                         }
                     }
@@ -749,7 +752,7 @@ Object.assign(TextElement.prototype, {
                 if (isLineBreak) {
                     numBreaksThisLine++;
                     if (this._maxLines < 0 || lines < this._maxLines) {
-                        breakLine(this._visibleSymbols, i, _xMinusTrailingWhitespace);
+                        breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                         wordStartIndex = i + 1;
                         lineStartIndex = i + 1;
                     }
@@ -771,7 +774,7 @@ Object.assign(TextElement.prototype, {
                         // broken onto multiple lines.
                         if (numWordsThisLine === 0) {
                             wordStartIndex = i;
-                            breakLine(this._visibleSymbols, i, _xMinusTrailingWhitespace);
+                            breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                         } else {
                             // Move back to the beginning of the current word.
                             var backtrack = Math.max(i - wordStartIndex, 0);
@@ -784,7 +787,7 @@ Object.assign(TextElement.prototype, {
                                 var backtrackStart = wordStartIndex;
                                 var backtrackEnd = i;
                                 for (j = backtrackStart; j < backtrackEnd; j++) {
-                                    var backChar = this._visibleSymbols[j];
+                                    var backChar = this._symbols[j];
                                     var backCharData = json.chars[backChar];
                                     var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                     backMeshInfo.lines[lines - 1] -= 1;
@@ -794,7 +797,7 @@ Object.assign(TextElement.prototype, {
 
                             i -= backtrack + 1;
 
-                            breakLine(this._visibleSymbols, wordStartIndex, wordStartX);
+                            breakLine(this._symbols, wordStartIndex, wordStartX);
                             continue;
                         }
                     }
@@ -933,7 +936,7 @@ Object.assign(TextElement.prototype, {
             // there will almost always be some leftover text on the final line which has
             // not yet been pushed to _lineContents.
             if (lineStartIndex < l) {
-                breakLine(this._visibleSymbols, l, _x);
+                breakLine(this._symbols, l, _x);
             }
         }
 
