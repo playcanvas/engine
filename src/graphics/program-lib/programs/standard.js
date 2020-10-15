@@ -1328,20 +1328,22 @@ var standard = {
         var usesCookie = false;
         var usesCookieNow;
 
+        if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
+
         // FRAGMENT SHADER BODY
 
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
             if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW*twoSidedLightingNegScaleFactor : -vNormalW*twoSidedLightingNegScaleFactor;\n";
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                    code += "   dTangentW = gl_FrontFacing ? vTangentW*twoSidedLightingNegScaleFactor : -vTangentW*twoSidedLightingNegScaleFactor;\n";
+                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW*twoSidedLightingNegScaleFactor : -vBinormalW*twoSidedLightingNegScaleFactor;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
