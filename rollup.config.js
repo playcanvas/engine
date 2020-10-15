@@ -112,7 +112,8 @@ function importAssemblyScriptInstead(options) {
 
 function importAssemblyScriptAsJavaScriptInstead(options) {
     const filter = createFilter([
-        '**/*.js'
+        '**/*.js',
+        '**/*.ts'
     ], []);
 
     return {
@@ -255,6 +256,7 @@ var target_assemblyscript_32 = {
             comments: 'some'
         }),
         spacesToTabs(),
+        typescript(),
         importAssemblyScriptInstead()
     ]
 };
@@ -284,6 +286,7 @@ var target_assemblyscript_64 = {
             comments: 'some'
         }),
         spacesToTabs(),
+        typescript(),
         importAssemblyScriptInstead()
     ]
 };
