@@ -831,8 +831,7 @@ shadergraph.connectFragOut = function (arg) {
         // specific port of a node
         this.graph.connect(arg.node, arg.port, -1, graphVar.name);
     }
-
-    //this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+    // this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
 shadergraph.connectVertexOffset = function (arg) {
@@ -850,7 +849,7 @@ shadergraph.connectVertexOffset = function (arg) {
         // specific port of a node
         this.graph.connect(arg.node, arg.port, -1, graphVar.name);
     }
-//    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+    // this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
 shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
