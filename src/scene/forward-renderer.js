@@ -813,6 +813,10 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
 
         if (clear) {
+            // use camera clear options if any
+            if (!options)
+                options = camera._clearOptions;
+
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
