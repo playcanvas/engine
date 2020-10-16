@@ -86,22 +86,16 @@
             //start building shader graph
             pc.shadergraph.start(coreNodesJSONString);
 
-            //create a simple PS shader graph - just a 2D texture sample
-            var texSampleNode = pc.shadergraph.textureSample2D('diffSamp',diffuseMap, pc.shadergraph.uv0);
-            
+            //create a simple PS shader graph - just a 2D texture sample with scrolling UVs
+            var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
+            var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0);
+            var texSampleNode = pc.shadergraph.textureSample2D('diffSamp',diffuseMap, scrollNode);
+                        
             //hook up PS outputs
             pc.shadergraph.connectFragOut(texSampleNode);
-
-            //create a custom vertex offset shader graph node
-            var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);
-            
-            //hook up custom node inputs
-            pc.shadergraph.connectCustom(wobbleVSNode, 'wp', pc.shadergraph.worldPosVS);
-            pc.shadergraph.connectCustom(wobbleVSNode, 'wn', pc.shadergraph.worldNormVS);
-            pc.shadergraph.connectCustom(wobbleVSNode, 't', pc.shadergraph.param('float', 'uTime', 0.0));
-
-            //hook up VS output
-            pc.shadergraph.connectVertexOffset(wobbleVSNode);
+   
+            //hook up VS output 
+            pc.shadergraph.connectVertexOffset(pc.shadergraph.param('vec3', 'uZero3', new pc.Vec3(0,0,0)));
 
             //end graph and assign built graph to material
             var material = pc.shadergraph.end();

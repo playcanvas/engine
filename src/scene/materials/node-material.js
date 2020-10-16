@@ -616,7 +616,8 @@ Object.assign(NodeMaterial.prototype, {
                         // root graph output var
                         graphOutputVarTmpVarMap[con.dstVarName] = srcTmpVarMap[con.srcIndex][con.srcVarName];
                     } else {
-                        // invalid connection?!
+                        // this is a direct conection between an input port and an output io port - this happens on all input port editor previews
+                        graphOutputVarTmpVarMap[con.dstVarName] = con.srcVarName;
                     }
                 }
             }
@@ -705,7 +706,46 @@ shadergraph._getNode = function (name, funcString, declString) {
     return this.nodeRegistry[name];
 };
 
-shadergraph.start = function () {
+shadergraph._addCoreFunction = function (coreName, coreNode) {
+
+    this[coreName] = function (...args) {
+        var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
+
+        var sgInputs = coreNode.graphData.graphVars.filter(function (graphVar) {
+            return graphVar.name.startsWith('IN_');
+        });
+
+        if (sgInputs.length === args.length) {
+            args.forEach((arg, argIndex) => {
+                if (typeof(arg) === 'number') {
+                    // ret port of a node
+                    var argNodeIndex = arg;
+                    this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
+                } else if (arg.type) {
+                    // graphVar (ioPort)
+                    this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
+                } else {
+                    // specific port of a node
+                    this.graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
+                }
+            });
+        } else {
+            console.log("arguments do not match core node function");
+        }
+        return sgIndex;
+    };
+
+};
+
+shadergraph.start = function (coreNodesJSON) {
+    const coreNodeList = JSON.parse(coreNodesJSON);
+
+    Object.keys(coreNodeList).forEach((key) => {
+        var coreNode = this._getNode(key, coreNodeList[key].code);
+
+        this._addCoreFunction(key, coreNode);
+    });
+
     // check current graph is null?
     shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
     shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
@@ -776,16 +816,41 @@ shadergraph.param = function (type, name, value) {
     return graphVar;
 };
 
-shadergraph.connectFragOut = function (nodeIndex, name) {
+shadergraph.connectFragOut = function (arg) {
     // assumes this is only called once per graph TODO: verify this
     var graphVar = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 1));
-    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+
+    if (typeof(arg) === 'number') {
+        // ret port of a node
+        var argNodeIndex = arg;
+        this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
+    } else if (arg.type) {
+        // graphVar (ioPort)
+        this.graph.connect(-1, arg.name, -1, graphVar.name);
+    } else {
+        // specific port of a node
+        this.graph.connect(arg.node, arg.port, -1, graphVar.name);
+    }
+
+    //this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
-shadergraph.connectVertexOffset = function (nodeIndex, name) {
+shadergraph.connectVertexOffset = function (arg) {
     // assumes this is only called once per graph TODO: verify this
     var graphVar = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
-    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+
+    if (typeof(arg) === 'number') {
+        // ret port of a node
+        var argNodeIndex = arg;
+        this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
+    } else if (arg.type) {
+        // graphVar (ioPort)
+        this.graph.connect(-1, arg.name, -1, graphVar.name);
+    } else {
+        // specific port of a node
+        this.graph.connect(arg.node, arg.port, -1, graphVar.name);
+    }
+//    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
 };
 
 shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
