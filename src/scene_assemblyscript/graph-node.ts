@@ -3,6 +3,10 @@ import { Tags } from '../core/tags.js';
 import { Mat4 } from '../math_assemblyscript/mat4.js';
 import { Quat } from '../math_assemblyscript/quat.js';
 import { Vec3 } from '../math_assemblyscript/vec3.js';
+import { Mat3 } from '../math_assemblyscript/mat3.js';
+
+declare var assemblyscript: any;
+declare var Loader: any;
 
 /*
 text = "";
@@ -19,9 +23,6 @@ for (var name in assemblyscript.instance.exports) {
 }
 text;
 */
-
-declare var assemblyscript: any;
-declare var Loader: any;
 
 var $get$name                                 = assemblyscript.instance.exports["GraphNode#get:name"];
 var $set$name                                 = assemblyscript.instance.exports["GraphNode#set:name"];
@@ -159,7 +160,7 @@ var $set$rotateLocal_quaternion               = assemblyscript.instance.exports[
 var $rotateLocal                              = assemblyscript.instance.exports["GraphNode#rotateLocal"];
 
 
-function GraphNode(name) {
+function GraphNode(name?: string) {
     EventHandler.call(this);
     this.tags = new Tags(this);
     this._labels = {};
@@ -171,12 +172,16 @@ function GraphNode(name) {
         assemblyscript.instance.exports.__setArgumentsLength(0);
         this.ptr = $constructor(0);
     }
+    list[this.ptr] = this;
 }
 
 GraphNode.prototype = Object.create(EventHandler.prototype);
 GraphNode.prototype.constructor = GraphNode;
 
+var list = {};
 GraphNode.wrap = function(ptr) {
+    if (ptr in list)
+        return list[ptr];
     var tmp = Object.create(GraphNode.prototype);
     tmp.ptr = ptr;
     return tmp;
@@ -216,19 +221,258 @@ Object.defineProperty(GraphNode.prototype, 'enabled', {
         return !!$get$enabled(this.ptr);
     },
 
-    set: function (enabled) {
-        $set$enabled(this.ptr, enabled);
+    set: function (value) {
+        $set$enabled(this.ptr, value);
     }
 });
+
+Object.defineProperty(GraphNode.prototype, '_enabled', {
+    get: function () {
+        return !!$get$_enabled(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_enabled(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'scaleCompensation', {
+    get: function () {
+        return !!$get$scaleCompensation(this.ptr);
+    },
+
+    set: function (value) {
+        $set$scaleCompensation(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_enabledInHierarchy', {
+    get: function () {
+        return !!$get$_enabledInHierarchy(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_enabledInHierarchy(this.ptr, value);
+    }
+});
+
+/*
+var $get$_right                               = assemblyscript.instance.exports["GraphNode#get:_right"];
+var $set$_right                               = assemblyscript.instance.exports["GraphNode#set:_right"];
+var $get$_up                                  = assemblyscript.instance.exports["GraphNode#get:_up"];
+var $set$_up                                  = assemblyscript.instance.exports["GraphNode#set:_up"];
+var $get$_forward                             = assemblyscript.instance.exports["GraphNode#get:_forward"];
+var $set$_forward                             = assemblyscript.instance.exports["GraphNode#set:_forward"];
+var $set$_parent                              = assemblyscript.instance.exports["GraphNode#set:_parent"];
+var $get$_children                            = assemblyscript.instance.exports["GraphNode#get:_children"];
+var $set$_children                            = assemblyscript.instance.exports["GraphNode#set:_children"];
+*/
+
+function setterGetterObserver(object, name) {
+    Object.defineProperty(object.prototype, name, {
+        get: function () {
+            console.error("Getter:", object, name);
+            return 123;
+        },
+    
+        set: function (value) {
+            console.error("Setter:", object, name, value);
+        }
+    });
+}
+setterGetterObserver(GraphNode, "_right");
+setterGetterObserver(GraphNode, "_up");
+setterGetterObserver(GraphNode, "_forward");
+//setterGetterObserver(GraphNode, "_children");
+setterGetterObserver(GraphNode, "_sync_scale");
+
+Object.defineProperty(GraphNode.prototype, '_frozen', {
+    get: function () {
+        return !!$get$_frozen(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_frozen(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_dirtyNormal', {
+    get: function () {
+        return !!$get$_dirtyNormal(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_dirtyNormal(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_dirtyLocal', {
+    get: function () {
+        return !!$get$_dirtyLocal(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_dirtyLocal(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_dirtyWorld', {
+    get: function () {
+        return !!$get$_dirtyWorld(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_dirtyWorld(this.ptr, value);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'worldTransform', {
+    get: function () {
+        return Mat4.wrap($get$worldTransform(this.ptr));
+    },
+
+    set: function (value) {
+        $set$worldTransform(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'normalMatrix', {
+    get: function () {
+        return Mat3.wrap($get$normalMatrix(this.ptr));
+    },
+
+    set: function (value) {
+        $set$normalMatrix(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'localTransform', {
+    get: function () {
+        return Mat4.wrap($get$localTransform(this.ptr));
+    },
+
+    set: function (value) {
+        $set$localTransform(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'localPosition', {
+    get: function () {
+        return Vec3.wrap($get$localPosition(this.ptr));
+    },
+
+    set: function (value) {
+        $set$localPosition(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'localRotation', {
+    get: function () {
+        return Quat.wrap($get$localRotation(this.ptr));
+    },
+
+    set: function (value) {
+        $set$localRotation(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'localScale', {
+    get: function () {
+        return Vec3.wrap($get$localScale(this.ptr));
+    },
+
+    set: function (value) {
+        $set$localScale(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'localEulerAngles', {
+    get: function () {
+        return Vec3.wrap($get$localEulerAngles(this.ptr));
+    },
+
+    set: function (value) {
+        $set$localEulerAngles(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_scale', {
+    get: function () {
+        return Vec3.wrap($get$_scale(this.ptr));
+    },
+
+    set: function (value) {
+        $set$_scale(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'position', {
+    get: function () {
+        return Vec3.wrap($get$position(this.ptr));
+    },
+
+    set: function (value) {
+        $set$position(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'rotation', {
+    get: function () {
+        return Quat.wrap($get$rotation(this.ptr));
+    },
+
+    set: function (value) {
+        $set$rotation(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, 'eulerAngles', {
+    get: function () {
+        return Vec3.wrap($get$eulerAngles(this.ptr));
+    },
+
+    set: function (value) {
+        $set$eulerAngles(this.ptr, value.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_aabbVer', {
+    get: function () {
+        return $get$_aabbVer(this.ptr);
+    },
+
+    set: function (value) {
+        $set$_aabbVer(this.ptr, value);
+    }
+});
+
+
 
 Object.defineProperty(GraphNode.prototype, 'parent', {
     get: function () {
         var parent_ptr = $get$parent(this.ptr);
         if (parent_ptr == 0)
-            return undefined;
+            return null;
         return GraphNode.wrap(parent_ptr);
+    },
+    set: function (value) {
+        console.log("no set, value", value);
     }
 });
+
+Object.defineProperty(GraphNode.prototype, '_parent', {
+    get: function () {
+        var parent_ptr = $get$_parent(this.ptr);
+        if (parent_ptr == 0)
+            return null;
+        return GraphNode.wrap(parent_ptr);
+    },
+    set: function (value) {
+        console.log("no set, value", value);
+    }
+});
+
+
 
 Object.defineProperty(GraphNode.prototype, 'path', {
     get: function () {
@@ -243,35 +487,52 @@ Object.defineProperty(GraphNode.prototype, 'root', {
     }
 });
 
-Object.defineProperty(GraphNode.prototype, 'children', {
-    get: function () {
-        /*
+function array_ptr_to_graphnodes(array_ptr: number) {
+       /*
         Array<T>
             buffer: ArrayBuffer
             dataStart: uSize
             byteLength: i32
             length: i32
         */
+       var struct = new Int32Array(assemblyscript.module.exports.memory.buffer, array_ptr, 4);
+       var struct_buffer     = struct[0];
+       var struct_dataStart  = struct[1];
+       var struct_byteLength = struct[2];
+       var struct_length     = struct[3];
+       // e.g. [371824, 371824, 4, 1] for 1 children
+       // e.g. [371824, 371824, 8, 2] for 2 children
+       var childarray = new Int32Array(assemblyscript.module.exports.memory.buffer, struct_buffer, struct_length);
+       var childs = [];
+       for (var childelem of childarray) {
+           childs.push(GraphNode.wrap(childelem));
+       }
+       return childs;
+}
+
+Object.defineProperty(GraphNode.prototype, 'children', {
+    get: function () {
         var array_ptr = $get$children(this.ptr);
-        var struct = new Int32Array(assemblyscript.module.exports.memory.buffer, array_ptr, 4);
-        var struct_buffer     = struct[0];
-        var struct_dataStart  = struct[1];
-        var struct_byteLength = struct[2];
-        var struct_length     = struct[3];
-        // e.g. [371824, 371824, 4, 1] for 1 children
-        // e.g. [371824, 371824, 8, 2] for 2 children
-        var childarray = new Int32Array(assemblyscript.module.exports.memory.buffer, struct_buffer, struct_length);
-        var childs = [];
-        for (var childelem of childarray) {
-            childs.push(GraphNode.wrap(childelem));
-        }
-        return childs;
+        return array_ptr_to_graphnodes(array_ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_children', {
+    get: function () {
+        var array_ptr = $get$_children(this.ptr);
+        return array_ptr_to_graphnodes(array_ptr);
     }
 });
 
 Object.defineProperty(GraphNode.prototype, 'graphDepth', {
     get: function () {
         return $get$graphDepth(this.ptr);
+    }
+});
+
+Object.defineProperty(GraphNode.prototype, '_graphDepth', {
+    get: function () {
+        return $get$_graphDepth(this.ptr);
     }
 });
 
@@ -289,7 +550,15 @@ Object.assign(GraphNode.prototype, {
     },
 
     clone: function () {
-        return GraphNode.wrap($clone(this.ptr));
+        //var clone = GraphNode.wrap($clone(this.ptr));
+        var clone = new GraphNode();
+        this._cloneInternal(clone);
+        var tags = this.tags._list;
+        for (var i = 0; i < tags.length; i++)
+            clone.tags.add(tags[i]);
+
+        clone._labels = Object.assign({}, this._labels);
+        return clone;
     },
 
     /**
@@ -710,23 +979,29 @@ Object.assign(GraphNode.prototype, {
         $_dirtifyWorldInternal(this.ptr);
     },
 
-    setPosition: function (x, y, z) {
-        // TODO: wasm only accepts a Vec3, but I wanna convert to TS first
-        if (x instanceof Vec3) {
-            $setPosition(this.ptr, x.x, x.y, x.z);
-        } else {
-            $setPosition(this.ptr, x, y, z);
+    setPosition: function() {
+        var tmp = new Vec3();
+        return function (x, y, z) {
+            if (x instanceof Vec3) {
+                tmp.copy(x);
+            } else {
+                tmp.set(x, y, z);
+            }
+            $setPosition(this.ptr, tmp.ptr);
         }
-    },
+    }(),
 
-    setRotation: function (x, y, z, w) {
-        // TODO: same as setPosition
-        if (x instanceof Quat) {
-            $setRotation(this.ptr, x.x, x.y, x.z, x.w);
-        } else {
-            $setRotation(this.ptr, x, y, z, w);
+    setRotation: function () {
+        var tmp = new Quat();
+        return function (x, y, z, w) {
+            if (x instanceof Quat) {
+                tmp.copy(x)
+            } else {
+                tmp.set(x, y, z, w);
+            }
+            $setRotation(this.ptr, tmp.ptr);
         }
-    },
+    }(),
 
     setEulerAngles: function (x, y, z) {
         if (x instanceof Vec3) {
@@ -778,9 +1053,10 @@ Object.assign(GraphNode.prototype, {
      * this.entity.removeChild(child);
      */
     removeChild: function (child) {
-        $removeChild(this.ptr, child.ptr);
-        
-        // TODO: fire
+        var removed = $removeChild(this.ptr, child.ptr);
+        // removeChild returns now true/false, depending on if child was actually removed
+        // So we can fire these two events for it in JS
+
         //// Remove from child list
         //for (i = 0; i < length; ++i) {
         //    if (this._children[i] === child) {
@@ -798,6 +1074,18 @@ Object.assign(GraphNode.prototype, {
         //        return;
         //    }
         //}
+
+        if (removed) {
+            // alert child that it has been removed
+            if (child.fire) {
+                child.fire('remove', this);
+            }
+
+            // alert the parent that it has had a child removed
+            if (this.fire) {
+                this.fire('childremove', child);
+            }
+        }
     },
 
     _sync: function () {

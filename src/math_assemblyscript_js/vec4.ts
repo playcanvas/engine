@@ -1,5 +1,5 @@
 
-import { Vec4 as Vec4_AS } from "../../assembly/Vec4";
+import { Vec4 as Vec4_AS } from "../../assembly/math/vec4";
 
 class Vec4 extends Vec4_AS {
     constructor(x?: any, y?: any, z?: any, w?: any) {

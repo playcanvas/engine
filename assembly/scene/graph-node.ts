@@ -1223,7 +1223,7 @@ export class GraphNode {
      * var child = this.entity.children[0];
      * this.entity.removeChild(child);
      */
-    removeChild(child: GraphNode): void {
+    removeChild(child: GraphNode): boolean {
         var i: i32;
         var length = this._children.length;
 
@@ -1241,9 +1241,10 @@ export class GraphNode {
                 // alert the parent that it has had a child removed
                 //if (this.fire) this.fire('childremove', child);
 
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     _sync_scale: Vec3 = new Vec3(0, 0, 0);

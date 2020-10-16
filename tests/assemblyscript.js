@@ -53,12 +53,27 @@ global.close = function (a, b, e) {
     expect(a).to.be.closeTo(b, e);
 }
 
+global.beforeEach = function() {
+    
+}
+
+global.afterEach = function() {
+    
+}
+
 global.window = {
     navigator: {
         userAgent: "node"
     }
 };
 
+// In scene/test_graphnode:
+// var PRODUCTION = __karma__.config.args.includes('--release');
+global.__karma__ = {
+    config: {
+        args: "--release"
+    }
+}
 function requireUncached(module) {
     delete require.cache[require.resolve(module)];
     return require(module);
@@ -67,7 +82,8 @@ function requireUncached(module) {
 async function load_wasm(filename) {
     var wasmFile = fs.readFileSync(path.join(__dirname, filename));
     imports = {};
-    var module = await Loader.instantiateBuffer(wasmFile, imports);
+    //var module = await Loader.instantiateBuffer(wasmFile, imports);
+    var module = await Loader.instantiate(wasmFile, imports);
     window.module = module;
     global.assemblyscript = {
         module: module,
@@ -83,8 +99,8 @@ async function load_wasm(filename) {
 
 async function main() {
     await load_wasm("../build/optimized_32.wasm");
-    window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
-    window.module.updateDataViews();
+    window.module.exports.memory.grow((20 * 1024 * 1024 ) / 65536) // can use up to 20mb without regrowth (which invalidates all dataviews)
+    //window.module.updateDataViews();
     global.instance = window.instance;
     global.pc = require("../build/playcanvas.assemblyscript_32");
     
@@ -93,6 +109,7 @@ async function main() {
     requireUncached("./math/test_vec2")
     requireUncached("./math/test_vec3")
     requireUncached("./math/test_vec4")
+    requireUncached("./scene/test_graphnode")
 
     console.log(`32bit: ${counter} tests (${success} succeeded, ${error} failed)`);
 
@@ -102,8 +119,8 @@ async function main() {
     error = 0;
 
     await load_wasm("../build/optimized_64.wasm");
-    window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
-    window.module.updateDataViews();
+    //window.module.memory.grow((300 * 1024 * 1024 ) / 65536) // can use up to 300mb without regrowth (which invalidates all dataviews)
+    //window.module.updateDataViews();
     global.instance = window.instance;
     global.pc = require("../build/playcanvas.assemblyscript_64");
     
@@ -112,6 +129,7 @@ async function main() {
     requireUncached("./math/test_vec2")
     requireUncached("./math/test_vec3")
     requireUncached("./math/test_vec4")
+    requireUncached("./scene/test_graphnode")
 
     console.log(`64bit: ${counter} tests (${success} succeeded, ${error} failed)`);
 }

@@ -1,6 +1,6 @@
 import { Vec3 } from "./vec3";
 
-import { Mat4 as Mat4_AS } from "../../assembly/Mat4";
+import { Mat4 as Mat4_AS } from "../../assembly/math/mat4";
 
 class Mat4 extends Mat4_AS {
     data: Array<number>;

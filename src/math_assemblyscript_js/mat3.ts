@@ -1,5 +1,5 @@
 
-import { Mat3 as Mat3_AS } from "../../assembly/Mat3";
+import { Mat3 as Mat3_AS } from "../../assembly/math/mat3";
 
 class Mat3 extends Mat3_AS {
     data: Array<number>;

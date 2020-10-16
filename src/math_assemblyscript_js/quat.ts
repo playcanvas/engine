@@ -1,6 +1,6 @@
 import { Vec3 } from "./vec3";
 
-import { Quat as Quat_AS } from "../../assembly/Quat";
+import { Quat as Quat_AS } from "../../assembly/math/quat";
 
 class Quat extends Quat_AS {
     constructor(x?: any, y?: any, z?: any, w?: any) {
