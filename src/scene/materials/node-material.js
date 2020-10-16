@@ -254,7 +254,7 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             graphVar = { type: type, name: name, valueX: value };
         } else {
-            graphVar = { type: type, name: name};
+            graphVar = { type: type, name: name };
         }
 
         this.graphData.graphVars.push(graphVar);
