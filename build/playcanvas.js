@@ -1,6 +1,6 @@
 /**
  * @license
- * PlayCanvas Engine v1.34.0-dev revision 7397d249
+ * PlayCanvas Engine v1.34.0-dev revision 8f01a724
  * Copyright 2011-2020 PlayCanvas Ltd. All rights reserved.
  */
 (function (global, factory) {
@@ -447,7 +447,7 @@
 		return result;
 	}();
 	var version = "1.34.0-dev";
-	var revision = "7397d249";
+	var revision = "8f01a724";
 	var config = { };
 	var common = { };
 	var apps = { };
@@ -23899,7 +23899,7 @@
 			} else if (typeof(value) === 'number') {
 				graphVar = { type: type, name: name, valueX: value };
 			} else {
-				graphVar = { type: type, name: name};
+				graphVar = { type: type, name: name };
 			}
 			this.graphData.graphVars.push(graphVar);
 			return graphVar;
@@ -24161,6 +24161,8 @@
 					} else {
 						if (con.srcIndex >= 0) {
 							graphOutputVarTmpVarMap[con.dstVarName] = srcTmpVarMap[con.srcIndex][con.srcVarName];
+						} else {
+							graphOutputVarTmpVarMap[con.dstVarName] = con.srcVarName;
 						}
 					}
 				}
@@ -24225,7 +24227,35 @@
 		}
 		return this.nodeRegistry[name];
 	};
-	shadergraph.start = function () {
+	shadergraph._addCoreFunction = function (coreName, coreNode) {
+		this[coreName] = function (...args) {
+			var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
+			var sgInputs = coreNode.graphData.graphVars.filter(function (graphVar) {
+				return graphVar.name.startsWith('IN_');
+			});
+			if (sgInputs.length === args.length) {
+				args.forEach((arg, argIndex) => {
+					if (typeof(arg) === 'number') {
+						var argNodeIndex = arg;
+						this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
+					} else if (arg.type) {
+						this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
+					} else {
+						this.graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
+					}
+				});
+			} else {
+				console.log("arguments do not match core node function");
+			}
+			return sgIndex;
+		};
+	};
+	shadergraph.start = function (coreNodesJSON) {
+		const coreNodeList = JSON.parse(coreNodesJSON);
+		Object.keys(coreNodeList).forEach((key) => {
+			var coreNode = this._getNode(key, coreNodeList[key].code);
+			this._addCoreFunction(key, coreNode);
+		});
 		shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
 		shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
 	};
@@ -24280,13 +24310,27 @@
 		var graphVar = this.graph.addInput(type, name, value);
 		return graphVar;
 	};
-	shadergraph.connectFragOut = function (nodeIndex, name) {
+	shadergraph.connectFragOut = function (arg) {
 		var graphVar = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 1));
-		this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+		if (typeof(arg) === 'number') {
+			var argNodeIndex = arg;
+			this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
+		} else if (arg.type) {
+			this.graph.connect(-1, arg.name, -1, graphVar.name);
+		} else {
+			this.graph.connect(arg.node, arg.port, -1, graphVar.name);
+		}
 	};
-	shadergraph.connectVertexOffset = function (nodeIndex, name) {
+	shadergraph.connectVertexOffset = function (arg) {
 		var graphVar = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
-		this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
+		if (typeof(arg) === 'number') {
+			var argNodeIndex = arg;
+			this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
+		} else if (arg.type) {
+			this.graph.connect(-1, arg.name, -1, graphVar.name);
+		} else {
+			this.graph.connect(arg.node, arg.port, -1, graphVar.name);
+		}
 	};
 	shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
 		if (typeof(nodeIndex_or_param) === 'number') {
