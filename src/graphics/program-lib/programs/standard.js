@@ -1336,14 +1336,14 @@ var standard = {
 
         if (needsNormal) {
             if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW*twoSidedLightingNegScaleFactor : -vNormalW*twoSidedLightingNegScaleFactor;\n";
+                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW*twoSidedLightingNegScaleFactor : -vTangentW*twoSidedLightingNegScaleFactor;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW*twoSidedLightingNegScaleFactor : -vBinormalW*twoSidedLightingNegScaleFactor;\n";
+                    code += "   dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
+                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
