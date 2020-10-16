@@ -308,7 +308,7 @@ Picker.prototype.prepare = function (camera, scene, arg) {
     // save old camera state
     this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
 
-    // clear registered meshes, rendering will register them against
+    // clear registered meshes, rendering will register them again
     self.mapping.length = 0;
 
     // Render
