@@ -47,6 +47,9 @@ function Picker(app, width, height) {
     this.pickColor = new Float32Array(4);
     this.pickColor[3] = 1;
 
+    // mapping table from ids to meshInstances
+    this.mapping = [];
+
     this.scene = null;
     this.drawCalls = [];
     this.layer = null;
@@ -109,8 +112,11 @@ Picker.prototype.getSelection = function (x, y, width, height) {
         y = this.layer.renderTarget.height - (y + (height || 1));
     }
 
-    width = width || 1;
-    height = height || 1;
+    // make sure we have nice numbers to work with
+    x = Math.floor(x);
+    y = Math.floor(y);
+    width = Math.floor(Math.max(width || 1, 1));
+    height = Math.floor(Math.max(height || 1, 1));
 
     // Cache active render target
     var prevRenderTarget = device.renderTarget;
@@ -128,8 +134,7 @@ Picker.prototype.getSelection = function (x, y, width, height) {
     device.setRenderTarget(prevRenderTarget);
 
     var selection = [];
-
-    var drawCalls = this.layer.instances.visibleOpaque[0].list;
+    var mapping = this.mapping;
 
     var r, g, b, index;
     for (var i = 0; i < width * height; i++) {
@@ -139,7 +144,8 @@ Picker.prototype.getSelection = function (x, y, width, height) {
         index = r << 16 | g << 8 | b;
         // White is 'no selection'
         if (index !== 0xffffff) {
-            var selectedMeshInstance = drawCalls[index];
+            // TODO: optimize search using set instead of array
+            var selectedMeshInstance = mapping[index];
             if (selection.indexOf(selectedMeshInstance) === -1) {
                 selection.push(selectedMeshInstance);
             }
@@ -158,7 +164,8 @@ Picker.prototype.getSelection = function (x, y, width, height) {
  * in any way, pc.Picker#prepare does not need to be called again.
  * @param {pc.CameraComponent} camera - The camera component used to render the scene.
  * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
- * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
+ * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+ * If not supplied, all layers rendering to backbuffer before this layer will be used.
  */
 Picker.prototype.prepare = function (camera, scene, arg) {
     var device = this.device;
@@ -201,7 +208,8 @@ Picker.prototype.prepare = function (camera, scene, arg) {
                 var colorBuffer = new Texture(device, {
                     format: PIXELFORMAT_R8_G8_B8_A8,
                     width: self.width,
-                    height: self.height
+                    height: self.height,
+                    mipmaps: false
                 });
                 colorBuffer.name = 'pick';
                 colorBuffer.minFilter = FILTER_NEAREST;
@@ -226,6 +234,7 @@ Picker.prototype.prepare = function (camera, scene, arg) {
                 self.pickColor[2] = (index & 0xff) / 255;
                 pickColorId.setValue(self.pickColor);
                 device.setBlending(false);
+                self.mapping[index] = meshInstance;
             }
         });
 
@@ -299,6 +308,9 @@ Picker.prototype.prepare = function (camera, scene, arg) {
     // save old camera state
     this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
 
+    // clear registered meshes, rendering will register them against
+    self.mapping.length = 0;
+
     // Render
     this.app.renderer.renderComposition(this.layerComp);
 
@@ -311,9 +323,13 @@ Picker.prototype.onLayerPreRender = function (layer, sourceLayer, sourceRt) {
         layer.onDisable();
         layer.onEnable();
     }
+
+    // back up original settings
     layer.oldClear = layer.cameras[0].camera._clearOptions;
     layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
     layer.oldAspect = layer.cameras[0].aspectRatio;
+
+    // set up new settings
     layer.cameras[0].camera._clearOptions = this.clearOptions;
     layer.cameras[0].aspectRatioMode = ASPECT_MANUAL;
     var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
@@ -322,6 +338,8 @@ Picker.prototype.onLayerPreRender = function (layer, sourceLayer, sourceRt) {
 };
 
 Picker.prototype.onLayerPostRender = function (layer) {
+
+    // restore original settings
     layer.cameras[0].camera._clearOptions = layer.oldClear;
     layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
     layer.cameras[0].aspectRatio = layer.oldAspect;

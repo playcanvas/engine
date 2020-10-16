@@ -96,7 +96,10 @@ function MeshInstance(node, mesh, material) {
     this._screenSpace = false;
     this._noDepthDrawGl1 = false;
     this.cull = true;
+
+    // true if the meshInstance is pickable by Picker (by rendering ID to render target)
     this.pick = true;
+
     this._updateAabb = true;
     this._updateAabbFunc = null;
     this._calculateSortDistance = null;
