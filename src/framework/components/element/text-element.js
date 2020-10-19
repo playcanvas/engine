@@ -510,6 +510,10 @@ Object.assign(TextElement.prototype, {
         for (i = 0; i < this._symbols.length; i++) {
             if (!NON_VISIBLE_CHAR.has(this._symbols[i])) {
                 this._symbols[inputIndex] = this._symbols[i];
+                if (this._symbolColors) {
+                    this._symbolColors[inputIndex] = this._symbolColors[i];
+                }
+
                 inputIndex++;
             }
         }
