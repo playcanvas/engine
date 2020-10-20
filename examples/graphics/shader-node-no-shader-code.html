@@ -83,13 +83,13 @@
             var model = modelComponent.model;
             var diffuseMap = model.getMaterials()[0].diffuseMap;
 
-            //start building shader graph
+            //start building shader graph, register core nodes
             pc.shadergraph.start(coreNodesJSONString);
 
             //create a simple PS shader graph - just a 2D texture sample with scrolling UVs
             var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
             var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0);
-            var texSampleNode = pc.shadergraph.textureSample2D('diffSamp',diffuseMap, scrollNode);
+            var texSampleNode = pc.shadergraph.textureSample2D('diffSamp', diffuseMap, scrollNode);
                         
             //hook up PS outputs
             pc.shadergraph.connectFragOut(texSampleNode);

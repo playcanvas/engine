@@ -22,6 +22,8 @@ import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
+import { shadergraph_nodeRegistry } from './shader-graph-registry.js';
+
 /**
  * @class
  * @name pc.StandardMaterial
@@ -751,6 +753,13 @@ Object.assign(StandardMaterial.prototype, {
         var uniform;
         this._clearParameters();
 
+        if (this._shaderGraphChunk)
+        {
+            var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
+
+            rootShaderGraph.updateShaderGraphUniforms(this);
+        }
+
         this._setParameter('material_ambient', this.ambientUniform);
 
         if (!this.diffuseMap || this.diffuseTint) {
@@ -987,6 +996,11 @@ Object.assign(StandardMaterial.prototype, {
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
         else
             this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+
+        // add shader graph chunk to options
+        if (this._shaderGraphChunk) {
+            options._shaderGraphChunk = this._shaderGraphChunk;
+        }
 
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);

@@ -75,7 +75,39 @@ Object.assign(NodeMaterial.prototype, {
         return clone;
     },
 
-    updateUniforms: function () {
+    updateShaderGraphUniforms: function (mat) {
+        for (var n = 0; n < this.graphData.graphVars.length; n++) {
+            var graphVar = this.graphData.graphVars[n];
+
+            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
+                var chunkId = '_' + this.id;
+
+                switch (graphVar.type) {
+                    case 'sampler2D':
+                        mat.setParameter(graphVar.name + chunkId, graphVar.valueTex);
+                        break;
+                    case 'float':
+                        mat.setParameter(graphVar.name + chunkId, graphVar.valueX);
+                        break;
+                    case 'vec2':
+                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY]);
+                        break;
+                    case 'vec3':
+                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
+                        break;
+                    case 'vec4':
+                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
+                        break;
+                    case 'samplerCube':
+                    default:
+                        // error
+                        break;
+                }
+            }
+        }
+    },
+
+    updateUniforms: function (material) {
         this.clearParameters();
 
         for (var n = 0; n < this.graphData.graphVars.length; n++) {
@@ -389,14 +421,13 @@ Object.assign(NodeMaterial.prototype, {
         return callString;
     },
 
-    // this is currently not used - but will be used by the shadergraph script interface
     // TODO: re-enable and optimize using transient name map
-    // _getGraphVarByName: function (name) {
+    getGraphVarByName: function (name) {
         // convienient but not fast - TODO: optimize?
-        // return this.graphData.graphVars.filter(function (graphVar) {
-        //    return graphVar.name === name;
-        // })[0];
-    // },
+        return this.graphData.graphVars.filter(function (graphVar) {
+            return graphVar.name === name;
+        })[0];
+    },
 
     _generateSubGraphFuncs: function (depGraphFuncs, depGraphVarList) {
         var i;
@@ -692,174 +723,4 @@ Object.assign(NodeMaterial.prototype, {
 
 });
 
-var shadergraph = {};
-
-shadergraph.graphCounter = 0;
-
-shadergraph.nodeRegistry = {};
-
-shadergraph._getNode = function (name, funcString, declString) {
-    if (!this.nodeRegistry[name]) {
-        this.nodeRegistry[name] = new NodeMaterial(funcString, declString);
-    }
-
-    return this.nodeRegistry[name];
-};
-
-shadergraph._addCoreFunction = function (coreName, coreNode) {
-
-    this[coreName] = function (...args) {
-        var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
-
-        var sgInputs = coreNode.graphData.graphVars.filter(function (graphVar) {
-            return graphVar.name.startsWith('IN_');
-        });
-
-        if (sgInputs.length === args.length) {
-            args.forEach((arg, argIndex) => {
-                if (typeof(arg) === 'number') {
-                    // ret port of a node
-                    var argNodeIndex = arg;
-                    this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
-                } else if (arg.type) {
-                    // graphVar (ioPort)
-                    this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
-                } else {
-                    // specific port of a node
-                    this.graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
-                }
-            });
-        } else {
-            console.log("arguments do not match core node function");
-        }
-        return sgIndex;
-    };
-
-};
-
-shadergraph.start = function (coreNodesJSON) {
-    const coreNodeList = JSON.parse(coreNodesJSON);
-
-    Object.keys(coreNodeList).forEach((key) => {
-        var coreNode = this._getNode(key, coreNodeList[key].code);
-
-        this._addCoreFunction(key, coreNode);
-    });
-
-    // check current graph is null?
-    shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
-    shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
-};
-
-shadergraph.end = function () {
-    var ret = shadergraph.graph;
-    shadergraph.graph = null;
-    shadergraph.graphCounter++;
-    return ret;
-};
-
-shadergraph.textureSample2D = function (name, texture, uv) {
-
-    var texSampNode = this.graph.addSubGraph(this._getNode('texSample', 'vec4 texSample(in sampler2D tex, in vec2 uv, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n color=samp.rgb;\n alpha=samp.a;\n return samp;\n}'));
-
-    // assumes name is unique TODO: verify?
-    var graphVar = this.graph.addInput('sampler2D', name, texture);
-    this.graph.connect(-1, graphVar.name, texSampNode, 'IN_tex');
-    this.graph.connect(uv, 'OUT_ret', texSampNode, 'IN_uv');
-
-    return texSampNode;
-};
-
-shadergraph.customNode = function (name, f, d) {
-    var nodeIndex = this.graph.addSubGraph(this._getNode(name, f, d));
-    return nodeIndex;
-};
-
-Object.defineProperty(shadergraph, 'uv0', {
-    get: function () {
-        var nodeIndex = this.graph.addSubGraph(this._getNode('uv0', 'vec2 uv0() { return vUv0; }'));
-        return nodeIndex;
-    }
-});
-
-Object.defineProperty(shadergraph, 'worldPosPS', {
-    get: function () {
-        var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosPS', 'vec3 wpPS() { return vPosition; }'));
-        return nodeIndex;
-    }
-});
-
-Object.defineProperty(shadergraph, 'worldNormPS', {
-    get: function () {
-        var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormPS', 'vec3 wnPS() { return vNormal; }'));
-        return nodeIndex;
-    }
-});
-
-Object.defineProperty(shadergraph, 'worldPosVS', {
-    get: function () {
-        var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosVS', 'vec3 wpVS() { return getWorldPositionNM(); }'));
-        return nodeIndex;
-    }
-});
-
-Object.defineProperty(shadergraph, 'worldNormVS', {
-    get: function () {
-        var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormVS', 'vec3 wnVS() { return getWorldNormalNM(); }'));
-        return nodeIndex;
-    }
-});
-
-shadergraph.param = function (type, name, value) {
-    // assumes name is unique TODO: verify this
-    var graphVar = this.graph.addInput(type, name, value);
-    return graphVar;
-};
-
-shadergraph.connectFragOut = function (arg) {
-    // assumes this is only called once per graph TODO: verify this
-    var graphVar = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 1));
-
-    if (typeof(arg) === 'number') {
-        // ret port of a node
-        var argNodeIndex = arg;
-        this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
-    } else if (arg.type) {
-        // graphVar (ioPort)
-        this.graph.connect(-1, arg.name, -1, graphVar.name);
-    } else {
-        // specific port of a node
-        this.graph.connect(arg.node, arg.port, -1, graphVar.name);
-    }
-    // this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
-};
-
-shadergraph.connectVertexOffset = function (arg) {
-    // assumes this is only called once per graph TODO: verify this
-    var graphVar = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
-
-    if (typeof(arg) === 'number') {
-        // ret port of a node
-        var argNodeIndex = arg;
-        this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
-    } else if (arg.type) {
-        // graphVar (ioPort)
-        this.graph.connect(-1, arg.name, -1, graphVar.name);
-    } else {
-        // specific port of a node
-        this.graph.connect(arg.node, arg.port, -1, graphVar.name);
-    }
-    // this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, graphVar.name);
-};
-
-shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
-    if (typeof(nodeIndex_or_param) === 'number') {
-        var nodeIndex = nodeIndex_or_param;
-        this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
-    } else {
-        var graphVar = nodeIndex_or_param;
-        this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_' + destName);
-    }
-};
-
-export { NodeMaterial, shadergraph };
+export { NodeMaterial };
