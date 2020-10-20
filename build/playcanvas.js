@@ -1,6 +1,6 @@
 /**
  * @license
- * PlayCanvas Engine v1.34.0-dev revision 8f01a724
+ * PlayCanvas Engine v1.34.0-dev revision adb2a859
  * Copyright 2011-2020 PlayCanvas Ltd. All rights reserved.
  */
 (function (global, factory) {
@@ -447,7 +447,7 @@
 		return result;
 	}();
 	var version = "1.34.0-dev";
-	var revision = "8f01a724";
+	var revision = "adb2a859";
 	var config = { };
 	var common = { };
 	var apps = { };
@@ -5884,6 +5884,16 @@
 		}
 	};
 
+	var shadergraph_nodeRegistry = {};
+	shadergraph_nodeRegistry.registerNode = function (name, node)
+	{
+		shadergraph_nodeRegistry[name] = node;
+	};
+	shadergraph_nodeRegistry.getNode = function (name)
+	{
+		return shadergraph_nodeRegistry[name];
+	};
+
 	var _oldChunkFloat = function (s, o, p) {
 		return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + shaderChunks[o] + "\n#endif\n";
 	};
@@ -6020,6 +6030,9 @@
 				for (i = 0; i < options.lights.length; i++) {
 					key += options.lights[i].key;
 				}
+			}
+			if (options._shaderGraphChunk) {
+				key += options._shaderGraphChunk;
 			}
 			return hashCode(key);
 		},
@@ -6166,6 +6179,15 @@
 			return code;
 		},
 		createShaderDefinition: function (device, options) {
+			var rootShaderGraph = null;
+			var rootDeclGLSL = '';
+			var rootCallGLSL = '';
+			if (options._shaderGraphChunk)
+			{
+				rootShaderGraph = shadergraph_nodeRegistry.getNode(options._shaderGraphChunk);
+				rootDeclGLSL = rootShaderGraph.generateRootDeclGlsl();
+				rootCallGLSL = rootShaderGraph.generateRootCallGlsl();
+			}
 			var i, p;
 			var lighting = options.lights.length > 0;
 			if (options.dirLightMap) {
@@ -6189,6 +6211,7 @@
 			if (!options.useSpecular) options.specularMap = options.glossMap = null;
 			var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
 			var shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
+			needsNormal = needsNormal || options._shaderGraphChunk;
 			this.options = options;
 			var code = '';
 			var codeBody = '';
@@ -6431,9 +6454,23 @@
 			}
 			code = this._vsAddTransformCode(code, device, chunks, options);
 			if (needsNormal) code += chunks.normalVS;
+			if (options._shaderGraphChunk)
+			{
+				code += "#define SG_VS\n";
+				code += rootDeclGLSL;
+			}
 			code += "\n";
 			code += chunks.startVS;
 			code += codeBody;
+			if (options._shaderGraphChunk)
+			{
+				if (rootShaderGraph.getGraphVarByName('OUT_vertOff'))
+				{
+					code += rootCallGLSL;
+					code += "   vPositionW = vPositionW+OUT_vertOff;\n";
+					code += "   gl_Position = matrix_viewProjection*vec4(vPositionW,1);\n";
+				}
+			}
 			code += "}";
 			var vshader = code;
 			var oldVars = varyings;
@@ -6896,6 +6933,11 @@
 					code += (options.enableGGXSpecular) ? chunks.reflDirAnisoPS : chunks.reflDirPS;
 				}
 			}
+			if (options._shaderGraphChunk)
+			{
+				code += "#define SG_PS\n";
+				code += rootDeclGLSL;
+			}
 			var hasPointLights = false;
 			var usesLinearFalloff = false;
 			var usesInvSquaredFalloff = false;
@@ -6928,7 +6970,7 @@
 				} else {
 					code += "   getOpacity();\n";
 					if (options.alphaTest) {
-						code += "   alphaTest(dAlpha);\n";
+						if (!options._shaderGraphChunk) code += "   alphaTest(dAlpha);\n";
 					}
 				}
 			}
@@ -6944,7 +6986,7 @@
 				if (opacityParallax) {
 					code += "   getOpacity();\n";
 					if (options.alphaTest) {
-						code += "   alphaTest(dAlpha);\n";
+						if (!options._shaderGraphChunk) code += "   alphaTest(dAlpha);\n";
 					}
 				}
 				code += "   getNormal();\n";
@@ -6953,10 +6995,36 @@
 						code += "   getGlossiness();\n";
 						getGlossinessCalled = true;
 					}
-					code += "   getReflDir();\n";
+					if (!options._shaderGraphChunk) code += "   getReflDir();\n";
 				}
 			}
 			code += "   getAlbedo();\n";
+			if (options._shaderGraphChunk)
+			{
+				code += rootCallGLSL;
+				if (rootShaderGraph.getGraphVarByName('OUT_dAlpha'))
+				{
+					code += 'dAlpha=OUT_dAlpha;\n';
+				}
+				if (options.alphaTest) {
+					code += "   alphaTest(dAlpha);\n";
+				}
+				if (rootShaderGraph.getGraphVarByName('OUT_dNormalW'))
+				{
+					code += 'dNormalW=OUT_dNormalW;\n';
+				}
+				if (rootShaderGraph.getGraphVarByName('OUT_dGlossiness'))
+				{
+					code += 'dGlossiness=OUT_dGlossiness;\n';
+				}
+				if (options.useSpecular) {
+					code += "   getReflDir();\n";
+				}
+				if (rootShaderGraph.getGraphVarByName('OUT_dAlbedo'))
+				{
+					code += 'dAlbedo=OUT_dAlbedo;\n';
+				}
+			}
 			if ((lighting && options.useSpecular) || reflections) {
 				code += "   getSpecularity();\n";
 				if (!getGlossinessCalled) code += "   getGlossiness();\n";
@@ -7102,6 +7170,17 @@
 			}
 			if (options.msdf) {
 				code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
+			}
+			if (options._shaderGraphChunk)
+			{
+				if (rootShaderGraph.getGraphVarByName('OUT_fragOut'))
+				{
+					code += 'gl_FragColor = OUT_fragOut;\n';
+				}
+				if (rootShaderGraph.getGraphVarByName('OUT_dEmission'))
+				{
+					code += 'gl_FragColor.rgb += OUT_dEmission;\n';
+				}
 			}
 			code += "\n";
 			code += end();
@@ -23752,7 +23831,32 @@
 			clone.shaderVariants = this.shaderVariants.slice(0);
 			return clone;
 		},
-		updateUniforms: function () {
+		updateShaderGraphUniforms: function (mat) {
+			for (var n = 0; n < this.graphData.graphVars.length; n++) {
+				var graphVar = this.graphData.graphVars[n];
+				if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
+					var chunkId = '_' + this.id;
+					switch (graphVar.type) {
+						case 'sampler2D':
+							mat.setParameter(graphVar.name + chunkId, graphVar.valueTex);
+							break;
+						case 'float':
+							mat.setParameter(graphVar.name + chunkId, graphVar.valueX);
+							break;
+						case 'vec2':
+							mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY]);
+							break;
+						case 'vec3':
+							mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
+							break;
+						case 'vec4':
+							mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
+							break;
+					}
+				}
+			}
+		},
+		updateUniforms: function (material) {
 			this.clearParameters();
 			for (var n = 0; n < this.graphData.graphVars.length; n++) {
 				var graphVar = this.graphData.graphVars[n];
@@ -23995,6 +24099,11 @@
 			callString += ' );\n';
 			return callString;
 		},
+		getGraphVarByName: function (name) {
+			return this.graphData.graphVars.filter(function (graphVar) {
+				return graphVar.name === name;
+			})[0];
+		},
 		_generateSubGraphFuncs: function (depGraphFuncs, depGraphVarList) {
 			var i;
 			if (this.graphData.subGraphs != undefined) {
@@ -24218,129 +24327,6 @@
 			return generatedGlsl;
 		}
 	});
-	var shadergraph = {};
-	shadergraph.graphCounter = 0;
-	shadergraph.nodeRegistry = {};
-	shadergraph._getNode = function (name, funcString, declString) {
-		if (!this.nodeRegistry[name]) {
-			this.nodeRegistry[name] = new NodeMaterial(funcString, declString);
-		}
-		return this.nodeRegistry[name];
-	};
-	shadergraph._addCoreFunction = function (coreName, coreNode) {
-		this[coreName] = function (...args) {
-			var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
-			var sgInputs = coreNode.graphData.graphVars.filter(function (graphVar) {
-				return graphVar.name.startsWith('IN_');
-			});
-			if (sgInputs.length === args.length) {
-				args.forEach((arg, argIndex) => {
-					if (typeof(arg) === 'number') {
-						var argNodeIndex = arg;
-						this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
-					} else if (arg.type) {
-						this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
-					} else {
-						this.graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
-					}
-				});
-			} else {
-				console.log("arguments do not match core node function");
-			}
-			return sgIndex;
-		};
-	};
-	shadergraph.start = function (coreNodesJSON) {
-		const coreNodeList = JSON.parse(coreNodesJSON);
-		Object.keys(coreNodeList).forEach((key) => {
-			var coreNode = this._getNode(key, coreNodeList[key].code);
-			this._addCoreFunction(key, coreNode);
-		});
-		shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
-		shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
-	};
-	shadergraph.end = function () {
-		var ret = shadergraph.graph;
-		shadergraph.graph = null;
-		shadergraph.graphCounter++;
-		return ret;
-	};
-	shadergraph.textureSample2D = function (name, texture, uv) {
-		var texSampNode = this.graph.addSubGraph(this._getNode('texSample', 'vec4 texSample(in sampler2D tex, in vec2 uv, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n color=samp.rgb;\n alpha=samp.a;\n return samp;\n}'));
-		var graphVar = this.graph.addInput('sampler2D', name, texture);
-		this.graph.connect(-1, graphVar.name, texSampNode, 'IN_tex');
-		this.graph.connect(uv, 'OUT_ret', texSampNode, 'IN_uv');
-		return texSampNode;
-	};
-	shadergraph.customNode = function (name, f, d) {
-		var nodeIndex = this.graph.addSubGraph(this._getNode(name, f, d));
-		return nodeIndex;
-	};
-	Object.defineProperty(shadergraph, 'uv0', {
-		get: function () {
-			var nodeIndex = this.graph.addSubGraph(this._getNode('uv0', 'vec2 uv0() { return vUv0; }'));
-			return nodeIndex;
-		}
-	});
-	Object.defineProperty(shadergraph, 'worldPosPS', {
-		get: function () {
-			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosPS', 'vec3 wpPS() { return vPosition; }'));
-			return nodeIndex;
-		}
-	});
-	Object.defineProperty(shadergraph, 'worldNormPS', {
-		get: function () {
-			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormPS', 'vec3 wnPS() { return vNormal; }'));
-			return nodeIndex;
-		}
-	});
-	Object.defineProperty(shadergraph, 'worldPosVS', {
-		get: function () {
-			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosVS', 'vec3 wpVS() { return getWorldPositionNM(); }'));
-			return nodeIndex;
-		}
-	});
-	Object.defineProperty(shadergraph, 'worldNormVS', {
-		get: function () {
-			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormVS', 'vec3 wnVS() { return getWorldNormalNM(); }'));
-			return nodeIndex;
-		}
-	});
-	shadergraph.param = function (type, name, value) {
-		var graphVar = this.graph.addInput(type, name, value);
-		return graphVar;
-	};
-	shadergraph.connectFragOut = function (arg) {
-		var graphVar = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 1));
-		if (typeof(arg) === 'number') {
-			var argNodeIndex = arg;
-			this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
-		} else if (arg.type) {
-			this.graph.connect(-1, arg.name, -1, graphVar.name);
-		} else {
-			this.graph.connect(arg.node, arg.port, -1, graphVar.name);
-		}
-	};
-	shadergraph.connectVertexOffset = function (arg) {
-		var graphVar = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
-		if (typeof(arg) === 'number') {
-			var argNodeIndex = arg;
-			this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
-		} else if (arg.type) {
-			this.graph.connect(-1, arg.name, -1, graphVar.name);
-		} else {
-			this.graph.connect(arg.node, arg.port, -1, graphVar.name);
-		}
-	};
-	shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
-		if (typeof(nodeIndex_or_param) === 'number') {
-			var nodeIndex = nodeIndex_or_param;
-			this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
-		} else {
-			var graphVar = nodeIndex_or_param;
-			this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_' + destName);
-		}
-	};
 
 	function NodeMaterialBinder(assets, device, parser) {
 		this._assets = assets;
@@ -51004,6 +50990,11 @@
 		updateUniforms: function () {
 			var uniform;
 			this._clearParameters();
+			if (this._shaderGraphChunk)
+			{
+				var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
+				rootShaderGraph.updateShaderGraphUniforms(this);
+			}
 			this._setParameter('material_ambient', this.ambientUniform);
 			if (!this.diffuseMap || this.diffuseTint) {
 				this._setParameter('material_diffuse', this.diffuseUniform);
@@ -51197,6 +51188,9 @@
 				this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 			else
 				this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+			if (this._shaderGraphChunk) {
+				options._shaderGraphChunk = this._shaderGraphChunk;
+			}
 			if (this.onUpdateShader) {
 				options = this.onUpdateShader(options);
 			}
@@ -54698,6 +54692,138 @@
 			return this.layer.renderTarget;
 		}
 	});
+
+	var shadergraph = {};
+	shadergraph.graphCounter = 0;
+	shadergraph._getNode = function (name, funcString, declString) {
+		if (!shadergraph_nodeRegistry.getNode(name)) {
+			shadergraph_nodeRegistry.registerNode(name, new NodeMaterial(funcString, declString));
+		}
+		return shadergraph_nodeRegistry.getNode(name);
+	};
+	shadergraph._registerCoreFunction = function (coreName, coreNode) {
+		this[coreName] = function (...args) {
+			var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
+			var sgInputs = coreNode.graphData.graphVars.filter(function (graphVar) {
+				return graphVar.name.startsWith('IN_');
+			});
+			if (sgInputs.length === args.length) {
+				args.forEach((arg, argIndex) => {
+					if (typeof(arg) === 'number') {
+						var argNodeIndex = arg;
+						this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
+					} else if (arg.type) {
+						this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
+					} else {
+						this.graph.connect(arg.node, 'OUT_' + arg.port, sgIndex, sgInputs[argIndex].name);
+					}
+				});
+			} else {
+				console.log("arguments do not match core node function");
+			}
+			return sgIndex;
+		};
+	};
+	shadergraph.start = function (coreNodesJSON) {
+		const coreNodeList = JSON.parse(coreNodesJSON);
+		Object.keys(coreNodeList).forEach((key) => {
+			var coreNode = this._getNode(key, coreNodeList[key].code);
+			this._registerCoreFunction(key, coreNode);
+		});
+		shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
+		shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
+	};
+	shadergraph.end = function () {
+		var ret = shadergraph.graph;
+		shadergraph.graph = null;
+		shadergraph.graphCounter++;
+		return ret;
+	};
+	shadergraph.textureSample2D = function (name, texture, uv) {
+		var texSampNode = this.graph.addSubGraph(this._getNode('texSample', 'vec4 texSample(in sampler2D tex, in vec2 uv, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n color=samp.rgb;\n alpha=samp.a;\n return samp;\n}'));
+		var graphVar = this.graph.addInput('sampler2D', name, texture);
+		this.graph.connect(-1, graphVar.name, texSampNode, 'IN_tex');
+		this.graph.connect(uv, 'OUT_ret', texSampNode, 'IN_uv');
+		return texSampNode;
+	};
+	shadergraph.customNode = function (name, f, d) {
+		var nodeIndex = this.graph.addSubGraph(this._getNode(name, f, d));
+		return nodeIndex;
+	};
+	Object.defineProperty(shadergraph, 'uv0', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('uv0', 'vec2 uv0() { return vUv0; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldPosPS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosPS', 'vec3 wpPS() { return vPosition; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldNormPS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormPS', 'vec3 wnPS() { return vNormal; }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldPosVS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosVS', 'vec3 wpVS() { return getWorldPosition(); }'));
+			return nodeIndex;
+		}
+	});
+	Object.defineProperty(shadergraph, 'worldNormVS', {
+		get: function () {
+			var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormVS', 'vec3 wnVS() { return getNormal(); }'));
+			return nodeIndex;
+		}
+	});
+	shadergraph.param = function (type, name, value) {
+		var graphVar = this.graph.addInput(type, name, value);
+		return graphVar;
+	};
+	shadergraph.connectOutput = function (arg, type, name) {
+		var graphVar = this.graph.addOutput(type, name);
+		if (typeof(arg) === 'number') {
+			var argNodeIndex = arg;
+			this.graph.connect(argNodeIndex, 'OUT_ret', -1, graphVar.name);
+		} else if (arg.type) {
+			this.graph.connect(-1, arg.name, -1, graphVar.name);
+		} else {
+			this.graph.connect(arg.node, 'OUT_' + arg.port, -1, graphVar.name);
+		}
+	};
+	shadergraph.connectVertexOffset = function (arg) {
+		this.connectOutput(arg, 'vec3', 'vertOff');
+	};
+	shadergraph.connectAlphaOut = function (arg) {
+		this.connectOutput(arg, 'float', 'dAlpha');
+	};
+	shadergraph.connectMetalnessOut = function (arg) {
+	};
+	shadergraph.connectGlossinessOut = function (arg) {
+		this.connectOutput(arg, 'float', 'dGlossiness');
+	};
+	shadergraph.connectAlbedoOut = function (arg) {
+		this.connectOutput(arg, 'vec3', 'dAlbedo');
+	};
+	shadergraph.connectEmissiveOut = function (arg) {
+		this.connectOutput(arg, 'vec3', 'dEmission');
+	};
+	shadergraph.connectFragOut = function (arg) {
+		this.connectOutput(arg, 'vec4', 'fragOut');
+	};
+	shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
+		if (typeof(nodeIndex_or_param) === 'number') {
+			var nodeIndex = nodeIndex_or_param;
+			this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
+		} else {
+			var graphVar = nodeIndex_or_param;
+			this.graph.connect(-1, graphVar.name, destNodeIndex, 'IN_' + destName);
+		}
+	};
 
 	function ResourceHandler() {}
 	Object.assign(ResourceHandler.prototype, {
