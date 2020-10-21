@@ -36,6 +36,7 @@ var categories = [
             "model-outline",
             "model-shapes",
             "model-textured-box",
+            "painter",
             "particles-anim-index",
             "particles-random-sprites",
             "particles-snow",
