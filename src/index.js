@@ -95,6 +95,7 @@ export { shadergraph } from './scene/materials/shader-graph.js';
 export { Skin, SkinInstance } from './scene/skin.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardNodeMaterial } from './scene/materials/standard-node-material.js';
 export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 

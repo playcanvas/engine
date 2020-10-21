@@ -654,16 +654,7 @@ Object.assign(StandardMaterial.prototype, {
         this.cubeMapMaxUniform = new Float32Array(3);
     },
 
-
-   /**
-    * @function
-    * @name pc.StandardMaterial#clone
-    * @description Duplicates a Standard material. All properties are duplicated except textures
-    * where only the references are copied.
-    * @returns {pc.StandardMaterial} A cloned Standard material.
-    */
-    clone: function () {
-        var clone = new StandardMaterial();
+    _cloneInternal: function (clone) {
         Material.prototype._cloneInternal.call(this, clone);
 
         var pname;
@@ -681,7 +672,18 @@ Object.assign(StandardMaterial.prototype, {
                 }
             }
         }
+    },
 
+   /**
+    * @function
+    * @name pc.StandardMaterial#clone
+    * @description Duplicates a Standard material. All properties are duplicated except textures
+    * where only the references are copied.
+    * @returns {pc.StandardMaterial} A cloned Standard material.
+    */
+    clone: function () {
+        var clone = new StandardMaterial();
+        this._cloneInternal(clone);
         return clone;
     },
 
@@ -752,13 +754,6 @@ Object.assign(StandardMaterial.prototype, {
     updateUniforms: function () {
         var uniform;
         this._clearParameters();
-
-        if (this._shaderGraphChunk)
-        {
-            var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
-
-            rootShaderGraph.updateShaderGraphUniforms(this);
-        }
 
         this._setParameter('material_ambient', this.ambientUniform);
 
@@ -917,8 +912,7 @@ Object.assign(StandardMaterial.prototype, {
         this.dirtyColor = false;
     },
 
-    updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-
+    _updateShaderGlobals: function (device, scene) {
         if (!this._colorProcessed && this._scene) {
             this._colorProcessed = true;
             this._processColor();
@@ -988,6 +982,12 @@ Object.assign(StandardMaterial.prototype, {
             }
         }
 
+        return prefilteredCubeMap128;
+    },
+
+    updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+        var prefilteredCubeMap128 = this._updateShaderGlobals(device, scene);
+
         // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
         var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
@@ -996,11 +996,6 @@ Object.assign(StandardMaterial.prototype, {
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
         else
             this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
-
-        // add shader graph chunk to options
-        if (this._shaderGraphChunk) {
-            options._shaderGraphChunk = this._shaderGraphChunk;
-        }
 
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
