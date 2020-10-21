@@ -88,11 +88,11 @@
                 //start building shader graph
                 pc.shadergraph.start(coreNodesJSONString);
 
-                //create a custom vertex offset shader graph chunk
-                var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);
-
                 // add time param
                 var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
+
+                //create a custom vertex offset shader graph chunk
+                var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);
 
                 //hook up custom node inputs
                 pc.shadergraph.connectCustom(wobbleVSNode, 'wp', pc.shadergraph.worldPosVS);
@@ -118,16 +118,19 @@
                 //end graph and assign built graph to chunk
                 var shaderGraphChunk = pc.shadergraph.end();
 
-                var shaderGraphMaterials=[];
                 //add shaderGraphChunk to each material
+                var shaderGraphMaterials=[];
+                
                 model.meshInstances.forEach(function (meshInstance) {
                     if (!meshInstance.material._shaderGraphChunk)
                     {
-                        meshInstance.material._shaderGraphChunk = shaderGraphChunk.name;
+                        var shaderGraphMaterial = new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk);
+                        shaderGraphMaterials.push(shaderGraphMaterial);
+
+                        meshInstance.material = shaderGraphMaterial;
+                        
                         meshInstance.material.alphaTest = 0.5;
                         meshInstance.material.update();
-                        
-                        shaderGraphMaterials.push(meshInstance.material);
                     }
                 });
 

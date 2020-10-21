@@ -1,6 +1,6 @@
 /**
  * @license
- * PlayCanvas Engine v1.34.0-dev revision adb2a859
+ * PlayCanvas Engine v1.34.0-dev revision 2680e004
  * Copyright 2011-2020 PlayCanvas Ltd. All rights reserved.
  */
 (function (global, factory) {
@@ -447,7 +447,7 @@
 		return result;
 	}();
 	var version = "1.34.0-dev";
-	var revision = "adb2a859";
+	var revision = "2680e004";
 	var config = { };
 	var common = { };
 	var apps = { };
@@ -50913,8 +50913,7 @@
 			this.cubeMapMinUniform = new Float32Array(3);
 			this.cubeMapMaxUniform = new Float32Array(3);
 		},
-		clone: function () {
-			var clone = new StandardMaterial();
+		_cloneInternal: function (clone) {
 			Material.prototype._cloneInternal.call(this, clone);
 			var pname;
 			for (var i = 0; i < _propsSerial.length; i++) {
@@ -50931,6 +50930,10 @@
 					}
 				}
 			}
+		},
+		clone: function () {
+			var clone = new StandardMaterial();
+			this._cloneInternal(clone);
 			return clone;
 		},
 		_updateMapTransform: function (transform, tiling, offset) {
@@ -50990,11 +50993,6 @@
 		updateUniforms: function () {
 			var uniform;
 			this._clearParameters();
-			if (this._shaderGraphChunk)
-			{
-				var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
-				rootShaderGraph.updateShaderGraphUniforms(this);
-			}
 			this._setParameter('material_ambient', this.ambientUniform);
 			if (!this.diffuseMap || this.diffuseTint) {
 				this._setParameter('material_diffuse', this.diffuseUniform);
@@ -51121,7 +51119,7 @@
 			}
 			this.dirtyColor = false;
 		},
-		updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+		_updateShaderGlobals: function (device, scene) {
 			if (!this._colorProcessed && this._scene) {
 				this._colorProcessed = true;
 				this._processColor();
@@ -51182,15 +51180,16 @@
 					console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
 				}
 			}
+			return prefilteredCubeMap128;
+		},
+		updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+			var prefilteredCubeMap128 = this._updateShaderGlobals(device, scene);
 			var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
 			var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 			if (minimalOptions)
 				this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 			else
 				this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
-			if (this._shaderGraphChunk) {
-				options._shaderGraphChunk = this._shaderGraphChunk;
-			}
 			if (this.onUpdateShader) {
 				options = this.onUpdateShader(options);
 			}
@@ -54825,6 +54824,58 @@
 		}
 	};
 
+	function StandardNodeMaterial(mat, chunk) {
+		StandardMaterial.call(this);
+		if (mat)
+		{
+			StandardMaterial.prototype._cloneInternal.call(mat, this);
+		}
+		if (chunk)
+		{
+			this._shaderGraphChunk = chunk.name;
+		}
+	}
+	StandardNodeMaterial.prototype = Object.create(StandardMaterial.prototype);
+	StandardNodeMaterial.prototype.constructor = StandardNodeMaterial;
+	Object.assign(StandardNodeMaterial.prototype, {
+		clone: function () {
+			var clone = new StandardNodeMaterial();
+			StandardMaterial.prototype._cloneInternal.call(this, clone);
+			clone._shaderGraphChunk = this._shaderGraphChunk;
+			return clone;
+		},
+		updateUniforms: function () {
+			StandardMaterial.prototype.updateUniforms.call(this);
+			if (this._shaderGraphChunk)
+			{
+				var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
+				rootShaderGraph.updateShaderGraphUniforms(this);
+			}
+		},
+		updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+			var prefilteredCubeMap128 = StandardMaterial.prototype._updateShaderGlobals.call(this, device, scene);
+			var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+			var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+			if (minimalOptions)
+				this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+			else
+				this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+			if (this._shaderGraphChunk) {
+				options._shaderGraphChunk = this._shaderGraphChunk;
+			}
+			if (this.onUpdateShader) {
+				options = this.onUpdateShader(options);
+			}
+			var library = device.getProgramLibrary();
+			this.shader = library.getProgram('standard', options);
+			if (!objDefs) {
+				this.clearVariants();
+				this.variants[0] = this.shader;
+			}
+			this.dirtyShader = false;
+		}
+	});
+
 	function ResourceHandler() {}
 	Object.assign(ResourceHandler.prototype, {
 		load: function (url, callback, asset) {
@@ -58374,6 +58425,7 @@
 	exports.SpriteComponentSystem = SpriteComponentSystem;
 	exports.SpriteHandler = SpriteHandler;
 	exports.StandardMaterial = StandardMaterial;
+	exports.StandardNodeMaterial = StandardNodeMaterial;
 	exports.StencilParameters = StencilParameters;
 	exports.TEXHINT_ASSET = TEXHINT_ASSET;
 	exports.TEXHINT_LIGHTMAP = TEXHINT_LIGHTMAP;
