@@ -145,6 +145,28 @@ function TextElement(element) {
 var LINE_BREAK_CHAR = /^[\r\n]$/;
 var WHITESPACE_CHAR = /^[ \t]$/;
 var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+var CONTROL_CHARS = [
+    '\u061C',
+    '\u200E',
+    '\u200F',
+    '\u202A',
+    '\u202B',
+    '\u202C',
+    '\u202D',
+    '\u202E',
+    '\u2066',
+    '\u2067',
+    '\u2068',
+    '\u2069'
+];
+
+var CONTROL_GLYPH_DATA = {
+    width: 0,
+    height: 0,
+    xadvance: 0,
+    xoffset: 0,
+    yoffset: 0
+};
 
 Object.assign(TextElement.prototype, {
     destroy: function () {
@@ -691,14 +713,20 @@ Object.assign(TextElement.prototype, {
 
                 data = json.chars[char];
 
-                // use 'space' if available or first character
+                // handle missing glyph
                 if (!data) {
-                    if (json.chars[' ']) {
-                        data = json.chars[' '];
+                    if (CONTROL_CHARS.indexOf(char) !== -1) {
+                        // handle unicode control characters
+                        data = CONTROL_GLYPH_DATA;
                     } else {
-                        for (var key in json.chars) {
-                            data = json.chars[key];
-                            break;
+                        // otherwise use space character
+                        if (json.chars[' ']) {
+                            data = json.chars[' '];
+                        } else {
+                            for (var key in json.chars) {
+                                data = json.chars[key];
+                                break;
+                            }
                         }
                     }
                 }
