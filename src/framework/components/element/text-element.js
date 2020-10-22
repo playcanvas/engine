@@ -145,6 +145,8 @@ function TextElement(element) {
 var LINE_BREAK_CHAR = /^[\r\n]$/;
 var WHITESPACE_CHAR = /^[ \t]$/;
 var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+
+// unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 var CONTROL_CHARS = [
     '\u061C',
     '\u200E',
@@ -160,6 +162,7 @@ var CONTROL_CHARS = [
     '\u2069'
 ];
 
+// glyph data to use for missing control characters
 var CONTROL_GLYPH_DATA = {
     width: 0,
     height: 0,
