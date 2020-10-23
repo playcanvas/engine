@@ -123,6 +123,7 @@ var standardMaterialParameterTypes = {
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
+    alphaFade: 'number',
     opacity: 'number',
     opacityVertexColor: 'boolean',
     opacityVertexColorChannel: 'string',
@@ -131,6 +132,7 @@ var standardMaterialParameterTypes = {
     opacityMapUv: 'number',
     opacityMapTiling: 'vec2',
     opacityMapOffset: 'vec2',
+    opacityFadesSpecular: 'boolean',
 
     reflectivity: 'number',
     refraction: 'number',

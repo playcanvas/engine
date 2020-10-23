@@ -26,6 +26,7 @@ var categories = [
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",
+            "material-translucent-specular",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
