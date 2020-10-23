@@ -919,11 +919,8 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
 
     var material = new StandardMaterial();
 
-    // glTF doesn't define how to occlude specular
+    // glTF dooesn't define how to occlude specular
     material.occludeSpecular = true;
-
-    // glTF doesn't expect material opacity to fade specular lighting
-    material.opacityFadesSpecRefl = true;// false
 
     material.diffuseTint = true;
     material.diffuseVertexColor = true;
