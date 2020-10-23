@@ -817,8 +817,7 @@ Object.assign(StandardMaterial.prototype, {
 
         this._setParameter('material_opacity', this.opacity);
 
-        if (this.opacityFadesSpecRefl === false)
-        {
+        if (this.opacityFadesSpecRefl === false) {
             this._setParameter('material_alphaFade', this.alphaFade);
         }
 

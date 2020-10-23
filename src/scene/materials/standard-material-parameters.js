@@ -163,7 +163,6 @@ var standardMaterialParameterTypes = {
     useLighting: 'boolean',
     useSkybox: 'boolean',
     useGammaTonemap: 'boolean',
-    
 
     prefilteredCubeMap128: 'texture',
     prefilteredCubeMap64: 'texture',

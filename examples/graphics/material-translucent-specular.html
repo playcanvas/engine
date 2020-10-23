@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas translucent material specular</title>
+    <title>PlayCanvas Translucent Material Specular</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -25,6 +25,7 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas);
+        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -40,21 +41,24 @@
         app.scene.toneMapping = pc.TONEMAP_ACES;
         // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.skyboxMip = 1;
+        app.scene.skyboxIntensity = 1;
 
         // Create an entity with a camera component
         var camera = new pc.Entity();
         camera.addComponent("camera");
-        camera.translate(0, 0, 3);
+        camera.translate(0, 0, 8);
+        camera.rotate(0, 0, 0);
         app.root.addChild(camera);
 
-        // Create an entity with a directional light component
-        var light = new pc.Entity();
-        light.addComponent("light", {
-            type: "directional",
-            color: new pc.Color(1, 0.8, 0.25)
-        });
-        app.root.addChild(light);
-        light.setLocalEulerAngles(85, -100, 0);
+         // Create an entities with a directional light components
+        for (var i = 0; i < 3; i++) {
+            var light = new pc.Entity();
+            light.addComponent("light", {
+                type: "directional"
+            });
+            app.root.addChild(light);
+            light.rotateLocal(60+10*i, 30+90*i, 0);
+        }
 
         // Load a cubemap asset. This DDS file was 'prefiltered' in the
         // PlayCanvas Editor and then downloaded.
@@ -69,127 +73,63 @@
             app.scene.setSkybox(cubemapAsset.resources);
         });
 
-        // function to create sphere
-        var createSphere = function (x, y, z, material, scale) {
+        var NUM_SPHERES_X = 10;
+        var NUM_SPHERES_Z = 5;
+
+        var createSphere = function (x, y, z) {
+            var material = new pc.StandardMaterial();
+            material.diffuse = new pc.Color(0.7, 0.7, 0.7);
+            material.metalness = 0.0;
+            material.shininess = ((z) / (NUM_SPHERES_Z - 1) * 50)+50;
+            material.useMetalness = true;
+            material.blendType = pc.BLEND_NORMAL;
+            material.opacity = (x>=5)? ((x-5)/5+0.2)*((x-5)/5+0.2): (x/5+0.2)*(x/5+0.2);
+            material.opacityFadesSpecRefl = (x>=5)? false : true;
+            material.alphaWrite = false;
+
+            material.update();
+
             var sphere = new pc.Entity();
 
             sphere.addComponent("model", {
                 material: material,
                 type: "sphere"
             });
-            sphere.setLocalPosition(x, y, z);
-            if (scale) {sphere.setLocalScale(scale, scale, scale);}
-            else {sphere.setLocalScale(0.7, 0.7, 0.7);}
+            sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, z - (NUM_SPHERES_Z - 1) * 0.5, 0);
+            sphere.setLocalScale(0.7, 0.7, 0.7);
             app.root.addChild(sphere);
         };
 
-        var material;
-        var clearCoatMaterial;
-
-        // async load a textures, create materials and spheres, then start app
-        app.assets.loadFromUrl("../assets/textures/flakes5n.png", "texture", function (err, asset) {
-            var normalMap = asset.resource;
-            app.assets.loadFromUrl("../assets/textures/flakes5c.png", "texture", function (err, asset) {
-                var diffuseMap = asset.resource;
-                app.assets.loadFromUrl("../assets/textures/flakes5o.png", "texture", function (err, asset) {
-                    var otherMap = asset.resource;
-
-                    material0 = new pc.StandardMaterial();
-                    material0.diffuseMap = diffuseMap;
-                    //material0.metalnessMap = otherMap;
-                    //material0.metalnessMapChannel = 'r';
-                    material0.glossMap = otherMap;
-                    material0.glossMapChannel = 'g';
-                    material0.normalMap = normalMap;
-                    material0.diffuse = new pc.Color(0.6, 0.6, 0.9);
-                    material0.diffuseTint = true;
-                    material0.metalness = 1.0;
-                    material0.shininess = 0.0;
-                    material0.bumpiness = 0.7;
-                    material0.useMetalness = true;
-
-                    material0.update();
-
-                    //createSphere(-0.5, 0, -1, material0,2);
-                    //createSphere( 0.5, 0, -1, material0,2);
-
-                    material = new pc.StandardMaterial();
-                    material.diffuseMap = diffuseMap;
-                    material.metalnessMap = otherMap;
-                    material.metalnessMapChannel = 'r';
-                    material.glossMap = otherMap;
-                    material.glossMapChannel = 'g';
-                    material.normalMap = normalMap;
-                    material.diffuse = new pc.Color(0.6, 0.6, 0.9);
-                    material.diffuseTint = true;
-                    material.metalness = 1.0;
-                    material.shininess = 90.0;
-                    material.bumpiness = 0.7;
-                    material.useMetalness = true;
-
-                    material.clearCoat = 0.25;
-                    material.clearCoatGlossiness = 0.9;
-
-                    material.blendType = pc.BLEND_NORMAL;
-                    material.opacity = 0.5;
-                    material.opacityFadesSpecRefl = true;
-                    material.alphaWrite = false;
-
-                    material.update();
-
-                    createSphere(-0.5, 0, 0, material);
-
-                    clearCoatMaterial = new pc.StandardMaterial();
-                    clearCoatMaterial.diffuseMap = diffuseMap;
-                    clearCoatMaterial.metalnessMap = otherMap;
-                    clearCoatMaterial.metalnessMapChannel = 'r';
-                    clearCoatMaterial.glossMap = otherMap;
-                    clearCoatMaterial.glossMapChannel = 'g';
-                    clearCoatMaterial.normalMap = normalMap;
-                    clearCoatMaterial.diffuse = new pc.Color(0.6, 0.6, 0.9);
-                    clearCoatMaterial.diffuseTint = true;
-                    clearCoatMaterial.metalness = 1.0;
-                    clearCoatMaterial.shininess = 90;
-                    clearCoatMaterial.bumpiness = 0.7;
-                    clearCoatMaterial.useMetalness = true;
-
-                    clearCoatMaterial.clearCoat = 0.25;
-                    clearCoatMaterial.clearCoatGlossiness = 0.9;
-
-                    clearCoatMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                    clearCoatMaterial.opacity = 0.5;
-                    clearCoatMaterial.opacityFadesSpecRefl = false;
-                    clearCoatMaterial.alphaWrite = false;
-
-                    clearCoatMaterial.update();
-
-                    createSphere(0.5, 0, 0, clearCoatMaterial);
-
-                    app.start();
-                });
+        var createText = function (fontAsset, message, x, y, z, rotx, roty) {
+            // Create a text element-based entity
+            var text = new pc.Entity();
+            text.addComponent("element", {
+                anchor: [0.5, 0.5, 0.5, 0.5],
+                fontAsset: fontAsset,
+                fontSize: 0.5,
+                pivot: [0.5, 0.5],
+                text: message,
+                type: pc.ELEMENTTYPE_TEXT
             });
-        });
+            text.setLocalPosition(x, y, z);
+            text.setLocalEulerAngles(rotx, roty, 0);
+            app.root.addChild(text);
+        };
 
-        // update things each frame
-        var time = 0;
-        app.on("update", function (dt) {
-            // rotate camera around the objects
-            time += dt;
-            camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));
-            camera.lookAt(pc.Vec3.ZERO);
+        for (var i = 0; i < NUM_SPHERES_Z; i++) {
+            for (var j = 0; j < NUM_SPHERES_X; j++) {
+                createSphere(j, 0, i);
+            }
+        }
 
-            var opac = Math.sin(time)*0.5+0.5;
-            if (material) 
-            {   
-                material.opacity = opac;
-                material.update();
-            }
-            if (clearCoatMaterial) 
-            {
-                clearCoatMaterial.opacity = opac;
-                clearCoatMaterial.update();
-            }
+        // Load a font
+        var fontAsset = new pc.Asset('arial.json', "font", { url: "../assets/fonts/arial.json" });
+        fontAsset.on('load', function () {
+            createText(fontAsset, 'Spec Fade On', -NUM_SPHERES_X * 0.25, ((NUM_SPHERES_Z + 1) * -0.5), 0, -0, 0);
+            createText(fontAsset, 'Spec Fade Off', NUM_SPHERES_X * 0.25, ((NUM_SPHERES_Z + 1) * -0.5), 0, -0, 0);
         });
+        app.assets.add(fontAsset);
+        app.assets.load(fontAsset);
     </script>
 </body>
 </html>
