@@ -1339,7 +1339,7 @@ var standard = {
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
-            if (!options.hasTangents && device.extStandardDerivatives) {
+            if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {
                 if (options.twoSidedLighting) {
                     code += "   dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
                 } else {
