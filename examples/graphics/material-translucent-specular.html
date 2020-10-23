@@ -84,7 +84,7 @@
             material.useMetalness = true;
             material.blendType = pc.BLEND_NORMAL;
             material.opacity = (x>=5)? ((x-5)/5+0.2)*((x-5)/5+0.2): (x/5+0.2)*(x/5+0.2);
-            material.opacityFadesSpecRefl = (x>=5)? false : true;
+            material.opacityFadesSpecular = (x>=5)? false : true;
             material.alphaWrite = false;
 
             material.update();

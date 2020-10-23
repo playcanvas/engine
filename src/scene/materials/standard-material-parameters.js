@@ -132,7 +132,7 @@ var standardMaterialParameterTypes = {
     opacityMapUv: 'number',
     opacityMapTiling: 'vec2',
     opacityMapOffset: 'vec2',
-    opacityFadesSpecRefl: 'boolean',
+    opacityFadesSpecular: 'boolean',
 
     reflectivity: 'number',
     refraction: 'number',

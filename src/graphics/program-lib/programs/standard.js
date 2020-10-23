@@ -985,7 +985,7 @@ var standard = {
             code += '#define CLEARCOAT\n';
         }
 
-        if (options.opacityFadesSpecRefl === false) {
+        if (options.opacityFadesSpecular === false) {
             code += 'uniform float material_alphaFade;\n';
         }
 
@@ -1571,7 +1571,7 @@ var standard = {
             }
         }
 
-        if (options.opacityFadesSpecRefl === false) {
+        if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
                 code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
                 code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";

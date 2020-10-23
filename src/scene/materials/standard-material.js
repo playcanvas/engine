@@ -154,8 +154,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
- * @property {boolean} opacityFadesSpecRefl used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecRefl} is set to false.
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecular} is set to false.
  *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
@@ -265,7 +265,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
  * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
  * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
- * * opacityFadesSpecRefl: enable specular fade. See {@link pc.Material#opacityFadesSpecRefl}.
+ * * opacityFadesSpecular: enable specular fade. See {@link pc.Material#opacityFadesSpecular}.
  * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
  * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
  * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
@@ -820,7 +820,7 @@ Object.assign(StandardMaterial.prototype, {
 
         this._setParameter('material_opacity', this.opacity);
 
-        if (this.opacityFadesSpecRefl === false) {
+        if (this.opacityFadesSpecular === false) {
             this._setParameter('material_alphaFade', this.alphaFade);
         }
 
@@ -1110,7 +1110,7 @@ var _defineMaterialProps = function (obj) {
     _defineFlag(obj, "occludeDirect", false);
     _defineFlag(obj, "normalizeNormalMap", true);
     _defineFlag(obj, "conserveEnergy", true);
-    _defineFlag(obj, "opacityFadesSpecRefl", true);
+    _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
     _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
     _defineFlag(obj, "fresnelModel", FRESNEL_NONE);
