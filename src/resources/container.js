@@ -9,15 +9,35 @@ import { GlbParser } from './parser/glb-parser.js';
 /**
  * @class
  * @name pc.ContainerResource
- * @classdesc Container for a list of animations, textures, materials and a model.
+ * @classdesc Container for a list of animations, textures, materials, models, nodes, scenes, default scene
+ * cameras and lights. Entities in scene hierarchies will have model, camera and light components attached to them.
+ * Animation components have to be added manually (using animationIndicesByNode) as either pc.AnimComponent or pc.AnimationComponent.
  * @param {object} data - The loaded GLB data.
+ * @property {pc.Entity|null} scene Root entity of the default GLB scene.
+ * @property {pc.Entity[]} scenes Root entities of scenes indexed by GLB scenes.
+ * @property {pc.CameraComponent[]} cameras Instanced camera components, does not match index of GLB cameras.
+ * @property {pc.LightComponent[]} lights Instanced light components, does not match index of GLB lights.
+ * @property {pc.Entity[]} nodes Entities indexed by GLB nodes.
+ * @property {pc.Asset[]} materials Material assets indexed by GLB materials.
+ * @property {pc.Asset[]} textures Texture assets indexed by GLB textures.
+ * @property {pc.Asset[]} animations Animation assets indexed by GLB animations.
+ * @property {number[][]} animationIndicesByNode Animation asset indices indexed by GLB nodes.
+ * @property {pc.Asset[]} models Model assets indexed by GLB meshes.
+ * @property {pc.AssetRegistry} registry The asset registry.
  */
 function ContainerResource(data) {
     this.data = data;
-    this.model = null;
+    this.scene = null;
+    this.scenes = [];
+    this.cameras = [];
+    this.lights = [];
+    this.nodes = [];
     this.materials = [];
     this.textures = [];
     this.animations = [];
+    this.animationIndicesByNode = [];
+    this.models = [];
+    this._modelByNode = []; // not public since it is only used to keep model refs for when container is destroyed
     this.registry = null;
 }
 
@@ -33,14 +53,58 @@ Object.assign(ContainerResource.prototype, {
 
         var destroyAssets = function (assets) {
             assets.forEach(function (asset) {
-                destroyAsset(asset);
+                if (asset) {
+                    destroyAsset(asset);
+                }
             });
         };
+
+        // destroy entities
+        if (this.scene) {
+            this.scene.destroy();
+            this.scene = null;
+        }
+
+        if (this.scenes) {
+            this.scenes.forEach(function (scene) {
+                scene.destroy();
+            });
+            this.scenes = null;
+        }
+
+        if (this.cameras) {
+            this.cameras = null;
+        }
+
+        if (this.lights) {
+            this.lights = null;
+        }
+
+        if (this.nodes) {
+            this.nodes.forEach(function (node) {
+                node.destroy();
+            });
+            this.nodes = null;
+        }
 
         // unload and destroy assets
         if (this.animations) {
             destroyAssets(this.animations);
             this.animations = null;
+        }
+
+        if (this.animationIndicesByNode) {
+            this.animationIndicesByNode = null;
+        }
+
+        if (this.models) {
+            destroyAssets(this.models);
+            this.models = null;
+        }
+
+        if (this._modelByNode) {
+            destroyAssets(this._modelByNode);
+            this._modelByNode = null;
         }
 
         if (this.textures) {
@@ -53,11 +117,6 @@ Object.assign(ContainerResource.prototype, {
             this.materials = null;
         }
 
-        if (this.model) {
-            destroyAsset(this.model);
-            this.model = null;
-        }
-
         this.data = null;
         this.assets = null;
     }
@@ -68,7 +127,7 @@ Object.assign(ContainerResource.prototype, {
  * @name pc.ContainerHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
- * textures, models and animations.
+ * textures, scenes and animations.
  * The asset options object can be used to pass load time callbacks for handling the various resources
  * at different stages of loading. The table below lists the resource types and the corresponding
  * supported process functions.
@@ -78,6 +137,9 @@ Object.assign(ContainerResource.prototype, {
  * |-------------+-------------+-------------+-------------+-------------|
  * | global      |      x      |             |             |      x      |
  * | node        |      x      |      x      |             |      x      |
+ * | scene       |      x      |      x      |             |      x      |
+ * | camera      |      x      |      x      |             |      x      |
+ * | light       |      x      |      x      |             |      x      |
  * | animation   |      x      |             |             |      x      |
  * | material    |      x      |      x      |             |      x      |
  * | image       |      x      |             |      x      |      x      |
@@ -128,6 +190,7 @@ Object.assign(ContainerHandler.prototype, {
                                  path.extractPath(url.load),
                                  arrayBuffer,
                                  self._device,
+                                 self._defaultMaterial,
                                  asset.registry,
                                  asset.options,
                                  function (err, result) {
@@ -162,7 +225,7 @@ Object.assign(ContainerHandler.prototype, {
         return data;
     },
 
-    // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
+    // Create assets to wrap the loaded engine resources - models, materials, textures and animations.
     patch: function (asset, assets) {
         var container = asset.resource;
         var data = container && container.data;
@@ -178,28 +241,49 @@ Object.assign(ContainerHandler.prototype, {
                 return subAsset;
             };
 
-            var i;
+            // create model assets
+            var modelAssets = data.models.map(function (model, index) {
+                return createAsset('model', model, index);
+            });
 
-            // create model asset
-            var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
+            // create node model assets
+            var modelAssetByNode = data.modelByNode.map(function (model, index) {
+                return model !== null ? createAsset('model', model, index) : null;
+            });
 
             // create material assets
-            var materials = [];
-            for (i = 0; i < data.materials.length; ++i) {
-                materials.push(createAsset('material', data.materials[i], i));
-            }
+            var materialAssets = data.materials.map(function (material, index) {
+                return createAsset('material', material, index);
+            });
 
             // create animation assets
-            var animations = [];
-            for (i = 0; i < data.animations.length; ++i) {
-                animations.push(createAsset('animation', data.animations[i], i));
-            }
+            var animationAssets = data.animations.map(function (animation, index) {
+                return createAsset('animation', animation, index);
+            });
 
-            container.data = null;              // since assets are created, release GLB data
-            container.model = model;
-            container.materials = materials;
-            container.textures = data.textures; // texture assets are created directly
-            container.animations = animations;
+            // add model components to nodes
+            data.nodes.forEach(function (node, nodeIndex) {
+                var modelAsset = modelAssetByNode[nodeIndex];
+                if (modelAsset !== null) {
+                    node.addComponent('model', {
+                        type: 'asset',
+                        asset: modelAsset
+                    });
+                }
+            });
+
+            container.data = null;                      // since assets are created, release GLB data
+            container.scene = data.scene;
+            container.scenes = data.scenes;
+            container.cameras = data.cameras;
+            container.lights = data.lights;
+            container.nodes = data.nodes;
+            container.materials = materialAssets;
+            container.textures = data.textures;         // texture assets are created in parser
+            container.animations = animationAssets;
+            container.animationIndicesByNode = data.animationIndicesByNode;
+            container.models = modelAssets;
+            container._modelByNode = modelAssetByNode;    // keep model refs for when container is destroyed
             container.registry = assets;
         }
     }
