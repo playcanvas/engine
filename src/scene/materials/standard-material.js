@@ -154,6 +154,9 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
+ * @property {boolean} opacityFadesSpecRefl: used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade: used to fade out materials when {@link pc.Material#opacityFadesSpecRefl} is set to false.
+ *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
@@ -262,8 +265,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
  * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
  * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
- * * opacityFadesSpecRefl: used to specify whether specular and reflections are faded out using opacity. Default is true. When set to false use alphaFade to fade out materials.
- * * alphaFade: used to fade out materials when opacityFadesSpecRefl is set to false.
+ * * opacityFadesSpecRefl: enable specular fade. See {@link pc.Material#opacityFadesSpecRefl}.
+ * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
  * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
  * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
  * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
