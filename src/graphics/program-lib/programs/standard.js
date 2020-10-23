@@ -1339,11 +1339,20 @@ var standard = {
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
-            if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
+            if (!options.hasTangents && device.extStandardDerivatives) {
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
+                } else {
+                    code += "   dVertexNormalW = normalize(vNormalW);\n";
+                }
             } else {
-                code += "   dVertexNormalW = vNormalW;\n";
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
+                } else {
+                    code += "   dVertexNormalW = vNormalW;\n";
+                }
             }
+
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "   dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
