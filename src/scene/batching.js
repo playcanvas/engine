@@ -17,7 +17,7 @@ import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { SkinInstance } from './skin.js';
+import { SkinInstance } from './skin-instance.js';
 
 /**
  * @class
@@ -98,10 +98,10 @@ SkinBatchInstance.prototype = Object.create(SkinBatchInstance.prototype);
 SkinBatchInstance.prototype.constructor = SkinBatchInstance;
 
 Object.assign(SkinBatchInstance.prototype, {
-    updateMatrices: function (rootNode) {
+    updateMatrices: function (rootNode, skinUpdateIndex) {
     },
 
-    updateMatrixPalette: function () {
+    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
         var pe;
         var mp = this.matrixPalette;
         var base;

@@ -125,6 +125,8 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
     options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
     options.conserveEnergy = stdMat.conserveEnergy;
+    options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
+    options.alphaFade = stdMat.alphaFade;
     options.occludeSpecular = stdMat.occludeSpecular;
     options.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
     options.occludeDirect = stdMat.occludeDirect;
@@ -145,6 +147,8 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {

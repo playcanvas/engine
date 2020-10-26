@@ -546,21 +546,25 @@ Object.assign(CameraComponent.prototype, {
      * user is expected to move freely around their environment, potentially long
      * distances from their starting point.
      *
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once
+     * @param {object} [options] - object with options for XR session initialization.
+     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+     * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
-     *     if (err) {
-     *         // failed to start XR session
-     *     } else {
-     *         // in XR
+     * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+     *     callback: function (err) {
+     *         if (err) {
+     *             // failed to start XR session
+     *         } else {
+     *             // in XR
+     *         }
      *     }
      * });
      */
-    startXr: function (type, spaceType, callback) {
-        this.system.app.xr.start(this, type, spaceType, callback);
+    startXr: function (type, spaceType, options) {
+        this.system.app.xr.start(this, type, spaceType, options);
     },
 
     /**

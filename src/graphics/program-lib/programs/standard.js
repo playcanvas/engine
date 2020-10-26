@@ -1020,6 +1020,10 @@ var standard = {
             code += '#define CLEARCOAT\n';
         }
 
+        if (options.opacityFadesSpecular === false) {
+            code += 'uniform float material_alphaFade;\n';
+        }
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         var shadowTypeUsed = [];
@@ -1096,9 +1100,22 @@ var standard = {
         }
 
         if (needsNormal) {
-            if (options.normalMap) {
+             // if normalMap is disabled, then so is normalDetailMap
+            if (options.normalMap || options.clearCoatNormalMap) {
+                // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently decide which unpackNormal to use.
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
+                if (!options.hasTangents) {
+                    // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) indenpendently
+                    var normalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    tbn = tbn.replace(/\$UV/g, normalMapUv);
+                }
+                code += tbn;
+            }
+        }
+
+        if (needsNormal) {
+            if (options.normalMap) {
                 if (options.normalDetail) {
                     code += this._addMap("normalDetail", "normalDetailMapPS", options, chunks);
                 }
@@ -1109,8 +1126,6 @@ var standard = {
                 } else {
                     code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
-                code += tbn;
             } else {
                 code += chunks.normalVertexPS;
 
@@ -1162,6 +1177,12 @@ var standard = {
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
+        }
+
+        if (options.clearCoat > 0) {
+            code += this._addMap("clearCoat", "clearCoatPS", options, chunks);
+            code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, chunks);
+            code += this._addMap("clearCoatNormal", "clearCoatNormalPS", options, chunks);
         }
 
         if (options.heightMap) {
@@ -1353,20 +1374,31 @@ var standard = {
         var usesCookie = false;
         var usesCookieNow;
 
+        if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
+
         // FRAGMENT SHADER BODY
 
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
-            if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+            if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
+                } else {
+                    code += "   dVertexNormalW = normalize(vNormalW);\n";
+                }
             } else {
-                code += "   dVertexNormalW = vNormalW;\n";
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
+                } else {
+                    code += "   dVertexNormalW = vNormalW;\n";
+                }
             }
+
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                    code += "   dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
+                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
@@ -1392,7 +1424,7 @@ var standard = {
 
         if (needsNormal) {
             code += "   getViewDir();\n";
-            if (options.heightMap || options.normalMap || options.enableGGXSpecular) {
+            if (options.heightMap || options.normalMap || options.clearCoatNormalMap || options.enableGGXSpecular) {
                 code += "   getTBN();\n";
             }
             if (options.heightMap) {
@@ -1417,6 +1449,12 @@ var standard = {
         }
 
         code += "   getAlbedo();\n";
+
+        if (options.clearCoat > 0) {
+            code += "   getClearCoat();\n";
+            code += "   getClearCoatGlossiness();\n";
+            code += "   getClearCoatNormal();\n";
+        }
 
         if (options._shaderGraphChunk)
         {
@@ -1615,6 +1653,15 @@ var standard = {
             }
         }
 
+        if (options.opacityFadesSpecular === false) {
+            if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
+                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
+            }
+            code += "dAlpha *= material_alphaFade;\n";
+        }
+
         code += chunks.endPS;
         if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_ADDITIVEALPHA || options.alphaToCoverage) {
             code += chunks.outputAlphaPS;
@@ -1689,8 +1736,8 @@ var standard = {
         if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
-        if (code.includes("ccSpecularity")) structCode += "vec3 ccSpecularity;\n";
-        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness=0.9;\n";
+        if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
+        if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
 

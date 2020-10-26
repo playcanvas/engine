@@ -17,6 +17,7 @@ var vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 var rawToValue = function (app, args, value, old) {
     var i;
+    var j;
 
     switch (args.type) {
         case 'boolean':
@@ -33,14 +34,31 @@ var rawToValue = function (app, args, value, old) {
             }
             return null;
         case 'json':
-            if (typeof value === 'object') {
-                return value;
+            var result = {};
+
+            if (Array.isArray(args.schema)) {
+                if (!value || typeof value !== 'object') {
+                    value = {};
+                }
+
+                for (i = 0; i < args.schema.length; i++) {
+                    var field = args.schema[i];
+                    if (!field.name) continue;
+
+                    if (field.array) {
+                        result[field.name] = [];
+                        if (Array.isArray(value[field.name])) {
+                            for (j = 0; j < value[field.name].length; j++) {
+                                result[field.name].push(rawToValue(app, field, value[field.name][j]));
+                            }
+                        }
+                    } else {
+                        result[field.name] = rawToValue(app, field, value[field.name]);
+                    }
+                }
             }
-            try {
-                return JSON.parse(value);
-            } catch (ex) {
-                return null;
-            }
+
+            return result;
         case 'asset':
             if (value instanceof Asset) {
                 return value;
@@ -167,6 +185,8 @@ function ScriptAttributes(scriptType) {
  * @param {string} [args.color] - String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
  * Defining this property will render Gradient in Editor's field UI.
  * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
+ * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
+ * but with an added 'name' field to specify the name of each attribute in the JSON.
  * @example
  * PlayerController.attributes.add('fullName', {
  *     type: 'string'
@@ -187,6 +207,26 @@ function ScriptAttributes(scriptType) {
  *         { '64x64': 64 },
  *         { '128x128': 128 }
  *     ]
+ * });
+ * @example
+ * PlayerController.attributes.add('config', {
+ *     type: 'json',
+ *     schema: [{
+ *         name: 'speed',
+ *         type: 'number',
+ *         title: 'Speed',
+ *         placeholder: 'km/h',
+ *         default: 22.2
+ *     }, {
+ *         name: 'resolution',
+ *         type: 'number',
+ *         default: 32,
+ *         enum: [
+ *             { '32x32': 32 },
+ *             { '64x64': 64 },
+ *             { '128x128': 128 }
+ *         ]
+ *     }]
  * });
  */
 ScriptAttributes.prototype.add = function (name, args) {

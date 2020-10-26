@@ -18,7 +18,7 @@ var ids = 0;
  * @classdesc Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
  * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
  * @param {pc.XrManager} manager - WebXR Manager.
- * @param {object} xrInputSource - XRInputSource object that is created by WebXR API.
+ * @param {object} xrInputSource - [XRInputSource]{@link https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource} object that is created by WebXR API.
  * @property {number} id Unique number associated with instance of input source. Same physical devices when reconnected will not share this ID.
  * @property {object} inputSource XRInputSource object that is associated with this input source.
  * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
@@ -188,18 +188,14 @@ XrInputSource.prototype.update = function (frame) {
 };
 
 XrInputSource.prototype._updateTransforms = function () {
-    var dirty;
-
     if (this._dirtyLocal) {
-        dirty = true;
         this._dirtyLocal = false;
         this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
     }
 
     var parent = this._manager.camera.parent;
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
-        if (dirty) this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
     } else {
         this._worldTransform.copy(this._localTransform);
     }
@@ -211,18 +207,14 @@ XrInputSource.prototype._updateRayTransforms = function () {
 
     var parent = this._manager.camera.parent;
     if (parent) {
-        dirty = dirty || parent._dirtyLocal || parent._dirtyWorld;
+        var parentTransform = this._manager.camera.parent.getWorldTransform();
 
-        if (dirty) {
-            var parentTransform = this._manager.camera.parent.getWorldTransform();
+        parentTransform.getTranslation(this._position);
+        this._rotation.setFromMat4(parentTransform);
 
-            parentTransform.getTranslation(this._position);
-            this._rotation.setFromMat4(parentTransform);
-
-            this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
-            this._ray.origin.add(this._position);
-            this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
-        }
+        this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
+        this._ray.origin.add(this._position);
+        this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
     } else if (dirty) {
         this._ray.origin.copy(this._rayLocal.origin);
         this._ray.direction.copy(this._rayLocal.direction);

@@ -21,6 +21,66 @@ function AnimComponentBinder(animComponent, graph) {
 AnimComponentBinder.prototype = Object.create(DefaultAnimBinder.prototype);
 AnimComponentBinder.prototype.constructor = AnimComponentBinder;
 
+AnimComponentBinder._packFloat = function (values) {
+    return values[0];
+};
+
+AnimComponentBinder._packBoolean = function (values) {
+    return !!values[0];
+};
+
+AnimComponentBinder._packVec2 = function () {
+    var v = new Vec2();
+    return function (values) {
+        v.x = values[0];
+        v.y = values[1];
+        return v;
+    };
+}();
+
+AnimComponentBinder._packVec3 = function () {
+    var v = new Vec3();
+    return function (values) {
+        v.x = values[0];
+        v.y = values[1];
+        v.z = values[2];
+        return v;
+    };
+}();
+
+AnimComponentBinder._packVec4 = function () {
+    var v = new Vec4();
+    return function (values) {
+        v.x = values[0];
+        v.y = values[1];
+        v.z = values[2];
+        v.w = values[3];
+        return v;
+    };
+}();
+
+AnimComponentBinder._packColor = function () {
+    var v = new Color();
+    return function (values) {
+        v.r = values[0];
+        v.g = values[1];
+        v.b = values[2];
+        v.a = values[3];
+        return v;
+    };
+}();
+
+AnimComponentBinder._packQuat = function () {
+    var v = new Quat();
+    return function (values) {
+        v.x = values[0];
+        v.y = values[1];
+        v.z = values[2];
+        v.w = values[3];
+        return v;
+    };
+}();
+
 Object.assign(AnimComponentBinder.prototype, {
     resolve: function (path) {
         var pathSections = this.propertyLocator.decode(path);
@@ -78,73 +138,56 @@ Object.assign(AnimComponentBinder.prototype, {
         return currEntity._parent.findByPath(entityHierarchy.join('/'));
     },
 
-    _floatSetter: function (propertyComponent, propertyHierarchy) {
-        var setter = function (values) {
-            this._setProperty(propertyComponent, propertyHierarchy, values[0]);
-        };
-        return setter.bind(this);
-    },
-    _booleanSetter: function (propertyComponent, propertyHierarchy) {
-        var setter = function (values) {
-            this._setProperty(propertyComponent, propertyHierarchy, !!values[0]);
-        };
-        return setter.bind(this);
-    },
-    _colorSetter: function (propertyComponent, propertyHierarchy) {
-        var colorKeys = ['r', 'g', 'b', 'a'];
-        var setter = function (values) {
-            for (var i = 0; i < values.length; i++) {
-                this._setProperty(propertyComponent, propertyHierarchy.concat(colorKeys[i]), values[i]);
-            }
-        };
-        return setter.bind(this);
-    },
-    _vecSetter: function (propertyComponent, propertyHierarchy) {
-        var vectorKeys = ['x', 'y', 'z', 'w'];
-        var setter = function (values) {
-            for (var i = 0; i < values.length; i++) {
-                this._setProperty(propertyComponent, propertyHierarchy.concat(vectorKeys[i]), values[i]);
-            }
-        };
-        return setter.bind(this);
-    },
-
-    _getProperty: function (propertyComponent, propertyHierarchy) {
-        if (propertyHierarchy.length === 1) {
-            return propertyComponent[propertyHierarchy[0]];
+    // resolve an object path
+    _resolvePath: function (object, path, resolveLeaf) {
+        var steps = path.length - (resolveLeaf ? 0 : 1);
+        for (var i = 0; i < steps; i++) {
+            object = object[path[i]];
         }
-        var propertyObject = propertyComponent[propertyHierarchy[0]];
-        return propertyObject[propertyHierarchy[1]];
-
+        return object;
     },
 
-    _setProperty: function (propertyComponent, propertyHierarchy, value) {
-        if (propertyHierarchy.length === 1) {
-            propertyComponent[propertyHierarchy[0]] = value;
-        } else {
-            var propertyObject = propertyComponent[propertyHierarchy[0]];
-            propertyObject[propertyHierarchy[1]] = value;
-            propertyComponent[propertyHierarchy[0]] = propertyObject;
-        }
-    },
+    // construct a setter function for the property located at 'path' from the base object. packFunc
+    // is a function which takes the animation values array and packages them for the target property
+    // in the correct format (i.e. vec2, quat, color etc).
+    _setter: function (object, path, packFunc) {
+        var obj = this._resolvePath(object, path);
+        var key = path[path.length - 1];
 
-    _getEntityProperty: function (propertyHierarchy) {
-        var entityProperties = [
-            'localScale',
-            'localPosition',
-            'localRotation',
-            'localEulerAngles',
-            'position',
-            'rotation',
-            'eulerAngles'
-        ];
-        var entityProperty;
-        for (var i = 0; i < entityProperties.length; i++) {
-            if (propertyHierarchy.indexOf(entityProperties[i]) !== -1) {
-                entityProperty = entityProperties[i];
-            }
+        // if the object has a setter function, use it
+        var setterFunc = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
+        if (obj[setterFunc]) {
+            var func = obj[setterFunc].bind(obj);
+            return function (values) {
+                func(packFunc(values));
+            };
         }
-        return entityProperty;
+
+        var prop = obj[key];
+
+        // if the target property has a copy function, use it (vec3, color, quat)
+        if (typeof prop === 'object' && prop.hasOwnProperty('copy')) {
+            return function (values) {
+                prop.copy(packFunc(values));
+            };
+        }
+
+        // when animating individual members of vec/colour/quaternion, we must also invoke the
+        // object's setter. this is required by some component properties which have custom
+        // handlers which propagate the changes correctly.
+        if ([Vec2, Vec3, Vec4, Color, Quat].indexOf(obj.constructor) !== -1 && path.length > 1) {
+            var parent = path.length > 2 ? this._resolvePath(object, path.slice(0, -1)) : object;
+            var objKey = path[path.length - 2];
+            return function (values) {
+                obj[key] = packFunc(values);
+                parent[objKey] = obj;
+            };
+        }
+
+        // otherwise set the property directly (float, boolean)
+        return function (values) {
+            obj[key] = packFunc(values);
+        };
     },
 
     _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
@@ -159,7 +202,7 @@ Object.assign(AnimComponentBinder.prototype, {
             }
         }
 
-        var property = this._getProperty(propertyComponent, propertyHierarchy);
+        var property = this._resolvePath(propertyComponent, propertyHierarchy, true);
 
         if (typeof property === 'undefined')
             return null;
@@ -169,37 +212,37 @@ Object.assign(AnimComponentBinder.prototype, {
         var animDataComponents;
 
         if (typeof property === 'number') {
-            setter = this._floatSetter(propertyComponent, propertyHierarchy);
+            setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packFloat);
             animDataType = 'vector';
             animDataComponents = 1;
         } else if (typeof property === 'boolean') {
-            setter = this._booleanSetter(propertyComponent, propertyHierarchy);
+            setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packBoolean);
             animDataType = 'vector';
             animDataComponents = 1;
         } else if (typeof property === 'object') {
             switch (property.constructor) {
                 case Vec2:
-                    setter = this._vecSetter(propertyComponent, propertyHierarchy);
+                    setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packVec2);
                     animDataType = 'vector';
                     animDataComponents = 2;
                     break;
                 case Vec3:
-                    setter = this._vecSetter(propertyComponent, propertyHierarchy);
+                    setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packVec3);
                     animDataType = 'vector';
                     animDataComponents = 3;
                     break;
                 case Vec4:
-                    setter = this._vecSetter(propertyComponent, propertyHierarchy);
+                    setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packVec4);
                     animDataType = 'vector';
                     animDataComponents = 4;
                     break;
                 case Color:
-                    setter = this._colorSetter(propertyComponent, propertyHierarchy);
+                    setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packColor);
                     animDataType = 'vector';
                     animDataComponents = 4;
                     break;
                 case Quat:
-                    setter = this._vecSetter(propertyComponent, propertyHierarchy);
+                    setter = this._setter(propertyComponent, propertyHierarchy, AnimComponentBinder._packQuat);
                     animDataType = 'quaternion';
                     animDataComponents = 4;
                     break;
@@ -208,23 +251,8 @@ Object.assign(AnimComponentBinder.prototype, {
             }
         }
 
-        // for entity properties we cannot just set their values, we must also call the values setter function.
-        var entityProperty = this._getEntityProperty(propertyHierarchy);
-        if (entityProperty) {
-            var entityPropertySetter = function (values) {
-                // first set new values on the property as before
-                setter(values);
-
-                // create the function name of the entity properties setter
-                var entityPropertySetterFunctionName = "set" +
-                    entityProperty.substring(0, 1).toUpperCase() +
-                    entityProperty.substring(1);
-
-                // call the setter function for entities updated property using the newly set property value
-                propertyComponent[entityPropertySetterFunctionName](this._getProperty(propertyComponent, [entityProperty]));
-            };
-            return new AnimTarget(entityPropertySetter.bind(this), animDataType, animDataComponents);
-        } else if (propertyHierarchy.indexOf('material') !== -1) {
+        // materials must have update called after changing settings
+        if (propertyHierarchy.indexOf('material') !== -1) {
             return new AnimTarget(function (values) {
                 setter(values);
                 propertyComponent.material.update();
@@ -232,7 +260,6 @@ Object.assign(AnimComponentBinder.prototype, {
         }
 
         return new AnimTarget(setter, animDataType, animDataComponents);
-
     }
 });
 

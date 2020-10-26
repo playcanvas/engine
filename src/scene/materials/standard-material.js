@@ -79,8 +79,28 @@ import { shadergraphRegistry } from './shader-graph-registry.js';
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
- * @property {number} clearCoat Defines the strength of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
- * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+ * @property {pc.Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
+ * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
+ * @property {pc.Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
+ * @property {pc.Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each component is between 0 and 1.
+ * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can be "r", "g", "b" or "a".
+ * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat intensity. Can be "r", "g", "b" or "a".
+ * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {pc.Texture|null} clearCoatGlossMap Monochrome clear coat glossiness map (default is null). If specified, will be multiplied by normalized 'clearCoatGlossiness' value and/or vertex colors.
+ * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
+ * @property {pc.Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
+ * @property {pc.Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map. Each component is between 0 and 1.
+ * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use. Can be "r", "g", "b" or "a".
+ * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat glossiness. Can be "r", "g", "b" or "a".
+ * @property {pc.Texture|null} clearCoatNormalMap The clear coat normal map of the material (default is null). The texture must contains normalized, tangent space normals.
+ * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
+ * @property {pc.Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
+ * @property {pc.Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
+ * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
+ * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
  * @property {boolean} useMetalness Use metalness properties instead of specular.
  * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
@@ -135,6 +155,9 @@ import { shadergraphRegistry } from './shader-graph-registry.js';
  * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
+ *
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecular} is set to false.
  *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
@@ -244,6 +267,8 @@ import { shadergraphRegistry } from './shader-graph-registry.js';
  * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
  * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
  * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
+ * * opacityFadesSpecular: enable specular fade. See {@link pc.Material#opacityFadesSpecular}.
+ * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
  * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
  * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
  * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
@@ -776,9 +801,10 @@ Object.assign(StandardMaterial.prototype, {
         }
 
         if (this.clearCoat > 0) {
-            this._setParameter('material_clearCoatSpecularity', this.clearCoat);
+            this._setParameter('material_clearCoat', this.clearCoat);
             this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
             this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
+            this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
         uniform = this.getUniform("shininess", this.shininess, true);
@@ -797,6 +823,10 @@ Object.assign(StandardMaterial.prototype, {
         }
 
         this._setParameter('material_opacity', this.opacity);
+
+        if (this.opacityFadesSpecular === false) {
+            this._setParameter('material_alphaFade', this.alphaFade);
+        }
 
         if (this.occludeSpecular) {
             this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
@@ -1041,6 +1071,7 @@ var _defineMaterialProps = function (obj) {
         return { name: 'material_heightMapFactor', value: height * 0.025 };
     });
     _defineFloat(obj, "opacity", 1);
+    _defineFloat(obj, "alphaFade", 1);
     _defineFloat(obj, "alphaTest", 0);
     _defineFloat(obj, "bumpiness", 1);
     _defineFloat(obj, "normalDetailMapBumpiness", 1);
@@ -1052,6 +1083,7 @@ var _defineMaterialProps = function (obj) {
     _defineFloat(obj, "anisotropy", 0);
     _defineFloat(obj, "clearCoat", 0);
     _defineFloat(obj, "clearCoatGlossiness", 1);
+    _defineFloat(obj, "clearCoatBumpiness", 1);
     _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
     _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
@@ -1087,6 +1119,7 @@ var _defineMaterialProps = function (obj) {
     _defineFlag(obj, "occludeDirect", false);
     _defineFlag(obj, "normalizeNormalMap", true);
     _defineFlag(obj, "conserveEnergy", true);
+    _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
     _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
     _defineFlag(obj, "fresnelModel", FRESNEL_NONE);
@@ -1115,6 +1148,9 @@ var _defineMaterialProps = function (obj) {
     _defineTex2D(obj, "msdf", 0, 3, "", false);
     _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, true);
     _defineTex2D(obj, "normalDetail", 0, -1, "", false);
+    _defineTex2D(obj, "clearCoat", 0, 1, "", true);
+    _defineTex2D(obj, "clearCoatGloss", 0, 1, "", true);
+    _defineTex2D(obj, "clearCoatNormal", 0, -1, "", false);
 
     _defineObject(obj, "cubeMap");
     _defineObject(obj, "sphereMap");

@@ -34,7 +34,8 @@ import { Model } from '../../scene/model.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { Skin, SkinInstance } from '../../scene/skin.js';
+import { Skin } from '../../scene/skin.js';
+import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
 import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';
@@ -436,11 +437,29 @@ var createVertexBufferInternal = function (device, sourceDesc, disableFlipV) {
     return vertexBuffer;
 };
 
-var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, disableFlipV) {
-    // build vertex buffer format desc and source
-    var sourceDesc = {};
-    for (var attrib in attributes) {
+var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, disableFlipV, vertexBufferDict) {
+
+    // extract list of attributes to use
+    var attrib, useAttributes = {}, attribIds = [];
+    for (attrib in attributes) {
         if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
+            useAttributes[attrib] = attributes[attrib];
+
+            // build unique id for each attribute in format: Semantic:accessorIndex
+            attribIds.push(attrib + ":" + attributes[attrib]);
+        }
+    }
+
+    // sort unique ids and create unique vertex buffer ID
+    attribIds.sort();
+    var vbKey = attribIds.join();
+
+    // return already created vertex buffer if identical
+    var vb = vertexBufferDict[vbKey];
+    if (!vb) {
+        // build vertex buffer format desc and source
+        var sourceDesc = {};
+        for (attrib in useAttributes) {
             var accessor = accessors[attributes[attrib]];
             var accessorData = getAccessorData(accessor, bufferViews);
             var bufferView = bufferViews[accessor.bufferView];
@@ -458,14 +477,18 @@ var createVertexBuffer = function (device, attributes, indices, accessors, buffe
                 normalize: accessor.normalized
             };
         }
+
+        // generate normals if they're missing (this should probably be a user option)
+        if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
+            generateNormals(sourceDesc, indices);
+        }
+
+        // create and store it in the dictionary
+        vb = createVertexBufferInternal(device, sourceDesc, disableFlipV);
+        vertexBufferDict[vbKey] = vb;
     }
 
-    // generate normals if they're missing (this should probably be a user option)
-    if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        generateNormals(sourceDesc, indices);
-    }
-
-    return createVertexBufferInternal(device, sourceDesc, disableFlipV);
+    return vb;
 };
 
 var createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, disableFlipV) {
@@ -597,7 +620,7 @@ var createSkin = function (device, gltfSkin, accessors, bufferViews, nodes) {
 var tempMat = new Mat4();
 var tempVec = new Vec3();
 
-var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, disableFlipV) {
+var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, disableFlipV, vertexBufferDict) {
     var meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -688,7 +711,7 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
         // if mesh was not constructed from draco data, use uncompressed
         if (!vertexBuffer) {
             indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, disableFlipV);
+            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, disableFlipV, vertexBufferDict);
             primitiveType = getPrimitiveType(primitive);
         }
 
@@ -846,6 +869,36 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         "    #ifdef MAPVERTEX",
         "        dSpecularity *= saturate(vVertexColor.$VC);",
         "    #endif",
+        "}"
+    ].join('\n');
+
+    var clearCoatGlossChunk = [
+        "#ifdef MAPFLOAT",
+        "uniform float material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "uniform sampler2D texture_clearCoatGlossMap;",
+        "#endif",
+        "",
+        "void getClearCoatGlossiness() {",
+        "    ccGlossiness = 1.0;",
+        "",
+        "#ifdef MAPFLOAT",
+        "    ccGlossiness *= material_clearCoatGlossiness;",
+        "#endif",
+        "",
+        "#ifdef MAPTEXTURE",
+        "    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;",
+        "#endif",
+        "",
+        "#ifdef MAPVERTEX",
+        "    ccGlossiness *= saturate(vVertexColor.$VC);",
+        "#endif",
+        "",
+        "    ccGlossiness = 1.0 - ccGlossiness;",
+        "",
+        "    ccGlossiness += 0.0000001;",
         "}"
     ].join('\n');
 
@@ -1056,6 +1109,48 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
     } else {
         material.twoSidedLighting = false;
         material.cull = CULLFACE_BACK;
+    }
+
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_clearcoat')) {
+        var ccData = gltfMaterial.extensions.KHR_materials_clearcoat;
+
+        if (ccData.hasOwnProperty('clearcoatFactor')) {
+            material.clearCoat = ccData.clearcoatFactor * 0.25; // TODO: remove temporary workaround for replicating glTF clear-coat visuals
+        } else {
+            material.clearCoat = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatTexture')) {
+            var clearcoatTexture = ccData.clearcoatTexture;
+            material.clearCoatMap = textures[clearcoatTexture.index];
+            material.clearCoatMapChannel = 'r';
+
+            extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
+            material.clearCoatGlossiness = ccData.clearcoatRoughnessFactor;
+        } else {
+            material.clearCoatGlossiness = 0;
+        }
+        if (ccData.hasOwnProperty('clearcoatRoughnessTexture')) {
+            var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
+            material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
+            material.clearCoatGlossMapChannel = 'g';
+
+            extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
+        }
+        if (ccData.hasOwnProperty('clearcoatNormalTexture')) {
+            var clearcoatNormalTexture = ccData.clearcoatNormalTexture;
+            material.clearCoatNormalMap = textures[clearcoatNormalTexture.index];
+
+            extractTextureTransform(clearcoatNormalTexture, material, ['clearCoatNormal']);
+
+            if (clearcoatNormalTexture.hasOwnProperty('scale')) {
+                material.clearCoatBumpiness = clearcoatNormalTexture.scale;
+            }
+        }
+
+        material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
     }
 
     // handle unlit material by disabling lighting and copying diffuse colours
@@ -1274,8 +1369,11 @@ var createMeshes = function (device, gltf, bufferViews, callback, disableFlipV) 
         return [];
     }
 
+    // dictionary of vertex buffers to avoid duplicates
+    var vertexBufferDict = {};
+
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, disableFlipV);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, disableFlipV, vertexBufferDict);
     });
 };
 

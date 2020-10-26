@@ -91,7 +91,8 @@ export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
 export { shadergraph } from './scene/materials/shader-graph.js';
-export { Skin, SkinInstance } from './scene/skin.js';
+export { Skin } from './scene/skin.js';
+export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
 export { StandardNodeMaterial } from './scene/materials/standard-node-material.js';
@@ -117,7 +118,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
