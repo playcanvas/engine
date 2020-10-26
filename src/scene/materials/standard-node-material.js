@@ -5,7 +5,7 @@ import {
 } from '../constants.js';
 import { StandardMaterial } from './standard-material.js';
 
-import { shadergraph_nodeRegistry } from './shader-graph-registry.js';
+import { shadergraphRegistry } from './shader-graph-registry.js';
 
 /**
  * @class
@@ -59,7 +59,7 @@ Object.assign(StandardNodeMaterial.prototype, {
 
         if (this._shaderGraphChunk)
         {
-            var rootShaderGraph = shadergraph_nodeRegistry.getNode(this._shaderGraphChunk);
+            var rootShaderGraph = shadergraphRegistry.getNode(this._shaderGraphChunk);
 
             rootShaderGraph.updateShaderGraphUniforms(this);
         }

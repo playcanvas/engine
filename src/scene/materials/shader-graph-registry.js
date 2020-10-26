@@ -1,13 +1,13 @@
-var shadergraph_nodeRegistry = {};
+var shadergraphRegistry = {};
 
-shadergraph_nodeRegistry.registerNode = function (name, node)
+shadergraphRegistry.registerNode = function (name, node)
 {
-    shadergraph_nodeRegistry[name] = node;
+    shadergraphRegistry[name] = node;
 };
 
-shadergraph_nodeRegistry.getNode = function (name)
+shadergraphRegistry.getNode = function (name)
 {
-    return shadergraph_nodeRegistry[name];
+    return shadergraphRegistry[name];
 };
 
-export { shadergraph_nodeRegistry };
+export { shadergraphRegistry };

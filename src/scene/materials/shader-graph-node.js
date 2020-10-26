@@ -1,27 +1,21 @@
-import { programlib } from '../../graphics/program-lib/program-lib.js';
-import { Shader } from '../../graphics/shader.js';
-
-import { Material } from './material.js';
-
-import {
-    SHADER_FORWARD
-    // SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW
-} from '../constants.js';
-
 import { Texture } from '../../graphics/texture.js';
 import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
+var id = 0;
+
 /**
+ * @private
  * @class
- * @name NodeMaterial
- * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
+ * @name ShaderGraphNode
+ * @classdesc A Shader Graph Node is used by shadergraph
  * @param {string} funcGlsl - shader function used by this material
  * @param {string} declGlsl - shader declarations used by the shader function
  */
-var NodeMaterial = function (funcGlsl, declGlsl) {
-    Material.call(this);
+var ShaderGraphNode = function (funcGlsl, declGlsl) {
+    this.name = "Untitled";
+    this.id = id++;
 
     // storage for asset references
     this._graphVarAssetReferences = [];
@@ -30,7 +24,7 @@ var NodeMaterial = function (funcGlsl, declGlsl) {
 
     this.graphData = {};
 
-    this.graphData.graphVars = []; // input, output or constant variables
+    this.graphData.ioPorts = []; // input, output or constant variables
 
     if (funcGlsl) {
         this.graphData.customFuncGlsl = funcGlsl;
@@ -40,63 +34,55 @@ var NodeMaterial = function (funcGlsl, declGlsl) {
         this.graphData.subGraphs = [];
         this.graphData.connections = [];
     }
-
-    this.shaderVariants = [];
-
 };
 
-NodeMaterial.prototype = Object.create(Material.prototype);
-NodeMaterial.prototype.constructor = NodeMaterial;
+ShaderGraphNode.prototype.constructor = ShaderGraphNode;
 
-Object.assign(NodeMaterial.prototype, {
+Object.assign(ShaderGraphNode.prototype, {
     /**
      * @function
-     * @name NodeMaterial#clone
-     * @description Duplicates a Node material. All properties are duplicated except textures
+     * @name ShaderGraphNode#clone
+     * @description Duplicates a ShaderGraphNode. All properties are duplicated except textures
      * where only the references are copied.
-     * @returns {NodeMaterial} A cloned Node material.
+     * @returns {ShaderGraphNode} A cloned ShaderGraphNode.
      */
     clone: function () {
-        var clone = new NodeMaterial();
-
-        Material.prototype._cloneInternal.call(this, clone);
+        var clone = new ShaderGraphNode();
 
         clone.graphData = {};
 
-        clone.graphData.graphVars = this.graphData.graphVars.slice(0);
+        clone.graphData.ioPorts = this.graphData.ioPorts.slice(0);
         clone.graphData.subGraphs = this.graphData.subGraphs.slice(0);
         clone.graphData.connections = this.graphData.connections.slice(0);
 
         clone.graphData.customDeclGlsl = this.graphData.customDeclGlsl;
         clone.graphData.customFuncGlsl = this.graphData.customFuncGlsl;
 
-        clone.shaderVariants = this.shaderVariants.slice(0);
-
         return clone;
     },
 
     updateShaderGraphUniforms: function (mat) {
-        for (var n = 0; n < this.graphData.graphVars.length; n++) {
-            var graphVar = this.graphData.graphVars[n];
+        for (var n = 0; n < this.graphData.ioPorts.length; n++) {
+            var ioPort = this.graphData.ioPorts[n];
 
-            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
+            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D')) {
                 var chunkId = '_' + this.id;
 
-                switch (graphVar.type) {
+                switch (ioPort.type) {
                     case 'sampler2D':
-                        mat.setParameter(graphVar.name + chunkId, graphVar.valueTex);
+                        mat.setParameter(ioPort.name + chunkId, ioPort.valueTex);
                         break;
                     case 'float':
-                        mat.setParameter(graphVar.name + chunkId, graphVar.valueX);
+                        mat.setParameter(ioPort.name + chunkId, ioPort.valueX);
                         break;
                     case 'vec2':
-                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY]);
+                        mat.setParameter(ioPort.name + chunkId, [ioPort.valueX, ioPort.valueY]);
                         break;
                     case 'vec3':
-                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
+                        mat.setParameter(ioPort.name + chunkId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ]);
                         break;
                     case 'vec4':
-                        mat.setParameter(graphVar.name + chunkId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
+                        mat.setParameter(ioPort.name + chunkId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW]);
                         break;
                     case 'samplerCube':
                     default:
@@ -105,93 +91,37 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
         }
-    },
-
-    updateUniforms: function (material) {
-        this.clearParameters();
-
-        for (var n = 0; n < this.graphData.graphVars.length; n++) {
-            var graphVar = this.graphData.graphVars[n];
-
-            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
-                var matId = '_' + this.id;
-
-                switch (graphVar.type) {
-                    case 'sampler2D':
-                        this.setParameter(graphVar.name + matId, graphVar.valueTex);
-                        break;
-                    case 'float':
-                        this.setParameter(graphVar.name + matId, graphVar.valueX);
-                        break;
-                    case 'vec2':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY]);
-                        break;
-                    case 'vec3':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ]);
-                        break;
-                    case 'vec4':
-                        this.setParameter(graphVar.name + matId, [graphVar.valueX, graphVar.valueY, graphVar.valueZ, graphVar.valueW]);
-                        break;
-                    case 'samplerCube':
-                    default:
-                        // error
-                        break;
-                }
-            }
-        }
-
-        if (this.dirtyShader || !this._scene) {
-            this.shader = null;
-            this.clearVariants();
-        }
-    },
-
-    updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-        if (this.hasValidGraphData()) {
-            this.initShader(device);
-            this.dirtyShader = false;
-        }
-
-        if (this.shaderVariants[pass]) {
-            this.shader = this.shaderVariants[pass];
-        } else {
-            this.shader = this._placeHolderShader;
-        }
-    },
-
-    setPlaceHolderShader: function (placeHolderMat) {
-        this._placeHolderShader = placeHolderMat.shaderVariants[SHADER_FORWARD];
     },
 
     hasValidGraphData: function (graphRootTime) {
         var i;
-        if (this.graphData.graphVars && this.graphData.graphVars.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                if (this.graphData.graphVars[i] && this.graphData.graphVars[i].name && this.graphData.graphVars[i].type) {
-                    if (this.graphData.graphVars[i].type === 'sampler2D' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueTex && this.graphData.graphVars[i].valueTex instanceof Texture)) {
+        if (this.graphData.ioPorts && this.graphData.ioPorts.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                if (this.graphData.ioPorts[i] && this.graphData.ioPorts[i].name && this.graphData.ioPorts[i].type) {
+                    if (this.graphData.ioPorts[i].type === 'sampler2D' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueTex && this.graphData.ioPorts[i].valueTex instanceof Texture)) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'float' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number')) {
+                    } else if (this.graphData.ioPorts[i].type === 'float' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number')) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec2' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec2' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec3' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' &&
-                              this.graphData.graphVars[i].valueZ != undefined && typeof(this.graphData.graphVars[i].valueZ) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec3' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
+                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.graphVars[i].type === 'vec4' && !this.graphData.graphVars[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.graphVars[i].valueX != undefined && typeof(this.graphData.graphVars[i].valueX) === 'number' &&
-                              this.graphData.graphVars[i].valueY != undefined && typeof(this.graphData.graphVars[i].valueY) === 'number' &&
-                              this.graphData.graphVars[i].valueZ != undefined && typeof(this.graphData.graphVars[i].valueZ) === 'number' &&
-                              this.graphData.graphVars[i].valueW != undefined && typeof(this.graphData.graphVars[i].valueW) === 'number' )) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec4' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
+                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
+                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' &&
+                              this.graphData.ioPorts[i].valueW != undefined && typeof(this.graphData.ioPorts[i].valueW) === 'number' )) {
                             return false;
                         }
                     }
@@ -222,7 +152,7 @@ Object.assign(NodeMaterial.prototype, {
                     this._tmpRootTime = graphRootTime;
                 }
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
-                    if (this.graphData.subGraphs[i] && this.graphData.subGraphs[i] instanceof NodeMaterial && this.graphData.subGraphs[i].name) {
+                    if (this.graphData.subGraphs[i] && this.graphData.subGraphs[i] instanceof ShaderGraphNode && this.graphData.subGraphs[i].name) {
                         if (this.graphData.subGraphs[i]._tmpRootTime === graphRootTime) {
                             // recursion detected!
                             return false;
@@ -244,54 +174,25 @@ Object.assign(NodeMaterial.prototype, {
         return false;
     },
 
-    // NB only called when shader graph is valid and shader is marked as dirty
-    initShader: function (device) {
-        // this is where we could get a list of pass types in current app render pipeline (layers)
-        // and query shader graph to check if there is a special output
-        // var passes=[SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW];
-        var passes = [SHADER_FORWARD];
-
-        for (var i = 0; i < passes.length; i++) {
-            var useSkin = false;
-
-            if (this.meshInstances && this.meshInstances[0] && this.meshInstances[0].skinInstance) {
-                useSkin = true; // TODO make this a variant?
-            }
-
-            var options = {
-                skin: useSkin,
-                shaderGraph: this,
-                pass: passes[i],
-                maxPixelLights: (this.maxPixelLights) ? this.maxPixelLights : 4,
-                maxVertexLights: (this.maxVertexLights) ? this.maxVertexLights : 8
-            };
-
-            // var depGraphTextureList=[];
-
-            var shaderDefinition = programlib.node.createShaderDefinition(device, options);
-            this.shaderVariants[passes[i]] = new Shader(device, shaderDefinition);
-        }
-    },
-
     _addGraphVar: function (type, name, value) {
-        var graphVar;
+        var ioPort;
         if (value instanceof Texture) {
-            graphVar = { type: type, name: name, valueTex: value };
+            ioPort = { type: type, name: name, valueTex: value };
         } else if (value instanceof Vec4) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z, valueW: value.w };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z, valueW: value.w };
         } else if (value instanceof Vec3) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y, valueZ: value.z };
         } else if (value instanceof Vec2) {
-            graphVar = { type: type, name: name, valueX: value.x, valueY: value.y };
+            ioPort = { type: type, name: name, valueX: value.x, valueY: value.y };
         } else if (typeof(value) === 'number') {
-            graphVar = { type: type, name: name, valueX: value };
+            ioPort = { type: type, name: name, valueX: value };
         } else {
-            graphVar = { type: type, name: name };
+            ioPort = { type: type, name: name };
         }
 
-        this.graphData.graphVars.push(graphVar);
+        this.graphData.ioPorts.push(ioPort);
 
-        return graphVar;
+        return ioPort;
     },
 
     addInput: function (type, name, value) {
@@ -303,7 +204,7 @@ Object.assign(NodeMaterial.prototype, {
     },
 
     addConstant: function (type, value) {
-        return this._addGraphVar(type, 'CONST_' + type + '_' + this.graphData.graphVars.length, value); // create a unique name
+        return this._addGraphVar(type, 'CONST_' + type + '_' + this.graphData.ioPorts.length, value); // create a unique name
     },
 
     genCustomFuncVars: function () {
@@ -351,17 +252,17 @@ Object.assign(NodeMaterial.prototype, {
         this.graphData.connections.push(connection);
     },
 
-    _getGraphVarValueString: function (graphVar) {
+    _getGraphVarValueString: function (ioPort) {
         var ret;
 
-        if (graphVar.type === 'float') {
-            ret = 'float(' + graphVar.valueX + ')';
-        } else if (graphVar.type === 'vec2') {
-            ret = 'vec2(' + graphVar.valueX + ', ' + graphVar.valueY + ')';
-        } else if (graphVar.type === 'vec3') {
-            ret = 'vec3(' + graphVar.valueX + ', ' + graphVar.valueY + ', ' + graphVar.valueZ + ')';
-        } else if (graphVar.type === 'vec4') {
-            ret = 'vec4(' + graphVar.valueX + ', ' + graphVar.valueY + ', ' + graphVar.valueZ + ', ' + graphVar.valueW + ')';
+        if (ioPort.type === 'float') {
+            ret = 'float(' + ioPort.valueX + ')';
+        } else if (ioPort.type === 'vec2') {
+            ret = 'vec2(' + ioPort.valueX + ', ' + ioPort.valueY + ')';
+        } else if (ioPort.type === 'vec3') {
+            ret = 'vec3(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ')';
+        } else if (ioPort.type === 'vec4') {
+            ret = 'vec4(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ', ' + ioPort.valueW + ')';
         }
 
         return ret;
@@ -369,14 +270,14 @@ Object.assign(NodeMaterial.prototype, {
 
     _generateSubGraphCall: function (inNames, outNames) {
         var i;
-        var graphVar;
+        var ioPort;
         var callString = '';
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('OUT_ret')) {
-                if (outNames[graphVar.name] != undefined) {
-                    callString += outNames[graphVar.name] + ' = ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('OUT_ret')) {
+                if (outNames[ioPort.name] != undefined) {
+                    callString += outNames[ioPort.name] + ' = ';
                 } else {
                     // I guess this is actually valid (return value not assigned to anything)
                 }
@@ -390,23 +291,23 @@ Object.assign(NodeMaterial.prototype, {
             callString += this.name + '_' + this.id + '( ';
         }
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_')) {
-                if (inNames && inNames[graphVar.name] != undefined) {
-                    callString += inNames[graphVar.name] + ', ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_')) {
+                if (inNames && inNames[ioPort.name] != undefined) {
+                    callString += inNames[ioPort.name] + ', ';
                 } else {
                     // this is tricky - use varname and unique (temp) id
-                    callString += graphVar.name + '_' + this.id + ', ';
+                    callString += ioPort.name + '_' + this.id + ', ';
                 }
             }
         }
 
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('OUT_') && !graphVar.name.startsWith('OUT_ret')) {
-                if (outNames[graphVar.name] != undefined) {
-                    callString += outNames[graphVar.name] + ', ';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('OUT_') && !ioPort.name.startsWith('OUT_ret')) {
+                if (outNames[ioPort.name] != undefined) {
+                    callString += outNames[ioPort.name] + ', ';
                 } else {
                     // this shouldn't be possible - all outputs from connected subgraphs will have a tmpVar declared.
                     // ERROR!!!!
@@ -424,8 +325,8 @@ Object.assign(NodeMaterial.prototype, {
     // TODO: re-enable and optimize using transient name map
     getGraphVarByName: function (name) {
         // convienient but not fast - TODO: optimize?
-        return this.graphData.graphVars.filter(function (graphVar) {
-            return graphVar.name === name;
+        return this.graphData.ioPorts.filter(function (ioPort) {
+            return ioPort.name === name;
         })[0];
     },
 
@@ -441,11 +342,11 @@ Object.assign(NodeMaterial.prototype, {
                 }
 
                 if (depGraphFuncs[name] === undefined) {
-                    if (subGraph.graphData.graphVars) {
-                        for (var v = 0; v < subGraph.graphData.graphVars.length; v++) {
-                            var graphVar = subGraph.graphData.graphVars[v];
-                            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D') ) {
-                                var depGraphVar = 'uniform ' + graphVar.type + ' ' + graphVar.name + '_' + subGraph.id + ';\n';
+                    if (subGraph.graphData.ioPorts) {
+                        for (var v = 0; v < subGraph.graphData.ioPorts.length; v++) {
+                            var ioPort = subGraph.graphData.ioPorts[v];
+                            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D') ) {
+                                var depGraphVar = 'uniform ' + ioPort.type + ' ' + ioPort.name + '_' + subGraph.id + ';\n';
 
                                 depGraphVarList.push(depGraphVar);
                             }
@@ -461,21 +362,21 @@ Object.assign(NodeMaterial.prototype, {
 
     generateRootDeclGlsl: function () {
         var i;
-        var graphVar;
+        var ioPort;
         var generatedGlsl = '';
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
             var matId = '_' + this.id;
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_') || (graphVar.name.startsWith('CONST_') && graphVar.type === 'sampler2D')) {
-                generatedGlsl += 'uniform ' + graphVar.type + ' ' + graphVar.name + matId + ';\n';
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D')) {
+                generatedGlsl += 'uniform ' + ioPort.type + ' ' + ioPort.name + matId + ';\n';
             }
         }
         // run through constants values are set here (except for textures - which have to be uniforms)
-        for (i = 0; i < this.graphData.graphVars.length; i++) {
-            graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('CONST_') && (graphVar.type != 'sampler2D' )) {
-                generatedGlsl += graphVar.type + ' ' + graphVar.name + ' = ' + this._getGraphVarValueString(graphVar) + ';\n';
+        for (i = 0; i < this.graphData.ioPorts.length; i++) {
+            ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('CONST_') && (ioPort.type != 'sampler2D' )) {
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getGraphVarValueString(ioPort) + ';\n';
             }
         }
 
@@ -533,15 +434,15 @@ Object.assign(NodeMaterial.prototype, {
         var inNames = {};
         var outNames = {};
 
-        for (var i = 0; i < this.graphData.graphVars.length; i++) {
+        for (var i = 0; i < this.graphData.ioPorts.length; i++) {
             var matId = '_' + this.id;
-            var graphVar = this.graphData.graphVars[i];
-            if (graphVar.name.startsWith('IN_')) {
-                inNames[graphVar.name] = graphVar.name + matId;
+            var ioPort = this.graphData.ioPorts[i];
+            if (ioPort.name.startsWith('IN_')) {
+                inNames[ioPort.name] = ioPort.name + matId;
             }
-            if (graphVar.name.startsWith('OUT_')) {
-                generatedGlsl += graphVar.type + ' ' + graphVar.name + ';\n';
-                outNames[graphVar.name] = graphVar.name;
+            if (ioPort.name.startsWith('OUT_')) {
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ';\n';
+                outNames[ioPort.name] = ioPort.name;
             }
         }
 
@@ -553,7 +454,7 @@ Object.assign(NodeMaterial.prototype, {
 
     _generateFuncGlsl: function () {
         var i;
-        var graphVar;
+        var ioPort;
         var generatedGlsl;
 
         if (this.graphData.customFuncGlsl) {
@@ -564,10 +465,10 @@ Object.assign(NodeMaterial.prototype, {
             // function head
             var retUsed = false;
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_ret')) {
-                    generatedGlsl = graphVar.type + ' ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_ret')) {
+                    generatedGlsl = ioPort.type + ' ';
                     retUsed = true;
                 }
             }
@@ -578,18 +479,18 @@ Object.assign(NodeMaterial.prototype, {
                 generatedGlsl = 'void ' + this.name + '_' + this.id + '( ';
             }
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('IN_')) {
-                    generatedGlsl += 'in ' + graphVar.type + ' ' + graphVar.name + ', ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('IN_')) {
+                    generatedGlsl += 'in ' + ioPort.type + ' ' + ioPort.name + ', ';
                 }
             }
 
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_')) {
-                    if (!graphVar.name.startsWith('OUT_ret')) {
-                        generatedGlsl += 'out ' + graphVar.type + ' ' + graphVar.name + ', ';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_')) {
+                    if (!ioPort.name.startsWith('OUT_ret')) {
+                        generatedGlsl += 'out ' + ioPort.type + ' ' + ioPort.name + ', ';
                     }
                 }
             }
@@ -615,8 +516,8 @@ Object.assign(NodeMaterial.prototype, {
                     var srcSubGraph = this.graphData.subGraphs[con.srcIndex];
                     if (srcTmpVarMap[con.srcIndex] === undefined) {
                         srcTmpVarMap[con.srcIndex] = {};
-                        for (var o = 0; o < srcSubGraph.graphData.graphVars.length; o++) {
-                            var outputVar = srcSubGraph.graphData.graphVars[o];
+                        for (var o = 0; o < srcSubGraph.graphData.ioPorts.length; o++) {
+                            var outputVar = srcSubGraph.graphData.ioPorts[o];
                             if (outputVar.name.startsWith('OUT_')) {
                                 generatedGlsl += outputVar.type + ' temp_' + outputVar.type + '_' + tmpVarCounter + ';\n';
                                 srcTmpVarMap[con.srcIndex][outputVar.name] = 'temp_' + outputVar.type + '_' + tmpVarCounter;
@@ -708,10 +609,10 @@ Object.assign(NodeMaterial.prototype, {
             }
 
             // output assignment
-            for (i = 0; i < this.graphData.graphVars.length; i++) {
-                graphVar = this.graphData.graphVars[i];
-                if (graphVar.name.startsWith('OUT_') && !graphVar.name.startsWith('OUT_ret')) {
-                    generatedGlsl += graphVar.name + ' = ' + graphOutputVarTmpVarMap[graphVar.name] + ';\n';
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.name.startsWith('OUT_') && !ioPort.name.startsWith('OUT_ret')) {
+                    generatedGlsl += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
                 }
             }
 
@@ -723,4 +624,4 @@ Object.assign(NodeMaterial.prototype, {
 
 });
 
-export { NodeMaterial };
+export { ShaderGraphNode };

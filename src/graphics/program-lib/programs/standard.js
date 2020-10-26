@@ -22,7 +22,7 @@ import {
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-import { shadergraph_nodeRegistry } from '../../../scene/materials/shader-graph-registry.js';
+import { shadergraphRegistry } from '../../../scene/materials/shader-graph-registry.js';
 
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
@@ -450,7 +450,7 @@ var standard = {
 
         if (options._shaderGraphChunk)
         {
-            rootShaderGraph = shadergraph_nodeRegistry.getNode(options._shaderGraphChunk);
+            rootShaderGraph = shadergraphRegistry.getNode(options._shaderGraphChunk);
 
             rootDeclGLSL = rootShaderGraph.generateRootDeclGlsl();
             rootCallGLSL = rootShaderGraph.generateRootCallGlsl();

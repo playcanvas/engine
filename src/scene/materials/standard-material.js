@@ -22,7 +22,7 @@ import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
-import { shadergraph_nodeRegistry } from './shader-graph-registry.js';
+import { shadergraphRegistry } from './shader-graph-registry.js';
 
 /**
  * @class
