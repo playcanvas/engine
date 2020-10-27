@@ -60,7 +60,7 @@ Object.assign(RenderHandler.prototype, {
             }
         } else { // container is loaded already
 
-            self.processAsset(asset, a, renderIndex);
+            self.processAsset(asset, containerAsset, renderIndex);
         }
     },
 
