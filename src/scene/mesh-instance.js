@@ -134,9 +134,15 @@ Object.defineProperty(MeshInstance.prototype, 'mesh', {
         return this._mesh;
     },
     set: function (mesh) {
-        if (this._mesh) this._mesh.decReference();
+        if (this._mesh) {
+            this._mesh.decReference();
+        }
+
         this._mesh = mesh;
-        if (mesh) mesh.incReference();
+
+        if (mesh) {
+            mesh.incReference();
+        }
     }
 });
 
@@ -375,6 +381,31 @@ Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
 });
 
 Object.assign(MeshInstance.prototype, {
+
+    destroy: function () {
+
+        // make sure instance and material clear references
+        var mesh = this.mesh;
+        if (mesh) {
+            this.mesh = null;   // this calls decReference on mesh
+            if (mesh.refCount < 1) {
+                mesh.destroy();
+            }
+        }
+
+        if (this.skinInstance) {
+            this.skinInstance.destroy();
+            this.skinInstance = null;
+        }
+
+        if (this.morphInstance) {
+            this.morphInstance.destroy();
+            this.morphInstance = null;
+        }
+
+        this.material = null;
+    },
+
     syncAabb: function () {
         // Deprecated
     },

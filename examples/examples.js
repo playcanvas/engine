@@ -45,6 +45,7 @@ var categories = [
             "point-cloud-simulation",
             "portal",
             "post-effects",
+            "render-asset",
             "render-to-texture",
             "shader-burn",
             "shader-toon",

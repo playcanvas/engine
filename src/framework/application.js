@@ -62,6 +62,7 @@ import { HtmlHandler } from '../resources/html.js';
 import { JsonHandler } from '../resources/json.js';
 import { MaterialHandler } from '../resources/material.js';
 import { ModelHandler } from '../resources/model.js';
+import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
 import { SceneHandler } from '../resources/scene.js';
 import { SceneSettingsHandler } from '../resources/scene-settings.js';
@@ -715,6 +716,7 @@ function Application(canvas, options) {
     this.loader.addHandler("animclip", new AnimClipHandler());
     this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
     this.loader.addHandler("model", new ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
+    this.loader.addHandler("render", new RenderHandler(this.assets));
     this.loader.addHandler("material", new MaterialHandler(this));
     this.loader.addHandler("texture", new TextureHandler(this.graphicsDevice, this.assets, this.loader));
     this.loader.addHandler("text", new TextHandler());

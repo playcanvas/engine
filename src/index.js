@@ -138,6 +138,7 @@ export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 export { MaterialHandler } from './resources/material.js';
 export { ModelHandler } from './resources/model.js';
+export { RenderHandler } from './resources/render.js';
 export { ResourceHandler } from './resources/handler.js';
 export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';

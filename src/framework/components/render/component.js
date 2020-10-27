@@ -61,6 +61,9 @@ function RenderComponent(system, entity)   {
     // area - used by lightmapper
     this._area = null;
 
+    // render asset
+    this._asset = null;
+
     entity.on('remove', this.onRemoveChild, this);
     entity.on('insert', this.onInsertChild, this);
 }
@@ -164,6 +167,9 @@ Object.assign(RenderComponent.prototype, {
     },
 
     onEnable: function () {
+
+        console.log("render.onEnable called");
+
         var app = this.system.app;
         var scene = app.scene;
 
@@ -173,8 +179,26 @@ Object.assign(RenderComponent.prototype, {
             scene.layers.on("remove", this.onLayerRemoved, this);
         }
 
-        if (this._meshInstances) {
+        var isAsset = (this._type === 'asset');
+        if (this._meshInstances && this._meshInstances.length) {
             this.addToLayers();
+        } else if (isAsset && this._asset) {
+
+            // bind and load render asset if necessary
+            var asset = app.assets.get(this._asset);
+            if (asset/* && asset.resource !== this._model*/) {
+
+                app.assets.load(asset);
+
+//                var self = this;
+//                asset.ready(function () {
+//                    self._bindRenderAsset(asset.resource.renders[0]._id);
+//                    self._bindRenderAsset(asset);
+//                });
+
+
+                this._bindRenderAsset(asset);
+            }
         }
 
         if (this._batchGroupId >= 0) {
@@ -196,7 +220,7 @@ Object.assign(RenderComponent.prototype, {
             app.batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
 
-        if (this._meshInstances) {
+        if (this._meshInstances && this._meshInstances.length) {
             this.removeFromLayers();
         }
     },
@@ -243,6 +267,142 @@ Object.assign(RenderComponent.prototype, {
                 }
             }
         }
+    },
+
+    _bindRenderAsset: function (asset) {
+
+        console.log("bind render asset");
+
+
+
+        this._unbindRenderAsset(asset);
+
+        asset.on('load', this._onRenderAssetLoad, this);
+        asset.on('unload', this._onRenderAssetUnload, this);
+        asset.on('change', this._onRenderAssetChange, this);
+        asset.on('remove', this._onRenderAssetRemove, this);
+
+        if (asset.resource) {
+            this._onRenderAssetLoad(asset);
+        } else {
+            // trigger an asset load if the component is enabled
+            if (this.enabled && this.entity.enabled) {
+                this.system.app.assets.load(asset);
+            }
+        }
+    },
+
+    _unbindRenderAsset: function (asset) {
+        asset.off('load', this._onRenderAssetLoad, this);
+        asset.off('unload', this._onRenderAssetUnload, this);
+        asset.off('change', this._onRenderAssetChange, this);
+        asset.off('remove', this._onRenderAssetRemove, this);
+    },
+
+    _onRenderAssetLoad: function (asset) {
+
+
+        // probably need to delete old mesh instances????
+
+        this._render = asset.resources;
+        this._cloneFromRender(this._render);
+
+        //this.model = asset.resource.clone();
+        //this._clonedModel = true;
+    },
+
+    _cloneFromRender: function (render) {
+
+        var meshInstances = [];
+
+        if (render && render.length) {
+            for (var i = 0; i < render.length; i++) {
+                var mesh = render[i];
+                var material = this._material;    // this needs to change !!!!!!!!!!!!!
+
+                var meshInst = new MeshInstance(this.entity, mesh, material);
+                meshInstances.push(meshInst);
+            }
+
+            this.meshInstances = meshInstances;
+        }
+
+        // probably need to copy transform as well?????
+
+
+
+
+
+
+        // var cloneMeshInstances = [];
+        // var cloneSkinInstances = [];
+        // var cloneMorphInstances = [];
+
+        // // Clone the skin instances
+        // for (i = 0; i < this.skinInstances.length; i++) {
+        //     var skin = this.skinInstances[i].skin;
+        //     var cloneSkinInstance = new SkinInstance(skin);
+
+        //     // Resolve bone IDs to actual graph nodes
+        //     var bones = [];
+        //     for (j = 0; j < skin.boneNames.length; j++) {
+        //         var boneName = skin.boneNames[j];
+        //         var bone = cloneGraph.findByName(boneName);
+        //         bones.push(bone);
+        //     }
+        //     cloneSkinInstance.bones = bones;
+
+        //     cloneSkinInstances.push(cloneSkinInstance);
+        // }
+
+        // // Clone the morph instances
+        // for (i = 0; i < this.morphInstances.length; i++) {
+        //     var morph = this.morphInstances[i].morph;
+        //     var cloneMorphInstance = new MorphInstance(morph);
+        //     cloneMorphInstances.push(cloneMorphInstance);
+        // }
+
+        // // Clone the mesh instances
+        // for (i = 0; i < this.meshInstances.length; i++) {
+        //     var meshInstance = this.meshInstances[i];
+        //     var nodeIndex = srcNodes.indexOf(meshInstance.node);
+        //     var cloneMeshInstance = new MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+
+        //     if (meshInstance.skinInstance) {
+        //         var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
+        //         cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
+        //     }
+
+        //     if (meshInstance.morphInstance) {
+        //         var morphInstanceIndex = this.morphInstances.indexOf(meshInstance.morphInstance);
+        //         cloneMeshInstance.morphInstance = cloneMorphInstances[morphInstanceIndex];
+        //     }
+
+        //     cloneMeshInstances.push(cloneMeshInstance);
+        // }
+
+
+
+
+    },
+
+    _onRenderAssetUnload: function (asset) {
+        //this.model = null;
+    },
+
+    _onRenderAssetChange: function (asset, attr, _new, _old) {
+
+        console.log("render component: asset changed");
+
+        this._onRenderAssetLoad(asset);
+
+        // if (attr === 'data') {
+        //     this.mapping = this._mapping;
+        // }
+    },
+
+    _onRenderAssetRemove: function (asset) {
+//        this.model = null;
     },
 
     /**

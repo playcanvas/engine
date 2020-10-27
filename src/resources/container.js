@@ -18,6 +18,7 @@ import { SkinInstance } from '../scene/skin-instance.js';
 function ContainerResource(data) {
     this.data = data;
     this.model = null;
+    this.renders = [];
     this.materials = [];
     this.textures = [];
     this.animations = [];
@@ -279,6 +280,12 @@ Object.assign(ContainerHandler.prototype, {
             // create model asset
             var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
+            // render assets
+            var renders = [];
+            for (i = 0; i < data.meshes.length; ++i) {
+                renders.push(createAsset('render', data.meshes[i], i));
+            }
+
             // create material assets
             var materials = [];
             for (i = 0; i < data.materials.length; ++i) {
@@ -293,6 +300,7 @@ Object.assign(ContainerHandler.prototype, {
 
             container.data = null;              // since assets are created, release GLB data
             container.model = model;
+            container.renders = renders;
             container.materials = materials;
             container.textures = data.textures; // texture assets are created directly
             container.animations = animations;

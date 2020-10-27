@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Asset Render</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+        app.start();
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+
+
+
+        // create and register the container asset for a glb
+        var url = "../assets/models/playcanvas-cube.glb";
+        var containerAsset = new pc.Asset("playcanvas-cube.glb", "container", { url: url });
+        app.assets.add(containerAsset);
+
+        var addRenderComponent = function (entity, renderIndex) {
+
+            // add render component
+            entity.addComponent("render", Object.assign( { type: "asset" }));
+
+            // create ref render asset for it
+            var name = url + "/render" + "/" + renderIndex; // does not really matter
+            var refAsset = new pc.Asset(name, "render", undefined, {
+
+                // container asset ID
+                containerId: containerAsset._id,
+
+                // render sub-asset index
+                renderIndex: renderIndex
+            });
+
+            app.assets.add(refAsset);
+
+            entity.render._asset = refAsset._id;
+        }
+
+
+        // create entity hierarchy, link up render component to render assets
+        var entityRoot = new pc.Entity();
+
+        var entity1 = new pc.Entity();
+        entityRoot.addChild(entity1);
+        addRenderComponent(entity1, 0);
+
+        var entity2 = new pc.Entity();
+        entityRoot.addChild(entity2);
+        addRenderComponent(entity2, 1);
+
+        app.root.addChild(entityRoot);
+        entityRoot.setLocalScale(0.1, 0.1, 0.1);
+
+
+
+
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.2, 0.1, 0.1),
+            farClip: 10000
+        });
+        camera.translate(50, 30, 50);
+        camera.lookAt(pc.Vec3.ZERO);
+        app.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 1000,
+            castShadows: true
+        });
+        light.translate(5, 0, 15);
+        app.root.addChild(light);
+
+        app.on("update", function (dt) {
+            if (entityRoot) {
+                entityRoot.rotate(0, 10 * dt, 0);
+            }
+        });
+    </script>
+</body>
+</html>
