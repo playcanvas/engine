@@ -36,7 +36,7 @@ Object.assign(StandardNodeMaterial.prototype, {
     * @function
     * @name pc.StandardNodeMaterial#clone
     * @description Duplicates a Standard node material.
-    * @returns {pc.StandardNodeMaterial} A cloned Standard material.
+    * @returns {pc.StandardNodeMaterial} A cloned Standard node material.
     */
     clone: function () {
         var clone = new StandardNodeMaterial();
