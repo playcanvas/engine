@@ -1493,6 +1493,7 @@ Object.assign(Application.prototype, {
         this.renderer._shadowMapUpdates = 0;
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
+        this.renderer._layerCompositionUpdateTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
