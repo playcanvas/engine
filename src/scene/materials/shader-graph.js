@@ -2,6 +2,11 @@ import { ShaderGraphNode } from './shader-graph-node.js';
 
 import { ShaderGraphRegistry } from './shader-graph-registry.js';
 
+/**
+ * @interface
+ * @name pc.shadergraph
+ * @description interface for shader graph building
+ */
 var shadergraph = {};
 
 shadergraph.graphCounter = 0;

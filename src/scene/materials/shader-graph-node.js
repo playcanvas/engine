@@ -39,13 +39,7 @@ var ShaderGraphNode = function (funcGlsl, declGlsl) {
 ShaderGraphNode.prototype.constructor = ShaderGraphNode;
 
 Object.assign(ShaderGraphNode.prototype, {
-    /**
-     * @function
-     * @name ShaderGraphNode#clone
-     * @description Duplicates a ShaderGraphNode. All properties are duplicated except textures
-     * where only the references are copied.
-     * @returns {ShaderGraphNode} A cloned ShaderGraphNode.
-     */
+
     clone: function () {
         var clone = new ShaderGraphNode();
 
