@@ -9,7 +9,7 @@ var id = 0;
  * @private
  * @class
  * @name ShaderGraphNode
- * @classdesc A Shader Graph Node is used by shadergraph
+ * @classdesc A Shader Graph Node class is used by shader graphs
  * @param {string} funcGlsl - shader function used by this material
  * @param {string} declGlsl - shader declarations used by the shader function
  */
@@ -181,7 +181,7 @@ Object.assign(ShaderGraphNode.prototype, {
         } else if (typeof(value) === 'number') {
             ioPort = { type: type, name: name, valueX: value };
         } else {
-            ioPort = { type: type, name: name };
+            ioPort = { type: type, name: name }; // output ports do not require a value
         }
 
         this.graphData.ioPorts.push(ioPort);
@@ -210,7 +210,6 @@ Object.assign(ShaderGraphNode.prototype, {
         var params = head.split("(")[1].split(",");
 
         this.name = retTypeAndFuncName.split(" ")[1];
-        // TODO check for function name clashes - maybe replace func name in function string with hash key?
 
         if (retType != "void") {
             this.addOutput(retType, 'ret');
@@ -223,13 +222,11 @@ Object.assign(ShaderGraphNode.prototype, {
 
             if (inOrOutAndTypeAndName[0] === "out") {
                 this.addOutput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
-                // this.defineOuputGetter(this.outputName[this.outputName.length - 1], this.outputName.length - 1);
             }
             if (inOrOutAndTypeAndName[0] === "in") {
                 this.addInput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
-                // this.defineInputSetter(this.inputName[this.inputName.length - 1], this.inputName.length - 1);
             } else {
-                // unsupported parameter !!! TODO add support for more parameter types?
+                // unsupported parameter
             }
         }
     },
@@ -303,8 +300,7 @@ Object.assign(ShaderGraphNode.prototype, {
                 if (outNames[ioPort.name] != undefined) {
                     callString += outNames[ioPort.name] + ', ';
                 } else {
-                    // this shouldn't be possible - all outputs from connected subgraphs will have a tmpVar declared.
-                    // ERROR!!!!
+                    // this shouldn't be possible - becasue all outputs from connected subgraphs will have a tmpVar declared.
                 }
             }
         }
@@ -441,7 +437,6 @@ Object.assign(ShaderGraphNode.prototype, {
         generatedGlsl += this._generateSubGraphCall(inNames, outNames);
 
         return generatedGlsl;
-        // NB the pass (or layer) will decide which output is used and how
     },
 
     _generateFuncGlsl: function () {
