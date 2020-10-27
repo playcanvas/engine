@@ -78,36 +78,36 @@
                 //start building shader graph and register core nodes
                 pc.shadergraph.start(coreNodesJSONString);
 
-                //create a shader graph chunk
+                //add input parameters
                 var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
                 var emissiveTexParam = pc.shadergraph.param('sampler2D', 'uEmissiveMap', emissiveMap); 
                 var emissiveColParam = pc.shadergraph.param('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
 
+                //create and hook up graph nodes
                 var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0());
                 var emissiveSampleNode = pc.shadergraph.texSample(emissiveTexParam, scrollNode);                    
-                var splitEmissiveSamp = pc.shadergraph.splitVec4(emissiveSampleNode);                
-                var emissiveCalc = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSamp, port:'x'}, {node:splitEmissiveSamp, port:'y'}, {node:splitEmissiveSamp, port:'z'}));
+                var splitEmissiveSampNode = pc.shadergraph.splitVec4(emissiveSampleNode);                
+                var emissiveCalcNode = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSampNode, port:'x'}, {node:splitEmissiveSampNode, port:'y'}, {node:splitEmissiveSampNode, port:'z'}));
 
                 //hook up outputs
-                pc.shadergraph.output({node:splitEmissiveSamp, port:'y'}, 'float', 'dAlpha');
-                pc.shadergraph.output(emissiveCalc, 'vec3', 'dEmission');
+                pc.shadergraph.output({node:splitEmissiveSampNode, port:'y'}, 'float', 'dAlpha');
+                pc.shadergraph.output(emissiveCalcNode, 'vec3', 'dEmission');
 
                 //end graph and return built graph chunk id
                 var shaderGraphChunkId = pc.shadergraph.end();
 
-                //set model's materials
+                //replace model's materials
                 var originalMaterials=[];
                 var shaderGraphMaterials=[];
                 
                 model.meshInstances.forEach(function (meshInstance) {
-                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial))
-                    {
+                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
                         var index = originalMaterials.indexOf(meshInstance.material);
 
-                        if (index === -1)
-                        {
-                            originalMaterials.push(meshInstance.material);
-                            index=shaderGraphMaterials.length;
+                        if (index === -1) {
+                            index = shaderGraphMaterials.length;
+
+                            originalMaterials.push(meshInstance.material);                            
                             shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
                         }
 
@@ -123,7 +123,7 @@
                     time += dt;
                     shaderGraphMaterials.forEach(function (material) {
                         material.setShaderGraphParameter('uTime', time);
-                        material.alphaTest = 1.0-((Math.sin(time*4.0)+1.7)*0.5);
+                        material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
                     });
                 });
 
