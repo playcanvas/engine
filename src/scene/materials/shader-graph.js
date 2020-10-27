@@ -15,7 +15,9 @@ shadergraph._getNode = function (name, funcString, declString) {
 
 shadergraph._registerCoreFunction = function (coreName, coreNode) {
 
-    this[coreName] = function (...args) {
+    this[coreName] = function () {
+        var args = arguments;
+
         var sgIndex = this.graph.addSubGraph(this._getNode(coreName));
 
         var sgInputs = coreNode.graphData.ioPorts.filter(function (ioPort) {
@@ -23,7 +25,8 @@ shadergraph._registerCoreFunction = function (coreName, coreNode) {
         });
 
         if (sgInputs.length === args.length) {
-            args.forEach((arg, argIndex) => {
+            for (var argIndex = 0; argIndex < args.length; argIndex++) {
+                var arg = args[argIndex];
                 if (typeof(arg) === 'number') {
                     // ret port of a node
                     var argNodeIndex = arg;
@@ -35,9 +38,9 @@ shadergraph._registerCoreFunction = function (coreName, coreNode) {
                     // specific port of a node
                     this.graph.connect(arg.node, 'OUT_' + arg.port, sgIndex, sgInputs[argIndex].name);
                 }
-            });
+            }
         } else {
-            console.log("arguments do not match core node function");
+            console.warn("arguments do not match core node function");
         }
         return sgIndex;
     };
@@ -51,12 +54,12 @@ shadergraph._registerCoreFunction = function (coreName, coreNode) {
  * @param {string} coreNodesJSON - (optional) core nodes JSON string to register
  */
 shadergraph.start = function (coreNodesJSON) {
-    const coreNodeList = JSON.parse(coreNodesJSON);
+    var coreNodeList = JSON.parse(coreNodesJSON);
 
-    Object.keys(coreNodeList).forEach((key) => {
-        var coreNode = this._getNode(key, coreNodeList[key].code);
-
-        this._registerCoreFunction(key, coreNode);
+    var self = this;
+    Object.keys(coreNodeList).forEach(function (key) {
+        var coreNode = self._getNode(key, coreNodeList[key].code);
+        self._registerCoreFunction(key, coreNode);
     });
 
     // check current graph is null?
