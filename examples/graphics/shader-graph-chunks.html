@@ -19,9 +19,6 @@
     <!-- The canvas element -->
     <canvas id="application-canvas"></canvas>
     
-    <!-- core nodes -->
-    <script src="./core_nodes.js"></script>
-    
     <!-- The script -->
     <script>
         var entity, light, camera;
@@ -74,60 +71,63 @@
 
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
                 var emissiveMap = asset.resource;
+                app.assets.loadFromUrl("../assets/core_nodes.json", "text", function (err, asset) {
+                    var coreNodeList = asset.resource;
 
-                //start building shader graph and register core nodes
-                pc.shadergraph.start(coreNodesJSONString);
+                    //start building shader graph and register core nodes
+                    pc.shadergraph.start(coreNodeList);
 
-                //add input parameters
-                var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
-                var emissiveTexParam = pc.shadergraph.param('sampler2D', 'uEmissiveMap', emissiveMap); 
-                var emissiveColParam = pc.shadergraph.param('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
+                    //add input parameters
+                    var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
+                    var emissiveTexParam = pc.shadergraph.param('sampler2D', 'uEmissiveMap', emissiveMap); 
+                    var emissiveColParam = pc.shadergraph.param('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
 
-                //create and hook up graph nodes
-                var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0());
-                var emissiveSampleNode = pc.shadergraph.texSample(emissiveTexParam, scrollNode);                    
-                var splitEmissiveSampNode = pc.shadergraph.splitVec4(emissiveSampleNode);                
-                var emissiveCalcNode = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSampNode, port:'x'}, {node:splitEmissiveSampNode, port:'y'}, {node:splitEmissiveSampNode, port:'z'}));
+                    //create and hook up graph nodes
+                    var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0());
+                    var emissiveSampleNode = pc.shadergraph.texSample(emissiveTexParam, scrollNode);                    
+                    var splitEmissiveSampNode = pc.shadergraph.splitVec4(emissiveSampleNode);                
+                    var emissiveCalcNode = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSampNode, port:'x'}, {node:splitEmissiveSampNode, port:'y'}, {node:splitEmissiveSampNode, port:'z'}));
 
-                //hook up outputs
-                pc.shadergraph.output({node:splitEmissiveSampNode, port:'y'}, 'float', 'dAlpha');
-                pc.shadergraph.output(emissiveCalcNode, 'vec3', 'dEmission');
+                    //hook up outputs
+                    pc.shadergraph.output({node:splitEmissiveSampNode, port:'y'}, 'float', 'dAlpha');
+                    pc.shadergraph.output(emissiveCalcNode, 'vec3', 'dEmission');
 
-                //end graph and return built graph chunk id
-                var shaderGraphChunkId = pc.shadergraph.end();
+                    //end graph and return built graph chunk id
+                    var shaderGraphChunkId = pc.shadergraph.end();
 
-                //replace model's materials
-                var originalMaterials=[];
-                var shaderGraphMaterials=[];
-                
-                model.meshInstances.forEach(function (meshInstance) {
-                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
-                        var index = originalMaterials.indexOf(meshInstance.material);
+                    //replace model's materials
+                    var originalMaterials=[];
+                    var shaderGraphMaterials=[];
+                    
+                    model.meshInstances.forEach(function (meshInstance) {
+                        if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
+                            var index = originalMaterials.indexOf(meshInstance.material);
 
-                        if (index === -1) {
-                            index = shaderGraphMaterials.length;
+                            if (index === -1) {
+                                index = shaderGraphMaterials.length;
 
-                            originalMaterials.push(meshInstance.material);                            
-                            shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
+                                originalMaterials.push(meshInstance.material);                            
+                                shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
+                            }
+
+                            meshInstance.material = shaderGraphMaterials[index];
+                            
+                            meshInstance.material.alphaTest = 0.5;
+                            meshInstance.material.update();
                         }
-
-                        meshInstance.material = shaderGraphMaterials[index];
-                        
-                        meshInstance.material.alphaTest = 0.5;
-                        meshInstance.material.update();
-                    }
-                });
-
-                //update time parameter and alpha test every frame
-                app.on("update", function (dt) {
-                    time += dt;
-                    shaderGraphMaterials.forEach(function (material) {
-                        material.setShaderGraphParameter('uTime', time);
-                        material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
                     });
-                });
 
-                app.start();
+                    //update time parameter and alpha test every frame
+                    app.on("update", function (dt) {
+                        time += dt;
+                        shaderGraphMaterials.forEach(function (material) {
+                            material.setShaderGraphParameter('uTime', time);
+                            material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
+                        });
+                    });
+
+                    app.start();
+                });
             });
         });
     </script>

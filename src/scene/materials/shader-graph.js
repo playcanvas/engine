@@ -55,18 +55,21 @@ shadergraph._registerCoreFunction = function (coreName, coreNode) {
 /**
  * @function
  * @name pc.shadergraph#start
- * @description start building a shader graph and (optional) register JSON list of core nodes to use
- * @param {string} coreNodesJSON - (optional) core nodes JSON string to register
+ * @description start building a shader graph and (optional) register list of core nodes to use
+ * @param {object|string} coreNodeList - (optional) core node list object or JSON string to register
  */
-shadergraph.start = function (coreNodesJSON) {
-    var coreNodeList = JSON.parse(coreNodesJSON);
+shadergraph.start = function (coreNodeList) {
+    if (coreNodeList) {
+        if (typeof coreNodeList === 'string') {
+            coreNodeList = JSON.parse(coreNodeList);
+        }
 
-    var self = this;
-    Object.keys(coreNodeList).forEach(function (key) {
-        var coreNode = self._getNode(key, coreNodeList[key].code);
-        self._registerCoreFunction(key, coreNode);
-    });
-
+        var self = this;
+        Object.keys(coreNodeList).forEach(function (key) {
+            var coreNode = self._getNode(key, coreNodeList[key].code);
+            self._registerCoreFunction(key, coreNode);
+        });
+    }
     // check current graph is null?
     shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
     shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
