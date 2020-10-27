@@ -439,7 +439,7 @@ var standard = {
         return code;
     },
 
-    createShaderDefinition: function (device, options, graphCodes) {
+    createShaderDefinition: function (device, options, graphCode) {
         var i, p;
         var lighting = options.lights.length > 0;
 
@@ -467,7 +467,7 @@ var standard = {
         var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
         var shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
 
-        needsNormal = needsNormal || graphCodes;
+        needsNormal = needsNormal || graphCode;
 
         this.options = options;
 
@@ -765,8 +765,8 @@ var standard = {
 
         if (needsNormal) code += chunks.normalVS;
 
-        if (graphCodes) {
-            code += graphCodes[0];
+        if (graphCode) {
+            code += graphCode[0];
         }
 
         code += "\n";
@@ -774,8 +774,8 @@ var standard = {
         code += chunks.startVS;
         code += codeBody;
 
-        if (graphCodes) {
-            code += graphCodes[1];
+        if (graphCode) {
+            code += graphCode[1];
         }
         code += "}";
 
@@ -1338,8 +1338,8 @@ var standard = {
             }
         }
 
-        if (graphCodes) {
-            code += graphCodes[2];
+        if (graphCode) {
+            code += graphCode[2];
         }
 
         var hasPointLights = false;
@@ -1390,7 +1390,7 @@ var standard = {
             } else {
                 code += "   getOpacity();\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
                 if (options.alphaTest) {
-                    if (!graphCodes) code += "   alphaTest(dAlpha);\n";
+                    if (!graphCode) code += "   alphaTest(dAlpha);\n";
                 }
             }
         }
@@ -1409,7 +1409,7 @@ var standard = {
             if (opacityParallax) {
                 code += "   getOpacity();\n"; // if there's parallax, calculate opacity after it, to properly distort
                 if (options.alphaTest) {
-                    if (!graphCodes) code += "   alphaTest(dAlpha);\n";
+                    if (!graphCode) code += "   alphaTest(dAlpha);\n";
                 }
             }
 
@@ -1419,7 +1419,7 @@ var standard = {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
                 }
-                if (!graphCodes) code += "   getReflDir();\n";
+                if (!graphCode) code += "   getReflDir();\n";
             }
         }
 
@@ -1431,8 +1431,8 @@ var standard = {
             code += "   getClearCoatNormal();\n";
         }
 
-        if (graphCodes) {
-            code += graphCodes[3];
+        if (graphCode) {
+            code += graphCode[3];
         }
 
         if ((lighting && options.useSpecular) || reflections) {
@@ -1623,8 +1623,8 @@ var standard = {
             code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
         }
 
-        if (graphCodes) {
-            code += graphCodes[4];
+        if (graphCode) {
+            code += graphCode[4];
         }
 
         code += "\n";
