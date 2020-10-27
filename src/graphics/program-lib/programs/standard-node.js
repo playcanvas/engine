@@ -17,8 +17,7 @@ standard_node.createShaderDefinition = function (device, options) {
     var rootDeclGLSL = '';
     var rootCallGLSL = '';
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         rootShaderGraph = ShaderGraphRegistry.getNode(options._shaderGraphChunkId);
 
         rootDeclGLSL = rootShaderGraph.generateRootDeclGlsl();
@@ -27,71 +26,59 @@ standard_node.createShaderDefinition = function (device, options) {
 
     var graphCodes = [];
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         graphCodes[0] = "#define SG_VS\n";
         graphCodes[0] += rootDeclGLSL;
     }
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         graphCodes[1] = '';
-        if (rootShaderGraph.getGraphVarByName('OUT_vertOff'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_vertOff')) {
             graphCodes[1] += rootCallGLSL;
             graphCodes[1] += "   vPositionW = vPositionW+OUT_vertOff;\n";
             graphCodes[1] += "   gl_Position = matrix_viewProjection*vec4(vPositionW,1);\n";
         }
     }
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         graphCodes[2] = "#define SG_PS\n";
         graphCodes[2] += rootDeclGLSL;
     }
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         graphCodes[3] = rootCallGLSL;
 
-        if (rootShaderGraph.getGraphVarByName('OUT_dAlpha'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_dAlpha')) {
             graphCodes[3] += 'dAlpha=OUT_dAlpha;\n';
         }
         if (options.alphaTest) {
             graphCodes[3] += "   alphaTest(dAlpha);\n";
         }
 
-        if (rootShaderGraph.getGraphVarByName('OUT_dNormalW'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_dNormalW')) {
             graphCodes[3] += 'dNormalW=OUT_dNormalW;\n';
         }
 
-        if (rootShaderGraph.getGraphVarByName('OUT_dGlossiness'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_dGlossiness')) {
             graphCodes[3] += 'dGlossiness=OUT_dGlossiness;\n';
         }
         if (options.useSpecular) {
             graphCodes[3] += "   getReflDir();\n";
         }
 
-        if (rootShaderGraph.getGraphVarByName('OUT_dAlbedo'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_dAlbedo')) {
             graphCodes[3] += 'dAlbedo=OUT_dAlbedo;\n';
         }
     }
 
-    if (options._shaderGraphChunkId)
-    {
+    if (options._shaderGraphChunkId) {
         graphCodes[4] = '';
 
-        if (rootShaderGraph.getGraphVarByName('OUT_fragOut'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_fragOut')) {
             graphCodes[4] +=  'gl_FragColor = OUT_fragOut;\n';
         }
 
-        if (rootShaderGraph.getGraphVarByName('OUT_dEmission'))
-        {
+        if (rootShaderGraph.getIoPortByName('OUT_dEmission')) {
             graphCodes[4] +=  'gl_FragColor.rgb += OUT_dEmission;\n';
         }
     }

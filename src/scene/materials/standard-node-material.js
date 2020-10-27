@@ -12,8 +12,8 @@ import { ShaderGraphRegistry } from './shader-graph-registry.js';
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
  * @classdesc Standard node material is sub class of the StandardMaterial, and adds Shadergraph interop functionality
- * @param {pc.StandardMaterial} mat optional material which is cloned
- * @param {pc.ShaderGraph} chunkId id of shader graph chunk to be used
+ * @param {pc.StandardMaterial} mat - optional material which is cloned
+ * @param {pc.ShaderGraph} chunkId - id of shader graph chunk to be used
  */
 function StandardNodeMaterial(mat, chunkId) {
     StandardMaterial.call(this);
@@ -51,12 +51,11 @@ Object.assign(StandardNodeMaterial.prototype, {
     * @function
     * @name pc.StandardNodeMaterial#setShaderGraphParameter
     * @description sets a parameter in the shader graph
-    * @param {string} name of the parameter
-    * @param {any} value of the parameter
+    * @param {string} name - name of the parameter
+    * @param {any} value - value of the parameter
     */
     setShaderGraphParameter: function (name, value) {
-        if (this._shaderGraphChunkId)
-        {
+        if (this._shaderGraphChunkId) {
             var rootShaderGraph = ShaderGraphRegistry.getNode(this._shaderGraphChunkId);
 
             var portName = 'IN_' + name + '_' + rootShaderGraph.id;
@@ -68,8 +67,7 @@ Object.assign(StandardNodeMaterial.prototype, {
     updateUniforms: function () {
         StandardMaterial.prototype.updateUniforms.call(this);
 
-        if (this._shaderGraphChunkId)
-        {
+        if (this._shaderGraphChunkId) {
             var rootShaderGraph = ShaderGraphRegistry.getNode(this._shaderGraphChunkId);
 
             rootShaderGraph.updateShaderGraphUniforms(this);

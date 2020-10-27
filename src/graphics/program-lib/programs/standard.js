@@ -765,8 +765,7 @@ var standard = {
 
         if (needsNormal) code += chunks.normalVS;
 
-        if (graphCodes)
-        {
+        if (graphCodes) {
             code += graphCodes[0];
         }
 
@@ -775,8 +774,7 @@ var standard = {
         code += chunks.startVS;
         code += codeBody;
 
-        if (graphCodes)
-        {
+        if (graphCodes) {
             code += graphCodes[1];
         }
         code += "}";
@@ -1340,8 +1338,7 @@ var standard = {
             }
         }
 
-        if (graphCodes)
-        {
+        if (graphCodes) {
             code += graphCodes[2];
         }
 
@@ -1434,8 +1431,7 @@ var standard = {
             code += "   getClearCoatNormal();\n";
         }
 
-        if (graphCodes)
-        {
+        if (graphCodes) {
             code += graphCodes[3];
         }
 
@@ -1627,8 +1623,7 @@ var standard = {
             code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
         }
 
-        if (graphCodes)
-        {
+        if (graphCodes) {
             code += graphCodes[4];
         }
 

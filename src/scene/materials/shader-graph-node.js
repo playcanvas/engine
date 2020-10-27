@@ -18,7 +18,7 @@ var ShaderGraphNode = function (funcGlsl, declGlsl) {
     this.id = id++;
 
     // storage for asset references
-    this._graphVarAssetReferences = [];
+    this._ioPortAssetReferences = [];
     this._glslAssetReferences = {};
     this._subGraphAssetReferences = [];
 
@@ -174,7 +174,7 @@ Object.assign(ShaderGraphNode.prototype, {
         return false;
     },
 
-    _addGraphVar: function (type, name, value) {
+    _addIoPort: function (type, name, value) {
         var ioPort;
         if (value instanceof Texture) {
             ioPort = { type: type, name: name, valueTex: value };
@@ -196,15 +196,15 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     addInput: function (type, name, value) {
-        return this._addGraphVar(type, 'IN_' + name, value);
+        return this._addIoPort(type, 'IN_' + name, value);
     },
 
     addOutput: function (type, name, value) {
-        return this._addGraphVar(type, 'OUT_' + name, value);
+        return this._addIoPort(type, 'OUT_' + name, value);
     },
 
     addConstant: function (type, value) {
-        return this._addGraphVar(type, 'CONST_' + type + '_' + this.graphData.ioPorts.length, value); // create a unique name
+        return this._addIoPort(type, 'CONST_' + type + '_' + this.graphData.ioPorts.length, value); // create a unique name
     },
 
     genCustomFuncVars: function () {
@@ -252,7 +252,7 @@ Object.assign(ShaderGraphNode.prototype, {
         this.graphData.connections.push(connection);
     },
 
-    _getGraphVarValueString: function (ioPort) {
+    _getIoPortValueString: function (ioPort) {
         var ret;
 
         if (ioPort.type === 'float') {
@@ -323,14 +323,14 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     // TODO: re-enable and optimize using transient name map
-    getGraphVarByName: function (name) {
+    getIoPortByName: function (name) {
         // convienient but not fast - TODO: optimize?
         return this.graphData.ioPorts.filter(function (ioPort) {
             return ioPort.name === name;
         })[0];
     },
 
-    _generateSubGraphFuncs: function (depGraphFuncs, depGraphVarList) {
+    _generateSubGraphFuncs: function (depGraphFuncs, depIoPortList) {
         var i;
         if (this.graphData.subGraphs != undefined) {
             for (i = 0; i < this.graphData.subGraphs.length; i++) {
@@ -346,15 +346,15 @@ Object.assign(ShaderGraphNode.prototype, {
                         for (var v = 0; v < subGraph.graphData.ioPorts.length; v++) {
                             var ioPort = subGraph.graphData.ioPorts[v];
                             if (ioPort.name.startsWith('IN_') || (ioPort.name.startsWith('CONST_') && ioPort.type === 'sampler2D') ) {
-                                var depGraphVar = 'uniform ' + ioPort.type + ' ' + ioPort.name + '_' + subGraph.id + ';\n';
+                                var depIoPort = 'uniform ' + ioPort.type + ' ' + ioPort.name + '_' + subGraph.id + ';\n';
 
-                                depGraphVarList.push(depGraphVar);
+                                depIoPortList.push(depIoPort);
                             }
                         }
                     }
 
                     depGraphFuncs[name] = subGraph._generateFuncGlsl();
-                    subGraph._generateSubGraphFuncs(depGraphFuncs, depGraphVarList);
+                    subGraph._generateSubGraphFuncs(depGraphFuncs, depIoPortList);
                 }
             }
         }
@@ -376,14 +376,14 @@ Object.assign(ShaderGraphNode.prototype, {
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.name.startsWith('CONST_') && (ioPort.type != 'sampler2D' )) {
-                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getGraphVarValueString(ioPort) + ';\n';
+                generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
             }
         }
 
         // get all sub graph function definitions (including functions in sub graphs' sub graphs ...)
         // assumes names are unique - maybe should be id or key?
         var depGraphFuncs = {};
-        var depGraphVarList = [];
+        var depIoPortList = [];
 
         var depName = this.name;
         if (!this.graphData.customFuncGlsl) {
@@ -391,11 +391,11 @@ Object.assign(ShaderGraphNode.prototype, {
         }
         depGraphFuncs[depName] = this._generateFuncGlsl(); // this should prevent infinite recursion?
 
-        this._generateSubGraphFuncs(depGraphFuncs, depGraphVarList);
+        this._generateSubGraphFuncs(depGraphFuncs, depIoPortList);
 
         // declare all dependancy textures
-        for (i = 0; i < depGraphVarList.length; i++) {
-            generatedGlsl += depGraphVarList[i];// .declString;
+        for (i = 0; i < depIoPortList.length; i++) {
+            generatedGlsl += depIoPortList[i];// .declString;
         }
 
         // add all the graph definitions
