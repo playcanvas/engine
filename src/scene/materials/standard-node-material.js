@@ -13,7 +13,7 @@ import { ShaderGraphRegistry } from './shader-graph-registry.js';
  * @augments pc.StandardMaterial
  * @classdesc Standard node material is sub class of the StandardMaterial, and adds Shadergraph interop functionality
  * @param {pc.StandardMaterial} mat - optional material which is cloned
- * @param {pc.ShaderGraph} chunkId - id of shader graph chunk to be used
+ * @param {pc.ShaderGraph} chunkId - optional id of shader graph chunk to be used
  */
 function StandardNodeMaterial(mat, chunkId) {
     StandardMaterial.call(this);

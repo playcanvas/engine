@@ -48,6 +48,7 @@ var categories = [
             "post-effects",
             "render-to-texture",
             "shader-burn",
+            "shader-graph-chunks",
             "shader-toon",
             "shader-wobble",
             "texture-basis",

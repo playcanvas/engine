@@ -92,7 +92,7 @@
                 pc.shadergraph.output({node:splitEmissiveSamp, port:'y'}, 'float', 'dAlpha');
                 pc.shadergraph.output(emissiveCalc, 'vec3', 'dEmission');
 
-                //end graph and assign built graph to chunk
+                //end graph and return built graph chunk id
                 var shaderGraphChunkId = pc.shadergraph.end();
 
                 //set model's materials
