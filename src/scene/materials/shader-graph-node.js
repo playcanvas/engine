@@ -316,9 +316,7 @@ Object.assign(ShaderGraphNode.prototype, {
         return callString;
     },
 
-    // TODO: re-enable and optimize using transient name map
     getIoPortByName: function (name) {
-        // convienient but not fast - TODO: optimize?
         return this.graphData.ioPorts.filter(function (ioPort) {
             return ioPort.name === name;
         })[0];
@@ -555,7 +553,7 @@ Object.assign(ShaderGraphNode.prototype, {
             // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
             var whileLoopCount = 0;
 
-            while (subGraphList.length < this.graphData.subGraphs.length || whileLoopCount < this.graphData.connections.length) {
+            while (subGraphList.length < this.graphData.subGraphs.length && whileLoopCount < this.graphData.connections.length) {
                 whileLoopCount++;
 
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
