@@ -20,17 +20,8 @@
     <canvas id="application-canvas"></canvas>
     
     <!-- core nodes -->
-    <!script id="core_nodes" src="./core_nodes.json" type="application/json"><!/script>
     <script src="./core_nodes.js"></script>
     
-    <!-- shaders -->
-    <script id="wobbleVS" type="x-shader/x-vertex">
-        vec3 wobbleVS(in vec3 wp, in vec3 wn, in float t)
-        { 
-            return vec3(sin(t*5.0+dot(wp.xy,vec2(1,1)))*0.2)*normalize(wn); 
-        }
-    </script>
-
     <!-- The script -->
     <script>
         var entity, light, camera;
