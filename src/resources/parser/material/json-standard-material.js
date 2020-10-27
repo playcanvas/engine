@@ -14,7 +14,7 @@ import { StandardMaterialValidator } from '../../../scene/materials/standard-mat
 import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
 
 /**
- * @class
+ * @private
  * @name pc.JsonStandardMaterialParser
  * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
  */
@@ -33,6 +33,7 @@ JsonStandardMaterialParser.prototype.parse = function (input) {
 };
 
 /**
+ * @private
  * @function
  * @name pc.JsonStandardMaterialParser#initialize
  * @description  Initialize material properties from the material data block e.g. Loading from server.
