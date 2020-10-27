@@ -3,16 +3,16 @@ import { standard } from './standard.js';
 import { ShaderGraphRegistry } from '../../../scene/materials/shader-graph-registry.js';
 
 // just do a shallow copy standard
-var standard_node = Object.assign({}, standard);
+var standardnode = Object.assign({}, standard);
 
 // override a couple of functions - the overridden functions have been altered in standard to accept extra params
-standard_node._generateKey = standard.generateKey;
-standard_node.generateKey = function (options) {
+standardnode._generateKey = standard.generateKey;
+standardnode.generateKey = function (options) {
     return this._generateKey(options, options._shaderGraphChunkId);
 };
 
-standard_node._createShaderDefinition = standard.createShaderDefinition;
-standard_node.createShaderDefinition = function (device, options) {
+standardnode._createShaderDefinition = standard.createShaderDefinition;
+standardnode.createShaderDefinition = function (device, options) {
     var rootShaderGraph = null;
     var rootDeclGLSL = '';
     var rootCallGLSL = '';
@@ -86,4 +86,4 @@ standard_node.createShaderDefinition = function (device, options) {
     return this._createShaderDefinition(device, options, graphCodes);
 };
 
-export { standard_node };
+export { standardnode };

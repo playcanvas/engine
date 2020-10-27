@@ -3,7 +3,7 @@ import { basic } from './programs/basic.js';
 import { particle } from './programs/particle.js';
 import { skybox } from './programs/skybox.js';
 import { standard } from './programs/standard.js';
-import { standard_node } from './programs/standard-node.js';
+import { standardnode } from './programs/standard-node.js';
 
 var programlib = {
     begin: begin,
@@ -20,7 +20,7 @@ var programlib = {
     particle: particle,
     skybox: skybox,
     standard: standard,
-    standard_node: standard_node
+    standardnode: standardnode
 };
 
 export { programlib };

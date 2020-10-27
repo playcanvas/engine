@@ -97,7 +97,7 @@ Object.assign(StandardNodeMaterial.prototype, {
         }
 
         var library = device.getProgramLibrary();
-        this.shader = library.getProgram('standard_node', options);
+        this.shader = library.getProgram('standardnode', options);
 
         if (!objDefs) {
             this.clearVariants();
