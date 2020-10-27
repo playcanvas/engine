@@ -22,8 +22,6 @@ import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
-import { shadergraphRegistry } from './shader-graph-registry.js';
-
 /**
  * @class
  * @name pc.StandardMaterial

@@ -22,8 +22,6 @@ import {
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-import { shadergraphRegistry } from '../../../scene/materials/shader-graph-registry.js';
-
 var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
@@ -169,7 +167,7 @@ var standard = {
     optionsContext: {},
     optionsContextMin: {},
 
-    generateKey: function (options) {
+    generateKey: function (options, graphId) {
         var buildPropertiesList = function (options) {
             var props = [];
             for (var prop in options) {
@@ -214,9 +212,7 @@ var standard = {
             }
         }
 
-        if (options._shaderGraphChunk) {
-            key += options._shaderGraphChunk;
-        }
+        if (graphId) key += graphId;
 
         return hashCode(key);
     },
@@ -443,19 +439,7 @@ var standard = {
         return code;
     },
 
-    createShaderDefinition: function (device, options) {
-        var rootShaderGraph = null;
-        var rootDeclGLSL = '';
-        var rootCallGLSL = '';
-
-        if (options._shaderGraphChunk)
-        {
-            rootShaderGraph = shadergraphRegistry.getNode(options._shaderGraphChunk);
-
-            rootDeclGLSL = rootShaderGraph.generateRootDeclGlsl();
-            rootCallGLSL = rootShaderGraph.generateRootCallGlsl();
-        }
-
+    createShaderDefinition: function (device, options, graphCodes) {
         var i, p;
         var lighting = options.lights.length > 0;
 
@@ -483,7 +467,7 @@ var standard = {
         var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
         var shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
 
-        needsNormal = needsNormal || options._shaderGraphChunk;
+        needsNormal = needsNormal || graphCodes;
 
         this.options = options;
 
@@ -781,24 +765,19 @@ var standard = {
 
         if (needsNormal) code += chunks.normalVS;
 
-        if (options._shaderGraphChunk)
+        if (graphCodes)
         {
-            code += "#define SG_VS\n";
-            code += rootDeclGLSL;
+            code += graphCodes[0];
         }
 
         code += "\n";
 
         code += chunks.startVS;
         code += codeBody;
-        if (options._shaderGraphChunk)
+
+        if (graphCodes)
         {
-            if (rootShaderGraph.getGraphVarByName('OUT_vertOff'))
-            {
-                code += rootCallGLSL;
-                code += "   vPositionW = vPositionW+OUT_vertOff;\n";
-                code += "   gl_Position = matrix_viewProjection*vec4(vPositionW,1);\n";
-            }
+            code += graphCodes[1];
         }
         code += "}";
 
@@ -1361,10 +1340,9 @@ var standard = {
             }
         }
 
-        if (options._shaderGraphChunk)
+        if (graphCodes)
         {
-            code += "#define SG_PS\n";
-            code += rootDeclGLSL;
+            code += graphCodes[2];
         }
 
         var hasPointLights = false;
@@ -1415,7 +1393,7 @@ var standard = {
             } else {
                 code += "   getOpacity();\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
                 if (options.alphaTest) {
-                    if (!options._shaderGraphChunk) code += "   alphaTest(dAlpha);\n";
+                    if (!graphCodes) code += "   alphaTest(dAlpha);\n";
                 }
             }
         }
@@ -1434,7 +1412,7 @@ var standard = {
             if (opacityParallax) {
                 code += "   getOpacity();\n"; // if there's parallax, calculate opacity after it, to properly distort
                 if (options.alphaTest) {
-                    if (!options._shaderGraphChunk) code += "   alphaTest(dAlpha);\n";
+                    if (!graphCodes) code += "   alphaTest(dAlpha);\n";
                 }
             }
 
@@ -1444,7 +1422,7 @@ var standard = {
                     code += "   getGlossiness();\n";
                     getGlossinessCalled = true;
                 }
-                if (!options._shaderGraphChunk) code += "   getReflDir();\n";
+                if (!graphCodes) code += "   getReflDir();\n";
             }
         }
 
@@ -1456,35 +1434,9 @@ var standard = {
             code += "   getClearCoatNormal();\n";
         }
 
-        if (options._shaderGraphChunk)
+        if (graphCodes)
         {
-            code += rootCallGLSL;
-
-            if (rootShaderGraph.getGraphVarByName('OUT_dAlpha'))
-            {
-                code += 'dAlpha=OUT_dAlpha;\n';
-            }
-            if (options.alphaTest) {
-                code += "   alphaTest(dAlpha);\n";
-            }
-
-            if (rootShaderGraph.getGraphVarByName('OUT_dNormalW'))
-            {
-                code += 'dNormalW=OUT_dNormalW;\n';
-            }
-
-            if (rootShaderGraph.getGraphVarByName('OUT_dGlossiness'))
-            {
-                code += 'dGlossiness=OUT_dGlossiness;\n';
-            }
-            if (options.useSpecular) {
-                code += "   getReflDir();\n";
-            }
-
-            if (rootShaderGraph.getGraphVarByName('OUT_dAlbedo'))
-            {
-                code += 'dAlbedo=OUT_dAlbedo;\n';
-            }
+            code += graphCodes[3];
         }
 
         if ((lighting && options.useSpecular) || reflections) {
@@ -1675,17 +1627,9 @@ var standard = {
             code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
         }
 
-        if (options._shaderGraphChunk)
+        if (graphCodes)
         {
-            if (rootShaderGraph.getGraphVarByName('OUT_fragOut'))
-            {
-                code += 'gl_FragColor = OUT_fragOut;\n';
-            }
-
-            if (rootShaderGraph.getGraphVarByName('OUT_dEmission'))
-            {
-                code += 'gl_FragColor.rgb += OUT_dEmission;\n';
-            }
+            code += graphCodes[4];
         }
 
         code += "\n";

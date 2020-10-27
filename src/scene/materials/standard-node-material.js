@@ -5,27 +5,25 @@ import {
 } from '../constants.js';
 import { StandardMaterial } from './standard-material.js';
 
-import { shadergraphRegistry } from './shader-graph-registry.js';
+import { ShaderGraphRegistry } from './shader-graph-registry.js';
 
 /**
  * @class
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
  * @classdesc Standard node material is sub class of the StandardMaterial, and adds Shadergraph interop functionality
- * @param {pc.StandardMaterial} mat
- * @param {pc.ShaderGraph} chunk
+ * @param {pc.StandardMaterial} mat optional material which is cloned
+ * @param {pc.ShaderGraph} chunkId id of shader graph chunk to be used
  */
-function StandardNodeMaterial(mat, chunk) {
+function StandardNodeMaterial(mat, chunkId) {
     StandardMaterial.call(this);
 
-    if (mat)
-    {
+    if (mat) {
         StandardMaterial.prototype._cloneInternal.call(mat, this);
     }
 
-    if (chunk)
-    {
-        this._shaderGraphChunk = chunk.name;
+    if (chunkId) {
+        this._shaderGraphChunkId = chunkId;
     }
 }
 
@@ -37,29 +35,42 @@ Object.assign(StandardNodeMaterial.prototype, {
    /**
     * @function
     * @name pc.StandardNodeMaterial#clone
-    * @description Duplicates a Standard node material. 
+    * @description Duplicates a Standard node material.
     * @returns {pc.StandardNodeMaterial} A cloned Standard material.
     */
     clone: function () {
         var clone = new StandardNodeMaterial();
         StandardMaterial.prototype._cloneInternal.call(this, clone);
 
-        clone._shaderGraphChunk = this._shaderGraphChunk;
-
-        //clone._shaderGraphChunk = [];
-        //this._shaderGraphChunks.forEach(function (chunk, index) {
-        //    clone._shaderGraphChunks[index] = chunk;
-        //});
+        clone._shaderGraphChunkId = this._shaderGraphChunkId;
 
         return clone;
+    },
+
+   /**
+    * @function
+    * @name pc.StandardNodeMaterial#setShaderGraphParameter
+    * @description sets a parameter in the shader graph
+    * @param {string} name of the parameter
+    * @param {any} value of the parameter
+    */
+    setShaderGraphParameter: function (name, value) {
+        if (this._shaderGraphChunkId)
+        {
+            var rootShaderGraph = ShaderGraphRegistry.getNode(this._shaderGraphChunkId);
+
+            var portName = 'IN_' + name + '_' + rootShaderGraph.id;
+
+            this.setParameter(portName, value);
+        }
     },
 
     updateUniforms: function () {
         StandardMaterial.prototype.updateUniforms.call(this);
 
-        if (this._shaderGraphChunk)
+        if (this._shaderGraphChunkId)
         {
-            var rootShaderGraph = shadergraphRegistry.getNode(this._shaderGraphChunk);
+            var rootShaderGraph = ShaderGraphRegistry.getNode(this._shaderGraphChunkId);
 
             rootShaderGraph.updateShaderGraphUniforms(this);
         }
@@ -79,8 +90,8 @@ Object.assign(StandardNodeMaterial.prototype, {
             this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 
         // add shader graph chunk to options
-        if (this._shaderGraphChunk) {
-            options._shaderGraphChunk = this._shaderGraphChunk;
+        if (this._shaderGraphChunkId) {
+            options._shaderGraphChunkId = this._shaderGraphChunkId;
         }
 
         if (this.onUpdateShader) {
@@ -88,7 +99,7 @@ Object.assign(StandardNodeMaterial.prototype, {
         }
 
         var library = device.getProgramLibrary();
-        this.shader = library.getProgram('standard', options);
+        this.shader = library.getProgram('standard_node', options);
 
         if (!objDefs) {
             this.clearVariants();

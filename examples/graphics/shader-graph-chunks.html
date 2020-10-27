@@ -81,68 +81,57 @@
             var model = modelComponent.model;
             var diffuseMap = model.getMaterials()[0].diffuseMap;
 
-            // app.assets.loadFromUrl("../assets/textures/spark.png", "texture", function (err, asset) {
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
                 var emissiveMap = asset.resource;
 
-                //start building shader graph
+                //start building shader graph and register core nodes
                 pc.shadergraph.start(coreNodesJSONString);
 
-                // add time param
+                //create a shader graph chunk
                 var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
-
-                //create a custom vertex offset shader graph chunk
-                var wobbleVSNode = pc.shadergraph.customNode('wobbleVS', document.getElementById("wobbleVS").textContent);
-
-                //hook up custom node inputs
-                pc.shadergraph.connectCustom(wobbleVSNode, 'wp', pc.shadergraph.worldPosVS);
-                pc.shadergraph.connectCustom(wobbleVSNode, 'wn', pc.shadergraph.worldNormVS);
-                pc.shadergraph.connectCustom(wobbleVSNode, 't', timeParam);
-
-                //hook up VS output
-                // pc.shadergraph.connectVertexOffset(wobbleVSNode);
-
-                //create a simple emissive shader graph chunk - just a 2D texture sample
-                var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0);
-                var emissiveSampleNode = pc.shadergraph.textureSample2D('emissiveSamp', emissiveMap, scrollNode);                
+                var emissiveTexParam = pc.shadergraph.param('sampler2D', 'uEmissiveMap', emissiveMap); 
                 var emissiveColParam = pc.shadergraph.param('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
+
+                var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0());
+                var emissiveSampleNode = pc.shadergraph.texSample(emissiveTexParam, scrollNode);                    
                 var splitEmissiveSamp = pc.shadergraph.splitVec4(emissiveSampleNode);                
                 var emissiveCalc = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSamp, port:'x'}, {node:splitEmissiveSamp, port:'y'}, {node:splitEmissiveSamp, port:'z'}));
 
-                //hook up PS outputs
-                // pc.shadergraph.connectGlossinessOut({node:splitEmissiveSamp, port:'w'});
-                pc.shadergraph.connectAlphaOut({node:splitEmissiveSamp, port:'y'});
-                pc.shadergraph.connectEmissiveOut(emissiveCalc);
-                // pc.shadergraph.connectAlbedoOut(pc.shadergraph.joinVec3({node:splitEmissiveSamp, port:'x'}, {node:splitEmissiveSamp, port:'y'}, {node:splitEmissiveSamp, port:'z'}));
-                
-                //end graph and assign built graph to chunk
-                var shaderGraphChunk = pc.shadergraph.end();
+                //hook up outputs
+                pc.shadergraph.output({node:splitEmissiveSamp, port:'y'}, 'float', 'dAlpha');
+                pc.shadergraph.output(emissiveCalc, 'vec3', 'dEmission');
 
-                //add shaderGraphChunk to each material
+                //end graph and assign built graph to chunk
+                var shaderGraphChunkId = pc.shadergraph.end();
+
+                //set model's materials
+                var originalMaterials=[];
                 var shaderGraphMaterials=[];
                 
                 model.meshInstances.forEach(function (meshInstance) {
-                    if (!meshInstance.material._shaderGraphChunk)
+                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial))
                     {
-                        var shaderGraphMaterial = new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk);
-                        shaderGraphMaterials.push(shaderGraphMaterial);
+                        var index = originalMaterials.indexOf(meshInstance.material);
 
-                        meshInstance.material = shaderGraphMaterial;
+                        if (index === -1)
+                        {
+                            originalMaterials.push(meshInstance.material);
+                            index=shaderGraphMaterials.length;
+                            shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
+                        }
+
+                        meshInstance.material = shaderGraphMaterials[index];
                         
                         meshInstance.material.alphaTest = 0.5;
                         meshInstance.material.update();
                     }
                 });
 
-                //update chunk uniforms
-                //material.initShader(app.graphicsDevice);
-                //shaderGraphChunk.updateUniforms();
-
-                //update time parameter every frame
+                //update time parameter and alpha test every frame
                 app.on("update", function (dt) {
                     time += dt;
                     shaderGraphMaterials.forEach(function (material) {
-                        material.setParameter('IN_uTime_'+shaderGraphChunk.id, time);
+                        material.setShaderGraphParameter('uTime', time);
                         material.alphaTest = 1.0-((Math.sin(time*4.0)+1.7)*0.5);
                     });
                 });

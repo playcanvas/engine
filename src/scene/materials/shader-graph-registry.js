@@ -1,13 +1,11 @@
-var shadergraphRegistry = {};
+var ShaderGraphRegistry = {};
 
-shadergraphRegistry.registerNode = function (name, node)
-{
-    shadergraphRegistry[name] = node;
+ShaderGraphRegistry.registerNode = function (name, node) {
+    ShaderGraphRegistry[name] = node;
 };
 
-shadergraphRegistry.getNode = function (name)
-{
-    return shadergraphRegistry[name];
+ShaderGraphRegistry.getNode = function (name) {
+    return ShaderGraphRegistry[name];
 };
 
-export { shadergraphRegistry };
+export { ShaderGraphRegistry };
