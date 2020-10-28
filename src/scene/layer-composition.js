@@ -41,7 +41,7 @@ function LayerComposition() {
     this._meshInstances = [];
     this._meshInstancesSet = new Set();
 
-    // all unique lights from all layers, stored both as an array, and also map for fast search (key is light, valus is its index in _lights array)
+    // all unique lights from all layers, stored both as an array, and also map for fast search (key is light, values is its index in _lights array)
     this._lights = [];
     this._lightsMap = new Map();
 
@@ -49,7 +49,7 @@ function LayerComposition() {
     this._lightShadowCasters = [];
     this._lightShadowCastersSets = [];
 
-    // lights split into arrays per type of light
+    // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
     this._splitLights = [[], [], []];
 
     // for each directional light (in _splitLights[LIGHTTYPE_DIRECTIONAL]), this stores array of unique cameras that are on the same layer as the light
@@ -111,7 +111,7 @@ LayerComposition.prototype._update = function () {
         }
     }
 
-    // function adds unique meshInstances from src array into destArray. A set is a Set containing already
+    // function adds unique meshInstances from src array into destArray. A destSet is a Set containing already
     // existing meshInstances  to accelerate the removal of duplicates
     // returns true if any of the materials on these meshInstances has _dirtyBlend set
     function addUniqueMeshInstance(destArray, destSet, srcArray) {
@@ -182,7 +182,8 @@ LayerComposition.prototype._update = function () {
                 // get all instances into single array
                 var layerInstances = layer.opaqueMeshInstances.concat(layer.transparentMeshInstances);
 
-                // distribute them into arrays
+                // distribute them into arrays. Note that we cannot assign new arrays, and so the extra copy above is needed
+                // so that we can update existing arrays  (for the reason see Layer.InstanceList)
                 layer.opaqueMeshInstances.length = 0;
                 layer.transparentMeshInstances.length = 0;
                 splitByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, layerInstances);
@@ -198,10 +199,8 @@ LayerComposition.prototype._update = function () {
         // build a list and map of all unique lights from all layers
         this._lights.length = 0;
         this._lightsMap.clear();
-        this._lightShadowCasters.length = 0;
-        this._lightShadowCastersSets.length = 0;
 
-        // create a list of all unique lights from all layers, create empty shadow caster entry as well
+        // create a list of all unique lights from all layers
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
             lights = layer._lights;
@@ -213,10 +212,28 @@ LayerComposition.prototype._update = function () {
 
                     this._lightsMap.set(light, this._lights.length);
                     this._lights.push(light);
-
-                    this._lightShadowCasters.push([]);
-                    this._lightShadowCastersSets.push(new Set());
                 }
+            }
+        }
+
+        // adjust _lightShadowCasters to the right size, matching number of lights, and clean it up (minimize allocations)
+        var lightCount = this._lights.length;
+        this._lightShadowCasters.length = lightCount;
+        this._lightShadowCastersSets.length = lightCount;
+        for (i = 0; i < lightCount; i++) {
+
+            // clear array
+            if (this._lightShadowCasters[i]) {
+                this._lightShadowCasters[i].length = 0;
+            } else {
+                this._lightShadowCasters[i] = [];
+            }
+
+            // clear set
+            if (this._lightShadowCastersSets[i]) {
+                this._lightShadowCastersSets[i].clear();
+            } else {
+                this._lightShadowCastersSets[i] = new Set();
             }
         }
 
