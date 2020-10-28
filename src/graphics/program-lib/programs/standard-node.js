@@ -27,8 +27,11 @@ standardnode.createShaderDefinition = function (device, options) {
     var graphCode = [];
 
     if (options._shaderGraphChunkId) {
-        graphCode[0] = "#define SG_VS\n";
-        graphCode[0] += rootDeclGLSL;
+        graphCode[0] = '';
+        if (rootShaderGraph.getIoPortByName('OUT_vertOff')) {
+            graphCode[0] += "#define SG_VS\n";
+            graphCode[0] += rootDeclGLSL;
+        }
     }
 
     if (options._shaderGraphChunkId) {
@@ -41,43 +44,47 @@ standardnode.createShaderDefinition = function (device, options) {
     }
 
     if (options._shaderGraphChunkId) {
-        graphCode[2] = "#define SG_PS\n";
-        graphCode[2] += rootDeclGLSL;
+        graphCode[2] = '';
+        if (rootShaderGraph.getIoPortByName('OUT_dAlpha') || rootShaderGraph.getIoPortByName('OUT_dNormalW') || rootShaderGraph.getIoPortByName('OUT_dGlossiness') || rootShaderGraph.getIoPortByName('OUT_dAlbedo') || rootShaderGraph.getIoPortByName('OUT_fragOut') || rootShaderGraph.getIoPortByName('OUT_dEmission')) {
+            graphCode[2] += "#define SG_PS\n";
+            graphCode[2] += rootDeclGLSL;
+        }
     }
 
     if (options._shaderGraphChunkId) {
-        graphCode[3] = rootCallGLSL;
+        graphCode[3] = '';
+        if (rootShaderGraph.getIoPortByName('OUT_dAlpha') || rootShaderGraph.getIoPortByName('OUT_dNormalW') || rootShaderGraph.getIoPortByName('OUT_dGlossiness') || rootShaderGraph.getIoPortByName('OUT_dAlbedo') || rootShaderGraph.getIoPortByName('OUT_fragOut') || rootShaderGraph.getIoPortByName('OUT_dEmission')) {
+            graphCode[3] += rootCallGLSL;
 
-        if (rootShaderGraph.getIoPortByName('OUT_dAlpha')) {
-            graphCode[3] += 'dAlpha=OUT_dAlpha;\n';
-        }
-        if (options.alphaTest) {
-            graphCode[3] += "   alphaTest(dAlpha);\n";
-        }
+            if (rootShaderGraph.getIoPortByName('OUT_dAlpha')) {
+                graphCode[3] += 'dAlpha=OUT_dAlpha;\n';
+            }
+            if (options.alphaTest) {
+                graphCode[3] += "   alphaTest(dAlpha);\n";
+            }
 
-        if (rootShaderGraph.getIoPortByName('OUT_dNormalW')) {
-            graphCode[3] += 'dNormalW=OUT_dNormalW;\n';
-        }
+            if (rootShaderGraph.getIoPortByName('OUT_dNormalW')) {
+                graphCode[3] += 'dNormalW=OUT_dNormalW;\n';
+            }
 
-        if (rootShaderGraph.getIoPortByName('OUT_dGlossiness')) {
-            graphCode[3] += 'dGlossiness=OUT_dGlossiness;\n';
-        }
-        if (options.useSpecular) {
-            graphCode[3] += "   getReflDir();\n";
-        }
+            if (rootShaderGraph.getIoPortByName('OUT_dGlossiness')) {
+                graphCode[3] += 'dGlossiness=OUT_dGlossiness;\n';
+            }
+            if (options.useSpecular) {
+                graphCode[3] += "   getReflDir();\n";
+            }
 
-        if (rootShaderGraph.getIoPortByName('OUT_dAlbedo')) {
-            graphCode[3] += 'dAlbedo=OUT_dAlbedo;\n';
+            if (rootShaderGraph.getIoPortByName('OUT_dAlbedo')) {
+                graphCode[3] += 'dAlbedo=OUT_dAlbedo;\n';
+            }
         }
     }
 
     if (options._shaderGraphChunkId) {
         graphCode[4] = '';
-
         if (rootShaderGraph.getIoPortByName('OUT_fragOut')) {
             graphCode[4] +=  'gl_FragColor = OUT_fragOut;\n';
         }
-
         if (rootShaderGraph.getIoPortByName('OUT_dEmission')) {
             graphCode[4] +=  'gl_FragColor.rgb += OUT_dEmission;\n';
         }
