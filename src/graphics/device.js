@@ -685,7 +685,7 @@ var GraphicsDevice = function (canvas, options) {
     this._spectorCurrentMarker = "";
     // #endif
 
-    this.createGrabPass();
+    this.createGrabPass(options.alpha, options.antialias);
 
     VertexFormat.init(this);
 };
@@ -1020,11 +1020,14 @@ Object.assign(GraphicsDevice.prototype, {
         this.transformFeedbackBuffer = null;
     },
 
-    createGrabPass: function () {
+    createGrabPass: function (alpha, antialias) {
         if (this.grabPassTexture) return;
 
+        // blitFramebuffer is throwing errors on Chromium when antialias is true and alpha is false, use webgl1 path in that case
+        this.grabPassUseWebGl2Path = this.webgl2 && (!(alpha === false && antialias === true));
+
         var grabPassTexture = new Texture(this, {
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: alpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -1060,7 +1063,7 @@ Object.assign(GraphicsDevice.prototype, {
         this.pushMarker("grabPass");
         // #endif
 
-        if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
+        if (this.grabPassUseWebGl2Path && width === grabPassTexture._width && height === grabPassTexture._height) {
             if (resolveRenderTarget) renderTarget.resolve(true);
 
             var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
