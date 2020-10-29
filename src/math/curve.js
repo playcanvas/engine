@@ -20,7 +20,8 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * * {@link pc.CURVE_STEP}
  *
  * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
- *
+ * @property {number} tension The tension used when type is CURVE_SPLINE.
+ * 
  * @example
  * var curve = new pc.Curve([
  *     [0, 0],
@@ -32,7 +33,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
 function Curve(data) {
     this.keys = [];
     this.type = CURVE_SMOOTHSTEP;
-    this.tension = 0.5; // used for CURVE_CARDINAL
+    this.tension = 0.5;                     // used for CURVE_SPLINE
     this._eval = new CurveEvaluator(this);
 
     if (data) {
