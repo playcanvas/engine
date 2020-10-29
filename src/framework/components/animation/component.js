@@ -325,6 +325,10 @@ Object.assign(AnimationComponent.prototype, {
             data.skeleton.animation = null;
         }
         if (data.animEvaluator) {
+            for (var i = 0; i < data.animEvaluator.clips.length; ++i) {
+                data.animEvaluator.clips[i].stop();
+            }
+            data.animEvaluator.update(0);
             data.animEvaluator.removeClips();
         }
     },

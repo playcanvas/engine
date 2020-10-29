@@ -117,6 +117,8 @@ var skipRenderCamera = null;
 var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
 
+var _skinUpdateIndex = 0;
+
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
 for (var fp = 0; fp < 8; fp++) {
@@ -491,6 +493,8 @@ function ForwardRenderer(graphicsDevice) {
     this.blurPackedVsmShader = [{}, {}];
     this.blurVsmWeights = {};
 
+    this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
+
     this.polygonOffsetId = scope.resolve("polygonOffset");
     this.polygonOffset = new Float32Array(2);
 
@@ -811,6 +815,10 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
 
         if (clear) {
+            // use camera clear options if any
+            if (!options)
+                options = camera._clearOptions;
+
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -1180,6 +1188,9 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateCpuSkinMatrices: function (drawCalls) {
+
+        _skinUpdateIndex++;
+
         var drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
@@ -1187,12 +1198,12 @@ Object.assign(ForwardRenderer.prototype, {
         var skinTime = now();
         // #endif
 
-        var i, skin;
+        var i, si;
         for (i = 0; i < drawCallsCount; i++) {
-            skin = drawCalls[i].skinInstance;
-            if (skin) {
-                skin.updateMatrices(drawCalls[i].node);
-                skin._dirty = true;
+            si = drawCalls[i].skinInstance;
+            if (si) {
+                si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
+                si._dirty = true;
             }
         }
 
@@ -1213,7 +1224,7 @@ Object.assign(ForwardRenderer.prototype, {
             skin = drawCalls[i].skinInstance;
             if (skin) {
                 if (skin._dirty) {
-                    skin.updateMatrixPalette();
+                    skin.updateMatrixPalette(drawCalls[i].node, _skinUpdateIndex);
                     skin._dirty = false;
                 }
             }
@@ -1608,8 +1619,9 @@ Object.assign(ForwardRenderer.prototype, {
                 wt.getY(worldMatY);
                 wt.getZ(worldMatZ);
                 worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0)
+                if (worldMatX.dot(worldMatZ) < 0) {
                     flipFaces *= -1;
+                }
             }
 
             if (flipFaces < 0) {
@@ -1619,6 +1631,19 @@ Object.assign(ForwardRenderer.prototype, {
             }
         }
         this.device.setCullMode(mode);
+
+        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
+            var wt2 = drawCall.node.worldTransform;
+            wt2.getX(worldMatX);
+            wt2.getY(worldMatY);
+            wt2.getZ(worldMatZ);
+            worldMatX.cross(worldMatX, worldMatY);
+            if (worldMatX.dot(worldMatZ) < 0) {
+                this.twoSidedLightingNegScaleFactorId.setValue(-1.0);
+            } else {
+                this.twoSidedLightingNegScaleFactorId.setValue(1.0);
+            }
+        }
     },
 
     setVertexBuffers: function (device, mesh) {

@@ -18,6 +18,12 @@ var _invMatrix = new Mat4();
 function SkinInstance(skin) {
     this._dirty = true;
 
+    // sequencial index of when the bone update was performed the last time
+    this._skinUpdateIndex = -1;
+
+    // true if bones need to be updated before the frustum culling (bones are needed to update bounds of the MeshInstance)
+    this._updateBeforeCull = true;
+
     if (skin) {
         this.initSkin(skin);
     }
@@ -77,16 +83,33 @@ Object.assign(SkinInstance.prototype, {
         }
     },
 
-    updateMatrices: function (rootNode) {
+    _updateMatrices: function (rootNode, skinUpdateIndex) {
 
-        _invMatrix.copy(rootNode.getWorldTransform()).invert();
-        for (var i = this.bones.length - 1; i >= 0; i--) {
-            this.matrices[i].mulAffine2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
-            this.matrices[i].mulAffine2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
+        // if not already up to date
+        if (this._skinUpdateIndex !== skinUpdateIndex) {
+            this._skinUpdateIndex = skinUpdateIndex;
+
+            _invMatrix.copy(rootNode.getWorldTransform()).invert();
+            for (var i = this.bones.length - 1; i >= 0; i--) {
+                this.matrices[i].mulAffine2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+                this.matrices[i].mulAffine2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
+            }
         }
     },
 
-    updateMatrixPalette: function () {
+    updateMatrices: function (rootNode, skinUpdateIndex) {
+
+        if (this._updateBeforeCull) {
+            this._updateMatrices(rootNode, skinUpdateIndex);
+        }
+    },
+
+    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
+
+        // make sure matrices are up to date
+        this._updateMatrices(rootNode, skinUpdateIndex);
+
+        // copy matrices to palette
         var pe;
         var mp = this.matrixPalette;
         var base;
