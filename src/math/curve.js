@@ -21,7 +21,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
  *
  * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
  * @property {number} tension The tension used when type is CURVE_SPLINE.
- * 
+ *
  * @example
  * var curve = new pc.Curve([
  *     [0, 0],
