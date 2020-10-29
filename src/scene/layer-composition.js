@@ -24,7 +24,9 @@ import {
 function LayerComposition() {
     EventHandler.call(this);
 
+    // all layers added into the composition
     this.layerList = [];
+
     this.subLayerList = [];
     this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
     this._opaqueOrder = {};
@@ -34,12 +36,29 @@ function LayerComposition() {
     this._dirtyBlend = false;
     this._dirtyLights = false;
     this._dirtyCameras = false;
+
+    // all unique meshInstances from all layers, stored both as an array, and also a set for fast search
     this._meshInstances = [];
+    this._meshInstancesSet = new Set();
+
+    // all unique lights from all layers, stored both as an array, and also map for fast search (key is light, values is its index in _lights array)
     this._lights = [];
+    this._lightsMap = new Map();
+
+    // each light in _lights has entry here at the same index, storing an array and also a set of shadow casters for it
+    this._lightShadowCasters = [];
+    this._lightShadowCastersSets = [];
+
+    // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
+    this._splitLights = [[], [], []];
+
+    // for each directional light (in _splitLights[LIGHTTYPE_DIRECTIONAL]), this stores array of unique cameras that are on the same layer as the light
+    this._globalLightCameras = [];
+
+    // array of unique cameras from all layers
     this.cameras = [];
-    this._sortedLights = [[], [], []];
-    this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
-    this._globalLightCameras = []; // array mapping _globalLights to cameras
+
+
     this._globalLightCameraIds = []; // array mapping _globalLights to camera ids in composition
     this._renderedRt = [];
     this._renderedByCam = [];
@@ -54,16 +73,18 @@ function LayerComposition() {
 LayerComposition.prototype = Object.create(EventHandler.prototype);
 LayerComposition.prototype.constructor = LayerComposition;
 
-LayerComposition.prototype._sortLights = function (target) {
+// function which splits list of lights on a a target object into separate lists of lights based on light type
+LayerComposition.prototype._splitLightsArray = function (target) {
     var light;
     var lights = target._lights;
-    target._sortedLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-    target._sortedLights[LIGHTTYPE_POINT].length = 0;
-    target._sortedLights[LIGHTTYPE_SPOT].length = 0;
+    target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
+    target._splitLights[LIGHTTYPE_POINT].length = 0;
+    target._splitLights[LIGHTTYPE_SPOT].length = 0;
+
     for (var i = 0; i < lights.length; i++) {
         light = lights[i];
         if (light.enabled) {
-            target._sortedLights[light._type].push(light);
+            target._splitLights[light._type].push(light);
         }
     }
 };
@@ -74,7 +95,8 @@ LayerComposition.prototype._update = function () {
     var len = this.layerList.length;
     var result = 0;
 
-    if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) { // if dirty flags on comp are clean, check if they are not in layers
+    // if composition dirty flags are not set, test if layers are marked dirty
+    if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
             if (layer._dirty) {
@@ -89,155 +111,212 @@ LayerComposition.prototype._update = function () {
         }
     }
 
-    var arr;
+    // function adds unique meshInstances from src array into destArray. A destSet is a Set containing already
+    // existing meshInstances  to accelerate the removal of duplicates
+    // returns true if any of the materials on these meshInstances has _dirtyBlend set
+    function addUniqueMeshInstance(destArray, destSet, srcArray) {
+        var meshInst, material, dirtyBlend = false;
+        var srcLen = srcArray.length;
+        for (var s = 0; s < srcLen; s++) {
+            meshInst = srcArray[s];
+
+            if (!destSet.has(meshInst)) {
+                destSet.add(meshInst);
+                destArray.push(meshInst);
+
+                material = meshInst.material;
+                if (material && material._dirtyBlend) {
+                    dirtyBlend = true;
+                    material._dirtyBlend = false;
+                }
+            }
+        }
+        return dirtyBlend;
+    }
+
+    // rebuild this._meshInstances array - add all unique meshInstances from all layers to it
+    // also set this._dirtyBlend to true if material of any meshInstance has _dirtyBlend set, and clear those flags on materials
     if (this._dirty) {
         result |= COMPUPDATED_INSTANCES;
         this._meshInstances.length = 0;
-        var mi;
-        for (i = 0; i < len; i++) {
-            layer = this.layerList[i];
-            if (layer.passThrough) continue;
-            arr = layer.opaqueMeshInstances;
-            for (j = 0; j < arr.length; j++) {
-                mi = arr[j];
-                if (this._meshInstances.indexOf(mi) < 0) {
-                    this._meshInstances.push(mi);
-                    if (mi.material && mi.material._dirtyBlend) {
-                        this._dirtyBlend = true;
-                        mi.material._dirtyBlend = false;
-                    }
-                }
-            }
-            arr = layer.transparentMeshInstances;
-            for (j = 0; j < arr.length; j++) {
-                mi = arr[j];
-                if (this._meshInstances.indexOf(mi) < 0) {
-                    this._meshInstances.push(mi);
-                    if (mi.material && mi.material._dirtyBlend) {
-                        this._dirtyBlend = true;
-                        mi.material._dirtyBlend = false;
-                    }
-                }
-            }
-        }
+        this._meshInstancesSet.clear();
 
         for (i = 0; i < len; i++) {
-            this.layerList[i]._dirty = false;
-            this.layerList[i]._version++;
+            layer = this.layerList[i];
+            if (!layer.passThrough) {
+
+                // add meshInstances from both opaque and transparent lists
+                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances);
+                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances);
+            }
+
+            layer._dirty = false;
+            layer._version++;
         }
+
         this._dirty = false;
     }
 
+    // funtion moves transparent or opaque meshes based on moveTransparent from src to dest array
+    function moveByBlendType(dest, src, moveTransparent) {
+        var material, isTransparent;
+        for (var s = 0; s < src.length; ) {
+
+            material = src[s].material;
+            isTransparent = material && material.blendType !== BLEND_NONE;
+
+            if (isTransparent === moveTransparent) {
+
+                // add it to dest
+                dest.push(src[s]);
+
+                // remove it from src
+                src[s] = src[src.length - 1];
+                src.length--;
+
+            } else {
+
+                // just skip it
+                s++;
+            }
+        }
+    }
+
+    // for each layer, split its meshInstances to either opaque or transparent array based on material blend type
     if (this._dirtyBlend) {
-        // TODO: make it fast
         result |= COMPUPDATED_BLEND;
-        var opaqueOld, transparentOld, opaqueNew, transparentNew;
+
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
-            if (layer.passThrough) continue;
-            opaqueOld = layer.opaqueMeshInstances;
-            transparentOld = layer.transparentMeshInstances;
-            opaqueNew = [];
-            transparentNew = [];
-            for (j = 0; j < opaqueOld.length; j++) {
-                if (opaqueOld[j].material && opaqueOld[j].material.blendType !== BLEND_NONE) {
-                    transparentNew.push(opaqueOld[j]);
-                } else {
-                    opaqueNew.push(opaqueOld[j]);
-                }
-            }
-            for (j = 0; j < transparentOld.length; j++) {
-                if (transparentOld[j].material && transparentOld[j].material.blendType !== BLEND_NONE) {
-                    transparentNew.push(transparentOld[j]);
-                } else {
-                    opaqueNew.push(transparentOld[j]);
-                }
-            }
-            layer.opaqueMeshInstances.length = opaqueNew.length;
-            for (j = 0; j < opaqueNew.length; j++) {
-                layer.opaqueMeshInstances[j] = opaqueNew[j];
-            }
-            layer.transparentMeshInstances.length = transparentNew.length;
-            for (j = 0; j < transparentNew.length; j++) {
-                layer.transparentMeshInstances[j] = transparentNew[j];
+            if (!layer.passThrough) {
+
+                // move any opaque meshInstances from transparentMeshInstances to opaqueMeshInstances
+                moveByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, false);
+
+                // move any transparent meshInstances from opaqueMeshInstances to transparentMeshInstances
+                moveByBlendType(layer.transparentMeshInstances, layer.opaqueMeshInstances, true);
             }
         }
         this._dirtyBlend = false;
     }
 
-    var casters, lid, light;
+    var light, lights;
     if (this._dirtyLights) {
         result |= COMPUPDATED_LIGHTS;
-        this._lights.length = 0;
-        this._lightShadowCasters.length = 0;
-        // TODO: don't create new arrays, reference
-        // updates when _dirty as well to fix shadow casters
 
+        // build a list and map of all unique lights from all layers
+        this._lights.length = 0;
+        this._lightsMap.clear();
+
+        // create a list of all unique lights from all layers
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
-            arr = layer._lights;
-            for (j = 0; j < arr.length; j++) {
-                light = arr[j];
-                lid = this._lights.indexOf(light);
-                if (lid < 0) {
-                    this._lights.push(light);
-                    lid = this._lights.length - 1;
-                }
+            lights = layer._lights;
+            for (j = 0; j < lights.length; j++) {
+                light = lights[j];
 
-                casters = this._lightShadowCasters[lid];
-                if (!casters) {
-                    this._lightShadowCasters[lid] = casters = [];
+                // add new light
+                if (!this._lightsMap.has(light)) {
+
+                    this._lightsMap.set(light, this._lights.length);
+                    this._lights.push(light);
                 }
             }
         }
 
-        this._sortLights(this);
+        // adjust _lightShadowCasters to the right size, matching number of lights, and clean it up (minimize allocations)
+        var lightCount = this._lights.length;
+        this._lightShadowCasters.length = lightCount;
+        this._lightShadowCastersSets.length = lightCount;
+        for (i = 0; i < lightCount; i++) {
+
+            // clear array
+            if (this._lightShadowCasters[i]) {
+                this._lightShadowCasters[i].length = 0;
+            } else {
+                this._lightShadowCasters[i] = [];
+            }
+
+            // clear set
+            if (this._lightShadowCastersSets[i]) {
+                this._lightShadowCastersSets[i].clear();
+            } else {
+                this._lightShadowCastersSets[i] = new Set();
+            }
+        }
+
+        // split global lights list by type
+        this._splitLightsArray(this);
         this._dirtyLights = false;
 
+        // split layer lights lists by type
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
-            this._sortLights(layer);
+            this._splitLightsArray(layer);
             layer._dirtyLights = false;
         }
     }
 
-    if (result) { // meshes OR lights changed
+    // if meshes OR lights changed, rebuild shadow casters
+    var casters, castersSet;
+    var meshInstances, meshInstance;
+    var lightIndex;
+    if (result) {
+
+        // start with empty shadow casters
+        for (i = 0; i < this._lightShadowCasters.length; i++) {
+            this._lightShadowCasters[i].length = 0;
+            this._lightShadowCastersSets[i].clear();
+        }
+
+        // for each layer
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
-            arr = layer._lights;
-            for (j = 0; j < arr.length; j++) {
-                light = arr[j];
-                lid = this._lights.indexOf(light);
-                casters = this._lightShadowCasters[lid];
-                var meshInstances = layer.shadowCasters;
-                for (k = 0; k < casters.length;) {
-                    if (this._meshInstances.indexOf(casters[k]) < 0) {
-                        casters[k] = casters[casters.length - 1];
-                        casters.length -= 1;
-                    } else {
-                        k++;
-                    }
-                }
+            lights = layer._lights;
+
+            // for each light of a layer
+            for (j = 0; j < lights.length; j++) {
+
+                // find its index in global light list, and get shadow casters for it
+                lightIndex = this._lightsMap.get(lights[j]);
+                casters = this._lightShadowCasters[lightIndex];
+                castersSet = this._lightShadowCastersSets[lightIndex];
+
+                // add unique meshes from the layer to casters
+                meshInstances = layer.shadowCasters;
                 for (k = 0; k < meshInstances.length; k++) {
-                    if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
+
+                    meshInstance = meshInstances[k];
+
+                    if (!castersSet.has(meshInstance)) {
+                        castersSet.add(meshInstance);
+                        casters.push(meshInstance);
+                    }
                 }
             }
         }
     }
 
+    // rebuild _globalLightCameras - list of cameras for each directional light
     if ((result & COMPUPDATED_LIGHTS) || this._dirtyCameras) {
+
         // TODO: make dirty when changing layer.enabled on/off
         this._globalLightCameras.length = 0;
-        var globalLights = this._sortedLights[LIGHTTYPE_DIRECTIONAL];
+        var globalLights = this._splitLights[LIGHTTYPE_DIRECTIONAL];
+
         for (l = 0; l < globalLights.length; l++) {
             light = globalLights[l];
             this._globalLightCameras[l] = [];
+
             for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
-                if (layer._sortedLights[LIGHTTYPE_DIRECTIONAL].indexOf(light) < 0) continue;
-                for (k = 0; k < layer.cameras.length; k++) {
-                    if (this._globalLightCameras[l].indexOf(layer.cameras[k]) >= 0) continue;
-                    this._globalLightCameras[l].push(layer.cameras[k]);
+                if (layer._splitLights[LIGHTTYPE_DIRECTIONAL].indexOf(light) >= 0) {
+
+                    for (k = 0; k < layer.cameras.length; k++) {
+                        if (this._globalLightCameras[l].indexOf(layer.cameras[k]) < 0) {
+                            this._globalLightCameras[l].push(layer.cameras[k]);
+                        }
+                    }
                 }
             }
         }
@@ -247,6 +326,7 @@ LayerComposition.prototype._update = function () {
     if (this._dirtyCameras) {
         result |= COMPUPDATED_CAMERAS;
 
+        // build array of unique cameras from all layers
         this.cameras.length = 0;
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
@@ -316,6 +396,7 @@ LayerComposition.prototype._update = function () {
         }
     }
 
+    var arr;
     if ((result & COMPUPDATED_LIGHTS) || (result & COMPUPDATED_CAMERAS)) {
         // cameras/lights changed
         this._globalLightCameraIds.length = 0;
