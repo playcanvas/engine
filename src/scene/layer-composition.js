@@ -157,16 +157,27 @@ LayerComposition.prototype._update = function () {
         this._dirty = false;
     }
 
-    // function adds meshInstances from src array into opaque or transparent arrays based on material blend type
-    function splitByBlendType(destOpaque, destTransparent, src) {
-        var material;
-        var srcLen = src.length;
-        for (var s = 0; s < srcLen; s++) {
+    // funtion moves transparent or opaque meshes based on moveTransparent from src to dest array
+    function moveByBlendType(dest, src, moveTransparent) {
+        var material, isTransparent;
+        for (var s = 0; s < src.length; ) {
+
             material = src[s].material;
-            if (material && material.blendType !== BLEND_NONE) {
-                destTransparent.push(src[s]);
+            isTransparent = material && material.blendType !== BLEND_NONE;
+
+            if (isTransparent === moveTransparent) {
+
+                // add it to dest
+                dest.push(src[s]);
+
+                // remove it from src
+                src[s] = src[src.length - 1];
+                src.length--;
+
             } else {
-                destOpaque.push(src[s]);
+
+                // just skip it
+                s++;
             }
         }
     }
@@ -179,14 +190,11 @@ LayerComposition.prototype._update = function () {
             layer = this.layerList[i];
             if (!layer.passThrough) {
 
-                // get all instances into single array
-                var layerInstances = layer.opaqueMeshInstances.concat(layer.transparentMeshInstances);
+                // move any opaque meshInstances from transparentMeshInstances to opaqueMeshInstances
+                moveByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, false);
 
-                // distribute them into arrays. Note that we cannot assign new arrays, and so the extra copy above is needed
-                // so that we can update existing arrays  (for the reason see Layer.InstanceList)
-                layer.opaqueMeshInstances.length = 0;
-                layer.transparentMeshInstances.length = 0;
-                splitByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, layerInstances);
+                // move any transparent meshInstances from opaqueMeshInstances to transparentMeshInstances
+                moveByBlendType(layer.transparentMeshInstances, layer.opaqueMeshInstances, true);
             }
         }
         this._dirtyBlend = false;
