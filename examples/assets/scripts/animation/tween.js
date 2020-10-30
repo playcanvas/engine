@@ -125,10 +125,10 @@ Tween.prototype.initialize = function () {
     this.tweenInstances = [];
     this.tweenCallbacks = [];
 
-    var makeStartCallback = function (i) {  
-       return function() {  
-          this.start(i);
-       };
+    var makeStartCallback = function (i) {
+        return function () {
+            this.start(i);
+        };
     };
 
     for (i = 0; i < this.tweens.length; i++) {
@@ -192,8 +192,8 @@ Tween.prototype.start = function (idx) {
     var app = this.app;
     var tween = this.tweens[idx];
 
-    var easingTypes = [ 'In', 'Out', 'InOut' ];
-    var easingFuncs = [ 'Linear', 'Quadratic', 'Cubic', 'Quartic', 'Quintic', 'Sinusoidal', 'Exponential', 'Circular', 'Elastic', 'Back', 'Bounce'];
+    var easingTypes = ['In', 'Out', 'InOut'];
+    var easingFuncs = ['Linear', 'Quadratic', 'Cubic', 'Quartic', 'Quintic', 'Sinusoidal', 'Exponential', 'Circular', 'Elastic', 'Back', 'Bounce'];
 
     var easingFunc;
     if (tween.easingFunction === 0) {
