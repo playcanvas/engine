@@ -499,13 +499,13 @@ function prefilterCubemap2(cubemap) {
         return data;
     };
 
-    var levels = [];
-    var level0 = null;
+    var i;
+    var cubemaps = [];
 
     // generate prefiltered lighting data
     var sizes = [128, 64, 32, 16, 8, 4, 2, 1];
     var specPower = [undefined, 512, 128, 32, 8, 2, 1, 1];
-    for (var i = 0; i < sizes.length; ++i) {
+    for (i = 0; i < sizes.length; ++i) {
         var level = new pc.Texture(device, {
             cubemap: true,
             name: 'skyboxPrefilter' + i,
@@ -515,16 +515,16 @@ function prefilterCubemap2(cubemap) {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
-        pc.reprojectTexture(device, level0 || cubemap, level, specPower[i]);
+        pc.reprojectTexture(device, cubemaps[0] || cubemap, level, specPower[i]);
+        cubemaps.push(level);
+    }
 
-        // download and store level data
+    // download texture from GPU
+    var levels = [];
+    for (i = 0; i < cubemaps.length; ++i) {
         levels[i] = [];
         for (var face = 0; face < 6; ++face) {
-            levels[i].push(readPixels(level, face));
-        }
-
-        if (level0 === null) {
-            level0 = level;
+            levels[i].push(readPixels(cubemaps[i], face));
         }
     }
 
@@ -536,6 +536,7 @@ function prefilterCubemap2(cubemap) {
         type: pc.TEXTURETYPE_RGBM,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
         addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        //fixCubemapSeams: true
         levels: levels
     });
 }
