@@ -114,9 +114,10 @@ shadergraph.param = function (type, name, value) {
  * // valid outputs are:
  * pc.shadergraph.output(arg, 'vec3', 'vertOff');
  * pc.shadergraph.output(arg, 'float', 'dAlpha');
- * pc.shadergraph.output(arg, 'float', 'dMetalness');
- * pc.shadergraph.output(arg, 'float', 'dGlossiness');
  * pc.shadergraph.output(arg, 'vec3', 'dAlbedo');
+ * pc.shadergraph.output(arg, 'vec3', 'dNormalMap');
+ * pc.shadergraph.output(arg, 'float', 'dGlossiness');
+ * pc.shadergraph.output(arg, 'vec3', 'dSpecularity');
  * pc.shadergraph.output(arg, 'vec3', 'dEmission');
  */
 shadergraph.output = function (arg, type, name) {

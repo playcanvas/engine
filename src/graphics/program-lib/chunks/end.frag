@@ -4,7 +4,11 @@
     gl_FragColor.rgb = combineColor();
     #endif 
 
+    #ifdef SG_PS
+    gl_FragColor.rgb += dEmission;
+    #else
     gl_FragColor.rgb += getEmission();
+    #endif
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
 
     #ifndef HDR

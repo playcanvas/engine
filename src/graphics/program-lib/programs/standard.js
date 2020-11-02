@@ -1412,7 +1412,7 @@ var standard = {
                     if (!graphCode) code += "   alphaTest(dAlpha);\n";
                 }
             }
-
+            
             code += "   getNormal();\n";
             if (options.useSpecular) {
                 if (options.enableGGXSpecular) {
@@ -1431,14 +1431,39 @@ var standard = {
             code += "   getClearCoatNormal();\n";
         }
 
-        if (graphCode) {
-            code += graphCode[3];
-        }
-
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
             if (!getGlossinessCalled) code += "   getGlossiness();\n";
-            if (options.fresnelModel > 0) code += "   getFresnel();\n";
+            if (options.fresnelModel > 0) {
+                if (!graphCode) code += "   getFresnel();\n";
+            }
+        }
+
+        if (graphCode) {
+            if (!options.normalMap) {
+                code += "   dNormalMap = vec3(0);\n";
+            }
+
+            code += "   dEmission=getEmission();\n";
+
+            code += graphCode[3];
+
+            if (needsNormal) {
+                if (options.alphaTest) {
+                    code += "   alphaTest(dAlpha);\n";
+                }
+
+                code += "   dNormalW = dTBN * dNormalMap;\n";
+
+                if (options.useSpecular) {
+                    code += "   getReflDir();\n";
+                }
+            }
+            if ((lighting && options.useSpecular) || reflections) {
+                if (options.fresnelModel > 0) {
+                    code += "   getFresnel();\n";
+                }
+            }
         }
 
         if (addAmbient) {
