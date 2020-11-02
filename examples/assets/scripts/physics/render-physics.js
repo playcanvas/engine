@@ -199,8 +199,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     collision._debugShape.setRotation(collision.entity.getRotation());
                 }
 
-                // If the shape is a cylinder or a capsule, rotate it so that it's axis is
-                // taken into account
+                // If the shape is a capsule, cone or cylinder, rotate it so that its axis is taken into account
                 if (collision.type === 'capsule' || collision.type === 'cone' || collision.type === 'cylinder') {
                     if (collision._debugShape._axis === 0) {
                         // X
