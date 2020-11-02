@@ -136,17 +136,18 @@ vec3 getDirectionEquirect() {
 
 vec3 getDirectionCubemap() {
     vec2 st = vUv0 * 2.0 - 1.0;
+    float face = targetFace();
 
     vec3 vec;
-    if (targetFace() == 0.0) {
+    if (face == 0.0) {
         vec = vec3(1, -st.y, -st.x);
-    } else if (targetFace() == 1.0) {
+    } else if (face == 1.0) {
         vec = vec3(-1, -st.y, st.x);
-    } else if (targetFace() == 2.0) {
+    } else if (face == 2.0) {
         vec = vec3(st.x, 1, st.y);
-    } else if (targetFace() == 3.0) {
+    } else if (face == 3.0) {
         vec = vec3(st.x, -1, -st.y);
-    } else if (targetFace() == 4.0) {
+    } else if (face == 4.0) {
         vec = vec3(st.x, -st.y, 1);
     } else {
         vec = vec3(-st.x, -st.y, -1);
