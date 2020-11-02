@@ -688,6 +688,10 @@ var GraphicsDevice = function (canvas, options) {
     this.createGrabPass();
 
     VertexFormat.init(this);
+
+    // #ifdef DEBUG
+    this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
+    // #endif
 };
 GraphicsDevice.prototype = Object.create(EventHandler.prototype);
 GraphicsDevice.prototype.constructor = GraphicsDevice;
@@ -1785,6 +1789,15 @@ Object.assign(GraphicsDevice.prototype, {
     },
 
     uploadTexture: function (texture) {
+        // #ifdef DEBUG
+        if (!texture.device) {
+            if (!this._destroyedTextures.has(texture)) {
+                this._destroyedTextures.add(texture);
+                console.error("attempting to use a texture that has been destroyed.");
+            }
+        }
+        // #endif
+
         var gl = this.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
