@@ -1785,6 +1785,12 @@ Object.assign(GraphicsDevice.prototype, {
     },
 
     uploadTexture: function (texture) {
+        // #ifdef DEBUG
+        if (!texture.device) {
+            console.error("attempting to use a texture that has been destroyed.");
+        }
+        // #endif
+
         var gl = this.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
