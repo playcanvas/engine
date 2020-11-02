@@ -57,6 +57,36 @@
         });
         app.root.addChild(light);
         light.setLocalEulerAngles(15, -20, 0);
+            
+        var originalMaterials=[];
+        var shaderGraphMaterials=[];
+
+        //replace model's materials
+        var setShaderGraphChunk = function setShaderGraphChunk(model, shaderGraphChunkId) {    
+            model.meshInstances.forEach(function (meshInstance) {
+                var isNodeMat = (meshInstance.material instanceof pc.StandardNodeMaterial);
+
+                if (!isNodeMat) {
+                    var index = originalMaterials.indexOf(meshInstance.material);
+
+                    if (index === -1) {
+                        index = shaderGraphMaterials.length;
+                        originalMaterials.push(meshInstance.material);                            
+                        shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
+                    }
+                    
+                    meshInstance.material = shaderGraphMaterials[index];
+                } else {
+                    if (meshInstance.material._shaderGraphChunkId != shaderGraphChunkId) {
+                        meshInstance.material._shaderGraphChunkId = shaderGraphChunkId;
+                        meshInstance.material.dirtyShader = true;
+                    }
+                }
+                
+                meshInstance.material.alphaTest = 0.5;
+                meshInstance.material.update();
+            });
+        };
 
         var url = "../assets/models/statue.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
@@ -77,7 +107,7 @@
                     //start building shader graph and register core nodes
                     pc.shadergraph.start(coreNodeList);
 
-                    //add input parameters
+/*                    //add input parameters
                     var timeParam = pc.shadergraph.param('float', 'uTime', 0.0);
                     var emissiveTexParam = pc.shadergraph.param('sampler2D', 'uEmissiveMap', emissiveMap); 
                     var emissiveColParam = pc.shadergraph.param('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
@@ -85,43 +115,78 @@
                     //create and hook up graph nodes
                     var scrollNode = pc.shadergraph.add2( pc.shadergraph.joinVec2( timeParam, timeParam), pc.shadergraph.uv0());
                     var emissiveSampleNode = pc.shadergraph.texSample(emissiveTexParam, scrollNode);                    
-                    var splitEmissiveSampNode = pc.shadergraph.splitVec4(emissiveSampleNode);                
+                    var splitEmissiveSampNode = pc.shadergraph.splitVec4({node:emissiveSampleNode, port:'rgba'});                
                     var emissiveCalcNode = pc.shadergraph.mul3(emissiveColParam, pc.shadergraph.joinVec3({node:splitEmissiveSampNode, port:'x'}, {node:splitEmissiveSampNode, port:'y'}, {node:splitEmissiveSampNode, port:'z'}));
 
                     //hook up outputs
                     pc.shadergraph.output({node:splitEmissiveSampNode, port:'y'}, 'float', 'dAlpha');
-                    pc.shadergraph.output(emissiveCalcNode, 'vec3', 'dEmission');
+                    pc.shadergraph.output(emissiveCalcNode, 'vec3', 'dEmission');*/
 
                     //end graph and return built graph chunk id
-                    var shaderGraphChunkId = pc.shadergraph.end();
+                    setShaderGraphChunk(model, pc.shadergraph.end());
 
-                    //replace model's materials
-                    var originalMaterials=[];
-                    var shaderGraphMaterials=[];
-                    
-                    model.meshInstances.forEach(function (meshInstance) {
-                        if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
-                            var index = originalMaterials.indexOf(meshInstance.material);
+                    //allow shader graph json files to 
+                    var drag_count=0;
 
-                            if (index === -1) {
-                                index = shaderGraphMaterials.length;
+                    var dropHandler = function (evt) {
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                        var files = evt.dataTransfer.files;
+                        // Loop through the FileList and read
+                        for (var i = 0, f; f = files[i]; i++) {
 
-                                originalMaterials.push(meshInstance.material);                            
-                                shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunkId));
+                            // Only process json files.
+                            if (!f.type.match('application/json')) {
+                                continue;
                             }
 
-                            meshInstance.material = shaderGraphMaterials[index];
-                            
-                            meshInstance.material.alphaTest = 0.5;
-                            meshInstance.material.update();
+                            var reader = new FileReader();
+
+                            // Closure to capture the file information.
+                            reader.onload = (function(theFile) {
+                            return function(e) {
+                                graph_name = 'drag_n_drop_'+drag_count++;
+
+                                var graph = pc.shadergraph._getNode(graph_name);
+                                graph.name = graph_name;
+
+                                var graphDataString = e.target.result;
+
+                                function reviver(key, value) {
+                                    if (value instanceof Object)
+                                    {
+                                        const ObjKeys = Object.keys(value);
+                                        if (ObjKeys.length == 1 && ObjKeys[0] === 'subgName')
+                                        {
+                                            return pc.shadergraph._getNode(value.subgName);
+                                        }
+                                    }
+                                    return value;
+                                }
+
+                                graph.graphData = JSON.parse(graphDataString, reviver.bind());
+
+                                setShaderGraphChunk(model, graph_name);
+                            };
+                            })(f);
+
+                            reader.readAsText(f);
                         }
-                    });
+                    };
+
+                    // configure drag and drop
+                    const preventDefault = function (ev) {
+                        ev.preventDefault();
+                    };                    
+                    window.addEventListener('dragenter', preventDefault, false);
+                    window.addEventListener('dragover', preventDefault, false);
+                    window.addEventListener('drop', dropHandler, false);
 
                     //update time parameter and alpha test every frame
                     app.on("update", function (dt) {
                         time += dt;
                         shaderGraphMaterials.forEach(function (material) {
-                            material.setShaderGraphParameter('uTime', time);
+                            // material.setShaderGraphParameter('uTime', time);
                             material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
                         });
                     });
