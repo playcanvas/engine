@@ -214,15 +214,6 @@ vec4 prefilter() {
         result += DECODE_FUNC(SOURCE_FUNC(dir));
     }
 
-    // int t = int(mod(dot(floor(gl_FragCoord.xy), vec2(1.0, 1.0)), 4.0));
-    // switch (t)
-    // {
-    //     case 0:  return vec4(0, 0, 0, 0.125);
-    //     case 1:  return vec4(1, 0, 0, 0.125);
-    //     case 2:  return vec4(0, 1, 0, 0.125);
-    //     default: return vec4(0, 0, 1, 0.125);
-    // };
-
     return ENCODE_FUNC(result / float(NUM_SAMPLES));
 }
 
