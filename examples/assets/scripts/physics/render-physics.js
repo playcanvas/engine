@@ -204,7 +204,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                 if (collision.type == 'cylinder' || collision.type == 'capsule' || collision.type == 'cone') {
                     if (collision._debugShape._axis === 0) {
                         // X
-                        collision._debugShape.rotateLocal(0, 0, 90);
+                        collision._debugShape.rotateLocal(0, 0, -90);
                     } else if (collision._debugShape._axis === 2) {
                         // Z
                         collision._debugShape.rotateLocal(90, 0, 0);
