@@ -1412,7 +1412,7 @@ var standard = {
                     if (!graphCode) code += "   alphaTest(dAlpha);\n";
                 }
             }
-            
+
             code += "   getNormal();\n";
             if (options.useSpecular) {
                 if (options.enableGGXSpecular) {
