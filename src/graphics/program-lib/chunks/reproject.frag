@@ -104,22 +104,6 @@ vec3 modifySeams(vec3 dir, float amount)
     return dir;
 }
 
-vec3 modifySeamsInv(vec3 dir, float amount)
-{
-    if (amount != 1.0)
-    {
-        vec3 adir = abs(dir);
-        float M = max(max(adir.x, adir.y), adir.z);
-        if (adir.x == M)
-            dir /= vec3(1.0, amount, amount);
-        else if (adir.y == M)
-            dir /= vec3(amount, 1.0, amount);
-        else
-            dir /= vec3(amount, amount, 1.0);
-    }
-    return dir;
-}
-
 vec2 toSpherical(vec3 dir) {
     return vec2(atan(dir.z, dir.x) * -1.0, asin(dir.y));
 }
@@ -168,7 +152,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return modifySeamsInv(normalize(vec), targetCubeSeamScale());
+    return modifySeams(normalize(vec), 1.0 / targetCubeSeamScale());
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad
