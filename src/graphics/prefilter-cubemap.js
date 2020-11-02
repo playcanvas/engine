@@ -513,7 +513,9 @@ function prefilterCubemap2(cubemap) {
             height: sizes[i],
             type: pc.TEXTURETYPE_RGBM,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+            fixCubemapSeams: true,
+            mipmaps: false
         });
         pc.reprojectTexture(device, cubemaps[0] || cubemap, level, specPower[i]);
         cubemaps.push(level);
@@ -536,7 +538,7 @@ function prefilterCubemap2(cubemap) {
         type: pc.TEXTURETYPE_RGBM,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
         addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-        //fixCubemapSeams: true
+        fixCubemapSeams: true,
         levels: levels
     });
 }

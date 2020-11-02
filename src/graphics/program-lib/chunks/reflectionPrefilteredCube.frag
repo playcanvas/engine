@@ -15,50 +15,37 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
 
     float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
-    int index1 = int(bias);
-    int index2 = int(min(bias + 1.0, 7.0));
-
-    vec3 fixedReflDir = fixSeams(cubeMapProject(tReflDirW), bias);
-    fixedReflDir.x *= -1.0;
-
-    vec4 cubes[6];
-    cubes[0] = textureCube(texture_prefilteredCubeMap128, fixedReflDir);
-    cubes[1] = textureCube(texture_prefilteredCubeMap64, fixedReflDir);
-    cubes[2] = textureCube(texture_prefilteredCubeMap32, fixedReflDir);
-    cubes[3] = textureCube(texture_prefilteredCubeMap16, fixedReflDir);
-    cubes[4] = textureCube(texture_prefilteredCubeMap8, fixedReflDir);
-    cubes[5] = textureCube(texture_prefilteredCubeMap4, fixedReflDir);
-
-    // Also we don't have dynamic indexing in PS, so...
-    vec4 cube[2];
-    for(int i = 0; i < 6; i++) {
-        if (i == index1) {
-            cube[0] = cubes[i];
-        }
-        if (i == index2) {
-            cube[1] = cubes[i];
-        }
+    vec3 refl = cubeMapProject(tReflDirW);
+    vec4 cubes0;
+    vec4 cubes1;
+    if (bias < 1.0)
+    {
+        cubes0 = textureCube(texture_prefilteredCubeMap128, fixSeams(refl, 0.0));
+        cubes1 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0));
+    }
+    else if (bias < 2.0)
+    {
+        cubes0 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0));
+        cubes1 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0));
+    }
+    else if (bias < 3.0)
+    {
+        cubes0 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0));
+        cubes1 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0));
+    }
+    else if (bias < 4.0)
+    {
+        cubes0 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0));
+        cubes1 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0));
+    }
+    else
+    {
+        cubes0 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0));
+        cubes1 = textureCube(texture_prefilteredCubeMap4, fixSeams(refl, 5.0));
     }
 
-    // another variant
-    /*if (index1==0){ cube[0]=cubes[0];
-    }else if (index1==1){ cube[0]=cubes[1];
-    }else if (index1==2){ cube[0]=cubes[2];
-    }else if (index1==3){ cube[0]=cubes[3];
-    }else if (index1==4){ cube[0]=cubes[4];
-    }else if (index1==5){ cube[0]=cubes[5];}
-
-    if (index2==0){ cube[1]=cubes[0];
-    }else if (index2==1){ cube[1]=cubes[1];
-    }else if (index2==2){ cube[1]=cubes[2];
-    }else if (index2==3){ cube[1]=cubes[3];
-    }else if (index2==4){ cube[1]=cubes[4];
-    }else if (index2==5){ cube[1]=cubes[5];}*/
-
-    vec4 cubeFinal = mix(cube[0], cube[1], fract(bias));
-    vec3 refl = processEnvironment($DECODE(cubeFinal).rgb);
-
-    return refl;
+    vec4 cubeFinal = mix(cubes0, cubes1, fract(bias));
+    return processEnvironment($DECODE(cubeFinal).rgb);
 }
 
 void addReflection() {   

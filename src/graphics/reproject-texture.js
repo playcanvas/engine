@@ -45,6 +45,7 @@ var getCoding = function (texture) {
  * the function performs a standard resample.
  */
 var reprojectTexture = function (device, source, target, specularPower) {
+    var processFunc = (specularPower !== undefined) ? 'prefilter' : 'reproject';
     var decodeFunc = "decode" + getCoding(source);
     var encodeFunc = "encode" + getCoding(target);
     var sourceFunc = source.cubemap ? "sampleCubemap" : "sampleEquirect";
@@ -53,13 +54,14 @@ var reprojectTexture = function (device, source, target, specularPower) {
     var shader = createShaderFromCode(
         device,
         shaderChunks.fullscreenQuadVS,
+        "#define PROCESS_FUNC " + processFunc + "\n" +
         "#define DECODE_FUNC " + decodeFunc + "\n" +
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
         "#define NUM_SAMPLES 1024\n\n" +
         shaderChunks.reprojectPS,
-        "reproject" + decodeFunc + encodeFunc + sourceFunc + targetFunc,
+        processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
         device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"
     );
@@ -70,7 +72,8 @@ var reprojectTexture = function (device, source, target, specularPower) {
     var constantParams = device.scope.resolve("params");
     var params = new Vec4();
     params.y = (specularPower !== undefined) ? specularPower : 1;
-    params.z = (specularPower !== undefined) ? 1 : 0;
+    params.z = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
+    params.w = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
 
     for (var face = 0; face < (target.cubemap ? 6 : 1); face++) {
         var targ = new RenderTarget(device, target, {

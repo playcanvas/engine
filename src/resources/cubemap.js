@@ -122,9 +122,9 @@ Object.assign(CubemapHandler.prototype, {
                         height: tex.height >> i,
                         format: tex.format,
                         levels: prelitLevels,
-                        // fixCubemapSeams: true,
-                        // addressU: ADDRESS_CLAMP_TO_EDGE,
-                        // addressV: ADDRESS_CLAMP_TO_EDGE
+                        addressU: ADDRESS_CLAMP_TO_EDGE,
+                        addressV: ADDRESS_CLAMP_TO_EDGE,
+                        fixCubemapSeams: true
                     });
 
                     resources[i + 1] = prelit;

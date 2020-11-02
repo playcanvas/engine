@@ -1,5 +1,6 @@
 // This shader requires the following #DEFINEs:
 //
+// PROCESS_FUNC - must be one of reproject, prefilter
 // DECODE_FUNC - must be one of decodeRGBM, decodeRGBE, decodeGamma or decodeLinear
 // ENCODE_FUNC - must be one of encodeRGBM, encodeRGBE, encideGamma or encodeLinear
 // SOURCE_FUNC - must be one of sampleCubemap, sampleEquirect
@@ -16,9 +17,15 @@ uniform samplerCube sourceCube;
 
 // params:
 // x - target cubemap face 0..6
-// y - specular power
-// z - 0 for reproject, 1 for prefilter
+// y - specular power (when prefiltering)
+// z - source cubemap seam scale (0 to disable)
+// w - target cubemap size for seam calc (0 to disable)
 uniform vec4 params;
+
+float targetFace() { return params.x; }
+float specularPower() { return params.y; }
+float sourceCubeSeamScale() { return params.z; }
+float targetCubeSeamScale() { return params.w; }
 
 float PI = 3.141592653589793;
 
@@ -81,6 +88,38 @@ vec4 encodeRGBE(vec3 source) {
 
 //-- supported projections
 
+vec3 modifySeams(vec3 dir, float amount)
+{
+    if (amount != 1.0)
+    {
+        vec3 adir = abs(dir);
+        float M = max(max(adir.x, adir.y), adir.z);
+        if (adir.x == M)
+            dir *= vec3(1.0, amount, amount);
+        else if (adir.y == M)
+            dir *= vec3(amount, 1.0, amount);
+        else
+            dir *= vec3(amount, amount, 1.0);
+    }
+    return dir;
+}
+
+vec3 modifySeamsInv(vec3 dir, float amount)
+{
+    if (amount != 1.0)
+    {
+        vec3 adir = abs(dir);
+        float M = max(max(adir.x, adir.y), adir.z);
+        if (adir.x == M)
+            dir /= vec3(1.0, amount, amount);
+        else if (adir.y == M)
+            dir /= vec3(amount, 1.0, amount);
+        else
+            dir /= vec3(amount, amount, 1.0);
+    }
+    return dir;
+}
+
 vec2 toSpherical(vec3 dir) {
     return vec2(atan(dir.z, dir.x) * -1.0, asin(dir.y));
 }
@@ -100,7 +139,7 @@ vec4 sampleEquirect(vec3 dir) {
 }
 
 vec4 sampleCubemap(vec3 dir) {
-    return textureCube(sourceCube, dir);
+    return textureCube(sourceCube, modifySeams(dir, sourceCubeSeamScale()));
 }
 
 vec4 sampleCubemap(vec2 sph) {
@@ -113,24 +152,23 @@ vec3 getDirectionEquirect() {
 
 vec3 getDirectionCubemap() {
     vec2 st = vUv0 * 2.0 - 1.0;
-    float face = params.x;
 
     vec3 vec;
-    if (face==0.0) {
+    if (targetFace() == 0.0) {
         vec = vec3(1, -st.y, -st.x);
-    } else if (face==1.0) {
+    } else if (targetFace() == 1.0) {
         vec = vec3(-1, -st.y, st.x);
-    } else if (face==2.0) {
+    } else if (targetFace() == 2.0) {
         vec = vec3(st.x, 1, st.y);
-    } else if (face==3.0) {
+    } else if (targetFace() == 3.0) {
         vec = vec3(st.x, -1, -st.y);
-    } else if (face==4.0) {
+    } else if (targetFace() == 4.0) {
         vec = vec3(st.x, -st.y, 1);
     } else {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return normalize(vec);
+    return modifySeamsInv(normalize(vec), targetCubeSeamScale());
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad
@@ -187,13 +225,22 @@ vec4 prefilter() {
     vec3 result = vec3(0.0);
     for (int i=0; i<NUM_SAMPLES; ++i) {
         vec2 uv = vec2(float(i) / float(NUM_SAMPLES), rnd(i));
-        vec3 dir = vecSpace * hemisphereSamplePhong(uv, params.y);
+        vec3 dir = vecSpace * hemisphereSamplePhong(uv, specularPower());
         result += DECODE_FUNC(SOURCE_FUNC(dir));
     }
+
+    // int t = int(mod(dot(floor(gl_FragCoord.xy), vec2(1.0, 1.0)), 4.0));
+    // switch (t)
+    // {
+    //     case 0:  return vec4(0, 0, 0, 0.125);
+    //     case 1:  return vec4(1, 0, 0, 0.125);
+    //     case 2:  return vec4(0, 1, 0, 0.125);
+    //     default: return vec4(0, 0, 1, 0.125);
+    // };
 
     return ENCODE_FUNC(result / float(NUM_SAMPLES));
 }
 
 void main(void) {
-    gl_FragColor = (params.z == 0.0) ? reproject() : prefilter();
+    gl_FragColor = PROCESS_FUNC();
 }
