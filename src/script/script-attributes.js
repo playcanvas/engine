@@ -48,8 +48,8 @@ var rawToValue = function (app, args, value, old) {
                     if (field.array) {
                         result[field.name] = [];
 
-                        var arr = Array.isArray(value[field.name]) ? value[field.name]: [];
-                        
+                        var arr = Array.isArray(value[field.name]) ? value[field.name] : [];
+
                         for (j = 0; j < arr.length; j++) {
                             result[field.name].push(rawToValue(app, field, arr[j]));
                         }
