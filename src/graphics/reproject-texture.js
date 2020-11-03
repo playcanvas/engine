@@ -43,8 +43,9 @@ var getCoding = function (texture) {
  * @param {number} [specularPower] - optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
+ * @param {number} [numSamples] - optional number of samples (default is 1024).
  */
-var reprojectTexture = function (device, source, target, specularPower) {
+var reprojectTexture = function (device, source, target, specularPower, numSamples) {
     var processFunc = (specularPower !== undefined) ? 'prefilter' : 'reproject';
     var decodeFunc = "decode" + getCoding(source);
     var encodeFunc = "encode" + getCoding(target);
@@ -59,7 +60,7 @@ var reprojectTexture = function (device, source, target, specularPower) {
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES " + (specularPower !== undefined ? "1024" : "1") + "\n\n" +
+        "#define NUM_SAMPLES " + (numSamples || 1024) + "\n\n" +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
