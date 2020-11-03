@@ -6,7 +6,7 @@ CubemapRenderer.attributes.add('depth', { type: 'boolean', default: true });
 CubemapRenderer.attributes.add('layerBaseName', { type: 'string', default: "CubeLayer" });
 
 // initialize code called once per entity
-CubemapRenderer.prototype.initialize = function() {
+CubemapRenderer.prototype.initialize = function () {
 
     // Create cubemap render target with specified resolution and mipmap generation
     var colorBuffer = new pc.Texture(this.app.graphicsDevice, {
