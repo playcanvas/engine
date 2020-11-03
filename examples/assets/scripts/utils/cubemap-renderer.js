@@ -1,3 +1,10 @@
+// How to use in the Editor:
+// - create 6 layers for rendering cubemap faces, and pass base name of these layers to .layerBaseName
+//   example: layerBaseName = "CubeLayer", layers "CubeLayer0", CubeLayer1" .. "CubeLayer5" need to be created in the Editor
+// - add your entities with Model component to these layers
+// - add this script component on an Entity, and use script assign .cubeMap to your material:
+//   material.cubeMap = entity.script.cubemapRenderer.cubeMap;
+
 var CubemapRenderer = pc.createScript('cubemapRenderer');
 
 CubemapRenderer.attributes.add('resolution', { type: 'number', default: 64 });
