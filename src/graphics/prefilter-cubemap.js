@@ -14,8 +14,6 @@ import { Texture } from './texture.js';
 
 import { Application } from '../framework/application.js';
 
-import { reprojectTexture } from './reproject-texture.js';
-
 function syncToCpu(device, targ, face) {
     var tex = targ._colorBuffer;
     if (tex.format != PIXELFORMAT_R8_G8_B8_A8) return;
