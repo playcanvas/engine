@@ -88,18 +88,21 @@ vec4 encodeRGBE(vec3 source) {
 
 //-- supported projections
 
-vec3 modifySeams(vec3 dir, float amount)
-{
-    if (amount != 1.0)
-    {
+vec3 modifySeams(vec3 dir, float amount) {
+    if (amount != 1.0) {
         vec3 adir = abs(dir);
         float M = max(max(adir.x, adir.y), adir.z);
-        if (adir.x == M)
-            dir *= vec3(1.0, amount, amount);
-        else if (adir.y == M)
-            dir *= vec3(amount, 1.0, amount);
-        else
-            dir *= vec3(amount, amount, 1.0);
+        if (adir.x == M) {
+            dir.y *= amount;
+            dir.z *= amount;
+        }
+        else if (adir.y == M) {
+            dir.x *= amount;
+            dir.z *= amount;
+        } else {
+            dir.x *= amount;
+            dir.y *= amount;
+        }
     }
     return dir;
 }
