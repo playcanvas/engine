@@ -88,7 +88,7 @@
             app.root.addChild(entity);
 
             // Add a model compoonent
-            app.systems.model.addComponent(entity, {
+            entity.addComponent('model', {
                 type: 'asset'
             });
             entity.model.model = model;
