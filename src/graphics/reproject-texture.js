@@ -59,7 +59,7 @@ var reprojectTexture = function (device, source, target, specularPower) {
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES 1024\n\n" +
+        "#define NUM_SAMPLES " + (specularPower !== undefined ? "1024" : "1") + "\n\n" +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
