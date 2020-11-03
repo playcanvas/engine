@@ -120,8 +120,8 @@ Object.assign(ShaderGraphBuilder.prototype, {
     /**
      * @function
      * @name pc.ShaderGraphBuilder#getShaderGraphChunk
-     * @description get shader graph chunk id
-     * @returns {string} shader graph chunk id string
+     * @description get shader graph chunk
+     * @returns {any} shader graph chunk
      */
     getShaderGraphChunk: function () {
         return this.graph;
