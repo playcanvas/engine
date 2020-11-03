@@ -47,13 +47,17 @@ var rawToValue = function (app, args, value, old) {
 
                     if (field.array) {
                         result[field.name] = [];
-                        if (Array.isArray(value[field.name])) {
-                            for (j = 0; j < value[field.name].length; j++) {
-                                result[field.name].push(rawToValue(app, field, value[field.name][j]));
-                            }
+
+                        var arr = Array.isArray(value[field.name]) ? value[field.name]: [];
+                        
+                        for (j = 0; j < arr.length; j++) {
+                            result[field.name].push(rawToValue(app, field, arr[j]));
                         }
                     } else {
-                        result[field.name] = rawToValue(app, field, value[field.name]);
+                        // use the value of the field as it's passed into rawToValue otherwise
+                        // use the default field value
+                        var val = value.hasOwnProperty(field.name) ? value[field.name] : field.default;
+                        result[field.name] = rawToValue(app, field, val);
                     }
                 }
             }
