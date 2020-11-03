@@ -1,14 +1,12 @@
 import { standard } from './standard.js';
 
-import { ShaderGraphRegistry } from '../../../scene/materials/shader-graph-registry.js';
-
 // just do a shallow copy standard
 var standardnode = Object.assign({}, standard);
 
 // override a couple of functions - the overridden functions have been altered in standard to accept extra params
 standardnode._generateKey = standard.generateKey;
 standardnode.generateKey = function (options) {
-    return this._generateKey(options, options._shaderGraphChunkId);
+    return this._generateKey(options, options._shaderGraphChunk.id);
 };
 
 standardnode._createShaderDefinition = standard.createShaderDefinition;
@@ -17,8 +15,8 @@ standardnode.createShaderDefinition = function (device, options) {
     var rootDeclGLSL = '';
     var rootCallGLSL = '';
 
-    if (options._shaderGraphChunkId) {
-        rootShaderGraph = ShaderGraphRegistry.getNode(options._shaderGraphChunkId);
+    if (options._shaderGraphChunk) {
+        rootShaderGraph = options._shaderGraphChunk;
 
         rootDeclGLSL = rootShaderGraph.generateRootDeclGlsl();
         rootCallGLSL = rootShaderGraph.generateRootCallGlsl();
@@ -26,7 +24,7 @@ standardnode.createShaderDefinition = function (device, options) {
 
     var graphCode = [];
 
-    if (options._shaderGraphChunkId) {
+    if (options._shaderGraphChunk) {
         graphCode[0] = '';
         if (rootShaderGraph.getIoPortByName('OUT_vertOff')) {
             graphCode[0] += "#define SG_VS\n";
@@ -34,7 +32,7 @@ standardnode.createShaderDefinition = function (device, options) {
         }
     }
 
-    if (options._shaderGraphChunkId) {
+    if (options._shaderGraphChunk) {
         graphCode[1] = '';
         if (rootShaderGraph.getIoPortByName('OUT_vertOff')) {
             graphCode[1] += rootCallGLSL;
@@ -43,7 +41,7 @@ standardnode.createShaderDefinition = function (device, options) {
         }
     }
 
-    if (options._shaderGraphChunkId) {
+    if (options._shaderGraphChunk) {
         graphCode[2] = '';
         if (rootShaderGraph.getIoPortByName('OUT_dAlpha') || rootShaderGraph.getIoPortByName('OUT_dNormalMap') || rootShaderGraph.getIoPortByName('OUT_dGlossiness') || rootShaderGraph.getIoPortByName('OUT_dSpecularity') || rootShaderGraph.getIoPortByName('OUT_dAlbedo') || rootShaderGraph.getIoPortByName('OUT_fragOut') || rootShaderGraph.getIoPortByName('OUT_dEmission')) {
             graphCode[2] += "#define SG_PS\n";
@@ -51,7 +49,7 @@ standardnode.createShaderDefinition = function (device, options) {
         }
     }
 
-    if (options._shaderGraphChunkId) {
+    if (options._shaderGraphChunk) {
         graphCode[3] = '';
         if (rootShaderGraph.getIoPortByName('OUT_dAlpha') || rootShaderGraph.getIoPortByName('OUT_dNormalMap') || rootShaderGraph.getIoPortByName('OUT_dGlossiness') || rootShaderGraph.getIoPortByName('OUT_dSpecularity') || rootShaderGraph.getIoPortByName('OUT_dAlbedo') || rootShaderGraph.getIoPortByName('OUT_fragOut') || rootShaderGraph.getIoPortByName('OUT_dEmission')) {
             graphCode[3] += rootCallGLSL;
@@ -82,7 +80,7 @@ standardnode.createShaderDefinition = function (device, options) {
         }
     }
 
-    if (options._shaderGraphChunkId) {
+    if (options._shaderGraphChunk) {
         graphCode[4] = '';
         if (rootShaderGraph.getIoPortByName('OUT_fragOut')) {
             graphCode[4] +=  'gl_FragColor = OUT_fragOut;\n';

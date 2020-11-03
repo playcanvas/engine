@@ -90,7 +90,7 @@ export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
-export { shadergraph } from './scene/materials/shader-graph.js';
+export { ShaderGraphBuilder } from './scene/materials/shader-graph-builder.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';

@@ -79,12 +79,12 @@ ProgramLibrary.prototype.getProgram = function (name, options) {
 
 ProgramLibrary.prototype.storeNewProgram = function (name, options) {
     var opt = {};
-    if (name === "standard") {
+    if (name === "standard" || name === "standardnode") {
         // For standard material saving all default values is overkill, so we store only diff
         var defaultMat = this._getDefaultStdMatOptions(options.pass);
 
         for (var p in options) {
-            if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
+            if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p] && p !== '_shaderGraphChunk') || p === "pass")
                 opt[p] = options[p];
         }
     } else {

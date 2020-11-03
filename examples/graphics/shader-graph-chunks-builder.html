@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Shader Graph Nodes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+    
+    <!-- The script -->
+    <script>
+        var entity, light, camera;
+        var time = 0;
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // Create an Entity with a camera component
+        camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 25);
+        app.root.addChild(camera);
+
+        // Create an entity with a directional light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 0.8, 0.25)
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(15, -20, 0);
+
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            entity = new pc.Entity();
+            var modelComponent = entity.addComponent("model", {
+                    type: "asset",
+                    asset: asset.resource.model
+                });
+            app.root.addChild(entity);
+            var model = modelComponent.model;
+            var diffuseMap = model.getMaterials()[0].diffuseMap;
+
+            app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
+                var emissiveMap = asset.resource;
+                app.assets.loadFromUrl("../assets/core_nodes.json", "text", function (err, asset) {
+                    var coreNodeList = asset.resource;
+
+                    //create a shader graph builder
+                    var builder = new pc.ShaderGraphBuilder(coreNodeList);
+
+                    //add input parameters
+                    var timeParam = builder.addParam('float', 'uTime', 0.0);
+                    var emissiveTexParam = builder.addParam('sampler2D', 'uEmissiveMap', emissiveMap);
+                    var emissiveColParam = builder.addParam('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
+
+                    //create and hook up graph nodes
+                    var scrollNode = builder.addNode('add2', builder.addNode('joinVec2', timeParam, timeParam), builder.addNode('uv0'));
+                    var emissiveSampleNode = builder.addNode('texSample', emissiveTexParam, scrollNode);
+                    var emissiveCalcNode = builder.addNode('mul3', emissiveColParam, {node:emissiveSampleNode, port:'rgb'});
+
+                    //hook up outputs
+                    builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'dAlpha');
+                    builder.addOutput(emissiveCalcNode, 'vec3', 'dEmission');
+
+                    //return built shader graph chunk
+                    var shaderGraphChunk = builder.getShaderGraphChunk();
+
+                    //replace model's materials
+                    var originalMaterials=[];
+                    var shaderGraphMaterials=[];
+                    
+                    model.meshInstances.forEach(function (meshInstance) {
+                        if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
+                            var index = originalMaterials.indexOf(meshInstance.material);
+
+                            if (index === -1) {
+                                index = shaderGraphMaterials.length;
+
+                                originalMaterials.push(meshInstance.material);                            
+                                shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
+                            }
+
+                            meshInstance.material = shaderGraphMaterials[index];
+                            
+                            meshInstance.material.alphaTest = 0.5;
+                            meshInstance.material.update();
+                        }
+                    });
+
+                    //update time parameter and alpha test every frame
+                    app.on("update", function (dt) {
+                        time += dt;
+                        shaderGraphMaterials.forEach(function (material) {
+                            material.setShaderGraphParameter('uTime', time);
+                            material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
+                        });
+                    });
+
+                    app.start();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
