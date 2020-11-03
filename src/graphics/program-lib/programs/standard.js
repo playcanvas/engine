@@ -1110,7 +1110,9 @@ var standard = {
         }
 
         if (needsNormal) {
-            code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
+            var hasRotation = (options.skyboxRotation && (options.skyboxRotation.x !== 0.0 || options.skyboxRotation.y !== 0.0 || options.skyboxRotation.z !== 0.0));
+
+            code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : hasRotation ? chunks.cubeMapProjectNoneRotPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 

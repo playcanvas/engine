@@ -1,7 +1,10 @@
 import { Color } from '../../core/color.js';
 
 import { Vec2 } from '../../math/vec2.js';
+import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
+import { Mat3 } from '../../math/mat3.js';
+import { Mat4 } from '../../math/mat4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
@@ -189,6 +192,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * Defaults to pc.CUBEPROJ_NONE.
  * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
  * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
+ * @property {pc.Quat} cubeMapRotation The rotation of the cubeMap.
  * @property {number} reflectivity Environment map intensity.
  *
  * @property {pc.Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
@@ -253,6 +257,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.
  * * fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.
  * * cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.
+ * * // cubeMapRotation: the value of {@link pc.StandardMaterial#cubeMapRotation}.
  * * useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.
  * * blendType: the value of {@link pc.Material#blendType}.
  * * twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.
@@ -292,6 +297,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
+ * * skyboxRotation: reflected skybox rotation.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -1006,6 +1012,16 @@ Object.assign(StandardMaterial.prototype, {
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+            }
+
+            if (this.useSkybox)
+            {
+                if (!this._cubeMapRotationMatrix4) this._cubeMapRotationMatrix4 = new Mat4();
+                this._cubeMapRotationMatrix4.setTRS(Vec3.ZERO, scene._skyboxRotation, Vec3.ONE);
+                if (!this._cubeMapRotationMatrix3) this._cubeMapRotationMatrix3 = new Mat3();
+                this._cubeMapRotationMatrix4.invertTo3x3(this._cubeMapRotationMatrix3);
+
+                this._setParameter('cubeMapRotationMatrix', this._cubeMapRotationMatrix3.data);
             }
         }
 

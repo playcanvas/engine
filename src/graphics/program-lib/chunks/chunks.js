@@ -30,6 +30,7 @@ import combineDiffuseSpecularOldPS from './combineDiffuseSpecularOld.frag';
 import cookiePS from './cookie.frag';
 import cubeMapProjectBoxPS from './cubeMapProjectBox.frag';
 import cubeMapProjectNonePS from './cubeMapProjectNone.frag';
+import cubeMapProjectNoneRotPS from './cubeMapProjectNoneRot.frag';
 import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
@@ -163,6 +164,7 @@ import skinTexVS from './skinTex.vert';
 import skyboxPS from './skybox.frag';
 import skyboxVS from './skybox.vert';
 import skyboxHDRPS from './skyboxHDR.frag';
+import skyboxHDRRotPS from './skyboxHDRRot.frag';
 import skyboxPrefilteredCubePS from './skyboxPrefilteredCube.frag';
 import specularPS from './specular.frag';
 import specularAaNonePS from './specularAaNone.frag';
@@ -232,6 +234,7 @@ var shaderChunks = {
     cookiePS: cookiePS,
     cubeMapProjectBoxPS: cubeMapProjectBoxPS,
     cubeMapProjectNonePS: cubeMapProjectNonePS,
+    cubeMapProjectNoneRotPS: cubeMapProjectNoneRotPS,
     detailModesPS: detailModesPS,
     diffusePS: diffusePS,
     diffuseDetailMapPS: diffuseDetailMapPS,
@@ -365,6 +368,7 @@ var shaderChunks = {
     skyboxPS: skyboxPS,
     skyboxVS: skyboxVS,
     skyboxHDRPS: skyboxHDRPS,
+    skyboxHDRRotPS: skyboxHDRRotPS,
     skyboxPrefilteredCubePS: skyboxPrefilteredCubePS,
     specularPS: specularPS,
     specularAaNonePS: specularAaNonePS,

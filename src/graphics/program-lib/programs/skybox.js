@@ -6,7 +6,7 @@ import { gammaCode, precisionCode, tonemapCode } from './common.js';
 var skybox = {
     generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
-                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.mip;
+                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.useRotation + "" + options.mip;
         return key;
     },
 
@@ -20,7 +20,8 @@ var skybox = {
         fshader += gammaCode(options.gamma);
         fshader += tonemapCode(options.toneMapping);
         fshader += shaderChunks.rgbmPS;
-        fshader += shaderChunks.skyboxHDRPS
+        var skyboxChunkPS = options.useRotation ? shaderChunks.skyboxHDRRotPS : shaderChunks.skyboxHDRPS;
+        fshader += skyboxChunkPS
             .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
             .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
 

@@ -141,6 +141,7 @@ var standardMaterialParameterTypes = {
     cubeMap: 'cubemap',
     cubeMapProjection: 'number',
     cubeMapProjectionBox: 'boundingbox',
+    // cubeMapRotation: 'quat',
 
     lightVertexColor: 'boolean',
     lightVertexColorChannel: 'string',
