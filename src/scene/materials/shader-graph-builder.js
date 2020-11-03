@@ -4,7 +4,7 @@ var id = 0;
 
 /**
  * @class
- * @name ShaderGraphBuilder
+ * @name pc.ShaderGraphBuilder
  * @classdesc A Shader Graph Builder class
  * @param {object|string} coreNodeList - core node list object or JSON string
  */
@@ -30,31 +30,31 @@ ShaderGraphBuilder.prototype.constructor = ShaderGraphBuilder;
 
 Object.assign(ShaderGraphBuilder.prototype, {
     /**
-    * @function
-    * @name pc.ShaderGraphBuilder#addParam
-    * @description adds a parameter input to graph
-    * @param {string} type - type of parameter
-    * @param {string} name - name of parameter
-    * @param {any} value - value of parameter
-    * @returns {any} returns the created input port
-    */
+     * @function
+     * @name pc.ShaderGraphBuilder#addParam
+     * @description adds a parameter input to graph
+     * @param {string} type - type of parameter
+     * @param {string} name - name of parameter
+     * @param {any} value - value of parameter
+     * @returns {any} returns the created input port
+     */
     addParam: function (type, name, value) {
         var ioPort = this.graph.addInput(type, name, value);
         return ioPort;
     },
     /**
-    * @function
-    * @name pc.ShaderGraphBuilder#addNode
-    * @description creates and adds a core node to the shader graph and connects up inputs
-    * @param {string} name - name of parameter
-    * @param {object} [arguments] - 0-N output node ports or params to connect to new core node inputs - number and port type of arguments must match.
-    * @returns {number} returns the created node id
-    * @example
-    * var node0 = pc.shadergraph.addNode('uv0');
-    * var node1 = pc.shadergraph.addNode('texSample', param0, node0 );
-    * var node2 = pc.shadergraph.addNode('splitVec4', node1 );
-    * var node3 = pc.shadergraph.addNode('mul3', param1, node42 );
-    */
+     * @function
+     * @name pc.ShaderGraphBuilder#addNode
+     * @description creates and adds a core node to the shader graph and connects up inputs
+     * @param {string} name - name of parameter
+     * @param {object} [arguments] - 0-N output node ports or params to connect to new core node inputs - number and port type of arguments must match.
+     * @returns {number} returns the created node id
+     * @example
+     * var node0 = pc.shadergraph.addNode('uv0');
+     * var node1 = pc.shadergraph.addNode('texSample', param0, node0 );
+     * var node2 = pc.shadergraph.addNode('splitVec4', node1 );
+     * var node3 = pc.shadergraph.addNode('mul3', param1, node42 );
+     */
     addNode: function (name) {
         var args = arguments;
         var coreNode = this.nodes[name];
@@ -119,7 +119,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
     },
     /**
      * @function
-     * @name pc.ShaderGraphBuilder#getShaderGraphChunkId
+     * @name pc.ShaderGraphBuilder#getShaderGraphChunk
      * @description get shader graph chunk id
      * @returns {string} shader graph chunk id string
      */

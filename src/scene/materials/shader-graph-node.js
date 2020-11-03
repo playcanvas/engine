@@ -9,7 +9,7 @@ var id = 0;
  * @private
  * @class
  * @name ShaderGraphNode
- * @classdesc A Shader Graph Node class is used by shader graphs
+ * @classdesc A Shader Graph Node class used by shader graphs
  * @param {string} funcGlsl - shader function used by this material
  * @param {string} declGlsl - shader declarations used by the shader function
  */
