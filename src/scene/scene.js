@@ -55,8 +55,7 @@ import { StandardMaterial } from './materials/standard-material.js';
  * * {@link pc.TONEMAP_ACES}
  *
  * Defaults to pc.TONEMAP_LINEAR.
- * @property {number} exposure The exposure value tweaks the overall brightness of
- * the scene. Defaults to 1.
+ * @property {number} exposure The exposure value tweaks the overall brightness of the scene. Defaults to 1.
  * @property {pc.Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
@@ -65,12 +64,11 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
- * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
- * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
- * Defaults to 1.
- * @property {number} lightmapMaxResolution The maximum lightmap resolution. Defaults to
- * 2048.
+ * @property {pc.Layer[]} skyboxLayers An array of {@link pc.Layer} specifiying which layers the skybox gets added to. Defaults to [{@link pc.LAYERID_SKYBOX}].
+ * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+ * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes. Defaults to 0 (base level).
+ * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier. Defaults to 1.
+ * @property {number} lightmapMaxResolution The maximum lightmap resolution. Defaults to 2048.
  * @property {number} lightmapMode The lightmap baking mode. Can be:
  *
  * * {@link pc.BAKE_COLOR}: single color lightmap
@@ -115,6 +113,9 @@ function Scene() {
 
     this._skyboxIntensity = 1;
     this._skyboxMip = 0;
+
+    // ids of layers the skybox mesh is added to
+    this._skyboxLayers = [LAYERID_SKYBOX];
 
     this.lightmapSizeMultiplier = 1;
     this.lightmapMaxResolution = 2048;
@@ -199,6 +200,17 @@ Object.defineProperty(Scene.prototype, 'skybox', {
     },
     set: function (value) {
         this._skyboxCubeMap = value;
+        this._resetSkyboxModel();
+        this.updateShaders = true;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'skyboxLayers', {
+    get: function () {
+        return this._skyboxLayers;
+    },
+    set: function (value) {
+        this._skyboxLayers = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
     }
@@ -353,24 +365,9 @@ Scene.prototype.applySettings = function (settings) {
     this.updateShaders = true;
 };
 
-Scene.prototype._updateSkybox = function (device) {
-    // Create skybox
+Scene.prototype._createSkyboxModel = function (device, usedTex) {
+
     if (!this.skyboxModel) {
-
-        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
-        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
-        // to change the look of existing scenes dramatically.
-        // NOTE: the table skips the 32x32 mipmap
-        var skyboxMapping = [0, 1, 3, 4, 5, 6];
-
-        // select which texture to use for the backdrop
-        var usedTex =
-            this._skyboxMip ?
-                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
-                this._skyboxCubeMap || this._skyboxPrefiltered[0];
-        if (!usedTex) {
-            return;
-        }
 
         var material = new Material();
         var scene = this;
@@ -393,28 +390,63 @@ Scene.prototype._updateSkybox = function (device) {
         material.cull = CULLFACE_FRONT;
         material.depthWrite = false;
 
-        var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
-        if (skyLayer) {
-            var node = new GraphNode();
-            var mesh = createBox(device);
-            var meshInstance = new MeshInstance(node, mesh, material);
-            meshInstance.cull = false;
-            meshInstance._noDepthDrawGl1 = true;
+        var node = new GraphNode("Skydome");
+        var mesh = createBox(device);
+        var meshInstance = new MeshInstance(node, mesh, material);
+        meshInstance.cull = false;
+        meshInstance._noDepthDrawGl1 = true;
 
-            var model = new Model();
-            model.graph = node;
-            model.meshInstances = [meshInstance];
-            this.skyboxModel = model;
+        var model = new Model();
+        model.graph = node;
+        model.meshInstances = [meshInstance];
 
-            skyLayer.addMeshInstances(model.meshInstances);
-            this.skyLayer = skyLayer;
+        this.skyboxModel = model;
+    }
 
-            // enable the layer on first skybox update (the skybox layer is created disabled)
-            if (this._firstUpdateSkybox) {
-                skyLayer.enabled = true;
-                this._firstUpdateSkybox = false;
+    return this.skyboxModel;
+};
+
+Scene.prototype._updateSkybox = function (device) {
+
+    // Create skybox
+    if (!this.skyboxModel) {
+
+        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
+        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
+        // to change the look of existing scenes dramatically.
+        // NOTE: the table skips the 32x32 mipmap
+        var skyboxMapping = [0, 1, 3, 4, 5, 6];
+
+        // select which texture to use for the backdrop
+        var usedTex =
+            this._skyboxMip ?
+                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                this._skyboxCubeMap || this._skyboxPrefiltered[0];
+        if (!usedTex) {
+            return;
+        }
+
+        // assign meshInstance of the skydome model to layers
+        var skyboxSet = false;
+        for (var i = 0; i < this._skyboxLayers.length; i++) {
+            var layer = this.layers.getLayerById(this._skyboxLayers[i]);
+            if (layer) {
+
+                var model = this._createSkyboxModel(device, usedTex);
+                layer.addMeshInstances(model.meshInstances);
+
+                // enable the default skybox layer on first skybox update (the skybox layer is created disabled)
+                var isSkyLayer = this._skyboxLayers[i] === LAYERID_SKYBOX;
+                if (isSkyLayer && this._firstUpdateSkybox) {
+                    layer.enabled = true;
+                    this._firstUpdateSkybox = false;
+                }
+
+                skyboxSet = true;
             }
+        }
 
+        if (skyboxSet) {
             this.fire("set:skybox", usedTex);
         }
     }
@@ -422,7 +454,12 @@ Scene.prototype._updateSkybox = function (device) {
 
 Scene.prototype._resetSkyboxModel = function () {
     if (this.skyboxModel) {
-        this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
+
+        // remove mesh instances from layers
+        for (var i = 0; i < this._skyboxLayers.length; i++) {
+            var layer = this.layers.getLayerById(this._skyboxLayers[i]);
+            layer.removeMeshInstances(this.skyboxModel.meshInstances);
+        }
         this.skyboxModel.destroy();
     }
     this.skyboxModel = null;

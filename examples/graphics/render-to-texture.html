@@ -37,8 +37,6 @@
 
         var miniStats = new pcx.MiniStats(app);
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
         // helper function to create a primitive with shape type, position, scale, color and layer
         function createPrimitive(primitiveType, position, scale, color, layer) {
             // create material of specified color
@@ -69,7 +67,9 @@
             format: pc.PIXELFORMAT_R8_G8_B8,
             autoMipmap: true,
             minFilter: pc.FILTER_LINEAR,
-            magFilter: pc.FILTER_LINEAR
+            magFilter: pc.FILTER_LINEAR,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
         var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, texture, { depth: true });
 
@@ -90,13 +90,14 @@
         createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id, tvLayer.id]);
 
         // Create main camera, which renders entities in world layer
+        // Note: do not specify 'layers' to be world only, as we need the camera to be added to other default layers as well (skydome, depth ..)
         var camera = new pc.Entity();
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.4),
-            layers: [worldLayer.id]
+            fov: 100
         });
-        camera.translate(0, 20, 25);
-        camera.lookAt(pc.Vec3.ZERO);
+        camera.translate(0, 9, 15);
+        camera.lookAt(1, 4, 0);
         app.root.addChild(camera);
 
         // Create tv camera, which renders entities in tv layer
@@ -124,12 +125,34 @@
         app.root.addChild(light);
 
         // create a plane called tv which we use to display rendered texture
-        var tv = createPrimitive("plane", new pc.Vec3(4, 4, -5), new pc.Vec3(10, 5, 5), new pc.Color(1, 1, 1), [worldLayer.id]);
+        var tv = createPrimitive("plane", new pc.Vec3(6, 8, -5), new pc.Vec3(20, 10, 10), new pc.Color(1, 1, 1), [worldLayer.id]);
         tv.setLocalEulerAngles(90, 0, 0);
         tv.model.castShadows = false;
         tv.model.receiveShadows = false;
         tv.model.material.diffuseMap = texture;     // assign our rendered texture as a diffuse texture
         tv.model.material.update();
+
+
+        // setup skydome
+        app.scene.skyboxMip = 0;        // use top mipmap level of cubemap (full resolution)
+
+        // in additionl to SKYBOX layer, add skybox mesh to tvLayer to render into the texture as well
+        app.scene.skyboxLayers = [pc.LAYERID_SKYBOX, tvLayer.id];
+
+        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+            url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
+        });
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+        cubemapAsset.ready(function () {
+            app.scene.setSkybox(cubemapAsset.resources);
+        });
+
+        app.scene.gammaCorrection = pc.GAMMA_SRGB;
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // update things each frame
         var time = 0;
@@ -137,7 +160,7 @@
         app.on("update", function (dt) {
             // rotate tv camera around the objects
             time += dt;
-            tvCamera.setLocalPosition(12 * Math.sin(time), 5, 12 * Math.cos(time));
+            tvCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));
             tvCamera.lookAt(pc.Vec3.ZERO);
 
             // every 5 seconds switch tv camera between perspective and orthographic projection

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Render To Cubemap</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app
+        var app = new pc.Application(canvas);
+
+    </script>
+
+    <!-- Include cube map renderer script after the app was created -->
+    <script src="../assets/scripts/utils/cubemap-renderer.js"></script>
+
+    <script>
+
+        // start the update loop
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        // display mini stats
+        var miniStats = new pcx.MiniStats(app);
+
+        // set up some general scene rendering properties
+        app.scene.gammaCorrection = pc.GAMMA_SRGB;
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
+        // setup skydome
+        app.scene.skyboxMip = 0;        // use top mipmap level of cubemap (full resolution)
+        app.scene.skyboxIntensity = 2;  // make it brighter
+
+        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+            url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
+        });
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+        cubemapAsset.ready(function () {
+            app.scene.setSkybox(cubemapAsset.resources);
+        });
+
+        // helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
+        var createHighQualitySphere = function (material) {
+            
+            // create hight resolution sphere
+            var mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
+
+            // Create the mesh instance
+            var node = new pc.GraphNode();
+            this.meshInstance = new pc.MeshInstance(node, mesh, material);
+
+            // Create a model and add the mesh instance to it
+            var model = new pc.Model();
+            model.graph = node;
+            model.meshInstances = [this.meshInstance];
+
+            // Create Entity and add it to the scene
+            var entity = new pc.Entity();
+            app.root.addChild(entity);
+
+            // Add a model compoonent
+            app.systems.model.addComponent(entity, {
+                type: 'asset'
+            });
+            entity.model.model = model;
+
+            return entity;
+        }
+
+        // helper function to create a primitive with shape type, position, scale, color and layer
+        function createPrimitive(primitiveType, position, scale, color, layer) {
+            // create material of specified color
+            var material = new pc.StandardMaterial();
+            material.diffuse = color;
+            material.update();
+
+            // create primitive
+            var primitive = new pc.Entity();
+            primitive.addComponent('model', {
+                type: primitiveType,
+                layers: layer
+            });
+            primitive.model.material = material;
+
+            // set position and scale and add it to scene
+            primitive.setLocalPosition(position);
+            primitive.setLocalScale(scale);
+            app.root.addChild(primitive);
+
+            return primitive;
+        }
+
+        // create material for the shiny ball, and the sphere itself
+        var shinyMat = new pc.StandardMaterial();
+        var shinyBall = createHighQualitySphere(shinyMat);
+        shinyBall.setLocalPosition(0, 0, 0);
+        shinyBall.setLocalScale(10, 10, 10);
+
+        // cubemap rendering needs 6 layers to be created, one for each rendered face
+        var worldLayer = app.scene.layers.getLayerByName("World");
+        var worldLayerIndex = app.scene.layers.layerList.indexOf(worldLayer);
+
+        var layerBaseName = "CubeLayer";
+        for (var l = 0; l < 6; l++) {
+            var layer = new pc.Layer({ name: (layerBaseName + l) });
+
+            // insert it right after world layer. This will make it a frame late, but can use shadows which are updated as part of World layer
+            // if shadows are not needed, it can be inserted before world layer
+            app.scene.layers.insertOpaque(layer, worldLayerIndex + 1);
+        }
+
+        // add cubemapRenderer which takes care of rendering dynamic cubemap
+        shinyBall.addComponent('script');
+        shinyBall.script.create('cubemapRenderer', {
+            attributes: {
+                resolution: 256,
+                mipmaps: true,
+                depth: true,
+                layerBaseName: layerBaseName
+            }
+        });
+
+        // finish set up of shiny material - make reflection a bit darker
+        shinyMat.diffuse = new pc.Color(0.6, 0.6, 0.6);
+
+        // use cubemap which is generated by cubemapRenderer
+        shinyMat.useSkybox = false;
+        shinyMat.cubeMap = shinyBall.script.cubemapRenderer.cubeMap;
+
+        // make it shiny without diffuse component        
+        shinyMat.metalness = 1;
+        shinyMat.useMetalness = true;
+        shinyMat.update();
+
+        // set up all cubemap layers in addition to default skybox layer to render skybox mesh
+        // in order to render skybox into cubemap
+        app.scene.skyboxLayers = [pc.LAYERID_SKYBOX].concat(shinyBall.script.cubemapRenderer.layers);
+
+        // list of all layers we render meshes to - which is world, and all cubemap faces
+        var allLayersIds = shinyBall.script.cubemapRenderer.layers.slice();
+        allLayersIds.push(worldLayer.id);
+
+        // create few random primitives that we will render both into the world and into the reflection cubemap
+        var entities = [];
+        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+        for (var i = 0; i < 6; i++) {
+            var shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+            var color = new pc.Color(Math.random(), Math.random(), Math.random());
+            entities.push(createPrimitive(shapeName, pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), color, allLayersIds));
+        }
+
+        // create green plane as a base to cast shadows on, again rendered into the world and also the reflection
+        createPrimitive("plane", new pc.Vec3(0, -8, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), allLayersIds);
+
+        // Create main camera, which renders entities in (default) world layer
+        var camera = new pc.Entity("MainCamera");
+        camera.addComponent("camera", {
+            fov: 60
+        });
+        app.root.addChild(camera);
+
+        // Create an Entity with a directional light component and add it to all layers
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1, 1),
+            range: 40,
+            castShadows: true,
+            layers: allLayersIds,
+            shadowBias: 0.2,
+            normalOffsetBias: 0.05,
+            shadowDistance: 20,
+        });
+        app.root.addChild(light);
+
+        // update things each frame
+        var time = 0;
+        app.on("update", function (dt) {
+            time += dt;
+
+            // rotate primitives around their center and also orbit them around the shiny sphere
+            for (var e = 0; e < entities.length; e++) {
+                var scale = (e + 1) / entities.length;
+                var offset = time + e * 200;
+                entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
+                entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
+            }
+
+            // slowly orbit camera around
+            camera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
+            camera.lookAt(pc.Vec3.ZERO);
+        });
+    </script>
+</body>
+</html>

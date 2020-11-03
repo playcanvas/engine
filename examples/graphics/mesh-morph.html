@@ -132,15 +132,15 @@
             model.morphInstances.push(morphInstance);
 
             // Create Entity and add it to the scene
-            this.entity = new pc.Entity();
-                entity.setLocalPosition(x, y, z);
-            app.root.addChild(this.entity);
+            var entity = new pc.Entity();
+            entity.setLocalPosition(x, y, z);
+            app.root.addChild(entity);
 
             // Add a model compoonent
-            app.systems.model.addComponent(this.entity, {
+            app.systems.model.addComponent(entity, {
                 type: 'asset'
             });
-            this.entity.model.model = model;
+            entity.model.model = model;
 
             return morphInstance;
         }
