@@ -10,9 +10,9 @@ import { StandardMaterial } from './standard-material.js';
  * @class
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
- * @classdesc Standard node material is sub class of the StandardMaterial, and adds Shadergraph interop functionality
+ * @classdesc StandardNodeMaterial is sub class of the StandardMaterial, and adds shader graph interop functionality
  * @param {pc.StandardMaterial} mat - optional material which is cloned
- * @param {string} chunk - optional id of shader graph chunk to be used
+ * @param {any} chunk - optional shader graph node chunk to be used
  */
 function StandardNodeMaterial(mat, chunk) {
     StandardMaterial.call(this);
@@ -49,7 +49,7 @@ Object.assign(StandardNodeMaterial.prototype, {
    /**
     * @function
     * @name pc.StandardNodeMaterial#setShaderGraphParameter
-    * @description sets a parameter in the shader graph
+    * @description sets a shader graph parameter
     * @param {string} name - name of the parameter
     * @param {any} value - value of the parameter
     */
