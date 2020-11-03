@@ -15,24 +15,25 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
 
     float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
+    vec3 mirror = vec3(-1.0, 1.0, 1.0);
     vec3 refl = cubeMapProject(tReflDirW);
     vec4 cubes0;
     vec4 cubes1;
     if (bias < 1.0) {
-        cubes0 = textureCube(texture_prefilteredCubeMap128, fixSeams(refl, 0.0));
-        cubes1 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0));
+        cubes0 = textureCube(texture_prefilteredCubeMap128, fixSeams(refl, 0.0) * mirror);
+        cubes1 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0) * mirror);
     } else if (bias < 2.0) {
-        cubes0 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0));
-        cubes1 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0));
+        cubes0 = textureCube(texture_prefilteredCubeMap64, fixSeams(refl, 1.0) * mirror);
+        cubes1 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0) * mirror);
     } else if (bias < 3.0) {
-        cubes0 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0));
-        cubes1 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0));
+        cubes0 = textureCube(texture_prefilteredCubeMap32, fixSeams(refl, 2.0) * mirror);
+        cubes1 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0) * mirror);
     } else if (bias < 4.0) {
-        cubes0 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0));
-        cubes1 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0));
+        cubes0 = textureCube(texture_prefilteredCubeMap16, fixSeams(refl, 3.0) * mirror);
+        cubes1 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0) * mirror);
     } else {
-        cubes0 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0));
-        cubes1 = textureCube(texture_prefilteredCubeMap4, fixSeams(refl, 5.0));
+        cubes0 = textureCube(texture_prefilteredCubeMap8, fixSeams(refl, 4.0) * mirror);
+        cubes1 = textureCube(texture_prefilteredCubeMap4, fixSeams(refl, 5.0) * mirror);
     }
 
     vec4 cubeFinal = mix(cubes0, cubes1, fract(bias));
