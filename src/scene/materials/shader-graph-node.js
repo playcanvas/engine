@@ -91,31 +91,32 @@ Object.assign(ShaderGraphNode.prototype, {
         var i;
         if (this.graphData.ioPorts && this.graphData.ioPorts.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
-                if (this.graphData.ioPorts[i] && this.graphData.ioPorts[i].name && this.graphData.ioPorts[i].type) {
-                    if (this.graphData.ioPorts[i].type === 'sampler2D' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.ioPorts[i].valueTex && this.graphData.ioPorts[i].valueTex instanceof Texture)) {
+                var ioPort = this.graphData.ioPorts[i];
+                if (ioPort && ioPort.name && ioPort.type) {
+                    if (ioPort.type === 'sampler2D' && !ioPort.name.startsWith('OUT_') ) {
+                        if (!(ioPort.valueTex && ioPort.valueTex instanceof Texture)) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'float' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number')) {
+                    } else if (ioPort.type === 'float' && !ioPort.name.startsWith('OUT_') ) {
+                        if (!(ioPort.valueX != undefined && typeof(ioPort.valueX) === 'number')) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec2' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
-                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' )) {
+                    } else if (ioPort.type === 'vec2' && !ioPort.name.startsWith('OUT_') ) {
+                        if (!(ioPort.valueX != undefined && typeof(ioPort.valueX) === 'number' &&
+                              ioPort.valueY != undefined && typeof(ioPort.valueY) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec3' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
-                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
-                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' )) {
+                    } else if (ioPort.type === 'vec3' && !ioPort.name.startsWith('OUT_') ) {
+                        if (!(ioPort.valueX != undefined && typeof(ioPort.valueX) === 'number' &&
+                              ioPort.valueY != undefined && typeof(ioPort.valueY) === 'number' &&
+                              ioPort.valueZ != undefined && typeof(ioPort.valueZ) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec4' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
-                        if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
-                              this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
-                              this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' &&
-                              this.graphData.ioPorts[i].valueW != undefined && typeof(this.graphData.ioPorts[i].valueW) === 'number' )) {
+                    } else if (ioPort.type === 'vec4' && !ioPort.name.startsWith('OUT_') ) {
+                        if (!(ioPort.valueX != undefined && typeof(ioPort.valueX) === 'number' &&
+                              ioPort.valueY != undefined && typeof(ioPort.valueY) === 'number' &&
+                              ioPort.valueZ != undefined && typeof(ioPort.valueZ) === 'number' &&
+                              ioPort.valueW != undefined && typeof(ioPort.valueW) === 'number' )) {
                             return false;
                         }
                     }
