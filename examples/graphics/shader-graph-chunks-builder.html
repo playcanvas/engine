@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Shader Graph Nodes</title>
+    <title>PlayCanvas Shader Graph Chunks Builder</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -73,9 +73,12 @@
                 var emissiveMap = asset.resource;
                 app.assets.loadFromUrl("../assets/core_nodes.json", "text", function (err, asset) {
                     var coreNodeList = asset.resource;
+                    
+                    //register loaded core nodes
+                    pc.shaderChunks.registerCoreShaderGraphNodes(coreNodeList);
 
                     //create a shader graph builder
-                    var builder = new pc.ShaderGraphBuilder(coreNodeList);
+                    var builder = new pc.ShaderGraphBuilder();
 
                     //add input parameters
                     var timeParam = builder.addParam('float', 'uTime', 0.0);

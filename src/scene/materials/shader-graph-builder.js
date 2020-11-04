@@ -1,3 +1,5 @@
+import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+
 import { ShaderGraphNode } from './shader-graph-node.js';
 
 var id = 0;
@@ -6,24 +8,13 @@ var id = 0;
  * @class
  * @name pc.ShaderGraphBuilder
  * @classdesc A Shader Graph Builder class
- * @param {object|string} coreNodeList - core node list object or JSON string
  */
-var ShaderGraphBuilder = function (coreNodeList) {
+var ShaderGraphBuilder = function () {
     id++;
+    this._nodes = shaderChunks._nodes;
 
-    var coreNodes = {};
-    if (coreNodeList) {
-        if (typeof coreNodeList === 'string') {
-            coreNodeList = JSON.parse(coreNodeList);
-        }
-        Object.keys(coreNodeList).forEach(function (key) {
-            coreNodes[key] = new ShaderGraphNode(coreNodeList[key].code);
-        });
-    }
-    this.nodes = coreNodes;
-
-    this.graph = new ShaderGraphNode();
-    this.graph.name = 'graphRoot_' + id;
+    this._graph = new ShaderGraphNode();
+    this._graph.name = 'graphRoot_' + id;
 };
 
 ShaderGraphBuilder.prototype.constructor = ShaderGraphBuilder;
@@ -39,7 +30,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @returns {any} returns the created input port
      */
     addParam: function (type, name, value) {
-        var ioPort = this.graph.addInput(type, name, value);
+        var ioPort = this._graph.addInput(type, name, value);
         return ioPort;
     },
     /**
@@ -57,8 +48,8 @@ Object.assign(ShaderGraphBuilder.prototype, {
      */
     addNode: function (name) {
         var args = arguments;
-        var coreNode = this.nodes[name];
-        var sgIndex = this.graph.addSubGraph(coreNode);
+        var coreNode = this._nodes[name];
+        var sgIndex = this._graph.addSubGraph(coreNode);
 
         var sgInputs = coreNode.graphData.ioPorts.filter(function (ioPort) {
             return ioPort.name.startsWith('IN_');
@@ -70,13 +61,13 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 if (typeof(arg) === 'number') {
                     // ret port of a node
                     var argNodeIndex = arg;
-                    this.graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
+                    this._graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
                 } else if (arg.type) {
                     // ioPort (ioPort)
-                    this.graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
+                    this._graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
                 } else {
                     // specific port of a node
-                    this.graph.connect(arg.node, 'OUT_' + arg.port, sgIndex, sgInputs[argIndex].name);
+                    this._graph.connect(arg.node, 'OUT_' + arg.port, sgIndex, sgInputs[argIndex].name);
                 }
             }
         } else {
@@ -103,18 +94,18 @@ Object.assign(ShaderGraphBuilder.prototype, {
      */
     addOutput: function (arg, type, name) {
         // assumes this is only called once per graph output TODO: verify this
-        var ioPort = this.graph.addOutput(type, name);
+        var ioPort = this._graph.addOutput(type, name);
 
         if (typeof(arg) === 'number') {
             // ret port of a node
             var argNodeIndex = arg;
-            this.graph.connect(argNodeIndex, 'OUT_ret', -1, ioPort.name);
+            this._graph.connect(argNodeIndex, 'OUT_ret', -1, ioPort.name);
         } else if (arg.type) {
             // ioPort (ioPort)
-            this.graph.connect(-1, arg.name, -1, ioPort.name);
+            this._graph.connect(-1, arg.name, -1, ioPort.name);
         } else {
             // specific port of a node
-            this.graph.connect(arg.node, 'OUT_' + arg.port, -1, ioPort.name);
+            this._graph.connect(arg.node, 'OUT_' + arg.port, -1, ioPort.name);
         }
     },
     /**
@@ -124,7 +115,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @returns {any} shader graph chunk
      */
     getShaderGraphChunk: function () {
-        return this.graph;
+        return this._graph;
     }
 });
 
