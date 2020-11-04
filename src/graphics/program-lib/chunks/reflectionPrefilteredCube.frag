@@ -16,7 +16,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 
     float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
     vec3 mirror = vec3(-1.0, 1.0, 1.0);
-    vec3 refl = cubeMapProject(tReflDirW);
+    vec3 refl = cubeMapProject(tReflDirW)*vec3(-1,1,1);
     vec4 cubes0;
     vec4 cubes1;
     if (bias < 1.0) {

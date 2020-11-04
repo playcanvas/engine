@@ -26,7 +26,7 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
 }
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    vec3 reflDir = normalize(cubeMapProject(tReflDirW));
+    vec3 reflDir = normalize(cubeMapProject(tReflDirW)*vec3(-1,1,1));
 
     // Convert vector to DP coords
     bool up = reflDir.y > 0.0;

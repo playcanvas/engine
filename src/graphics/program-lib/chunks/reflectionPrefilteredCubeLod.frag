@@ -8,7 +8,6 @@ uniform float material_reflectivity;
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     float bias = saturate(1.0 - tGlossiness) * 5.0; // multiply by max mip level
     vec3 fixedReflDir = fixSeams(cubeMapProject(tReflDirW), bias);
-    fixedReflDir.x *= -1.0;
 
     vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
 

@@ -110,10 +110,6 @@ StandardMaterialValidator.prototype.validate = function (data) {
             if (!(data[key] instanceof Array && data[key].length === 3)) {
                 this.setInvalid(key, data);
             }
-        } else if (type === 'quat') {
-            if (!(data[key] instanceof Array && data[key].length === 4)) {
-                this.setInvalid(key, data);
-            }
         } else if (type === 'texture') {
             if (!pathMapping) {
                 if (typeof(data[key]) === 'number' || data[key] === null) {

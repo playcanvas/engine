@@ -1,10 +1,7 @@
 import { Color } from '../../core/color.js';
 
 import { Vec2 } from '../../math/vec2.js';
-import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
