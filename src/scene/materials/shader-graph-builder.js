@@ -26,7 +26,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @description adds a parameter input to graph
      * @param {string} type - type of parameter
      * @param {string} name - name of parameter
-     * @param {any} value - value of parameter
+     * @param {any} value - optional value of parameter
      * @returns {any} returns the created input port
      */
     addParam: function (type, name, value) {

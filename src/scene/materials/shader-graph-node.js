@@ -182,7 +182,7 @@ Object.assign(ShaderGraphNode.prototype, {
         } else if (typeof(value) === 'number') {
             ioPort = { type: type, name: name, valueX: value };
         } else {
-            ioPort = { type: type, name: name }; // output ports do not require a value
+            ioPort = { type: type, name: name }; // value is optional when adding ports
         }
 
         this.graphData.ioPorts.push(ioPort);
@@ -198,8 +198,8 @@ Object.assign(ShaderGraphNode.prototype, {
         return this._addIoPort(type, 'OUT_' + name, value);
     },
 
-    addConstant: function (type, value) {
-        return this._addIoPort(type, 'CONST_' + type + '_' + this.graphData.ioPorts.length, value); // create a unique name
+    addConstant: function (type, value, userId) {
+        return this._addIoPort(type, 'CONST_' + type + '_' + userId ? userId : this.graphData.ioPorts.length, value);
     },
 
     genCustomFuncVars: function () {
