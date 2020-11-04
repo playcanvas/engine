@@ -78,10 +78,10 @@
                     var coreNodeList = asset.resource;
                     
                     //register loaded core nodes
-                    pc.shaderNodes.register(coreNodeList);
+                    app.shaderNodes.register(coreNodeList);
 
                     //create a shader graph builder
-                    var builder = new pc.ShaderGraphBuilder();
+                    var builder = new pc.ShaderGraphBuilder(app);
 
                     //add input parameters
                     var timeParam = builder.addParam('float', 'uTime', 0.0);
@@ -126,7 +126,7 @@
                     app.on("update", function (dt) {
                         time += dt;
                         shaderGraphMaterials.forEach(function (material) {
-                            material.setShaderGraphParameter('uTime', time);
+                            material.setParameter('uTime', time);
                             material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
                         });
                     });

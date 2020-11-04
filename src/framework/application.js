@@ -80,6 +80,8 @@ import { BundleRegistry } from '../bundles/bundle-registry.js';
 
 import { ScriptRegistry } from '../script/script-registry.js';
 
+import { ShaderNodeRegistry } from '../graphics/shader-node-registry.js';
+
 import { I18n } from '../i18n/i18n.js';
 
 import { VrManager } from '../vr/vr-manager.js';
@@ -442,6 +444,8 @@ function Application(canvas, options) {
     this.enableBundles = (typeof TextDecoder !== 'undefined');
     this.scriptsOrder = options.scriptsOrder || [];
     this.scripts = new ScriptRegistry(this);
+
+    this.shaderNodes = new ShaderNodeRegistry(this);
 
     this.i18n = new I18n(this);
 

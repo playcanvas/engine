@@ -53,7 +53,6 @@ export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-export { shaderNodes } from './graphics/program-lib/nodes/nodes.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
@@ -62,6 +61,7 @@ export { RenderTarget } from './graphics/render-target.js';
 export { ScopeId } from './graphics/scope-id.js';
 export { ScopeSpace } from './graphics/scope-space.js';
 export { Shader } from './graphics/shader.js';
+export { ShaderNodeRegistry } from './graphics/shader-node-registry.js';
 export { Texture } from './graphics/texture.js';
 export { TransformFeedback } from './graphics/transform-feedback.js';
 export { VertexBuffer } from './graphics/vertex-buffer.js';

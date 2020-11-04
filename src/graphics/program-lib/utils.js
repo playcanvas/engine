@@ -9,9 +9,6 @@ import { shaderChunks } from './chunks/chunks.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
-import { shaderNodes } from './nodes/nodes.js';
-import { ShaderGraphNode } from '../../scene/materials/shader-graph-node.js';
-
 var attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
     vertex_normal: SEMANTIC_NORMAL,
@@ -97,19 +94,4 @@ shaderChunks.collectAttribs = collectAttribs;
 shaderChunks.createShader = createShader;
 shaderChunks.createShaderFromCode = createShaderFromCode;
 
-function registerCoreShaderGraphNodes(coreNodeList) {
-    var coreNodes = {};
-    if (coreNodeList) {
-        if (typeof coreNodeList === 'string') {
-            coreNodeList = JSON.parse(coreNodeList);
-        }
-        Object.keys(coreNodeList).forEach(function (key) {
-            coreNodes[key] = new ShaderGraphNode(coreNodeList[key].code);
-        });
-    }
-    shaderNodes._nodes = coreNodes;
-}
-
-shaderNodes.register = registerCoreShaderGraphNodes;
-
-export { collectAttribs, createShader, createShaderFromCode, registerCoreShaderGraphNodes };
+export { collectAttribs, createShader, createShaderFromCode };

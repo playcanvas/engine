@@ -1,17 +1,19 @@
-import { shaderNodes } from '../../graphics/program-lib/nodes/nodes.js';
-
 import { ShaderGraphNode } from './shader-graph-node.js';
 
 var id = 0;
 
 /**
+ * @private
  * @class
  * @name pc.ShaderGraphBuilder
  * @classdesc A Shader Graph Builder class
+ * @param {pc.Application} app - Application with shader graph core nodes registered that will be used to build the shader graph
  */
-var ShaderGraphBuilder = function () {
+var ShaderGraphBuilder = function (app) {
     id++;
-    this._nodes = shaderNodes._nodes;
+
+    this.app = app;
+    this._nodes = this.app.shaderNodes._nodes;
 
     this._graph = new ShaderGraphNode();
     this._graph.name = 'graphRoot_' + id;
@@ -21,6 +23,7 @@ ShaderGraphBuilder.prototype.constructor = ShaderGraphBuilder;
 
 Object.assign(ShaderGraphBuilder.prototype, {
     /**
+     * @private
      * @function
      * @name pc.ShaderGraphBuilder#addParam
      * @description adds a parameter input to graph
@@ -34,6 +37,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         return ioPort;
     },
     /**
+     * @private
      * @function
      * @name pc.ShaderGraphBuilder#addNode
      * @description creates and adds a core node to the shader graph and connects up inputs
@@ -76,6 +80,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         return sgIndex;
     },
     /**
+     * @private
      * @function
      * @name pc.ShaderGraphBuilder#addOutput
      * @description connect a node port to graph material output
@@ -109,6 +114,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         }
     },
     /**
+     * @private
      * @function
      * @name pc.ShaderGraphBuilder#getShaderGraphChunk
      * @description get shader graph chunk

@@ -7,6 +7,7 @@ import {
 import { StandardMaterial } from './standard-material.js';
 
 /**
+ * @private
  * @class
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
@@ -31,12 +32,6 @@ StandardNodeMaterial.prototype.constructor = StandardNodeMaterial;
 
 Object.assign(StandardNodeMaterial.prototype, {
 
-   /**
-    * @function
-    * @name pc.StandardNodeMaterial#clone
-    * @description Duplicates a Standard node material.
-    * @returns {pc.StandardNodeMaterial} A cloned Standard node material.
-    */
     clone: function () {
         var clone = new StandardNodeMaterial();
         StandardMaterial.prototype._cloneInternal.call(this, clone);
@@ -46,20 +41,15 @@ Object.assign(StandardNodeMaterial.prototype, {
         return clone;
     },
 
-   /**
-    * @function
-    * @name pc.StandardNodeMaterial#setShaderGraphParameter
-    * @description sets a shader graph parameter
-    * @param {string} name - name of the parameter
-    * @param {any} value - value of the parameter
-    */
-    setShaderGraphParameter: function (name, value) {
+    setParameter: function (name, data) {
+        StandardMaterial.prototype.setParameter.call(this, name, data);
+
         if (this._shaderGraphChunk) {
             var rootShaderGraph = this._shaderGraphChunk;
 
             var portName = 'IN_' + name + '_' + rootShaderGraph.id;
 
-            this.setParameter(portName, value);
+            StandardMaterial.prototype.setParameter.call(this, portName, data);
         }
     },
 
