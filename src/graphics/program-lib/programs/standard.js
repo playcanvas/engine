@@ -1109,10 +1109,15 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
-        if (needsNormal) {
-            var hasRotation = (options.skyboxRotation && (options.skyboxRotation.x !== 0.0 || options.skyboxRotation.y !== 0.0 || options.skyboxRotation.z !== 0.0));
+        if (options.cubeMapRotation && (options.cubeMapRotation.x !== 0.0 || options.cubeMapRotation.y !== 0.0 || options.cubeMapRotation.z !== 0.0)) {
+            code += "#ifndef CUBEMAPROT\n";
+            code += "#define CUBEMAPROT\n";
+            code += "uniform mat3 cubeMapRotationMatrix;\n";
+            code += "#endif\n";
+        }
 
-            code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : hasRotation ? chunks.cubeMapProjectNoneRotPS : chunks.cubeMapProjectNonePS;
+        if (needsNormal) {
+            code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 

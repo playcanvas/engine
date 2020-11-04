@@ -1,6 +1,9 @@
 uniform vec3 envBoxMin, envBoxMax;
 
 vec3 cubeMapProject(vec3 nrdir) {
+#ifdef CUBEMAPROT
+    nrdir = nrdir*cubeMapRotationMatrix;
+#endif    
     vec3 rbmax = (envBoxMax - vPositionW) / nrdir;
     vec3 rbmin = (envBoxMin - vPositionW) / nrdir;
 

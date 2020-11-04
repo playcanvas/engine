@@ -3,6 +3,8 @@ import { Color } from '../../../core/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 
+import { Quat } from '../../../math/quat.js';
+
 import { Texture } from '../../../graphics/texture.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
@@ -63,6 +65,8 @@ JsonStandardMaterialParser.prototype.initialize = function (material, data) {
             material[key] = new Vec2(value[0], value[1]);
         } else if (type === 'rgb') {
             material[key] = new Color(value[0], value[1], value[2]);
+        } else if (type === 'quat') {
+            material[key] = new Quat(value[0], value[1], value[2], value[3]);
         } else if (type === 'texture') {
             if (value instanceof Texture) {
                 material[key] = value;
