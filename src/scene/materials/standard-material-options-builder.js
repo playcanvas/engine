@@ -135,7 +135,6 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.packedNormal = isPackedNormalMap;
     options.fastTbn = stdMat.fastTbn;
     options.cubeMapProjection = stdMat.cubeMapProjection;
-    options.cubeMapRotation = stdMat.cubeMap ? stdMat.cubeMapRotation : options.cubeMapRotation;
     options.customFragmentShader = stdMat.customFragmentShader;
     options.refraction = !!stdMat.refraction;
     options.useMetalness = stdMat.useMetalness;
@@ -186,7 +185,7 @@ StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, 
     options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
     options.prefilteredCubemap = !!prefilteredCubeMap128;
     options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
-    options.cubeMapRotation = stdMat.cubeMap ? stdMat.cubeMapRotation : scene.skyboxRotation;
+    options.cubeMapRotationMatrix = stdMat.cubeMap ? stdMat.cubeMap.cubeMapRotationMatrix : scene.skyboxRotationMatrix;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options, stdMat, objDefs, sortedLights, staticLightList) {

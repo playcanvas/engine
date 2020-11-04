@@ -1109,7 +1109,7 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
-        if (options.cubeMapRotation && (options.cubeMapRotation.x !== 0.0 || options.cubeMapRotation.y !== 0.0 || options.cubeMapRotation.z !== 0.0)) {
+        if (options.cubeMapRotationMatrix && (options.cubeMapRotationMatrix.data[0] !== -1.0 || options.cubeMapRotationMatrix.data[4] !== 1.0 || options.cubeMapRotationMatrix.data[8] !== 1.0)) {
             code += "#ifndef CUBEMAPROT\n";
             code += "#define CUBEMAPROT\n";
             code += "uniform mat3 cubeMapRotationMatrix;\n";

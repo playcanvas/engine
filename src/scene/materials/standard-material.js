@@ -192,7 +192,6 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * Defaults to pc.CUBEPROJ_NONE.
  * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
  * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
- * @property {pc.Quat} cubeMapRotation The rotation of the cubeMap.
  * @property {number} reflectivity Environment map intensity.
  *
  * @property {pc.Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
@@ -257,7 +256,6 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.
  * * fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.
  * * cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.
- * * cubeMapRotation: the value of {@link pc.StandardMaterial#cubeMapRotation}.
  * * useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.
  * * blendType: the value of {@link pc.Material#blendType}.
  * * twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.
@@ -297,7 +295,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
- * * cubeMapRotation: cube Map Rotation.
+ * * cubeMapRotationMatrix: cube Map Rotation.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -955,7 +953,7 @@ Object.assign(StandardMaterial.prototype, {
         var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
 
         var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
-        var globalSkyRotation;
+        var globalSkyRotationMatrix;
         if (this.useSkybox) {
             globalSky128 = scene._skyboxPrefiltered[0];
             globalSky64 = scene._skyboxPrefiltered[1];
@@ -963,7 +961,7 @@ Object.assign(StandardMaterial.prototype, {
             globalSky16 = scene._skyboxPrefiltered[3];
             globalSky8 = scene._skyboxPrefiltered[4];
             globalSky4 = scene._skyboxPrefiltered[5];
-            globalSkyRotation = scene._skyboxRotation;
+            globalSkyRotationMatrix = scene._skyboxRotationMatrix;
         }
 
         var prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;
@@ -973,7 +971,7 @@ Object.assign(StandardMaterial.prototype, {
         var prefilteredCubeMap8 = this.prefilteredCubeMap8 || globalSky8;
         var prefilteredCubeMap4 = this.prefilteredCubeMap4 || globalSky4;
 
-        var cubeMapRotation = this.cubeMapRotation || globalSkyRotation;
+        var cubeMapRotationMatrix = this.cubeMap ? this.cubeMap.cubeMapRotationMatrix : globalSkyRotationMatrix;
 
         if (prefilteredCubeMap128) {
             var allMips = prefilteredCubeMap128 &&
@@ -1018,13 +1016,8 @@ Object.assign(StandardMaterial.prototype, {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
-            if (cubeMapRotation) {
-                if (!this._cubeMapRotationMatrix4) this._cubeMapRotationMatrix4 = new Mat4();
-                this._cubeMapRotationMatrix4.setTRS(Vec3.ZERO, cubeMapRotation, Vec3.ONE);
-                if (!this._cubeMapRotationMatrix3) this._cubeMapRotationMatrix3 = new Mat3();
-                this._cubeMapRotationMatrix4.invertTo3x3(this._cubeMapRotationMatrix3);
-
-                this._setParameter('cubeMapRotationMatrix', this._cubeMapRotationMatrix3.data);
+            if (cubeMapRotationMatrix && (cubeMapRotationMatrix.data[0] !== -1.0 || cubeMapRotationMatrix.data[4] !== 0.0 || cubeMapRotationMatrix.data[8] !== 0.0)) {
+                this._setParameter('cubeMapRotationMatrix', cubeMapRotationMatrix.data);
             }
         }
 
@@ -1171,7 +1164,6 @@ var _defineMaterialProps = function (obj) {
     _defineObject(obj, "prefilteredCubeMap16");
     _defineObject(obj, "prefilteredCubeMap8");
     _defineObject(obj, "prefilteredCubeMap4");
-    _defineObject(obj, "cubeMapRotation");
 
     _defineAlias(obj, "diffuseTint", "diffuseMapTint");
     _defineAlias(obj, "specularTint", "specularMapTint");

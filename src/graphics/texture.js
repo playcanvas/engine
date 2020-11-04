@@ -65,6 +65,7 @@ import {
  * @param {string} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
  * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
  * seam fixing shader code to look right. Defaults to false.
+ * @param {pc.Mat3} [options.cubeMapRotationMatrix] - specifies cubemap rotation matrix
  * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
  * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
  * pixel data. Defaults to true.
@@ -119,6 +120,8 @@ function Texture(graphicsDevice, options) {
     this._flipY = true;
     this._premultiplyAlpha = false;
 
+    this.cubeMapRotationMatrix = null;
+
     this._mipmaps = true;
 
     this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
@@ -168,6 +171,8 @@ function Texture(graphicsDevice, options) {
 
         this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
         this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
+
+        this.cubeMapRotationMatrix = options.cubeMapRotationMatrix !== undefined ? options.cubeMapRotationMatrix : null;
 
         this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
         this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
