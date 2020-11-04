@@ -53,6 +53,7 @@ export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
+export { shaderNodes } from './graphics/program-lib/nodes/nodes.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';

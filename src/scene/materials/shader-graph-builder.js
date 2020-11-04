@@ -1,4 +1,4 @@
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { shaderNodes } from '../../graphics/program-lib/nodes/nodes.js';
 
 import { ShaderGraphNode } from './shader-graph-node.js';
 
@@ -11,7 +11,7 @@ var id = 0;
  */
 var ShaderGraphBuilder = function () {
     id++;
-    this._nodes = shaderChunks._nodes;
+    this._nodes = shaderNodes._nodes;
 
     this._graph = new ShaderGraphNode();
     this._graph.name = 'graphRoot_' + id;

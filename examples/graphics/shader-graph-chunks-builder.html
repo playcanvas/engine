@@ -58,6 +58,7 @@
         app.root.addChild(light);
         light.setLocalEulerAngles(15, -20, 0);
 
+        // load in a model
         var url = "../assets/models/statue.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             entity = new pc.Entity();
@@ -67,15 +68,17 @@
                 });
             app.root.addChild(entity);
             var model = modelComponent.model;
-            var diffuseMap = model.getMaterials()[0].diffuseMap;
 
+            // load a texture asset
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
                 var emissiveMap = asset.resource;
+
+                //load shader graph core nodes asset
                 app.assets.loadFromUrl("../assets/core_nodes.json", "text", function (err, asset) {
                     var coreNodeList = asset.resource;
                     
                     //register loaded core nodes
-                    pc.shaderChunks.registerCoreShaderGraphNodes(coreNodeList);
+                    pc.shaderNodes.register(coreNodeList);
 
                     //create a shader graph builder
                     var builder = new pc.ShaderGraphBuilder();
@@ -97,7 +100,7 @@
                     //return built shader graph chunk
                     var shaderGraphChunk = builder.getShaderGraphChunk();
 
-                    //replace model's materials
+                    //replace model's materials with standard node materials
                     var originalMaterials=[];
                     var shaderGraphMaterials=[];
                     

@@ -9,6 +9,7 @@ import { shaderChunks } from './chunks/chunks.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
+import { shaderNodes } from './nodes/nodes.js';
 import { ShaderGraphNode } from '../../scene/materials/shader-graph-node.js';
 
 var attrib2Semantic = {
@@ -92,6 +93,10 @@ function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedbac
     return shaderCache[uName];
 }
 
+shaderChunks.collectAttribs = collectAttribs;
+shaderChunks.createShader = createShader;
+shaderChunks.createShaderFromCode = createShaderFromCode;
+
 function registerCoreShaderGraphNodes(coreNodeList) {
     var coreNodes = {};
     if (coreNodeList) {
@@ -102,13 +107,9 @@ function registerCoreShaderGraphNodes(coreNodeList) {
             coreNodes[key] = new ShaderGraphNode(coreNodeList[key].code);
         });
     }
-
-    shaderChunks._nodes = coreNodes;
+    shaderNodes._nodes = coreNodes;
 }
 
-shaderChunks.collectAttribs = collectAttribs;
-shaderChunks.createShader = createShader;
-shaderChunks.createShaderFromCode = createShaderFromCode;
-shaderChunks.registerCoreShaderGraphNodes = registerCoreShaderGraphNodes;
+shaderNodes.register = registerCoreShaderGraphNodes;
 
 export { collectAttribs, createShader, createShaderFromCode, registerCoreShaderGraphNodes };
