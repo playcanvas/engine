@@ -48,6 +48,7 @@ import { Component } from '../component.js';
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
  * * "point": A light that illuminates in all directions from a point.
  * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
+ * * "area": A light in the shape of a quad that illuminates in one direction.
  * Defaults to "directional".
  * @property {pc.Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).

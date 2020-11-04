@@ -237,7 +237,7 @@ function Layer(options) {
 
     this._lightComponents = [];
     this._lights = [];
-    this._sortedLights = [[], [], []];
+    this._sortedLights = [[], [], [], []];
     this.cameras = [];
     this._dirty = false;
     this._dirtyLights = false;

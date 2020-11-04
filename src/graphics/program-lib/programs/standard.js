@@ -12,7 +12,7 @@ import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
@@ -991,12 +991,24 @@ var standard = {
         var useVsm = false;
         var usePerspZbufferShadow = false;
         var light;
+
+        var hasAreaLights = options.lights.some(light => light.type === LIGHTTYPE_AREA )
+
+        if (hasAreaLights) {
+            code += "uniform sampler2D ltc_1;\n";            
+            code += "uniform sampler2D ltc_2;\n";
+        }
+
         for (i = 0; i < options.lights.length; i++) {
             light = options.lights[i];
             lightType = light._type;
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
+            } else if (lightType === LIGHTTYPE_AREA) {
+                code += "uniform vec3 light" + i + "_position;\n";
+                code += "uniform vec3 light" + i + "_halfWidth;\n";            
+                code += "uniform vec3 light" + i + "_halfHeight;\n";            
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
@@ -1249,7 +1261,10 @@ var standard = {
 
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
 
-        if (lighting) code += chunks.lightDiffuseLambertPS;
+        if (lighting) {
+            code += chunks.lightDiffuseLambertPS;
+            code += chunks.ltc;
+        }
         var useOldAmbient = false;
         if (options.useSpecular) {
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
@@ -1429,23 +1444,71 @@ var standard = {
             if (options.dirLightMap) {
                 code += "   addDirLightMap();\n";
             }
-
+            
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
-
+                
                 // getLightDiffuse and getLightSpecular is BRDF itself.
-
+                
                 light = options.lights[i];
                 lightType = light._type;
                 usesCookieNow = false;
-
+                
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   dLightDirNormW = light" + i + "_direction;\n";
                     code += "   dAtten = 1.0;\n";
+                    code += "   dAtten *= getLightDiffuse();\n";
+                } else if (lightType === LIGHTTYPE_AREA) {
+
+                    // vec3 viewDir = geometry.viewDir;
+                    // vec3 position = geometry.position;
+                    // specular normal ccReflDirW
+                    // vec3 normal = geometry.normal;
+                    code += "   vec3 normal = dNormalW;\n";
+                    code += "   vec3 viewDir = dViewDirW;\n";
+                    code += "   vec3 lightColor = light" + i + "_color;\n";
+                    code += "   vec3 lightPos = light" + i + "_position;\n";
+                    code += "   vec3 halfWidth = vec3(1.0, 0.0, 0.0);//light" + i + "_halfWidth;\n";
+                    code += "   vec3 halfHeight = vec3(0.0, 1.0, 0.0);//light" + i + "_halfHeight;\n";
+                    code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+
+                    // vec3 halfWidth = rectAreaLight.halfWidth;
+                    // vec3 halfHeight = rectAreaLight.halfHeight;
+                    // vec3 lightColor = rectAreaLight.color;                    
+                    // float roughness = material.specularRoughness;
+                    
+                    code += "   vec3 rectCoords[ 4 ];\n";
+                    code += "   rectCoords[ 0 ] = lightPos + halfWidth - halfHeight;\n";
+                    code += "   rectCoords[ 1 ] = lightPos - halfWidth - halfHeight;\n";
+                    code += "   rectCoords[ 2 ] = lightPos - halfWidth + halfHeight;\n";
+                    code += "   rectCoords[ 3 ] = lightPos + halfWidth + halfHeight;\n";                    
+                    // code += "   RE_Direct_RectArea_Physical(position, halfWidth, halfHeight, lightColor const in RectAreaLight rectAreaLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
+
+                    code += "   vec2 uv = LTC_Uv( normal, viewDir, roughness );\n";
+                    code += "   vec4 t1 = texture2D( ltc_1, uv );\n"
+                    code += "   vec4 t2 = texture2D( ltc_2, uv );\n"
+                    code += "   mat3 mInv = mat3(\n"
+                    code += "       vec3( t1.x, 0, t1.y ),\n";
+                    code += "       vec3(    0, 1,    0 ),\n";
+                    code += "       vec3( t1.z, 0, t1.w )\n";
+                    code += "   );\n"
+
+                    // LTC Fresnel Approximation by Stephen Hill
+                    // http://blog.selfshadow.com/publications/s2016-advances/s2016_ltc_fresnel.pdf
+                    code += "   dDiffuseLight += lightColor * LTC_Evaluate( normal, viewDir, vPositionW, mat3( 1.0 ), rectCoords );\n";
+                    if( options.useSpecular )   
+                    {
+                        // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
+                        code += "   dSpecularLight += lightColor * t2.x  * LTC_Evaluate( normal, viewDir, vPositionW, mInv, rectCoords );\n";
+                        // code += "   dSpecularLight += lightColor * LTC_Evaluate( normal, viewDir, vPositionW, mInv, rectCoords );\n";
+                    }
+                    // if( options.clearCoat > 0 ) code += "   ccSpecularLight += lightColor * fresnel * LTC_Evaluate( ccNormalW, viewDir, position, mInv, rectCoords );\n";
+                    // code += "   RE_Direct_RectArea_Physical(light" + i + "_position);\n";
+
                 } else {
 
                     if (light._cookie) {
@@ -1485,9 +1548,9 @@ var standard = {
                             usesSpot = true;
                         }
                     }
+                    code += "       dAtten *= getLightDiffuse();\n";
                 }
 
-                code += "       dAtten *= getLightDiffuse();\n";
                 if (light.castShadows && !options.noShadow) {
 
                     var shadowReadMode = null;
@@ -1531,7 +1594,7 @@ var standard = {
                     }
                 }
 
-                code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                if( lightType !== LIGHTTYPE_AREA ) code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 if (options.clearCoat > 0 ) {
                     code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
@@ -1543,7 +1606,7 @@ var standard = {
                 }
 
 
-                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
+                if (lightType !== LIGHTTYPE_DIRECTIONAL && lightType !== LIGHTTYPE_AREA) {
                     code += "   }\n"; // BRANCH END
                 }
 

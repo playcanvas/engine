@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import {
     BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA
 } from './constants.js';
 
 /**
@@ -37,7 +37,7 @@ function LayerComposition() {
     this._meshInstances = [];
     this._lights = [];
     this.cameras = [];
-    this._sortedLights = [[], [], []];
+    this._sortedLights = [[], [], [], []];
     this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
     this._globalLightCameras = []; // array mapping _globalLights to cameras
     this._globalLightCameraIds = []; // array mapping _globalLights to camera ids in composition
@@ -60,6 +60,7 @@ LayerComposition.prototype._sortLights = function (target) {
     target._sortedLights[LIGHTTYPE_DIRECTIONAL].length = 0;
     target._sortedLights[LIGHTTYPE_POINT].length = 0;
     target._sortedLights[LIGHTTYPE_SPOT].length = 0;
+    target._sortedLights[LIGHTTYPE_AREA].length = 0;
     for (var i = 0; i < lights.length; i++) {
         light = lights[i];
         if (light.enabled) {

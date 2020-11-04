@@ -195,6 +195,13 @@ export var LIGHTTYPE_POINT = 1;
  * @description Spot (local) light source.
  */
 export var LIGHTTYPE_SPOT = 2;
+/**
+ * @constant
+ * @name pc.LIGHTTYPE_AREA
+ * @type {number}
+ * @description Area (local) light source.
+ */
+export var LIGHTTYPE_AREA = 3;
 
 /**
  * @constant

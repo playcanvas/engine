@@ -6,6 +6,7 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
+import { fetchLTCLuts } from '../graphics/ltc-lut'
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
@@ -35,7 +36,7 @@ import {
     BLUR_GAUSSIAN,
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
@@ -966,6 +967,28 @@ Object.assign(ForwardRenderer.prototype, {
         }
     },
 
+    dispatchAreaLight: function (scene, scope, area, cnt) {
+        var wtm = area._node.getWorldTransform();
+
+        if (!this.lightColorId[cnt]) {
+            this._resolveLight(scope, cnt);
+        }
+
+        this.lightColorId[cnt].setValue(scene.gammaCorrection ? area._linearFinalColor : area._finalColor);
+        wtm.getTranslation(area._position);
+        this.lightPos[cnt][0] = area._position.x;
+        this.lightPos[cnt][1] = area._position.y;
+        this.lightPos[cnt][2] = area._position.z;
+        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        // wtm.getY(spot._direction).scale(-1);
+        // spot._direction.normalize();
+        // this.lightDir[cnt][0] = spot._direction.x;
+        // this.lightDir[cnt][1] = spot._direction.y;
+        // this.lightDir[cnt][2] = spot._direction.z;
+        // this.lightDirId[cnt].setValue(this.lightDir[cnt]);
+    },
+
     dispatchSpotLight: function (scene, scope, spot, cnt) {
         var wtm = spot._node.getWorldTransform();
 
@@ -1050,14 +1073,16 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
         var i;
-        var point, spot;
+        var point, spot, area;
 
         var pnts = sortedLights[LIGHTTYPE_POINT];
         var spts = sortedLights[LIGHTTYPE_SPOT];
+        var areas = sortedLights[LIGHTTYPE_AREA];
 
         var numDirs = usedDirLights;
         var numPnts = pnts.length;
         var numSpts = spts.length;
+        var numAreas = areas.length;
         var cnt = numDirs;
 
         var scope = this.device.scope;
@@ -1096,6 +1121,24 @@ Object.assign(ForwardRenderer.prototype, {
                 cnt++;
                 staticId++;
                 spot = staticLightList[staticId];
+            }
+        }
+
+        for (i = 0; i < numAreas; i++) {
+            area = areas[i];
+            if (!(area.mask & mask)) continue;
+            if (area.isStatic) continue;
+            this.dispatchAreaLight(scene, scope, area, cnt);
+            cnt++;
+        }
+
+        if (staticLightList) {
+            area = staticLightList[staticId];
+            while (area && area._type === LIGHTTYPE_AREA) {
+                this.dispatchAreaLight(scene, scope, area, cnt);
+                cnt++;
+                staticId++;
+                area = staticLightList[staticId];
             }
         }
     },
@@ -1760,6 +1803,14 @@ Object.assign(ForwardRenderer.prototype, {
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
+
+                        // Upload the LTC Luts's if neccesary
+                        if(sortedLights[LIGHTTYPE_AREA].length > 0 ){
+                            const ltcs = fetchLTCLuts(this.device)
+                            material.setParameter('ltc_1', ltcs[0])   
+                            material.setParameter('ltc_2', ltcs[1])   
+                        }
+
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
 
