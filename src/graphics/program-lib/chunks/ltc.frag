@@ -1,7 +1,9 @@
-// Rect Area Light
+
+
 // Real-Time Polygonal-Light Shading with Linearly Transformed Cosines
 // by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt
 // code: https://github.com/selfshadow/ltc_code/
+
 mat3 transposeMat3( const in mat3 m ) {
 	mat3 tmp;
 	tmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );
@@ -71,50 +73,32 @@ vec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in m
 	vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 3 ], coords[ 0 ] );
 	// adjust for horizon clipping
 	float result = LTC_ClippedSphereFormFactor( vectorFormFactor );
-/*
-	// alternate method of adjusting for horizon clipping (see referece)
-	// refactoring required
-	float len = length( vectorFormFactor );
-	float z = vectorFormFactor.z / len;
-	const float LUT_SIZE = 64.0;
-	const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
-	const float LUT_BIAS = 0.5 / LUT_SIZE;
-	// tabulated horizon-clipped sphere, apparently...
-	vec2 uv = vec2( z * 0.5 + 0.5, len );
-	uv = uv * LUT_SCALE + LUT_BIAS;
-	float scale = texture2D( ltc_2, uv ).w;
-	float result = len * scale;
-*/
+
 	return vec3( result );
 }
 
-// void RE_Direct_RectArea_Physical( const in RectAreaLight rectAreaLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
-// 		vec3 normal = geometry.normal;
-// 		vec3 viewDir = geometry.viewDir;
-// 		vec3 position = geometry.position;
-// 		vec3 lightPos = rectAreaLight.position;
-// 		vec3 halfWidth = rectAreaLight.halfWidth;
-// 		vec3 halfHeight = rectAreaLight.halfHeight;
-// 		vec3 lightColor = rectAreaLight.color;
-// 		float roughness = material.specularRoughness;
-// 		vec3 rectCoords[ 4 ];
-// 		rectCoords[ 0 ] = lightPos + halfWidth - halfHeight; // counterclockwise; light shines in local neg z direction
-// 		rectCoords[ 1 ] = lightPos - halfWidth - halfHeight;
-// 		rectCoords[ 2 ] = lightPos - halfWidth + halfHeight;
-// 		rectCoords[ 3 ] = lightPos + halfWidth + halfHeight;
-// 		vec2 uv = LTC_Uv( normal, viewDir, roughness );
-// 		vec4 t1 = texture2D( ltc_1, uv );
-// 		vec4 t2 = texture2D( ltc_2, uv );
-// 		mat3 mInv = mat3(
-// 			vec3( t1.x, 0, t1.y ),
-// 			vec3(    0, 1,    0 ),
-// 			vec3( t1.z, 0, t1.w )
-// 		);
-// 		// LTC Fresnel Approximation by Stephen Hill
-// 		// http://blog.selfshadow.com/publications/s2016-advances/s2016_ltc_fresnel.pdf
-// 		vec3 fresnel = ( material.specularColor * t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );
-// 		reflectedLight.directSpecular += lightColor * fresnel * LTC_Evaluate( normal, viewDir, position, mInv, rectCoords );
-// 		reflectedLight.directDiffuse += lightColor * material.diffuseColor * LTC_Evaluate( normal, viewDir, position, mat3( 1.0 ), rectCoords );
-	// }
-// End Rect Area Light
+vec3[ 4 ] getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
+	vec3 coords[ 4 ];
+	coords[ 0 ] = lightPos + halfWidth - halfHeight;
+	coords[ 1 ] = lightPos - halfWidth - halfHeight;
+	coords[ 2 ] = lightPos - halfWidth + halfHeight;
+	coords[ 3 ] = lightPos + halfWidth + halfHeight;
+	return coords;
+}
+
+mat3 getRectAreaLut(vec3 normal, vec3 viewDir){
+	float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);
+	vec2 uv = LTC_Uv( normal, viewDir, roughness );
+
+	vec4 t1 = texture2D( ltc_1, uv );
+	vec4 t2 = texture2D( ltc_2, uv );
+
+	mat3 mInv = mat3(
+		vec3( t1.x, 0, t1.y ),
+		vec3(    0, 1,    0 ),
+		vec3( t1.z, 0, t1.w )
+	);
+
+	return mInv;
+}
 

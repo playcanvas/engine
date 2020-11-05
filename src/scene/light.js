@@ -64,7 +64,7 @@ var Light = function Light() {
     this._outerConeAngle = 45;
 
     // Area Light properties
-    this._size = new Vec2(10, 10)
+    this._size = new Vec2(1, 1)
 
     // Cache of light property data in a format more friendly for shader uniforms
     this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
