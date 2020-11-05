@@ -18,7 +18,8 @@ import {
 /**
  * @class
  * @name pc.Texture
- * @classdesc A texture is a container for texel data that can be utilized in a fragment shader. Typically, the texel data represents an image that is mapped over geometry.
+ * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
+ * Typically, the texel data represents an image that is mapped over geometry.
  * @description Creates a new texture.
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
  * @param {object} [options] - Object for passing optional arguments.
@@ -62,11 +63,18 @@ import {
  * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
  * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
  * @param {string} [options.type] - Specifies the image type, see {@link pc.TEXTURETYPE_DEFAULT}
- * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special seam fixing shader code to look right. Defaults to false.
- * @param {boolean} [options.isRenderTarget] - Specifies whether texture or cubemap was used as a render target. Defaults to false.
- * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw pixel data. Defaults to true.
- * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color channels. Defaults to false.
- * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL, hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only). Defaults to false.
+ * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
+ * seam fixing shader code to look right. Defaults to false.
+ * @param {boolean} [options.isRenderTarget] - Specifies whether texture or cubemap was used as a render target.
+ * Defaults to false.
+ * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+ * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
+ * pixel data. Defaults to true.
+ * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
+ * channels. Defaults to false.
+ * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+ * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
+ * Defaults to false.
  * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
  * Possible values:
  * * {@link pc.FUNC_LESS}
