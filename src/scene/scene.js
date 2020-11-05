@@ -124,6 +124,8 @@ function Scene() {
     this._skyboxRotationMatrix = new Mat3();
     this._skyboxRotationMatrix.data[0] *= -1.0;
 
+    this._skyboxIsRenderTarget = false;
+
     this.lightmapSizeMultiplier = 1;
     this.lightmapMaxResolution = 2048;
     this.lightmapMode = BAKE_COLORDIR;
@@ -206,7 +208,9 @@ Object.defineProperty(Scene.prototype, 'skybox', {
         return this._skyboxCubeMap;
     },
     set: function (value) {
-        if (value && (!this._skyboxCubeMap || value.isRenderTarget != this._skyboxCubeMap.isRenderTarget)) {
+        var newIsRenderTarget = value ? value.isRenderTarget : false;
+        if ( newIsRenderTarget !== this._skyboxIsRenderTarget) {
+            this._skyboxIsRenderTarget = newIsRenderTarget;
             this._skyboxRotationMatrix.data[0] *= -1.0;
             this._skyboxRotationMatrix.data[1] *= -1.0;
             this._skyboxRotationMatrix.data[2] *= -1.0;
@@ -235,14 +239,13 @@ Object.defineProperty(Scene.prototype, 'skyboxRotation', {
     },
     set: function (value) {
         if (!this._skyboxRotation.equals(value)) {
-            this._skyboxRotation = value;
+            this._skyboxRotation.copy(value);
 
             if (!this._skyboxRotationMatrix4) this._skyboxRotationMatrix4 = new Mat4();
 
             this._skyboxRotationMatrix4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
             this._skyboxRotationMatrix4.invertTo3x3(this._skyboxRotationMatrix);
-
-            if (this._skyboxCubeMap && !this._skyboxCubeMap.isRenderTarget) {
+            if (!this._skyboxIsRenderTarget) {
                 this._skyboxRotationMatrix.data[0] *= -1.0;
                 this._skyboxRotationMatrix.data[1] *= -1.0;
                 this._skyboxRotationMatrix.data[2] *= -1.0;
@@ -388,8 +391,8 @@ Scene.prototype.applySettings = function (settings) {
     this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
     this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
-    if (settings.render.skyboxRotation) {
-        this.skyboxRotation = settings.render.skyboxRotation;
+    if (settings.render.skyboxRotation !== undefined) {
+        this.skyboxRotation = new Quat(settings.render.skyboxRotation);
     } else {
         this._resetSkyboxModel();
         this.updateShaders = true;
@@ -423,7 +426,7 @@ Scene.prototype._updateSkybox = function (device) {
                 rgbm: usedTex.type === TEXTURETYPE_RGBM,
                 hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                 useIntensity: scene.skyboxIntensity !== 1,
-                useRotation: (!scene.skyboxRotation.equals(Quat.IDENTITY) || scene.skybox.isRenderTarget),
+                useRotation: (!scene.skyboxRotation.equals(Quat.IDENTITY) || (scene._skyboxIsRenderTarget)),
                 mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                 fixSeams: usedTex.fixCubemapSeams,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
@@ -435,7 +438,7 @@ Scene.prototype._updateSkybox = function (device) {
         material.updateShader();
         material.setParameter("texture_cubeMap", usedTex);
 
-        if (!this.skyboxRotation.equals(Quat.IDENTITY) || this.skybox.isRenderTarget) {
+        if (!this.skyboxRotation.equals(Quat.IDENTITY) || (this._skyboxIsRenderTarget)) {
             material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMatrix.data);
         }
 

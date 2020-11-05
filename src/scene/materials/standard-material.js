@@ -1016,7 +1016,7 @@ Object.assign(StandardMaterial.prototype, {
                     // Just use identity matrix (no -x flip)
                     this._setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
                 }
-            } else if (this.useSkybox && (!scene.skyboxRotation.equals(Quat.IDENTITY) || scene.skybox.isRenderTarget)) {
+            } else if (this.useSkybox && (!scene.skyboxRotation.equals(Quat.IDENTITY) || (scene._skyboxIsRenderTarget))) {
                 // private _skyboxRotationMatrix property will already apply -x flip in matrix based on if the skybox cube map is NOT a render target
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMatrix.data);
             }
