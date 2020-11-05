@@ -20,7 +20,9 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * * {@link pc.CURVE_STEP}
  *
  * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
- * @property {number} tension The tension used when type is CURVE_SPLINE.
+ * @property {number} tension Controls how {@link pc.CURVE_SPLINE} tangents are calculated.
+ * Valid range is betwen 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
+ * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
  *
  * @example
  * var curve = new pc.Curve([
