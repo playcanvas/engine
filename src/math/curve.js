@@ -21,7 +21,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
  *
  * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
  * @property {number} tension Controls how {@link pc.CURVE_SPLINE} tangents are calculated.
- * Valid range is betwen 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
+ * Valid range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
  * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
  *
  * @example
