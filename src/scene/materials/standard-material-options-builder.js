@@ -14,6 +14,8 @@ import {
     TONEMAP_LINEAR
 } from '../constants.js';
 
+import { Quat } from '../../math/quat.js';
+
 function StandardMaterialOptionsBuilder() {
     this._mapXForms = null;
 }
@@ -185,7 +187,7 @@ StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, 
     options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
     options.prefilteredCubemap = !!prefilteredCubeMap128;
     options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
-    options.cubeMapRotationMatrix = stdMat.cubeMap ? stdMat.cubeMap.cubeMapRotationMatrix : scene.skyboxRotationMatrix;
+    options.useCubeMapRotation = stdMat.cubeMap ? stdMat.cubeMap.isRenderTarget : (!scene.skyboxRotation.equals(Quat.IDENTITY) || scene.skybox.isRenderTarget);
 };
 
 StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options, stdMat, objDefs, sortedLights, staticLightList) {

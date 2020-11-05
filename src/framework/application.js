@@ -1720,7 +1720,7 @@ Object.assign(Application.prototype, {
      *         fog_start: 1,
      *         global_ambient: [0, 0, 0],
      *         skyboxIntensity: 1,
-     *         skyboxRotationMatrix: [-1, 0, 0, 0, 1, 0, 0, 0, 1],
+     *         skyboxRotation: [0, 0, 0, 1],
      *         fog_color: [0, 0, 0],
      *         lightmapMode: 1,
      *         fog: 'none',

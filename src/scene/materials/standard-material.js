@@ -21,6 +21,8 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { Mat3 } from '../../math/mat3.js';
+import { Quat } from '../../math/quat.js';
 
 /**
  * @class
@@ -292,7 +294,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
- * * cubeMapRotationMatrix: cube Map Rotation.
+ * * useCubeMapRotation: if cube map rotation is enabled.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -950,7 +952,6 @@ Object.assign(StandardMaterial.prototype, {
         var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
 
         var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
-        var globalSkyRotationMatrix;
         if (this.useSkybox) {
             globalSky128 = scene._skyboxPrefiltered[0];
             globalSky64 = scene._skyboxPrefiltered[1];
@@ -958,7 +959,6 @@ Object.assign(StandardMaterial.prototype, {
             globalSky16 = scene._skyboxPrefiltered[3];
             globalSky8 = scene._skyboxPrefiltered[4];
             globalSky4 = scene._skyboxPrefiltered[5];
-            globalSkyRotationMatrix = scene._skyboxRotationMatrix;
         }
 
         var prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;
@@ -967,8 +967,6 @@ Object.assign(StandardMaterial.prototype, {
         var prefilteredCubeMap16 = this.prefilteredCubeMap16 || globalSky16;
         var prefilteredCubeMap8 = this.prefilteredCubeMap8 || globalSky8;
         var prefilteredCubeMap4 = this.prefilteredCubeMap4 || globalSky4;
-
-        var cubeMapRotationMatrix = this.cubeMap ? this.cubeMap.cubeMapRotationMatrix : globalSkyRotationMatrix;
 
         if (prefilteredCubeMap128) {
             var allMips = prefilteredCubeMap128 &&
@@ -1013,8 +1011,14 @@ Object.assign(StandardMaterial.prototype, {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
-            if (cubeMapRotationMatrix && (cubeMapRotationMatrix.data[0] !== -1.0 || cubeMapRotationMatrix.data[4] !== 1.0 || cubeMapRotationMatrix.data[8] !== 1.0)) {
-                this._setParameter('cubeMapRotationMatrix', cubeMapRotationMatrix.data);
+            if (this.cubeMap) {
+                if (this.cubeMap.isRenderTarget) {
+                    // Just use identity matrix (no -x flip)
+                    this._setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
+                }
+            } else if (this.useSkybox && (!scene.skyboxRotation.equals(Quat.IDENTITY) || scene.skybox.isRenderTarget)) {
+                // private _skyboxRotationMatrix property will already apply -x flip in matrix based on if the skybox cube map is NOT a render target
+                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMatrix.data);
             }
         }
 

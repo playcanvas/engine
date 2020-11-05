@@ -130,13 +130,7 @@
                 // entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
 
                 rot.setFromEulerAngles(0.2 * y, 0.2 * x, 0);
-                rotMat4.setTRS(pc.Vec3.ZERO, rot, pc.Vec3.ONE);
-                rotMat4.invertTo3x3(rotMat3);
-                rotMat3.data[0]*=-1.0;
-                rotMat3.data[1]*=-1.0;
-                rotMat3.data[2]*=-1.0;
-
-                app.scene.skyboxRotationMatrix = rotMat3;
+                app.scene.skyboxRotation = rot;
             }
         });
     </script>

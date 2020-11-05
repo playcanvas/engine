@@ -1109,7 +1109,7 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
-        if (options.cubeMapRotationMatrix && (options.cubeMapRotationMatrix.data[0] !== -1.0 || options.cubeMapRotationMatrix.data[4] !== 1.0 || options.cubeMapRotationMatrix.data[8] !== 1.0)) {
+        if (options.useCubeMapRotation) {
             code += "#define CUBEMAPROT\n";
         }
 
