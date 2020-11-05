@@ -1110,13 +1110,12 @@ var standard = {
         }
 
         if (options.cubeMapRotationMatrix && (options.cubeMapRotationMatrix.data[0] !== -1.0 || options.cubeMapRotationMatrix.data[4] !== 1.0 || options.cubeMapRotationMatrix.data[8] !== 1.0)) {
-            code += "#ifndef CUBEMAPROT\n";
             code += "#define CUBEMAPROT\n";
-            code += "uniform mat3 cubeMapRotationMatrix;\n";
-            code += "#endif\n";
         }
 
         if (needsNormal) {
+            code += chunks.cubeMapRotatePS;
+
             code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }

@@ -2,10 +2,8 @@ uniform vec3 ambientSH[9];
 
 void addAmbient() {
 #ifdef CUBEMAPROT
-    vec3 n = (dNormalW*cubeMapRotationMatrix)*vec3(-1,1,1);
-#else
-    vec3 n = dNormalW;
-#endif    
+    vec3 n = cubeMapRotate1(dNormalW);
+
     vec3 color =
         ambientSH[0] +
         ambientSH[1] * n.x +
