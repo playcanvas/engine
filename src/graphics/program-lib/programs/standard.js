@@ -1263,7 +1263,7 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            code += chunks.ltc;
+            if( hasAreaLights ) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
@@ -1448,6 +1448,7 @@ var standard = {
             if (hasAreaLights) {
                 code += "   vec3[ 4 ] coords;\n";
                 code += "   mat3 mInv;\n";
+                // code += "   mat3 mInv;\n";
             }
             
             for (i = 0; i < options.lights.length; i++) {
@@ -1480,11 +1481,11 @@ var standard = {
                         code += "   mInv = getRectAreaLut(dNormalW, dViewDirW);\n";
                         code += "   dSpecularLight += light" + i + "_color * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mInv, coords );\n";
                     }
-                    if( options.clearCoat > 0 ) {
-                        // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
-                        code += "   mInv = getRectAreaLut(ccNormalW, dViewDirW)\n";
-                        code += "   ccSpecularLight += light" + i + "_color * LTC_Evaluate( ccNormalW, dViewDirW, vPositionW, mInv, coords );\n";
-                    }
+                    // if( options.clearCoat > 0 ) {
+                    //     // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
+                    //     code += "   mInv = getRectAreaLut(ccNormalW, dViewDirW)\n";
+                    //     code += "   ccSpecularLight += light" + i + "_color * texture2D( ltc_2, uv ).x * LTC_Evaluate( ccNormalW, dViewDirW, vPositionW, mInv, coords );\n";
+                    // }
 
                 } else {
 
