@@ -1013,7 +1013,7 @@ Object.assign(StandardMaterial.prototype, {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
-            if (cubeMapRotationMatrix && (cubeMapRotationMatrix.data[0] !== -1.0 || cubeMapRotationMatrix.data[4] !== 0.0 || cubeMapRotationMatrix.data[8] !== 0.0)) {
+            if (cubeMapRotationMatrix && (cubeMapRotationMatrix.data[0] !== -1.0 || cubeMapRotationMatrix.data[4] !== 1.0 || cubeMapRotationMatrix.data[8] !== 1.0)) {
                 this._setParameter('cubeMapRotationMatrix', cubeMapRotationMatrix.data);
             }
         }

@@ -412,7 +412,7 @@ Scene.prototype._updateSkybox = function (device) {
         material.updateShader();
         material.setParameter("texture_cubeMap", usedTex);
 
-        if (scene.skyboxRotationMatrix && (scene.skyboxRotationMatrix.data[0] !== -1.0 || scene.skyboxRotationMatrix.data[4] !== 0.0 || scene.skyboxRotationMatrix.data[8] !== 0.0)) {
+        if (scene.skyboxRotationMatrix && (scene.skyboxRotationMatrix.data[0] !== -1.0 || scene.skyboxRotationMatrix.data[4] !== 1.0 || scene.skyboxRotationMatrix.data[8] !== 1.0)) {
             material.setParameter("cubeMapRotationMatrix", this.skyboxRotationMatrix.data);
         }
 
