@@ -68,7 +68,7 @@ import { Mat4 } from '../math/mat4.js';
  * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to pc.Quat.IDENTITY
+ * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link pc.Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
  * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
  * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
