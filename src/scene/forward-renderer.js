@@ -6,7 +6,7 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
-import { fetchLTCLuts } from '../graphics/ltc-lut'
+import { fetchLTCLuts } from '../graphics/ltc-lut';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
@@ -51,7 +51,6 @@ import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { VisibleInstanceList } from './layer.js';
-import { Vec2 } from '../math/vec2.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -978,9 +977,8 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchAreaLight: function (scene, scope, area, cnt) {
         var wtm = area._node.getWorldTransform();
-        // var localRotation = area._node.localRotation;
-        var quat = new Quat()
-        quat.setFromMat4(wtm)
+        var quat = new Quat();
+        quat.setFromMat4(wtm);
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
@@ -993,21 +991,17 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][2] = area._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        
-
-
         let hWidth = quat.transformVector(new Vec3(area._size.x * 0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x;
         this.lightWidth[cnt][1] = hWidth.y;
         this.lightWidth[cnt][2] = hWidth.z;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-        
+
         let hHeight = quat.transformVector(new Vec3(0, 0, area._size.y * 0.5));
         this.lightHeight[cnt][0] = hHeight.x;
         this.lightHeight[cnt][1] = hHeight.y;
         this.lightHeight[cnt][2] = hHeight.z;
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
-
     },
 
     dispatchSpotLight: function (scene, scope, spot, cnt) {
@@ -1826,10 +1820,10 @@ Object.assign(ForwardRenderer.prototype, {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
 
                         // Upload the LTC Luts's if neccesary
-                        if(sortedLights[LIGHTTYPE_AREA].length > 0 ){
-                            const ltcs = fetchLTCLuts(this.device)
-                            material.setParameter('ltc_1', ltcs[0])   
-                            material.setParameter('ltc_2', ltcs[1])   
+                        if (sortedLights[LIGHTTYPE_AREA].length > 0 ) {
+                            const ltcs = fetchLTCLuts(this.device);
+                            material.setParameter('ltc_1', ltcs[0]);
+                            material.setParameter('ltc_2', ltcs[1]);
                         }
 
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);

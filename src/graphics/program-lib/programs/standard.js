@@ -992,10 +992,10 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(light => light.type === LIGHTTYPE_AREA )
+        var hasAreaLights = options.lights.some(light => light.type === LIGHTTYPE_AREA );
 
         if (hasAreaLights) {
-            code += "uniform sampler2D ltc_1;\n";            
+            code += "uniform sampler2D ltc_1;\n";
             code += "uniform sampler2D ltc_2;\n";
         }
 
@@ -1007,8 +1007,8 @@ var standard = {
                 code += "uniform vec3 light" + i + "_direction;\n";
             } else if (lightType === LIGHTTYPE_AREA) {
                 code += "uniform vec3 light" + i + "_position;\n";
-                code += "uniform vec3 light" + i + "_halfWidth;\n";            
-                code += "uniform vec3 light" + i + "_halfHeight;\n";            
+                code += "uniform vec3 light" + i + "_halfWidth;\n";
+                code += "uniform vec3 light" + i + "_halfHeight;\n";
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
@@ -1263,7 +1263,7 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if( hasAreaLights ) code += chunks.ltc;
+            if ( hasAreaLights ) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
@@ -1448,21 +1448,19 @@ var standard = {
             if (hasAreaLights) {
                 code += "   vec3[ 4 ] coords;\n";
                 code += "   mat3 mInv;\n";
-                // code += "   mat3 mInv;\n";
             }
-            
+
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
-                
                 // getLightDiffuse and getLightSpecular is BRDF itself.
-                
+
                 light = options.lights[i];
                 lightType = light._type;
                 usesCookieNow = false;
-                
+
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   dLightDirNormW = light" + i + "_direction;\n";
@@ -1475,8 +1473,7 @@ var standard = {
                     // LTC Fresnel Approximation by Stephen Hill
                     // http://blog.selfshadow.com/publications/s2016-advances/s2016_ltc_fresnel.pdf
                     code += "   dDiffuseLight += light" + i + "_color * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), coords );\n";
-                    if( options.useSpecular )   
-                    {
+                    if (options.useSpecular) {
                         // code += "   vec3 fresnel = ( /*material.specularColor * t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
                         code += "   mInv = getRectAreaLut(dNormalW, dViewDirW);\n";
                         code += "   dSpecularLight += light" + i + "_color * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mInv, coords );\n";
@@ -1572,7 +1569,7 @@ var standard = {
                     }
                 }
 
-                if( lightType !== LIGHTTYPE_AREA ) code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                if (lightType !== LIGHTTYPE_AREA) code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 if (options.clearCoat > 0 ) {
                     code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
