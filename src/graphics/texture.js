@@ -665,7 +665,7 @@ Object.assign(Texture.prototype, {
             this.device.destroyTexture(this);
         }
         this.device = null;
-        this._levels = null;
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
     },
 
     // Force a full resubmission of the texture to WebGL (used on a context restore event)
