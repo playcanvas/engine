@@ -140,14 +140,16 @@ LayerComposition.prototype._update = function () {
         result |= COMPUPDATED_INSTANCES;
         this._meshInstances.length = 0;
         this._meshInstancesSet.clear();
+        var dirtyBlend1, dirtyBlend2;
 
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
             if (!layer.passThrough) {
 
                 // add meshInstances from both opaque and transparent lists
-                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances);
-                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances);
+                dirtyBlend1 = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances);
+                dirtyBlend2 = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances);
+                this._dirtyBlend = dirtyBlend1 || dirtyBlend2;
             }
 
             layer._dirty = false;
