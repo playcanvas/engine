@@ -208,7 +208,7 @@ Object.defineProperty(Scene.prototype, 'skybox', {
         return this._skyboxCubeMap;
     },
     set: function (value) {
-        var newIsRenderTarget = value ? value.isRenderTarget : false;
+        var newIsRenderTarget = value ? value._isRenderTarget : false;
         if ( newIsRenderTarget !== this._skyboxIsRenderTarget) {
             this._skyboxIsRenderTarget = newIsRenderTarget;
             this._skyboxRotationMatrix.data[0] *= -1.0;

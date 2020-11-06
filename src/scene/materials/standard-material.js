@@ -1012,7 +1012,7 @@ Object.assign(StandardMaterial.prototype, {
             }
 
             if (this.cubeMap) {
-                if (this.cubeMap.isRenderTarget) {
+                if (this.cubeMap._isRenderTarget) {
                     // Just use identity matrix (no -x flip)
                     this._setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
                 }
