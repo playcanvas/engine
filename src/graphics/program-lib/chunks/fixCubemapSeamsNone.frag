@@ -11,7 +11,7 @@ vec3 fixSeamsStatic(vec3 vec, float invRecMipSize) {
 }
 
 vec3 calcSeam(vec3 vec) {
-    return vec3(0)
+    return vec3(0);
 }
 
 vec3 applySeam(vec3 vec, vec3 seam, vec3 scale) {
