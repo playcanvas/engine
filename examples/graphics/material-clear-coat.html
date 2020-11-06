@@ -44,7 +44,7 @@
         // Create an entity with a camera component
         var camera = new pc.Entity();
         camera.addComponent("camera");
-        camera.translate(0, 0, 3);
+        camera.translate(0, 0, 2);
         app.root.addChild(camera);
 
         // Create an entity with a directional light component
@@ -136,8 +136,8 @@
         app.on("update", function (dt) {
             // rotate camera around the objects
             time += dt;
-            camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));
-            camera.lookAt(pc.Vec3.ZERO);
+            //camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));
+            //camera.lookAt(pc.Vec3.ZERO);
         });
     </script>
 </body>

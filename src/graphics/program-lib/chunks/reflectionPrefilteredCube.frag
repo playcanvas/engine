@@ -46,7 +46,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     }
 
     vec4 cubeFinal = mix(cubes0, cubes1, fract(bias));
-    return processEnvironment($DECODE(cubeFinal).rgb) * 0.5;
+    return processEnvironment($DECODE(cubeFinal).rgb);
 }
 
 void addReflection() {   

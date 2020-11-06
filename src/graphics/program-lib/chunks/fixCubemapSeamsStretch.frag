@@ -27,12 +27,12 @@ vec3 fixSeamsStatic(vec3 vec, float invRecMipSize) {
 
 vec3 calcSeam(vec3 vec) {
     vec3 avec = abs(vec);
-    float M = max(vec.x, max(vec.y, vec.z));
-    return vec3(avec.x != M ? 1 : 0,
-                avec.y != M ? 1 : 0,
-                avec.z != M ? 1 : 0);
+    float M = max(avec.x, max(avec.y, avec.z));
+    return vec3(avec.x != M ? 1.0 : 0.0,
+                avec.y != M ? 1.0 : 0.0,
+                avec.z != M ? 1.0 : 0.0);
 }
 
 vec3 applySeam(vec3 vec, vec3 seam, float scale) {
-    return vec * (seam * scale + vec3(1) - seam);
+    return vec * (seam * scale + vec3(1.0) - seam);
 }
