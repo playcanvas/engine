@@ -208,14 +208,6 @@ Object.defineProperty(Scene.prototype, 'skybox', {
         return this._skyboxCubeMap;
     },
     set: function (value) {
-        var newIsRenderTarget = value ? value._isRenderTarget : false;
-        if ( newIsRenderTarget !== this._skyboxIsRenderTarget) {
-            this._skyboxIsRenderTarget = newIsRenderTarget;
-            this._skyboxRotationMatrix.data[0] *= -1.0;
-            this._skyboxRotationMatrix.data[1] *= -1.0;
-            this._skyboxRotationMatrix.data[2] *= -1.0;
-        }
-
         this._skyboxCubeMap = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
@@ -240,17 +232,6 @@ Object.defineProperty(Scene.prototype, 'skyboxRotation', {
     set: function (value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
-
-            if (!this._skyboxRotationMatrix4) this._skyboxRotationMatrix4 = new Mat4();
-
-            this._skyboxRotationMatrix4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
-            this._skyboxRotationMatrix4.invertTo3x3(this._skyboxRotationMatrix);
-            if (!this._skyboxIsRenderTarget) {
-                this._skyboxRotationMatrix.data[0] *= -1.0;
-                this._skyboxRotationMatrix.data[1] *= -1.0;
-                this._skyboxRotationMatrix.data[2] *= -1.0;
-            }
-
             this._resetSkyboxModel();
             this.updateShaders = true;
         }
@@ -392,11 +373,11 @@ Scene.prototype.applySettings = function (settings) {
     this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
     if (settings.render.skyboxRotation !== undefined) {
-        this.skyboxRotation = new Quat(settings.render.skyboxRotation);
-    } else {
-        this._resetSkyboxModel();
-        this.updateShaders = true;
+        this._skyboxRotation.set(settings.render.skyboxRotation);
     }
+
+    this._resetSkyboxModel();
+    this.updateShaders = true;
 };
 
 Scene.prototype._updateSkybox = function (device) {
@@ -416,6 +397,20 @@ Scene.prototype._updateSkybox = function (device) {
                 this._skyboxCubeMap || this._skyboxPrefiltered[0];
         if (!usedTex) {
             return;
+        }
+
+        // update rotation matrix after used texture is determined, but before material is updated
+        if (!this._skyboxRotationMatrix4) this._skyboxRotationMatrix4 = new Mat4();
+        this._skyboxRotationMatrix4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+        this._skyboxRotationMatrix4.invertTo3x3(this._skyboxRotationMatrix);
+
+        if (usedTex._isRenderTarget) {
+            this._skyboxIsRenderTarget = true;
+        } else {
+            this._skyboxIsRenderTarget = false;
+            this._skyboxRotationMatrix.data[0] *= -1.0;
+            this._skyboxRotationMatrix.data[1] *= -1.0;
+            this._skyboxRotationMatrix.data[2] *= -1.0;
         }
 
         var material = new Material();
