@@ -5,7 +5,7 @@ uniform samplerCube texture_prefilteredCubeMap128;
 #endif
 
 void addAmbient() {
-    vec3 fixedReflDir = fixSeamsStatic(cubeMapRotate0(dNormalW), 1.0 - 1.0 / 4.0);
+    vec3 fixedReflDir = fixSeamsStatic(cubeMapRotateNegX(dNormalW), 1.0 - 1.0 / 4.0);
 
     dDiffuseLight += processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) ).rgb);
 }
