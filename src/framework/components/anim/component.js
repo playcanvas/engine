@@ -343,7 +343,7 @@ Object.assign(AnimComponent.prototype, {
     /**
      * @private
      * @function
-     * @name pc.AnimComponent#setTrigger
+     * @name pc.AnimComponent#resetTrigger
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
      * @param {string} name - The name of the parameter to set.
      */

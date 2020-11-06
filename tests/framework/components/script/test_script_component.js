@@ -1146,7 +1146,10 @@ describe("pc.ScriptComponent", function () {
                         }, {
                             fieldNumber: 'shouldBeNull'
                         }, {
-                            missing: true
+                            missing: true,
+                            fieldNumberArray: ['shouldBecomeNull']
+                        }, {
+                            fieldNumberArray: [1,2,3]
                         }]
                     }
                 }
@@ -1162,8 +1165,12 @@ describe("pc.ScriptComponent", function () {
         expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
 
         expect(e.script.scriptWithAttributes.attribute4[1].fieldNumber).to.equal(null);
-        expect(e.script.scriptWithAttributes.attribute4[2].fieldNumber).to.equal(null);
+
+        expect(e.script.scriptWithAttributes.attribute4[2].fieldNumber).to.equal(1);
         expect(e.script.scriptWithAttributes.attribute4[2].missing).to.equal(undefined);
+        expect(e.script.scriptWithAttributes.attribute4[2].fieldNumberArray).to.deep.equal([null]);
+
+        expect(e.script.scriptWithAttributes.attribute4[3].fieldNumberArray).to.deep.equal([1, 2, 3]);
     });
 
     it('json script attributes are cloned correctly', function () {
@@ -1230,6 +1237,38 @@ describe("pc.ScriptComponent", function () {
 
         expect(e.script.scriptWithAttributes.attribute4.length).to.equal(1);
         expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
+    });
+
+    it('default values work for script attributes', function () {
+        var e = new pc.Entity();
+        e.addComponent('script');
+        e.script.create('scriptWithAttributes');
+
+        app.root.addChild(e);
+
+
+        expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
+        expect(e.script.scriptWithAttributes.attribute3).to.exist;
+        expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+    });
+
+    it('default values work for partially initialized script attributes', function () {
+        var e = new pc.Entity();
+        e.addComponent('script');
+        e.script.create('scriptWithAttributes', {
+            attributes: {
+                attribute2: 3,
+                attribute4: [{
+                    fieldEntity: null
+                }]
+            }
+        });
+
+        app.root.addChild(e);
+
+        expect(e.script.scriptWithAttributes.attribute2).to.equal(3);
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(1);
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumberArray).to.deep.equal([]);
     });
 
     it('enable is fired when entity becomes enabled', function () {
