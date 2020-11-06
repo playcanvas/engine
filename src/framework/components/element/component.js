@@ -1444,6 +1444,10 @@ Object.defineProperty(ElementComponent.prototype, "useInput", {
             } else {
                 this.system.app.elementInput.removeElement(this);
             }
+        } else {
+            if (this._useInput === true) {
+                console.warn("Elements will not get any input events because this.system.app.elementInput is not created");
+            }
         }
 
         this.fire('set:useInput', value);

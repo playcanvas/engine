@@ -96,7 +96,10 @@ function MeshInstance(node, mesh, material) {
     this._screenSpace = false;
     this._noDepthDrawGl1 = false;
     this.cull = true;
+
+    // true if the meshInstance is pickable by Picker (by rendering ID to render target)
     this.pick = true;
+
     this._updateAabb = true;
     this._updateAabbFunc = null;
     this._calculateSortDistance = null;
@@ -294,6 +297,8 @@ Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
         for (var i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
         }
+
+        this._setupSkinUpdate();
     }
 });
 
@@ -511,6 +516,23 @@ Object.assign(MeshInstance.prototype, {
                 }
                 parameter.scopeId.setValue(parameter.data);
             }
+        }
+    },
+
+    setOverrideAabb: function (aabb) {
+        this._updateAabb = !aabb;
+        if (aabb) {
+            this.aabb.copy(aabb);
+        }
+
+        this._setupSkinUpdate();
+    },
+
+    _setupSkinUpdate: function () {
+
+        // set if bones need to be updated before culling
+        if (this._skinInstance) {
+            this._skinInstance._updateBeforeCull = this._updateAabb;
         }
     }
 });

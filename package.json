@@ -1,9 +1,9 @@
 {
-  "name": "playcanvas",
-  "version": "1.35.0",
-  "author": "PlayCanvas <support@playcanvas.com>",
-  "homepage": "https://playcanvas.com",
-  "description": "PlayCanvas WebGL game engine",
+  "name": "playcanvas", 
+  "version": "1.35.2", 
+  "author": "PlayCanvas <support@playcanvas.com>", 
+  "homepage": "https://playcanvas.com", 
+  "description": "PlayCanvas WebGL game engine", 
   "keywords": [
     "3D",
     "2D",

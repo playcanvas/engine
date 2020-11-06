@@ -138,8 +138,10 @@
                 if (app.xr.supported) {
                     var activate = function () {
                         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
-                                if (err) message("Immersive VR failed to start: " + err.message);
+                            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+                                callback: function (err) {
+                                    if (err) message("Immersive VR failed to start: " + err.message);
+                                }
                             });
                         } else {
                             message("Immersive VR is not available");
