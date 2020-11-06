@@ -1841,7 +1841,6 @@ Object.assign(ForwardRenderer.prototype, {
                     material.setParameters(device);
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
-                    
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
 
                         // Upload the LTC Luts's if neccesary
