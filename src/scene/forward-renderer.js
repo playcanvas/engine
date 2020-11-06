@@ -1849,7 +1849,7 @@ Object.assign(ForwardRenderer.prototype, {
                             // response is cached
                             var ltcs = fetchLTCLuts(this.device);
                             material.setParameter('ltc_1', ltcs[0]);
-                            material.setParameter('ltc_2', ltcs[1]);
+                            // material.setParameter('ltc_2', ltcs[1]);
                         }
 
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);

@@ -86,19 +86,44 @@ vec3[ 4 ] getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 	return coords;
 }
 
-mat3 getRectAreaLut(vec3 normal, vec3 viewDir){
-	float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);
-	vec2 uv = LTC_Uv( normal, viewDir, roughness );
+void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 lightColor, float roughness, vec3 position, vec3 viewDir){
 
-	vec4 t1 = texture2D( ltc_1, uv );
-	vec4 t2 = texture2D( ltc_2, uv );
+	vec3[ 4 ] coords = getRectAreaLightCoords(lightPos, hWidth, hHeight);
+	vec2 uv;
+	vec4 t1;
+	vec4 t2;
+	vec3 fresnel;
+	mat3 mInv;
 
-	mat3 mInv = mat3(
+	// Diffuse
+	dDiffuseLight += lightColor * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), coords );
+
+	// Specular
+	uv = LTC_Uv( dNormalW, viewDir, roughness );
+	t1 = texture2D( ltc_1, uv );
+	// t2 = texture2D( ltc_2, uv );
+
+	mInv = mat3(
 		vec3( t1.x, 0, t1.y ),
 		vec3(    0, 1,    0 ),
 		vec3( t1.z, 0, t1.w )
 	);
+	// fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
+	dSpecularLight += lightColor * LTC_Evaluate( dNormalW, viewDir, position, mInv, coords );
 
-	return mInv;
+
+	#ifdef CLEARCOAT
+	uv = LTC_Uv( ccNormalW, viewDir, roughness );
+	t1 = texture2D( ltc_1, uv );
+	// t2 = texture2D( ltc_2, uv );
+
+	mInv = mat3(
+		vec3( t1.x, 0, t1.y ),
+		vec3(    0, 1,    0 ),
+		vec3( t1.z, 0, t1.w )
+	);
+	// fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
+	ccSpecularLight += lightColor * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
+	#endif
 }
 

@@ -1002,7 +1002,7 @@ var standard = {
 
         if (hasAreaLights) {
             code += "uniform sampler2D ltc_1;\n";
-            code += "uniform sampler2D ltc_2;\n";
+            // code += "uniform sampler2D ltc_2;\n";
         }
 
         for (i = 0; i < options.lights.length; i++) {
@@ -1462,11 +1462,6 @@ var standard = {
                 code += "   addDirLightMap();\n";
             }
 
-            if (hasAreaLights) {
-                code += "   vec3[ 4 ] coords;\n";
-                code += "   mat3 mInv;\n";
-            }
-
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
@@ -1485,21 +1480,8 @@ var standard = {
                     code += "   dAtten *= getLightDiffuse();\n";
                 } else if (lightType === LIGHTTYPE_AREA) {
 
-                    code += "   coords = getRectAreaLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
-
-                    // LTC Fresnel Approximation by Stephen Hill
-                    // http://blog.selfshadow.com/publications/s2016-advances/s2016_ltc_fresnel.pdf
-                    // code += "   dDiffuseLight += light" + i + "_color * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), coords );\n";
-                    if (options.useSpecular) {
-                        // code += "   vec3 fresnel = ( /*material.specularColor * t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
-                        code += "   mInv = getRectAreaLut(dNormalW, dViewDirW);\n";
-                        code += "   dSpecularLight += light" + i + "_color * 0.0 * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mInv, coords );\n";
-                    }
-                    if( options.clearCoat > 0 ) {
-                        // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
-                        // code += "   mInv = getRectAreaLut(ccNormalW, dViewDirW)\n";
-                        // code += "   ccSpecularLight += light" + i + "_color * ccSpecularity * texture2D( ltc_2, uv ).x * LTC_Evaluate( ccNormalW, dViewDirW, vPositionW, mInv, coords );\n";
-                    }
+                    code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+                    code += "   calculateRectAreaLight(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight, light" + i + "_color, roughness, vPositionW, dViewDirW);\n";
 
                 } else {
 
