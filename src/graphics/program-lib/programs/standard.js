@@ -1568,8 +1568,7 @@ var standard = {
                     }
                 }
 
-                if (lightType !== LIGHTTYPE_AREA) 
-                {
+                if (lightType !== LIGHTTYPE_AREA) {
                     code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                     if (options.clearCoat > 0 ) {
