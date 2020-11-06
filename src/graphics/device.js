@@ -3379,11 +3379,13 @@ Object.assign(GraphicsDevice.prototype, {
         return true;
     },
 
+    // NB for WebGL2: PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this: https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+    // NB for WebGL1: Only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are test for being renderable
     getHdrFormat: function () {
         if (this.textureHalfFloatRenderable) {
-            return PIXELFORMAT_RGB16F;
+            return PIXELFORMAT_RGBA16F;
         } else if (this.textureFloatRenderable) {
-            return PIXELFORMAT_RGB32F;
+            return PIXELFORMAT_RGBA32F;
         }
         return PIXELFORMAT_R8_G8_B8_A8;
     },

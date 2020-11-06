@@ -156,7 +156,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return modifySeams(normalize(vec), 1.0 / targetCubeSeamScale());
+    return normalize(modifySeams(vec, 1.0 / targetCubeSeamScale()));
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad
@@ -165,6 +165,12 @@ mat3 matrixFromVector(vec3 n) { // frisvad
     vec3 b1 = vec3(1.0 - n.x * n.x * a, b, -n.x);
     vec3 b2 = vec3(b, 1.0 - n.y * n.y * a, -n.y);
     return mat3(b1, b2, n);
+}
+
+mat3 matrixFromVectorSlow(vec3 n) {
+    vec3 a = normalize(cross(n, vec3(0, 1, 0)));
+    vec3 b = cross(n, a);
+    return mat3(a, b, n);
 }
 
 float rnd(int i) {
@@ -208,7 +214,7 @@ vec4 prefilter() {
     vec3 vec = TARGET_FUNC();
 
     // construct vector space given target direction
-    mat3 vecSpace = matrixFromVector(vec);
+    mat3 vecSpace = matrixFromVectorSlow(vec);
 
     vec3 result = vec3(0.0);
     for (int i=0; i<NUM_SAMPLES; ++i) {
