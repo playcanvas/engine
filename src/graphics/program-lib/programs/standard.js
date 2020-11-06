@@ -1568,15 +1568,18 @@ var standard = {
                     }
                 }
 
-                if (lightType !== LIGHTTYPE_AREA) code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                if (lightType !== LIGHTTYPE_AREA) 
+                {
+                    code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
-                if (options.clearCoat > 0 ) {
-                    code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                }
+                    if (options.clearCoat > 0 ) {
+                        code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    }
 
-                if (options.useSpecular) {
-                    code += "       dAtten *= getLightSpecular();\n";
-                    code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) {
+                        code += "       dAtten *= getLightSpecular();\n";
+                        code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    }
                 }
 
 
