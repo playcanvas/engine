@@ -999,13 +999,13 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][2] = area._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        let hWidth = quat.transformVector(new Vec3(area._size.x * 0.5, 0, 0));
+        var hWidth = quat.transformVector(new Vec3(area._size.x * 0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x;
         this.lightWidth[cnt][1] = hWidth.y;
         this.lightWidth[cnt][2] = hWidth.z;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
 
-        let hHeight = quat.transformVector(new Vec3(0, 0, area._size.y * 0.5));
+        var hHeight = quat.transformVector(new Vec3(0, 0, area._size.y * 0.5));
         this.lightHeight[cnt][0] = hHeight.x;
         this.lightHeight[cnt][1] = hHeight.y;
         this.lightHeight[cnt][2] = hHeight.z;
@@ -1841,11 +1841,13 @@ Object.assign(ForwardRenderer.prototype, {
                     material.setParameters(device);
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
+                    
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
 
                         // Upload the LTC Luts's if neccesary
                         if (sortedLights[LIGHTTYPE_AREA].length > 0 ) {
-                            const ltcs = fetchLTCLuts(this.device);
+                            // response is cached
+                            var ltcs = fetchLTCLuts(this.device);
                             material.setParameter('ltc_1', ltcs[0]);
                             material.setParameter('ltc_2', ltcs[1]);
                         }

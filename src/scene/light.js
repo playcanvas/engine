@@ -7,7 +7,7 @@ import { Vec4 } from '../math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
@@ -63,7 +63,7 @@ var Light = function Light() {
     this._outerConeAngle = 45;
 
     // Area Light properties
-    this._size = new Vec2(1, 1);
+    this._size = new Vec2(1, 1)
 
     // Cache of light property data in a format more friendly for shader uniforms
     this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
@@ -134,6 +134,9 @@ Object.assign(Light.prototype, {
         // Spot properties
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
+
+        // area properties
+        clone.size = this._size.clone();
 
         // Shadow properties
         clone.shadowBias = this.shadowBias;
@@ -473,6 +476,24 @@ Object.defineProperty(Light.prototype, 'intensity', {
             this._intensity = value;
             this._updateFinalColor();
         }
+    }
+});
+
+Object.defineProperty(Light.prototype, 'width', {
+    get: function () {
+        return this._size.x;
+    },
+    set: function (value) {
+        this._size.x = value;
+    }
+});
+
+Object.defineProperty(Light.prototype, 'height', {
+    get: function () {
+        return this._size.y;
+    },
+    set: function (value) {
+        this._size.y = value;
     }
 });
 

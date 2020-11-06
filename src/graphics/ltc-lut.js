@@ -22,7 +22,7 @@ import {
 // by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt
 // code: https://github.com/selfshadow/ltc_code/
 
-let LTC_FLOAT_1, LTC_FLOAT_2;
+var LTC_FLOAT_1, LTC_FLOAT_2;
 
 // function toHalf( val ) {
 
@@ -75,7 +75,7 @@ let LTC_FLOAT_1, LTC_FLOAT_2;
 //     return bits;
 
 // }
-export const fetchLTCLuts = graphicsDevice => {
+export var fetchLTCLuts = function (graphicsDevice) {
 
     // const floatView = new Float32Array( 1 );
     // const int32View = new Int32Array( floatView.buffer );
@@ -93,8 +93,8 @@ export const fetchLTCLuts = graphicsDevice => {
 
     // data textures
 
-    const ltc_float_1 = new Float32Array( LTC_MAT_1 );
-    const ltc_float_2 = new Float32Array( LTC_MAT_2 );
+    var ltc_float_1 = new Float32Array( LTC_MAT_1 );
+    var ltc_float_2 = new Float32Array( LTC_MAT_2 );
 
     // let LTC_FLOAT_1 = new pc.Texture(graphicsDevice, 64, 64 )
 

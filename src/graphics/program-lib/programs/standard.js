@@ -996,7 +996,9 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(light => light.type === LIGHTTYPE_AREA );
+        var hasAreaLights = options.lights.some(function (light){
+            return light.type === LIGHTTYPE_AREA;
+        });
 
         if (hasAreaLights) {
             code += "uniform sampler2D ltc_1;\n";
@@ -1491,13 +1493,13 @@ var standard = {
                     if (options.useSpecular) {
                         // code += "   vec3 fresnel = ( /*material.specularColor * t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
                         code += "   mInv = getRectAreaLut(dNormalW, dViewDirW);\n";
-                        code += "   dSpecularLight += light" + i + "_color * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mInv, coords );\n";
+                        code += "   dSpecularLight += light" + i + "_color * dSpecularity * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mInv, coords );\n";
                     }
-                    // if( options.clearCoat > 0 ) {
-                    //     // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
-                    //     code += "   mInv = getRectAreaLut(ccNormalW, dViewDirW)\n";
-                    //     code += "   ccSpecularLight += light" + i + "_color * texture2D( ltc_2, uv ).x * LTC_Evaluate( ccNormalW, dViewDirW, vPositionW, mInv, coords );\n";
-                    // }
+                    if( options.clearCoat > 0 ) {
+                        // code += "   vec3 fresnel = ( /*material.specularColor * */ t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n";
+                        code += "   mInv = getRectAreaLut(ccNormalW, dViewDirW)\n";
+                        code += "   ccSpecularLight += light" + i + "_color * ccSpecularity * texture2D( ltc_2, uv ).x * LTC_Evaluate( ccNormalW, dViewDirW, vPositionW, mInv, coords );\n";
+                    }
 
                 } else {
 
