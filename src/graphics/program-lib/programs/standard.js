@@ -1462,6 +1462,11 @@ var standard = {
                 code += "   addDirLightMap();\n";
             }
 
+
+            if (hasAreaLights){
+                code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+            }
+
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
@@ -1480,7 +1485,6 @@ var standard = {
                     code += "   dAtten *= getLightDiffuse();\n";
                 } else if (lightType === LIGHTTYPE_AREA) {
 
-                    code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
                     code += "   calculateRectAreaLight(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight, light" + i + "_color, roughness, vPositionW, dViewDirW);\n";
 
                 } else {
