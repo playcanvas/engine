@@ -15,6 +15,5 @@ vec3 cubeMapProject(vec3 nrdir) {
 
     vec3 posonbox = vPositionW + nrdir * fa;
     vec3 envBoxPos = (envBoxMin + envBoxMax) * 0.5;
-
-    return (posonbox - envBoxPos);
+    return posonbox - envBoxPos;
 }
