@@ -164,7 +164,6 @@ import skinTexVS from './skinTex.vert';
 import skyboxPS from './skybox.frag';
 import skyboxVS from './skybox.vert';
 import skyboxHDRPS from './skyboxHDR.frag';
-import skyboxHDRRotPS from './skyboxHDRRot.frag';
 import skyboxPrefilteredCubePS from './skyboxPrefilteredCube.frag';
 import specularPS from './specular.frag';
 import specularAaNonePS from './specularAaNone.frag';
@@ -368,7 +367,6 @@ var shaderChunks = {
     skyboxPS: skyboxPS,
     skyboxVS: skyboxVS,
     skyboxHDRPS: skyboxHDRPS,
-    skyboxHDRRotPS: skyboxHDRRotPS,
     skyboxPrefilteredCubePS: skyboxPrefilteredCubePS,
     specularPS: specularPS,
     specularAaNonePS: specularAaNonePS,

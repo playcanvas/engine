@@ -1113,6 +1113,10 @@ var standard = {
             code += "#define CUBEMAPROT\n";
         }
 
+        if (options.useDynamicCubeMap) {
+            code += "#define DYNCUBEMAP\n";
+        }
+
         if (needsNormal) {
             code += chunks.cubeMapRotatePS;
 

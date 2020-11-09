@@ -3,6 +3,9 @@ uniform float material_reflectivity;
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec3 lookupVec = fixSeams(cubeMapProject(tReflDirW));
+#ifndef DYNCUBEMAP
+    lookupVec.x *= -1.0;
+#endif
     return $textureCubeSAMPLE(texture_cubeMap, lookupVec).rgb;
 }
 

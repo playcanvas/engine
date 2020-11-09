@@ -408,9 +408,6 @@ Scene.prototype._updateSkybox = function (device) {
             this._skyboxIsRenderTarget = true;
         } else {
             this._skyboxIsRenderTarget = false;
-            this._skyboxRotationMatrix.data[0] *= -1.0;
-            this._skyboxRotationMatrix.data[1] *= -1.0;
-            this._skyboxRotationMatrix.data[2] *= -1.0;
         }
 
         var material = new Material();
@@ -421,7 +418,8 @@ Scene.prototype._updateSkybox = function (device) {
                 rgbm: usedTex.type === TEXTURETYPE_RGBM,
                 hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                 useIntensity: scene.skyboxIntensity !== 1,
-                useRotation: (!scene.skyboxRotation.equals(Quat.IDENTITY) || (scene._skyboxIsRenderTarget)),
+                useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
+                useDynamicCubeMap: scene._skyboxIsRenderTarget,
                 mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                 fixSeams: usedTex.fixCubemapSeams,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),

@@ -21,7 +21,6 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
-import { Mat3 } from '../../math/mat3.js';
 import { Quat } from '../../math/quat.js';
 
 /**
@@ -295,6 +294,7 @@ import { Quat } from '../../math/quat.js';
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
  * * useCubeMapRotation: if cube map rotation is enabled.
+ * * useDynamicCubeMap: if the cube map was dyanmically rendered.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -1011,13 +1011,7 @@ Object.assign(StandardMaterial.prototype, {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
-            if (this.cubeMap) {
-                if (this.cubeMap._isRenderTarget) {
-                    // Just use identity matrix (no -x flip)
-                    this._setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
-                }
-            } else if (this.useSkybox && (!scene.skyboxRotation.equals(Quat.IDENTITY) || (scene._skyboxIsRenderTarget))) {
-                // private _skyboxRotationMatrix property will already apply -x flip in matrix based on if the skybox cube map is NOT a render target
+            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY)) {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMatrix.data);
             }
         }

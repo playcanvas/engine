@@ -6,7 +6,8 @@ import { gammaCode, precisionCode, tonemapCode } from './common.js';
 var skybox = {
     generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
-                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.useRotation + "" + options.mip;
+                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" +
+                  options.useCubeMapRotation + "" + options.useDynamicCubeMap + "" + options.mip;
         return key;
     },
 
@@ -15,13 +16,14 @@ var skybox = {
 
         var fshader;
         fshader  = precisionCode(device);
+        fshader += options.useCubeMapRotation ? '#define CUBEMAPROT\n' : '';
+        fshader += options.useDynamicCubeMap ? '#define DYNCUBEMAP\n' : '';
         fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
         fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
         fshader += gammaCode(options.gamma);
         fshader += tonemapCode(options.toneMapping);
         fshader += shaderChunks.rgbmPS;
-        var skyboxChunkPS = options.useRotation ? shaderChunks.skyboxHDRRotPS : shaderChunks.skyboxHDRPS;
-        fshader += skyboxChunkPS
+        fshader += shaderChunks.skyboxHDRPS
             .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
             .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
 

@@ -2,8 +2,20 @@ varying vec3 vViewDir;
 
 uniform samplerCube texture_cubeMap;
 
+#ifdef CUBEMAPROT
+uniform mat3 cubeMapRotationMatrix;
+#endif
+
 void main(void) {
-    vec3 color = processEnvironment($textureCubeSAMPLE(texture_cubeMap, fixSeamsStatic(vViewDir, $FIXCONST)).rgb);
+#ifdef CUBEMAPROT
+    vec3 dir=vViewDir * cubeMapRotationMatrix;
+#else
+    vec3 dir=vViewDir;
+#endif
+#ifndef DYNCUBEMAP
+    dir.x *= -1.0;
+#endif
+    vec3 color = processEnvironment($textureCubeSAMPLE(texture_cubeMap, fixSeamsStatic(dir, $FIXCONST)).rgb);
     color = toneMap(color);
     color = gammaCorrectOutput(color);
     gl_FragColor = vec4(color, 1.0);

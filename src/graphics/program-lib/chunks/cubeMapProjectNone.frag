@@ -1,3 +1,3 @@
 vec3 cubeMapProject(vec3 dir) {
-    return cubeMapRotateNegX(dir);
+    return cubeMapRotate(dir);
 }
