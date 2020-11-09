@@ -1237,7 +1237,7 @@ Object.assign(ForwardRenderer.prototype, {
             light = lights[i];
             type = light._type;
             if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                if (type !== LIGHTTYPE_DIRECTIONAL) {
+                if (type !== LIGHTTYPE_DIRECTIONAL && type !== LIGHTTYPE_AREA) {
                     light.getBoundingSphere(tempSphere);
                     if (!camera.frustum.containsSphere(tempSphere)) continue;
                     light.visibleThisFrame = true;
