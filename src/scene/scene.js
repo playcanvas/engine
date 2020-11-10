@@ -121,8 +121,6 @@ function Scene() {
     this._skyboxMip = 0;
 
     this._skyboxRotation = new Quat();
-    this._skyboxRotationMatrix = new Mat3();
-    this._skyboxRotationMatrix.data[0] *= -1.0;
 
     this._skyboxIsRenderTarget = false;
 
@@ -399,11 +397,6 @@ Scene.prototype._updateSkybox = function (device) {
             return;
         }
 
-        // update rotation matrix after used texture is determined, but before material is updated
-        if (!this._skyboxRotationMatrix4) this._skyboxRotationMatrix4 = new Mat4();
-        this._skyboxRotationMatrix4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
-        this._skyboxRotationMatrix4.invertTo3x3(this._skyboxRotationMatrix);
-
         if (usedTex._isRenderTarget) {
             this._skyboxIsRenderTarget = true;
         } else {
@@ -431,8 +424,12 @@ Scene.prototype._updateSkybox = function (device) {
         material.updateShader();
         material.setParameter("texture_cubeMap", usedTex);
 
-        if (!this.skyboxRotation.equals(Quat.IDENTITY) || (this._skyboxIsRenderTarget)) {
-            material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMatrix.data);
+        if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
+            if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
+            if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
+            this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+            this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+            material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
         }
 
         material.cull = CULLFACE_FRONT;

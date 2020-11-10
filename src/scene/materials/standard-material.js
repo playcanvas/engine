@@ -1011,8 +1011,8 @@ Object.assign(StandardMaterial.prototype, {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
 
-            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY)) {
-                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMatrix.data);
+            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
 
