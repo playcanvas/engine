@@ -121,6 +121,8 @@ function Scene() {
     this._skyboxMip = 0;
 
     this._skyboxRotation = new Quat();
+    this._skyboxRotationMat3 = null;
+    this._skyboxRotationMat4 = null;
 
     this._skyboxIsRenderTarget = false;
 
