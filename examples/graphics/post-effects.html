@@ -148,7 +148,7 @@
         camera.camera.postEffects.addEffect(vignette);
 
         var bokeh = new pc.BokehEffect(app.graphicsDevice);
-        bokeh.focus = 0.4;
+        bokeh.focus = 0.0 - camera.getLocalPosition().z;
         camera.camera.postEffects.addEffect(bokeh);
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);
@@ -192,9 +192,10 @@
                 light.lookAt(entity.getPosition());
                 light.rotateLocal(90, 0, 0);
                 light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
-                // light.enabled = false;
-
+                
                 pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
+
+                bokeh.focus = light.getLocalPosition().z-camera.getLocalPosition().z;
             }
 
         });

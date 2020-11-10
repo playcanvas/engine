@@ -1,7 +1,7 @@
 uniform vec3 ambientSH[9];
 
 void addAmbient() {
-    vec3 n = dNormalW;
+    vec3 n = cubeMapRotate(dNormalW);
 
     vec3 color =
         ambientSH[0] +

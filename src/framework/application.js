@@ -1695,6 +1695,7 @@ Object.assign(Application.prototype, {
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
      * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+     * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
@@ -1719,6 +1720,7 @@ Object.assign(Application.prototype, {
      *         fog_start: 1,
      *         global_ambient: [0, 0, 0],
      *         skyboxIntensity: 1,
+     *         skyboxRotation: [0, 0, 0, 1],
      *         fog_color: [0, 0, 0],
      *         lightmapMode: 1,
      *         fog: 'none',

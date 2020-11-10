@@ -119,6 +119,8 @@ function Texture(graphicsDevice, options) {
     this._flipY = true;
     this._premultiplyAlpha = false;
 
+    this._isRenderTarget = false;
+
     this._mipmaps = true;
 
     this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
