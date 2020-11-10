@@ -7,7 +7,7 @@ var skybox = {
     generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" +
-                  options.useCubeMapRotation + "" + options.useDynamicCubeMap + "" + options.mip;
+                  options.useCubeMapRotation + "" + options.useRightHandedCubeMap + "" + options.mip;
         return key;
     },
 
@@ -16,8 +16,8 @@ var skybox = {
 
         var fshader;
         fshader  = precisionCode(device);
-        fshader += options.useCubeMapRotation ? '#define CUBEMAPROT\n' : '';
-        fshader += options.useDynamicCubeMap ? '#define DYNCUBEMAP\n' : '';
+        fshader += options.useCubeMapRotation ? '#define CUBEMAP_ROTATION\n' : '';
+        fshader += options.useRightHandedCubeMap ? '#define RIGHT_HANDED_CUBEMAP\n' : '';
         fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
         fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
         fshader += gammaCode(options.gamma);

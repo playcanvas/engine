@@ -1110,11 +1110,11 @@ var standard = {
         }
 
         if (options.useCubeMapRotation) {
-            code += "#define CUBEMAPROT\n";
+            code += "#define CUBEMAP_ROTATION\n";
         }
 
-        if (options.useDynamicCubeMap) {
-            code += "#define DYNCUBEMAP\n";
+        if (options.useRightHandedCubeMap) {
+            code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
         if (needsNormal) {

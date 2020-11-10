@@ -2,17 +2,17 @@ varying vec3 vViewDir;
 
 uniform samplerCube texture_cubeMap;
 
-#ifdef CUBEMAPROT
+#ifdef CUBEMAP_ROTATION
 uniform mat3 cubeMapRotationMatrix;
 #endif
 
 void main(void) {
-#ifdef CUBEMAPROT
+#ifdef CUBEMAP_ROTATION
     vec3 dir=vViewDir * cubeMapRotationMatrix;
 #else
     vec3 dir=vViewDir;
 #endif
-#ifndef DYNCUBEMAP
+#ifndef RIGHT_HANDED_CUBEMAP
     dir.x *= -1.0;
 #endif
     vec3 color = processEnvironment($textureCubeSAMPLE(texture_cubeMap, fixSeamsStatic(dir, $FIXCONST)).rgb);

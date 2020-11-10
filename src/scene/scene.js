@@ -412,7 +412,7 @@ Scene.prototype._updateSkybox = function (device) {
                 hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                 useIntensity: scene.skyboxIntensity !== 1,
                 useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
-                useDynamicCubeMap: scene._skyboxIsRenderTarget,
+                useRightHandedCubeMap: scene._skyboxIsRenderTarget,
                 mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                 fixSeams: usedTex.fixCubemapSeams,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
