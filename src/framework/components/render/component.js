@@ -302,7 +302,7 @@ Object.assign(RenderComponent.prototype, {
     },
 
     _onRenderAssetAdded: function (asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onRenderAssetAdd, this);
+        this.system.app.assets.off('add:' + asset.id, this._onRenderAssetAdded, this);
         if (asset.id === this._asset) {
             this._bindRenderAsset(asset);
         }
