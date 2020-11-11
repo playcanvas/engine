@@ -3,6 +3,8 @@ import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
+import { Asset } from '../../../asset/asset.js';
+
 import { Component } from '../component.js';
 
 /**
@@ -246,7 +248,7 @@ Object.assign(RenderComponent.prototype, {
      * @private
      * @function
      * @name pc.RenderComponent#show
-     * @description Enable rendering of the model {@link pc.MeshInstance}s if hidden using {@link pc.RenderComponent#hide}.
+     * @description Enable rendering of the render {@link pc.MeshInstance}s if hidden using {@link pc.RenderComponent#hide}.
      * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
      */
     show: function () {
@@ -299,13 +301,23 @@ Object.assign(RenderComponent.prototype, {
         asset.off('remove', this._onRenderAssetRemove, this);
     },
 
+    _onRenderAssetAdded: function (asset) {
+        this.system.app.assets.off('add:' + asset.id, this._onRenderAssetAdd, this);
+        if (asset.id === this._asset) {
+            this._bindRenderAsset(asset);
+        }
+    },
+
     _onRenderAssetLoad: function (asset) {
 
 
         // probably need to delete old mesh instances????
 
         this._render = asset.resources;
-        this._cloneFromRender(this._render);
+        
+        // this probably needs to load dependent asset now ??
+        
+        //this._cloneFromRender(this._render);
 
         //this.model = asset.resource.clone();
         //this._clonedModel = true;
@@ -703,6 +715,46 @@ Object.defineProperty(RenderComponent.prototype, "material", {
     set: function (value) {
         if (this._material !== value) {
             this._setMaterial(value);
+        }
+    }
+});
+
+Object.defineProperty(RenderComponent.prototype, "asset", {
+    get: function () {
+        return this._asset;
+    },
+
+    set: function (value) {
+        var assets = this.system.app.assets;
+        var _id = value;
+
+        if (value instanceof Asset) {
+            _id = value.id;
+        }
+
+        if (this._asset !== _id) {
+            if (this._asset) {
+                // remove previous asset
+                assets.off('add:' + this._asset, this._onRenderAssetAdded, this);
+                var _prev = assets.get(this._asset);
+                if (_prev) {
+                    this._unbindRenderAsset(_prev);
+                }
+            }
+
+            this._asset = _id;
+
+            if (this._asset) {
+                var asset = assets.get(this._asset);
+                if (!asset) {
+                    //this.model = null;
+                    assets.on('add:' + this._asset, this._onRenderAssetAdded, this);
+                } else {
+                    this._bindRenderAsset(asset);
+                }
+            } else {
+                //this.model = null;
+            }
         }
     }
 });
