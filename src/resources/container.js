@@ -14,7 +14,6 @@ import { GlbParser } from './parser/glb-parser.js';
  * @param {pc.Asset[]} animations - Array of assets of animations in the GLB container.
  * @param {pc.Asset[]} textures - Array of assets of textures in the GLB container.
  * @param {pc.Asset[]} materials - Array of assets of materials in the GLB container.
- * @param {pc.Asset} model - Asset of the model in the GLB container.
  */
 function ContainerResource(data) {
     this.data = data;
