@@ -101,7 +101,7 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 	// Specular
 	uv = LTC_Uv( dNormalW, viewDir, roughness );
 	t1 = texture2D( ltc_1, uv );
-	// t2 = texture2D( ltc_2, uv );
+	t2 = texture2D( ltc_2, uv );
 
 	mInv = mat3(
 		vec3( t1.x, 0, t1.y ),
@@ -115,7 +115,7 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 	#ifdef CLEARCOAT
 	uv = LTC_Uv( ccNormalW, viewDir, roughness );
 	t1 = texture2D( ltc_1, uv );
-	// t2 = texture2D( ltc_2, uv );
+	t2 = texture2D( ltc_2, uv );
 
 	mInv = mat3(
 		vec3( t1.x, 0, t1.y ),

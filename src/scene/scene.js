@@ -109,6 +109,8 @@ function Scene() {
 
     this._skyboxPrefiltered = [null, null, null, null, null, null];
 
+    this._areaLightLuts = null
+
     this._firstUpdateSkybox = true;
     this._skyboxCubeMap = null;
     this.skyboxModel = null;

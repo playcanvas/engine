@@ -6,7 +6,6 @@ import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
-import { fetchLTCLuts } from '../graphics/ltc-lut';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
@@ -1846,8 +1845,7 @@ Object.assign(ForwardRenderer.prototype, {
 
                         // Upload the LTC Luts's if neccesary
                         if (sortedLights[LIGHTTYPE_AREA].length > 0 ) {
-                            // response is cached
-                            var ltcs = fetchLTCLuts(this.device);
+                            var ltcs = this.scene._areaLightLuts;
                             material.setParameter('ltc_1', ltcs[0]);
                             material.setParameter('ltc_2', ltcs[1]);
                         }
