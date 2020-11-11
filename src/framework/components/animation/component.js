@@ -236,6 +236,12 @@ Object.assign(AnimationComponent.prototype, {
     onAssetChanged: function (asset, attribute, newValue, oldValue) {
         var i;
         if (attribute === 'resource' || attribute === 'resources') {
+            // If the attribute is 'resources', newValue can be an empty array when the
+            // asset is unloaded. Therefore, we should assign null in this case
+            if (newValue && newValue.length === 0 && attribute === 'resources') {
+                newValue = null;
+            }
+
             // replace old animation with new one
             if (newValue) {
                 var restarted = false;
@@ -269,6 +275,7 @@ Object.assign(AnimationComponent.prototype, {
                             delete this.animations[oldValue[i].name];
                         }
                     }
+
                     this.animations[asset.name] = newValue[0] || newValue;
                     restarted = false;
                     if (this.data.currAnim === asset.name) {
@@ -288,9 +295,15 @@ Object.assign(AnimationComponent.prototype, {
                 if (oldValue.length > 1) {
                     for (i = 0; i < oldValue.length; i++) {
                         delete this.animations[oldValue[i].name];
+                        if (this.data.currAnim === oldValue[i].name) {
+                            this._stopCurrentAnimation();
+                        }
                     }
                 } else {
                     delete this.animations[asset.name];
+                    if (this.data.currAnim === asset.name) {
+                        this._stopCurrentAnimation();
+                    }
                 }
                 delete this.animationsIndex[asset.id];
             }
