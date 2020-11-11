@@ -419,6 +419,8 @@ function Application(canvas, options) {
 
     options.graphicsDeviceOptions.xrCompatible = true;
 
+    options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
+
     this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
     this.stats = new ApplicationStats(this.graphicsDevice);
     this._soundManager = new SoundManager(options);
