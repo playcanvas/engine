@@ -108,8 +108,8 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 		vec3(    0, 1,    0 ),
 		vec3( t1.z, 0, t1.w )
 	);
-	// fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
-	dSpecularLight += lightColor * LTC_Evaluate( dNormalW, viewDir, position, mInv, coords );
+	fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
+	dSpecularLight += lightColor * fresnel * LTC_Evaluate( dNormalW, viewDir, position, mInv, coords );
 
 
 	#ifdef CLEARCOAT
@@ -122,8 +122,8 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 		vec3(    0, 1,    0 ),
 		vec3( t1.z, 0, t1.w )
 	);
-	// fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
-	ccSpecularLight += lightColor * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
+	fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
+	ccSpecularLight += lightColor * fresnel * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
 	#endif
 }
 
