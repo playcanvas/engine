@@ -946,7 +946,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         if (pbrData.hasOwnProperty('roughnessFactor')) {
             material.shininess = 100 * (1.0 - pbrData.roughnessFactor);
         } else {
-            material.shininess = 100;
+            material.shininess = 0;
         }
         if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
             var metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
@@ -1041,7 +1041,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
             material.clearCoatGlossiness = 1.0 - ccData.clearcoatRoughnessFactor;
         } else {
-            material.clearCoatGlossiness = 0;
+            material.clearCoatGlossiness = 1.0;
         }
         if (ccData.hasOwnProperty('clearcoatRoughnessTexture')) {
             var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
