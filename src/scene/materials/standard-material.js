@@ -118,7 +118,7 @@ import { Quat } from '../../math/quat.js';
  * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
  *
- * @property {boolean} hasRoughnessMap If true the {@link pc.Material#glossMap} is treated as a Roughness map 
+ * @property {boolean} hasRoughnessMap If true the {@link pc.Material#glossMap} is treated as a Roughness map
  * will get inverted when used with lighting. Defaults to false.
  *
  * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
