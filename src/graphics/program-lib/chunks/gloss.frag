@@ -14,7 +14,7 @@ void getGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-        #if ROUGHNESS_MAP
+        #ifdef ROUGHNESS_MAP
         dGlossiness *= 1.0 - texture2D(texture_glossMap, $UV).$CH;
         #else  
         dGlossiness *= texture2D(texture_glossMap, $UV).$CH;
@@ -23,10 +23,6 @@ void getGlossiness() {
 
     #ifdef MAPVERTEX
     dGlossiness *= saturate(vVertexColor.$VC);
-    #endif
-
-    #if GLTF_MAT_GENERATED
-    dGlossiness = 1.0 - dGlossiness;
     #endif
 
     dGlossiness += 0.0000001;
