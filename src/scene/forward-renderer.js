@@ -985,8 +985,6 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchAreaLight: function (scene, scope, area, cnt) {
         var wtm = area._node.getWorldTransform();
-        var quat = new Quat();
-        quat.setFromMat4(wtm);
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
@@ -999,13 +997,13 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][2] = area._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        var hWidth = quat.transformVector(new Vec3(area._size.x * 0.5, 0, 0));
+        var hWidth = wtm.transformVector(new Vec3(0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x;
         this.lightWidth[cnt][1] = hWidth.y;
         this.lightWidth[cnt][2] = hWidth.z;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
 
-        var hHeight = quat.transformVector(new Vec3(0, 0, area._size.y * 0.5));
+        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
         this.lightHeight[cnt][0] = hHeight.x;
         this.lightHeight[cnt][1] = hHeight.y;
         this.lightHeight[cnt][2] = hHeight.z;
