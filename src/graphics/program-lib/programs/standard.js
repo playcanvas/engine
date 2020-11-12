@@ -1117,8 +1117,12 @@ var standard = {
             code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
-        if (options.generatedFromGltfMaterial) {
-            code += "#define GLTF_MAT_GENERATED\n";
+        if (options.hasSrgbSpecularMap) {
+            code += "#define SRGB_SPECULAR_MAP\n";
+        }
+
+        if (options.hasRoughnessMap) {
+            code += "#define ROUGHNESS_MAP\n";
         }
 
         if (needsNormal) {

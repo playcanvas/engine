@@ -32,7 +32,8 @@ var standardMaterialParameterTypes = {
     diffuseDetailMapOffset: 'vec2',
     diffuseDetailMode: 'string',
 
-    generatedFromGltfMaterial: 'boolean',
+    hasSrgbSpecularMap: 'boolean',
+    hasRoughnessMap: 'boolean',
 
     specular: 'rgb',
     specularTint: 'boolean',

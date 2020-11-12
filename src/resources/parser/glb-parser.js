@@ -866,8 +866,6 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
         material.name = gltfMaterial.name;
     }
 
-    material.generatedFromGltfMaterial = true;
-
     var color, texture;
     if (gltfMaterial.hasOwnProperty('extensions') &&
         gltfMaterial.extensions.hasOwnProperty('KHR_materials_pbrSpecularGlossiness')) {
@@ -911,6 +909,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
             material.specularMapChannel = 'rgb';
             material.glossMapChannel = 'a';
+            material.hasSrgbSpecularMap = true;
 
             extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
         }
@@ -945,7 +944,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.metalness = 1;
         }
         if (pbrData.hasOwnProperty('roughnessFactor')) {
-            material.shininess = 100 * pbrData.roughnessFactor;
+            material.shininess = 100 * (1.0 - pbrData.roughnessFactor);
         } else {
             material.shininess = 100;
         }
@@ -954,6 +953,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
             material.metalnessMapChannel = 'b';
             material.glossMapChannel = 'g';
+            material.hasRoughnessMap = true;
 
             extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
         }
@@ -1039,7 +1039,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
         }
         if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
-            material.clearCoatGlossiness = ccData.clearcoatRoughnessFactor;
+            material.clearCoatGlossiness = 1.0 - ccData.clearcoatRoughnessFactor;
         } else {
             material.clearCoatGlossiness = 0;
         }
@@ -1047,6 +1047,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
             material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
             material.clearCoatGlossMapChannel = 'g';
+            material.hasRoughnessMap = true;
 
             extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
         }
