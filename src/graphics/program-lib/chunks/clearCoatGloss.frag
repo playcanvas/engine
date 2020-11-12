@@ -21,5 +21,9 @@ void getClearCoatGlossiness() {
     ccGlossiness *= saturate(vVertexColor.$VC);
     #endif
 
+    #if GLTF_MAT_GENERATED
+    dGlossiness = 1.0 - dGlossiness;
+    #endif
+
     ccGlossiness += 0.0000001;
 }

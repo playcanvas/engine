@@ -1117,6 +1117,10 @@ var standard = {
             code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
+        if (options.generatedFromGltfMaterial) {
+            code += "#define GLTF_MAT_GENERATED\n";
+        }
+
         if (needsNormal) {
             code += chunks.cubeMapRotatePS;
 

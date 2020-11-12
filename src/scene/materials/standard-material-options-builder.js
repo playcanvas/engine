@@ -127,6 +127,7 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
     options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
     options.conserveEnergy = stdMat.conserveEnergy;
+    options.generatedFromGltfMaterial = stdMat.generatedFromGltfMaterial;
     options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
     options.alphaFade = stdMat.alphaFade;
     options.occludeSpecular = stdMat.occludeSpecular;
