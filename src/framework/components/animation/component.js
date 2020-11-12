@@ -238,7 +238,7 @@ Object.assign(AnimationComponent.prototype, {
         if (attribute === 'resource' || attribute === 'resources') {
             // If the attribute is 'resources', newValue can be an empty array when the
             // asset is unloaded. Therefore, we should assign null in this case
-            if (newValue && newValue.length === 0 && attribute === 'resources') {
+            if (attribute === 'resources' && newValue && newValue.length === 0) {
                 newValue = null;
             }
 
