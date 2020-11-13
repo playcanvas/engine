@@ -90,6 +90,19 @@ RenderComponent.prototype.constructor = RenderComponent;
 
 Object.assign(RenderComponent.prototype, {
 
+    destroyMeshInstances: function () {
+
+        var meshInstances = this._meshInstances;
+        if (meshInstances) {
+            this.removeFromLayers();
+
+            for (var i = 0; i < meshInstances.length; i++) {
+                meshInstances[i].destroy();
+            }
+            this._meshInstances.length = 0;
+        }
+    },
+
     addToLayers: function () {
         var layer, layers = this.system.app.scene.layers;
         for (var i = 0; i < this._layers.length; i++) {
@@ -102,19 +115,20 @@ Object.assign(RenderComponent.prototype, {
 
     removeFromLayers: function () {
 
-        var layer, layers = this.system.app.scene.layers;
-        for (var i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
-            if (layer) {
-                layer.removeMeshInstances(this._meshInstances);
+        if (this._meshInstances && this._meshInstances.length) {
+
+            var layer, layers = this.system.app.scene.layers;
+            for (var i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeMeshInstances(this._meshInstances);
+                }
             }
         }
     },
 
     onRemoveChild: function () {
-        if (this._meshInstances) {
-            this.removeFromLayers();
-        }
+        this.removeFromLayers();
     },
 
     onInsertChild: function () {
@@ -124,6 +138,9 @@ Object.assign(RenderComponent.prototype, {
     },
 
     onRemove: function () {
+
+        this.destroyMeshInstances();
+
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
     },
@@ -191,9 +208,7 @@ Object.assign(RenderComponent.prototype, {
             app.batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
 
-        if (this._meshInstances && this._meshInstances.length) {
-            this.removeFromLayers();
-        }
+        this.removeFromLayers();
     },
 
     /**
@@ -246,13 +261,6 @@ Object.assign(RenderComponent.prototype, {
         } else {
             render.once('set:meshes', this._onSetMeshes, this);
         }
-
-        // this probably needs to load dependent asset now ??
-
-        // this._cloneFromRender(this._render);
-
-        // this.model = asset.resource.clone();
-        // this._clonedModel = true;
     },
 
     _onSetMeshes: function (meshes) {
@@ -326,14 +334,7 @@ Object.assign(RenderComponent.prototype, {
     },
 
     _onRenderAssetUnload: function () {
-        if (this._meshInstances) {
-            this.removeFromLayers();
-        }
-
-        for (var i = 0; i < this._meshInstances.length; i++) {
-            this._meshInstances[i].destroy();
-        }
-        this._meshInstances.length = 0;
+        this.destroyMeshInstances();
     },
 
     _onRenderAssetRemove: function () {
@@ -453,9 +454,7 @@ Object.defineProperty(RenderComponent.prototype, "meshInstances", {
 
     set: function (value) {
 
-        if (this._meshInstances) {
-            this.removeFromLayers();
-        }
+        this.removeFromLayers();
 
         this._meshInstances = value;
 
