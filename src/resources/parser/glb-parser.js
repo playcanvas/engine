@@ -909,7 +909,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
             material.specularMapChannel = 'rgb';
             material.glossMapChannel = 'a';
-            material.hasSrgbSpecularMap = true;
+            material.isSrgbSpecularMap = true;
 
             extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
         }
@@ -953,7 +953,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
             material.metalnessMapChannel = 'b';
             material.glossMapChannel = 'g';
-            material.hasRoughnessMap = true;
+            material.isRoughnessMap = true;
 
             extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
         }
@@ -1047,7 +1047,7 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
             material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
             material.clearCoatGlossMapChannel = 'g';
-            material.hasRoughnessMap = true;
+            material.isRoughnessMap = true;
 
             extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
         }

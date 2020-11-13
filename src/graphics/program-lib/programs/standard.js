@@ -1117,11 +1117,11 @@ var standard = {
             code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
-        if (options.hasSrgbSpecularMap) {
+        if (options.isSrgbSpecularMap) {
             code += "#define SRGB_SPECULAR_MAP\n";
         }
 
-        if (options.hasRoughnessMap) {
+        if (options.isRoughnessMap) {
             code += "#define ROUGHNESS_MAP\n";
         }
 

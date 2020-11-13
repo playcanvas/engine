@@ -60,7 +60,7 @@ import { Quat } from '../../math/quat.js';
  * * {@link pc.DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise.
  * Defaults to {@link pc.DETAILMODE_MUL}.
  *
- * @property {boolean} hasSrgbSpecularMap If true the {@link pc.Material#specularMap} is treated as in SRGB color
+ * @property {boolean} isSrgbSpecularMap If true the {@link pc.Material#specularMap} is treated as in SRGB color
  * space and will get converted to linear color space in when used with lighting. Defaults to false.
  *
  * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
@@ -118,7 +118,7 @@ import { Quat } from '../../math/quat.js';
  * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
  *
- * @property {boolean} hasRoughnessMap If true the {@link pc.Material#glossMap} is treated as a Roughness map
+ * @property {boolean} isRoughnessMap If true the {@link pc.Material#glossMap} is treated as a Roughness map
  * will get inverted when used with lighting. Defaults to false.
  *
  * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
@@ -254,8 +254,8 @@ import { Quat } from '../../math/quat.js';
  * * toneMap: the type of tone mapping being applied in the shader. See {@link pc.Scene#toneMapping} for the list of possible values.
  * * ambientTint: the value of {@link pc.StandardMaterial#ambientTint}.
  * * specularAntialias: the value of {@link pc.StandardMaterial#specularAntialias}.
- * * hasSrgbSpecularMap: the value of {@link pc.StandardMaterial#hasSrgbSpecularMap}.
- * * hasRoughnessMap: the value of {@link pc.StandardMaterial#hasRoughnessMap}.
+ * * isSrgbSpecularMap: the value of {@link pc.StandardMaterial#isSrgbSpecularMap}.
+ * * isRoughnessMap: the value of {@link pc.StandardMaterial#isRoughnessMap}.
  * * conserveEnergy: the value of {@link pc.StandardMaterial#conserveEnergy}.
  * * occludeSpecular: the value of {@link pc.StandardMaterial#occludeSpecular}.
  * * occludeDirect: the value of {@link pc.StandardMaterial#occludeDirect}.
@@ -1124,8 +1124,8 @@ var _defineMaterialProps = function (obj) {
     _defineFlag(obj, "enableGGXSpecular", false);
     _defineFlag(obj, "occludeDirect", false);
     _defineFlag(obj, "normalizeNormalMap", true);
-    _defineFlag(obj, "hasSrgbSpecularMap", false);
-    _defineFlag(obj, "hasRoughnessMap", false);
+    _defineFlag(obj, "isSrgbSpecularMap", false);
+    _defineFlag(obj, "isRoughnessMap", false);
     _defineFlag(obj, "conserveEnergy", true);
     _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
