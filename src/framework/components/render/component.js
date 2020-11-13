@@ -4,6 +4,7 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
 import { Asset } from '../../../asset/asset.js';
+import { AssetReference } from '../../../asset/asset-reference.js';
 
 import { Component } from '../component.js';
 
@@ -54,17 +55,27 @@ function RenderComponent(system, entity)   {
     this._meshInstances = [];
     this._layers = [LAYERID_WORLD]; // assign to the default world layer
 
-    this._material = system.defaultMaterial;
-    this._materialEvents = null;
-
     // bounding box which can be set to override bounding box based on mesh
     this._aabb = null;
 
     // area - used by lightmapper
     this._area = null;
 
-    // render asset
-    this._asset = null;
+    // render asset reference
+    this._assetReference = new AssetReference(
+        'asset',
+        this,
+        system.app.assets, {
+            add: this._onRenderAssetAdded,
+            load: this._onRenderAssetLoad,
+            remove: this._onRenderAssetRemove,
+            unload: this._onRenderAssetUnload
+        },
+        this
+    );
+
+    // material asset references
+    this._materialReferences = [];
 
     entity.on('remove', this.onRemoveChild, this);
     entity.on('insert', this.onInsertChild, this);
@@ -108,8 +119,6 @@ Object.assign(RenderComponent.prototype, {
     },
 
     onRemove: function () {
-        this._unsetMaterialEvents();
-
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
     },
@@ -134,44 +143,7 @@ Object.assign(RenderComponent.prototype, {
         layer.removeMeshInstances(this._meshInstances);
     },
 
-    _setMaterialEvent: function (index, event, id, handler) {
-        var evt = event + ':' + id;
-        this.system.app.assets.on(evt, handler, this);
-
-        if (!this._materialEvents)
-            this._materialEvents = [];
-
-        if (!this._materialEvents[index])
-            this._materialEvents[index] = { };
-
-        this._materialEvents[index][evt] = {
-            id: id,
-            handler: handler
-        };
-    },
-
-    _unsetMaterialEvents: function () {
-        var events = this._materialEvents;
-        if (events) {
-
-            var assets = this.system.app.assets;
-            for (var i = 0, len = events.length; i < len; i++) {
-                var evt = events[i];
-                if (evt) {
-                    for (var key in evt) {
-                        assets.off(key, evt[key].handler, this);
-                    }
-                }
-            }
-
-            this._materialEvents = null;
-        }
-    },
-
     onEnable: function () {
-
-        console.log("render.onEnable called");
-
         var app = this.system.app;
         var scene = app.scene;
 
@@ -184,22 +156,14 @@ Object.assign(RenderComponent.prototype, {
         var isAsset = (this._type === 'asset');
         if (this._meshInstances && this._meshInstances.length) {
             this.addToLayers();
-        } else if (isAsset && this._asset) {
+        } else if (isAsset && this.asset) {
+            this._onRenderAssetAdded();
+        }
 
-            // bind and load render asset if necessary
-            var asset = app.assets.get(this._asset);
-            if (asset/* && asset.resource !== this._model*/) {
-
-                app.assets.load(asset);
-
-//                var self = this;
-//                asset.ready(function () {
-//                    self._bindRenderAsset(asset.resource.renders[0]._id);
-//                    self._bindRenderAsset(asset);
-//                });
-
-
-                this._bindRenderAsset(asset);
+        // load materials
+        for (var i = 0; i < this._materialReferences.length; i++) {
+            if (this._materialReferences[i].asset) {
+                this.system.app.assets.load(this._materialReferences[i].asset);
             }
         }
 
@@ -259,80 +223,45 @@ Object.assign(RenderComponent.prototype, {
         }
     },
 
-    _setMaterial: function (material) {
-        if (this._material !== material) {
+    _onRenderAssetAdded: function () {
+        if (!this._assetReference.asset) return;
 
-            this._material = material;
-            if (this._meshInstances && this._type !== 'asset') {
-                for (var i = 0, len = this._meshInstances.length; i < len; i++) {
-                    this._meshInstances[i].material = material;
-                }
-            }
+        if (this._assetReference.asset.resource) {
+            this._onRenderAssetLoad();
+        } else if (this.enabled && this.entity.enabled) {
+            this.system.app.assets.load(this._assetReference.asset);
         }
     },
 
-    _bindRenderAsset: function (asset) {
-
-        console.log("bind render asset");
-
-
-
-        this._unbindRenderAsset(asset);
-
-        asset.on('load', this._onRenderAssetLoad, this);
-        asset.on('unload', this._onRenderAssetUnload, this);
-        asset.on('change', this._onRenderAssetChange, this);
-        asset.on('remove', this._onRenderAssetRemove, this);
-
-        if (asset.resource) {
-            this._onRenderAssetLoad(asset);
-        } else {
-            // trigger an asset load if the component is enabled
-            if (this.enabled && this.entity.enabled) {
-                this.system.app.assets.load(asset);
-            }
-        }
-    },
-
-    _unbindRenderAsset: function (asset) {
-        asset.off('load', this._onRenderAssetLoad, this);
-        asset.off('unload', this._onRenderAssetUnload, this);
-        asset.off('change', this._onRenderAssetChange, this);
-        asset.off('remove', this._onRenderAssetRemove, this);
-    },
-
-    _onRenderAssetAdded: function (asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onRenderAssetAdded, this);
-        if (asset.id === this._asset) {
-            this._bindRenderAsset(asset);
-        }
-    },
-
-    _onRenderAssetLoad: function (asset) {
-
-
+    _onRenderAssetLoad: function () {
         // probably need to delete old mesh instances????
+        var render = this._assetReference.asset.resource;
+        if (render.meshes) {
+            this._onSetMeshes(render.meshes);
+        } else {
+            render.once('set:meshes', this._onSetMeshes, this);
+        }
 
-        this._render = asset.resources;
-        
         // this probably needs to load dependent asset now ??
-        
+
         //this._cloneFromRender(this._render);
 
         //this.model = asset.resource.clone();
         //this._clonedModel = true;
     },
 
-    _cloneFromRender: function (render) {
+    _onSetMeshes: function (meshes) {
+        this._cloneMeshes(meshes);
+    },
 
+    _cloneMeshes: function (meshes) {
         var meshInstances = [];
 
-        if (render && render.length) {
-            for (var i = 0; i < render.length; i++) {
-                var mesh = render[i];
-                var material = this._material;    // this needs to change !!!!!!!!!!!!!
-
-                var meshInst = new MeshInstance(this.entity, mesh, material);
+        if (meshes.length) {
+            for (var i = 0; i < meshes.length; i++) {
+                var mesh = meshes[i];
+                var material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
+                var meshInst = new MeshInstance(this.entity, mesh, material || this.system.defaultMaterial);
                 meshInstances.push(meshInst);
             }
 
@@ -340,10 +269,6 @@ Object.assign(RenderComponent.prototype, {
         }
 
         // probably need to copy transform as well?????
-
-
-
-
 
 
         // var cloneMeshInstances = [];
@@ -393,28 +318,45 @@ Object.assign(RenderComponent.prototype, {
         //     cloneMeshInstances.push(cloneMeshInstance);
         // }
 
-
-
-
     },
 
     _onRenderAssetUnload: function (asset) {
         //this.model = null;
     },
 
-    _onRenderAssetChange: function (asset, attr, _new, _old) {
-
-        console.log("render component: asset changed");
-
-        this._onRenderAssetLoad(asset);
-
-        // if (attr === 'data') {
-        //     this.mapping = this._mapping;
-        // }
+    _onRenderAssetRemove: function (asset) {
+        if (this._assetReference.asset && this._assetReference.asset.resource) {
+            this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
+        }
+//        this.model = null;
     },
 
-    _onRenderAssetRemove: function (asset) {
-//        this.model = null;
+    _onMaterialAdded: function (index, component, asset) {
+        if (asset.resource) {
+            this._onMaterialLoad(index, component, asset);
+        } else {
+            if (this.enabled && this.entity.enabled) {
+                this.system.app.assets.load(asset);
+            }
+        }
+    },
+
+    _onMaterialLoad: function (index, component, asset) {
+        if (this._meshInstances[index]) {
+            this._meshInstances[index].material = asset.resource;
+        }
+    },
+
+    _onMaterialRemove: function (index, component, asset) {
+        if (this._meshInstances[index]) {
+            this._meshInstances[index].material = this.system.defaultMaterial;
+        }
+    },
+
+    _onMaterialUnload: function (index, component, asset) {
+        if (this._meshInstances[index]) {
+            this._meshInstances[index].material = this.system.defaultMaterial;
+        }
     },
 
     /**
@@ -485,7 +427,8 @@ Object.defineProperty(RenderComponent.prototype, "type", {
 
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
-                this._meshInstances = [new MeshInstance(this.entity, primData.mesh, this._material)];
+                var material = this._materialReferences[0] && this._materialReferences[0].asset && this._materialReferences[0].asset.resource;
+                this._meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
 
                 if (this.system._inTools)
                     this.generateWireframe();
@@ -707,54 +650,71 @@ Object.defineProperty(RenderComponent.prototype, "batchGroupId", {
     }
 });
 
-Object.defineProperty(RenderComponent.prototype, "material", {
+Object.defineProperty(RenderComponent.prototype, "materialAssets", {
     get: function () {
-        return this._material;
+        return this._materialReferences.map(function (ref) {
+            return ref.id;
+        });
     },
 
     set: function (value) {
-        if (this._material !== value) {
-            this._setMaterial(value);
+        var i;
+        value = value || [];
+        if (this._materialReferences.length > value.length) {
+            for (i = value.length; i < this._materialReferences.length; i++) {
+                this._materialReferences[i].id = null;
+            }
+            this._materialReferences.length = value.length;
+        }
+
+        for (i = 0; i < value.length; i++) {
+            if (value[i]) {
+                var id = value[i] instanceof Asset ? value[i].id : value[i];
+                if (!this._materialReferences[i]) {
+                    this._materialReferences.push(
+                        new AssetReference(
+                            i,
+                            this,
+                            this.system.app.assets, {
+                                add: this._onMaterialAdded,
+                                load: this._onMaterialLoad,
+                                remove: this._onMaterialRemove,
+                                unload: this._onMaterialUnload
+                            },
+                            this
+                        )
+                    );
+                }
+
+                if (this._materialReferences[i].id !== id) {
+                    this._materialReferences[i].id = id;
+                }
+
+                if (this._materialReferences[i].asset) {
+                    this._onMaterialAdded(i, this, this._materialReferences[i].asset);
+                }
+            }
         }
     }
 });
 
 Object.defineProperty(RenderComponent.prototype, "asset", {
     get: function () {
-        return this._asset;
+        return this._assetReference.id;
     },
 
     set: function (value) {
-        var assets = this.system.app.assets;
-        var _id = value;
+        var id = (value instanceof Asset ? value.id : value);
+        if (this._assetReference.id === id) return;
 
-        if (value instanceof Asset) {
-            _id = value.id;
+        if (this._assetReference.asset && this._assetReference.asset.resource) {
+            this._onRenderAssetRemove();
         }
 
-        if (this._asset !== _id) {
-            if (this._asset) {
-                // remove previous asset
-                assets.off('add:' + this._asset, this._onRenderAssetAdded, this);
-                var _prev = assets.get(this._asset);
-                if (_prev) {
-                    this._unbindRenderAsset(_prev);
-                }
-            }
+        this._assetReference.id = id;
 
-            this._asset = _id;
-
-            if (this._asset) {
-                var asset = assets.get(this._asset);
-                if (!asset) {
-                    //this.model = null;
-                    assets.on('add:' + this._asset, this._onRenderAssetAdded, this);
-                } else {
-                    this._bindRenderAsset(asset);
-                }
-            } else {
-                //this.model = null;
-            }
+        if (this._assetReference.asset) {
+            this._onRenderAssetAdded();
         }
     }
 });

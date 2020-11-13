@@ -39,8 +39,8 @@ Object.assign(RenderComponentSystem.prototype, {
 
         // order matters here
         properties = [
-            'material',
             'asset',
+            'materialAssets',
             'castShadows',
             'receiveShadows',
             'castShadowsLightmap',
