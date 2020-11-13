@@ -51,12 +51,12 @@ Object.assign(ShaderGraphBuilder.prototype, {
     },
     _validateArg: function (arg, type, name, node, err) {
         if (arg.type) {
-            if (!this._addedParams[arg.name]) {
-                console.error(err + ": invalid input param" + arg.name);
+            if (!this._addedParams[arg.name.slice(3)]) {
+                console.error(err + ": invalid input param: " + arg.name);
                 return false;
             }
             if (arg.type !== type) {
-                console.error(err + ": input param type mismatch:" + arg.name + "." + type + " != " + node + "." + name + "." + type );
+                console.error(err + ": input param type mismatch: " + arg.name + "." + type + " != " + node + "." + name + "." + type );
                 return false;
             }
         } else {
@@ -65,16 +65,16 @@ Object.assign(ShaderGraphBuilder.prototype, {
             }
             var core = this._addedNodes[arg.node];
             if (!core) {
-                console.error(err + ": invalid node index" + arg.node);
+                console.error(err + ": invalid node index: " + arg.node);
                 return false;
             }
             var port = core.getIoPortByName('OUT_' + arg.port);
             if (!port) {
-                console.error(err + ": invalid output port:" + core.name + "." + arg.port);
+                console.error(err + ": invalid output port: " + core.name + "." + arg.port);
                 return false;
             }
             if (port.type !== type) {
-                console.error(err + ": port type mismatch:" + core.name + "." + port.name + "." + port.type + " != " + node + "." + name + "." + type );
+                console.error(err + ": port type mismatch: " + core.name + "." + port.name + "." + port.type + " != " + node + "." + name + "." + type );
                 return false;
             }
         }
@@ -103,7 +103,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
 
         // validate before adding node
         if (sgInputs.length !== (args.length - 1)) {
-            console.error("pc.ShaderGraphBuilder#addNode number of arguments provided do not match core node:" + name);
+            console.error("pc.ShaderGraphBuilder#addNode: number of arguments provided do not match core node: " + name);
             return -1;
         }
 

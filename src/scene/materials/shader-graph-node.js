@@ -224,11 +224,10 @@ Object.assign(ShaderGraphNode.prototype, {
 
             if (inOrOutAndTypeAndName[0] === "out") {
                 this.addOutput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
-            }
-            if (inOrOutAndTypeAndName[0] === "in") {
+            } else if (inOrOutAndTypeAndName[0] === "in") {
                 this.addInput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
             } else {
-                console.warn('unsupported parameter');
+                console.warn('unsupported parameter please check format');
             }
         }
     },
