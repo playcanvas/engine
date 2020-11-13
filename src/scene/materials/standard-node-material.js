@@ -12,8 +12,8 @@ import { StandardMaterial } from './standard-material.js';
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
  * @classdesc StandardNodeMaterial is sub class of the StandardMaterial, and adds shader graph interop functionality
- * @param {pc.StandardMaterial} mat - optional material which is cloned
- * @param {any} chunk - optional shader graph node chunk to be used
+ * @param {pc.StandardMaterial} mat - Optional material which is cloned.
+ * @param {any} chunk - Optional shader graph node chunk to be used.
  */
 function StandardNodeMaterial(mat, chunk) {
     StandardMaterial.call(this);
@@ -22,9 +22,7 @@ function StandardNodeMaterial(mat, chunk) {
         StandardMaterial.prototype._cloneInternal.call(mat, this);
     }
 
-    if (chunk) {
-        this._shaderGraphChunk = chunk;
-    }
+    this._shaderGraphChunk = chunk;
 }
 
 StandardNodeMaterial.prototype = Object.create(StandardMaterial.prototype);
@@ -32,6 +30,14 @@ StandardNodeMaterial.prototype.constructor = StandardNodeMaterial;
 
 Object.assign(StandardNodeMaterial.prototype, {
 
+    /**
+     * @private
+     * @function
+     * @name pc.StandardNodeMaterial#clone
+     * @description Duplicates a Standard Node material. All properties are duplicated except textures
+     * and the shader graph chunk where only the references are copied.
+     * @returns {pc.StandardNodeMaterial} A cloned Standard Node material.
+     */
     clone: function () {
         var clone = new StandardNodeMaterial();
         StandardMaterial.prototype._cloneInternal.call(this, clone);
@@ -41,13 +47,24 @@ Object.assign(StandardNodeMaterial.prototype, {
         return clone;
     },
 
+    /**
+     * @private
+     * @function
+     * @name pc.StandardNodeMaterial#setParameter
+     * @description Sets a shader parameter on a StandardNodeMaterial material.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     */
     setParameter: function (name, data) {
         StandardMaterial.prototype.setParameter.call(this, name, data);
 
         if (this._shaderGraphChunk) {
             var rootShaderGraph = this._shaderGraphChunk;
 
-            var portName = 'IN_' + name + '_' + rootShaderGraph.id;
+            if (!rootShaderGraph._portNameCache) rootShaderGraph._portNameCache = {};
+            if (!rootShaderGraph._portNameCache[name]) rootShaderGraph._portNameCache[name] = 'IN_' + name + '_' + rootShaderGraph.id;
+
+            var portName = rootShaderGraph._portNameCache[name];
 
             StandardMaterial.prototype.setParameter.call(this, portName, data);
         }
@@ -59,7 +76,7 @@ Object.assign(StandardNodeMaterial.prototype, {
         if (this._shaderGraphChunk) {
             var rootShaderGraph = this._shaderGraphChunk;
 
-            rootShaderGraph.updateShaderGraphUniforms(this);
+            rootShaderGraph.updateUniforms(this);
         }
 
     },

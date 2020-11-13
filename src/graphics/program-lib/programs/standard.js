@@ -467,7 +467,7 @@ var standard = {
         var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap || options.enableGGXSpecular;
         var shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
 
-        needsNormal = needsNormal || graphCode;
+        needsNormal = needsNormal || (graphCode && graphCode.needsNormal);
 
         this.options = options;
 
@@ -766,7 +766,7 @@ var standard = {
         if (needsNormal) code += chunks.normalVS;
 
         if (graphCode) {
-            code += graphCode[0];
+            code += graphCode.vsDecl;
         }
 
         code += "\n";
@@ -775,7 +775,7 @@ var standard = {
         code += codeBody;
 
         if (graphCode) {
-            code += graphCode[1];
+            code += graphCode.vsCode;
         }
         code += "}";
 
@@ -1339,7 +1339,7 @@ var standard = {
         }
 
         if (graphCode) {
-            code += graphCode[2];
+            code += graphCode.psDecl;
         }
 
         var hasPointLights = false;
@@ -1446,7 +1446,7 @@ var standard = {
 
             code += "   dEmission=getEmission();\n";
 
-            code += graphCode[3];
+            code += graphCode.psCode;
 
             if (needsNormal) {
                 if (options.alphaTest) {
@@ -1649,7 +1649,7 @@ var standard = {
         }
 
         if (graphCode) {
-            code += graphCode[4];
+            code += graphCode.psEnd;
         }
 
         code += "\n";

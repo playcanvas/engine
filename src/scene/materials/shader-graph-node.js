@@ -4,6 +4,7 @@ import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
 var id = 0;
+var counter = 0;
 
 /**
  * @private
@@ -55,7 +56,7 @@ Object.assign(ShaderGraphNode.prototype, {
         return clone;
     },
 
-    updateShaderGraphUniforms: function (mat) {
+    updateUniforms: function (mat) {
         for (var n = 0; n < this.graphData.ioPorts.length; n++) {
             var ioPort = this.graphData.ioPorts[n];
 
@@ -87,7 +88,7 @@ Object.assign(ShaderGraphNode.prototype, {
         }
     },
 
-    hasValidGraphData: function (graphRootTime) {
+    hasValidGraphData: function (graphRootCounter) {
         var i;
         if (this.graphData.ioPorts && this.graphData.ioPorts.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
@@ -141,21 +142,21 @@ Object.assign(ShaderGraphNode.prototype, {
                 }
 
                 // infinite recursion protection
-                // if no graphRootTime set, set it to current time
-                if (!graphRootTime) {
-                    graphRootTime = new Date().getTime();
-                    this._tmpRootTime = graphRootTime;
+                // if no graphRootCounter set, set it to counter, and increment counter
+                if (!graphRootCounter) {
+                    graphRootCounter = counter++;
+                    this._tmpRootTime = graphRootCounter;
                 }
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
                     if (this.graphData.subGraphs[i] && this.graphData.subGraphs[i] instanceof ShaderGraphNode && this.graphData.subGraphs[i].name) {
-                        if (this.graphData.subGraphs[i]._tmpRootTime === graphRootTime) {
+                        if (this.graphData.subGraphs[i]._tmpRootTime === graphRootCounter) {
                             // recursion detected!
                             return false;
                         }
 
-                        this._tmpRootTime = graphRootTime;
+                        this._tmpRootTime = graphRootCounter;
 
-                        if (!(this.graphData.subGraphs[i].hasValidGraphData(graphRootTime))) {
+                        if (!(this.graphData.subGraphs[i].hasValidGraphData(graphRootCounter))) {
                             return false;
                         }
 
@@ -227,7 +228,7 @@ Object.assign(ShaderGraphNode.prototype, {
             if (inOrOutAndTypeAndName[0] === "in") {
                 this.addInput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
             } else {
-                // unsupported parameter
+                console.warn('unsupported parameter');
             }
         }
     },
@@ -408,8 +409,8 @@ Object.assign(ShaderGraphNode.prototype, {
 
             depGraphList.push(funcString);
         }
-        var tLen = depGraphList.length; // need this because pop() reduces array length!
-        for (i = 0; i < tLen; i++) {
+
+        while (depGraphList.length) {
             generatedGlsl += depGraphList.pop();
         }
 
@@ -553,12 +554,12 @@ Object.assign(ShaderGraphNode.prototype, {
                 whileLoopCount++;
 
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
-                    if (subGraphOnListFlags[i] != true) {
+                    if (subGraphOnListFlags[i] !== true) {
                         var allInputsOnList = true;
                         if (dstConnectedMap[i] != undefined) {
                             for (var n = 0; n < dstConnectedMap[i].length; n++) {
                                 var connectedSrcIndex = dstConnectedMap[i][n];
-                                if (subGraphOnListFlags[connectedSrcIndex] != true) {
+                                if (subGraphOnListFlags[connectedSrcIndex] !== true) {
                                     allInputsOnList = false;
                                     break;
                                 }
