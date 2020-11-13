@@ -437,6 +437,8 @@ Object.defineProperty(RenderComponent.prototype, "type", {
             this._area = null;
             this._type = value;
 
+            this.destroyMeshInstances();
+
             if (value !== 'asset') {
 
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
