@@ -400,21 +400,18 @@ Object.assign(RenderComponent.prototype, {
     }
 });
 
-Object.defineProperties(RenderComponent.prototype, {
+Object.defineProperty(RenderComponent.prototype, "aabb", {
+    get: function () {
+        return this._aabb;
+    },
+    set: function (value) {
+        this._aabb = value;
 
-    'aabb': {
-        get: function () {
-            return this._aabb;
-        },
-        set: function (value) {
-            this._aabb = value;
-
-            // set it on meshInstances
-            var mi = this._meshInstances;
-            if (mi) {
-                for (var i = 0; i < mi.length; i++) {
-                    mi[i].setOverrideAabb(this._aabb);
-                }
+        // set it on meshInstances
+        var mi = this._meshInstances;
+        if (mi) {
+            for (var i = 0; i < mi.length; i++) {
+                mi[i].setOverrideAabb(this._aabb);
             }
         }
     }
