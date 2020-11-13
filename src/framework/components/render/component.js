@@ -320,15 +320,23 @@ Object.assign(RenderComponent.prototype, {
 
     },
 
-    _onRenderAssetUnload: function (asset) {
-        //this.model = null;
+    _onRenderAssetUnload: function () {
+        if (this._meshInstances) {
+            this.removeFromLayers();
+        }
+
+        for (var i = 0; i < this._meshInstances.length; i++) {
+            this._meshInstances[i].destroy();
+        }
+        this._meshInstances.length = 0;
     },
 
-    _onRenderAssetRemove: function (asset) {
+    _onRenderAssetRemove: function () {
         if (this._assetReference.asset && this._assetReference.asset.resource) {
             this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
         }
-//        this.model = null;
+
+        this._onRenderAssetUnload();
     },
 
     _onMaterialAdded: function (index, component, asset) {
