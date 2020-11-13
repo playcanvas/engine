@@ -226,17 +226,6 @@ Object.assign(RenderComponent.prototype, {
         }
     },
 
-    _setMaterial: function (material) {
-        if (this._material !== material) {
-            this._material = material;
-            if (this._meshInstances && this._type !== 'asset') {
-                for (var i = 0, len = this._meshInstances.length; i < len; i++) {
-                    this._meshInstances[i].material = material;
-                }
-            }
-        }
-    },
-
     _onRenderAssetAdded: function () {
         if (!this._assetReference.asset) return;
 
@@ -446,8 +435,7 @@ Object.defineProperty(RenderComponent.prototype, "type", {
 
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
-                var material = this._materialReferences[0] && this._materialReferences[0].asset && this._materialReferences[0].asset.resource;
-                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
+                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, this._material || this.system.defaultMaterial)];
 
                 if (this.system._inTools)
                     this.generateWireframe();
@@ -675,7 +663,13 @@ Object.defineProperty(RenderComponent.prototype, "material", {
     },
     set: function (value) {
         if (this._material !== value) {
-            this._setMaterial(value);
+            this._material = value;
+
+            if (this._meshInstances && this._type !== 'asset') {
+                for (var i = 0; i < this._meshInstances.length; i++) {
+                    this._meshInstances[i].material = value;
+                }
+            }
         }
     }
 });
