@@ -26,9 +26,11 @@ import { Component } from '../component.js';
  * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
  * * "plane": The component will render a plane (1 unit in each dimension)
  * * "sphere": The component will render a sphere (radius 0.5)
+ * @property {pc.Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
+ * @property {pc.Asset[]|number[]} materialAsset The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
+ * @property {pc.Material} material The material {@link pc.Material} that will be used to render the meshes (not used on models of type 'asset').
  * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
- * @property {pc.Material} material The material {@link pc.Material} that will be used to render the meshes (not used on models of type 'asset').
  * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
  * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
