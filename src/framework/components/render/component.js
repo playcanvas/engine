@@ -244,10 +244,10 @@ Object.assign(RenderComponent.prototype, {
 
         // this probably needs to load dependent asset now ??
 
-        //this._cloneFromRender(this._render);
+        // this._cloneFromRender(this._render);
 
-        //this.model = asset.resource.clone();
-        //this._clonedModel = true;
+        // this.model = asset.resource.clone();
+        // this._clonedModel = true;
     },
 
     _onSetMeshes: function (meshes) {
