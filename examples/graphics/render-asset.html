@@ -8,7 +8,7 @@
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <style>
-        body { 
+        body {
             margin: 0;
             overflow-y: hidden;
         }
@@ -50,14 +50,16 @@
         var addRenderComponent = function (entity, renderIndex) {
 
             // add render component
-            entity.addComponent("render", Object.assign( { type: "asset" }));
+            entity.addComponent("render", {
+                type: 'asset'
+            });
 
             // create ref render asset for it
             var name = url + "/render" + "/" + renderIndex; // does not really matter
             var refAsset = new pc.Asset(name, "render", undefined, {
 
                 // container asset ID
-                containerId: containerAsset._id,
+                containerAsset: containerAsset._id,
 
                 // render sub-asset index
                 renderIndex: renderIndex
@@ -65,7 +67,7 @@
 
             app.assets.add(refAsset);
 
-            entity.render._asset = refAsset._id;
+            entity.render.asset = refAsset;
         }
 
 
@@ -82,10 +84,6 @@
 
         app.root.addChild(entityRoot);
         entityRoot.setLocalScale(0.1, 0.1, 0.1);
-
-
-
-
 
         // Create an Entity with a camera component
         var camera = new pc.Entity();
