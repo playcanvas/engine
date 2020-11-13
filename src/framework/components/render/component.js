@@ -141,6 +141,9 @@ Object.assign(RenderComponent.prototype, {
 
         this.destroyMeshInstances();
 
+        this.asset = null;
+        this.materialAsset = null;
+
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
     },
