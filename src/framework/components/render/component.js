@@ -436,7 +436,7 @@ Object.defineProperty(RenderComponent.prototype, "type", {
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
                 var material = this._materialReferences[0] && this._materialReferences[0].asset && this._materialReferences[0].asset.resource;
-                this._meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
+                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
 
                 if (this.system._inTools)
                     this.generateWireframe();
