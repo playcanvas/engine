@@ -74,6 +74,9 @@ function RenderComponent(system, entity)   {
         this
     );
 
+    // material used to render meshes other than asset type
+    this._material = system.defaultMaterial;
+
     // material asset references
     this._materialReferences = [];
 
@@ -219,6 +222,17 @@ Object.assign(RenderComponent.prototype, {
         if (this._meshInstances) {
             for (var i = 0; i < this._meshInstances.length; i++) {
                 this._meshInstances[i].visible = true;
+            }
+        }
+    },
+
+    _setMaterial: function (material) {
+        if (this._material !== material) {
+            this._material = material;
+            if (this._meshInstances && this._type !== 'asset') {
+                for (var i = 0, len = this._meshInstances.length; i < len; i++) {
+                    this._meshInstances[i].material = material;
+                }
             }
         }
     },
@@ -651,6 +665,17 @@ Object.defineProperty(RenderComponent.prototype, "batchGroupId", {
             }
 
             this._batchGroupId = value;
+        }
+    }
+});
+
+Object.defineProperty(RenderComponent.prototype, "material", {
+    get: function () {
+        return this._material;
+    },
+    set: function (value) {
+        if (this._material !== value) {
+            this._setMaterial(value);
         }
     }
 });
