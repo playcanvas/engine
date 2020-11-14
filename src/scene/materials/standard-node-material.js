@@ -62,7 +62,7 @@ Object.assign(StandardNodeMaterial.prototype, {
             var rootShaderGraph = this._shaderGraphChunk;
 
             if (!rootShaderGraph._portNameCache) rootShaderGraph._portNameCache = {};
-            if (!rootShaderGraph._portNameCache[name]) rootShaderGraph._portNameCache[name] = 'IN_' + name + '_' + rootShaderGraph.id;
+            if (!rootShaderGraph._portNameCache[name]) rootShaderGraph._portNameCache[name] = name + '_' + rootShaderGraph.id;
 
             var portName = rootShaderGraph._portNameCache[name];
 

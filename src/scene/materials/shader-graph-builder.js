@@ -1,4 +1,4 @@
-import { ShaderGraphNode } from './shader-graph-node.js';
+import { ShaderGraphNode, PORT_TYPE_IN } from './shader-graph-node.js';
 
 var id = 0;
 
@@ -51,7 +51,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
     },
     _validateArg: function (arg, type, name, node, err) {
         if (arg.type) {
-            if (!this._addedParams[arg.name.slice(3)]) {
+            if (!this._addedParams[arg.name]) {
                 console.error(err + ": invalid input param: " + arg.name);
                 return false;
             }
@@ -68,7 +68,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 console.error(err + ": invalid node index: " + arg.node);
                 return false;
             }
-            var port = core.getIoPortByName('OUT_' + arg.port);
+            var port = core.getIoPortByName(arg.port);
             if (!port) {
                 console.error(err + ": invalid output port: " + core.name + "." + arg.port);
                 return false;
@@ -98,7 +98,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         var args = arguments;
         var coreNode = this._nodes[name];
         var sgInputs = coreNode.graphData.ioPorts.filter(function (ioPort) {
-            return ioPort.name.startsWith('IN_');
+            return ioPort.ptype === PORT_TYPE_IN;
         });
 
         // validate before adding node
@@ -124,13 +124,13 @@ Object.assign(ShaderGraphBuilder.prototype, {
             if (typeof(arg) === 'number') {
                 // ret port of a node
                 var argNodeIndex = arg;
-                this._graph.connect(argNodeIndex, 'OUT_ret', sgIndex, sgInputs[argIndex].name);
+                this._graph.connect(argNodeIndex, 'ret', sgIndex, sgInputs[argIndex].name);
             } else if (arg.type) {
                 // ioPort (ioPort)
                 this._graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
             } else {
                 // specific port of a node
-                this._graph.connect(arg.node, 'OUT_' + arg.port, sgIndex, sgInputs[argIndex].name);
+                this._graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
             }
         }
         return sgIndex;
@@ -144,14 +144,10 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @param {string} type - Type of output.
      * @param {string} name - Name of output.
      * @example
-     * pc.shadergraph.output(arg, 'vec3', 'vertOff');
-     * pc.shadergraph.output(arg, 'float', 'dAlpha');
-     * pc.shadergraph.output(arg, 'vec3', 'dAlbedo');
-     * pc.shadergraph.output(arg, 'vec3', 'dNormalMap');
-     * pc.shadergraph.output(arg, 'float', 'dGlossiness');
-     * pc.shadergraph.output(arg, 'vec3', 'dSpecularity');
-     * pc.shadergraph.output(arg, 'vec3', 'dEmission');
-     * pc.shadergraph.output(arg, 'vec4', 'customPass0');
+     * builder.addOutput(arg, 'vec3', 'sgVertOff');
+     * builder.addOutput(arg, 'float', 'sgAlpha');
+     * builder.addOutput(arg, 'vec3', 'sgAlbedo');
+     * builder.addOutput(arg, 'vec4', 'sgCustomPass0');
      */
     addOutput: function (arg, type, name) {
         // validate before adding output
@@ -172,13 +168,13 @@ Object.assign(ShaderGraphBuilder.prototype, {
         if (typeof(arg) === 'number') {
             // ret port of a node
             var argNodeIndex = arg;
-            this._graph.connect(argNodeIndex, 'OUT_ret', -1, ioPort.name);
+            this._graph.connect(argNodeIndex, 'ret', -1, ioPort.name);
         } else if (arg.type) {
             // ioPort (ioPort)
             this._graph.connect(-1, arg.name, -1, ioPort.name);
         } else {
             // specific port of a node
-            this._graph.connect(arg.node, 'OUT_' + arg.port, -1, ioPort.name);
+            this._graph.connect(arg.node, arg.port, -1, ioPort.name);
         }
     },
     /**

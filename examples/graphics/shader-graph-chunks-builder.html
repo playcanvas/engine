@@ -94,8 +94,8 @@
                     var emissiveCalcNode = builder.addNode('mul3', emissiveColParam, {node:emissiveSampleNode, port:'rgb'});
 
                     // hook up outputs
-                    builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'dAlpha');
-                    builder.addOutput(emissiveCalcNode, 'vec3', 'dEmission');
+                    builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'sgAlpha');
+                    builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
 
                     // return built shader graph chunk
                     var shaderGraphChunk = builder.getShaderGraphChunk();
