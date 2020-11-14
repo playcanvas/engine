@@ -87,7 +87,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @name pc.ShaderGraphBuilder#addNode
      * @description Creates and adds a core node to the shader graph and connects up inputs.
      * @param {string} name - Name of the core node.
-     * @param {object} [arguments] - First argument is name string, then 0-N output node ports or params to
+     * @param {...*} arguments - First argument is name string, then 0-N output node ports or params to
      * connect to new core node inputs - number and port type of arguments must match.
      * @returns {number} Returns the created node id.
      * @example
