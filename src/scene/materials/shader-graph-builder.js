@@ -7,7 +7,8 @@ var id = 0;
  * @class
  * @name pc.ShaderGraphBuilder
  * @classdesc A Shader Graph Builder class
- * @param {pc.Application} app - Application with shader graph core nodes registered that will be used to build the shader graph
+ * @param {pc.Application} app - Application with shader graph core nodes registered that will be used to
+ * build the shader graph
  */
 var ShaderGraphBuilder = function (app) {
     id++;
@@ -85,14 +86,15 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @function
      * @name pc.ShaderGraphBuilder#addNode
      * @description Creates and adds a core node to the shader graph and connects up inputs.
-     * @param {string} name - Name of parameter.
-     * @param {object} [arguments] - First argument is name string, then 0-N output node ports or params to connect to new core node inputs - number and port type of arguments must match.
+     * @param {string} name - Name of the core node.
+     * @param {object} [arguments] - First argument is name string, then 0-N output node ports or params to
+     * connect to new core node inputs - number and port type of arguments must match.
      * @returns {number} Returns the created node id.
      * @example
-     * var node0 = pc.shadergraph.addNode('uv0');
-     * var node1 = pc.shadergraph.addNode('texSample', param0, node0 );
-     * var node2 = pc.shadergraph.addNode('splitVec4', node1 );
-     * var node3 = pc.shadergraph.addNode('mul3', param1, node42 );
+     * var node0 = builder.addNode('uv0');
+     * var node1 = builder.addNode('texSample', param0, node0 );
+     * var node2 = builder.addNode('splitVec4', node1 );
+     * var node3 = builder.addNode('mul3', param1, node42 );
      */
     addNode: function (name) {
         var args = arguments;
