@@ -4,7 +4,7 @@
     gl_FragColor.rgb = combineColor();
     #endif 
 
-    #ifdef SHADERGRAPH_PIXELSHADER
+    #ifdef SHADERGRAPH_PS
     gl_FragColor.rgb += dEmission;
     #else
     gl_FragColor.rgb += getEmission();

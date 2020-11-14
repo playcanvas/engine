@@ -52,7 +52,7 @@ var counter = 0;
  * @class
  * @name ShaderGraphNode
  * @classdesc A Shader Graph Node class used by shader graphs
- * @param {string} funcCodeString - shader function used by this material
+ * @param {string} funcCodeString - shader function used by this node
  * @param {string} declCodeString - shader declarations used by the shader function
  */
 var ShaderGraphNode = function (funcCodeString, declCodeString) {
@@ -64,6 +64,11 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
     this._codeStringAssetReferences = {};
     this._subGraphAssetReferences = [];
 
+    // port map and cache (optimization)
+    this._portMap = {};
+    this._portCache = {};
+
+    // graph
     this.graphData = {};
 
     this.graphData.ioPorts = []; // input, output or constant variables
@@ -76,9 +81,6 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
         this.graphData.subGraphs = [];
         this.graphData.connections = [];
     }
-
-    // cache for port access acceleration optimization
-    this._portCache = {};
 };
 
 ShaderGraphNode.prototype.constructor = ShaderGraphNode;
@@ -100,13 +102,20 @@ Object.assign(ShaderGraphNode.prototype, {
         return clone;
     },
 
+    _flushCachedPorts: function () {
+        this._portCache = {};
+    },
+
+    _getCachedPort: function (i) {
+        var ioPort = this.graphData.ioPorts[i];
+        if (!this._portCache[ioPort.name]) this._portCache[ioPort.name] = { isUniform: (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D')), nameId: ioPort.name + '_' + this.id, port: ioPort, index: i };
+        return this._portCache[ioPort.name];
+    },
+
     updateUniforms: function (mat) {
         for (var n = 0; n < this.graphData.ioPorts.length; n++) {
             var ioPort = this.graphData.ioPorts[n];
-
-            // use port access acceleration optimization
-            if (!this._portCache[ioPort.name]) this._portCache[ioPort.name] = { isUniform: (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D')), nameId: ioPort.name + '_' + this.id };
-            var ioPortCached = this._portCache[ioPort.name];
+            var ioPortCached = this._getCachedPort(n); // use port cache (minor optimization)
 
             if (ioPortCached.isUniform) {
                 switch (ioPort.type) {
@@ -225,6 +234,7 @@ Object.assign(ShaderGraphNode.prototype, {
     _addIoPort: function (type, name, value, ptype) {
         var ioPort = new Port(type, name, value, ptype);
 
+        this._portMap[name] = this.graphData.ioPorts.length;
         this.graphData.ioPorts.push(ioPort);
 
         return ioPort;
@@ -330,8 +340,8 @@ Object.assign(ShaderGraphNode.prototype, {
                 if (inNames && inNames[ioPort.name] !== undefined) {
                     callString += inNames[ioPort.name] + ', ';
                 } else {
-                    // this is tricky - use varname and unique (temp) id
-                    callString += ioPort.name + '_' + this.id + ', ';
+                    var ioPortCached = this._getCachedPort(i); // use port cache (minor optimization)
+                    callString += ioPortCached.nameId + ', ';
                 }
             }
         }
@@ -356,9 +366,11 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     getIoPortByName: function (name) {
-        return this.graphData.ioPorts.filter(function (ioPort) {
-            return ioPort.name === name;
-        })[0];
+        return (this._portMap[name] === undefined) ? undefined : this.graphData.ioPorts[this._portMap[name]];
+    },
+
+    getIoPortUniformName: function (name) {
+        return (this._portMap[name] === undefined) ? undefined : this._getCachedPort(this._portMap[name]).nameId;
     },
 
     _generateSubGraphFuncs: function (depGraphFuncs, depIoPortList) {
@@ -376,9 +388,9 @@ Object.assign(ShaderGraphNode.prototype, {
                     if (subGraph.graphData.ioPorts) {
                         for (var v = 0; v < subGraph.graphData.ioPorts.length; v++) {
                             var ioPort = subGraph.graphData.ioPorts[v];
-                            if (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D') ) {
-                                var depIoPort = 'uniform ' + ioPort.type + ' ' + ioPort.name + '_' + subGraph.id + ';\n';
-
+                            var ioPortCached = subGraph._getCachedPort(v); // use port cache (minor optimization)
+                            if (ioPortCached.isUniform) {
+                                var depIoPort = 'uniform ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
                                 depIoPortList.push(depIoPort);
                             }
                         }
@@ -395,15 +407,17 @@ Object.assign(ShaderGraphNode.prototype, {
         var i;
         var ioPort;
         var generatedCodeString = '';
+
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
-            var matId = '_' + this.id;
             ioPort = this.graphData.ioPorts[i];
-            if (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D')) {
-                generatedCodeString += 'uniform ' + ioPort.type + ' ' + ioPort.name + matId + ';\n';
+            var ioPortCached = this._getCachedPort(i); // use port cache (minor optimization)
+
+            if (ioPortCached.isUniform) {
+                generatedCodeString += 'uniform ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
             }
         }
-        // run through constants values are set here (except for textures - which have to be uniforms)
+        // run through constants - values are set here (except for textures - which have to be uniforms)
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.ptype === PORT_TYPE_CONST && (ioPort.type !== 'sampler2D' )) {
@@ -435,17 +449,17 @@ Object.assign(ShaderGraphNode.prototype, {
             var funcString = '';
 
             if ( func.endsWith('PS') ) {
-                funcString += '#ifdef SHADERGRAPH_PIXELSHADER\n';
+                funcString += '#ifdef SHADERGRAPH_PS\n';
             } else if ( func.endsWith('VS') ) {
-                funcString += '#ifdef SHADERGRAPH_VERTEXSHADER\n';
+                funcString += '#ifdef SHADERGRAPH_VS\n';
             }
 
             funcString += depGraphFuncs[func] + '\n';
 
             if ( func.endsWith('PS')  ) {
-                funcString += '#endif //SHADERGRAPH_PIXELSHADER\n';
+                funcString += '#endif //SHADERGRAPH_PS\n';
             } else if ( func.endsWith('VS') ) {
-                funcString += '#endif //SHADERGRAPH_VERTEXSHADER\n';
+                funcString += '#endif //SHADERGRAPH_VS\n';
             }
 
             depGraphList.push(funcString);
@@ -466,10 +480,10 @@ Object.assign(ShaderGraphNode.prototype, {
         var outNames = {};
 
         for (var i = 0; i < this.graphData.ioPorts.length; i++) {
-            var matId = '_' + this.id;
             var ioPort = this.graphData.ioPorts[i];
+            var ioPortCached = this._getCachedPort(i); // use port cache (minor optimization)
             if (ioPort.ptype === PORT_TYPE_IN) {
-                inNames[ioPort.name] = ioPort.name + matId;
+                inNames[ioPort.name] = ioPortCached.nameId;
             }
             if (ioPort.ptype === PORT_TYPE_OUT || ioPort.ptype === PORT_TYPE_RET ) {
                 generatedCodeString += ioPort.type + ' ' + ioPort.name + ';\n';
@@ -620,17 +634,17 @@ Object.assign(ShaderGraphNode.prototype, {
                     var func = this.graphData.subGraphs[subGraphIndex].name;
 
                     if ( func.endsWith('PS') ) {
-                        generatedCodeString += '#ifdef SHADERGRAPH_PIXELSHADER\n';
+                        generatedCodeString += '#ifdef SHADERGRAPH_PS\n';
                     } else if ( func.endsWith('VS') ) {
-                        generatedCodeString += '#ifdef SHADERGRAPH_VERTEXSHADER\n';
+                        generatedCodeString += '#ifdef SHADERGRAPH_VS\n';
                     }
 
                     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateSubGraphCall(dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
 
                     if ( func.endsWith('PS')  ) {
-                        generatedCodeString += '#endif //SHADERGRAPH_PIXELSHADER\n';
+                        generatedCodeString += '#endif //SHADERGRAPH_PS\n';
                     } else if ( func.endsWith('VS') ) {
-                        generatedCodeString += '#endif //SHADERGRAPH_VERTEXSHADER\n';
+                        generatedCodeString += '#endif //SHADERGRAPH_VS\n';
                     }
                 }
             }

@@ -60,13 +60,10 @@ Object.assign(StandardNodeMaterial.prototype, {
 
         if (this._shaderGraphChunk) {
             var rootShaderGraph = this._shaderGraphChunk;
-
-            if (!rootShaderGraph._portNameCache) rootShaderGraph._portNameCache = {};
-            if (!rootShaderGraph._portNameCache[name]) rootShaderGraph._portNameCache[name] = name + '_' + rootShaderGraph.id;
-
-            var portName = rootShaderGraph._portNameCache[name];
-
-            StandardMaterial.prototype.setParameter.call(this, portName, data);
+            var portName = rootShaderGraph.getIoPortUniformName(name);
+            if (portName) {
+                StandardMaterial.prototype.setParameter.call(this, portName, data);
+            }
         }
     },
 

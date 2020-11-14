@@ -27,7 +27,7 @@ standardnode.createShaderDefinition = function (device, options) {
 
         graphCode.vsDecl = '';
         if (rootShaderGraph.getIoPortByName('sgVertOff')) {
-            graphCode.vsDecl += "#define SHADERGRAPH_VERTEXSHADER\n";
+            graphCode.vsDecl += "#define SHADERGRAPH_VS\n";
             graphCode.vsDecl += rootDeclGLSL;
         }
 
@@ -40,7 +40,7 @@ standardnode.createShaderDefinition = function (device, options) {
 
         graphCode.psDecl = '';
         if (rootShaderGraph.getIoPortByName('sgAlpha') || rootShaderGraph.getIoPortByName('sgNormalMap') || rootShaderGraph.getIoPortByName('sgGlossiness') || rootShaderGraph.getIoPortByName('sgSpecularity') || rootShaderGraph.getIoPortByName('sgAlbedo') || rootShaderGraph.getIoPortByName('sgFragOut') || rootShaderGraph.getIoPortByName('sgEmission')) {
-            graphCode.psDecl += "#define SHADERGRAPH_PIXELSHADER\n";
+            graphCode.psDecl += "#define SHADERGRAPH_PS\n";
             graphCode.psDecl += rootDeclGLSL;
         }
 
