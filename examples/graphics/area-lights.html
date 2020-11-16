@@ -71,6 +71,7 @@
             var material = new pc.StandardMaterial();
             material.diffuse = color;
             material.metalness = 0.2 + Math.random() * 0.8;
+            material.shininess = 70;
             material.useMetalness = true;
             material.update();
 
@@ -95,30 +96,51 @@
             light.addComponent("light", {
                 type: "area",
                 color: color,
-                intensity: 10,
+                intensity: 15,
                 range: 50,
                 castShadows: false
             });
 
+            // front face quad
+            var frontMaterial = new pc.StandardMaterial();
+            frontMaterial.emissive = color;
+            frontMaterial.update();
+
             // add plane that represents the area light
             light.addComponent("model", {
-                type: "plane"
+                type: "plane",
+                material: frontMaterial
             });
 
             light.setLocalScale(scale, scale, scale);
             light.translate(position);
             app.root.addChild(light);
 
+            // black back face quad
+            var backMaterial = new pc.StandardMaterial();
+            backMaterial.diffuse = new pc.Color(0, 0, 0);
+            backMaterial.useLighting = false;
+            backMaterial.update();
+
+            var backFace = new pc.Entity();
+            backFace.addComponent("model", {
+                type: "plane",
+                material: backMaterial
+            });
+            backFace.setLocalEulerAngles(-180, 0, 0);
+            backFace.setLocalPosition(0, 0.001, 0);
+            light.addChild(backFace);
+
             return light;
         }
 
         // create ground plane
-        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3));
+        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3));
 
         // create 3 primitives, keep their references to rotate them later
-        createPrimitive("sphere", new pc.Vec3(-4, 2, -6), new pc.Vec3(2, 6, 3), new pc.Color(1, 0, 0));
-        createPrimitive("box", new pc.Vec3(4, 2, -7), new pc.Vec3(6, 3, 3), new pc.Color(1, 1, 0));
-        createPrimitive("cone", new pc.Vec3(0, 2, 7), new pc.Vec3(2, 5, 2), new pc.Color(0, 1, 1));
+        createPrimitive("sphere", new pc.Vec3(-4, 2, -6), new pc.Vec3(5, 6, 3), new pc.Color(0.6, 0.6, 0.5));
+        createPrimitive("box", new pc.Vec3(4, 2, -7), new pc.Vec3(6, 3, 3), new pc.Color(1, 1, 0.4));
+        createPrimitive("cone", new pc.Vec3(0, 2, 7), new pc.Vec3(2, 5, 2), new pc.Color(0.6, 1, 1));
 
         // Create the camera, which renders entities 
         var camera = new pc.Entity();
