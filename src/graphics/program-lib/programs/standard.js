@@ -637,9 +637,10 @@ var standard = {
                 attributes["vertex_texCoord" + i] = "TEXCOORD" + i;
                 code += chunks["uv" + i + "VS"];
                 codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
-            }
-            if (useUnmodifiedUv[i]) {
-                codeBody += "   vUv" + i + " = uv" + i + ";\n";
+
+                if (useUnmodifiedUv[i] === true || useUnmodifiedUv[i] === undefined) {
+                    codeBody += "   vUv" + i + " = uv" + i + ";\n";
+                }
             }
         }
 
