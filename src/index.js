@@ -268,6 +268,7 @@ export * from './xr/constants.js';
 export { XrInput } from './xr/xr-input.js';
 export { XrInputSource } from './xr/xr-input-source.js';
 export { XrLightEstimation } from './xr/xr-light-estimation.js';
+export { XrDepthSensing } from './xr/xr-depth-sensing.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';

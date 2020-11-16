@@ -475,12 +475,14 @@ XrManager.prototype.update = function (frame) {
     this.input.update(frame);
 
     if (this._type === XRTYPE_AR) {
-        if (this.hitTest.supported) {
+        if (this.hitTest.supported)
             this.hitTest.update(frame);
-        }
-        if (this.lightEstimation.supported) {
+
+        if (this.lightEstimation.supported)
             this.lightEstimation.update(frame);
-        }
+
+        if (this.depthSensing.supported)
+            this.depthSensing.update(frame, pose && pose.views[0]);
     }
 
     this.fire('update', frame);
