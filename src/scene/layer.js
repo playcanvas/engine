@@ -237,12 +237,15 @@ function Layer(options) {
 
     this._lightComponents = [];
     this._lights = [];
-    this._sortedLights = [[], [], []];
+    this._splitLights = [[], [], []];
     this.cameras = [];
     this._dirty = false;
     this._dirtyLights = false;
     this._dirtyCameras = false;
+
+    // if there is single camera in a layer, this is 0, otherwise unique ID of the combination of the cameras
     this._cameraHash = 0;
+
     this._lightHash = 0;
     this._staticLightHash = 0;
     this._needsStaticPrepare = true;
@@ -403,8 +406,11 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         } else {
             arr = this.transparentMeshInstances;
         }
+
+        // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
         if (arr.indexOf(m) < 0) arr.push(m);
         if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
+
         if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
             if (mat.updateShader !== Material.prototype.updateShader) {
                 mat.clearVariants();

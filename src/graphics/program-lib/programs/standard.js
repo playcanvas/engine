@@ -1109,7 +1109,17 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
+        if (options.useCubeMapRotation) {
+            code += "#define CUBEMAP_ROTATION\n";
+        }
+
+        if (options.useRightHandedCubeMap) {
+            code += "#define RIGHT_HANDED_CUBEMAP\n";
+        }
+
         if (needsNormal) {
+            code += chunks.cubeMapRotatePS;
+
             code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
