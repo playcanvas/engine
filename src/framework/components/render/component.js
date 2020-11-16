@@ -443,7 +443,7 @@ Object.defineProperties(RenderComponent.prototype, {
 
                 if (value !== 'asset') {
                     var material = this._material;
-                    if (!material) {
+                    if (!material || material === this.system.defaultMaterial) {
                         material = this._materialReferences[0] &&
                                    this._materialReferences[0].asset &&
                                    this._materialReferences[0].asset.resource;
