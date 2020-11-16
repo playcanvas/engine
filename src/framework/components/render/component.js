@@ -442,10 +442,16 @@ Object.defineProperties(RenderComponent.prototype, {
                 this.destroyMeshInstances();
 
                 if (value !== 'asset') {
+                    var material = this._material;
+                    if (!material) {
+                        material = this._materialReferences[0] &&
+                                   this._materialReferences[0].asset &&
+                                   this._materialReferences[0].asset.resource;
+                    }
 
                     var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                     this._area = primData.area;
-                    this.meshInstances = [new MeshInstance(this.entity, primData.mesh, this._material || this.system.defaultMaterial)];
+                    this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
 
                     if (this.system._inTools)
                         this.generateWireframe();
@@ -700,24 +706,24 @@ Object.defineProperties(RenderComponent.prototype, {
             }
 
             for (i = 0; i < value.length; i++) {
+                if (!this._materialReferences[i]) {
+                    this._materialReferences.push(
+                        new AssetReference(
+                            i,
+                            this,
+                            this.system.app.assets, {
+                                add: this._onMaterialAdded,
+                                load: this._onMaterialLoad,
+                                remove: this._onMaterialRemove,
+                                unload: this._onMaterialUnload
+                            },
+                            this
+                        )
+                    );
+                }
+
                 if (value[i]) {
                     var id = value[i] instanceof Asset ? value[i].id : value[i];
-                    if (!this._materialReferences[i]) {
-                        this._materialReferences.push(
-                            new AssetReference(
-                                i,
-                                this,
-                                this.system.app.assets, {
-                                    add: this._onMaterialAdded,
-                                    load: this._onMaterialLoad,
-                                    remove: this._onMaterialRemove,
-                                    unload: this._onMaterialUnload
-                                },
-                                this
-                            )
-                        );
-                    }
-
                     if (this._materialReferences[i].id !== id) {
                         this._materialReferences[i].id = id;
                     }
@@ -725,8 +731,12 @@ Object.defineProperties(RenderComponent.prototype, {
                     if (this._materialReferences[i].asset) {
                         this._onMaterialAdded(i, this, this._materialReferences[i].asset);
                     }
-                } else if (this._meshInstances[i]) {
-                    this._meshInstances[i].material = this.system.defaultMaterial;
+                } else {
+                    this._materialReferences[i].id = null;
+
+                    if (this._meshInstances[i]) {
+                        this._meshInstances[i].material = this.system.defaultMaterial;
+                    }
                 }
             }
         }
