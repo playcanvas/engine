@@ -18,8 +18,8 @@ import { Component } from '../component.js';
  * @description Create a new RenderComponent.
  * @param {pc.RenderComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
- * @property {string} type The type of the model. Can be one of the following:
- * * "asset": The component will render a model asset
+ * @property {string} type The type of the render. Can be one of the following:
+ * * "asset": The component will render a render asset
  * * "box": The component will render a box (1 unit in each dimension)
  * * "capsule": The component will render a capsule (radius 0.5, height 2)
  * * "cone": The component will render a cone (radius 0.5, height 1)
@@ -28,7 +28,7 @@ import { Component } from '../component.js';
  * * "sphere": The component will render a sphere (radius 0.5)
  * @property {pc.Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
  * @property {pc.Asset[]|number[]} materialAsset The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
- * @property {pc.Material} material The material {@link pc.Material} that will be used to render the meshes (not used on models of type 'asset').
+ * @property {pc.Material} material The material {@link pc.Material} that will be used to render the meshes (not used on renders of type 'asset').
  * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
  * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
@@ -77,6 +77,7 @@ function RenderComponent(system, entity)   {
     );
 
     // material used to render meshes other than asset type
+    // it gets priority when set to something else than defaultMaterial, otherwise materialASsets[0] is used
     this._material = system.defaultMaterial;
 
     // material asset references
@@ -221,7 +222,7 @@ Object.assign(RenderComponent.prototype, {
      * @description Stop rendering {@link pc.MeshInstance}s without removing them from the scene hierarchy.
      * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance to false.
      * Note, this does not remove the mesh instances from the scene hierarchy or draw call list.
-     * So the model component still incurs some CPU overhead.
+     * So the render component still incurs some CPU overhead.
      */
     hide: function () {
         if (this._meshInstances) {
@@ -257,7 +258,10 @@ Object.assign(RenderComponent.prototype, {
     },
 
     _onRenderAssetLoad: function () {
-        // probably need to delete old mesh instances????
+
+        // remove existing instances
+        this.destroyMeshInstances();
+
         var render = this._assetReference.asset.resource;
         if (render.meshes) {
             this._onSetMeshes(render.meshes);
@@ -467,7 +471,7 @@ Object.defineProperties(RenderComponent.prototype, {
 
         set: function (value) {
 
-            this.removeFromLayers();
+            this.destroyMeshInstances();
 
             this._meshInstances = value;
 
@@ -662,7 +666,7 @@ Object.defineProperties(RenderComponent.prototype, {
                 }
 
                 if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
-                    // re-add model to scene, in case it was removed by batching
+                    // re-add render to scene, in case it was removed by batching
                     this.addToLayers();
                 }
 
