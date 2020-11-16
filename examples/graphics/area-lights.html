@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Area lights</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+
+    </script>
+
+    <!-- LUT table for area lights, included after the app has been created -->
+    <script src="../assets/scripts/lights/area-light-lut.js"></script>
+
+    <script>
+
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        // set up some general scene rendering properties
+        app.scene.gammaCorrection = pc.GAMMA_SRGB;
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
+        // setup skydome
+        app.scene.skyboxMip = 0;            // use top mipmap level of cubemap (full resolution)
+        app.scene.skyboxIntensity = 0.4;    // make it darker
+
+        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+            url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
+        });
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+        cubemapAsset.ready(function () {
+            app.scene.setSkybox(cubemapAsset.resources);
+        });
+
+        // helper function to create a primitive with shape type, position, scale, color
+        function createPrimitive(primitiveType, position, scale, color) {
+            // create material of specified color
+            var material = new pc.StandardMaterial();
+            material.diffuse = color;
+            material.metalness = 0.2 + Math.random() * 0.8;
+            material.useMetalness = true;
+            material.update();
+
+            // create primitive
+            var primitive = new pc.Entity();
+            primitive.addComponent('model', {
+                type: primitiveType
+            });
+            primitive.model.material = material;
+
+            // set position and scale and add it to scene
+            primitive.setLocalPosition(position);
+            primitive.setLocalScale(scale);
+            app.root.addChild(primitive);
+
+            return primitive;
+        }
+
+        function createAreaLight(position, scale, color) {
+
+            var light = new pc.Entity();
+            light.addComponent("light", {
+                type: "area",
+                color: color,
+                intensity: 10,
+                range: 50,
+                castShadows: false
+            });
+
+            // add plane that represents the area light
+            light.addComponent("model", {
+                type: "plane"
+            });
+
+            light.setLocalScale(scale, scale, scale);
+            light.translate(position);
+            app.root.addChild(light);
+
+            return light;
+        }
+
+        // create ground plane
+        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3));
+
+        // create 3 primitives, keep their references to rotate them later
+        createPrimitive("sphere", new pc.Vec3(-4, 2, -6), new pc.Vec3(2, 6, 3), new pc.Color(1, 0, 0));
+        createPrimitive("box", new pc.Vec3(4, 2, -7), new pc.Vec3(6, 3, 3), new pc.Color(1, 1, 0));
+        createPrimitive("cone", new pc.Vec3(0, 2, 7), new pc.Vec3(2, 5, 2), new pc.Color(0, 1, 1));
+
+        // Create the camera, which renders entities 
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.2, 0.2, 0.2)
+        });
+        app.root.addChild(camera);
+        camera.setLocalPosition(0, 10, 20);
+        camera.lookAt(pc.Vec3.ZERO);
+
+        // Create an area light
+        var light1 = createAreaLight(new pc.Vec3(-5, 3, 0), 4, new pc.Color(1, 0.5, 0.5));
+        var light2 = createAreaLight(new pc.Vec3(5, 2, 2), 2, new pc.Color(1, 1, 0));
+
+        // update things each frame
+        var time = 0;
+        var switchTime = 0;
+        app.on("update", function (dt) {
+            time += dt;
+
+
+            light1.setLocalEulerAngles(time * 50, 0, 70 + Math.sin(time * 0.5) * 45);
+            light2.setLocalEulerAngles(time * 30, 0, 90);
+
+        });
+    </script>
+</body>
+</html>
