@@ -632,7 +632,7 @@ var standard = {
 
         if (options.forceUv1) {
             useUv[1] = true;
-            useUnmodifiedUv[1] = useUnmodifiedUv[1] ? useUnmodifiedUv[1] : true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
         }
 
         for (i = 0; i < maxUvSets; i++) {
