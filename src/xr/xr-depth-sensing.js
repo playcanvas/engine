@@ -5,7 +5,7 @@ import { EventHandler } from '../core/event-handler.js';
  * @name pc.XrDepthSensing
  * @augments pc.EventHandler
  * @classdesc Depth Sensing provides depth information which is reconstructed using underlying AR system. It provides ability to query depth value (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for: reconstructing real world geometry; virtual object placement; occlusion of virtual objects by real world geometry; and more.
- * @description
+ * @description Depth Sensing provides depth information which is reconstructed using underlying AR system. It provides ability to query depth value (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for: reconstructing real world geometry; virtual object placement; occlusion of virtual objects by real world geometry; and more.
  * @param {pc.XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Depth Sensing is supported.
  * @property {number} width Width of depth texture or 0 if not available.
