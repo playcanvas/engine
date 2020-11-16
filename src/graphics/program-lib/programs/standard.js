@@ -630,17 +630,19 @@ var standard = {
             }
         }
 
-        if (options.forceUv1) useUv[1] = true;
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = useUnmodifiedUv[1] ? useUnmodifiedUv[1] : true;
+        }
 
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = "TEXCOORD" + i;
                 code += chunks["uv" + i + "VS"];
                 codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
-
-                if (useUnmodifiedUv[i] === true || useUnmodifiedUv[i] === undefined) {
-                    codeBody += "   vUv" + i + " = uv" + i + ";\n";
-                }
+            }
+            if (useUnmodifiedUv[i]) {
+                codeBody += "   vUv" + i + " = uv" + i + ";\n";
             }
         }
 
