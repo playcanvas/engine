@@ -10,6 +10,7 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
@@ -50,10 +51,12 @@ function XrManager(app) {
     this._session = null;
     this._baseLayer = null;
     this._referenceSpace = null;
+    this._frame = null;
 
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
+    this.depthSensing = new XrDepthSensing(this);
 
     this._camera = null;
     this.views = [];
@@ -212,6 +215,7 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     if (type === XRTYPE_AR) {
         optionalFeatures.push('light-estimation');
         optionalFeatures.push('hit-test');
+        optionalFeatures.push('depth-sensing');
     } else if (type === XRTYPE_VR) {
         optionalFeatures.push('hand-tracking');
     }
