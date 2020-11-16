@@ -725,6 +725,8 @@ Object.defineProperties(RenderComponent.prototype, {
                     if (this._materialReferences[i].asset) {
                         this._onMaterialAdded(i, this, this._materialReferences[i].asset);
                     }
+                } else if (this._meshInstances[i]) {
+                    this._meshInstances[i].material = this.system.defaultMaterial;
                 }
             }
         }
