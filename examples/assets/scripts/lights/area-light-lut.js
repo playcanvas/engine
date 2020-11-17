@@ -1,5 +1,3 @@
-var AreaLightLut = pc.createScript('areaLightLut');
-
 //  Real-Time Polygonal-Light Shading with Linearly Transformed Cosines.
 //  Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt.
 //  ACM Transactions on Graphics (Proceedings of ACM SIGGRAPH 2016) 35(4), 2016.
