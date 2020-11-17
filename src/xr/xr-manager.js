@@ -51,7 +51,6 @@ function XrManager(app) {
     this._session = null;
     this._baseLayer = null;
     this._referenceSpace = null;
-    this._frame = null;
 
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
