@@ -6,6 +6,8 @@ import { getShapePrimitive } from '../../../scene/procedural.js';
 import { Asset } from '../../../asset/asset.js';
 import { AssetReference } from '../../../asset/asset-reference.js';
 
+import { EntityReference } from '../../utils/entity-reference.js';
+
 import { Component } from '../component.js';
 
 /**
@@ -62,6 +64,10 @@ function RenderComponent(system, entity)   {
 
     // area - used by lightmapper
     this._area = null;
+
+    // the entity that represents the root bone
+    // if this render component has skinned meshes
+    this._rootBone = new EntityReference(this, 'rootBone');
 
     // render asset reference
     this._assetReference = new AssetReference(
@@ -172,6 +178,8 @@ Object.assign(RenderComponent.prototype, {
     onEnable: function () {
         var app = this.system.app;
         var scene = app.scene;
+
+        this._rootBone.onParentComponentEnable();
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
