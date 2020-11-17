@@ -33,46 +33,23 @@
 
     <script>
 
-        app.start();
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
-
-        var miniStats = new pcx.MiniStats(app);
-
-        // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
-        app.scene.toneMapping = pc.TONEMAP_ACES;
-
-        // setup skydome
-        app.scene.skyboxMip = 0;            // use top mipmap level of cubemap (full resolution)
-        app.scene.skyboxIntensity = 0.4;    // make it darker
-
-        // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
-        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
-            url: "../assets/cubemaps/helipad.dds"
-        }, {
-            type: pc.TEXTURETYPE_RGBM
-        });
-        app.assets.add(cubemapAsset);
-        app.assets.load(cubemapAsset);
-        cubemapAsset.ready(function () {
-            app.scene.setSkybox(cubemapAsset.resources);
-        });
 
         // helper function to create a primitive with shape type, position, scale, color
-        function createPrimitive(primitiveType, position, scale, color) {
+        function createPrimitive(primitiveType, position, scale, color, assetManifest) {
+
             // create material of specified color
             var material = new pc.StandardMaterial();
             material.diffuse = color;
-            material.metalness = 0.2 + Math.random() * 0.8;
-            material.shininess = 70;
+            material.shininess = 80;
             material.useMetalness = true;
+
+            if (assetManifest) {
+                material.diffuseMap = assetManifest[0].asset.resource;
+                material.normalMap = assetManifest[1].asset.resource;
+                material.glossMap = assetManifest[2].asset.resource;
+                material.metalness = 0.7;
+            }
+
             material.update();
 
             // create primitive
@@ -95,10 +72,15 @@
             var light = new pc.Entity();
             light.addComponent("light", {
                 type: "area",
+                //type: "spot",
                 color: color,
-                intensity: 15,
-                range: 50,
-                castShadows: false
+                intensity: 20,
+                range: 10,
+                castShadows: false,
+
+
+                innerConeAngle: 60,
+                outerConeAngle: 90
             });
 
             // front face quad
@@ -134,26 +116,110 @@
             return light;
         }
 
-        // create ground plane
-        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3));
 
-        // create 3 primitives, keep their references to rotate them later
-        createPrimitive("sphere", new pc.Vec3(-4, 2, -6), new pc.Vec3(5, 6, 3), new pc.Color(0.6, 0.6, 0.5));
-        createPrimitive("box", new pc.Vec3(4, 2, -7), new pc.Vec3(6, 3, 3), new pc.Color(1, 1, 0.4));
-        createPrimitive("cone", new pc.Vec3(0, 2, 7), new pc.Vec3(2, 5, 2), new pc.Color(0.6, 1, 1));
 
-        // Create the camera, which renders entities 
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2)
+        // A list of assets that need to be loaded
+        var assetManifest = [
+            {
+                type: "texture",
+                url: "../assets/textures/seaside-rocks01-color.png"
+            },
+            {
+                type: "texture",
+                url: "../assets/textures/seaside-rocks01-normal.png"
+            },
+            {
+                type: "texture",
+                url: "../assets/textures/seaside-rocks01-gloss.png"
+            },
+            {
+                type: "container",
+                url: "../assets/models/statue.glb"
+            },
+        ];
+
+        // Load all assets and then run the example
+        var assetsToLoad = assetManifest.length;
+        assetManifest.forEach(function (entry) {
+            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
+                if (!err && asset) {
+                    assetsToLoad--;
+                    entry.asset = asset;
+                    if (assetsToLoad === 0) {
+                        run();
+                    }
+                }
+            });
         });
-        app.root.addChild(camera);
-        camera.setLocalPosition(0, 10, 20);
-        camera.lookAt(pc.Vec3.ZERO);
 
-        // Create an area light
-        var light1 = createAreaLight(new pc.Vec3(-5, 3, 0), 4, new pc.Color(1, 0.5, 0.5));
-        var light2 = createAreaLight(new pc.Vec3(5, 2, 2), 2, new pc.Color(1, 1, 0));
+        var light1, light2;
+        function run() {
+
+            app.start();
+
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
+            var miniStats = new pcx.MiniStats(app);
+
+            // set up some general scene rendering properties
+            app.scene.gammaCorrection = pc.GAMMA_SRGB;
+            app.scene.toneMapping = pc.TONEMAP_ACES;
+
+            // setup skydome
+            app.scene.skyboxMip = 1;            // use top mipmap level of cubemap (full resolution)
+            app.scene.skyboxIntensity = 0.4;    // make it darker
+
+            // Load a cubemap asset. This DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+            var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+                url: "../assets/cubemaps/helipad.dds"
+            }, {
+                type: pc.TEXTURETYPE_RGBM
+            });
+            app.assets.add(cubemapAsset);
+            app.assets.load(cubemapAsset);
+            cubemapAsset.ready(function () {
+                app.scene.setSkybox(cubemapAsset.resources);
+            });
+
+
+
+
+
+
+            // create ground plane
+            createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assetManifest);
+
+             // Create a model entity and assign the statue model
+             var statue = new pc.Entity();
+             statue.addComponent("model", {
+                type: "asset",
+                asset: assetManifest[3].asset.resource.model
+            });
+            statue.setLocalScale(0.4, 0.4, 0.4);
+            app.root.addChild(statue);
+
+
+
+            // Create the camera, which renders entities 
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.2, 0.2, 0.2),
+                fov: 60
+            });
+            app.root.addChild(camera);
+            camera.setLocalPosition(0, 6, 12);
+            camera.lookAt(pc.Vec3.ZERO);
+
+            // Create an area light
+            light1 = createAreaLight(new pc.Vec3(-5, 3, 2), 4, new pc.Color(1, 1, 1));
+            light2 = createAreaLight(new pc.Vec3(5, 3, -2), 5, new pc.Color(1, 1, 0));
+        }
 
         // update things each frame
         var time = 0;
@@ -161,9 +227,13 @@
         app.on("update", function (dt) {
             time += dt;
 
+            if (light1) {
+                light1.setLocalEulerAngles(time * 50, 0, 70 + Math.sin(time * 0.5) * 45);
+            }
 
-            light1.setLocalEulerAngles(time * 50, 0, 70 + Math.sin(time * 0.5) * 45);
-            light2.setLocalEulerAngles(time * 30, 0, 90);
+            if (light2) {
+                light2.setLocalEulerAngles(time * 30, 0, 90);
+            }
 
         });
     </script>
