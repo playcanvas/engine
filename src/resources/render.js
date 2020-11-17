@@ -31,11 +31,23 @@ function onContainerAssetAdded(containerAsset) {
 
     renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
     renderAsset.registry.on('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+    renderAsset.registry.off('remove:' + containerAsset.id, onContainerAssetRemoved, renderAsset);
+    renderAsset.registry.once('remove:' + containerAsset.id, onContainerAssetRemoved, renderAsset);
 
     if (!containerAsset.resource) {
         renderAsset.registry.load(containerAsset);
     } else {
         onContainerAssetLoaded.call(renderAsset, containerAsset);
+    }
+}
+
+function onContainerAssetRemoved(containerAsset) {
+    var renderAsset = this;
+
+    renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+
+    if (renderAsset.resource) {
+        renderAsset.resource.meshes = null;
     }
 }
 
@@ -53,7 +65,7 @@ Object.assign(RenderHandler.prototype, {
 
         var containerAsset = registry.get(asset.data.containerAsset);
         if (!containerAsset) {
-            registry.once('add:' + containerAsset.id, onContainerAssetAdded, asset);
+            registry.once('add:' + asset.data.containerAsset, onContainerAssetAdded, asset);
             return;
         }
 
