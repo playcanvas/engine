@@ -17,8 +17,9 @@ function onContainerAssetLoaded(containerAsset) {
     var renderAsset = this;
     if (!renderAsset.resource) return;
 
-    var containerResource = containerAsset.resources[0];
-    var render = containerResource.renders[renderAsset.data.renderIndex];
+    var containerResource = containerAsset.resource;
+
+    var render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
     if (render) {
         renderAsset.resource.meshes = render.resource;
     }
@@ -27,9 +28,11 @@ function onContainerAssetLoaded(containerAsset) {
 // The scope of this function is the render asset
 function onContainerAssetAdded(containerAsset) {
     var renderAsset = this;
-    if (!containerAsset.loaded) {
-        renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
-        renderAsset.registry.once('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+
+    renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+    renderAsset.registry.on('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+
+    if (!containerAsset.resource) {
         renderAsset.registry.load(containerAsset);
     } else {
         onContainerAssetLoaded.call(renderAsset, containerAsset);
@@ -54,17 +57,7 @@ Object.assign(RenderHandler.prototype, {
             return;
         }
 
-        if (!containerAsset.loaded) {
-            registry.once('load:' + containerAsset.id, onContainerAssetLoaded, asset);
-            registry.load(containerAsset);
-            return;
-        }
-
-        onContainerAssetLoaded.call(asset, containerAsset);
-    },
-
-    _onContainerAssetAdded: function (asset) {
-        this._registry.off('add:' + asset.id, this._onContainerAssetAdded, this);
+        onContainerAssetAdded.call(asset, containerAsset);
     }
 });
 
