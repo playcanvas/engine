@@ -86,6 +86,7 @@
             // front face quad
             var frontMaterial = new pc.StandardMaterial();
             frontMaterial.emissive = color;
+            frontMaterial.useLighting = false;
             frontMaterial.update();
 
             // add plane that represents the area light
@@ -228,11 +229,13 @@
             time += dt;
 
             if (light1) {
-                light1.setLocalEulerAngles(time * 50, 0, 70 + Math.sin(time * 0.5) * 45);
+                var factor1 = (Math.sin(time) + 1) * 0.5;
+                light1.setLocalEulerAngles(pc.math.lerp(90, 220, factor1), 0, 90);
             }
 
             if (light2) {
-                light2.setLocalEulerAngles(time * 30, 0, 90);
+                var factor2 = (Math.sin(time * 0.6) + 1) * 0.5;
+                light2.setLocalEulerAngles(pc.math.lerp(-90, 90, factor2), 0, 90);
             }
 
         });
