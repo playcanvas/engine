@@ -86,12 +86,12 @@
                     // add input parameters
                     var timeParam = builder.addParam('float', 'uTime', 0.0);
                     var emissiveTexParam = builder.addParam('sampler2D', 'uEmissiveMap', emissiveMap);
-                    var emissiveColParam = builder.addParam('vec3', 'uEmmisiveColorParam', new pc.Vec3(0.2, 0.3, 0.3));
+                    var emissiveColConst = builder.addConst('vec3', 'emissiveColConst', new pc.Vec3(0.2, 0.3, 0.3));
 
                     // create and hook up graph nodes
                     var scrollNode = builder.addNode('add2', builder.addNode('joinVec2', timeParam, timeParam), builder.addNode('uv0'));
                     var emissiveSampleNode = builder.addNode('texSample', emissiveTexParam, scrollNode);
-                    var emissiveCalcNode = builder.addNode('mul3', emissiveColParam, {node:emissiveSampleNode, port:'rgb'});
+                    var emissiveCalcNode = builder.addNode('mul3', emissiveColConst, {node:emissiveSampleNode, port:'rgb'});
 
                     // hook up outputs
                     builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'sgAlpha');

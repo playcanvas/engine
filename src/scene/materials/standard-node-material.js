@@ -11,7 +11,8 @@ import { StandardMaterial } from './standard-material.js';
  * @class
  * @name pc.StandardNodeMaterial
  * @augments pc.StandardMaterial
- * @classdesc StandardNodeMaterial is sub class of the StandardMaterial, and adds shader graph interop functionality
+ * @classdesc StandardNodeMaterial is sub class of the StandardMaterial, and adds shader graph
+ * interop functionality.
  * @param {pc.StandardMaterial} mat - Optional material which is cloned.
  * @param {any} chunk - Optional shader graph node chunk to be used.
  */

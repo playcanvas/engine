@@ -249,7 +249,7 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     addConstant: function (type, userId, value) {
-        var name = 'CONST_' + type + '_' + userId ? userId : this.graphData.ioPorts.length;
+        var name = 'const_' + type + '_' + (userId ? userId : this.graphData.ioPorts.length);
         return this._addIoPort(type, name, value, PORT_TYPE_CONST);
     },
 
@@ -406,22 +406,16 @@ Object.assign(ShaderGraphNode.prototype, {
     generateRootDeclCodeString: function () {
         var i;
         var ioPort;
+        var ioPortCached;
         var generatedCodeString = '';
 
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
-            var ioPortCached = this._getCachedPort(i); // use port cache (minor optimization)
+            ioPortCached = this._getCachedPort(i); // use port cache (minor optimization)
 
             if (ioPortCached.isUniform) {
                 generatedCodeString += 'uniform ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
-            }
-        }
-        // run through constants - values are set here (except for textures - which have to be uniforms)
-        for (i = 0; i < this.graphData.ioPorts.length; i++) {
-            ioPort = this.graphData.ioPorts[i];
-            if (ioPort.ptype === PORT_TYPE_CONST && (ioPort.type !== 'sampler2D' )) {
-                generatedCodeString += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
             }
         }
 
@@ -539,6 +533,14 @@ Object.assign(ShaderGraphNode.prototype, {
             if (generatedCodeString.endsWith(', ')) generatedCodeString = generatedCodeString.slice(0, -2);
 
             generatedCodeString += ' ) {\n';
+
+            // input constants (not including samplers)
+            for (i = 0; i < this.graphData.ioPorts.length; i++) {
+                ioPort = this.graphData.ioPorts[i];
+                if (ioPort.ptype === PORT_TYPE_CONST && (ioPort.type !== 'sampler2D' )) {
+                    generatedCodeString += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
+                }
+            }
 
             // temporary structures - with temp scope only in parsing function
             var tmpVarCounter = 0;

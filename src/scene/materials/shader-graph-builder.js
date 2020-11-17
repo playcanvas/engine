@@ -6,9 +6,9 @@ var id = 0;
  * @private
  * @class
  * @name pc.ShaderGraphBuilder
- * @classdesc A Shader Graph Builder class
+ * @classdesc A Shader Graph Builder class.
  * @param {pc.Application} app - Application with shader graph core nodes registered that will be used to
- * build the shader graph
+ * build the shader graph.
  */
 var ShaderGraphBuilder = function (app) {
     id++;
@@ -20,7 +20,7 @@ var ShaderGraphBuilder = function (app) {
     this._graph.name = 'graphRoot_' + id;
 
     // for validation
-    this._addedParams = {};
+    this._addedNamedInputs = {};
     this._addedNodes = [];
     this._addedOutputs = {};
 };
@@ -39,20 +39,47 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @returns {any} Returns the created input port.
      */
     addParam: function (type, name, value) {
-        if (this._addedParams[name]) {
+        if (this._addedNamedInputs[name]) {
             console.error('pc.ShaderGraphBuilder#addOutput: param ' + name + ' already added!');
             return null;
         }
 
         var ioPort = this._graph.addInput(type, name, value);
 
-        this._addedParams[name] = ioPort;
+        this._addedNamedInputs[name] = ioPort;
+
+        return ioPort;
+    },
+    /**
+     * @private
+     * @function
+     * @name pc.ShaderGraphBuilder#addConst
+     * @description Adds a constant input to graph.
+     * @param {string} type - Type of constant.
+     * @param {string} userId - Optional userId of constant.
+     * @param {any} value - Value of constant.
+     * @returns {any} Returns the created constant port.
+     */
+    addConst: function (type, userId, value) {
+        var name = userId ? 'const_' + type + '_' + userId : '';
+        if (userId && this._addedNamedInputs[name]) {
+            console.error('pc.ShaderGraphBuilder#addConst: userId ' + userId + ' already used!');
+            return null;
+        }
+        if (!value) {
+            console.error('pc.ShaderGraphBuilder#addConst:' + (userId ? '' : type) + ' constant ' + (userId || '') + ' has no value!');
+            return null;
+        }
+
+        var ioPort = this._graph.addConstant(type, userId, value);
+
+        if (userId) this._addedNamedInputs[name] = ioPort;
 
         return ioPort;
     },
     _validateArg: function (arg, type, name, node, err) {
         if (arg.type) {
-            if (!this._addedParams[arg.name]) {
+            if (!this._addedNamedInputs[arg.name] && !arg.name.startsWith('const_') ) {
                 console.error(err + ": invalid input param: " + arg.name);
                 return false;
             }
