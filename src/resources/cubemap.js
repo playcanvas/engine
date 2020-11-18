@@ -297,7 +297,7 @@ Object.assign(CubemapHandler.prototype, {
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
                 onReady(i, loadedAssets[i]);
-            } else if (parseInt(assetId, 10) === assetId) {
+            } else if (parseInt(assetId, 10) == assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);
                 if (texAsset) {
