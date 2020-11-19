@@ -6,9 +6,10 @@ import { getShapePrimitive } from '../../../scene/procedural.js';
 import { Asset } from '../../../asset/asset.js';
 import { AssetReference } from '../../../asset/asset-reference.js';
 
-import { EntityReference } from '../../utils/entity-reference.js';
-
 import { Component } from '../component.js';
+import { ComponentSystem } from '../system.js';
+
+import { Entity } from '../../entity.js';
 
 /**
  * @private
@@ -68,7 +69,7 @@ function RenderComponent(system, entity)   {
 
     // the entity that represents the root bone
     // if this render component has skinned meshes
-    this._rootBone = new EntityReference(this, 'rootBone');
+    this._rootBone = null;
 
     // render asset reference
     this._assetReference = new AssetReference(
@@ -92,11 +93,52 @@ function RenderComponent(system, entity)   {
 
     entity.on('remove', this.onRemoveChild, this);
     entity.on('insert', this.onInsertChild, this);
+
+    this.on('set_rootBone', this._onSetRootBone, this);
 }
 RenderComponent.prototype = Object.create(Component.prototype);
 RenderComponent.prototype.constructor = RenderComponent;
 
 Object.assign(RenderComponent.prototype, {
+
+    _onSetRootBone: function (name, oldValue, newValue) {
+        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
+        this._rootBone = newValue;
+
+        if (!newValue) return;
+
+        if (!(newValue instanceof Entity)) {
+            var entity = this.system.app.root.findByGuid(newValue);
+            if (entity) {
+                this.rootBone = entity;
+            } else {
+                // handle GUID case - find entity by guid
+                // and if not there yet do it in post initialize
+                if (this.system._postInitialized) {
+                    // TODO: error here? system has been postInitialized already
+                    // so this entity is not going to be found
+                } else {
+                    ComponentSystem.on('postinitialize', this._onPostInitialize, this);
+                }
+            }
+        } else {
+            this._onFindRootBone();
+        }
+    },
+
+    _onFindRootBone: function () {
+        console.log('this.rootBone', this.rootBone);
+    },
+
+    _onPostInitialize: function () {
+        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
+        if (this._rootBone) {
+            var entity = this.system.app.root.findByGuid(this._rootBone);
+            if (entity) {
+                this.rootBone = entity;
+            }
+        }
+    },
 
     destroyMeshInstances: function () {
 
@@ -146,6 +188,7 @@ Object.assign(RenderComponent.prototype, {
     },
 
     onRemove: function () {
+        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
 
         this.destroyMeshInstances();
 
@@ -180,7 +223,7 @@ Object.assign(RenderComponent.prototype, {
         var app = this.system.app;
         var scene = app.scene;
 
-        this._rootBone.onParentComponentEnable();
+        // this._rootBone.onParentComponentEnable();
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {

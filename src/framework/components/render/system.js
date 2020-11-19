@@ -46,6 +46,9 @@ function RenderComponentSystem(app) {
     this.defaultMaterial = app.scene.defaultMaterial;
 
     this.on('beforeremove', this.onRemove, this);
+
+    this._postInitialized = false;
+    ComponentSystem.bind('postInitialize', this._onPostInitialize, this);
 }
 
 RenderComponentSystem.prototype = Object.create(ComponentSystem.prototype);
@@ -71,6 +74,10 @@ Object.assign(RenderComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, _data, _schema);
+    },
+
+    _onPostInitialize: function () {
+        this._postInitialized = true;
     },
 
     cloneComponent: function (entity, clone) {
