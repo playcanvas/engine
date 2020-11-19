@@ -105,7 +105,7 @@ Object.assign(MorphInstance.prototype, {
 
         this.meshInstance = null;
 
-            // don't destroy shader as it's in the cache and can be used by other materials
+        // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
         if (this.morph) {
