@@ -85,7 +85,7 @@
 
             // front face quad
             var frontMaterial = new pc.StandardMaterial();
-            frontMaterial.emissive = color;
+            frontMaterial.diffuse = new pc.Color(0, 0, 0);
             frontMaterial.useLighting = false;
             frontMaterial.update();
 
@@ -101,9 +101,10 @@
 
             // black back face quad
             var backMaterial = new pc.StandardMaterial();
-            backMaterial.diffuse = new pc.Color(0, 0, 0);
+            backMaterial.emissive = color;
             backMaterial.useLighting = false;
             backMaterial.update();
+
 
             var backFace = new pc.Entity();
             backFace.addComponent("model", {
@@ -230,12 +231,12 @@
 
             if (light1) {
                 var factor1 = (Math.sin(time) + 1) * 0.5;
-                light1.setLocalEulerAngles(pc.math.lerp(90, 220, factor1), 0, 90);
+                light1.setLocalEulerAngles(pc.math.lerp(-90, 110, factor1), 0, 90);
             }
 
             if (light2) {
                 var factor2 = (Math.sin(time * 0.6) + 1) * 0.5;
-                light2.setLocalEulerAngles(pc.math.lerp(-90, 90, factor2), 0, 90);
+                light2.setLocalEulerAngles(pc.math.lerp(50, 250, factor2), 0, 90);
             }
 
         });

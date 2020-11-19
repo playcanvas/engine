@@ -997,7 +997,7 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][2] = area._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        var hWidth = wtm.transformVector(new Vec3(0.5, 0, 0));
+        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
         this.lightWidth[cnt][0] = hWidth.x;
         this.lightWidth[cnt][1] = hWidth.y;
         this.lightWidth[cnt][2] = hWidth.z;
