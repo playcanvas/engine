@@ -43,6 +43,7 @@ import { Component } from '../component.js';
  * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which the meshes should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+ * @property {pc.Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
  */
 function RenderComponent(system, entity)   {
     Component.call(this, system, entity);
