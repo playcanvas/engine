@@ -3,7 +3,8 @@ var categories = [
     {
         name: "animation",
         examples: [
-            "blend"
+            "blend",
+            "tweening"
         ]
     }, {
         name: "camera",
@@ -15,7 +16,9 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "area-picker",
             "batching-dynamic",
+            "grab-pass",
             "hardware-instancing",
             "hierarchy",
             "layers",
@@ -24,6 +27,7 @@ var categories = [
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",
+            "material-translucent-specular",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
@@ -34,6 +38,7 @@ var categories = [
             "model-outline",
             "model-shapes",
             "model-textured-box",
+            "painter",
             "particles-anim-index",
             "particles-random-sprites",
             "particles-snow",
@@ -46,7 +51,8 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis"
+            "texture-basis",
+            "transform-feedback"
         ]
     }, {
         name: "loaders",
@@ -64,6 +70,7 @@ var categories = [
     }, {
         name: "misc",
         examples: [
+            "mini-stats",
             "multi-application"
         ]
     }, {
@@ -71,7 +78,8 @@ var categories = [
         examples: [
             "compound-collision",
             "falling-shapes",
-            "raycast"
+            "raycast",
+            "vehicle"
         ]
     }, {
         name: "sound",
@@ -82,6 +90,7 @@ var categories = [
         name: "user-interface",
         examples: [
             "button-basic",
+            "button-particle",
             "button-sprite",
             "text-basic",
             "text-canvas-font",
@@ -100,6 +109,7 @@ var categories = [
             'ar-hit-test',
             'vr-basic',
             'vr-controllers',
+            'vr-hands',
             'vr-movement',
             'xr-picking'
         ]

@@ -1,4 +1,4 @@
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
@@ -13,6 +13,8 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR,
     TONEMAP_LINEAR
 } from '../constants.js';
+
+import { Quat } from '../../math/quat.js';
 
 function StandardMaterialOptionsBuilder() {
     this._mapXForms = null;
@@ -125,6 +127,8 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
     options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
     options.conserveEnergy = stdMat.conserveEnergy;
+    options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
+    options.alphaFade = stdMat.alphaFade;
     options.occludeSpecular = stdMat.occludeSpecular;
     options.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
     options.occludeDirect = stdMat.occludeDirect;
@@ -140,11 +144,13 @@ StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (opti
     options.msdf = !!stdMat.msdfMap;
     options.twoSidedLighting = stdMat.twoSidedLighting;
     options.pixelSnap = stdMat.pixelSnap;
-    options.aoMapUv = stdMat.aoUvSet; // backwards componen
+    options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
     options.diffuseDetail = !!stdMat.diffuseMap;
     options.normalDetail = !!stdMat.normalMap;
     options.diffuseDetailMode = stdMat.diffuseDetailMode;
     options.detailModes = !!options.diffuseDetail;
+    options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+    options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 };
 
 StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {
@@ -181,6 +187,8 @@ StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, 
     options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
     options.prefilteredCubemap = !!prefilteredCubeMap128;
     options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
+    options.useCubeMapRotation = (stdMat.useSkybox && scene && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY));
+    options.useRightHandedCubeMap = stdMat.cubeMap ? stdMat.cubeMap._isRenderTarget : (stdMat.useSkybox && scene && scene._skyboxIsRenderTarget );
 };
 
 StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options, stdMat, objDefs, sortedLights, staticLightList) {

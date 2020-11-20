@@ -38,8 +38,7 @@ import { Component } from '../component.js';
  * @property {pc.Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
  * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on this model.
- * @property {pc.Material} material The material {@link pc.Material} that will be used to render the model. Setting
- * this property will apply the material to all mesh instances of the model.
+ * @property {pc.Material} material The material {@link pc.Material} that will be used to render the model (not used on models of type 'asset').
  * @property {pc.Asset|number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset').
  * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
  * @property {object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model
@@ -48,6 +47,8 @@ import { Component } from '../component.js';
  * @property {boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark model as non-movable (optimization).
+ * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
@@ -78,6 +79,9 @@ function ModelComponent(system, entity)   {
 
     this._layers = [LAYERID_WORLD]; // assign to the default world layer
     this._batchGroupId = -1;
+
+    // bounding box which can be set to override bounding box based on mesh
+    this._aabb = null;
 
     this._area = null;
 
@@ -439,7 +443,7 @@ Object.assign(ModelComponent.prototype, {
     },
 
     _onModelAssetAdded: function (asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdd, this);
+        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdded, this);
         if (asset.id === this._asset) {
             this._bindModelAsset(asset);
         }
@@ -492,6 +496,26 @@ Object.defineProperty(ModelComponent.prototype, "meshInstances", {
             return;
 
         this._model.meshInstances = value;
+    }
+});
+
+Object.defineProperties(ModelComponent.prototype, {
+
+    'aabb': {
+        get: function () {
+            return this._aabb;
+        },
+        set: function (value) {
+            this._aabb = value;
+
+            // set it on meshInstances
+            var mi = this._model.meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setOverrideAabb(this._aabb);
+                }
+            }
+        }
     }
 });
 
@@ -684,6 +708,7 @@ Object.defineProperty(ModelComponent.prototype, "model", {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
                 meshInstances[i].isStatic = this._isStatic;
+                meshInstances[i].setOverrideAabb(this._aabb);
             }
 
             this.lightmapped = this._lightmapped; // update meshInstances
@@ -701,6 +726,10 @@ Object.defineProperty(ModelComponent.prototype, "model", {
             if (this.entity.animation)
                 this.entity.animation.setModel(this._model);
 
+            // Update any animation component
+            if (this.entity.anim) {
+                this.entity.anim.resetStateGraph();
+            }
             // trigger event handler to load mapping
             // for new model
             if (this.type === 'asset') {

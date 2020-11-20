@@ -291,6 +291,7 @@ var worker = null;
 var callbacks = { };
 var format = null;
 var transcodeQueue = [];
+var downloadConfig = null;
 
 function basisTargetFormat() {
     if (!format) {
@@ -461,18 +462,40 @@ function basisDownload(glueUrl, wasmUrl, fallbackUrl, callback) {
     }
 }
 
+// set the wasm url config to be used if basisDownloadFromConfig is invoked
+function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
+    downloadConfig = {
+        glueUrl: glueUrl,
+        wasmUrl: wasmUrl,
+        fallbackUrl: fallbackUrl
+    };
+}
+
 // search for wasm module in the global config and initialize basis
 function basisDownloadFromConfig(callback) {
-    var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-    var wasmModule = modules.find(function (m) {
-        return m.moduleName === 'BASIS';
-    });
-    if (wasmModule) {
-        var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
-        basisDownload(urlBase + wasmModule.glueUrl,
-                      urlBase + wasmModule.wasmUrl,
-                      urlBase + wasmModule.fallbackUrl,
+    if (downloadConfig) {
+        // config was user-specified
+        basisDownload(downloadConfig.glueUrl,
+                      downloadConfig.wasmUrl,
+                      downloadConfig.fallbackUrl,
                       callback);
+    } else {
+        // get config from global PC config structure
+        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+        var wasmModule = modules.find(function (m) {
+            return m.moduleName === 'BASIS';
+        });
+        if (wasmModule) {
+            var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
+            basisDownload(urlBase + wasmModule.glueUrl,
+                          urlBase + wasmModule.wasmUrl,
+                          urlBase + wasmModule.fallbackUrl,
+                          callback);
+        } else {
+            // #ifdef DEBUG
+            console.warn("WARNING: unable to load basis wasm module - no config was specified");
+            // #endif
+        }
     }
 }
 
@@ -494,4 +517,11 @@ function basisTranscode(url, data, callback, options) {
     }
 }
 
-export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode };
+export {
+    basisDownload,
+    basisSetDownloadConfig,
+    basisDownloadFromConfig,
+    basisInitialize,
+    basisTargetFormat,
+    basisTranscode
+};

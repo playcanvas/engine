@@ -4,8 +4,9 @@ import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from './graphics.js';
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 
 // get a coding string for texture based on its type and pixel format.
@@ -42,25 +43,26 @@ var getCoding = function (texture) {
  * @param {number} [specularPower] - optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.
+ * @param {number} [numSamples] - optional number of samples (default is 1024).
  */
-var reprojectTexture = function (device, source, target, specularPower) {
-    var chunks = shaderChunks;
-
+var reprojectTexture = function (device, source, target, specularPower, numSamples) {
+    var processFunc = (specularPower !== undefined) ? 'prefilter' : 'reproject';
     var decodeFunc = "decode" + getCoding(source);
     var encodeFunc = "encode" + getCoding(target);
     var sourceFunc = source.cubemap ? "sampleCubemap" : "sampleEquirect";
     var targetFunc = target.cubemap ? "getDirectionCubemap" : "getDirectionEquirect";
 
-    var shader = chunks.createShaderFromCode(
+    var shader = createShaderFromCode(
         device,
-        chunks.fullscreenQuadVS,
+        shaderChunks.fullscreenQuadVS,
+        "#define PROCESS_FUNC " + processFunc + "\n" +
         "#define DECODE_FUNC " + decodeFunc + "\n" +
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES 1024\n\n" +
-        chunks.reprojectPS,
-        "reproject" + decodeFunc + encodeFunc + sourceFunc + targetFunc,
+        "#define NUM_SAMPLES " + (numSamples || 1024) + "\n\n" +
+        shaderChunks.reprojectPS,
+        processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
         device.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n"
     );
@@ -71,7 +73,8 @@ var reprojectTexture = function (device, source, target, specularPower) {
     var constantParams = device.scope.resolve("params");
     var params = new Vec4();
     params.y = (specularPower !== undefined) ? specularPower : 1;
-    params.z = (specularPower !== undefined) ? 1 : 0;
+    params.z = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
+    params.w = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
 
     for (var face = 0; face < (target.cubemap ? 6 : 1); face++) {
         var targ = new RenderTarget(device, target, {

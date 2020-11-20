@@ -1,4 +1,2 @@
-
     writeOutput();
 }
-

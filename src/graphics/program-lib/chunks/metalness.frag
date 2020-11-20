@@ -12,30 +12,20 @@ uniform float material_metalness;
 uniform sampler2D texture_metalnessMap;
 #endif
 
-#ifdef CLEARCOAT
-uniform float material_clearCoatSpecularity;
-#endif
-
 void getSpecularity() {
     float metalness = 1.0;
 
     #ifdef MAPFLOAT
-        metalness *= material_metalness;
+    metalness *= material_metalness;
     #endif
 
     #ifdef MAPTEXTURE
-        metalness *= texture2D(texture_metalnessMap, $UV).$CH;
+    metalness *= texture2D(texture_metalnessMap, $UV).$CH;
     #endif
 
     #ifdef MAPVERTEX
-        metalness *= saturate(vVertexColor.$VC);
+    metalness *= saturate(vVertexColor.$VC);
     #endif
 
     processMetalness(metalness);
-
-    #ifdef CLEARCOAT
-        ccSpecularity = vec3(1.0);
-        ccSpecularity *= material_clearCoatSpecularity;
-    #endif
 }
-

@@ -401,7 +401,7 @@ Object.assign(Http.prototype, {
         try {
             xhr.send(postdata);
         } catch (e) {
-            // DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
+            // DWE: Don't callback on exceptions as behavior is inconsistent, e.g. cross-domain request errors don't throw an exception.
             // Error callback should be called by xhr.onerror() callback instead.
             if (!errored) {
                 options.error(xhr.status, xhr, e);

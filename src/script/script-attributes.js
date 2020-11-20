@@ -2,6 +2,9 @@ import { Color } from '../core/color.js';
 
 import { Curve } from '../math/curve.js';
 import { CurveSet } from '../math/curve-set.js';
+import { Vec2 } from '../math/vec2.js';
+import { Vec3 } from '../math/vec3.js';
+import { Vec4 } from '../math/vec4.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
@@ -10,9 +13,11 @@ import { Asset } from '../asset/asset.js';
 import { createScript } from './script.js';
 
 var components = ['x', 'y', 'z', 'w'];
+var vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 var rawToValue = function (app, args, value, old) {
     var i;
+    var j;
 
     switch (args.type) {
         case 'boolean':
@@ -29,14 +34,35 @@ var rawToValue = function (app, args, value, old) {
             }
             return null;
         case 'json':
-            if (typeof value === 'object') {
-                return value;
+            var result = {};
+
+            if (Array.isArray(args.schema)) {
+                if (!value || typeof value !== 'object') {
+                    value = {};
+                }
+
+                for (i = 0; i < args.schema.length; i++) {
+                    var field = args.schema[i];
+                    if (!field.name) continue;
+
+                    if (field.array) {
+                        result[field.name] = [];
+
+                        var arr = Array.isArray(value[field.name]) ? value[field.name] : [];
+
+                        for (j = 0; j < arr.length; j++) {
+                            result[field.name].push(rawToValue(app, field, arr[j]));
+                        }
+                    } else {
+                        // use the value of the field as it's passed into rawToValue otherwise
+                        // use the default field value
+                        var val = value.hasOwnProperty(field.name) ? value[field.name] : field.default;
+                        result[field.name] = rawToValue(app, field, val);
+                    }
+                }
             }
-            try {
-                return JSON.parse(value);
-            } catch (ex) {
-                return null;
-            }
+
+            return result;
         case 'asset':
             if (value instanceof Asset) {
                 return value;
@@ -86,9 +112,10 @@ var rawToValue = function (app, args, value, old) {
         case 'vec3':
         case 'vec4':
             var len = parseInt(args.type.slice(3), 10);
+            var vecType = vecLookup[len];
 
-            if (value instanceof pc['Vec' + len]) {
-                if (old instanceof pc['Vec' + len]) {
+            if (value instanceof vecType) {
+                if (old instanceof vecType) {
                     old.copy(value);
                     return old;
                 }
@@ -98,7 +125,7 @@ var rawToValue = function (app, args, value, old) {
                     if (typeof value[i] !== 'number')
                         return null;
                 }
-                if (!old) old = new pc['Vec' + len]();
+                if (!old) old = new vecType();
 
                 for (i = 0; i < len; i++)
                     old[components[i]] = value[i];
@@ -162,6 +189,8 @@ function ScriptAttributes(scriptType) {
  * @param {string} [args.color] - String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
  * Defining this property will render Gradient in Editor's field UI.
  * @param {object[]} [args.enum] - List of fixed choices for field, defined as array of objects, where key in object is a title of an option.
+ * @param {object[]} [args.schema] - List of attributes for type 'json'. Each attribute description is an object with the same properties as regular script attributes
+ * but with an added 'name' field to specify the name of each attribute in the JSON.
  * @example
  * PlayerController.attributes.add('fullName', {
  *     type: 'string'
@@ -182,6 +211,26 @@ function ScriptAttributes(scriptType) {
  *         { '64x64': 64 },
  *         { '128x128': 128 }
  *     ]
+ * });
+ * @example
+ * PlayerController.attributes.add('config', {
+ *     type: 'json',
+ *     schema: [{
+ *         name: 'speed',
+ *         type: 'number',
+ *         title: 'Speed',
+ *         placeholder: 'km/h',
+ *         default: 22.2
+ *     }, {
+ *         name: 'resolution',
+ *         type: 'number',
+ *         default: 32,
+ *         enum: [
+ *             { '32x32': 32 },
+ *             { '64x64': 64 },
+ *             { '128x128': 128 }
+ *         ]
+ *     }]
  * });
  */
 ScriptAttributes.prototype.add = function (name, args) {

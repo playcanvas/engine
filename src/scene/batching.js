@@ -11,13 +11,13 @@ import {
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/chunks.js';
+import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 
 import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
-import { SkinInstance } from './skin.js';
+import { SkinInstance } from './skin-instance.js';
 
 /**
  * @class
@@ -98,10 +98,10 @@ SkinBatchInstance.prototype = Object.create(SkinBatchInstance.prototype);
 SkinBatchInstance.prototype.constructor = SkinBatchInstance;
 
 Object.assign(SkinBatchInstance.prototype, {
-    updateMatrices: function (rootNode) {
+    updateMatrices: function (rootNode, skinUpdateIndex) {
     },
 
-    updateMatrixPalette: function () {
+    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
         var pe;
         var mp = this.matrixPalette;
         var base;
@@ -628,7 +628,7 @@ BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, 
                 break;
             }
 
-            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlaping UI
+            // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlapping UI
             if ((material !== mi.material) ||
                 (layer !== mi.layer) ||
                 (vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash) ||

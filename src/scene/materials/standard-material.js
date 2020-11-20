@@ -5,8 +5,7 @@ import { Vec4 } from '../../math/vec4.js';
 
 import { generateDpAtlas } from '../../graphics/paraboloid.js';
 import { shFromCubemap } from '../../graphics/prefilter-cubemap.js';
-import { programlib } from '../../graphics/program-lib/program-lib.js';
-import { _matTex2D } from '../../graphics/program-lib/standard.js';
+import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -22,6 +21,7 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { Quat } from '../../math/quat.js';
 
 /**
  * @class
@@ -78,8 +78,28 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
  *
- * @property {number} clearCoat Defines the strength of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
- * @property {number} clearCoatGlossiness Defines the glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+ * @property {pc.Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
+ * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
+ * @property {pc.Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
+ * @property {pc.Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each component is between 0 and 1.
+ * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can be "r", "g", "b" or "a".
+ * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat intensity. Can be "r", "g", "b" or "a".
+ * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer from 0 (rough) to 1 (mirror).
+ * @property {pc.Texture|null} clearCoatGlossMap Monochrome clear coat glossiness map (default is null). If specified, will be multiplied by normalized 'clearCoatGlossiness' value and/or vertex colors.
+ * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
+ * @property {pc.Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
+ * @property {pc.Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map. Each component is between 0 and 1.
+ * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use. Can be "r", "g", "b" or "a".
+ * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
+ * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat glossiness. Can be "r", "g", "b" or "a".
+ * @property {pc.Texture|null} clearCoatNormalMap The clear coat normal map of the material (default is null). The texture must contains normalized, tangent space normals.
+ * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
+ * @property {pc.Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal map.
+ * @property {pc.Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal map. Each component is between 0 and 1.
+ * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales the assigned main clear coat normal map.
+ * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  *
  * @property {boolean} useMetalness Use metalness properties instead of specular.
  * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
@@ -134,6 +154,9 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
+ *
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecular} is set to false.
  *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
@@ -200,7 +223,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * {@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
- * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+ * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter.
  * * {@link pc.FRESNEL_NONE}: No Fresnel.
  * * {@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
@@ -243,6 +266,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
  * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
  * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
+ * * opacityFadesSpecular: enable specular fade. See {@link pc.Material#opacityFadesSpecular}.
+ * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
  * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
  * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
  * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
@@ -268,6 +293,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
+ * * useCubeMapRotation: if cube map rotation is enabled.
+ * * useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -685,10 +712,12 @@ Object.assign(StandardMaterial.prototype, {
     },
 
     _updateMapTransform: function (transform, tiling, offset) {
+        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0) {
+            return null;
+        }
+
         transform = transform || new Vec4();
         transform.set(tiling.x, tiling.y, offset.x, offset.y);
-
-        if ((transform.x === 1) && (transform.y === 1) && (transform.z === 0) && (transform.w === 0)) return null;
         return transform;
     },
 
@@ -708,25 +737,32 @@ Object.assign(StandardMaterial.prototype, {
 
     _updateMap: function (p) {
         var mname = p + "Map";
-        if (this[mname]) {
-            this._setParameter("texture_" + mname, this[mname]);
+        var map = this[mname];
+        if (map) {
+            this._setParameter("texture_" + mname, map);
+
+            // update transform
             var tname = mname + "Transform";
-            var uname = mname + "TransformUniform";
-            if (!this[tname]) {
-                this[uname] = new Float32Array(4);
-            }
             this[tname] = this._updateMapTransform(
                 this[tname],
                 this[mname + "Tiling"],
                 this[mname + "Offset"]
             );
 
-            if (this[tname]) {
-                this[uname][0] = this[tname].x;
-                this[uname][1] = this[tname].y;
-                this[uname][2] = this[tname].z;
-                this[uname][3] = this[tname].w;
-                this._setParameter('texture_' + tname, this[uname]);
+            // update uniform
+            var transform = this[tname];
+            if (transform) {
+                var uname = mname + "TransformUniform";
+                var uniform = this[uname];
+                if (!uniform) {
+                    uniform = new Float32Array(4);
+                    this[uname] = uniform;
+                }
+                uniform[0] = transform.x;
+                uniform[1] = transform.y;
+                uniform[2] = transform.z;
+                uniform[3] = transform.w;
+                this._setParameter('texture_' + tname, uniform);
             }
         }
     },
@@ -764,9 +800,10 @@ Object.assign(StandardMaterial.prototype, {
         }
 
         if (this.clearCoat > 0) {
-            this._setParameter('material_clearCoatSpecularity', this.clearCoat);
+            this._setParameter('material_clearCoat', this.clearCoat);
             this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
             this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
+            this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
         uniform = this.getUniform("shininess", this.shininess, true);
@@ -785,6 +822,10 @@ Object.assign(StandardMaterial.prototype, {
         }
 
         this._setParameter('material_opacity', this.opacity);
+
+        if (this.opacityFadesSpecular === false) {
+            this._setParameter('material_alphaFade', this.alphaFade);
+        }
 
         if (this.occludeSpecular) {
             this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
@@ -969,12 +1010,15 @@ Object.assign(StandardMaterial.prototype, {
             } else {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
+
+            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
+            }
         }
 
-        var generator = programlib.standard;
-       // Minimal options for Depth and Shadow passes
+        // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
-        var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
+        var options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
@@ -1011,7 +1055,7 @@ var _defineMaterialProps = function (obj) {
 
     _defineFloat(obj, "shininess", 25, function (mat, shininess) {
        // Shininess is 0-100 value
-       // which is actually a 0-1 glosiness value.
+       // which is actually a 0-1 glossiness value.
        // Can be converted to specular power using exp2(shininess * 0.01 * 11)
         var value;
         if (mat.shadingModel === SPECULAR_PHONG) {
@@ -1025,6 +1069,7 @@ var _defineMaterialProps = function (obj) {
         return { name: 'material_heightMapFactor', value: height * 0.025 };
     });
     _defineFloat(obj, "opacity", 1);
+    _defineFloat(obj, "alphaFade", 1);
     _defineFloat(obj, "alphaTest", 0);
     _defineFloat(obj, "bumpiness", 1);
     _defineFloat(obj, "normalDetailMapBumpiness", 1);
@@ -1036,6 +1081,7 @@ var _defineMaterialProps = function (obj) {
     _defineFloat(obj, "anisotropy", 0);
     _defineFloat(obj, "clearCoat", 0);
     _defineFloat(obj, "clearCoatGlossiness", 1);
+    _defineFloat(obj, "clearCoatBumpiness", 1);
     _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
     _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
@@ -1071,6 +1117,7 @@ var _defineMaterialProps = function (obj) {
     _defineFlag(obj, "occludeDirect", false);
     _defineFlag(obj, "normalizeNormalMap", true);
     _defineFlag(obj, "conserveEnergy", true);
+    _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
     _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
     _defineFlag(obj, "fresnelModel", FRESNEL_NONE);
@@ -1099,6 +1146,9 @@ var _defineMaterialProps = function (obj) {
     _defineTex2D(obj, "msdf", 0, 3, "", false);
     _defineTex2D(obj, "diffuseDetail", 0, 3, "", false, true);
     _defineTex2D(obj, "normalDetail", 0, -1, "", false);
+    _defineTex2D(obj, "clearCoat", 0, 1, "", true);
+    _defineTex2D(obj, "clearCoatGloss", 0, 1, "", true);
+    _defineTex2D(obj, "clearCoatNormal", 0, -1, "", false);
 
     _defineObject(obj, "cubeMap");
     _defineObject(obj, "sphereMap");

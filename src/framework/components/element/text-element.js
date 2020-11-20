@@ -146,6 +146,31 @@ var LINE_BREAK_CHAR = /^[\r\n]$/;
 var WHITESPACE_CHAR = /^[ \t]$/;
 var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 
+// unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
+var CONTROL_CHARS = [
+    '\u061C',
+    '\u200E',
+    '\u200F',
+    '\u202A',
+    '\u202B',
+    '\u202C',
+    '\u202D',
+    '\u202E',
+    '\u2066',
+    '\u2067',
+    '\u2068',
+    '\u2069'
+];
+
+// glyph data to use for missing control characters
+var CONTROL_GLYPH_DATA = {
+    width: 0,
+    height: 0,
+    xadvance: 0,
+    xoffset: 0,
+    yoffset: 0
+};
+
 Object.assign(TextElement.prototype, {
     destroy: function () {
         this._setMaterial(null); // clear material from mesh instances
@@ -384,7 +409,6 @@ Object.assign(TextElement.prototype, {
                 // destroy old mesh
                 if (meshInfo.meshInstance) {
                     this._removeMeshInstance(meshInfo.meshInstance);
-                    meshInfo.meshInstance.material = null;
                 }
 
                 // if there are no letters for this mesh continue
@@ -503,19 +527,12 @@ Object.assign(TextElement.prototype, {
     },
 
     _removeMeshInstance: function (meshInstance) {
-        var ib;
-        var iblen;
+
+        meshInstance.material = null;
 
         var oldMesh = meshInstance.mesh;
         if (oldMesh) {
-            if (oldMesh.vertexBuffer) {
-                oldMesh.vertexBuffer.destroy();
-            }
-
-            if (oldMesh.indexBuffer) {
-                for (ib = 0, iblen = oldMesh.indexBuffer.length; ib < iblen; ib++)
-                    oldMesh.indexBuffer[ib].destroy();
-            }
+            oldMesh.destroy();
         }
 
         var idx = this._model.meshInstances.indexOf(meshInstance);
@@ -699,14 +716,20 @@ Object.assign(TextElement.prototype, {
 
                 data = json.chars[char];
 
-                // use 'space' if available or first character
+                // handle missing glyph
                 if (!data) {
-                    if (json.chars[' ']) {
-                        data = json.chars[' '];
+                    if (CONTROL_CHARS.indexOf(char) !== -1) {
+                        // handle unicode control characters
+                        data = CONTROL_GLYPH_DATA;
                     } else {
-                        for (var key in json.chars) {
-                            data = json.chars[key];
-                            break;
+                        // otherwise use space character
+                        if (json.chars[' ']) {
+                            data = json.chars[' '];
+                        } else {
+                            for (var key in json.chars) {
+                                data = json.chars[key];
+                                break;
+                            }
                         }
                     }
                 }

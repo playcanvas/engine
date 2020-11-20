@@ -1,4 +1,5 @@
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -13,6 +14,7 @@ import {
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
+var _tempSphere = new BoundingSphere();
 
 /**
  * @class
@@ -94,7 +96,10 @@ function MeshInstance(node, mesh, material) {
     this._screenSpace = false;
     this._noDepthDrawGl1 = false;
     this.cull = true;
+
+    // true if the meshInstance is pickable by Picker (by rendering ID to render target)
     this.pick = true;
+
     this._updateAabb = true;
     this._updateAabbFunc = null;
     this._calculateSortDistance = null;
@@ -292,6 +297,8 @@ Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
         for (var i = 0; i < this._shader.length; i++) {
             this._shader[i] = null;
         }
+
+        this._setupSkinUpdate();
     }
 });
 
@@ -372,6 +379,32 @@ Object.assign(MeshInstance.prototype, {
         // Deprecated
     },
 
+    // test if meshInstance is visible by camera. It requires the frustum of the camera to be up to date, which forward-renderer
+    // takes care of. This function should  not be called elsewhere.
+    _isVisible: function (camera) {
+
+        if (this.visible) {
+
+            // custom visibility method of MeshInstance
+            if (this.isVisibleFunc) {
+                return this.isVisibleFunc(camera);
+            }
+
+            var pos = this.aabb.center;
+            if (this._aabb._radiusVer !== this._aabbVer) {
+                this._aabb._radius = this._aabb.halfExtents.length();
+                this._aabb._radiusVer = this._aabbVer;
+            }
+
+            _tempSphere.radius = this._aabb._radius;
+            _tempSphere.center = pos;
+
+            return camera.frustum.containsSphere(_tempSphere);
+        }
+
+        return false;
+    },
+
     updateKey: function () {
         var material = this.material;
         this._key[SORTKEY_FORWARD] = getKey(this.layer,
@@ -389,8 +422,10 @@ Object.assign(MeshInstance.prototype, {
     setInstancing: function (vertexBuffer) {
         if (vertexBuffer) {
             this.instancingData = new InstancingData(vertexBuffer.numVertices);
-            this.instancingData.offset = 0;
             this.instancingData.vertexBuffer = vertexBuffer;
+
+            // mark vertex buffer as instancing data
+            vertexBuffer.instancing = true;
 
             // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
             this.cull = false;
@@ -409,11 +444,28 @@ Object.assign(MeshInstance.prototype, {
         return this.parameters;
     },
 
+    /**
+     * @function
+     * @name pc.MeshInstance#getParameter
+     * @description Retrieves the specified shader parameter from a mesh instance.
+     * @param {string} name - The name of the parameter to query.
+     * @returns {object} The named parameter.
+     */
     getParameter: function (name) {
         return this.parameters[name];
     },
 
+    /**
+     * @function
+     * @name pc.MeshInstance#setParameter
+     * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
+     * if set on Material this mesh instance uses for rendering.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number} [passFlags] - Mask describing which passes the material should be included in.
+     */
     setParameter: function (name, data, passFlags) {
+
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         if (data === undefined && typeof name === 'object') {
@@ -441,17 +493,46 @@ Object.assign(MeshInstance.prototype, {
         }
     },
 
+     /**
+      * @function
+      * @name pc.MeshInstance#deleteParameter
+      * @description Deletes a shader parameter on a mesh instance.
+      * @param {string} name - The name of the parameter to delete.
+      */
     deleteParameter: function (name) {
         if (this.parameters[name]) {
             delete this.parameters[name];
         }
     },
 
-    setParameters: function () {
-        // Push each shader parameter into scope
-        for (var paramName in this.parameters) {
-            var parameter = this.parameters[paramName];
-            parameter.scopeId.setValue(parameter.data);
+    // used to apply parameters from this mesh instance into scope of uniforms, called internally by forward-renderer
+    setParameters: function (device, passFlag) {
+        var parameter, parameters = this.parameters;
+        for (var paramName in parameters) {
+            parameter = parameters[paramName];
+            if (parameter.passFlags & passFlag) {
+                if (!parameter.scopeId) {
+                    parameter.scopeId = device.scope.resolve(paramName);
+                }
+                parameter.scopeId.setValue(parameter.data);
+            }
+        }
+    },
+
+    setOverrideAabb: function (aabb) {
+        this._updateAabb = !aabb;
+        if (aabb) {
+            this.aabb.copy(aabb);
+        }
+
+        this._setupSkinUpdate();
+    },
+
+    _setupSkinUpdate: function () {
+
+        // set if bones need to be updated before culling
+        if (this._skinInstance) {
+            this._skinInstance._updateBeforeCull = this._updateAabb;
         }
     }
 });
@@ -475,7 +556,6 @@ Object.defineProperty(Command.prototype, 'key', {
 function InstancingData(numObjects) {
     this.count = numObjects;
     this.vertexBuffer = null;
-    this.offset = 0;
 }
 
 function getKey(layer, blendType, isCommand, materialId) {
@@ -485,7 +565,7 @@ function getKey(layer, blendType, isCommand, materialId) {
     // 27 - 30 : layer
     // 26      : translucency type (opaque/transparent)
     // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
+    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
     return ((layer & 0x0f) << 27) |
            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
            ((isCommand ? 1 : 0) << 25) |

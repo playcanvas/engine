@@ -1,12 +1,12 @@
-var DebugPhysics = pc.createScript('debugPhysics');
+var RenderPhysics = pc.createScript('renderPhysics');
 
-DebugPhysics.attributes.add('drawShapes', {
+RenderPhysics.attributes.add('drawShapes', {
     type: 'boolean',
     default: false,
     title: 'Draw Shapes',
     description: 'Draw representations of physics collision shapes'
 });
-DebugPhysics.attributes.add('opacity', {
+RenderPhysics.attributes.add('opacity', {
     type: 'number',
     default: 0.5,
     min: 0,
@@ -14,7 +14,7 @@ DebugPhysics.attributes.add('opacity', {
     title: 'Opacity',
     description: 'Opacity of physics collision shapes'
 });
-DebugPhysics.attributes.add('castShadows', {
+RenderPhysics.attributes.add('castShadows', {
     type: 'boolean',
     default: true,
     title: 'Cast Shadows',
@@ -22,7 +22,7 @@ DebugPhysics.attributes.add('castShadows', {
 });
 
 // initialize code called once per entity
-DebugPhysics.prototype.initialize = function () {
+RenderPhysics.prototype.initialize = function () {
     // Handle attribute change events
     this.on('attr:castShadows', function (value, prev) {
         this.debugRoot.children.forEach(function (child) {
@@ -59,7 +59,7 @@ DebugPhysics.prototype.initialize = function () {
     });
 };
 
-DebugPhysics.prototype.createModel = function (mesh, material) {
+RenderPhysics.prototype.createModel = function (mesh, material) {
     var node = new pc.GraphNode();
     var meshInstance = new pc.MeshInstance(node, mesh, material);
     var model = new pc.Model();
@@ -68,7 +68,7 @@ DebugPhysics.prototype.createModel = function (mesh, material) {
     return model;
 };
 
-DebugPhysics.prototype.postUpdate = function (dt) {
+RenderPhysics.prototype.postUpdate = function (dt) {
     // For any existing debug shapes, mark them as not updated (yet)
     this.debugRoot.children.forEach(function (child) {
         child.updated = false;
@@ -139,6 +139,7 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                             });
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
+                            debugShape._axis = collision.axis;
                             break;
                         case 'cylinder':
                             mesh = pc.createCylinder(this.app.graphicsDevice, {
@@ -147,6 +148,7 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                             });
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
+                            debugShape._axis = collision.axis;
                             break;
                         case 'sphere':
                             mesh = pc.createSphere(this.app.graphicsDevice, {
@@ -161,6 +163,7 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                             });
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
+                            debugShape._axis = collision.axis;
                             break;
                     }
 
@@ -194,6 +197,17 @@ DebugPhysics.prototype.postUpdate = function (dt) {
                 } else {
                     collision._debugShape.setPosition(collision.entity.getPosition());
                     collision._debugShape.setRotation(collision.entity.getRotation());
+                }
+
+                // If the shape is a capsule, cone or cylinder, rotate it so that its axis is taken into account
+                if (collision.type === 'capsule' || collision.type === 'cone' || collision.type === 'cylinder') {
+                    if (collision._debugShape._axis === 0) {
+                        // X
+                        collision._debugShape.rotateLocal(0, 0, -90);
+                    } else if (collision._debugShape._axis === 2) {
+                        // Z
+                        collision._debugShape.rotateLocal(90, 0, 0);
+                    }
                 }
 
                 collision._debugShape.updated = true;

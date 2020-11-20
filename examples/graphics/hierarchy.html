@@ -70,8 +70,9 @@
                 var offset = spacing * (gridSize - 1) * 0.5;
                 for (var x = 0; x < gridSize; x++) {
                     for (var y = 0; y < gridSize; y++) {
+                        var shape = Math.random() < 0.5 ? "box" : "sphere";
                         var position = new pc.Vec3(x * spacing - offset, spacing, y * spacing - offset);
-                        var entity = createPrimitive("box", position, new pc.Vec3(scale, scale, scale));
+                        var entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));
 
                         parent.addChild(entity);
                         entities.push(entity);

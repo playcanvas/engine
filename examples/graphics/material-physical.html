@@ -52,14 +52,12 @@
         // PlayCanvas Editor and then downloaded.
         var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
             url: "../assets/cubemaps/helipad.dds"
+        }, {
+            type: pc.TEXTURETYPE_RGBM
         });
         app.assets.add(cubemapAsset);
         app.assets.load(cubemapAsset);
         cubemapAsset.ready(function () {
-            // Mark the cubemaps as RGBM format since it's an HDR cubemap
-            cubemapAsset.resources.forEach(function (cubemap) {
-                cubemap.type = pc.TEXTURETYPE_RGBM;
-            });
             app.scene.setSkybox(cubemapAsset.resources);
         });
 
@@ -112,6 +110,23 @@
         });
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
+
+        //rotate the skybox using mouse input
+        var mouse = new pc.Mouse(document.body);
+
+        var x = 0;
+        var y = 0;
+        var rot = new pc.Quat();
+
+        mouse.on('mousemove', function (event) {
+            if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
+                x += event.dx;
+                y += event.dy;
+
+                rot.setFromEulerAngles(0.2 * y, 0.2 * x, 0);
+                app.scene.skyboxRotation = rot;
+            }
+        });
     </script>
 </body>
 </html>

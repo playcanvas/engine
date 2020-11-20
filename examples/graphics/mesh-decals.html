@@ -140,16 +140,16 @@
 
             // update positions when needed
             if (updatePositions)
-                self.mesh.setPositions(self.positions);
+                mesh.setPositions(positions);
 
             // update colors when needed
             if (updateColors)
-                self.mesh.setColors32(self.colors);
+                mesh.setColors32(colors);
 
             // update indices and uvs only one time, as they never change
             if (initAll) {
-                mesh.setIndices(self.indices);
-                mesh.setUvs(0, self.uvs);
+                mesh.setIndices(indices);
+                mesh.setUvs(0, uvs);
             }
 
             mesh.update(pc.PRIMITIVE_TRIANGLES);

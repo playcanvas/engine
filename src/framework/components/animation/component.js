@@ -236,6 +236,12 @@ Object.assign(AnimationComponent.prototype, {
     onAssetChanged: function (asset, attribute, newValue, oldValue) {
         var i;
         if (attribute === 'resource' || attribute === 'resources') {
+            // If the attribute is 'resources', newValue can be an empty array when the
+            // asset is unloaded. Therefore, we should assign null in this case
+            if (attribute === 'resources' && newValue && newValue.length === 0) {
+                newValue = null;
+            }
+
             // replace old animation with new one
             if (newValue) {
                 var restarted = false;
@@ -269,6 +275,7 @@ Object.assign(AnimationComponent.prototype, {
                             delete this.animations[oldValue[i].name];
                         }
                     }
+
                     this.animations[asset.name] = newValue[0] || newValue;
                     restarted = false;
                     if (this.data.currAnim === asset.name) {
@@ -288,9 +295,15 @@ Object.assign(AnimationComponent.prototype, {
                 if (oldValue.length > 1) {
                     for (i = 0; i < oldValue.length; i++) {
                         delete this.animations[oldValue[i].name];
+                        if (this.data.currAnim === oldValue[i].name) {
+                            this._stopCurrentAnimation();
+                        }
                     }
                 } else {
                     delete this.animations[asset.name];
+                    if (this.data.currAnim === asset.name) {
+                        this._stopCurrentAnimation();
+                    }
                 }
                 delete this.animationsIndex[asset.id];
             }
@@ -325,6 +338,10 @@ Object.assign(AnimationComponent.prototype, {
             data.skeleton.animation = null;
         }
         if (data.animEvaluator) {
+            for (var i = 0; i < data.animEvaluator.clips.length; ++i) {
+                data.animEvaluator.clips[i].stop();
+            }
+            data.animEvaluator.update(0);
             data.animEvaluator.removeClips();
         }
     },
@@ -461,7 +478,22 @@ Object.assign(AnimationComponent.prototype, {
 Object.defineProperties(AnimationComponent.prototype, {
     currentTime: {
         get: function () {
-            return this.data.skeleton._time;
+            var data = this.data;
+
+            if (data.skeleton) {
+                return this.data.skeleton._time;
+            }
+
+            if (data.animEvaluator) {
+                // Get the last clip's current time which will be the one
+                // that is currently being blended
+                var clips = data.animEvaluator.clips;
+                if (clips.length > 0) {
+                    return clips[clips.length - 1].time;
+                }
+            }
+
+            return 0;
         },
         set: function (currentTime) {
             var data = this.data;

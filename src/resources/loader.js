@@ -18,7 +18,7 @@ Object.assign(ResourceLoader.prototype, {
      * @name pc.ResourceLoader#addHandler
      * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
-     * @param {string} type - The name of the resource type that the handler will be registerd with. Can be:
+     * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
      *
      * * {@link pc.ASSET_ANIMATION}
      * * {@link pc.ASSET_AUDIO}
@@ -59,8 +59,8 @@ Object.assign(ResourceLoader.prototype, {
      * @function
      * @name pc.ResourceLoader#getHandler
      * @description Get a {@link pc.ResourceHandler} for a resource type.
-     * @param {string} type - The name of the resource type that the handler is registerd with.
-     * @returns {pc.ResourceHandler} The registerd handler.
+     * @param {string} type - The name of the resource type that the handler is registered with.
+     * @returns {pc.ResourceHandler} The registered handler.
      */
     getHandler: function (type) {
         return this._handlers[type];
@@ -87,6 +87,12 @@ Object.assign(ResourceLoader.prototype, {
         if (!handler) {
             var err = "No handler for asset type: " + type;
             callback(err);
+            return;
+        }
+
+        // handle requests with null file
+        if (!url) {
+            this._loadNull(handler, callback, asset);
             return;
         }
 
@@ -150,6 +156,22 @@ Object.assign(ResourceLoader.prototype, {
                 });
             }
         }
+    },
+
+    // load an asset with no url, skipping bundles and caching
+    _loadNull: function (handler, callback, asset) {
+        var onLoad = function (err, data, extra) {
+            if (err) {
+                callback(err);
+            } else {
+                try {
+                    callback(null, handler.open(null, data, asset), extra);
+                } catch (e) {
+                    callback(e);
+                }
+            }
+        };
+        handler.load(null, onLoad, asset);
     },
 
     _onSuccess: function (key, result, extra) {

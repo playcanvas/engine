@@ -71,8 +71,8 @@ var matD = new Mat4();
  * @property {pc.Vec2} shadowOffset The text shadow effect shift amount from original text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} textWidth The width of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} textHeight The height of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
- * @property {number} autoWidth Automatically set the width of the component to be the same as the textWidth. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
- * @property {number} autoHeight Automatically set the height of the component to be the same as the textHeight. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} autoWidth Automatically set the width of the component to be the same as the textWidth. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} autoHeight Automatically set the height of the component to be the same as the textHeight. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {pc.Font} font The font used for rendering the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} fontSize The size of the font. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
@@ -101,9 +101,10 @@ var matD = new Mat4();
  * @property {number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
- * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types. The only supported tag is `[color]` with a hex color value. E.g `[color="#ff0000"]red text[/color]`
  * @property {number} rangeStart Index of the first character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {number} rangeEnd Index of the last character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+ * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene, but instead limit child elements to only be rendered where this element is rendered.
  */
 function ElementComponent(system, entity) {
     Component.call(this, system, entity);
@@ -633,9 +634,15 @@ Object.assign(ElementComponent.prototype, {
     },
 
     _onScreenRemove: function () {
-        // if there is a screen and it is not being destroyed
-        if (this.screen && !this.screen._destroying) {
-            this._updateScreen(null);
+        if (this.screen) {
+            if (this.screen._destroying) {
+                // If the screen entity is being destroyed, we don't call
+                // _updateScreen() as an optimization but we should still
+                // set it to null to clean up dangling references
+                this.screen = null;
+            } else {
+                this._updateScreen(null);
+            }
         }
     },
 
@@ -914,8 +921,8 @@ Object.assign(ElementComponent.prototype, {
             var sw = this.system.app.graphicsDevice.width;
             var sh = this.system.app.graphicsDevice.height;
 
-            var cameraWidth = camera._rect.width * sw;
-            var cameraHeight = camera._rect.height * sh;
+            var cameraWidth = camera._rect.z * sw;
+            var cameraHeight = camera._rect.w * sh;
             clipL = camera._rect.x * sw;
             clipR = clipL + cameraWidth;
             clipT = (1 - camera._rect.y) * sh;
@@ -1443,6 +1450,10 @@ Object.defineProperty(ElementComponent.prototype, "useInput", {
             } else {
                 this.system.app.elementInput.removeElement(this);
             }
+        } else {
+            if (this._useInput === true) {
+                console.warn("Elements will not get any input events because this.system.app.elementInput is not created");
+            }
         }
 
         this.fire('set:useInput', value);
@@ -1617,7 +1628,7 @@ _define("rangeEnd");
 /**
  * @event
  * @name pc.ElementComponent#touchcancel
- * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+ * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
  * @param {pc.ElementTouchEvent} event - The event.
  */
 

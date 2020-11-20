@@ -1,6 +1,8 @@
+import { math } from '../math/math.js';
+
 import {
     ADDRESS_REPEAT,
-    FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_L8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R5_G5_B5_A1, PIXELFORMAT_R4_G4_B4_A4,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -116,6 +118,8 @@ function Texture(graphicsDevice, options) {
     this.fixCubemapSeams = false;
     this._flipY = true;
     this._premultiplyAlpha = false;
+
+    this._isRenderTarget = false;
 
     this._mipmaps = true;
 
@@ -498,14 +502,7 @@ Object.defineProperties(Texture.prototype, {
 
     gpuSize: {
         get: function () {
-            var mips = this.pot &&
-                    (this._mipmaps ||
-                        this._minFilter === FILTER_NEAREST_MIPMAP_NEAREST ||
-                        this._minFilter === FILTER_NEAREST_MIPMAP_LINEAR ||
-                        this._minFilter === FILTER_LINEAR_MIPMAP_NEAREST ||
-                        this._minFilter === FILTER_LINEAR_MIPMAP_LINEAR) &&
-                        !(this._compressed && this._levels.length === 1);
-
+            var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
             return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
         }
     },
@@ -561,7 +558,7 @@ Object.defineProperties(Texture.prototype, {
      */
     pot: {
         get: function () {
-            return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+            return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
         }
     }
 });
@@ -589,7 +586,7 @@ Object.assign(Texture, {
             _pixelSizeTable = [];
             _pixelSizeTable[PIXELFORMAT_A8] = 1;
             _pixelSizeTable[PIXELFORMAT_L8] = 1;
-            _pixelSizeTable[PIXELFORMAT_L8_A8] = 1;
+            _pixelSizeTable[PIXELFORMAT_L8_A8] = 2;
             _pixelSizeTable[PIXELFORMAT_R5_G6_B5] = 2;
             _pixelSizeTable[PIXELFORMAT_R5_G5_B5_A1] = 2;
             _pixelSizeTable[PIXELFORMAT_R4_G4_B4_A4] = 2;
@@ -670,7 +667,7 @@ Object.assign(Texture.prototype, {
             this.device.destroyTexture(this);
         }
         this.device = null;
-        this._levels = null;
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
     },
 
     // Force a full resubmission of the texture to WebGL (used on a context restore event)
@@ -782,9 +779,7 @@ Object.assign(Texture.prototype, {
                     if (!face ||                  // face is missing
                         face.width !== width ||   // face is different width
                         face.height !== height || // face is different height
-                        !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
-                          (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
-                          (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement))) {  // video
+                        !this.device._isBrowserInterface(face)) {            // new image bitmap
                         invalid = true;
                         break;
                     }
@@ -803,9 +798,7 @@ Object.assign(Texture.prototype, {
             }
         } else {
             // check if source is valid type of element
-            if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
-                  (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
-                  (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
+            if (!this.device._isBrowserInterface(source))
                 invalid = true;
 
             if (!invalid) {

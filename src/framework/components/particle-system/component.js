@@ -50,6 +50,7 @@ var COMPLEX_PROPERTIES = [
     'animLoop',
     'colorMap',
     'localSpace',
+    'screenSpace',
     'orientation'
 ];
 
@@ -108,6 +109,7 @@ var depthLayer;
  * @property {boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
  * @property {boolean} noFog Disable fogging.
  * @property {boolean} localSpace Binds particles to emitter transformation rather then world space.
+ * @property {boolean} screenSpace Renders particles in 2D screen space. This needs to be set when particle system is part of hierarchy with {@link pc.ScreenComponent} as its ancestor, and allows particle system to integrate with the rendering of {@link pc.ElementComponent}s. Note that an entity with ParticleSystem component cannot be parented directly to {@link pc.ScreenComponent}, but has to be a child of a {@link pc.ElementComponent}, for example {@link pc.LayoutGroupComponent}.
  * @property {number} numParticles Maximum number of simulated particles.
  * @property {number} rate Minimal interval in seconds between particle births.
  * @property {number} rate2 Maximal interval in seconds between particle births.
@@ -144,7 +146,7 @@ var depthLayer;
  *
  * @property {number} sort Sorting mode. Forces CPU simulation, so be careful.
  *
- * * {@link pc.PARTICLESORT_NONE}: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.
+ * * {@link pc.PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
  * * {@link pc.PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
  * * {@link pc.PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
  * * {@link pc.PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
@@ -209,9 +211,24 @@ var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
     }.bind(this));
 
     this._requestedDepth = false;
+    this._drawOrder = 0;
 };
 ParticleSystemComponent.prototype = Object.create(Component.prototype);
 ParticleSystemComponent.prototype.constructor = ParticleSystemComponent;
+
+Object.defineProperties(ParticleSystemComponent.prototype, {
+    drawOrder: {
+        get: function () {
+            return this._drawOrder;
+        },
+        set: function (drawOrder) {
+            this._drawOrder = drawOrder;
+            if (this.emitter) {
+                this.emitter.drawOrder = drawOrder;
+            }
+        }
+    }
+});
 
 Object.assign(ParticleSystemComponent.prototype, {
     addModelToLayers: function () {
@@ -623,6 +640,7 @@ Object.assign(ParticleSystemComponent.prototype, {
                 initialVelocity: data.initialVelocity,
                 wrap: data.wrap,
                 localSpace: data.localSpace,
+                screenSpace: data.screenSpace,
                 wrapBounds: data.wrapBounds,
                 lifetime: data.lifetime,
                 rate: data.rate,
@@ -685,6 +703,7 @@ Object.assign(ParticleSystemComponent.prototype, {
             });
 
             this.emitter.meshInstance.node = this.entity;
+            this.emitter.drawOrder = this.drawOrder;
 
             this.psys = new Model();
             this.psys.graph = this.entity;

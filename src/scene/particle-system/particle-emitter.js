@@ -21,7 +21,8 @@ import {
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
 } from '../../graphics/graphics.js';
-import { shaderChunks } from '../../graphics/chunks.js';
+import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
@@ -215,13 +216,14 @@ var ParticleEmitter = function (graphicsDevice, options) {
     setProperty("rate2", this.rate);
     setProperty("lifetime", 50);                             // Particle lifetime
     setProperty("emitterExtents", new Vec3(0, 0, 0));        // Spawn point divergence
-    setProperty("emitterExtentsInner", new Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from reneration
+    setProperty("emitterExtentsInner", new Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from regeneration
     setProperty("emitterRadius", 0);
     setProperty("emitterRadiusInner", 0);                       // Same as ExtentsInner but for spherical volume
     setProperty("emitterShape", EMITTERSHAPE_BOX);
     setProperty("initialVelocity", 1);
     setProperty("wrap", false);
     setProperty("localSpace", false);
+    setProperty("screenSpace", false);
     setProperty("wrapBounds", null);
     setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
     setProperty("normalMap", null);
@@ -342,6 +344,7 @@ var ParticleEmitter = function (graphicsDevice, options) {
 
     this.material = null;
     this.meshInstance = null;
+    this.drawOrder = 0;
 
     this.seed = Math.random();
 
@@ -659,23 +662,21 @@ Object.assign(ParticleEmitter.prototype, {
             this.swapTex = false;
         }
 
-        var chunks = shaderChunks;
-        var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + chunks.particleUpdaterInitPS +
-        (this.pack8 ? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
-            (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
-        (this.emitterShape === EMITTERSHAPE_BOX ? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
-        chunks.particleUpdaterStartPS;
-        var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
-        var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
-        var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
-
+        var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + shaderChunks.particleUpdaterInitPS +
+        (this.pack8 ? (shaderChunks.particleInputRgba8PS + shaderChunks.particleOutputRgba8PS) :
+            (shaderChunks.particleInputFloatPS + shaderChunks.particleOutputFloatPS)) +
+        (this.emitterShape === EMITTERSHAPE_BOX ? shaderChunks.particleUpdaterAABBPS : shaderChunks.particleUpdaterSpherePS) +
+        shaderChunks.particleUpdaterStartPS;
+        var shaderCodeRespawn = shaderCodeStart + shaderChunks.particleUpdaterRespawnPS + shaderChunks.particleUpdaterEndPS;
+        var shaderCodeNoRespawn = shaderCodeStart + shaderChunks.particleUpdaterNoRespawnPS + shaderChunks.particleUpdaterEndPS;
+        var shaderCodeOnStop = shaderCodeStart + shaderChunks.particleUpdaterOnStopPS + shaderChunks.particleUpdaterEndPS;
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
         var params = this.emitterShape + "" + this.pack8 + "" + this.localSpace;
-        this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + params);
-        this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + params);
-        this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + params);
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + params);
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + params);
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + params);
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -849,6 +850,9 @@ Object.assign(ParticleEmitter.prototype, {
                 }
             }
 
+            // set by Editor if running inside editor
+            var inTools = this.emitter.inTools;
+
             var shader = programLib.getProgram("particle", {
                 useCpu: this.emitter.useCpu,
                 normal: this.emitter.normalOption,
@@ -862,6 +866,10 @@ Object.assign(ParticleEmitter.prototype, {
                 fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : "none",
                 wrap: this.emitter.wrap && this.emitter.wrapBounds,
                 localSpace: this.emitter.localSpace,
+
+                // in Editor, screen space particles (children of 2D Screen) are still rendered in 3d space
+                screenSpace: inTools ? false : this.emitter.screenSpace,
+
                 blend: this.blendType,
                 animTex: this.emitter._isAnimated(),
                 animTexLoop: this.emitter.animLoop,
@@ -1198,6 +1206,10 @@ Object.assign(ParticleEmitter.prototype, {
                 if (this.onFinished) this.onFinished();
                 this.meshInstance.visible = false;
             }
+        }
+
+        if (this.meshInstance) {
+            this.meshInstance.drawOrder = this.drawOrder;
         }
 
         // #ifdef PROFILER

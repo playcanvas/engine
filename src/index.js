@@ -6,9 +6,10 @@ import './polyfill/object-assign.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
+import './polyfill/OESVertexArrayObject.js';
 
 // CORE
-export { apps, common, config, data, extend, isDefined, makeArray, revision, type, version } from './core/core.js';
+export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
 export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
@@ -51,7 +52,7 @@ export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.j
 export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
-export { shaderChunks } from './graphics/chunks.js';
+export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/device.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
@@ -89,7 +90,8 @@ export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { Picker } from './scene/pick.js';
 export { Scene } from './scene/scene.js';
-export { Skin, SkinInstance } from './scene/skin.js';
+export { Skin } from './scene/skin.js';
+export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
 export { StencilParameters } from './scene/stencil-parameters.js';
@@ -114,7 +116,7 @@ export { Bundle } from './bundles/bundle.js';
 export { BundleRegistry } from './bundles/bundle-registry.js';
 
 // RESOURCES
-export { basisDownload, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
+export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
 export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';

@@ -404,7 +404,7 @@ Object.assign(Vec3.prototype, {
      * a.sub(b);
      *
      * // Should output [-10, -10, -10]
-     * console.log("The result of the addition is: " + a.toString());
+     * console.log("The result of the subtraction is: " + a.toString());
      */
     sub: function (rhs) {
         this.x -= rhs.x;
@@ -429,7 +429,7 @@ Object.assign(Vec3.prototype, {
      * r.sub2(a, b);
      *
      * // Should output [-10, -10, -10]
-     * console.log("The result of the addition is: " + r.toString());
+     * console.log("The result of the subtraction is: " + r.toString());
      */
     sub2: function (lhs, rhs) {
         this.x = lhs.x - rhs.x;
@@ -573,5 +573,14 @@ Object.defineProperties(Vec3, {
     FORWARD: { value: new Vec3(0, 0, -1) },
     BACK: { value: new Vec3(0, 0, 1) }
 });
+
+Object.freeze(Vec3.ZERO);
+Object.freeze(Vec3.ONE);
+Object.freeze(Vec3.UP);
+Object.freeze(Vec3.DOWN);
+Object.freeze(Vec3.RIGHT);
+Object.freeze(Vec3.LEFT);
+Object.freeze(Vec3.FORWARD);
+Object.freeze(Vec3.BACK);
 
 export { Vec3 };

@@ -17,7 +17,6 @@ uniform float initialVelocity;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 
-
 vec3 inPos;
 vec3 inVel;
 float inAngle;

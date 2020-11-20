@@ -56,7 +56,7 @@ Object.assign(TagsCache.prototype, {
         }
 
         // by position in list
-        var ind = this._index[tag].indexOf(item);
+        var ind = this._index[tag].list.indexOf(item);
         if (ind === -1)
             return;
 
@@ -193,7 +193,7 @@ Object.assign(Tags.prototype, {
      * @function
      * @name pc.Tags#add
      * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-     * @param {string} name - Name of a tag, or array of tags.
+     * @param {...*} name - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
      * tags.add('level-1');
@@ -231,7 +231,7 @@ Object.assign(Tags.prototype, {
      * @function
      * @name pc.Tags#remove
      * @description Remove tag.
-     * @param {string} name - Name of a tag or array of tags.
+     * @param {...*} name - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
      * @example
      * tags.remove('level-1');

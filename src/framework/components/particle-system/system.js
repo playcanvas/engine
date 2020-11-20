@@ -1,5 +1,3 @@
-import { type } from '../../../core/core.js';
-
 import { Curve } from '../../../math/curve.js';
 import { CurveSet } from '../../../math/curve-set.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -44,6 +42,7 @@ var _schema = [
     'wrap',
     'wrapBounds',
     'localSpace',
+    'screenSpace',
     'colorMapAsset',
     'normalMapAsset',
     'mesh',
@@ -150,7 +149,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
             }
 
             if (types[prop] === 'vec3') {
-                if (type(data[prop]) === 'array') {
+                if (Array.isArray(data[prop])) {
                     data[prop] = new Vec3(data[prop][0], data[prop][1], data[prop][2]);
                 }
             } else if (types[prop] === 'curve') {
@@ -168,7 +167,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
             }
 
             // duplicate layer list
-            if (data.layers && type(data.layers) === 'array') {
+            if (data.layers && Array.isArray(data.layers)) {
                 data.layers = data.layers.slice(0);
             }
         }
@@ -237,7 +236,7 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
                                 lightCube[i * 3 + 1] = this.app.scene.ambientLight.g;
                                 lightCube[i * 3 + 2] = this.app.scene.ambientLight.b;
                             }
-                            var dirs = layer._sortedLights[LIGHTTYPE_DIRECTIONAL];
+                            var dirs = layer._splitLights[LIGHTTYPE_DIRECTIONAL];
                             for (j = 0; j < dirs.length; j++) {
                                 for (c = 0; c < 6; c++) {
                                     var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;

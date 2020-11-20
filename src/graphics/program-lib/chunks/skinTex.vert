@@ -4,14 +4,13 @@ attribute vec4 vertex_boneIndices;
 uniform highp sampler2D texture_poseMap;
 uniform vec4 texture_poseMapSize;
 
-void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3)
-{
+void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3) {
     float j = i * 3.0;
     float dx = texture_poseMapSize.z;
     float dy = texture_poseMapSize.w;
     
-    float x = mod(j, float(texture_poseMapSize.x));
     float y = floor(j * dx);
+    float x = j - (y * texture_poseMapSize.x);
     y = dy * (y + 0.5);
 
     // read elements of 4x3 matrix
@@ -20,8 +19,7 @@ void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3)
     v3 = texture2D(texture_poseMap, vec2(dx * (x + 2.5), y));
 }
 
-mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights)
-{
+mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights) {
     // get 4 bone matrices
     vec4 a1, a2, a3;
     getBoneMatrix(indices.x, a1, a2, a3);
@@ -51,4 +49,3 @@ mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights)
         v1.w, v2.w, v3.w, one
     );
 }
-

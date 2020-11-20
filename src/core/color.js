@@ -178,4 +178,107 @@ Object.assign(Color.prototype, {
     }
 });
 
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.BLACK
+ * @type {pc.Color}
+ * @description A constant color set to black [0, 0, 0, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.BLUE
+ * @type {pc.Color}
+ * @description A constant color set to blue [0, 0, 1, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.CYAN
+ * @type {pc.Color}
+ * @description A constant color set to cyan [0, 1, 1, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.GRAY
+ * @type {pc.Color}
+ * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.GREEN
+ * @type {pc.Color}
+ * @description A constant color set to green [0, 1, 0, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.MAGENTA
+ * @type {pc.Color}
+ * @description A constant color set to magenta [1, 0, 1, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.RED
+ * @type {pc.Color}
+ * @description A constant color set to red [1, 0, 0, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.WHITE
+ * @type {pc.Color}
+ * @description A constant color set to white [1, 1, 1, 1].
+ */
+
+/**
+ * @field
+ * @static
+ * @readonly
+ * @name pc.Color.YELLOW
+ * @type {pc.Color}
+ * @description A constant color set to yellow [1, 1, 0, 1].
+ */
+
+Object.defineProperties(Color, {
+    BLACK: { value: new Color(0, 0, 0, 1) },
+    WHITE: { value: new Color(1, 1, 1, 1) },
+    YELLOW: { value: new Color(1, 1, 0, 1) },
+    RED: { value: new Color(1, 0, 0, 1) },
+    MAGENTA: { value: new Color(1, 0, 1, 1) },
+    GREEN: { value: new Color(0, 1, 0, 1) },
+    GRAY: { value: new Color(0.5, 0.5, 0.5, 1) },
+    CYAN: { value: new Color(0, 1, 1, 1) },
+    BLUE: { value: new Color(0, 0, 1, 1) }
+});
+
+Object.freeze(Color.BLACK);
+Object.freeze(Color.WHITE);
+Object.freeze(Color.YELLOW);
+Object.freeze(Color.RED);
+Object.freeze(Color.MAGENTA);
+Object.freeze(Color.GREEN);
+Object.freeze(Color.GRAY);
+Object.freeze(Color.CYAN);
+Object.freeze(Color.BLUE);
+
 export { Color };

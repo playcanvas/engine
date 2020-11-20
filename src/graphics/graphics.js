@@ -364,21 +364,21 @@ export var FUNC_ALWAYS = 7;
  * @constant
  * @name pc.INDEXFORMAT_UINT8
  * @type {number}
- * @description 8-bit unsigned vertex indices.
+ * @description 8-bit unsigned vertex indices (0 to 255).
  */
 export var INDEXFORMAT_UINT8 = 0;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT16
  * @type {number}
- * @description 16-bit unsigned vertex indices.
+ * @description 16-bit unsigned vertex indices (0 to 65,535).
  */
 export var INDEXFORMAT_UINT16 = 1;
 /**
  * @constant
  * @name pc.INDEXFORMAT_UINT32
  * @type {number}
- * @description 32-bit unsigned vertex indices.
+ * @description 32-bit unsigned vertex indices (0 to 4,294,967,295).
  */
 export var INDEXFORMAT_UINT32 = 2;
 
@@ -964,7 +964,7 @@ export var TEXTURELOCK_WRITE = 2;
 /**
  * @constant
  * @name pc.TEXTURETYPE_DEFAULT
- * @type {number}
+ * @type {string}
  * @description Texture is a default type.
  */
 export var TEXTURETYPE_DEFAULT = 'default';
@@ -972,7 +972,7 @@ export var TEXTURETYPE_DEFAULT = 'default';
 /**
  * @constant
  * @name pc.TEXTURETYPE_RGBM
- * @type {number}
+ * @type {string}
  * @description Texture stores high dynamic range data in RGBM format
  */
 export var TEXTURETYPE_RGBM = 'rgbm';
@@ -980,7 +980,7 @@ export var TEXTURETYPE_RGBM = 'rgbm';
 /**
  * @constant
  * @name pc.TEXTURETYPE_RGBE
- * @type {number}
+ * @type {string}
  * @description Texture stores high dynamic range data in RGBE format
  */
 export var TEXTURETYPE_RGBE = 'rgbe';
@@ -988,7 +988,7 @@ export var TEXTURETYPE_RGBE = 'rgbe';
 /**
  * @constant
  * @name pc.TEXTURETYPE_SWIZZLEGGGR
- * @type {number}
+ * @type {string}
  * @description Texture stores normalmap data swizzled in GGGR format. This is used for tangent space normal
  * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality
  * when the texture data is compressed.
@@ -1093,3 +1093,39 @@ export var typedArrayToType = {
 // map of engine pc.INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export var typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export var typedArrayIndexFormatsByteSize = [1, 2, 4];
+
+// map of engine semantics into location on device in range 0..15 (note - semantics mapping to
+// the same location cannot be used at the same time)
+// organized in a way that ATTR0-ATTR7 do not overlap with common important semantics
+export var semanticToLocation = {};
+semanticToLocation[SEMANTIC_POSITION] = 0;
+semanticToLocation[SEMANTIC_NORMAL] = 1;
+semanticToLocation[SEMANTIC_BLENDWEIGHT] = 2;
+semanticToLocation[SEMANTIC_BLENDINDICES] = 3;
+semanticToLocation[SEMANTIC_COLOR] = 4;
+semanticToLocation[SEMANTIC_TEXCOORD0] = 5;
+semanticToLocation[SEMANTIC_TEXCOORD1] = 6;
+semanticToLocation[SEMANTIC_TEXCOORD2] = 7;
+semanticToLocation[SEMANTIC_TEXCOORD3] = 8;
+semanticToLocation[SEMANTIC_TEXCOORD4] = 9;
+semanticToLocation[SEMANTIC_TEXCOORD5] = 10;
+semanticToLocation[SEMANTIC_TEXCOORD6] = 11;
+semanticToLocation[SEMANTIC_TEXCOORD7] = 12;
+semanticToLocation[SEMANTIC_TANGENT] = 13;
+
+semanticToLocation[SEMANTIC_ATTR0] = 0;
+semanticToLocation[SEMANTIC_ATTR1] = 1;
+semanticToLocation[SEMANTIC_ATTR2] = 2;
+semanticToLocation[SEMANTIC_ATTR3] = 3;
+semanticToLocation[SEMANTIC_ATTR4] = 4;
+semanticToLocation[SEMANTIC_ATTR5] = 5;
+semanticToLocation[SEMANTIC_ATTR6] = 6;
+semanticToLocation[SEMANTIC_ATTR7] = 7;
+semanticToLocation[SEMANTIC_ATTR8] = 8;
+semanticToLocation[SEMANTIC_ATTR9] = 9;
+semanticToLocation[SEMANTIC_ATTR10] = 10;
+semanticToLocation[SEMANTIC_ATTR11] = 11;
+semanticToLocation[SEMANTIC_ATTR12] = 12;
+semanticToLocation[SEMANTIC_ATTR13] = 13;
+semanticToLocation[SEMANTIC_ATTR14] = 14;
+semanticToLocation[SEMANTIC_ATTR15] = 15;

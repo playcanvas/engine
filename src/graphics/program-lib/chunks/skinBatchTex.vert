@@ -1,13 +1,15 @@
 attribute float vertex_boneIndices;
+
 uniform highp sampler2D texture_poseMap;
 uniform vec4 texture_poseMapSize;
+
 mat4 getBoneMatrix(const in float i) {
     float j = i * 3.0;
     float dx = texture_poseMapSize.z;
     float dy = texture_poseMapSize.w;
 
-    float x = mod(j, float(texture_poseMapSize.x));
     float y = floor(j * dx);
+    float x = j - (y * texture_poseMapSize.x);
     y = dy * (y + 0.5);
 
     // read elements of 4x3 matrix
@@ -23,4 +25,3 @@ mat4 getBoneMatrix(const in float i) {
         v1.w, v2.w, v3.w, 1
     );
 }
-

@@ -270,6 +270,13 @@ var tempGraphNode = new GraphNode();
  * }
  */
 
+
+/**
+ * @name pc.Application#lightmapper
+ * @type {pc.Lightmapper}
+ * @description The run-time lightmapper.
+ */
+
 /**
  * @name pc.Application#loader
  * @type {pc.ResourceLoader}
@@ -1328,9 +1335,9 @@ Object.assign(Application.prototype, {
      * @name pc.Application#start
      * @description Start the application. This function does the following:
      * 1. Fires an event on the application named 'start'
-     * 2. Calls initialize for all components on entities in the hierachy
+     * 2. Calls initialize for all components on entities in the hierarchy
      * 3. Fires an event on the application named 'initialize'
-     * 4. Calls postInitialize for all components on entities in the hierachy
+     * 4. Calls postInitialize for all components on entities in the hierarchy
      * 5. Fires an event on the application named 'postinitialize'
      * 6. Starts executing the main loop of the application
      * This function is called internally by PlayCanvas applications made in the Editor
@@ -1434,7 +1441,8 @@ Object.assign(Application.prototype, {
         // #endif
     },
 
-    _fillFrameStats: function (now, dt, ms) {
+    _fillFrameStatsBasic: function (now, dt, ms) {
+
         // Timing stats
         var stats = this.stats.frame;
         stats.dt = dt;
@@ -1446,6 +1454,15 @@ Object.assign(Application.prototype, {
         } else {
             stats._fpsAccum++;
         }
+
+        // total draw call
+        this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
+        this.graphicsDevice._drawCallsPerFrame = 0;
+    },
+
+    _fillFrameStats: function () {
+
+        var stats = this.stats.frame;
 
         // Render stats
         stats.cameras = this.renderer._camerasRendered;
@@ -1476,6 +1493,7 @@ Object.assign(Application.prototype, {
         this.renderer._shadowMapUpdates = 0;
         this.graphicsDevice._shaderSwitchesPerFrame = 0;
         this.renderer._cullTime = 0;
+        this.renderer._layerCompositionUpdateTime = 0;
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
@@ -1494,7 +1512,6 @@ Object.assign(Application.prototype, {
         stats.immediate = 0;
         stats.instanced = 0;
         stats.removedByInstancing = 0;
-        stats.total = this.graphicsDevice._drawCallsPerFrame;
         stats.misc = stats.total - (stats.forward + stats.shadow);
         this.renderer._depthDrawCalls = 0;
         this.renderer._shadowDrawCalls = 0;
@@ -1504,7 +1521,6 @@ Object.assign(Application.prototype, {
         this.renderer._immediateRendered = 0;
         this.renderer._instancedDrawCalls = 0;
         this.renderer._removedByInstancing = 0;
-        this.graphicsDevice._drawCallsPerFrame = 0;
 
         this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 
@@ -1679,6 +1695,7 @@ Object.assign(Application.prototype, {
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
      * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+     * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
@@ -1703,6 +1720,7 @@ Object.assign(Application.prototype, {
      *         fog_start: 1,
      *         global_ambient: [0, 0, 0],
      *         skyboxIntensity: 1,
+     *         skyboxRotation: [0, 0, 0, 1],
      *         fog_color: [0, 0, 0],
      *         lightmapMode: 1,
      *         fog: 'none',
@@ -2015,14 +2033,37 @@ Object.assign(Application.prototype, {
     /**
      * @function
      * @name pc.Application#renderLines
-     * @description Draw an array of lines.
-     * @param {pc.Vec3[]} position - An array of points to draw lines between.
-     * @param {pc.Color[]} color - An array of colors to color the lines. This must be the same size as the position array.
+     * @description Renders an arbitrary number of discrete line segments. The lines
+     * are not connected by each subsequent point in the array. Instead, they are
+     * individual segments specified by two points. Therefore, the lengths of the
+     * supplied position and color arrays must be the same and also must be a multiple
+     * of 2. The colors of the ends of each line segment will be interpolated along
+     * the length of each line.
+     * @param {pc.Vec3[]} position - An array of points to draw lines between. The
+     * length of the array must be a multiple of 2.
+     * @param {pc.Color[]} color - An array of colors to color the lines. This
+     * must be the same length as the position array. The length of the array must
+     * also be a multiple of 2.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the line into.
+     * @param {pc.Layer} [options.layer] - The layer to render the lines into.
      * @example
-     * var points = [new pc.Vec3(0, 0, 0), new pc.Vec3(1, 0, 0), new pc.Vec3(1, 1, 0), new pc.Vec3(1, 1, 1)];
-     * var colors = [new pc.Color(1, 0, 0), new pc.Color(1, 1, 0), new pc.Color(0, 1, 1), new pc.Color(0, 0, 1)];
+     * // Render 2 discrete line segments
+     * var points = [
+     *     // Line 1
+     *     new pc.Vec3(0, 0, 0),
+     *     new pc.Vec3(1, 0, 0),
+     *     // Line 2
+     *     new pc.Vec3(1, 1, 0),
+     *     new pc.Vec3(1, 1, 1)
+     * ];
+     * var colors = [
+     *     // Line 1
+     *     pc.Color.RED,
+     *     pc.Color.YELLOW,
+     *     // Line 2
+     *     pc.Color.CYAN,
+     *     pc.Color.BLUE
+     * ];
      * app.renderLines(points, colors);
      */
     renderLines: function (position, color, options) {
@@ -2389,8 +2430,10 @@ var makeTick = function (_app) {
         if (application.graphicsDevice.contextLost)
             return;
 
+        application._fillFrameStatsBasic(currentTime, dt, ms);
+
         // #ifdef PROFILER
-        application._fillFrameStats(currentTime, dt, ms);
+        application._fillFrameStats();
         // #endif
 
         application.fire("frameupdate", ms);

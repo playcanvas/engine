@@ -145,7 +145,7 @@ InstanceList.prototype.clearVisibleLists = function (cameraPass) {
  * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
  * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).
  * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
- * @property {Function} onPostCull Custom function that is called after visibiliy culling is performed for this layer.
+ * @property {Function} onPostCull Custom function that is called after visibility culling is performed for this layer.
  * Useful for reverting changes done in {@link pc.Layer#onPreCull} and determining final mesh instance visibility (see {@link pc.MeshInstance#visibleThisFrame}).
  * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
  * @property {Function} onPreRender Custom function that is called before this layer is rendered.
@@ -237,12 +237,15 @@ function Layer(options) {
 
     this._lightComponents = [];
     this._lights = [];
-    this._sortedLights = [[], [], []];
+    this._splitLights = [[], [], []];
     this.cameras = [];
     this._dirty = false;
     this._dirtyLights = false;
     this._dirtyCameras = false;
+
+    // if there is single camera in a layer, this is 0, otherwise unique ID of the combination of the cameras
     this._cameraHash = 0;
+
     this._lightHash = 0;
     this._staticLightHash = 0;
     this._needsStaticPrepare = true;
@@ -403,8 +406,11 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         } else {
             arr = this.transparentMeshInstances;
         }
+
+        // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
         if (arr.indexOf(m) < 0) arr.push(m);
         if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
+
         if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
             if (mat.updateShader !== Material.prototype.updateShader) {
                 mat.clearVariants();

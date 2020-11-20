@@ -1,5 +1,9 @@
+import { math } from './math.js';
+import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
+
+var _halfSize = new Vec2();
 
 /**
  * @class
@@ -15,6 +19,17 @@ function Mat4() {
     data[0] = data[5] = data[10] = data[15] = 1;
     this.data = data;
 }
+
+// Static function which evaluates perspective projection matrix half size at the near plane
+Mat4._getPerspectiveHalfSize = function (halfSize, fov, aspect, znear, fovIsHorizontal) {
+    if (fovIsHorizontal) {
+        halfSize.x = znear * Math.tan(fov * Math.PI / 360);
+        halfSize.y = halfSize.x / aspect;
+    } else {
+        halfSize.y = znear * Math.tan(fov * Math.PI / 360);
+        halfSize.x = halfSize.y * aspect;
+    }
+};
 
 Object.assign(Mat4.prototype, {
     /**
@@ -586,17 +601,8 @@ Object.assign(Mat4.prototype, {
      * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
     setPerspective: function (fov, aspect, znear, zfar, fovIsHorizontal) {
-        var xmax, ymax;
-
-        if (!fovIsHorizontal) {
-            ymax = znear * Math.tan(fov * Math.PI / 360);
-            xmax = ymax * aspect;
-        } else {
-            xmax = znear * Math.tan(fov * Math.PI / 360);
-            ymax = xmax / aspect;
-        }
-
-        return this.setFrustum(-xmax, xmax, -ymax, ymax, znear, zfar);
+        Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
+        return this.setFrustum(-_halfSize.x, _halfSize.x, -_halfSize.y, _halfSize.y, znear, zfar);
     },
 
     /**
@@ -653,7 +659,7 @@ Object.assign(Mat4.prototype, {
     setFromAxisAngle: function (axis, angle) {
         var x, y, z, c, s, t, tx, ty, m;
 
-        angle *= pc.math.DEG_TO_RAD;
+        angle *= math.DEG_TO_RAD;
 
         x = axis.x;
         y = axis.y;
@@ -1187,9 +1193,9 @@ Object.assign(Mat4.prototype, {
     setFromEulerAngles: function (ex, ey, ez) {
         var s1, c1, s2, c2, s3, c3, m;
 
-        ex *= pc.math.DEG_TO_RAD;
-        ey *= pc.math.DEG_TO_RAD;
-        ez *= pc.math.DEG_TO_RAD;
+        ex *= math.DEG_TO_RAD;
+        ey *= math.DEG_TO_RAD;
+        ez *= math.DEG_TO_RAD;
 
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
         s1 = Math.sin(-ex);
@@ -1271,7 +1277,7 @@ Object.assign(Mat4.prototype, {
                 x = Math.atan2(m[4] / sy, m[5] / sy);
             }
 
-            return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
+            return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
         };
     }()),
 
@@ -1320,5 +1326,8 @@ Object.defineProperties(Mat4, {
     ZERO: { value: new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) },
     IDENTITY: { value: new Mat4() }
 });
+
+Object.freeze(Mat4.ZERO);
+Object.freeze(Mat4.IDENTITY);
 
 export { Mat4 };

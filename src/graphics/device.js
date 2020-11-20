@@ -1,3 +1,4 @@
+import '../polyfill/OESVertexArrayObject.js';
 import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
 
@@ -25,12 +26,14 @@ import {
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
-    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY
+    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
+    semanticToLocation
 } from './graphics.js';
 
+import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { programlib } from './program-lib/program-lib.js';
-import { shaderChunks } from './chunks.js';
+import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { ProgramLibrary } from './program-library.js';
 import { ScopeSpace } from './scope-space.js';
@@ -130,9 +133,8 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    var chunks = shaderChunks;
-    var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
-    var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
+    var test1 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTestPS, "ptest1");
+    var test2 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTest2PS, "ptest2");
 
     var textureOptions = {
         format: PIXELFORMAT_RGBA32F,
@@ -248,15 +250,10 @@ var GraphicsDevice = function (canvas, options) {
     this.shader = null;
     this.indexBuffer = null;
     this.vertexBuffers = [];
-    this.vbOffsets = [];
     this._enableAutoInstancing = false;
     this.autoInstancingMaxObjects = 16384;
-    this.attributesInvalidated = true;
     this.defaultFramebuffer = null;
-    this.boundBuffer = null;
-    this.boundElementBuffer = null;
-    this.instancedAttribs = { };
-    this.enabledAttributes = { };
+    this.boundVao = null;
     this.transformFeedbackBuffer = null;
     this.activeFramebuffer = null;
     this.textureUnit = 0;
@@ -284,6 +281,9 @@ var GraphicsDevice = function (canvas, options) {
     this.textures = [];
     this.targets = [];
 
+    // cache of VAOs
+    this._vaoMap = new Map();
+
     // Add handlers for when the WebGL context is lost or restored
     this.contextLost = false;
 
@@ -304,9 +304,6 @@ var GraphicsDevice = function (canvas, options) {
         this.contextLost = false;
         this.fire('devicerestored');
     }.bind(this);
-
-    canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
-    canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
     // Retrieve the WebGL context
     var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -332,6 +329,12 @@ var GraphicsDevice = function (canvas, options) {
     }
 
     this.gl = gl;
+
+    // init polyfill for VAOs
+    window.setupVertexArrayObject(gl);
+
+    canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+    canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
     this.initializeExtensions();
     this.initializeCapabilities();
@@ -682,9 +685,13 @@ var GraphicsDevice = function (canvas, options) {
     this._spectorCurrentMarker = "";
     // #endif
 
-    this.createGrabPass(options.alpha);
+    this.createGrabPass();
 
     VertexFormat.init(this);
+
+    // #ifdef DEBUG
+    this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
+    // #endif
 };
 GraphicsDevice.prototype = Object.create(EventHandler.prototype);
 GraphicsDevice.prototype.constructor = GraphicsDevice;
@@ -985,11 +992,8 @@ Object.assign(GraphicsDevice.prototype, {
             this.buffers[i].bufferId = undefined;
             this.buffers[i].unlock();
         }
-        this.boundBuffer = null;
-        this.boundElementBuffer = null;
+        this.boundVao = null;
         this.indexBuffer = null;
-        this.attributesInvalidated = true;
-        this.enabledAttributes = {};
         this.vertexBuffers = [];
 
         // Force all textures to be recreated and reuploaded
@@ -1020,13 +1024,11 @@ Object.assign(GraphicsDevice.prototype, {
         this.transformFeedbackBuffer = null;
     },
 
-    createGrabPass: function (alpha) {
+    createGrabPass: function () {
         if (this.grabPassTexture) return;
 
-        var format = alpha ? PIXELFORMAT_R8_G8_B8_A8 : PIXELFORMAT_R8_G8_B8;
-
         var grabPassTexture = new Texture(this, {
-            format: format,
+            format: PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -1058,6 +1060,10 @@ Object.assign(GraphicsDevice.prototype, {
         var width = this.width;
         var height = this.height;
 
+        // #ifdef DEBUG
+        this.pushMarker("grabPass");
+        // #endif
+
         if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
             if (resolveRenderTarget) renderTarget.resolve(true);
 
@@ -1087,6 +1093,10 @@ Object.assign(GraphicsDevice.prototype, {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
             }
         }
+
+        // #ifdef DEBUG
+        this.popMarker();
+        // #endif
     },
 
     destroyGrabPass: function () {
@@ -1422,8 +1432,10 @@ Object.assign(GraphicsDevice.prototype, {
      */
     getCopyShader: function () {
         if (!this._copyShader) {
-            var chunks = shaderChunks;
-            this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            this._copyShader = createShaderFromCode(this,
+                                                    shaderChunks.fullscreenQuadVS,
+                                                    shaderChunks.outputTex2DPS,
+                                                    "outputTex2D");
         }
         return this._copyShader;
     },
@@ -1437,8 +1449,7 @@ Object.assign(GraphicsDevice.prototype, {
      * and pc.GraphicsDevice#updateEnd must not be nested.
      */
     updateBegin: function () {
-        this.boundBuffer = null;
-        this.boundElementBuffer = null;
+        this.boundVao = null;
 
         // clear texture units once a frame on desktop safari
         if (this._tempEnableSafariTextureUnitWorkaround) {
@@ -1473,6 +1484,10 @@ Object.assign(GraphicsDevice.prototype, {
      */
     updateEnd: function () {
         var gl = this.gl;
+
+        // unbind VAO from device to protect it from being changed
+        this.boundVao = null;
+        this.gl.bindVertexArray(null);
 
         // Unset the render target
         var target = this.renderTarget;
@@ -1766,7 +1781,23 @@ Object.assign(GraphicsDevice.prototype, {
         }
     },
 
+    _isBrowserInterface: function (texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
+               (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
+               (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
+               (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
+    },
+
     uploadTexture: function (texture) {
+        // #ifdef DEBUG
+        if (!texture.device) {
+            if (!this._destroyedTextures.has(texture)) {
+                this._destroyedTextures.add(texture);
+                console.error("attempting to use a texture that has been destroyed.");
+            }
+        }
+        // #endif
+
         var gl = this.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
@@ -1802,7 +1833,7 @@ Object.assign(GraphicsDevice.prototype, {
                 // ----- CUBEMAP -----
                 var face;
 
-                if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
+                if (this._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
                         if (!texture._levelsUpdated[0][face])
@@ -1896,7 +1927,7 @@ Object.assign(GraphicsDevice.prototype, {
                 }
             } else {
                 // ----- 2D -----
-                if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
+                if (this._isBrowserInterface(mipObject)) {
                     // Downsize images that are too large to be used as textures
                     if (mipObject instanceof HTMLImageElement) {
                         if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
@@ -2122,76 +2153,123 @@ Object.assign(GraphicsDevice.prototype, {
         }
     },
 
-    setBuffers: function (numInstances) {
-        var gl = this.gl;
-        var attribute, element, vertexBuffer, vbOffset, bufferId, locationId;
-        var attributes = this.shader.attributes;
+    // function creates VertexArrayObject from list of vertex buffers
+    createVertexArray: function (vertexBuffers) {
 
-        // Commit the vertex buffer inputs
-        if (this.attributesInvalidated) {
-            for (var i = 0, len = attributes.length; i < len; i++) {
-                attribute = attributes[i];
+        var i, vertexBuffer, key;
+        var vao;
 
-                // Retrieve vertex element for this shader attribute
-                element = attribute.scopeId.value;
+        // only use cache when more than 1 vertex buffer, otherwise it's unique
+        var useCache = vertexBuffers.length > 1;
+        if (useCache) {
 
-                // Check the vertex element is valid
-                if (element !== null) {
-                    // Retrieve the vertex buffer that contains this element
-                    vertexBuffer = this.vertexBuffers[element.stream];
-                    if (vertexBuffer) {
-                        vbOffset = this.vbOffsets[element.stream] || 0;
+            // generate unique key for the vertex buffers
+            key = "";
+            for (i = 0; i < vertexBuffers.length; i++) {
+                vertexBuffer = vertexBuffers[i];
+                key += vertexBuffer.id + vertexBuffer.format.renderingingHash;
+            }
 
-                        // Set the active vertex buffer object
-                        bufferId = vertexBuffer.bufferId;
-                        if (this.boundBuffer !== bufferId) {
-                            gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-                            this.boundBuffer = bufferId;
-                        }
+            // try to get VAO from cache
+            vao = this._vaoMap.get(key);
+        }
 
-                        // Hook the vertex buffer to the shader program
-                        locationId = attribute.locationId;
-                        if (!this.enabledAttributes[locationId]) {
-                            gl.enableVertexAttribArray(locationId);
-                            this.enabledAttributes[locationId] = true;
-                        }
-                        gl.vertexAttribPointer(
-                            locationId,
-                            element.numComponents,
-                            this.glType[element.dataType],
-                            element.normalize,
-                            element.stride,
-                            element.offset + vbOffset
-                        );
+        // need to create new vao
+        if (!vao) {
 
-                        if (element.stream === 1 && numInstances > 0) {
-                            if (!this.instancedAttribs[locationId]) {
-                                gl.vertexAttribDivisor(locationId, 1);
-                                this.instancedAttribs[locationId] = true;
-                            }
-                        } else if (this.instancedAttribs[locationId]) {
-                            gl.vertexAttribDivisor(locationId, 0);
-                            this.instancedAttribs[locationId] = false;
-                        }
+            // create VA object
+            var gl = this.gl;
+            vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            // don't capture index buffer in VAO
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+            // #ifdef DEBUG
+            var locZero = false;
+            // #endif
+
+            var e, elements;
+            for (i = 0; i < vertexBuffers.length; i++) {
+
+                // bind buffer
+                vertexBuffer = vertexBuffers[i];
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
+
+                // for each attribute
+                elements = vertexBuffer.format.elements;
+                for (var j = 0; j < elements.length; j++) {
+                    e = elements[j];
+                    var loc = semanticToLocation[e.name];
+
+                    // #ifdef DEBUG
+                    if (loc === 0) {
+                        locZero = true;
                     }
-                } else {
-                    // disable the attribute (shader will get default value 0, 0, 0, 1)
-                    if (this.enabledAttributes[attribute.locationId]) {
-                        gl.disableVertexAttribArray(attribute.locationId);
-                        this.enabledAttributes[attribute.locationId] = false;
+                    // #endif
+
+                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                    gl.enableVertexAttribArray(loc);
+
+                    if (vertexBuffer.instancing) {
+                        gl.vertexAttribDivisor(loc, 1);
                     }
                 }
             }
 
-            this.attributesInvalidated = false;
+            // end of VA object
+            gl.bindVertexArray(null);
+
+            // unbind any array buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            // add it to cache
+            if (useCache) {
+                this._vaoMap.set(key, vao);
+            }
+
+            // #ifdef DEBUG
+            if (!locZero) {
+                console.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
+            }
+            // #endif
         }
 
-        // Set the active index buffer object
-        bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
-        if (this.boundElementBuffer !== bufferId) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
-            this.boundElementBuffer = bufferId;
+        return vao;
+    },
+
+    setBuffers: function () {
+        var gl = this.gl;
+        var vertexBuffer, vao;
+
+        // create VAO for specified vertex buffers
+        if (this.vertexBuffers.length === 1) {
+
+            // single VB keeps its VAO
+            vertexBuffer = this.vertexBuffers[0];
+            if (!vertexBuffer._vao) {
+                vertexBuffer._vao = this.createVertexArray(this.vertexBuffers);
+            }
+            vao = vertexBuffer._vao;
+        } else {
+            // obtain temporary VAO for multiple vertex buffers
+            vao = this.createVertexArray(this.vertexBuffers);
         }
+
+        // set active VAO
+        if (this.boundVao !== vao) {
+            this.boundVao = vao;
+            gl.bindVertexArray(vao);
+        }
+
+        // empty array of vertex buffers
+        this.vertexBuffers.length = 0;
+
+        // Set the active index buffer object
+        // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
+        // and so we don't know what VAO sets it to.
+        var bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     },
 
     /**
@@ -2211,6 +2289,8 @@ Object.assign(GraphicsDevice.prototype, {
      * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @param {number} [numInstances=1] - The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
+     * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers / VAO. This is used when rendering of
+     * multiple views, for example under WebXR.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
@@ -2220,7 +2300,7 @@ Object.assign(GraphicsDevice.prototype, {
      *     indexed: false
      * });
      */
-    draw: function (primitive, numInstances) {
+    draw: function (primitive, numInstances, keepBuffers) {
         var gl = this.gl;
 
         var i, j, len; // Loop counting
@@ -2230,12 +2310,10 @@ Object.assign(GraphicsDevice.prototype, {
         var samplers = shader.samplers;
         var uniforms = shader.uniforms;
 
-        if (numInstances > 0) {
-            this.boundBuffer = null;
-            this.attributesInvalidated = true;
+        // vertex buffers
+        if (!keepBuffers) {
+            this.setBuffers();
         }
-
-        this.setBuffers(numInstances);
 
         // Commit the shader program variables
         var textureUnit = 0;
@@ -2337,8 +2415,9 @@ Object.assign(GraphicsDevice.prototype, {
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
         }
 
-        // #ifdef PROFILER
         this._drawCallsPerFrame++;
+
+        // #ifdef PROFILER
         this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
         // #endif
     },
@@ -2368,7 +2447,7 @@ Object.assign(GraphicsDevice.prototype, {
      * // Clear color buffer to yellow and depth to 1.0
      * device.clear({
      *     color: [1, 1, 0, 1],
-     *     depth: 1.0,
+     *     depth: 1,
      *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
      * });
      */
@@ -3047,47 +3126,14 @@ Object.assign(GraphicsDevice.prototype, {
     /**
      * @function
      * @name pc.GraphicsDevice#setVertexBuffer
-     * @description Sets the current vertex buffer for a specific stream index on the graphics
-     * device. On subsequent calls to pc.GraphicsDevice#draw, the specified vertex buffer will be
-     * used to provide vertex data for any primitives.
+     * @description Sets the current vertex buffer on the graphics device. On subsequent calls to
+     * {@link pc.GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
      * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
-     * @param {number} stream - The stream index for the vertex buffer, indexed from 0 upwards.
-     * @param {number} [vbOffset=0] - The byte offset into the vertex buffer data. Defaults to 0.
      */
-    setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
-        if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
-            // Store the vertex buffer for this stream index
-            this.vertexBuffers[stream] = vertexBuffer;
-            this.vbOffsets[stream] = vbOffset;
+    setVertexBuffer: function (vertexBuffer) {
 
-            // Push each vertex element in scope
-            if (vertexBuffer) {
-                var vertexFormat = vertexBuffer.getFormat();
-                var i = 0;
-                var elements = vertexFormat.elements;
-                var numElements = elements.length;
-                while (i < numElements) {
-                    var vertexElement = elements[i++];
-                    vertexElement.stream = stream;
-                    vertexElement.scopeId.setValue(vertexElement);
-                }
-            }
-
-            this.attributesInvalidated = true;
-        }
-    },
-
-    // Function to disable vertex elements coming from vertex buffer and using constant default value instead (0,0,0,1)
-    // this is similar to setVertexBuffer with null vertex buffer, where access to vertexFormat is replaced by providing list of element semantics
-    disableVertexBufferElements: function (elementNames) {
-
-        for (var i = 0; i < elementNames.length; i++) {
-            // Resolve the ScopeId for the attribute name
-            var scopeId = this.scope.resolve(elementNames[i]);
-            if (scopeId.value) {
-                this.attributesInvalidated = true;
-                scopeId.setValue(null);
-            }
+        if (vertexBuffer) {
+            this.vertexBuffers.push(vertexBuffer);
         }
     },
 
@@ -3139,6 +3185,7 @@ Object.assign(GraphicsDevice.prototype, {
         var gl = this.gl;
 
         var definition = shader.definition;
+        var attr, attrs = definition.attributes;
         var glVertexShader = this.compileShaderSource(definition.vshader, true);
         var glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
@@ -3149,14 +3196,31 @@ Object.assign(GraphicsDevice.prototype, {
 
         if (this.webgl2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
-            var attrs = definition.attributes;
             var outNames = [];
-            for (var attr in attrs) {
+            for (attr in attrs) {
                 if (attrs.hasOwnProperty(attr)) {
                     outNames.push("out_" + attr);
                 }
             }
             gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
+        }
+
+        // map all vertex input attributes to fixed locations
+        var locations = {};
+        for (attr in attrs) {
+            if (attrs.hasOwnProperty(attr)) {
+                var semantic = attrs[attr];
+                var loc = semanticToLocation[semantic];
+
+                if (locations.hasOwnProperty(loc)) {
+                    // #ifdef DEBUG
+                    console.warn("WARNING: Two attribues are mapped to the same location in a shader: " + locations[loc] + " and " + attr);
+                    // #endif
+                }
+
+                locations[loc] = attr;
+                gl.bindAttribLocation(glProgram, loc, attr);
+            }
         }
 
         gl.linkProgram(glProgram);
@@ -3315,11 +3379,13 @@ Object.assign(GraphicsDevice.prototype, {
         return true;
     },
 
+    // NB for WebGL2: PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this: https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+    // NB for WebGL1: Only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are test for being renderable
     getHdrFormat: function () {
         if (this.textureHalfFloatRenderable) {
-            return PIXELFORMAT_RGB16F;
+            return PIXELFORMAT_RGBA16F;
         } else if (this.textureFloatRenderable) {
-            return PIXELFORMAT_RGB32F;
+            return PIXELFORMAT_RGBA32F;
         }
         return PIXELFORMAT_R8_G8_B8_A8;
     },
@@ -3407,6 +3473,21 @@ Object.assign(GraphicsDevice.prototype, {
         this.programLib.clearCache();
     },
 
+    /**
+     * @function
+     * @name pc.GraphicsDevice#clearVertexArrayObjectCache
+     * @description Frees memory from all vertex array objects ever allocated with this device.
+     */
+    clearVertexArrayObjectCache: function () {
+
+        var gl = this.gl;
+        this._vaoMap.forEach(function (item, key, mapObj) {
+            gl.deleteVertexArray(item);
+        });
+
+        this._vaoMap.clear();
+    },
+
     removeShaderFromCache: function (shader) {
         this.programLib.removeFromCache(shader);
     },
@@ -3421,6 +3502,7 @@ Object.assign(GraphicsDevice.prototype, {
         }
 
         this.clearShaderCache();
+        this.clearVertexArrayObjectCache();
 
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);

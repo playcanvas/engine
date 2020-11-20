@@ -12,6 +12,9 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
+[English](https://github.com/playcanvas/engine/blob/master/README.md)
+[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
+
 ## Project Showcase
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
@@ -29,7 +32,7 @@ You can see more games on the [PlayCanvas website](https://playcanvas.com/explor
 ## Users
 
 PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
-**Animech, ARM, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
+**Animech, Arm, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
 
 ## Features
 

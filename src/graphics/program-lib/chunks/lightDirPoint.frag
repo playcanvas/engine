@@ -3,4 +3,3 @@ void getLightDirPoint(vec3 lightPosW) {
     dLightDirNormW = normalize(dLightDirW);
     dLightPosW = lightPosW;
 }
-

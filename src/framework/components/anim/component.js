@@ -10,6 +10,7 @@ import {
 import { AnimComponentBinder } from './binder.js';
 import { AnimComponentLayer } from './layer.js';
 import { AnimController } from './controller.js';
+import { AnimStateGraph } from './state-graph.js';
 
 /**
  * @private
@@ -39,7 +40,10 @@ Object.assign(AnimComponent.prototype, {
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      */
     loadStateGraph: function (stateGraph) {
-        this.data.stateGraph = stateGraph;
+        var data = this.data;
+        data.stateGraph = stateGraph;
+        data.parameters = stateGraph.parameters;
+        data.layers = [];
 
         var graph;
         var modelComponent = this.entity.model;
@@ -49,10 +53,6 @@ Object.assign(AnimComponent.prototype, {
                 graph = m.getGraph();
             }
         }
-
-        var data = this.data;
-
-        data.parameters = stateGraph.parameters;
 
         function addLayer(name, states, transitions, order) {
             var animBinder = new AnimComponentBinder(this, graph);
@@ -72,6 +72,52 @@ Object.assign(AnimComponent.prototype, {
             var layer = stateGraph.layers[i];
             addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }
+        this.setupAnimationAssets();
+    },
+
+    setupAnimationAssets: function () {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            var layer = this.data.layers[i];
+            var layerName = layer.name;
+            for (var j = 0; j < layer.states.length; j++) {
+                var stateName = layer.states[j];
+                if (stateName !== 'START' && stateName !== 'END') {
+                    var stateKey = layerName + ':' + stateName;
+                    if (!this.data.animationAssets[stateKey]) {
+                        this.data.animationAssets[stateKey] = {
+                            asset: null
+                        };
+                    }
+                }
+            }
+        }
+        this.loadAnimationAssets();
+    },
+
+    loadAnimationAssets: function () {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            var layer = this.data.layers[i];
+            for (var j = 0; j < layer.states.length; j++) {
+                var stateName = layer.states[j];
+                var animationAsset = this.data.animationAssets[layer.name + ':' + stateName];
+                if (!animationAsset || !animationAsset.asset) {
+                    this.removeNodeAnimations(stateName, layer.name);
+                    continue;
+                }
+                var assetId = animationAsset.asset;
+                var asset = this.system.app.assets.get(assetId);
+                if (asset.resource) {
+                    this.assignAnimation(stateName, asset.resource, layer.name);
+                } else {
+                    asset.once('load', function (layerName, stateName) {
+                        return function (asset) {
+                            this.assignAnimation(stateName, asset.resource, layerName);
+                        }.bind(this);
+                    }.bind(this)(layer.name, stateName));
+                    this.system.app.assets.load(asset);
+                }
+            }
+        }
     },
 
     /**
@@ -82,10 +128,21 @@ Object.assign(AnimComponent.prototype, {
      */
     removeStateGraph: function () {
         this.data.stateGraph = null;
+        this.data.stateGraphAsset = null;
+        this.data.animationAssets = {};
         this.data.layers = [];
         this.data.layerIndices = {};
         this.data.parameters = {};
         this.data.playing = false;
+    },
+
+    resetStateGraph: function () {
+        if (this.stateGraphAsset) {
+            var stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
+            this.loadStateGraph(stateGraph);
+        } else {
+            this.removeStateGraph();
+        }
     },
 
     /**
@@ -132,8 +189,7 @@ Object.assign(AnimComponent.prototype, {
             // #endif
             return;
         }
-        layerName = layerName || 'DEFAULT_LAYER';
-        var layer = this.findAnimationLayer(layerName);
+        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #ifdef DEBUG
             console.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
@@ -152,8 +208,7 @@ Object.assign(AnimComponent.prototype, {
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations: function (nodeName, layerName) {
-        layerName = layerName || 'DEFAULT_LAYER';
-        var layer = this.findAnimationLayer(layerName);
+        var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #ifdef DEBUG
             console.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
@@ -288,7 +343,7 @@ Object.assign(AnimComponent.prototype, {
     /**
      * @private
      * @function
-     * @name pc.AnimComponent#setTrigger
+     * @name pc.AnimComponent#resetTrigger
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
      * @param {string} name - The name of the parameter to set.
      */
@@ -309,6 +364,11 @@ Object.defineProperties(AnimComponent.prototype, {
             return this.data.stateGraphAsset;
         },
         set: function (value) {
+            if (value === null) {
+                this.removeStateGraph();
+                return;
+            }
+
             var _id;
             var _asset;
 
@@ -330,14 +390,37 @@ Object.defineProperties(AnimComponent.prototype, {
             if (_asset.resource) {
                 this.data.stateGraph = _asset.resource;
                 this.loadStateGraph(this.data.stateGraph);
+                _asset.on('change', function (asset) {
+                    this.data.stateGraph = new AnimStateGraph(asset._data);
+                    this.loadStateGraph(this.data.stateGraph);
+                }.bind(this));
             } else {
-                _asset.on('load', function (asset) {
+                _asset.once('load', function (asset) {
                     this.data.stateGraph = asset.resource;
+                    this.loadStateGraph(this.data.stateGraph);
+                }.bind(this));
+                _asset.on('change', function (asset) {
+                    this.data.stateGraph = new AnimStateGraph(asset._data);
                     this.loadStateGraph(this.data.stateGraph);
                 }.bind(this));
                 this.system.app.assets.load(_asset);
             }
             this.data.stateGraphAsset = _id;
+        }
+    },
+    /**
+     * @private
+     * @name pc.AnimComponent#animationAssets
+     * @type {object}
+     * @description The animation assets used to load each states animation tracks
+     */
+    animationAssets: {
+        get: function () {
+            return this.data.animationAssets;
+        },
+        set: function (value) {
+            this.data.animationAssets = value;
+            this.loadAnimationAssets();
         }
     },
     /**

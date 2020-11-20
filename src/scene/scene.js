@@ -2,6 +2,7 @@ import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { Vec3 } from '../math/vec3.js';
+import { Mat3 } from '../math/mat3.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/graphics.js';
 
@@ -12,6 +13,8 @@ import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { Model } from './model.js';
 import { StandardMaterial } from './materials/standard-material.js';
+import { Quat } from '../math/quat.js';
+import { Mat4 } from '../math/mat4.js';
 
 /**
  * @class
@@ -65,6 +68,7 @@ import { StandardMaterial } from './materials/standard-material.js';
  * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
  * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
+ * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link pc.Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
  * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
  * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
@@ -116,6 +120,12 @@ function Scene() {
     this._skyboxIntensity = 1;
     this._skyboxMip = 0;
 
+    this._skyboxRotation = new Quat();
+    this._skyboxRotationMat3 = null;
+    this._skyboxRotationMat4 = null;
+
+    this._skyboxIsRenderTarget = false;
+
     this.lightmapSizeMultiplier = 1;
     this.lightmapMaxResolution = 2048;
     this.lightmapMode = BAKE_COLORDIR;
@@ -139,7 +149,7 @@ function Scene() {
     this._shaderVersion = 0;
     this._statsUpdated = false;
 
-    // backwards compatibilty only
+    // backwards compatibility only
     this._models = [];
 
     // default material used in case no other material is available
@@ -212,6 +222,19 @@ Object.defineProperty(Scene.prototype, 'skyboxIntensity', {
         this._skyboxIntensity = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'skyboxRotation', {
+    get: function () {
+        return this._skyboxRotation;
+    },
+    set: function (value) {
+        if (!this._skyboxRotation.equals(value)) {
+            this._skyboxRotation.copy(value);
+            this._resetSkyboxModel();
+            this.updateShaders = true;
+        }
     }
 });
 
@@ -349,6 +372,10 @@ Scene.prototype.applySettings = function (settings) {
     this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
     this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
+    if (settings.render.skyboxRotation !== undefined) {
+        this._skyboxRotation.set(settings.render.skyboxRotation);
+    }
+
     this._resetSkyboxModel();
     this.updateShaders = true;
 };
@@ -357,13 +384,25 @@ Scene.prototype._updateSkybox = function (device) {
     // Create skybox
     if (!this.skyboxModel) {
 
+        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
+        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
+        // to change the look of existing scenes dramatically.
+        // NOTE: the table skips the 32x32 mipmap
+        var skyboxMapping = [0, 1, 3, 4, 5, 6];
+
         // select which texture to use for the backdrop
         var usedTex =
             this._skyboxMip ?
-                this._skyboxPrefiltered[this._skyboxMip] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
                 this._skyboxCubeMap || this._skyboxPrefiltered[0];
         if (!usedTex) {
             return;
+        }
+
+        if (usedTex._isRenderTarget) {
+            this._skyboxIsRenderTarget = true;
+        } else {
+            this._skyboxIsRenderTarget = false;
         }
 
         var material = new Material();
@@ -374,6 +413,8 @@ Scene.prototype._updateSkybox = function (device) {
                 rgbm: usedTex.type === TEXTURETYPE_RGBM,
                 hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
                 useIntensity: scene.skyboxIntensity !== 1,
+                useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
+                useRightHandedCubeMap: scene._skyboxIsRenderTarget,
                 mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
                 fixSeams: usedTex.fixCubemapSeams,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
@@ -384,6 +425,15 @@ Scene.prototype._updateSkybox = function (device) {
 
         material.updateShader();
         material.setParameter("texture_cubeMap", usedTex);
+
+        if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
+            if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
+            if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
+            this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+            this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+            material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
+        }
+
         material.cull = CULLFACE_FRONT;
         material.depthWrite = false;
 
