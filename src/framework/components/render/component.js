@@ -3,6 +3,7 @@ import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { SkinInstance } from '../../../scene/skin-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
+import { GraphNode } from '../../../scene/graph-node.js';
 
 import { Asset } from '../../../asset/asset.js';
 import { AssetReference } from '../../../asset/asset-reference.js';
@@ -226,8 +227,6 @@ Object.assign(RenderComponent.prototype, {
         var app = this.system.app;
         var scene = app.scene;
 
-        // this._rootBone.onParentComponentEnable();
-
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
             scene.layers.on("add", this.onLayerAdded, this);
@@ -338,7 +337,7 @@ Object.assign(RenderComponent.prototype, {
 
     _cloneSkinInstances: function () {
 
-        if (this._meshInstances.length && this._rootBone) {
+        if (this._meshInstances.length && this._rootBone instanceof GraphNode) {
 
             var j, skin, skinInst;
 
