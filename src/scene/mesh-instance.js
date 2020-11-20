@@ -393,10 +393,7 @@ Object.assign(MeshInstance.prototype, {
             }
         }
 
-        if (this.skinInstance) {
-            this.skinInstance.destroy();
-            this.skinInstance = null;
-        }
+        this.destroySkinInstance();
 
         if (this.morphInstance) {
             this.morphInstance.destroy();
@@ -404,6 +401,13 @@ Object.assign(MeshInstance.prototype, {
         }
 
         this.material = null;
+    },
+
+    destroySkinInstance: function () {
+        if (this._skinInstance) {
+            this._skinInstance.destroy();
+            this._skinInstance = null;
+        }
     },
 
     syncAabb: function () {

@@ -1,6 +1,7 @@
 import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { SkinInstance } from '../../../scene/skin-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
 import { Asset } from '../../../asset/asset.js';
@@ -67,8 +68,7 @@ function RenderComponent(system, entity)   {
     // area - used by lightmapper
     this._area = null;
 
-    // the entity that represents the root bone
-    // if this render component has skinned meshes
+    // the entity that represents the root bone if this render component has skinned meshes
     this._rootBone = null;
 
     // render asset reference
@@ -127,7 +127,10 @@ Object.assign(RenderComponent.prototype, {
     },
 
     _onFindRootBone: function () {
-        console.log('this.rootBone', this.rootBone);
+
+        // remove existing skin instances and create new ones, connected to new root bone
+        this._clearSkinInstances();
+        this._cloneSkinInstances();
     },
 
     _onPostInitialize: function () {
@@ -326,70 +329,86 @@ Object.assign(RenderComponent.prototype, {
         this._cloneMeshes(meshes);
     },
 
+    _clearSkinInstances: function () {
+
+        for (var i = 0; i < this._meshInstances.length; i++) {
+            this._meshInstances[i].skinInstance = null;
+        }
+    },
+
+    _cloneSkinInstances: function () {
+
+        if (this._meshInstances.length && this._rootBone) {
+
+            var j, skin, skinInst;
+
+            // maps each unique original skin to cloned skin instance
+            var skins = new Map();
+
+            for (var i = 0; i < this._meshInstances.length; i++) {
+                var meshInstance = this._meshInstances[i];
+                var mesh = meshInstance.mesh;
+
+                // if skinned but does not have instance created yet
+                if (mesh.skin && !mesh.skinInstance) {
+
+                    skin = mesh.skin;
+                    skinInst = skins.get(skin);
+
+                    // don't have skin instance for this skin
+                    if (!skinInst) {
+
+                        skinInst = new SkinInstance(skin);
+                        skins.set(skin, skinInst);
+
+                        // Resolve bone IDs to actual graph nodes
+                        var bones = [];
+                        for (j = 0; j < skin.boneNames.length; j++) {
+                            var boneName = skin.boneNames[j];
+                            var bone = this._rootBone.findByName(boneName);
+
+                            if (!bone) {
+                                console.error("Failed to find bone [", boneName, "] in the entity hierarchy, RenderComponent on ", this.entity.name, ", rootBone: ", this._rootBone.name);
+                                bone = this.entity;
+                            }
+
+                            bones.push(bone);
+                        }
+                        skinInst.bones = bones;
+                    }
+
+                    meshInstance.skinInstance = skinInst;
+                }
+            }
+        }
+    },
+
     _cloneMeshes: function (meshes) {
-        var meshInstances = [];
 
         if (meshes.length) {
+
+            // cloned mesh instances
+            var meshInstances = [];
+
             for (var i = 0; i < meshes.length; i++) {
+
+                // mesh instance
                 var mesh = meshes[i];
                 var material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
                 var meshInst = new MeshInstance(this.entity, mesh, material || this.system.defaultMaterial);
                 meshInstances.push(meshInst);
+
+                // morph instance
+                if (mesh.morph) {
+                    meshInst.morphInstance = new MorphInstance(mesh.morph);
+                }
             }
 
             this.meshInstances = meshInstances;
+
+            // try to create skin instances if rootBone has been set, otherwise this executes when rootBone is set later
+            this._cloneSkinInstances();
         }
-
-        // probably need to copy transform as well?????
-
-
-        // var cloneMeshInstances = [];
-        // var cloneSkinInstances = [];
-        // var cloneMorphInstances = [];
-
-        // // Clone the skin instances
-        // for (i = 0; i < this.skinInstances.length; i++) {
-        //     var skin = this.skinInstances[i].skin;
-        //     var cloneSkinInstance = new SkinInstance(skin);
-
-        //     // Resolve bone IDs to actual graph nodes
-        //     var bones = [];
-        //     for (j = 0; j < skin.boneNames.length; j++) {
-        //         var boneName = skin.boneNames[j];
-        //         var bone = cloneGraph.findByName(boneName);
-        //         bones.push(bone);
-        //     }
-        //     cloneSkinInstance.bones = bones;
-
-        //     cloneSkinInstances.push(cloneSkinInstance);
-        // }
-
-        // // Clone the morph instances
-        // for (i = 0; i < this.morphInstances.length; i++) {
-        //     var morph = this.morphInstances[i].morph;
-        //     var cloneMorphInstance = new MorphInstance(morph);
-        //     cloneMorphInstances.push(cloneMorphInstance);
-        // }
-
-        // // Clone the mesh instances
-        // for (i = 0; i < this.meshInstances.length; i++) {
-        //     var meshInstance = this.meshInstances[i];
-        //     var nodeIndex = srcNodes.indexOf(meshInstance.node);
-        //     var cloneMeshInstance = new MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
-
-        //     if (meshInstance.skinInstance) {
-        //         var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
-        //         cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
-        //     }
-
-        //     if (meshInstance.morphInstance) {
-        //         var morphInstanceIndex = this.morphInstances.indexOf(meshInstance.morphInstance);
-        //         cloneMeshInstance.morphInstance = cloneMorphInstances[morphInstanceIndex];
-        //     }
-
-        //     cloneMeshInstances.push(cloneMeshInstance);
-        // }
-
     },
 
     _onRenderAssetUnload: function () {
