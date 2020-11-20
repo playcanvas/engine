@@ -1873,6 +1873,12 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
     var postprocess = options && options.bufferView && options.bufferView.postprocess;
 
     var remaining = gltf.bufferViews.length;
+
+    // handle case of no buffers
+    if (!remaining) {
+        callback(null, null);
+    }
+
     var onLoad = function (index, bufferView) {
         var gltfBufferView = gltf.bufferViews[index];
         if (gltfBufferView.hasOwnProperty('byteStride')) {
