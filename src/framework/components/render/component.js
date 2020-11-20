@@ -2,6 +2,7 @@ import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../scene/constants.j
 import { BatchGroup } from '../../../scene/batching.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { SkinInstance } from '../../../scene/skin-instance.js';
+import { MorphInstance } from '../../../scene/morph-instance.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 
