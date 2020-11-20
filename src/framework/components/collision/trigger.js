@@ -115,7 +115,7 @@ Object.assign(Trigger.prototype,  {
         if (!body) return;
 
         var systems = this.app.systems;
-        var idx = systems.rigidbody._triggers.indexOf(this);
+        var idx = systems.collision._triggers.indexOf(this);
         if (idx > -1) {
             systems.collision._triggers.splice(idx, 1);
         }
