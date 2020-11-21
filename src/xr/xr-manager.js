@@ -10,6 +10,7 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrImageTracking } from './xr-image-tracking.js';
 
 /**
  * @class
@@ -54,6 +55,7 @@ function XrManager(app) {
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
+    this.imageTracking = new XrImageTracking(this);
 
     this._camera = null;
     this.views = [];
@@ -207,23 +209,47 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     // 3. probably immersive-vr will fail to be created
     // 4. call makeXRCompatible, very likely will lead to context loss
 
-    var optionalFeatures = [];
+    var opts = {
+        requiredFeatures: [spaceType],
+        optionalFeatures: []
+    };
 
     if (type === XRTYPE_AR) {
-        optionalFeatures.push('light-estimation');
-        optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('light-estimation');
+        opts.optionalFeatures.push('hit-test');
+
+        if (options && options.imageTracking) {
+            opts.optionalFeatures.push('image-tracking');
+        }
     } else if (type === XRTYPE_VR) {
-        optionalFeatures.push('hand-tracking');
+        opts.optionalFeatures.push('hand-tracking');
     }
 
-    if (options && options.optionalFeatures) {
-        optionalFeatures = optionalFeatures.concat(options.optionalFeatures);
-    }
+    if (options && options.optionalFeatures)
+        opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
 
-    navigator.xr.requestSession(type, {
-        requiredFeatures: [spaceType],
-        optionalFeatures: optionalFeatures
-    }).then(function (session) {
+    if (this.imageTracking.images.length) {
+        this.imageTracking.prepareImages(function (err, trackedImages) {
+            if (err) {
+                if (callback) callback(err);
+                self.fire('error', err);
+                return;
+            }
+
+            if (trackedImages !== null)
+                opts.trackedImages = trackedImages;
+
+            self._onStartOptionsReady(type, spaceType, opts, callback);
+        });
+    } else {
+        self._onStartOptionsReady(type, spaceType, opts, callback);
+    }
+};
+
+XrManager.prototype._onStartOptionsReady = function (type, spaceType, options, callback) {
+    var self = this;
+
+    navigator.xr.requestSession(type, options).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;
@@ -476,6 +502,9 @@ XrManager.prototype.update = function (frame) {
         }
         if (this.lightEstimation.supported) {
             this.lightEstimation.update(frame);
+        }
+        if (this.imageTracking.supported) {
+            this.imageTracking.update(frame);
         }
     }
 
