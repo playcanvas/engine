@@ -1,3 +1,4 @@
+import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
@@ -11,6 +12,8 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * @property {pc.XrTrackedImage[]} images List of {@link pc.XrTrackedImage} that contain tracking information.
  */
 function XrImageTracking(manager) {
+    EventHandler.call(this);
+
     this._manager = manager;
     this._supported = !! window.XRImageTrackingResult;
     this._available = false;
@@ -22,6 +25,15 @@ function XrImageTracking(manager) {
         this._manager.on('end', this._onSessionEnd, this);
     }
 }
+XrImageTracking.prototype = Object.create(EventHandler.prototype);
+XrImageTracking.prototype.constructor = XrImageTracking;
+
+/**
+ * @event
+ * @name pc.XrImageTracking#error
+ * @param {Error} error - Error object related to failure of image tracking.
+ * @description Fired when XR session is started, but image tracking failed to process provided images.
+ */
 
 /**
  * @function
@@ -69,7 +81,7 @@ XrImageTracking.prototype._onSessionStart = function () {
         }
     }).catch(function (err) {
         self._available = false;
-        console.log(err);
+        self.fire('error', err);
     });
 };
 

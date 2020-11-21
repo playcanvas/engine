@@ -33,6 +33,18 @@ function XrTrackedImage(image, width) {
 XrTrackedImage.prototype = Object.create(EventHandler.prototype);
 XrTrackedImage.prototype.constructor = XrTrackedImage;
 
+/**
+ * @event
+ * @name pc.XrTrackedImage#tracked
+ * @description Fired when image becomes actively tracked.
+ */
+
+/**
+ * @event
+ * @name pc.XrTrackedImage#untracked
+ * @description Fired when image is no more actively tracked.
+ */
+
 XrTrackedImage.prototype.prepare = function () {
     var self = this;
 

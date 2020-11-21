@@ -138,7 +138,6 @@ XrManager.prototype.constructor = XrManager;
  * });
  */
 
-
 /**
  * @event
  * @name pc.XrManager#error
