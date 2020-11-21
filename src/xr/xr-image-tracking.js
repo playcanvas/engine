@@ -1,4 +1,3 @@
-import { EventHandler } from '../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
@@ -12,8 +11,6 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * @property {pc.XrTrackedImage[]} images List of {@link pc.XrTrackedImage} that contain tracking information.
  */
 function XrImageTracking(manager) {
-    EventHandler.call(this);
-
     this._manager = manager;
     this._supported = !! window.XRImageTrackingResult;
     this._available = false;
@@ -25,8 +22,6 @@ function XrImageTracking(manager) {
         this._manager.on('end', this._onSessionEnd, this);
     }
 }
-XrImageTracking.prototype = Object.create(EventHandler.prototype);
-XrImageTracking.prototype.constructor = XrImageTracking;
 
 /**
  * @function
