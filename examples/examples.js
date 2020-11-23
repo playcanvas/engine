@@ -3,7 +3,8 @@ var categories = [
     {
         name: "animation",
         examples: [
-            "blend"
+            "blend",
+            "tweening"
         ]
     }, {
         name: "camera",
@@ -15,6 +16,7 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "area-picker",
             "batching-dynamic",
             "grab-pass",
             "hardware-instancing",
@@ -25,6 +27,7 @@ var categories = [
             "material-anisotropic",
             "material-clear-coat",
             "material-physical",
+            "material-translucent-specular",
             "mesh-decals",
             "mesh-deformation",
             "mesh-generation",
@@ -35,6 +38,7 @@ var categories = [
             "model-outline",
             "model-shapes",
             "model-textured-box",
+            "painter",
             "particles-anim-index",
             "particles-random-sprites",
             "particles-snow",

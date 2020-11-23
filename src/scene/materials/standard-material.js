@@ -21,6 +21,7 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { Quat } from '../../math/quat.js';
 
 /**
  * @class
@@ -154,6 +155,9 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecular} is set to false.
+ *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
@@ -262,6 +266,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.
  * * alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.
  * * alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.
+ * * opacityFadesSpecular: enable specular fade. See {@link pc.Material#opacityFadesSpecular}.
+ * * alphaFade: fade value. See {@link pc.Material#alphaFade}.
  * * sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.
  * * cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.
  * * dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.
@@ -287,6 +293,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
+ * * useCubeMapRotation: if cube map rotation is enabled.
+ * * useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -815,6 +823,10 @@ Object.assign(StandardMaterial.prototype, {
 
         this._setParameter('material_opacity', this.opacity);
 
+        if (this.opacityFadesSpecular === false) {
+            this._setParameter('material_alphaFade', this.alphaFade);
+        }
+
         if (this.occludeSpecular) {
             this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
         }
@@ -998,6 +1010,10 @@ Object.assign(StandardMaterial.prototype, {
             } else {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
             }
+
+            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
+            }
         }
 
         // Minimal options for Depth and Shadow passes
@@ -1053,6 +1069,7 @@ var _defineMaterialProps = function (obj) {
         return { name: 'material_heightMapFactor', value: height * 0.025 };
     });
     _defineFloat(obj, "opacity", 1);
+    _defineFloat(obj, "alphaFade", 1);
     _defineFloat(obj, "alphaTest", 0);
     _defineFloat(obj, "bumpiness", 1);
     _defineFloat(obj, "normalDetailMapBumpiness", 1);
@@ -1100,6 +1117,7 @@ var _defineMaterialProps = function (obj) {
     _defineFlag(obj, "occludeDirect", false);
     _defineFlag(obj, "normalizeNormalMap", true);
     _defineFlag(obj, "conserveEnergy", true);
+    _defineFlag(obj, "opacityFadesSpecular", true);
     _defineFlag(obj, "occludeSpecular", SPECOCC_AO);
     _defineFlag(obj, "shadingModel", SPECULAR_BLINN);
     _defineFlag(obj, "fresnelModel", FRESNEL_NONE);

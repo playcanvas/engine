@@ -415,6 +415,7 @@ function ForwardRenderer(graphicsDevice) {
     this._skinTime = 0;
     this._morphTime = 0;
     this._instancingTime = 0;
+    this._layerCompositionUpdateTime = 0;
 
     // Shaders
     var library = device.getProgramLibrary();
@@ -492,6 +493,8 @@ function ForwardRenderer(graphicsDevice) {
     this.blurVsmShader = [{}, {}];
     this.blurPackedVsmShader = [{}, {}];
     this.blurVsmWeights = {};
+
+    this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
 
     this.polygonOffsetId = scope.resolve("polygonOffset");
     this.polygonOffset = new Float32Array(2);
@@ -813,6 +816,10 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
 
         if (clear) {
+            // use camera clear options if any
+            if (!options)
+                options = camera._clearOptions;
+
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -1613,8 +1620,9 @@ Object.assign(ForwardRenderer.prototype, {
                 wt.getY(worldMatY);
                 wt.getZ(worldMatZ);
                 worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0)
+                if (worldMatX.dot(worldMatZ) < 0) {
                     flipFaces *= -1;
+                }
             }
 
             if (flipFaces < 0) {
@@ -1624,6 +1632,19 @@ Object.assign(ForwardRenderer.prototype, {
             }
         }
         this.device.setCullMode(mode);
+
+        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
+            var wt2 = drawCall.node.worldTransform;
+            wt2.getX(worldMatX);
+            wt2.getY(worldMatY);
+            wt2.getZ(worldMatZ);
+            worldMatX.cross(worldMatX, worldMatY);
+            if (worldMatX.dot(worldMatZ) < 0) {
+                this.twoSidedLightingNegScaleFactorId.setValue(-1.0);
+            } else {
+                this.twoSidedLightingNegScaleFactorId.setValue(1.0);
+            }
+        }
     },
 
     setVertexBuffers: function (device, mesh) {
@@ -2663,11 +2684,19 @@ Object.assign(ForwardRenderer.prototype, {
 
         this.beginLayers(comp);
 
+        // #ifdef PROFILER
+        var layerCompositionUpdateTime = now();
+        // #endif
+
         // Update static layer data, if something's changed
         var updated = comp._update();
         if (updated & COMPUPDATED_LIGHTS) {
             this.scene.updateLitShaders = true;
         }
+
+        // #ifdef PROFILER
+        this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
+        // #endif
 
         // #ifdef PROFILER
         if (updated & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
@@ -2811,8 +2840,8 @@ Object.assign(ForwardRenderer.prototype, {
         this.gpuUpdate(comp._meshInstances);
 
         // Shadow render for all local visible culled lights
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_POINT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_POINT]);
 
         // Rendering
         renderedLength = 0;
@@ -2877,7 +2906,7 @@ Object.assign(ForwardRenderer.prototype, {
                 // #ifdef PROFILER
                 draws = this._shadowDrawCalls;
                 // #endif
-                this.renderShadows(layer._sortedLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
+                this.renderShadows(layer._splitLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
                 // #ifdef PROFILER
                 layer._shadowDrawCalls += this._shadowDrawCalls - draws;
                 // #endif
@@ -2906,7 +2935,7 @@ Object.assign(ForwardRenderer.prototype, {
                 this.renderForward(camera.camera,
                                    visible.list,
                                    visible.length,
-                                   layer._sortedLights,
+                                   layer._splitLights,
                                    layer.shaderPass,
                                    layer.cullingMask,
                                    layer.onDrawCall,

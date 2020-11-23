@@ -306,7 +306,13 @@ Object.assign(CollisionComponent.prototype, {
     },
 
     onBeforeRemove: function () {
+        if (this.asset) {
+            this.asset = null;
+        }
+
         this.entity.off('insert', this._onInsert, this);
+
+        this.off();
     }
 });
 
