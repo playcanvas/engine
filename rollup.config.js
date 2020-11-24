@@ -1,4 +1,5 @@
 import replace from '@rollup/plugin-replace';
+import typescript from '@rollup/plugin-typescript';
 import { createFilter } from '@rollup/pluginutils';
 import cleanup from 'rollup-plugin-cleanup';
 import { version } from './package.json';
@@ -19,7 +20,7 @@ function getBanner(config) {
 
 function spacesToTabs() {
     const filter = createFilter([
-        '**/*.js'
+        '**/*.js', '**/*.ts'
     ], []);
 
     return {
@@ -35,7 +36,7 @@ function spacesToTabs() {
 
 function preprocessor(options) {
     const filter = createFilter([
-        '**/*.js'
+        '**/*.js', '**/*.ts'
     ], []);
 
     return {
@@ -108,62 +109,14 @@ export default [{
             __CURRENT_SDK_VERSION__: version
         }),
         cleanup({
-            comments: 'some'
+            comments: 'some',
+            extensions: ['js', 'ts']
         }),
-        spacesToTabs()
+        spacesToTabs(),
+        typescript()
     ]
 }, {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (DEBUG PROFILER)'),
-        file: 'build/playcanvas.dbg.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: true,
-            RELEASE: false
-        }),
-        shaderChunks(false),
-        replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
-        }),
-        cleanup({
-            comments: 'some'
-        }),
-        spacesToTabs()
-    ]
-}, {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (PROFILER)'),
-        file: 'build/playcanvas.prf.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        preprocessor({
-            PROFILER: true,
-            DEBUG: false,
-            RELEASE: false
-        }),
-        shaderChunks(false),
-        replace({
-            __REVISION__: revision,
-            __CURRENT_SDK_VERSION__: version
-        }),
-        cleanup({
-            comments: 'some'
-        }),
-        spacesToTabs()
-    ]
-}, {
-    input: 'extras/index.js',
+    input: 'extras/index.ts',
     output: {
         banner: getBanner(''),
         file: 'build/playcanvas-extras.js',
@@ -173,8 +126,18 @@ export default [{
     },
     plugins: [
         cleanup({
-            comments: 'some'
+            comments: 'some',
+            extensions: ['js', 'ts']
         }),
-        spacesToTabs()
+        spacesToTabs(),
+        typescript({
+            "tsconfig": false,
+            "include": [
+                "build/webgl2.d.ts",
+                "build/playcanvas.d.ts",
+                "extras/**/*"
+            ],
+            "target": "es5"
+        })
     ]
 }];

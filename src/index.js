@@ -27,16 +27,7 @@ export { URI, createURI } from './core/uri.js';
 export { http, Http } from './net/http.js';
 
 // MATH
-export * from './math/constants.js';
-export { math } from './math/math.js';
-export { Curve } from './math/curve.js';
-export { CurveSet } from './math/curve-set.js';
-export { Mat3 } from './math/mat3.js';
-export { Mat4 } from './math/mat4.js';
-export { Quat } from './math/quat.js';
-export { Vec2 } from './math/vec2.js';
-export { Vec3 } from './math/vec3.js';
-export { Vec4 } from './math/vec4.js';
+export * from './math/index';
 
 // SHAPE
 export { BoundingBox } from './shape/bounding-box.js';

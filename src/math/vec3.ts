@@ -9,19 +9,62 @@
  * @example
  * var v = new pc.Vec3(1, 2, 3);
  */
-function Vec3(x, y, z) {
-    if (x && x.length === 3) {
-        this.x = x[0];
-        this.y = x[1];
-        this.z = x[2];
-    } else {
-        this.x = x || 0;
-        this.y = y || 0;
-        this.z = z || 0;
-    }
-}
+class Vec3 {
+    /**
+     * @name pc.Vec3#x
+     * @type {number}
+     * @description The first component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
+     */
+    x: number;
+    /**
+     * @name pc.Vec3#y
+     * @type {number}
+     * @description The second component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
+     */
+    y: number;
+    /**
+     * @name pc.Vec3#z
+     * @type {number}
+     * @description The third component of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
+     */
+    z: number;
 
-Object.assign(Vec3.prototype, {
+    constructor(x?: number | number[], y?: number, z?: number) {
+        if (Array.isArray(x)) {
+            this.x = x[0];
+            this.y = x[1];
+            this.z = x[2];
+        } else {
+            this.x = x || 0;
+            this.y = y || 0;
+            this.z = z || 0;
+        }
+    }
+
     /**
      * @function
      * @name pc.Vec3#add
@@ -37,13 +80,13 @@ Object.assign(Vec3.prototype, {
      * // Should output [30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
-    add: function (rhs) {
+    add(rhs: Vec3): Vec3 {
         this.x += rhs.x;
         this.y += rhs.y;
         this.z += rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -62,13 +105,13 @@ Object.assign(Vec3.prototype, {
      *
      * console.log("The result of the addition is: " + r.toString());
      */
-    add2: function (lhs, rhs) {
+    add2(lhs: Vec3, rhs: Vec3): Vec3 {
         this.x = lhs.x + rhs.x;
         this.y = lhs.y + rhs.y;
         this.z = lhs.z + rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -80,9 +123,9 @@ Object.assign(Vec3.prototype, {
      * var vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
-    clone: function () {
+    clone(): Vec3 {
         return new Vec3().copy(this);
-    },
+    }
 
     /**
      * @function
@@ -98,13 +141,13 @@ Object.assign(Vec3.prototype, {
      *
      * console.log("The two vectors are " + (dst.equals(src) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs: Vec3): Vec3 {
         this.x = rhs.x;
         this.y = rhs.y;
         this.z = rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -119,7 +162,7 @@ Object.assign(Vec3.prototype, {
      * // Should print the Z axis (i.e. [0, 0, 1])
      * console.log("The result of the cross product is: " + back.toString());
      */
-    cross: function (lhs, rhs) {
+    cross(lhs: Vec3, rhs: Vec3): Vec3 {
         // Create temporary variables in case lhs or rhs are 'this'
         var lx = lhs.x;
         var ly = lhs.y;
@@ -133,7 +176,7 @@ Object.assign(Vec3.prototype, {
         this.z = lx * ry - rx * ly;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -147,12 +190,12 @@ Object.assign(Vec3.prototype, {
      * var d = v1.distance(v2);
      * console.log("The between v1 and v2 is: " + d);
      */
-    distance: function (rhs) {
+    distance(rhs: Vec3): number {
         var x = this.x - rhs.x;
         var y = this.y - rhs.y;
         var z = this.z - rhs.z;
         return Math.sqrt(x * x + y * y + z * z);
-    },
+    }
 
     /**
      * @function
@@ -166,9 +209,9 @@ Object.assign(Vec3.prototype, {
      * var v1dotv2 = v1.dot(v2);
      * console.log("The result of the dot product is: " + v1dotv2);
      */
-    dot: function (rhs) {
+    dot(rhs: Vec3): number {
         return this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
-    },
+    }
 
     /**
      * @function
@@ -181,9 +224,9 @@ Object.assign(Vec3.prototype, {
      * var b = new pc.Vec3(4, 5, 6);
      * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs: Vec3): boolean {
         return this.x === rhs.x && this.y === rhs.y && this.z === rhs.z;
-    },
+    }
 
     /**
      * @function
@@ -196,9 +239,9 @@ Object.assign(Vec3.prototype, {
      * // Should output 5
      * console.log("The length of the vector is: " + len);
      */
-    length: function () {
+    length(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    },
+    }
 
     /**
      * @function
@@ -211,9 +254,9 @@ Object.assign(Vec3.prototype, {
      * // Should output 25
      * console.log("The length squared of the vector is: " + len);
      */
-    lengthSq: function () {
+    lengthSq(): number {
         return this.x * this.x + this.y * this.y + this.z * this.z;
-    },
+    }
 
     /**
      * @function
@@ -234,13 +277,13 @@ Object.assign(Vec3.prototype, {
      * r.lerp(a, b, 0.5); // r is 5, 5, 5
      * r.lerp(a, b, 1);   // r is equal to b
      */
-    lerp: function (lhs, rhs, alpha) {
+    lerp(lhs: Vec3, rhs: Vec3, alpha: number): Vec3 {
         this.x = lhs.x + alpha * (rhs.x - lhs.x);
         this.y = lhs.y + alpha * (rhs.y - lhs.y);
         this.z = lhs.z + alpha * (rhs.z - lhs.z);
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -257,13 +300,13 @@ Object.assign(Vec3.prototype, {
      * // Should output 8, 15, 24
      * console.log("The result of the multiplication is: " + a.toString());
      */
-    mul: function (rhs) {
+    mul(rhs: Vec3): Vec3 {
         this.x *= rhs.x;
         this.y *= rhs.y;
         this.z *= rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -282,13 +325,13 @@ Object.assign(Vec3.prototype, {
      * // Should output 8, 15, 24
      * console.log("The result of the multiplication is: " + r.toString());
      */
-    mul2: function (lhs, rhs) {
+    mul2(lhs: Vec3, rhs: Vec3): Vec3 {
         this.x = lhs.x * rhs.x;
         this.y = lhs.y * rhs.y;
         this.z = lhs.z * rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -304,7 +347,7 @@ Object.assign(Vec3.prototype, {
      * // Should output 1, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize: function () {
+    normalize(): Vec3 {
         var lengthSq = this.x * this.x + this.y * this.y + this.z * this.z;
         if (lengthSq > 0) {
             var invLength = 1 / Math.sqrt(lengthSq);
@@ -314,7 +357,7 @@ Object.assign(Vec3.prototype, {
         }
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -331,7 +374,7 @@ Object.assign(Vec3.prototype, {
      * // Should output 5, 0, 0
      * console.log("The result of the vector projection is: " + v.toString());
      */
-    project: function (rhs) {
+    project(rhs: Vec3): Vec3 {
         var a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
         var b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
         var s = a_dot_b / b_dot_b;
@@ -339,7 +382,7 @@ Object.assign(Vec3.prototype, {
         this.y = rhs.y * s;
         this.z = rhs.z * s;
         return this;
-    },
+    }
 
     /**
      * @function
@@ -360,13 +403,13 @@ Object.assign(Vec3.prototype, {
      * // Divide by 2
      * v.scale(0.5);
      */
-    scale: function (scalar) {
+    scale(scalar: number): Vec3 {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -383,13 +426,13 @@ Object.assign(Vec3.prototype, {
      * // Should output 5, 10, 20
      * console.log("The result of the vector set is: " + v.toString());
      */
-    set: function (x, y, z) {
+    set(x: number, y: number, z: number): Vec3 {
         this.x = x;
         this.y = y;
         this.z = z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -406,13 +449,13 @@ Object.assign(Vec3.prototype, {
      * // Should output [-10, -10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
-    sub: function (rhs) {
+    sub(rhs: Vec3): Vec3 {
         this.x -= rhs.x;
         this.y -= rhs.y;
         this.z -= rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -431,13 +474,13 @@ Object.assign(Vec3.prototype, {
      * // Should output [-10, -10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
-    sub2: function (lhs, rhs) {
+    sub2(lhs: Vec3, rhs: Vec3): Vec3 {
         this.x = lhs.x - rhs.x;
         this.y = lhs.y - rhs.y;
         this.z = lhs.z - rhs.z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -449,138 +492,82 @@ Object.assign(Vec3.prototype, {
      * // Should output '[20, 10, 5]'
      * console.log(v.toString());
      */
-    toString: function () {
+    toString(): string {
         return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
     }
-});
 
-/**
- * @name pc.Vec3#x
- * @type {number}
- * @description The first component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get x
- * var x = vec.x;
- *
- * // Set x
- * vec.x = 0;
- */
-/**
- * @name pc.Vec3#y
- * @type {number}
- * @description The second component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get y
- * var y = vec.y;
- *
- * // Set y
- * vec.y = 0;
- */
-/**
- * @name pc.Vec3#z
- * @type {number}
- * @description The third component of the vector.
- * @example
- * var vec = new pc.Vec3(10, 20, 30);
- *
- * // Get z
- * var z = vec.z;
- *
- * // Set z
- * vec.z = 0;
- */
-
-/**
- * @static
- * @readonly
- * @name pc.Vec3.BACK
- * @type {pc.Vec3}
- * @description A constant vector set to [0, 0, 1].
- */
-
-/**
- * @static
- * @readonly
- * @name pc.Vec3.DOWN
- * @type {pc.Vec3}
- * @description A constant vector set to [0, -1, 0].
- */
-
-/**
- * @static
- * @readonly
- * @name pc.Vec3.FORWARD
- * @type {pc.Vec3}
- * @description A constant vector set to [0, 0, -1].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec3.LEFT
- * @type {pc.Vec3}
- * @description A constant vector set to [-1, 0, 0].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec3.ONE
- * @type {pc.Vec3}
- * @description A constant vector set to [1, 1, 1].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec3.RIGHT
- * @type {pc.Vec3}
- * @description A constant vector set to [1, 0, 0].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec3.UP
- * @type {pc.Vec3}
- * @description A constant vector set to [0, 1, 0].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec3.ZERO
- * @type {pc.Vec3}
- * @description A constant vector set to [0, 0, 0].
- */
-
-Object.defineProperties(Vec3, {
-    ZERO: { value: new Vec3(0, 0, 0) },
-    ONE: { value: new Vec3(1, 1, 1) },
-    UP: { value: new Vec3(0, 1, 0) },
-    DOWN: { value: new Vec3(0, -1, 0) },
-    RIGHT: { value: new Vec3(1, 0, 0) },
-    LEFT: { value: new Vec3(-1, 0, 0) },
-    FORWARD: { value: new Vec3(0, 0, -1) },
-    BACK: { value: new Vec3(0, 0, 1) }
-});
-
-Object.freeze(Vec3.ZERO);
-Object.freeze(Vec3.ONE);
-Object.freeze(Vec3.UP);
-Object.freeze(Vec3.DOWN);
-Object.freeze(Vec3.RIGHT);
-Object.freeze(Vec3.LEFT);
-Object.freeze(Vec3.FORWARD);
-Object.freeze(Vec3.BACK);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.ZERO
+     * @type {pc.Vec3}
+     * @description A constant vector set to [0, 0, 0].
+     */
+    static readonly ZERO: Vec3 = Object.freeze(new Vec3(0, 0, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.ONE
+     * @type {pc.Vec3}
+     * @description A constant vector set to [1, 1, 1].
+     */
+    static readonly ONE: Vec3 = Object.freeze(new Vec3(1, 1, 1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.UP
+     * @type {pc.Vec3}
+     * @description A constant vector set to [0, 1, 0].
+     */
+    static readonly UP: Vec3 = Object.freeze(new Vec3(0, 1, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.DOWN
+     * @type {pc.Vec3}
+     * @description A constant vector set to [0, -1, 0].
+     */
+    static readonly DOWN: Vec3 = Object.freeze(new Vec3(0, -1, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.RIGHT
+     * @type {pc.Vec3}
+     * @description A constant vector set to [1, 0, 0].
+     */
+    static readonly RIGHT: Vec3 = Object.freeze(new Vec3(1, 0, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.LEFT
+     * @type {pc.Vec3}
+     * @description A constant vector set to [-1, 0, 0].
+     */
+    static readonly LEFT: Vec3 = Object.freeze(new Vec3(-1, 0, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.FORWARD
+     * @type {pc.Vec3}
+     * @description A constant vector set to [0, 0, -1].
+     */
+    static readonly FORWARD: Vec3 = Object.freeze(new Vec3(0, 0, -1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec3.BACK
+     * @type {pc.Vec3}
+     * @description A constant vector set to [0, 0, 1].
+     */
+    static BACK: Vec3 = Object.freeze(new Vec3(0, 0, 1));
+}
 
 export { Vec3 };

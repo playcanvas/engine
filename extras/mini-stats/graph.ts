@@ -1,30 +1,51 @@
+import { CpuTimer } from './cpu-timer';
+import { GpuTimer } from './gpu-timer';
+import { Render2d } from './render2d';
+import { StatsTimer } from './stats-timer';
+
 // Realtime performance graph visual
-function Graph(name, app, watermark, textRefreshRate, timer) {
-    this.name = name;
-    this.device = app.graphicsDevice;
-    this.timer = timer;
-    this.watermark = watermark;
-    this.enabled = false;
-    this.textRefreshRate = textRefreshRate;
+class Graph {
+    name: string;
+    device: pc.GraphicsDevice;
+    timer: CpuTimer | GpuTimer | StatsTimer;
+    watermark: number;
+    enabled: boolean;
+    textRefreshRate: number;
+    avgTotal: number;
+    avgTimer: number;
+    avgCount: number;
+    timingText: string;
+    texture: pc.Texture;
+    yOffset: number;
+    cursor: number;
+    sample: Uint8ClampedArray;
+    counter: number;
 
-    this.avgTotal = 0;
-    this.avgTimer = 0;
-    this.avgCount = 0;
-    this.timingText = "";
+    constructor(name: string, app: pc.Application, watermark: number, textRefreshRate: number, timer: CpuTimer | GpuTimer | StatsTimer) {
+        this.name = name;
+        this.device = app.graphicsDevice;
+        this.timer = timer;
+        this.watermark = watermark;
+        this.enabled = false;
+        this.textRefreshRate = textRefreshRate;
 
-    this.texture = null;
-    this.yOffset = 0;
-    this.cursor = 0;
-    this.sample = new Uint8ClampedArray(4);
-    this.sample.set([0, 0, 0, 255]);
+        this.avgTotal = 0;
+        this.avgTimer = 0;
+        this.avgCount = 0;
+        this.timingText = "";
 
-    app.on('frameupdate', this.update.bind(this));
+        this.texture = null;
+        this.yOffset = 0;
+        this.cursor = 0;
+        this.sample = new Uint8ClampedArray(4);
+        this.sample.set([0, 0, 0, 255]);
 
-    this.counter = 0;
-}
+        app.on('frameupdate', this.update.bind(this));
 
-Object.assign(Graph.prototype, {
-    update: function (ms) {
+        this.counter = 0;
+    }
+
+    update(ms: number): void {
         var timings = this.timer.timings;
 
         // calculate stacked total
@@ -77,9 +98,9 @@ Object.assign(Graph.prototype, {
                 this.cursor = 0;
             }
         }
-    },
+    }
 
-    render: function (render2d, x, y, w, h) {
+    render(render2d: Render2d, x: number, y: number, w: number, h: number) {
         render2d.quad(this.texture,
                       x + w,
                       y,
@@ -90,6 +111,6 @@ Object.assign(Graph.prototype, {
                       -w, 0,
                       this.enabled);
     }
-});
+}
 
 export { Graph };

@@ -5,16 +5,17 @@
  * @description Creates a new identity Mat3 object.
  * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
-function Mat3() {
-    var data;
-    // Create an identity matrix. Note that a new Float32Array has all elements set
-    // to zero by default, so we only need to set the relevant elements to one.
-    data = new Float32Array(9);
-    data[0] = data[4] = data[8] = 1;
-    this.data = data;
-}
+class Mat3 {
+    data: Float32Array;
 
-Object.assign(Mat3.prototype, {
+    constructor() {
+        var data = new Float32Array(9);
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data[0] = data[4] = data[8] = 1;
+        this.data = data;
+    }
+
     /**
      * @function
      * @name pc.Mat3#clone
@@ -25,9 +26,9 @@ Object.assign(Mat3.prototype, {
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    clone: function () {
+    clone(): Mat3 {
         return new Mat3().copy(this);
-    },
+    }
 
     /**
      * @function
@@ -41,7 +42,7 @@ Object.assign(Mat3.prototype, {
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs): Mat3 {
         var src = rhs.data;
         var dst = this.data;
 
@@ -56,7 +57,7 @@ Object.assign(Mat3.prototype, {
         dst[8] = src[8];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -68,7 +69,7 @@ Object.assign(Mat3.prototype, {
      * var dst = new pc.Mat3();
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
      */
-    set: function (src) {
+    set(src: number[]): Mat3 {
         var dst = this.data;
 
         dst[0] = src[0];
@@ -82,7 +83,7 @@ Object.assign(Mat3.prototype, {
         dst[8] = src[8];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -95,7 +96,7 @@ Object.assign(Mat3.prototype, {
      * var b = new pc.Mat3();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs: Mat3): boolean {
         var l = this.data;
         var r = rhs.data;
 
@@ -108,7 +109,7 @@ Object.assign(Mat3.prototype, {
                 (l[6] === r[6]) &&
                 (l[7] === r[7]) &&
                 (l[8] === r[8]));
-    },
+    }
 
     /**
      * @function
@@ -119,7 +120,7 @@ Object.assign(Mat3.prototype, {
      * var m = new pc.Mat3();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    isIdentity: function () {
+    isIdentity(): boolean {
         var m = this.data;
         return ((m[0] === 1) &&
                 (m[1] === 0) &&
@@ -130,7 +131,7 @@ Object.assign(Mat3.prototype, {
                 (m[6] === 0) &&
                 (m[7] === 0) &&
                 (m[8] === 1));
-    },
+    }
 
     /**
      * @function
@@ -141,7 +142,7 @@ Object.assign(Mat3.prototype, {
      * m.setIdentity();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    setIdentity: function () {
+    setIdentity(): Mat3 {
         var m = this.data;
         m[0] = 1;
         m[1] = 0;
@@ -156,27 +157,7 @@ Object.assign(Mat3.prototype, {
         m[8] = 1;
 
         return this;
-    },
-
-    /**
-     * @function
-     * @name pc.Mat3#toString
-     * @description Converts the matrix to string form.
-     * @returns {string} The matrix in string form.
-     * @example
-     * var m = new pc.Mat3();
-     * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
-     * console.log(m.toString());
-     */
-    toString: function () {
-        var t = '[';
-        for (var i = 0; i < 9; i++) {
-            t += this.data[i];
-            t += (i !== 8) ? ', ' : '';
-        }
-        t += ']';
-        return t;
-    },
+    }
 
     /**
      * @function
@@ -189,7 +170,7 @@ Object.assign(Mat3.prototype, {
      * // Transpose in place
      * m.transpose();
      */
-    transpose: function () {
+    transpose(): Mat3 {
         var m = this.data;
 
         var tmp;
@@ -199,32 +180,45 @@ Object.assign(Mat3.prototype, {
 
         return this;
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat3.IDENTITY
- * @type {pc.Mat3}
- * @description A constant matrix set to the identity.
- */
+    /**
+     * @function
+     * @name pc.Mat3#toString
+     * @description Converts the matrix to string form.
+     * @returns {string} The matrix in string form.
+     * @example
+     * var m = new pc.Mat3();
+     * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
+     * console.log(m.toString());
+     */
+    toString(): string {
+        var t = '[';
+        for (var i = 0; i < 9; i++) {
+            t += this.data[i];
+            t += (i !== 8) ? ', ' : '';
+        }
+        t += ']';
+        return t;
+    }
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat3.ZERO
- * @type {pc.Mat3}
- * @description A constant matrix with all elements set to 0.
- */
-
-Object.defineProperties(Mat3, {
-    ZERO: { value: new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]) },
-    IDENTITY: { value: new Mat3() }
-});
-
-Object.freeze(Mat3.ZERO);
-Object.freeze(Mat3.IDENTITY);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat3.IDENTITY
+     * @type {pc.Mat3}
+     * @description A constant matrix set to the identity.
+     */
+    static readonly IDENTITY: Mat3 = Object.freeze(new Mat3());
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat3.ZERO
+     * @type {pc.Mat3}
+     * @description A constant matrix with all elements set to 0.
+     */
+    static readonly ZERO: Mat3 = Object.freeze(new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]));
+}
 
 export { Mat3 };

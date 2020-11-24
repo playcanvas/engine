@@ -8,17 +8,46 @@
  * @example
  * var v = new pc.Vec2(1, 2);
  */
-function Vec2(x, y) {
-    if (x && x.length === 2) {
-        this.x = x[0];
-        this.y = x[1];
-    } else {
-        this.x = x || 0;
-        this.y = y || 0;
-    }
-}
+class Vec2 {
+    /**
+     * @name pc.Vec2#x
+     * @type {number}
+     * @description The first component of the vector.
+     * @example
+     * var vec = new pc.Vec2(10, 20);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
+     */
+    x: number;
+    /**
+     * @name pc.Vec2#y
+     * @type {number}
+     * @description The second component of the vector.
+     * @example
+     * var vec = new pc.Vec2(10, 20);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
+     */
+    y: number;
 
-Object.assign(Vec2.prototype, {
+    constructor(x?: number | number[], y?: number, z?: number) {
+        if (Array.isArray(x)) {
+            this.x = x[0];
+            this.y = x[1];
+        } else {
+            this.x = x || 0;
+            this.y = y || 0;
+        }
+    }
+
     /**
      * @function
      * @name pc.Vec2#add
@@ -34,12 +63,12 @@ Object.assign(Vec2.prototype, {
      * // Should output [30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
-    add: function (rhs) {
+    add(rhs: Vec2): Vec2 {
         this.x += rhs.x;
         this.y += rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -58,12 +87,12 @@ Object.assign(Vec2.prototype, {
      *
      * console.log("The result of the addition is: " + r.toString());
      */
-    add2: function (lhs, rhs) {
+    add2(lhs: Vec2, rhs: Vec2): Vec2 {
         this.x = lhs.x + rhs.x;
         this.y = lhs.y + rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -75,9 +104,9 @@ Object.assign(Vec2.prototype, {
      * var vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
-    clone: function () {
+    clone(): Vec2 {
         return new Vec2().copy(this);
-    },
+    }
 
     /**
      * @function
@@ -93,12 +122,12 @@ Object.assign(Vec2.prototype, {
      *
      * console.log("The two vectors are " + (dst.equals(src) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs: Vec2): Vec2 {
         this.x = rhs.x;
         this.y = rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -112,11 +141,11 @@ Object.assign(Vec2.prototype, {
      * var d = v1.distance(v2);
      * console.log("The between v1 and v2 is: " + d);
      */
-    distance: function (rhs) {
+    distance(rhs: Vec2): number {
         var x = this.x - rhs.x;
         var y = this.y - rhs.y;
         return Math.sqrt(x * x + y * y);
-    },
+    }
 
     /**
      * @function
@@ -130,9 +159,9 @@ Object.assign(Vec2.prototype, {
      * var v1dotv2 = v1.dot(v2);
      * console.log("The result of the dot product is: " + v1dotv2);
      */
-    dot: function (rhs) {
+    dot(rhs: Vec2): number {
         return this.x * rhs.x + this.y * rhs.y;
-    },
+    }
 
     /**
      * @function
@@ -145,9 +174,9 @@ Object.assign(Vec2.prototype, {
      * var b = new pc.Vec2(4, 5);
      * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs: Vec2): boolean {
         return this.x === rhs.x && this.y === rhs.y;
-    },
+    }
 
     /**
      * @function
@@ -160,9 +189,9 @@ Object.assign(Vec2.prototype, {
      * // Should output 5
      * console.log("The length of the vector is: " + len);
      */
-    length: function () {
+    length(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
-    },
+    }
 
     /**
      * @function
@@ -175,9 +204,9 @@ Object.assign(Vec2.prototype, {
      * // Should output 25
      * console.log("The length squared of the vector is: " + len);
      */
-    lengthSq: function () {
+    lengthSq(): number {
         return this.x * this.x + this.y * this.y;
-    },
+    }
 
     /**
      * @function
@@ -198,12 +227,12 @@ Object.assign(Vec2.prototype, {
      * r.lerp(a, b, 0.5); // r is 5, 5
      * r.lerp(a, b, 1);   // r is equal to b
      */
-    lerp: function (lhs, rhs, alpha) {
+    lerp(lhs: Vec2, rhs: Vec2, alpha: number): Vec2 {
         this.x = lhs.x + alpha * (rhs.x - lhs.x);
         this.y = lhs.y + alpha * (rhs.y - lhs.y);
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -220,12 +249,12 @@ Object.assign(Vec2.prototype, {
      * // Should output 8, 15
      * console.log("The result of the multiplication is: " + a.toString());
      */
-    mul: function (rhs) {
+    mul(rhs: Vec2): Vec2 {
         this.x *= rhs.x;
         this.y *= rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -244,12 +273,12 @@ Object.assign(Vec2.prototype, {
      * // Should output 8, 15
      * console.log("The result of the multiplication is: " + r.toString());
      */
-    mul2: function (lhs, rhs) {
+    mul2(lhs: Vec2, rhs: Vec2): Vec2 {
         this.x = lhs.x * rhs.x;
         this.y = lhs.y * rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -265,7 +294,7 @@ Object.assign(Vec2.prototype, {
      * // Should output 1, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize: function () {
+    normalize(): Vec2 {
         var lengthSq = this.x * this.x + this.y * this.y;
         if (lengthSq > 0) {
             var invLength = 1 / Math.sqrt(lengthSq);
@@ -274,7 +303,7 @@ Object.assign(Vec2.prototype, {
         }
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -295,12 +324,12 @@ Object.assign(Vec2.prototype, {
      * // Divide by 2
      * v.scale(0.5);
      */
-    scale: function (scalar) {
+    scale(scalar: number): Vec2 {
         this.x *= scalar;
         this.y *= scalar;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -316,12 +345,12 @@ Object.assign(Vec2.prototype, {
      * // Should output 5, 10
      * console.log("The result of the vector set is: " + v.toString());
      */
-    set: function (x, y) {
+    set(x: number, y: number): Vec2 {
         this.x = x;
         this.y = y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -338,12 +367,12 @@ Object.assign(Vec2.prototype, {
      * // Should output [-10, -10]
      * console.log("The result of the subtraction is: " + a.toString());
      */
-    sub: function (rhs) {
+    sub(rhs: Vec2): Vec2 {
         this.x -= rhs.x;
         this.y -= rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -362,12 +391,12 @@ Object.assign(Vec2.prototype, {
      * // Should output [-10, -10]
      * console.log("The result of the subtraction is: " + r.toString());
      */
-    sub2: function (lhs, rhs) {
+    sub2(lhs: Vec2, rhs: Vec2) {
         this.x = lhs.x - rhs.x;
         this.y = lhs.y - rhs.y;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -379,108 +408,64 @@ Object.assign(Vec2.prototype, {
      * // Should output '[20, 10]'
      * console.log(v.toString());
      */
-    toString: function () {
+    toString(): string {
         return '[' + this.x + ', ' + this.y + ']';
     }
-});
 
-/**
- * @field
- * @name pc.Vec2#x
- * @type {number}
- * @description The first element of the vector.
- * @example
- * var vec = new pc.Vec2(10, 20);
- *
- * // Get x
- * var x = vec.x;
- *
- * // Set x
- * vec.x = 0;
- */
-/**
- * @field
- * @name pc.Vec2#y
- * @type {number}
- * @description The second element of the vector.
- * @example
- * var vec = new pc.Vec2(10, 20);
- *
- * // Get y
- * var y = vec.y;
- *
- * // Set y
- * vec.y = 0;
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec2.ONE
- * @type {pc.Vec2}
- * @description A constant vector set to [1, 1].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec2.RIGHT
- * @type {pc.Vec2}
- * @description A constant vector set to [1, 0].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec2.LEFT
- * @type {pc.Vec2}
- * @description A constant vector set to [-1, 0].
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec2.UP
- * @type {pc.Vec2}
- * @description A constant vector set to [0, 1].
- */
-
- /**
-  * @field
-  * @static
-  * @readonly
-  * @name pc.Vec2.DOWN
-  * @type {pc.Vec2}
-  * @description A constant vector set to [0, -1].
-  */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Vec2.ZERO
- * @type {pc.Vec2}
- * @description A constant vector set to [0, 0].
- */
-
-Object.defineProperties(Vec2, {
-    ZERO: { value: new Vec2(0, 0) },
-    ONE: { value: new Vec2(1, 1) },
-    UP: { value: new Vec2(0, 1) },
-    DOWN: { value: new Vec2(0, -1) },
-    RIGHT: { value: new Vec2(1, 0) },
-    LEFT: { value: new Vec2(-1, 0) }
-});
-
-Object.freeze(Vec2.ZERO);
-Object.freeze(Vec2.ONE);
-Object.freeze(Vec2.UP);
-Object.freeze(Vec2.DOWN);
-Object.freeze(Vec2.RIGHT);
-Object.freeze(Vec2.LEFT);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.ZERO
+     * @type {pc.Vec2}
+     * @description A constant vector set to [0, 0].
+     */
+    static readonly ZERO: Vec2 = Object.freeze(new Vec2(0, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.ONE
+     * @type {pc.Vec2}
+     * @description A constant vector set to [1, 1].
+     */
+    static readonly ONE: Vec2 = Object.freeze(new Vec2(1, 1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.UP
+     * @type {pc.Vec2}
+     * @description A constant vector set to [0, 1].
+     */
+    static readonly UP: Vec2 = Object.freeze(new Vec2(0, 1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.DOWN
+     * @type {pc.Vec2}
+     * @description A constant vector set to [0, -1].
+     */
+    static readonly DOWN: Vec2 = Object.freeze(new Vec2(0, -1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.RIGHT
+     * @type {pc.Vec2}
+     * @description A constant vector set to [1, 0].
+     */
+    static readonly RIGHT: Vec2 = Object.freeze(new Vec2(1, 0));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.LEFT
+     * @type {pc.Vec2}
+     * @description A constant vector set to [-1, 0].
+     */
+    static readonly LEFT: Vec2 = Object.freeze(new Vec2(-1, 0));
+}
 
 export { Vec2 };

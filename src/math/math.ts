@@ -98,7 +98,7 @@ var math = {
      * @returns {number} A single unsigned 24 bit Number.
      */
     bytesToInt24: function (r, g, b) {
-        if (r.length) {
+        if (Array.isArray(r)) {
             b = r[2];
             g = r[1];
             r = r[0];
@@ -123,7 +123,7 @@ var math = {
      * @param {number} a - A single byte (0-255).
      */
     bytesToInt32: function (r, g, b, a) {
-        if (r.length) {
+        if (Array.isArray(r)) {
             a = r[3];
             b = r[2];
             g = r[1];

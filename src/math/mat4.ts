@@ -1,9 +1,16 @@
-import { math } from './math.js';
-import { Vec2 } from './vec2.js';
-import { Vec3 } from './vec3.js';
-import { Vec4 } from './vec4.js';
+import { math } from "./math";
+import { Mat3 } from './mat3';
+import { Quat } from './quat';
+import { Vec2 } from './vec2';
+import { Vec3 } from './vec3';
+import { Vec4 } from './vec4';
 
-var _halfSize = new Vec2();
+let _halfSize = new Vec2();
+
+let x = new Vec3();
+let y = new Vec3();
+let z = new Vec3();
+let scale = new Vec3();
 
 /**
  * @class
@@ -12,26 +19,17 @@ var _halfSize = new Vec2();
  * @description Creates a new identity Mat4 object.
  * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
-function Mat4() {
-    var data = new Float32Array(16);
-    // Create an identity matrix. Note that a new Float32Array has all elements set
-    // to zero by default, so we only need to set the relevant elements to one.
-    data[0] = data[5] = data[10] = data[15] = 1;
-    this.data = data;
-}
+class Mat4 {
+    data: Float32Array;
 
-// Static function which evaluates perspective projection matrix half size at the near plane
-Mat4._getPerspectiveHalfSize = function (halfSize, fov, aspect, znear, fovIsHorizontal) {
-    if (fovIsHorizontal) {
-        halfSize.x = znear * Math.tan(fov * Math.PI / 360);
-        halfSize.y = halfSize.x / aspect;
-    } else {
-        halfSize.y = znear * Math.tan(fov * Math.PI / 360);
-        halfSize.x = halfSize.y * aspect;
+    constructor() {
+        var data = new Float32Array(16);
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data[0] = data[5] = data[10] = data[15] = 1;
+        this.data = data;
     }
-};
 
-Object.assign(Mat4.prototype, {
     /**
      * @function
      * @name pc.Mat4#add2
@@ -47,7 +45,7 @@ Object.assign(Mat4.prototype, {
      *
      * console.log("The result of the addition is: " + m.toString());
      */
-    add2: function (lhs, rhs) {
+    add2(lhs: Mat4, rhs: Mat4): Mat4 {
         var a = lhs.data,
             b = rhs.data,
             r = this.data;
@@ -70,7 +68,7 @@ Object.assign(Mat4.prototype, {
         r[15] = a[15] + b[15];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -85,9 +83,9 @@ Object.assign(Mat4.prototype, {
      *
      * console.log("The result of the addition is: " + m.toString());
      */
-    add: function (rhs) {
+    add(rhs: Mat4): Mat4 {
         return this.add2(this, rhs);
-    },
+    }
 
     /**
      * @function
@@ -99,9 +97,9 @@ Object.assign(Mat4.prototype, {
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    clone: function () {
+    clone(): Mat4 {
         return new Mat4().copy(this);
-    },
+    }
 
     /**
      * @function
@@ -115,7 +113,7 @@ Object.assign(Mat4.prototype, {
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs: Mat4): Mat4 {
         var src = rhs.data,
             dst = this.data;
 
@@ -137,7 +135,7 @@ Object.assign(Mat4.prototype, {
         dst[15] = src[15];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -150,7 +148,7 @@ Object.assign(Mat4.prototype, {
      * var b = new pc.Mat4();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs: Mat4): boolean {
         var l = this.data,
             r = rhs.data;
 
@@ -170,7 +168,7 @@ Object.assign(Mat4.prototype, {
                 (l[13] === r[13]) &&
                 (l[14] === r[14]) &&
                 (l[15] === r[15]));
-    },
+    }
 
     /**
      * @function
@@ -181,7 +179,7 @@ Object.assign(Mat4.prototype, {
      * var m = new pc.Mat4();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    isIdentity: function () {
+    isIdentity(): boolean {
         var m = this.data;
 
         return ((m[0] === 1) &&
@@ -200,7 +198,7 @@ Object.assign(Mat4.prototype, {
                 (m[13] === 0) &&
                 (m[14] === 0) &&
                 (m[15] === 1));
-    },
+    }
 
     /**
      * @function
@@ -220,7 +218,7 @@ Object.assign(Mat4.prototype, {
      *
      * console.log("The result of the multiplication is: " + r.toString());
      */
-    mul2: function (lhs, rhs) {
+    mul2(lhs: Mat4, rhs: Mat4): Mat4 {
         var a00, a01, a02, a03,
             a10, a11, a12, a13,
             a20, a21, a22, a23,
@@ -284,7 +282,7 @@ Object.assign(Mat4.prototype, {
         r[15] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -297,7 +295,7 @@ Object.assign(Mat4.prototype, {
      * @param {pc.Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
      * @returns {pc.Mat4} Self for chaining.
      */
-    mulAffine2: function (lhs, rhs) {
+    mulAffine2(lhs: Mat4, rhs: Mat4): Mat4 {
         var a00, a01, a02,
             a10, a11, a12,
             a20, a21, a22,
@@ -353,7 +351,7 @@ Object.assign(Mat4.prototype, {
         r[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -370,9 +368,9 @@ Object.assign(Mat4.prototype, {
      *
      * console.log("The result of the multiplication is: " + a.toString());
      */
-    mul: function (rhs) {
+    mul(rhs: Mat4): Mat4 {
         return this.mul2(this, rhs);
-    },
+    }
 
     /**
      * @function
@@ -390,7 +388,7 @@ Object.assign(Mat4.prototype, {
      *
      * var tv = m.transformPoint(v);
      */
-    transformPoint: function (vec, res) {
+    transformPoint(vec: Vec3, res: Vec3): Vec3 {
         var x, y, z, m;
 
         m = this.data;
@@ -406,7 +404,7 @@ Object.assign(Mat4.prototype, {
         res.z = x * m[2] + y * m[6] + z * m[10] + m[14];
 
         return res;
-    },
+    }
 
     /**
      * @function
@@ -424,7 +422,7 @@ Object.assign(Mat4.prototype, {
      *
      * var tv = m.transformVector(v);
      */
-    transformVector: function (vec, res) {
+    transformVector(vec: Vec3, res: Vec3): Vec3 {
         var x, y, z, m;
 
         m = this.data;
@@ -440,7 +438,7 @@ Object.assign(Mat4.prototype, {
         res.z = x * m[2] + y * m[6] + z * m[10];
 
         return res;
-    },
+    }
 
     /**
      * @function
@@ -461,7 +459,7 @@ Object.assign(Mat4.prototype, {
      *
      * m.transformVec4(v, result);
      */
-    transformVec4: function (vec, res) {
+    transformVec4(vec: Vec4, res: Vec4): Vec4 {
         var x, y, z, w, m;
 
         m = this.data;
@@ -479,7 +477,7 @@ Object.assign(Mat4.prototype, {
         res.w = x * m[3] + y * m[7] + z * m[11] + w * m[15];
 
         return res;
-    },
+    }
 
     /**
      * @function
@@ -500,41 +498,33 @@ Object.assign(Mat4.prototype, {
      * var up = new pc.Vec3(0, 1, 0);
      * var m = new pc.Mat4().setLookAt(position, target, up);
      */
-    setLookAt: (function () {
-        var x, y, z;
+    setLookAt(position: Vec3, target: Vec3, up: Vec3): Mat4 {
+        z.sub2(position, target).normalize();
+        y.copy(up).normalize();
+        x.cross(y, z).normalize();
+        y.cross(z, x);
 
-        x = new Vec3();
-        y = new Vec3();
-        z = new Vec3();
+        var r = this.data;
 
-        return function (position, target, up) {
-            z.sub2(position, target).normalize();
-            y.copy(up).normalize();
-            x.cross(y, z).normalize();
-            y.cross(z, x);
+        r[0]  = x.x;
+        r[1]  = x.y;
+        r[2]  = x.z;
+        r[3]  = 0;
+        r[4]  = y.x;
+        r[5]  = y.y;
+        r[6]  = y.z;
+        r[7]  = 0;
+        r[8]  = z.x;
+        r[9]  = z.y;
+        r[10] = z.z;
+        r[11] = 0;
+        r[12] = position.x;
+        r[13] = position.y;
+        r[14] = position.z;
+        r[15] = 1;
 
-            var r = this.data;
-
-            r[0]  = x.x;
-            r[1]  = x.y;
-            r[2]  = x.z;
-            r[3]  = 0;
-            r[4]  = y.x;
-            r[5]  = y.y;
-            r[6]  = y.z;
-            r[7]  = 0;
-            r[8]  = z.x;
-            r[9]  = z.y;
-            r[10] = z.z;
-            r[11] = 0;
-            r[12] = position.x;
-            r[13] = position.y;
-            r[14] = position.z;
-            r[15] = 1;
-
-            return this;
-        };
-    }()),
+        return this;
+    }
 
     /**
      * @private
@@ -553,7 +543,7 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 perspective projection matrix
      * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
      */
-    setFrustum: function (left, right, bottom, top, znear, zfar) {
+    setFrustum(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): Mat4 {
         var temp1, temp2, temp3, temp4, r;
 
         temp1 = 2 * znear;
@@ -580,7 +570,7 @@ Object.assign(Mat4.prototype, {
         r[15] = 0;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -600,10 +590,10 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 perspective projection matrix
      * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
-    setPerspective: function (fov, aspect, znear, zfar, fovIsHorizontal) {
+    setPerspective(fov: number, aspect: number, znear: number, zfar: number, fovIsHorizontal: boolean): Mat4 {
         Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
         return this.setFrustum(-_halfSize.x, _halfSize.x, -_halfSize.y, _halfSize.y, znear, zfar);
-    },
+    }
 
     /**
      * @function
@@ -621,7 +611,7 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 orthographic projection matrix
      * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
      */
-    setOrtho: function (left, right, bottom, top, near, far) {
+    setOrtho(left: number, right: number, bottom: number, top: number, near: number, far: number): Mat4 {
         var r = this.data;
 
         r[0] = 2 / (right - left);
@@ -642,7 +632,7 @@ Object.assign(Mat4.prototype, {
         r[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -656,7 +646,7 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 rotation matrix
      * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
      */
-    setFromAxisAngle: function (axis, angle) {
+    setFromAxisAngle(axis: Vec3, angle: number): Mat4 {
         var x, y, z, c, s, t, tx, ty, m;
 
         angle *= math.DEG_TO_RAD;
@@ -689,7 +679,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @private
@@ -704,7 +694,7 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 translation matrix
      * var tm = new pc.Mat4().setTranslate(10, 10, 10);
      */
-    setTranslate: function (x, y, z) {
+    setTranslate(x: number, y: number, z: number): Mat4 {
         var m = this.data;
 
         m[0] = 1;
@@ -725,7 +715,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @private
@@ -740,7 +730,7 @@ Object.assign(Mat4.prototype, {
      * // Create a 4x4 scale matrix
      * var sm = new pc.Mat4().setScale(10, 10, 10);
      */
-    setScale: function (x, y, z) {
+    setScale(x: number, y: number, z: number): Mat4 {
         var m = this.data;
 
         m[0] = x;
@@ -761,7 +751,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -775,7 +765,7 @@ Object.assign(Mat4.prototype, {
      * // Invert in place
      * rot.invert();
      */
-    invert: function () {
+    invert(): Mat4 {
         var a00, a01, a02, a03,
             a10, a11, a12, a13,
             a20, a21, a22, a23,
@@ -842,7 +832,7 @@ Object.assign(Mat4.prototype, {
 
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -851,7 +841,7 @@ Object.assign(Mat4.prototype, {
      * @param {number[]} src - Source array. Must have 16 values.
      * @returns {pc.Mat4} Self for chaining.
      */
-    set: function (src) {
+    set(src: number[]): Mat4 {
         var dst = this.data;
         dst[0] = src[0];
         dst[1] = src[1];
@@ -871,7 +861,7 @@ Object.assign(Mat4.prototype, {
         dst[15] = src[15];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -882,7 +872,7 @@ Object.assign(Mat4.prototype, {
      * m.setIdentity();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    setIdentity: function () {
+    setIdentity(): Mat4 {
         var m = this.data;
         m[0] = 1;
         m[1] = 0;
@@ -902,7 +892,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -921,7 +911,7 @@ Object.assign(Mat4.prototype, {
      * var m = new pc.Mat4();
      * m.setTRS(t, r, s);
      */
-    setTRS: function (t, r, s) {
+    setTRS(t: Vec3, r: Quat, s: Vec3): Mat4 {
         var qx, qy, qz, qw, sx, sy, sz,
             x2, y2, z2, xx, xy, xz, yy, yz, zz, wx, wy, wz, m;
 
@@ -970,7 +960,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -983,7 +973,7 @@ Object.assign(Mat4.prototype, {
      * // Transpose in place
      * m.transpose();
      */
-    transpose: function () {
+    transpose(): Mat4 {
         var tmp, m = this.data;
 
         tmp = m[1];
@@ -1011,9 +1001,9 @@ Object.assign(Mat4.prototype, {
         m[14] = tmp;
 
         return this;
-    },
+    }
 
-    invertTo3x3: function (res) {
+    invertTo3x3(res: Mat3): Mat4 {
         var a11, a21, a31, a12, a22, a32, a13, a23, a33,
             m, r, det, idet;
 
@@ -1060,7 +1050,7 @@ Object.assign(Mat4.prototype, {
         r[8] = idet * a33;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -1076,11 +1066,11 @@ Object.assign(Mat4.prototype, {
      * var t = new pc.Vec3();
      * m.getTranslation(t);
      */
-    getTranslation: function (t) {
+    getTranslation(t: Vec3): Vec3 {
         t = (t === undefined) ? new Vec3() : t;
 
         return t.set(this.data[12], this.data[13], this.data[14]);
-    },
+    }
 
     /**
      * @function
@@ -1096,11 +1086,11 @@ Object.assign(Mat4.prototype, {
      * var x = new pc.Vec3();
      * m.getX(x);
      */
-    getX: function (x) {
+    getX(x: Vec3): Vec3 {
         x = (x === undefined) ? new Vec3() : x;
 
         return x.set(this.data[0], this.data[1], this.data[2]);
-    },
+    }
 
     /**
      * @function
@@ -1116,11 +1106,11 @@ Object.assign(Mat4.prototype, {
      * var y = new pc.Vec3();
      * m.getY(y);
      */
-    getY: function (y) {
+    getY(y: Vec3): Vec3 {
         y = (y === undefined) ? new Vec3() : y;
 
         return y.set(this.data[4], this.data[5], this.data[6]);
-    },
+    }
 
     /**
      * @function
@@ -1136,11 +1126,11 @@ Object.assign(Mat4.prototype, {
      * var z = new pc.Vec3();
      * m.getZ(z);
      */
-    getZ: function (z) {
+    getZ(z: Vec3): Vec3 {
         z = (z === undefined) ? new Vec3() : z;
 
         return z.set(this.data[8], this.data[9], this.data[10]);
-    },
+    }
 
     /**
      * @function
@@ -1155,24 +1145,16 @@ Object.assign(Mat4.prototype, {
      * // Query the scale component
      * var scale = m.getScale();
      */
-    getScale: (function () {
-        var x, y, z;
+    getScale(scale: Vec3): Vec3 {
+        scale = (scale === undefined) ? new Vec3() : scale;
 
-        x = new Vec3();
-        y = new Vec3();
-        z = new Vec3();
+        this.getX(x);
+        this.getY(y);
+        this.getZ(z);
+        scale.set(x.length(), y.length(), z.length());
 
-        return function (scale) {
-            scale = (scale === undefined) ? new Vec3() : scale;
-
-            this.getX(x);
-            this.getY(y);
-            this.getZ(z);
-            scale.set(x.length(), y.length(), z.length());
-
-            return scale;
-        };
-    }()),
+        return scale;
+    }
 
     /**
      * @function
@@ -1190,7 +1172,7 @@ Object.assign(Mat4.prototype, {
     // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
     // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
     // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
-    setFromEulerAngles: function (ex, ey, ez) {
+    setFromEulerAngles(ex: number, ey: number, ez: number): Mat4 {
         var s1, c1, s2, c2, s3, c3, m;
 
         ex *= math.DEG_TO_RAD;
@@ -1229,7 +1211,7 @@ Object.assign(Mat4.prototype, {
         m[15] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -1244,42 +1226,38 @@ Object.assign(Mat4.prototype, {
      *
      * var eulers = m.getEulerAngles();
      */
-    getEulerAngles: (function () {
-        var scale = new Vec3();
+    getEulerAngles(eulers: Vec3): Vec3 {
+        var x, y, z, sx, sy, sz, m, halfPi;
 
-        return function (eulers) {
-            var x, y, z, sx, sy, sz, m, halfPi;
+        eulers = (eulers === undefined) ? new Vec3() : eulers;
 
-            eulers = (eulers === undefined) ? new Vec3() : eulers;
+        this.getScale(scale);
+        sx = scale.x;
+        sy = scale.y;
+        sz = scale.z;
 
-            this.getScale(scale);
-            sx = scale.x;
-            sy = scale.y;
-            sz = scale.z;
+        m = this.data;
 
-            m = this.data;
+        y = Math.asin(-m[2] / sx);
+        halfPi = Math.PI * 0.5;
 
-            y = Math.asin(-m[2] / sx);
-            halfPi = Math.PI * 0.5;
-
-            if (y < halfPi) {
-                if (y > -halfPi) {
-                    x = Math.atan2(m[6] / sy, m[10] / sz);
-                    z = Math.atan2(m[1] / sx, m[0] / sx);
-                } else {
-                    // Not a unique solution
-                    z = 0;
-                    x = -Math.atan2(m[4] / sy, m[5] / sy);
-                }
+        if (y < halfPi) {
+            if (y > -halfPi) {
+                x = Math.atan2(m[6] / sy, m[10] / sz);
+                z = Math.atan2(m[1] / sx, m[0] / sx);
             } else {
                 // Not a unique solution
                 z = 0;
-                x = Math.atan2(m[4] / sy, m[5] / sy);
+                x = -Math.atan2(m[4] / sy, m[5] / sy);
             }
+        } else {
+            // Not a unique solution
+            z = 0;
+            x = Math.atan2(m[4] / sy, m[5] / sy);
+        }
 
-            return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
-        };
-    }()),
+        return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
+    }
 
     /**
      * @function
@@ -1291,7 +1269,7 @@ Object.assign(Mat4.prototype, {
      * // Should output '[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]'
      * console.log(m.toString());
      */
-    toString: function () {
+    toString(): string {
         var i, t;
 
         t = '[';
@@ -1302,32 +1280,36 @@ Object.assign(Mat4.prototype, {
         t += ']';
         return t;
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat4.IDENTITY
- * @type {pc.Mat4}
- * @description A constant matrix set to the identity.
- */
+    // Static function which evaluates perspective projection matrix half size at the near plane
+    static _getPerspectiveHalfSize(halfSize: Vec2, fov: number, aspect: number, znear: number, fovIsHorizontal: boolean) {
+        if (fovIsHorizontal) {
+            halfSize.x = znear * Math.tan(fov * Math.PI / 360);
+            halfSize.y = halfSize.x / aspect;
+        } else {
+            halfSize.y = znear * Math.tan(fov * Math.PI / 360);
+            halfSize.x = halfSize.y * aspect;
+        }
+    }
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat4.ZERO
- * @type {pc.Mat4}
- * @description A constant matrix with all elements set to 0.
- */
-
-Object.defineProperties(Mat4, {
-    ZERO: { value: new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) },
-    IDENTITY: { value: new Mat4() }
-});
-
-Object.freeze(Mat4.ZERO);
-Object.freeze(Mat4.IDENTITY);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat4.IDENTITY
+     * @type {pc.Mat4}
+     * @description A constant matrix set to the identity.
+     */
+    static readonly IDENTITY: Mat4 = Object.freeze(new Mat4());
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat4.ZERO
+     * @type {pc.Mat4}
+     * @description A constant matrix with all elements set to 0.
+     */
+    static readonly ZERO: Mat4 = Object.freeze(new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+}
 
 export { Mat4 };
