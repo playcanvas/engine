@@ -198,7 +198,7 @@ class Quat {
      * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
      */
-    getEulerAngles(eulers: Vec3): Vec3 {
+    getEulerAngles(eulers?: Vec3): Vec3 {
         var x, y, z, qx, qy, qz, qw, a2;
 
         eulers = (eulers === undefined) ? new Vec3() : eulers;
@@ -673,7 +673,7 @@ class Quat {
      *
      * var tv = q.transformVector(v);
      */
-    transformVector(vec: Vec3, res: Vec3): Vec3 {
+    transformVector(vec: Vec3, res?: Vec3): Vec3 {
         if (res === undefined) {
             res = new Vec3();
         }

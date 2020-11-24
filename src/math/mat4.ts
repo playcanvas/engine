@@ -388,7 +388,7 @@ class Mat4 {
      *
      * var tv = m.transformPoint(v);
      */
-    transformPoint(vec: Vec3, res: Vec3): Vec3 {
+    transformPoint(vec: Vec3, res?: Vec3): Vec3 {
         var x, y, z, m;
 
         m = this.data;
@@ -422,7 +422,7 @@ class Mat4 {
      *
      * var tv = m.transformVector(v);
      */
-    transformVector(vec: Vec3, res: Vec3): Vec3 {
+    transformVector(vec: Vec3, res?: Vec3): Vec3 {
         var x, y, z, m;
 
         m = this.data;
@@ -459,7 +459,7 @@ class Mat4 {
      *
      * m.transformVec4(v, result);
      */
-    transformVec4(vec: Vec4, res: Vec4): Vec4 {
+    transformVec4(vec: Vec4, res?: Vec4): Vec4 {
         var x, y, z, w, m;
 
         m = this.data;
@@ -590,7 +590,7 @@ class Mat4 {
      * // Create a 4x4 perspective projection matrix
      * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
-    setPerspective(fov: number, aspect: number, znear: number, zfar: number, fovIsHorizontal: boolean): Mat4 {
+    setPerspective(fov: number, aspect: number, znear: number, zfar: number, fovIsHorizontal?: boolean): Mat4 {
         Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
         return this.setFrustum(-_halfSize.x, _halfSize.x, -_halfSize.y, _halfSize.y, znear, zfar);
     }
@@ -1066,7 +1066,7 @@ class Mat4 {
      * var t = new pc.Vec3();
      * m.getTranslation(t);
      */
-    getTranslation(t: Vec3): Vec3 {
+    getTranslation(t?: Vec3): Vec3 {
         t = (t === undefined) ? new Vec3() : t;
 
         return t.set(this.data[12], this.data[13], this.data[14]);
@@ -1086,7 +1086,7 @@ class Mat4 {
      * var x = new pc.Vec3();
      * m.getX(x);
      */
-    getX(x: Vec3): Vec3 {
+    getX(x?: Vec3): Vec3 {
         x = (x === undefined) ? new Vec3() : x;
 
         return x.set(this.data[0], this.data[1], this.data[2]);
@@ -1106,7 +1106,7 @@ class Mat4 {
      * var y = new pc.Vec3();
      * m.getY(y);
      */
-    getY(y: Vec3): Vec3 {
+    getY(y?: Vec3): Vec3 {
         y = (y === undefined) ? new Vec3() : y;
 
         return y.set(this.data[4], this.data[5], this.data[6]);
@@ -1126,7 +1126,7 @@ class Mat4 {
      * var z = new pc.Vec3();
      * m.getZ(z);
      */
-    getZ(z: Vec3): Vec3 {
+    getZ(z?: Vec3): Vec3 {
         z = (z === undefined) ? new Vec3() : z;
 
         return z.set(this.data[8], this.data[9], this.data[10]);
@@ -1145,7 +1145,7 @@ class Mat4 {
      * // Query the scale component
      * var scale = m.getScale();
      */
-    getScale(scale: Vec3): Vec3 {
+    getScale(scale?: Vec3): Vec3 {
         scale = (scale === undefined) ? new Vec3() : scale;
 
         this.getX(x);
@@ -1226,7 +1226,7 @@ class Mat4 {
      *
      * var eulers = m.getEulerAngles();
      */
-    getEulerAngles(eulers: Vec3): Vec3 {
+    getEulerAngles(eulers?: Vec3): Vec3 {
         var x, y, z, sx, sy, sz, m, halfPi;
 
         eulers = (eulers === undefined) ? new Vec3() : eulers;
@@ -1282,7 +1282,7 @@ class Mat4 {
     }
 
     // Static function which evaluates perspective projection matrix half size at the near plane
-    static _getPerspectiveHalfSize(halfSize: Vec2, fov: number, aspect: number, znear: number, fovIsHorizontal: boolean) {
+    static _getPerspectiveHalfSize(halfSize: Vec2, fov: number, aspect: number, znear: number, fovIsHorizontal?: boolean) {
         if (fovIsHorizontal) {
             halfSize.x = znear * Math.tan(fov * Math.PI / 360);
             halfSize.y = halfSize.x / aspect;
