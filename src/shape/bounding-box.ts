@@ -1,4 +1,8 @@
-import { Vec3 } from '../math/vec3.js';
+import { Mat4 } from '../math/mat4';
+import { Vec3 } from '../math/vec3';
+
+import { BoundingSphere } from './bounding-sphere';
+import { Ray } from './ray';
 
 var tmpVecA = new Vec3();
 var tmpVecB = new Vec3();
@@ -16,14 +20,18 @@ var tmpVecE = new Vec3();
  * @property {pc.Vec3} center Center of box.
  * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
  */
-function BoundingBox(center, halfExtents) {
-    this.center = center || new Vec3(0, 0, 0);
-    this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
-    this._min = new Vec3();
-    this._max = new Vec3();
-}
+class BoundingBox {
+    center: Vec3;
+    halfExtents: Vec3;
+    private _min: Vec3;
+    private _max: Vec3;
 
-Object.assign(BoundingBox.prototype, {
+    constructor(center: Vec3, halfExtents: Vec3) {
+        this.center = center || new Vec3(0, 0, 0);
+        this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
+        this._min = new Vec3();
+        this._max = new Vec3();
+    }
 
     /**
      * @function
@@ -31,7 +39,7 @@ Object.assign(BoundingBox.prototype, {
      * @description Combines two bounding boxes into one, enclosing both.
      * @param {pc.BoundingBox} other - Bounding box to add.
      */
-    add: function (other) {
+    add(other: BoundingBox): void {
         var tc = this.center;
         var tcx = tc.x;
         var tcy = tc.y;
@@ -75,7 +83,7 @@ Object.assign(BoundingBox.prototype, {
         th.x = (tmaxx - tminx) * 0.5;
         th.y = (tmaxy - tminy) * 0.5;
         th.z = (tmaxz - tminz) * 0.5;
-    },
+    }
 
     /**
      * @function
@@ -83,11 +91,10 @@ Object.assign(BoundingBox.prototype, {
      * @description Copies the contents of a source AABB.
      * @param {pc.BoundingBox} src - The AABB to copy from.
      */
-    copy: function (src) {
+    copy(src: BoundingBox): void {
         this.center.copy(src.center);
         this.halfExtents.copy(src.halfExtents);
-        this.type = src.type;
-    },
+    }
 
     /**
      * @function
@@ -95,9 +102,9 @@ Object.assign(BoundingBox.prototype, {
      * @description Returns a clone of the AABB
      * @returns {pc.BoundingBox} A duplicate AABB.
      */
-    clone: function () {
+    clone(): BoundingBox {
         return new BoundingBox(this.center.clone(), this.halfExtents.clone());
-    },
+    }
 
     /**
      * @function
@@ -106,7 +113,7 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.BoundingBox} other - Bounding box to test against.
      * @returns {boolean} True if there is an intersection.
      */
-    intersects: function (other) {
+    intersects(other: BoundingBox): boolean {
         var aMax = this.getMax();
         var aMin = this.getMin();
         var bMax = other.getMax();
@@ -115,9 +122,9 @@ Object.assign(BoundingBox.prototype, {
         return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
                (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
                (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
-    },
+    }
 
-    _intersectsRay: function (ray, point) {
+    _intersectsRay(ray: Ray, point: Vec3): boolean {
         var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin);
         var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
         var dir = ray.direction;
@@ -157,9 +164,9 @@ Object.assign(BoundingBox.prototype, {
             point.copy(ray.direction).scale(maxMin).add(ray.origin);
 
         return intersects;
-    },
+    }
 
-    _fastIntersectsRay: function (ray) {
+    _fastIntersectsRay(ray: Ray): boolean {
         var diff = tmpVecA;
         var cross = tmpVecB;
         var prod = tmpVecC;
@@ -195,7 +202,7 @@ Object.assign(BoundingBox.prototype, {
             return false;
 
         return true;
-    },
+    }
 
     /**
      * @function
@@ -205,13 +212,13 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
      */
-    intersectsRay: function (ray, point) {
+    intersectsRay(ray: Ray, point?: Vec3): boolean {
         if (point) {
             return this._intersectsRay(ray, point);
         }
 
         return this._fastIntersectsRay(ray);
-    },
+    }
 
     /**
      * @function
@@ -221,10 +228,10 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.Vec3} min - The minimum corner of the AABB.
      * @param {pc.Vec3} max - The maximum corner of the AABB.
      */
-    setMinMax: function (min, max) {
+    setMinMax(min: Vec3, max: Vec3): void {
         this.center.add2(max, min).scale(0.5);
         this.halfExtents.sub2(max, min).scale(0.5);
-    },
+    }
 
     /**
      * @function
@@ -232,9 +239,9 @@ Object.assign(BoundingBox.prototype, {
      * @description Return the minimum corner of the AABB.
      * @returns {pc.Vec3} Minimum corner.
      */
-    getMin: function () {
+    getMin(): Vec3 {
         return this._min.copy(this.center).sub(this.halfExtents);
-    },
+    }
 
     /**
      * @function
@@ -242,9 +249,9 @@ Object.assign(BoundingBox.prototype, {
      * @description Return the maximum corner of the AABB.
      * @returns {pc.Vec3} Maximum corner.
      */
-    getMax: function () {
+    getMax(): Vec3 {
         return this._max.copy(this.center).add(this.halfExtents);
-    },
+    }
 
     /**
      * @function
@@ -253,7 +260,7 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
-    containsPoint: function (point) {
+    containsPoint(point: Vec3): boolean {
         var min = this.getMin();
         var max = this.getMax();
 
@@ -264,7 +271,7 @@ Object.assign(BoundingBox.prototype, {
         }
 
         return true;
-    },
+    }
 
     /**
      * @function
@@ -274,7 +281,7 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.BoundingBox} aabb - Box to transform and enclose.
      * @param {pc.Mat4} m - Transformation matrix to apply to source AABB.
      */
-    setFromTransformedAabb: function (aabb, m) {
+    setFromTransformedAabb(aabb: BoundingBox, m: Mat4): void {
         var ac = aabb.center;
         var ar = aabb.halfExtents;
 
@@ -300,7 +307,7 @@ Object.assign(BoundingBox.prototype, {
             Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z,
             Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z
         );
-    },
+    }
 
     /**
      * @function
@@ -309,7 +316,7 @@ Object.assign(BoundingBox.prototype, {
      * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
      * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
      */
-    compute: function (vertices, numVerts) {
+    compute(vertices: number[] | Float32Array, numVerts?: number): void {
         numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
         if (numVerts > 0) {
             var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
@@ -329,7 +336,7 @@ Object.assign(BoundingBox.prototype, {
 
             this.setMinMax(min, max);
         }
-    },
+    }
 
     /**
      * @function
@@ -338,16 +345,16 @@ Object.assign(BoundingBox.prototype, {
      * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
      */
-    intersectsBoundingSphere: function (sphere) {
+    intersectsBoundingSphere(sphere: BoundingSphere): boolean {
         var sq = this._distanceToBoundingSphereSq(sphere);
         if (sq <= sphere.radius * sphere.radius) {
             return true;
         }
 
         return false;
-    },
+    }
 
-    _distanceToBoundingSphereSq: function (sphere) {
+    _distanceToBoundingSphereSq(sphere: BoundingSphere): number {
         var boxMin = this.getMin();
         var boxMax = this.getMax();
 
@@ -375,13 +382,13 @@ Object.assign(BoundingBox.prototype, {
         }
 
         return sq;
-    },
+    }
 
-    _expand: function (expandMin, expandMax) {
+    _expand(expandMin: Vec3, expandMax: Vec3): void {
         tmpVecA.add2(this.getMin(), expandMin);
         tmpVecB.add2(this.getMax(), expandMax);
         this.setMinMax(tmpVecA, tmpVecB);
     }
-});
+}
 
 export { BoundingBox };

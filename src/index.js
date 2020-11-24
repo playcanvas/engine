@@ -26,16 +26,8 @@ export { URI, createURI } from './core/uri.js';
 // NET
 export { http, Http } from './net/http.js';
 
-// MATH
 export * from './math/index';
-
-// SHAPE
-export { BoundingBox } from './shape/bounding-box.js';
-export { BoundingSphere } from './shape/bounding-sphere.js';
-export { Frustum } from './shape/frustum.js';
-export { OrientedBox } from './shape/oriented-box.js';
-export { Plane } from './shape/plane.js';
-export { Ray } from './shape/ray.js';
+export * from './shape/index';
 
 // GRAPHICS
 export * from './graphics/graphics.js';
