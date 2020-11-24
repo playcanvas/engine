@@ -116,6 +116,60 @@ export default [{
         typescript()
     ]
 }, {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(' (DEBUG PROFILER)'),
+        file: 'build/playcanvas.dbg.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: true,
+            DEBUG: true,
+            RELEASE: false
+        }),
+        shaderChunks(false),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        cleanup({
+            comments: 'some',
+            extensions: ['js', 'ts']
+        }),
+        spacesToTabs(),
+        typescript()
+    ]
+}, {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(' (PROFILER)'),
+        file: 'build/playcanvas.prf.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: true,
+            DEBUG: false,
+            RELEASE: false
+        }),
+        shaderChunks(false),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        cleanup({
+            comments: 'some',
+            extensions: ['js', 'ts']
+        }),
+        spacesToTabs(),
+        typescript()
+    ]
+}, {
     input: 'extras/index.ts',
     output: {
         banner: getBanner(''),

@@ -38,7 +38,7 @@ class Vec2 {
      */
     y: number;
 
-    constructor(x?: number | number[], y?: number, z?: number) {
+    constructor(x?: number | number[], y?: number) {
         if (Array.isArray(x)) {
             this.x = x[0];
             this.y = x[1];
