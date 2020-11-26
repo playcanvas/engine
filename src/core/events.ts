@@ -1,4 +1,4 @@
-import { EventHandler } from './event-handler.js';
+import { EventHandler } from './event-handler';
 
 var events = {
     /**

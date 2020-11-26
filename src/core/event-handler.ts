@@ -14,14 +14,16 @@
  * // fire event
  * obj.fire('hello', 'world');
  */
-function EventHandler() {
-    this._callbacks = { };
-    this._callbackActive = { };
-}
+class EventHandler {
+    _callbacks: {[key: string]: { callback: (...args: any[]) => void, scope: object, once: boolean } [] };
+    _callbackActive: {[key: string]: { callback: (...args: any[]) => void, scope: object, once: boolean } [] };
 
-Object.assign(EventHandler.prototype, {
+    constructor() {
+        this._callbacks = { };
+        this._callbackActive = { };
+    }
 
-    _addCallback: function (name, callback, scope, once) {
+    _addCallback(name: string, callback: (...args: any[]) => void, scope?: object, once?: boolean) {
         if (!name || typeof name !== 'string' || !callback)
             return;
 
@@ -36,7 +38,7 @@ Object.assign(EventHandler.prototype, {
             scope: scope || this,
             once: once || false
         });
-    },
+    }
 
     /**
      * @function
@@ -52,11 +54,11 @@ Object.assign(EventHandler.prototype, {
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
      */
-    on: function (name, callback, scope) {
+    on(name: string, callback: (...args: any[]) => void, scope?: object): EventHandler {
         this._addCallback(name, callback, scope, false);
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -77,7 +79,7 @@ Object.assign(EventHandler.prototype, {
      * obj.off('test', handler); // Removes all handler functions, called 'test'
      * obj.off('test', handler, this); // Removes all hander functions, called 'test' with scope this
      */
-    off: function (name, callback, scope) {
+    off(name: string, callback: (...args: any[]) => void, scope?: object): EventHandler {
         if (name) {
             if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
                 this._callbackActive[name] = this._callbackActive[name].slice();
@@ -118,7 +120,7 @@ Object.assign(EventHandler.prototype, {
         }
 
         return this;
-    },
+    }
 
     // ESLint rule disabled here as documenting arg1, arg2...argN as [...] rest
     // arguments is preferable to documenting each one individually.
@@ -141,7 +143,7 @@ Object.assign(EventHandler.prototype, {
      * obj.fire('test', 'This is the message');
      */
     /* eslint-enable valid-jsdoc */
-    fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+    fire(name: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any, arg6?: any, arg7?: any, arg8?: any): EventHandler {
         if (!name || !this._callbacks[name])
             return this;
 
@@ -179,7 +181,7 @@ Object.assign(EventHandler.prototype, {
             this._callbackActive[name] = null;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -196,10 +198,10 @@ Object.assign(EventHandler.prototype, {
      * obj.fire('test', 1, 2); // prints 3 to the console
      * obj.fire('test', 1, 2); // not going to get handled
      */
-    once: function (name, callback, scope) {
+    once(name: string, callback: (...args: any[]) => void, scope?: object) {
         this._addCallback(name, callback, scope, true);
         return this;
-    },
+    }
 
     /**
      * @function
@@ -212,9 +214,9 @@ Object.assign(EventHandler.prototype, {
      * obj.hasEvent('test'); // returns true
      * obj.hasEvent('hello'); // returns false
      */
-    hasEvent: function (name) {
+    hasEvent(name: string): boolean {
         return (this._callbacks[name] && this._callbacks[name].length !== 0) || false;
     }
-});
+}
 
 export { EventHandler };

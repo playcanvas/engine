@@ -1,4 +1,4 @@
-import { isDefined } from './core.js';
+import { isDefined } from './core';
 
 /**
  * @namespace pc.path

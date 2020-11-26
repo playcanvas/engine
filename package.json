@@ -34,6 +34,7 @@
     "src/polyfill/*"
   ],
   "devDependencies": {
+    "better-docs": "^2.3.2",
     "chai": "^4.2.0",
     "eslint": "^7.13.0",
     "google-closure-compiler": "20201102.0.1",
@@ -45,7 +46,7 @@
     "karma-spec-reporter": "0.0.32",
     "mocha": "^8.2.1",
     "@playcanvas/eslint-config": "^1.0.6",
-    "@playcanvas/jsdoc-template": "^1.0.13",
+    "@playcanvas/jsdoc-template": "^1.0.14",
     "preprocessor": "^1.4.0",
     "rollup": "^2.33.1",
     "@rollup/plugin-replace": "^2.3.4",

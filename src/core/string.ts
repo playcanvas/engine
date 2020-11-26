@@ -24,7 +24,7 @@ var DIACRITICAL_MARKS_END = 0x20FF;
 var VARIATION_MODIFIER_BEGIN = 0xFE00;
 var VARIATION_MODIFIER_END = 0xFE0F;
 
-function getCodePointData(string, i) {
+function getCodePointData(string: string, i?: number): { code: number, long: boolean } {
     var size = string.length;
     i = i || 0;
     // Account for out-of-bounds indices:

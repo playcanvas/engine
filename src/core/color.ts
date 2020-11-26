@@ -1,4 +1,4 @@
-import { math } from '../math/math.js';
+import { math } from '../math/math';
 
 /**
  * @class
@@ -14,31 +14,35 @@ import { math } from '../math/math.js';
  * @property {number} b The blue component of the color.
  * @property {number} a The alpha component of the color.
  */
-function Color(r, g, b, a) {
-    var length = r && r.length;
-    if (length === 3 || length === 4) {
-        this.r = r[0];
-        this.g = r[1];
-        this.b = r[2];
-        this.a = r[3] !== undefined ? r[3] : 1;
-    } else {
-        this.r = r || 0;
-        this.g = g || 0;
-        this.b = b || 0;
-        this.a = a !== undefined ? a : 1;
-    }
-}
+class Color {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
 
-Object.assign(Color.prototype, {
+    constructor(r?: number | number[], g?: number, b?: number, a?: number) {
+        if (Array.isArray(r)) {
+            this.r = r[0];
+            this.g = r[1];
+            this.b = r[2];
+            this.a = r[3] !== undefined ? r[3] : 1;
+        } else {
+            this.r = r || 0;
+            this.g = g || 0;
+            this.b = b || 0;
+            this.a = a !== undefined ? a : 1;
+        }
+    }
+
     /**
      * @function
      * @name pc.Color#clone
      * @description Returns a clone of the specified color.
      * @returns {pc.Color} A duplicate color object.
      */
-    clone: function () {
+    clone(): Color {
         return new Color(this.r, this.g, this.b, this.a);
-    },
+    }
 
     /**
      * @function
@@ -54,14 +58,14 @@ Object.assign(Color.prototype, {
      *
      * console.log("The two colors are " + (dst.equals(src) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs: Color): Color {
         this.r = rhs.r;
         this.g = rhs.g;
         this.b = rhs.b;
         this.a = rhs.a;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -74,9 +78,9 @@ Object.assign(Color.prototype, {
      * var b = new pc.Color(1, 1, 0, 1);
      * console.log("The two colors are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs: Color): boolean {
         return this.r === rhs.r && this.g === rhs.g && this.b === rhs.b && this.a === rhs.a;
-    },
+    }
 
     /**
      * @function
@@ -88,15 +92,14 @@ Object.assign(Color.prototype, {
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {pc.Color} Self for chaining.
      */
-    set: function (r, g, b, a) {
+    set(r: number, g: number, b: number, a?: number): Color {
         this.r = r;
         this.g = g;
         this.b = b;
         this.a = (a === undefined) ? 1 : a;
 
         return this;
-    },
-
+    }
 
     /**
      * @function
@@ -117,14 +120,14 @@ Object.assign(Color.prototype, {
      * r.lerp(a, b, 0.5); // r is 0.5, 0.5, 0.25
      * r.lerp(a, b, 1);   // r is equal to b
      */
-    lerp: function (lhs, rhs, alpha) {
+    lerp(lhs: Color, rhs: Color, alpha: number): Color {
         this.r = lhs.r + alpha * (rhs.r - lhs.r);
         this.g = lhs.g + alpha * (rhs.g - lhs.g);
         this.b = lhs.b + alpha * (rhs.b - lhs.b);
         this.a = lhs.a + alpha * (rhs.a - lhs.a);
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -134,7 +137,7 @@ Object.assign(Color.prototype, {
      * This is the same format used in HTML/CSS.
      * @returns {pc.Color} Self for chaining.
      */
-    fromString: function (hex) {
+    fromString(hex: string): Color {
         var i = parseInt(hex.replace('#', '0x'), 16);
         var bytes;
         if (hex.length > 7) {
@@ -147,7 +150,7 @@ Object.assign(Color.prototype, {
         this.set(bytes[0] / 255, bytes[1] / 255, bytes[2] / 255, bytes[3] / 255);
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -162,7 +165,7 @@ Object.assign(Color.prototype, {
      * // Should output '#ffffffff'
      * console.log(c.toString());
      */
-    toString: function (alpha) {
+    toString(alpha: boolean): string {
         var s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
         if (alpha === true) {
             var a = Math.round(this.a * 255).toString(16);
@@ -176,109 +179,96 @@ Object.assign(Color.prototype, {
 
         return s;
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.BLACK
- * @type {pc.Color}
- * @description A constant color set to black [0, 0, 0, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.BLACK
+     * @type {pc.Color}
+     * @description A constant color set to black [0, 0, 0, 1].
+     */
+    static readonly BLACK: Color = Object.freeze(new Color(0, 0, 0, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.BLUE
- * @type {pc.Color}
- * @description A constant color set to blue [0, 0, 1, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.BLUE
+     * @type {pc.Color}
+     * @description A constant color set to blue [0, 0, 1, 1].
+     */
+    static readonly BLUE: Color = Object.freeze(new Color(0, 0, 1, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.CYAN
- * @type {pc.Color}
- * @description A constant color set to cyan [0, 1, 1, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.CYAN
+     * @type {pc.Color}
+     * @description A constant color set to cyan [0, 1, 1, 1].
+     */
+    static readonly CYAN: Color = Object.freeze(new Color(0, 1, 1, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.GRAY
- * @type {pc.Color}
- * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.GRAY
+     * @type {pc.Color}
+     * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
+     */
+    static readonly GRAY: Color = Object.freeze(new Color(0.5, 0.5, 0.5, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.GREEN
- * @type {pc.Color}
- * @description A constant color set to green [0, 1, 0, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.GREEN
+     * @type {pc.Color}
+     * @description A constant color set to green [0, 1, 0, 1].
+     */
+    static readonly GREEN: Color = Object.freeze(new Color(0, 1, 0, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.MAGENTA
- * @type {pc.Color}
- * @description A constant color set to magenta [1, 0, 1, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.MAGENTA
+     * @type {pc.Color}
+     * @description A constant color set to magenta [1, 0, 1, 1].
+     */
+    static readonly MAGENTA: Color = Object.freeze(new Color(1, 0, 1, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.RED
- * @type {pc.Color}
- * @description A constant color set to red [1, 0, 0, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.RED
+     * @type {pc.Color}
+     * @description A constant color set to red [1, 0, 0, 1].
+     */
+    static readonly RED: Color = Object.freeze(new Color(1, 0, 0, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.WHITE
- * @type {pc.Color}
- * @description A constant color set to white [1, 1, 1, 1].
- */
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.WHITE
+     * @type {pc.Color}
+     * @description A constant color set to white [1, 1, 1, 1].
+     */
+    static readonly WHITE: Color = Object.freeze(new Color(1, 1, 1, 1));
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Color.YELLOW
- * @type {pc.Color}
- * @description A constant color set to yellow [1, 1, 0, 1].
- */
-
-Object.defineProperties(Color, {
-    BLACK: { value: new Color(0, 0, 0, 1) },
-    WHITE: { value: new Color(1, 1, 1, 1) },
-    YELLOW: { value: new Color(1, 1, 0, 1) },
-    RED: { value: new Color(1, 0, 0, 1) },
-    MAGENTA: { value: new Color(1, 0, 1, 1) },
-    GREEN: { value: new Color(0, 1, 0, 1) },
-    GRAY: { value: new Color(0.5, 0.5, 0.5, 1) },
-    CYAN: { value: new Color(0, 1, 1, 1) },
-    BLUE: { value: new Color(0, 0, 1, 1) }
-});
-
-Object.freeze(Color.BLACK);
-Object.freeze(Color.WHITE);
-Object.freeze(Color.YELLOW);
-Object.freeze(Color.RED);
-Object.freeze(Color.MAGENTA);
-Object.freeze(Color.GREEN);
-Object.freeze(Color.GRAY);
-Object.freeze(Color.CYAN);
-Object.freeze(Color.BLUE);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Color.YELLOW
+     * @type {pc.Color}
+     * @description A constant color set to yellow [1, 1, 0, 1].
+     */
+    static readonly YELLOW: Color = Object.freeze(new Color(1, 1, 0, 1));
+}
 
 export { Color };

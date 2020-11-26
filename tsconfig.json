@@ -1,12 +1,11 @@
 {
-    "allowJs": true,
+    "compilerOptions": {
+        "allowJs": true,
+        "lib": ["esnext", "dom"],
+        "target": "es5"
+    },
     "include": [
         "src/**/*.js",
         "src/**/*.ts"
-    ],
-    "lib": ["esnext", "dom"],
-    "outDir": "build",
-    "compilerOptions": {
-        "target": "es5"
-    }
+    ]
 }

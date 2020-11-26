@@ -1,11 +1,12 @@
 {
     "plugins": [
-        "plugins/markdown"
+        "plugins/markdown",
+        "node_modules/better-docs/typescript"
     ],
     "recurseDepth": 10,
     "source": {
         "include": ["src"],
-        "includePattern": ".+\\.js(doc|x)?$",
+        "includePattern": ".+\\.(js|ts)(doc|x)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "sourceType": "module",

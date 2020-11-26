@@ -6,7 +6,7 @@
  * @param {string} str - String.
  * @returns {number} Hash value.
  */
-function hashCode(str) {
+function hashCode(str: string): number {
     var hash = 0;
     for (var i = 0, len = str.length; i < len; i++) {
         hash = ((hash << 5) - hash) + str.charCodeAt(i);
