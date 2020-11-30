@@ -318,10 +318,10 @@ Object.assign(RenderComponent.prototype, {
         this.destroyMeshInstances();
 
         var render = this._assetReference.asset.resource;
+        render.off('set:meshes', this._onSetMeshes, this);
+        render.on('set:meshes', this._onSetMeshes, this);
         if (render.meshes) {
             this._onSetMeshes(render.meshes);
-        } else {
-            render.once('set:meshes', this._onSetMeshes, this);
         }
     },
 
