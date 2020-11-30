@@ -412,7 +412,11 @@ Object.assign(RenderComponent.prototype, {
     },
 
     _onRenderAssetUnload: function () {
-        this.destroyMeshInstances();
+
+        // when unloading asset, only remove asset mesh instances (type could have been already changed to 'box' or similar)
+        if (this._type === 'asset') {
+            this.destroyMeshInstances();
+        }
     },
 
     _onRenderAssetRemove: function () {
