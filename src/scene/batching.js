@@ -96,7 +96,7 @@ function SkinBatchInstance(device, nodes, rootNode) {
     this.bones = nodes;
 }
 
-SkinBatchInstance.prototype = Object.create(SkinBatchInstance.prototype);
+SkinBatchInstance.prototype = Object.create(SkinInstance.prototype);
 SkinBatchInstance.prototype.constructor = SkinBatchInstance;
 
 Object.assign(SkinBatchInstance.prototype, {
