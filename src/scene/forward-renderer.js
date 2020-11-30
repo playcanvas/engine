@@ -1599,7 +1599,7 @@ Object.assign(ForwardRenderer.prototype, {
     updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
 
-        // if material had alpha changed, notify scene here
+        // if material has dirtyBlend set, notify scene here
         if (meshInstance.material._dirtyBlend) {
             this.scene.layers._dirtyBlend = true;
         }
