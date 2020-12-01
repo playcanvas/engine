@@ -67,6 +67,7 @@ import { SceneHandler } from '../resources/scene.js';
 import { SceneSettingsHandler } from '../resources/scene-settings.js';
 import { ScriptHandler } from '../resources/script.js';
 import { ShaderHandler } from '../resources/shader.js';
+import { ShaderGraphHandler } from '../resources/shader-graph.js';
 import { SpriteHandler } from '../resources/sprite.js';
 import { TemplateHandler } from '../resources/template.js';
 import { TextHandler } from '../resources/text.js';
@@ -729,6 +730,7 @@ function Application(canvas, options) {
     this.loader.addHandler("html", new HtmlHandler());
     this.loader.addHandler("css", new CssHandler());
     this.loader.addHandler("shader", new ShaderHandler());
+    this.loader.addHandler("shadergraph", new ShaderGraphHandler());
     this.loader.addHandler("hierarchy", new HierarchyHandler(this));
     this.loader.addHandler("scenesettings", new SceneSettingsHandler(this));
     this.loader.addHandler("folder", new FolderHandler());

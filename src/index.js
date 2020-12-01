@@ -147,6 +147,7 @@ export { ScriptHandler } from './resources/script.js';
 export { SceneHandler } from './resources/scene.js';
 export { SceneSettingsHandler } from './resources/scene-settings.js';
 export { ShaderHandler } from './resources/shader.js';
+export { ShaderGraphHandler } from './resources/shader-graph.js';
 export { SpriteHandler } from './resources/sprite.js';
 export { TemplateHandler } from './resources/template.js';
 export { TextHandler } from './resources/text.js';
