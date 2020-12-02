@@ -11,8 +11,8 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for basis files.
  */
-function BasisParser(registry, maxRetries) {
-    this.maxRetries = Math.max(maxRetries, 0) || 0;
+function BasisParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(BasisParser.prototype, {

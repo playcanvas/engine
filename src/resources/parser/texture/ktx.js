@@ -30,8 +30,8 @@ var KNOWN_FORMATS = {
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for ktx files.
  */
-function KtxParser(registry, maxRetries) {
-    this.maxRetries = Math.max(maxRetries, 0) || 0;
+function KtxParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(KtxParser.prototype, {

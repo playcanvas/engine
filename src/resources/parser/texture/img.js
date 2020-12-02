@@ -12,10 +12,10 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for browser-supported image formats.
  */
-function ImgParser(registry, maxRetries) {
+function ImgParser(registry) {
     // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
     this.crossOrigin = registry.prefix ? 'anonymous' : null;
-    this.maxRetries = Math.max(maxRetries, 0) || 0;
+    this.maxRetries = 0;
     // disable ImageBitmap
     this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
 }

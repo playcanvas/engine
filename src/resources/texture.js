@@ -164,12 +164,12 @@ function TextureHandler(device, assets, loader) {
 
     // img parser handles all broswer-supported image formats, this
     // parser will be used when other more specific parsers are not found.
-    this.imgParser = new ImgParser(assets, 0);
+    this.imgParser = new ImgParser(assets);
 
     this.parsers = {
-        dds: new LegacyDdsParser(assets, 0),
-        ktx: new KtxParser(assets, 0),
-        basis: new BasisParser(assets, 0)
+        dds: new LegacyDdsParser(assets),
+        ktx: new KtxParser(assets),
+        basis: new BasisParser(assets)
     };
 }
 

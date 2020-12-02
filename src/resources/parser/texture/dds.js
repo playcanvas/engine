@@ -87,8 +87,8 @@ fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for dds files.
  */
-function DdsParser(registry, maxRetries) {
-    this.maxRetries = Math.max(maxRetries, 0) || 0;
+function DdsParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(DdsParser.prototype, {
