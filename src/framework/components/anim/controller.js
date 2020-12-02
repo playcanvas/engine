@@ -376,7 +376,7 @@ Object.defineProperties(AnimState.prototype, {
     },
     playable: {
         get: function () {
-            return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.animations.length === this.nodeCount);
+            return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.name === ANIM_STATE_ANY || this.animations.length === this.nodeCount);
         }
     },
     looping: {
@@ -699,7 +699,7 @@ Object.assign(AnimController.prototype, {
     },
 
     _getActiveStateProgressForTime: function (time) {
-        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY)
             return 1.0;
 
         var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
