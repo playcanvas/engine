@@ -46,8 +46,8 @@ Object.assign(Reader.prototype, {
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for hdr files.
  */
-function HdrParser(registry, maxRetries) {
-    this.maxRetries = Math.max(maxRetries, 0) || 0;
+function HdrParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(HdrParser.prototype, {
