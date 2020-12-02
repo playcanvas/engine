@@ -385,7 +385,7 @@ Object.assign(RenderComponent.prototype, {
 
     _cloneMeshes: function (meshes) {
 
-        if (meshes.length) {
+        if (meshes && meshes.length) {
 
             // cloned mesh instances
             var meshInstances = [];
