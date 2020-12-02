@@ -15,7 +15,7 @@ import { Sprite } from '../scene/sprite.js';
 function SpriteHandler(assets, device) {
     this._assets = assets;
     this._device = device;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 // The scope of this function is the sprite asset
@@ -44,7 +44,8 @@ Object.assign(SpriteHandler.prototype, {
         // if given a json file (probably engine-only use case)
         if (path.getExtension(url.original) === '.json') {
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 if (!err) {
                     callback(null, response);

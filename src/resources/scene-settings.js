@@ -2,7 +2,7 @@ import { http } from '../net/http.js';
 
 function SceneSettingsHandler(app) {
     this._app = app;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(SceneSettingsHandler.prototype, {
@@ -15,7 +15,8 @@ Object.assign(SceneSettingsHandler.prototype, {
         }
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);

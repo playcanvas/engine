@@ -17,7 +17,7 @@ function ModelHandler(device, defaultMaterial) {
     this._device = device;
     this._parsers = [];
     this._defaultMaterial = defaultMaterial;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 
     this.addParser(new JsonModelParser(this._device), function (url, data) {
         return (path.getExtension(url) === '.json');
@@ -38,7 +38,8 @@ Object.assign(ModelHandler.prototype, {
 
         // we need to specify JSON for blob URLs
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {

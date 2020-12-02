@@ -17,7 +17,7 @@ import { Untar, UntarWorker } from './untar.js';
 function BundleHandler(assets) {
     this._assets = assets;
     this._worker = null;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(BundleHandler.prototype, {
@@ -33,7 +33,8 @@ Object.assign(BundleHandler.prototype, {
 
         http.get(url.load, {
             responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (! err) {
                 try {

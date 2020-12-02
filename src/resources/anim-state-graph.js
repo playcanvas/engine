@@ -10,7 +10,7 @@ import { AnimStateGraph } from '../framework/components/anim/state-graph.js';
  * @classdesc Resource handler used for loading {@link pc.AnimStateGraph} resources.
  */
 function AnimStateGraphHandler() {
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(AnimStateGraphHandler.prototype, {
@@ -24,7 +24,8 @@ Object.assign(AnimStateGraphHandler.prototype, {
 
         // we need to specify JSON for blob URLs
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {

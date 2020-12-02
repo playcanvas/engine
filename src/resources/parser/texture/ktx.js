@@ -30,8 +30,8 @@ var KNOWN_FORMATS = {
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for ktx files.
  */
-function KtxParser(registry, retryRequests) {
-    this.retryRequests = !!retryRequests;
+function KtxParser(registry, maxRetries) {
+    this.maxRetries = Math.max(maxRetries, 0) || 0;
 }
 
 Object.assign(KtxParser.prototype, {
@@ -40,7 +40,8 @@ Object.assign(KtxParser.prototype, {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(url.load, options, callback);
     },
