@@ -688,6 +688,10 @@ var GraphicsDevice = function (canvas, options) {
     this.createGrabPass();
 
     VertexFormat.init(this);
+
+    // #ifdef DEBUG
+    this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
+    // #endif
 };
 GraphicsDevice.prototype = Object.create(EventHandler.prototype);
 GraphicsDevice.prototype.constructor = GraphicsDevice;
@@ -1785,6 +1789,15 @@ Object.assign(GraphicsDevice.prototype, {
     },
 
     uploadTexture: function (texture) {
+        // #ifdef DEBUG
+        if (!texture.device) {
+            if (!this._destroyedTextures.has(texture)) {
+                this._destroyedTextures.add(texture);
+                console.error("attempting to use a texture that has been destroyed.");
+            }
+        }
+        // #endif
+
         var gl = this.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
@@ -3366,11 +3379,13 @@ Object.assign(GraphicsDevice.prototype, {
         return true;
     },
 
+    // NB for WebGL2: PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this: https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+    // NB for WebGL1: Only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are test for being renderable
     getHdrFormat: function () {
         if (this.textureHalfFloatRenderable) {
-            return PIXELFORMAT_RGB16F;
+            return PIXELFORMAT_RGBA16F;
         } else if (this.textureFloatRenderable) {
-            return PIXELFORMAT_RGB32F;
+            return PIXELFORMAT_RGBA32F;
         }
         return PIXELFORMAT_R8_G8_B8_A8;
     },

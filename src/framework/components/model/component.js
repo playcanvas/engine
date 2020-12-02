@@ -437,7 +437,7 @@ Object.assign(ModelComponent.prototype, {
     },
 
     _onModelAssetAdded: function (asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdd, this);
+        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdded, this);
         if (asset.id === this._asset) {
             this._bindModelAsset(asset);
         }

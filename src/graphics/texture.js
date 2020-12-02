@@ -119,6 +119,8 @@ function Texture(graphicsDevice, options) {
     this._flipY = true;
     this._premultiplyAlpha = false;
 
+    this._isRenderTarget = false;
+
     this._mipmaps = true;
 
     this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
@@ -665,7 +667,7 @@ Object.assign(Texture.prototype, {
             this.device.destroyTexture(this);
         }
         this.device = null;
-        this._levels = null;
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
     },
 
     // Force a full resubmission of the texture to WebGL (used on a context restore event)

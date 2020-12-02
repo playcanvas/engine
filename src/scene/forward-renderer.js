@@ -415,6 +415,7 @@ function ForwardRenderer(graphicsDevice) {
     this._skinTime = 0;
     this._morphTime = 0;
     this._instancingTime = 0;
+    this._layerCompositionUpdateTime = 0;
 
     // Shaders
     var library = device.getProgramLibrary();
@@ -1597,6 +1598,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
+
+        // if material has dirtyBlend set, notify scene here
+        if (meshInstance.material._dirtyBlend) {
+            this.scene.layers._dirtyBlend = true;
+        }
+
         meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
         meshInstance._shader[pass] = meshInstance.material.shader;
     },
@@ -2683,11 +2690,19 @@ Object.assign(ForwardRenderer.prototype, {
 
         this.beginLayers(comp);
 
+        // #ifdef PROFILER
+        var layerCompositionUpdateTime = now();
+        // #endif
+
         // Update static layer data, if something's changed
         var updated = comp._update();
         if (updated & COMPUPDATED_LIGHTS) {
             this.scene.updateLitShaders = true;
         }
+
+        // #ifdef PROFILER
+        this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
+        // #endif
 
         // #ifdef PROFILER
         if (updated & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
@@ -2831,8 +2846,8 @@ Object.assign(ForwardRenderer.prototype, {
         this.gpuUpdate(comp._meshInstances);
 
         // Shadow render for all local visible culled lights
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_POINT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_POINT]);
 
         // Rendering
         renderedLength = 0;
@@ -2897,7 +2912,7 @@ Object.assign(ForwardRenderer.prototype, {
                 // #ifdef PROFILER
                 draws = this._shadowDrawCalls;
                 // #endif
-                this.renderShadows(layer._sortedLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
+                this.renderShadows(layer._splitLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
                 // #ifdef PROFILER
                 layer._shadowDrawCalls += this._shadowDrawCalls - draws;
                 // #endif
@@ -2926,7 +2941,7 @@ Object.assign(ForwardRenderer.prototype, {
                 this.renderForward(camera.camera,
                                    visible.list,
                                    visible.length,
-                                   layer._sortedLights,
+                                   layer._splitLights,
                                    layer.shaderPass,
                                    layer.cullingMask,
                                    layer.onDrawCall,

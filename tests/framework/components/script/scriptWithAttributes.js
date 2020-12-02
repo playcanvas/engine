@@ -11,10 +11,16 @@ ScriptWithAttributes.attributes.add('attribute2', {
 
 var schema = [{
     name: 'fieldNumber',
-    type: 'number'
+    type: 'number',
+    default: 1
 }, {
     name: 'fieldEntity',
     type: 'entity'
+}, {
+    name: 'fieldNumberArray',
+    type: 'number',
+    array: true,
+    default: 5
 }];
 
 ScriptWithAttributes.attributes.add('attribute3', {
