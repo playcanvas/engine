@@ -410,7 +410,7 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
 
         // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
         // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
-        if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m)) {
+        if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m) < 0) {
             arr.push(m);
         }
 
