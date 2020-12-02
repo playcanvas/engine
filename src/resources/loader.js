@@ -260,7 +260,7 @@ Object.assign(ResourceLoader.prototype, {
      * @private
      * @function
      * @name pc.ResourceLoader#enableRetry
-     * @param {Number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
+     * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
      * @description Enables retrying of failed requests when loading assets.
      */
     enableRetry: function (maxRetries) {
