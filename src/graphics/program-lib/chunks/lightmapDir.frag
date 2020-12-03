@@ -14,6 +14,7 @@ void addLightMap() {
         float nlight = (flight / max(vlight, 0.01)) * 0.5;
 
         dDiffuseLight += color * nlight * 2.0;
-        dSpecularLight += color * getLightSpecular();
     }
+
+    dSpecularLight += color * getLightSpecular();
 }
