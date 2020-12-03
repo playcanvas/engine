@@ -200,6 +200,7 @@ Object.assign(ContainerResource.prototype, {
 function ContainerHandler(device, defaultMaterial) {
     this._device = device;
     this._defaultMaterial = defaultMaterial;
+    this.maxRetries = 0;
 }
 
 Object.assign(ContainerHandler.prototype, {
@@ -217,7 +218,8 @@ Object.assign(ContainerHandler.prototype, {
 
         var options = {
             responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: false
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         var self = this;

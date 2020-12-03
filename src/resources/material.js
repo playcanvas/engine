@@ -38,7 +38,7 @@ function MaterialHandler(app) {
     this._placeholderTextures = null;
 
     this._parser = new JsonStandardMaterialParser();
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(MaterialHandler.prototype, {
@@ -52,7 +52,8 @@ Object.assign(MaterialHandler.prototype, {
 
         // Loading from URL (engine-only)
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 if (callback) {
