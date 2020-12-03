@@ -182,8 +182,9 @@ Object.assign(Lightmapper.prototype, {
             }
         } else if (node.render) {
             lightmapSizeMultiplier = node.render.lightmapSizeMultiplier;
-            if (node.render.type === 'asset') {  // TODO: change this to node.render.asset when implemented
-                console.warn("Render component needs to implement this");
+            if (node.render.type === 'asset') {
+                // TODO: render asset type should provide the area data - which describe size of mesh to allow 
+                // auto-scaling of assigned lightmap resolution
             } else if (node.render._area) {
                 data = node.render;
                 if (data._area) {
