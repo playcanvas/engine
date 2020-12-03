@@ -39,7 +39,7 @@ var regexFrame = /^data\.frames\.(\d+)$/;
  */
 function TextureAtlasHandler(loader) {
     this._loader = loader;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(TextureAtlasHandler.prototype, {
@@ -59,7 +59,8 @@ Object.assign(TextureAtlasHandler.prototype, {
         // load json data then load texture of same name
         if (path.getExtension(url.original) === '.json') {
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 if (!err) {
                     // load texture

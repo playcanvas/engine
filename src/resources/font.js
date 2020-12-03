@@ -38,7 +38,7 @@ function upgradeDataSchema(data) {
  */
 function FontHandler(loader) {
     this._loader = loader;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(FontHandler.prototype, {
@@ -54,7 +54,8 @@ Object.assign(FontHandler.prototype, {
         if (path.getExtension(url.original) === '.json') {
             // load json data then load texture of same name
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 // update asset data
                 if (!err) {

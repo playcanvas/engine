@@ -46,8 +46,8 @@ Object.assign(Reader.prototype, {
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for hdr files.
  */
-function HdrParser(registry, retryRequests) {
-    this.retryRequests = retryRequests;
+function HdrParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(HdrParser.prototype, {
@@ -55,7 +55,8 @@ Object.assign(HdrParser.prototype, {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         pc.http.get(url.load, options, callback);
     },
