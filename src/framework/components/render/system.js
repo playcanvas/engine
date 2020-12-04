@@ -46,9 +46,6 @@ function RenderComponentSystem(app) {
     this.defaultMaterial = app.scene.defaultMaterial;
 
     this.on('beforeremove', this.onRemove, this);
-
-    this._postInitialized = false;
-    ComponentSystem.bind('postInitialize', this._onPostInitialize, this);
 }
 
 RenderComponentSystem.prototype = Object.create(ComponentSystem.prototype);
@@ -74,24 +71,6 @@ Object.assign(RenderComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, _data, _schema);
-    },
-
-    _onPostInitialize: function () {
-        var store = this.store;
-
-        // resolve rootBone for each render entity
-        for (var id in store) {
-            if (!store.hasOwnProperty(id)) continue;
-            var item = store[id];
-            var entity = item.entity;
-
-            var component = entity.render;
-            var rootBone = component.rootBone;
-
-            if (rootBone && typeof rootBone === 'string') {
-                component.rootBone = this.app.root.findByGuid(rootBone);
-            }
-        }
     },
 
     cloneComponent: function (entity, clone) {

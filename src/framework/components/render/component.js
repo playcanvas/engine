@@ -11,7 +11,7 @@ import { AssetReference } from '../../../asset/asset-reference.js';
 
 import { Component } from '../component.js';
 
-import { Entity } from '../../entity.js';
+import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
  * @private
@@ -70,7 +70,8 @@ function RenderComponent(system, entity)   {
     this._area = null;
 
     // the entity that represents the root bone if this render component has skinned meshes
-    this._rootBone = null;
+    this._rootBone = new EntityReference(this, 'rootBone');
+    this._rootBone.on('set:entity', this._onSetRootBone, this);
 
     // render asset reference
     this._assetReference = new AssetReference(
@@ -94,31 +95,20 @@ function RenderComponent(system, entity)   {
 
     entity.on('remove', this.onRemoveChild, this);
     entity.on('insert', this.onInsertChild, this);
-
-    this.on('set_rootBone', this._onSetRootBone, this);
 }
+
 RenderComponent.prototype = Object.create(Component.prototype);
 RenderComponent.prototype.constructor = RenderComponent;
 
 Object.assign(RenderComponent.prototype, {
 
-    _onSetRootBone: function (name, oldValue, newValue) {
-        this._rootBone = newValue;
-
-        if (!newValue) return;
-
-        if (!(newValue instanceof Entity)) {
-            var entity = this.system.app.root.findByGuid(newValue);
-            if (entity) {
-                this.rootBone = entity;
-            }
-        } else {
+    _onSetRootBone: function (entity) {
+        if (entity) {
             this._onFindRootBone();
         }
     },
 
     _onFindRootBone: function () {
-
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
         this._cloneSkinInstances();
@@ -204,6 +194,8 @@ Object.assign(RenderComponent.prototype, {
     onEnable: function () {
         var app = this.system.app;
         var scene = app.scene;
+
+        this._rootBone.onParentComponentEnable();
 
         scene.on("set:layers", this.onLayersChanged, this);
         if (scene.layers) {
@@ -315,7 +307,7 @@ Object.assign(RenderComponent.prototype, {
 
     _cloneSkinInstances: function () {
 
-        if (this._meshInstances.length && this._rootBone instanceof GraphNode) {
+        if (this._meshInstances.length && this._rootBone.entity instanceof GraphNode) {
 
             var j, skin, skinInst;
 
@@ -342,10 +334,10 @@ Object.assign(RenderComponent.prototype, {
                         var bones = [];
                         for (j = 0; j < skin.boneNames.length; j++) {
                             var boneName = skin.boneNames[j];
-                            var bone = this._rootBone.findByName(boneName);
+                            var bone = this._rootBone.entity.findByName(boneName);
 
                             if (!bone) {
-                                console.error("Failed to find bone [" + boneName + "] in the entity hierarchy, RenderComponent on " + this.entity.name + ", rootBone: " + this._rootBone.name);
+                                console.error("Failed to find bone [" + boneName + "] in the entity hierarchy, RenderComponent on " + this.entity.name + ", rootBone: " + this._rootBone.entity.name);
                                 bone = this.entity;
                             }
 
