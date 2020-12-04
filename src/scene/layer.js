@@ -400,6 +400,7 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
     var casters = this.shadowCasters;
     for (var i = 0; i < meshInstances.length; i++) {
         m = meshInstances[i];
+
         mat = m.material;
         if (mat.blendType === BLEND_NONE) {
             arr = this.opaqueMeshInstances;
@@ -407,8 +408,12 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
             arr = this.transparentMeshInstances;
         }
 
+        // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
         // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
-        if (arr.indexOf(m) < 0) arr.push(m);
+        if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m) < 0) {
+            arr.push(m);
+        }
+
         if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
 
         if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
@@ -422,6 +427,33 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
     if (!this.passThrough) this._dirty = true;
 };
 
+// internal function to remove meshInstance from an array
+Layer.prototype.removeMeshInstanceFromArray = function (m, arr) {
+
+    var drawCall;
+    var spliceOffset = -1;
+    var spliceCount = 0;
+    var len = arr.length;
+    for (var j = 0; j < len; j++) {
+        drawCall = arr[j];
+        if (drawCall === m) {
+            spliceOffset = j;
+            spliceCount = 1;
+            break;
+        }
+        if (drawCall._staticSource === m) {
+            if (spliceOffset < 0) spliceOffset = j;
+            spliceCount++;
+        } else if (spliceOffset >= 0) {
+            break;
+        }
+    }
+
+    if (spliceOffset >= 0) {
+        arr.splice(spliceOffset, spliceCount);
+    }
+};
+
 /**
  * @function
  * @name pc.Layer#removeMeshInstances
@@ -431,59 +463,28 @@ Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
  */
 Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
 
-    var i, j, m, spliceOffset, spliceCount, len, drawCall;
+    var j, m;
     var opaque = this.opaqueMeshInstances;
     var transparent = this.transparentMeshInstances;
     var casters = this.shadowCasters;
 
-    for (i = 0; i < meshInstances.length; i++) {
+    for (var i = 0; i < meshInstances.length; i++) {
         m = meshInstances[i];
 
         // remove from opaque
-        spliceOffset = -1;
-        spliceCount = 0;
-        len = opaque.length;
-        for (j = 0; j < len; j++) {
-            drawCall = opaque[j];
-            if (drawCall === m) {
-                spliceOffset = j;
-                spliceCount = 1;
-                break;
-            }
-            if (drawCall._staticSource === m) {
-                if (spliceOffset < 0) spliceOffset = j;
-                spliceCount++;
-            } else if (spliceOffset >= 0) {
-                break;
-            }
-        }
-        if (spliceOffset >= 0) opaque.splice(spliceOffset, spliceCount);
+        this.removeMeshInstanceFromArray(m, opaque);
 
         // remove from transparent
-        spliceOffset = -1;
-        spliceCount = 0;
-        len = transparent.length;
-        for (j = 0; j < len; j++) {
-            drawCall = transparent[j];
-            if (drawCall === m) {
-                spliceOffset = j;
-                spliceCount = 1;
-                break;
-            }
-            if (drawCall._staticSource === m) {
-                if (spliceOffset < 0) spliceOffset = j;
-                spliceCount++;
-            } else if (spliceOffset >= 0) {
-                break;
-            }
-        }
-        if (spliceOffset >= 0) transparent.splice(spliceOffset, spliceCount);
+        this.removeMeshInstanceFromArray(m, transparent);
 
-        // remove from shadows
-        if (skipShadowCasters) continue;
-        j = casters.indexOf(m);
-        if (j >= 0) casters.splice(j, 1);
+        // remove from casters
+        if (!skipShadowCasters) {
+            j = casters.indexOf(m);
+            if (j >= 0)
+                casters.splice(j, 1);
+        }
     }
+
     this._dirty = true;
 };
 

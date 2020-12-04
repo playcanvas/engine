@@ -13,7 +13,7 @@ import { TemplateUtils } from '../templates/template-utils.js';
  */
 function SceneHandler(app) {
     this._app = app;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(SceneHandler.prototype, {
@@ -28,7 +28,8 @@ Object.assign(SceneHandler.prototype, {
         var assets = this._app.assets;
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 TemplateUtils.waitForTemplatesInScene(
