@@ -77,7 +77,21 @@ Object.assign(RenderComponentSystem.prototype, {
     },
 
     _onPostInitialize: function () {
-        this._postInitialized = true;
+        var store = this.store;
+
+        // resolve rootBone for each render entity
+        for (var id in store) {
+            if (!store.hasOwnProperty(id)) continue;
+            var item = store[id];
+            var entity = item.entity;
+
+            var component = entity.render;
+            var rootBone = component.rootBone;
+
+            if (rootBone && typeof rootBone === 'string') {
+                component.rootBone = this.app.root.findByGuid(rootBone);
+            }
+        }
     },
 
     cloneComponent: function (entity, clone) {

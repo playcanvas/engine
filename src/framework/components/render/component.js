@@ -104,7 +104,6 @@ RenderComponent.prototype.constructor = RenderComponent;
 Object.assign(RenderComponent.prototype, {
 
     _onSetRootBone: function (name, oldValue, newValue) {
-        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
         this._rootBone = newValue;
 
         if (!newValue) return;
@@ -113,15 +112,6 @@ Object.assign(RenderComponent.prototype, {
             var entity = this.system.app.root.findByGuid(newValue);
             if (entity) {
                 this.rootBone = entity;
-            } else {
-                // handle GUID case - find entity by guid
-                // and if not there yet do it in post initialize
-                if (this.system._postInitialized) {
-                    // TODO: error here? system has been postInitialized already
-                    // so this entity is not going to be found
-                } else {
-                    ComponentSystem.on('postinitialize', this._onPostInitialize, this);
-                }
             }
         } else {
             this._onFindRootBone();
@@ -133,16 +123,6 @@ Object.assign(RenderComponent.prototype, {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
         this._cloneSkinInstances();
-    },
-
-    _onPostInitialize: function () {
-        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
-        if (this._rootBone) {
-            var entity = this.system.app.root.findByGuid(this._rootBone);
-            if (entity) {
-                this.rootBone = entity;
-            }
-        }
     },
 
     destroyMeshInstances: function () {
@@ -193,8 +173,6 @@ Object.assign(RenderComponent.prototype, {
     },
 
     onRemove: function () {
-        ComponentSystem.off('postinitialize', this._onPostInitialize, this);
-
         this.destroyMeshInstances();
 
         this.asset = null;
