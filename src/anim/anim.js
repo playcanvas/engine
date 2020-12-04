@@ -641,11 +641,14 @@ function DefaultAnimBinder(graph) {
     flatten(graph);
 
     var findMeshInstances = function (node) {
+
+        // walk up to the first parent node of entity type (skips internal nodes of Model)
         var object = node;
         while (object && !(object instanceof Entity)) {
             object = object.parent;
         }
 
+        // get meshInstances from either model or render component
         var meshInstances;
         if (object) {
             if (object.render) {

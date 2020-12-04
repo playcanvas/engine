@@ -345,7 +345,7 @@ Object.assign(RenderComponent.prototype, {
                             var bone = this._rootBone.findByName(boneName);
 
                             if (!bone) {
-                                console.error("Failed to find bone [", boneName, "] in the entity hierarchy, RenderComponent on ", this.entity.name, ", rootBone: ", this._rootBone.name);
+                                console.error("Failed to find bone [" + boneName + "] in the entity hierarchy, RenderComponent on " + this.entity.name + ", rootBone: " + this._rootBone.name);
                                 bone = this.entity;
                             }
 
