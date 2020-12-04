@@ -384,7 +384,6 @@ Object.assign(MeshInstance.prototype, {
 
     destroy: function () {
 
-        // make sure instance and material clear references
         var mesh = this.mesh;
         if (mesh) {
             this.mesh = null;   // this calls decReference on mesh
@@ -400,6 +399,7 @@ Object.assign(MeshInstance.prototype, {
             this.morphInstance = null;
         }
 
+        // make sure material clears references to this meshInstance
         this.material = null;
     },
 
