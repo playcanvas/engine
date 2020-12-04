@@ -10,7 +10,6 @@ import { Asset } from '../../../asset/asset.js';
 import { AssetReference } from '../../../asset/asset-reference.js';
 
 import { Component } from '../component.js';
-import { ComponentSystem } from '../system.js';
 
 import { Entity } from '../../entity.js';
 
