@@ -172,6 +172,7 @@ Object.assign(Model.prototype, {
         for (var i = 0; i < meshInstances.length; i++) {
             meshInstances[i].destroy();
         }
+        this.meshInstances.length = 0;
     },
 
     /**
