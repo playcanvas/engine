@@ -104,11 +104,11 @@ Object.assign(RenderComponent.prototype, {
 
     _onSetRootBone: function (entity) {
         if (entity) {
-            this._onFindRootBone();
+            this._onRootBoneChanged();
         }
     },
 
-    _onFindRootBone: function () {
+    _onRootBoneChanged: function () {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
         this._cloneSkinInstances();
