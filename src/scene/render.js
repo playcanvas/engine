@@ -18,5 +18,4 @@ Object.defineProperty(Render.prototype, 'meshes', {
     }
 });
 
-
 export { Render };
