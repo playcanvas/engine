@@ -1717,7 +1717,7 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
 var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) {
     var result = [];
 
-    if (gltf.buffers === null || gltf.buffers.length === 0) {
+    if (!gltf.buffers || gltf.buffers.length === 0) {
         callback(null, result);
         return;
     }
@@ -1897,7 +1897,13 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
     };
     var postprocess = options && options.bufferView && options.bufferView.postprocess;
 
-    var remaining = gltf.bufferViews.length;
+    var remaining = gltf.bufferViews ? gltf.bufferViews.length : 0;
+
+    // handle case of no buffers
+    if (!remaining) {
+        callback(null, null);
+    }
+
     var onLoad = function (index, bufferView) {
         var gltfBufferView = gltf.bufferViews[index];
         if (gltfBufferView.hasOwnProperty('byteStride')) {
