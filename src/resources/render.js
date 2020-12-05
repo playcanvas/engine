@@ -4,7 +4,7 @@ import { Render } from '../scene/render.js';
  * @class
  * @name pc.RenderHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Model} resources.
+ * @classdesc Resource handler used for loading {@link pc.Render} resources.
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
