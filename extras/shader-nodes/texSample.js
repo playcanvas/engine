@@ -20,5 +20,5 @@ texSample.gen = function ( argTypes ) {
     return this.code;
 };
 
-//export { texSample };
+// export { texSample };
 export default texSample;
