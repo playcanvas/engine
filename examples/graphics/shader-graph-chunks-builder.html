@@ -39,6 +39,10 @@
 
         var miniStats = new pcx.MiniStats(app);
 
+        // register core nodes
+        app.shaderNodes.register(pcx.shaderNodes);
+
+        // set ambient light
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // Create an Entity with a camera component
@@ -73,66 +77,59 @@
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
                 var emissiveMap = asset.resource;
 
-                // load shader graph core nodes asset
-                app.assets.loadFromUrl("../assets/core_nodes.json", "text", function (err, asset) {
-                    var coreNodeList = asset.resource;
-                    
-                    // register loaded core nodes
-                    app.shaderNodes.register(coreNodeList);
+                // create a shader graph builder
+                var builder = new pc.ShaderGraphBuilder(app);
 
-                    // create a shader graph builder
-                    var builder = new pc.ShaderGraphBuilder(app);
+                // add input parameters
+                var timeParam = builder.addParam('float', 'uTime', 0.0);
+                var emissiveTexParam = builder.addParam('sampler2D', 'uEmissiveMap', emissiveMap);
+                var emissiveColConst = builder.addConst('vec3', 'emissiveColConst', new pc.Vec3(0.2, 0.3, 0.3));
 
-                    // add input parameters
-                    var timeParam = builder.addParam('float', 'uTime', 0.0);
-                    var emissiveTexParam = builder.addParam('sampler2D', 'uEmissiveMap', emissiveMap);
-                    var emissiveColConst = builder.addConst('vec3', 'emissiveColConst', new pc.Vec3(0.2, 0.3, 0.3));
+                // create and hook up graph nodes
+ //               var scrollNode = builder.addNode('add', [ builder.addNode('join', [ timeParam, timeParam] ), builder.addNode('uv0') ] );
+                var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
+                var emissiveSampleNode = builder.addNode('texSample', [ emissiveTexParam, scrollNode ] );
+                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNode, port:'rgb'} ] );
 
-                    // create and hook up graph nodes
-                    var scrollNode = builder.addNode('add2', builder.addNode('joinVec2', timeParam, timeParam), builder.addNode('uv0'));
-                    var emissiveSampleNode = builder.addNode('texSample', emissiveTexParam, scrollNode);
-                    var emissiveCalcNode = builder.addNode('mul3', emissiveColConst, {node:emissiveSampleNode, port:'rgb'});
+                // hook up outputs
+                builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'sgAlpha');
+                builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
 
-                    // hook up outputs
-                    builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'sgAlpha');
-                    builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
+                // return built shader graph chunk
+                var shaderGraphChunk = builder.getShaderGraphChunk();
 
-                    // return built shader graph chunk
-                    var shaderGraphChunk = builder.getShaderGraphChunk();
+                // replace model's materials with standard node materials
+                var originalMaterials = [];
+                var shaderGraphMaterials = [];
+                
+                model.meshInstances.forEach(function (meshInstance) {
+                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
+                        var index = originalMaterials.indexOf(meshInstance.material);
 
-                    // replace model's materials with standard node materials
-                    var originalMaterials = [];
-                    var shaderGraphMaterials = [];
-                    
-                    model.meshInstances.forEach(function (meshInstance) {
-                        if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
-                            var index = originalMaterials.indexOf(meshInstance.material);
+                        if (index === -1) {
+                            index = shaderGraphMaterials.length;
 
-                            if (index === -1) {
-                                index = shaderGraphMaterials.length;
-
-                                originalMaterials.push(meshInstance.material);                            
-                                shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
-                            }
-
-                            meshInstance.material = shaderGraphMaterials[index];
-                            
-                            meshInstance.material.alphaTest = 0.5;
-                            meshInstance.material.update();
+                            originalMaterials.push(meshInstance.material);                            
+                            shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
                         }
-                    });
 
-                    // update time parameter and alpha test every frame
-                    app.on("update", function (dt) {
-                        time += dt;
-                        shaderGraphMaterials.forEach(function (material) {
-                            material.setParameter('uTime', time);
-                            material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
-                        });
-                    });
-
-                    app.start();
+                        meshInstance.material = shaderGraphMaterials[index];
+                        
+                        meshInstance.material.alphaTest = 0.5;
+                        meshInstance.material.update();
+                    }
                 });
+
+                // update time parameter and alpha test every frame
+                app.on("update", function (dt) {
+                    time += dt;
+                    shaderGraphMaterials.forEach(function (material) {
+                        material.setParameter('uTime', time);
+                        material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
+                    });
+                });
+
+                app.start();
             });
         });
     </script>

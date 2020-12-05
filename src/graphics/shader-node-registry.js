@@ -10,8 +10,8 @@ import { ShaderGraphNode } from '../scene/materials/shader-graph-node.js';
  */
 function ShaderNodeRegistry(app) {
     this.app = app;
-    this._nodes = { };
-    this._list = [];
+    this._nodeDef = { };
+    this._nodeCache = { };
 }
 
 ShaderNodeRegistry.prototype.constructor = ShaderNodeRegistry;
@@ -34,9 +34,45 @@ ShaderNodeRegistry.prototype.register = function (coreNodeList) {
         }
         var self = this;
         Object.keys(coreNodeList).forEach(function (key) {
-            self._nodes[key] = new ShaderGraphNode(coreNodeList[key].code);
-            self._list.push(self._nodes[key]);
+            self._nodeDef[key] = coreNodeList[key];
+            self._nodeCache[key] = {};
         });
+    }
+};
+
+ShaderNodeRegistry.prototype._genVariantKey = function (argTypes) {
+    var key = 'variantKey';
+
+    var argIndex;
+    for (argIndex = 0; argIndex < argTypes.length; argIndex++) {
+        key += '_' + argTypes[argIndex];
+    }
+
+    return key;
+};
+
+ShaderNodeRegistry.prototype.get = function (name, argTypes) {
+    if (this._nodeCache[name]) {
+        if (!this._nodeDef[name].gen) {
+            // if no generator, passthrough
+            if (!this._nodeCache[name].def) {
+                this._nodeCache[name].def = new ShaderGraphNode(this._nodeDef[name].code);
+            }
+            return this._nodeCache[name].def;
+        }
+
+        var variantKey = this._genVariantKey(argTypes);
+        if (this._nodeCache[name][variantKey]) {
+            // return cached variant
+            return this._nodeCache[name][variantKey];
+        }
+
+        // generate variant, add to cache and return it
+        var variantCode = this._nodeDef[name].gen(argTypes);
+        if (variantCode) {
+            this._nodeCache[name][variantKey] = new ShaderGraphNode(variantCode);
+            return this._nodeCache[name][variantKey];
+        }
     }
 };
 

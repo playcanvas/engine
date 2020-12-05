@@ -14,7 +14,6 @@ var ShaderGraphBuilder = function (app) {
     id++;
 
     this.app = app;
-    this._nodes = this.app.shaderNodes._nodes;
 
     this._graph = new ShaderGraphNode();
     this._graph.name = 'graphRoot_' + id;
@@ -108,37 +107,79 @@ Object.assign(ShaderGraphBuilder.prototype, {
         }
         return true;
     },
+
+    _getArgTypes: function (args, err) {
+        var argTypes = [];
+        var argIndex;
+        for (argIndex = 0; argIndex < args.length; argIndex++) {
+            var arg = args[argIndex];
+            if (arg.type) {
+                argTypes[argIndex] = arg.type;
+            } else {
+                if (typeof(arg) === 'number') {
+                    arg = { node: arg, port: 'ret' };
+                }
+                var core = this._addedNodes[arg.node];
+                if (!core) {
+                    console.error(err + ": invalid node index: " + arg.node);
+                    return false;
+                }
+                var port = core.getIoPortByName(arg.port);
+                if (!port) {
+                    console.error(err + ": invalid output port: " + core.name + "." + arg.port);
+                    return false;
+                }
+                argTypes[argIndex] = port.type;
+            }
+        }
+        return argTypes;
+    },
+
     /**
      * @private
      * @function
      * @name pc.ShaderGraphBuilder#addNode
      * @description Creates and adds a core node to the shader graph and connects up inputs.
      * @param {string} name - Name of the core node.
-     * @param {...*} arguments - First argument is name string, then 0-N output node ports or params to
-     * connect to new core node inputs - number and port type of arguments must match.
+     * @param {*[]} args - Optional array of output node ports or params to connect to new core
+     * node inputs - number and port type of arguments must match.
      * @returns {number} Returns the created node id.
      * @example
      * var node0 = builder.addNode('uv0');
      * var node1 = builder.addNode('texSample', param0, node0 );
-     * var node2 = builder.addNode('splitVec4', node1 );
-     * var node3 = builder.addNode('mul3', param1, node42 );
+     * var node2 = builder.addNode('splitVec', node1 );
+     * var node3 = builder.addNode('mul', param1, node42 );
      */
-    addNode: function (name) {
-        var args = arguments;
-        var coreNode = this._nodes[name];
+    addNode: function (name, args) {
+        if (!args) args = [];
+
+        var argTypes = this._getArgTypes(args, "pc.ShaderGraphBuilder#addNode");
+        // validate arguments
+        if (!argTypes) {
+            console.error("pc.ShaderGraphBuilder#addNode: invalid arguments");
+            return -1;
+        }
+
+        var coreNode = this.app.shaderNodes.get(name, argTypes);
+        // validate shader node generated
+        if (!coreNode) {
+            console.error("pc.ShaderGraphBuilder#addNode: invalid node: " + name);
+            return -1;
+        }
+
         var sgInputs = coreNode.graphData.ioPorts.filter(function (ioPort) {
             return ioPort.ptype === PORT_TYPE_IN;
         });
 
         // validate before adding node
-        if (sgInputs.length !== (args.length - 1)) {
+        if (sgInputs.length !== (args.length)) {
             console.error("pc.ShaderGraphBuilder#addNode: number of arguments provided do not match core node: " + name);
             return -1;
         }
 
         var argIndex;
-        for (argIndex = 0; argIndex < (args.length - 1); argIndex++) {
-            var valid = this._validateArg(args[argIndex + 1], sgInputs[argIndex].type, sgInputs[argIndex].name, coreNode.name, "pc.ShaderGraphBuilder#addNode");
+        for (argIndex = 0; argIndex < args.length; argIndex++) {
+            var valid = this._validateArg(args[argIndex], sgInputs[argIndex].type, sgInputs[argIndex].name, coreNode.name, "pc.ShaderGraphBuilder#addNode");
             if (!valid) {
                 return -1;
             }
@@ -148,8 +189,8 @@ Object.assign(ShaderGraphBuilder.prototype, {
         var sgIndex = this._graph.addSubGraph(coreNode);
         this._addedNodes[sgIndex] = coreNode;
 
-        for (argIndex = 0; argIndex < (args.length - 1); argIndex++) {
-            var arg = args[argIndex + 1];
+        for (argIndex = 0; argIndex < args.length; argIndex++) {
+            var arg = args[argIndex];
             if (typeof(arg) === 'number') {
                 // ret port of a node
                 var argNodeIndex = arg;
