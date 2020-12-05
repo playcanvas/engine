@@ -1060,7 +1060,7 @@ function createBox(device, opts) {
     return createMesh(device, positions, options);
 }
 
-// returns Primive data, used by ModelComponent and RenderComponent
+// returns Primitive data, used by ModelComponent and RenderComponent
 function getShapePrimitive(device, type) {
 
     var primData = shapePrimitiveMap.get(type);
