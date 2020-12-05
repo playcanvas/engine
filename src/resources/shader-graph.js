@@ -6,20 +6,6 @@ import { Texture } from '../graphics/texture.js';
 import { AssetReference } from '../asset/asset-reference.js';
 import { ShaderGraphNode } from '../scene/materials/shader-graph-node.js';
 
-var PLACEHOLDER_MAP = {
-    aoMap: 'white',
-    diffuseMap: 'gray',
-    specularMap: 'gray',
-    metalnessMap: 'black',
-    glossMap: 'gray',
-    emissiveMap: 'gray',
-    normalMap: 'normal',
-    heightMap: 'gray',
-    opacityMap: 'gray',
-    sphereMap: 'gray',
-    lightMap: 'white'
-};
-
 /**
  * @class
  * @name pc.ShaderGraphHandler
@@ -32,8 +18,7 @@ function ShaderGraphHandler(app) {
     this._device = app.graphicsDevice;
 
     // if no core nodes specified at this point we load defaults
-    if (app.shaderNodes._list.length === 0)
-    {
+    if (app.shaderNodes._list.length === 0) {
         // NB location of default core nodes as yet to be finalized
         app.assets.loadFromUrl("../examples/assets/core_nodes.json", "text", function (err, asset) {
             var coreNodeList = asset.resource;
@@ -254,15 +239,12 @@ Object.assign(ShaderGraphHandler.prototype, {
                 }
                 // if there is a name, then it is a core node
                 for (i = 0; i < Object.keys(data.graphData.subGraphs).length; i++) {
-                    if (data.graphData.subGraphs[i].name && this._coreNodes[data.graphData.subGraphs[i].name])
-                    {
+                    if (data.graphData.subGraphs[i].name && this._coreNodes[data.graphData.subGraphs[i].name]) {
                         // name matches core node - so use core code
                         shadergraph.graphData.subGraphs[i].name = data.graphData.subGraphs[i].name;
                         shadergraph.graphData.subGraphs[i].graph = this._coreNodes[shadergraph.graphData.subGraphs[i].name];
-                    }
-                    else
-                    {
-                        //NB. NOT SUPPORTED IN MVP
+                    } else {
+                        // NB. NOT SUPPORTED IN MVP
                         // name does not match core node - so use sub graph asset
                         shadergraph.graphData.subGraphs[i].name = data.graphData.subGraphs[i].name;
                         if (typeof(data.graphData.subGraphs[i].graph) === 'number' && data.graphData.subGraphs[i].graph > 0) {
