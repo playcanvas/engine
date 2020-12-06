@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas-shader-nodes.js"></script>
     <style>
         body { 
             margin: 0;
@@ -40,7 +41,7 @@
         var miniStats = new pcx.MiniStats(app);
 
         // register core nodes
-        app.shaderNodes.register(pcx.shaderNodes);
+        app.shaderNodes.register(pcsg.shaderNodes);
 
         // set ambient light
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -97,7 +98,7 @@
                 var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNodeA, port:'rgb'} ] );
 
                 var switchValue = 1;
-                var switchName = 'ALPHA_SWITCH';
+                var switchName = 'switchAlpha';
                 var staticSwitch = builder.addStaticSwitch(switchName, [ {node:emissiveSampleNodeA, port:'g'}, {node:emissiveSampleNodeB, port:'a'} ], switchValue);                
 
                 // hook up outputs

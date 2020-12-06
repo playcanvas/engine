@@ -177,4 +177,19 @@ export default [{
         }),
         spacesToTabs()
     ]
+}, {
+    input: 'shader-nodes/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas-shader-nodes.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pcsg'
+    },
+    plugins: [
+        cleanup({
+            comments: 'some'
+        }),
+        spacesToTabs()
+    ]
 }];
