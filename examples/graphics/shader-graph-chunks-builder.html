@@ -93,16 +93,16 @@
                 // create and hook up graph nodes
  //               var scrollNode = builder.addNode('add', [ builder.addNode('join', [ timeParam, timeParam] ), builder.addNode('uv0') ] );
                 var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
-                var emissiveSampleNodeA = builder.addNode('texSample', [ emissiveTexParamA, scrollNode ] );
-                var emissiveSampleNodeB = builder.addNode('texSample', [ emissiveTexParamB, scrollNode ] );
-                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNodeA, port:'rgb'} ] );
+                var emissiveSampleNodeA = builder.addTextureSample( emissiveTexParamA, scrollNode );
+                var emissiveSampleNodeB = builder.addTextureSample( emissiveTexParamB, scrollNode );
+                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNodeA, swizzle:'rgb'} ] );
 
                 var switchValue = 1;
                 var switchName = 'switchAlpha';
-                var staticSwitch = builder.addStaticSwitch(switchName, [ {node:emissiveSampleNodeA, port:'g'}, {node:emissiveSampleNodeB, port:'a'} ], switchValue);                
+                var staticSwitchAlpha = builder.addStaticSwitch(switchName, [ {node:emissiveSampleNodeA, swizzle:'g'}, {node:emissiveSampleNodeB, swizzle:'a'} ], switchValue);                
 
                 // hook up outputs
-                builder.addOutput(staticSwitch, 'float', 'sgAlpha');
+                builder.addOutput(staticSwitchAlpha, 'float', 'sgAlpha');
                 builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
 
                 // return built shader graph chunk

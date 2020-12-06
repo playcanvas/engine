@@ -1,5 +1,8 @@
 import { ShaderGraphNode, PORT_TYPE_IN } from './shader-graph-node.js';
 
+// import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE } from '../../graphics/graphics.js';
+import { TEXTURETYPE_RGBM } from '../../graphics/graphics.js';
+
 var id = 0;
 
 /**
@@ -82,14 +85,19 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 console.error(err + ": invalid input param: " + arg.name);
                 return false;
             }
-            if (arg.type !== type) {
-                console.error(err + ": input param type mismatch: " + arg.name + "." + type + " != " + node + "." + name + "." + type );
-                return false;
-            }
+            // if (arg.type !== type) {
+            //     console.error(err + ": input param type mismatch: " + arg.name + "." + type + " != " + node + "." + name + "." + type );
+            //     return false;
+            // }
         } else {
             if (typeof(arg) === 'number') {
                 arg = { node: arg, port: 'ret' };
             }
+
+            if (!arg.port) {
+                arg = { node: arg.node, port: 'ret' };
+            }
+
             var core = this._addedNodes[arg.node];
             if (!core) {
                 console.error(err + ": invalid node index: " + arg.node);
@@ -100,42 +108,90 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 console.error(err + ": invalid output port: " + core.name + "." + arg.port);
                 return false;
             }
-            if (port.type !== type) {
-                console.error(err + ": port type mismatch: " + core.name + "." + port.name + "." + port.type + " != " + node + "." + name + "." + type );
-                return false;
-            }
+            // if (port.type !== type) {
+            //     console.error(err + ": port type mismatch: " + core.name + "." + port.name + "." + port.type + " != " + node + "." + name + "." + type );
+            //     return false;
+            // }
         }
         return true;
     },
 
     _getArgTypes: function (args, err) {
+        // useful LUTs - consider making these global somewhere?
+        // var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
+        var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
+
         var argTypes = [];
         var argIndex;
         for (argIndex = 0; argIndex < args.length; argIndex++) {
             var arg = args[argIndex];
             if (arg.type) {
+                // ioPort - no swizzle
                 argTypes[argIndex] = arg.type;
             } else {
                 if (typeof(arg) === 'number') {
+                    // node id - no swizzle - set ret port
                     arg = { node: arg, port: 'ret' };
                 }
-                var core = this._addedNodes[arg.node];
-                if (!core) {
-                    console.error(err + ": invalid node index: " + arg.node);
-                    return false;
+
+                var unswizzledType;
+                if (arg.port && arg.port.type) {
+                    // ioPort - probably with swizzle
+                    unswizzledType = arg.port.type;
+                } else {
+                    if (!arg.port) {
+                        arg = { node: arg.node, port: 'ret', swizzle: arg.swizzle };
+                    }
+
+                    // node and port - maybe with swizzle
+                    var core = this._addedNodes[arg.node];
+                    if (!core) {
+                        console.error(err + ": invalid node index: " + arg.node);
+                        return false;
+                    }
+                    var port = core.getIoPortByName(arg.port);
+                    if (!port) {
+                        console.error(err + ": invalid output port: " + core.name + "." + arg.port);
+                        return false;
+                    }
+
+                    unswizzledType = port.type;
                 }
-                var port = core.getIoPortByName(arg.port);
-                if (!port) {
-                    console.error(err + ": invalid output port: " + core.name + "." + arg.port);
-                    return false;
+
+                if (arg.swizzle) {
+                    var swizzleLen = arg.swizzle.length;
+                    // TODO: check if unswizzledType can be swizzled with specified swizzle
+                    if (swizzleLen < 1 || swizzleLen > 4) {
+                        console.error(err + ": invalid swizzle: " + arg.swizzle);
+                        return false;
+                    }
+
+                    argTypes[argIndex] = comp2Type[swizzleLen];
+                } else {
+                    argTypes[argIndex] = unswizzledType;
                 }
-                argTypes[argIndex] = port.type;
             }
         }
         return argTypes;
     },
 
-    addStaticSwitch: function (name, args, value) {
+    addTextureSample: function (texParam, uv) {
+        var texArgs = [texParam, uv];
+        var texNode = this.addNode('texSample', texArgs);
+
+        var switchName = 'switch_' + texNode;
+        var switchValue = 0;
+        if (texParam.valueTex.type === TEXTURETYPE_RGBM) {
+            switchValue = 2;
+        }
+
+        var switchArgs = [{ node: texNode, port: 'rgba' }, { node: texNode, port: 'srgba' }, { node: texNode, port: 'rgbm' }];
+        var switchNodeId = this.addStaticSwitch(switchName, switchArgs, switchValue, { isTexSwitch: true });
+
+        return switchNodeId;
+    },
+
+    addStaticSwitch: function (name, args, value, options) {
         // add a uniform - which is used for dynamic path
         var switchParam = this.addParam('float', name, value);
         if (!switchParam) {
@@ -145,7 +201,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         // prepend switch param
         var switchArgs = args.slice();
         switchArgs.unshift(switchParam);
-        var switchNodeId = this.addNode('select', switchArgs);
+        var switchNodeId = this.addNode('select', switchArgs, options);
         if (!switchNodeId) {
             console.error("pc.ShaderGraphBuilder#addStaticSwitch: failed to add static switch:" + name);
             return undefined;
@@ -163,6 +219,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @param {string} name - Name of the core node.
      * @param {number[]|object[]} [args] - Optional array of output node ports or params to connect to new core
      * node inputs - number and port type of arguments must match.
+     * @param {object} options - Optional options object.
      * @returns {number} Returns the created node id.
      * @example
      * var node0 = builder.addNode('uv0');
@@ -170,7 +227,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * var node2 = builder.addNode('splitVec', node1 );
      * var node3 = builder.addNode('mul', param1, node42 );
      */
-    addNode: function (name, args) {
+    addNode: function (name, args, options) {
         if (!args) args = [];
 
         var argTypes = this._getArgTypes(args, "pc.ShaderGraphBuilder#addNode");
@@ -180,7 +237,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
             return -1;
         }
 
-        var coreNode = this.app.shaderNodes.get(name, argTypes);
+        var coreNode = this.app.shaderNodes.get(name, argTypes, options);
         // validate shader node generated
         if (!coreNode) {
             console.error("pc.ShaderGraphBuilder#addNode: invalid node: " + name);
@@ -212,15 +269,21 @@ Object.assign(ShaderGraphBuilder.prototype, {
         for (argIndex = 0; argIndex < args.length; argIndex++) {
             var arg = args[argIndex];
             if (typeof(arg) === 'number') {
-                // ret port of a node
+                // ret port of a node - no swizzle
                 var argNodeIndex = arg;
                 this._graph.connect(argNodeIndex, 'ret', sgIndex, sgInputs[argIndex].name);
             } else if (arg.type) {
-                // ioPort (ioPort)
+                // ioPort - no swizzle
                 this._graph.connect(-1, arg.name, sgIndex, sgInputs[argIndex].name);
+            } else if (arg.port && arg.port.type) {
+                // ioPort - probably with swizzle
+                this._graph.connect(-1, arg.port.name, sgIndex, sgInputs[argIndex].name, arg.swizzle);
             } else {
-                // specific port of a node
-                this._graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name);
+                if (!arg.port) {
+                    arg = { node: arg.node, port: 'ret', swizzle: arg.swizzle };
+                }
+                // specific port of a node - maybe with swizzle
+                this._graph.connect(arg.node, arg.port, sgIndex, sgInputs[argIndex].name, arg.swizzle);
             }
         }
         return sgIndex;
@@ -256,15 +319,21 @@ Object.assign(ShaderGraphBuilder.prototype, {
         this._addedOutputs[name] = ioPort;
 
         if (typeof(arg) === 'number') {
-            // ret port of a node
+            // ret port of a node - no swizzle
             var argNodeIndex = arg;
             this._graph.connect(argNodeIndex, 'ret', -1, ioPort.name);
         } else if (arg.type) {
-            // ioPort
+            // ioPort - no swizzle
             this._graph.connect(-1, arg.name, -1, ioPort.name);
+        } else if (arg.port && arg.port.type) {
+            // ioPort - probably with swizzle
+            this._graph.connect(-1, arg.port.name, -1, ioPort.name, arg.swizzle);
         } else {
-            // specific port of a node
-            this._graph.connect(arg.node, arg.port, -1, ioPort.name);
+            if (!arg.port) {
+                arg = { node: arg.node, port: 'ret', swizzle: arg.swizzle };
+            }
+            // specific port of a node - maybe with swizzle
+            this._graph.connect(arg.node, arg.port, -1, ioPort.name, arg.swizzle);
         }
     },
     /**

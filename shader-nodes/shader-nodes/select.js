@@ -16,11 +16,11 @@ select.meta.ports[1] = { label: 'C4', id: 5 };
 select.meta.ports[2] = { label: 'C5', id: 6 };
 
 // generator
-select.gen = function ( argTypes ) {
+select.gen = function ( argTypes, options ) {
     var retType = flexOp.getRetType(argTypes);
 
     // construct head code
-    var code = flexOp.getHeadCode(retType, 'select', argTypes);
+    var code = flexOp.getHeadCode(retType, 'select', argTypes, options && options.isTexSwitch );
 
     // construct body code
     code += '{\n';

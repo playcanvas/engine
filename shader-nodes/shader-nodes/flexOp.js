@@ -25,18 +25,25 @@ flexOp.getRetType = function ( argTypes ) {
     return this.comp2Type[maxComp];
 };
 
-flexOp.getHeadCode = function (retType, opName, argTypes ) {
+flexOp.getHeadCode = function (retType, opName, argTypes, outputRetComponents ) {
     var code = retType + ' ' + opName + '( ';
     for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
         code += 'in ' + argTypes[argIndex] + ' arg' + argIndex;
 
         code += (argIndex === argTypes.length - 1) ? ' )\n' : ', ';
     }
+    if (outputRetComponents && this.type2Comp[retType] === 4) {
+        code.replace(' )\n', ', out vec3 rgb, out float r, out float g, out float b, out float a )\n');
+    }
+
     return code;
 };
 
 // generator
-flexOp.gen = function ( argTypes, opName, opCode ) {
+flexOp.gen = function ( argTypes, options ) {
+    var opName = options.opName;
+    var opCode = options.opCode;
+
     // determine return type
     var retType = this.getRetType(argTypes);
 

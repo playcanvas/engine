@@ -104,6 +104,9 @@ Object.assign(StandardNodeMaterial.prototype, {
         // add shader graph chunk to options
         if (this._shaderGraphChunk) {
             options._shaderGraphChunk = this._shaderGraphChunk;
+
+            // shader graph chunk texture sampling can switch to this
+            options.useRgbm = true;
         }
 
         if (this.onUpdateShader) {

@@ -10,7 +10,7 @@ add.meta.ports = flexOp.meta.ports;
 
 // generator
 add.gen = function ( argTypes ) {
-    return flexOp.gen(argTypes, 'add', '+');
+    return flexOp.gen(argTypes, { opName: 'add', opCode: '+' } );
 };
 
 // export { add };

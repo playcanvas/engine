@@ -36,11 +36,12 @@ var Port = function ( type, name, value, ptype) {
 };
 Port.prototype.constructor = Port;
 
-var Connection = function (srcIndex, srcName, dstIndex, dstName) {
+var Connection = function (srcIndex, srcName, dstIndex, dstName, swizzle) {
     this.srcIndex = srcIndex;
     this.srcName = srcName;
     this.dstIndex = dstIndex;
     this.dstName = dstName;
+    this.swizzle = swizzle;
 };
 Connection.prototype.constructor = Connection;
 
@@ -295,8 +296,8 @@ Object.assign(ShaderGraphNode.prototype, {
         return ret;
     },
 
-    connect: function (srcIndex, srcName, dstIndex, dstName) {
-        var connection = new Connection(srcIndex, srcName, dstIndex, dstName);
+    connect: function (srcIndex, srcName, dstIndex, dstName, swizzle) {
+        var connection = new Connection(srcIndex, srcName, dstIndex, dstName, swizzle);
         this.graphData.connections.push(connection);
     },
 
@@ -315,7 +316,7 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     _generateStaticSwitch: function (switchValue, inNames, outNames) {
-        // useful LUTs - consider making these global somewhere
+        // useful LUTs - consider making these global somewhere?
         var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
         var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
 
@@ -639,11 +640,11 @@ Object.assign(ShaderGraphNode.prototype, {
                         dstConnectedMap[con.dstIndex].push(con.srcIndex);
 
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstName] = srcTmpVarMap[con.srcIndex][con.srcName];
+                        dstTmpVarMap[con.dstIndex][con.dstName] = srcTmpVarMap[con.srcIndex][con.srcName] + ((con.swizzle) ? '.' + con.swizzle : '');
                     } else {
                         // root graph input/const var
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstName] = con.srcName;
+                        dstTmpVarMap[con.dstIndex][con.dstName] = con.srcName + ((con.swizzle) ? '.' + con.swizzle : '');
                     }
                 } else {
                     if (con.srcIndex >= 0) {

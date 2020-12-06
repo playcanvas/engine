@@ -1,5 +1,5 @@
 import { ShaderGraphNode } from '../scene/materials/shader-graph-node.js';
-
+import { hashCode } from '../core/hash.js';
 /**
  * @private
  * @class
@@ -40,18 +40,24 @@ ShaderNodeRegistry.prototype.register = function (coreNodeList) {
     }
 };
 
-ShaderNodeRegistry.prototype._genVariantKey = function (argTypes) {
-    var key = 'variantKey';
+ShaderNodeRegistry.prototype._genVariantKey = function (argTypes, options) {
+    var variantKey = 'varKey';
 
-    var argIndex;
-    for (argIndex = 0; argIndex < argTypes.length; argIndex++) {
-        key += '_' + argTypes[argIndex];
+    for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
+        variantKey += '_' + argTypes[argIndex];
     }
 
-    return key;
+    if (options) {
+        var optionKeys = Object.keys(options);
+        for (var keyIndex = 0; keyIndex < optionKeys.length; keyIndex++) {
+            variantKey += '_' + optionKeys + '_' + options[optionKeys[keyIndex]];
+        }
+    }
+
+    return hashCode(variantKey);
 };
 
-ShaderNodeRegistry.prototype.get = function (name, argTypes) {
+ShaderNodeRegistry.prototype.get = function (name, argTypes, options) {
     if (this._nodeCache[name]) {
         if (!this._nodeDef[name].gen) {
             // if no generator, passthrough
@@ -61,14 +67,14 @@ ShaderNodeRegistry.prototype.get = function (name, argTypes) {
             return this._nodeCache[name].def;
         }
 
-        var variantKey = this._genVariantKey(argTypes);
+        var variantKey = this._genVariantKey(argTypes, options);
         if (this._nodeCache[name][variantKey]) {
             // return cached variant
             return this._nodeCache[name][variantKey];
         }
 
         // generate variant, add to cache and return it
-        var variantCode = this._nodeDef[name].gen(argTypes);
+        var variantCode = this._nodeDef[name].gen(argTypes, options);
         if (variantCode) {
             this._nodeCache[name][variantKey] = new ShaderGraphNode(variantCode);
             return this._nodeCache[name][variantKey];
