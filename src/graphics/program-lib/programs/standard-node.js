@@ -1,12 +1,19 @@
 import { standard } from './standard.js';
+import { hashCode } from '../../../core/hash.js';
 
 // just do a shallow copy standard
 var standardnode = Object.assign({}, standard);
 
-// override a couple of functions - the overridden functions have been altered in standard to accept extra params
-standardnode._generateKey = standard.generateKey;
+// override a couple of functions - the overridden functions have been altered in standard
+standardnode._generateKey = standard._generateKey;
 standardnode.generateKey = function (options) {
-    return this._generateKey(options, options._shaderGraphChunk.id);
+    var key = this._generateKey(options);
+
+    if (options._shaderGraphChunk) {
+        key += options._shaderGraphChunk.getSwitchKey();
+    }
+
+    return hashCode(key);
 };
 
 standardnode._createShaderDefinition = standard.createShaderDefinition;

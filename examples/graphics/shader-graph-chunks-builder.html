@@ -74,25 +74,34 @@
             var model = modelComponent.model;
 
             // load a texture asset
+            app.assets.loadFromUrl("../assets/textures/particles-numbers.png", "texture", function (err, asset) {    
+                var emissiveMapB = asset.resource;            
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
-                var emissiveMap = asset.resource;
+                var emissiveMapA = asset.resource;
 
                 // create a shader graph builder
                 var builder = new pc.ShaderGraphBuilder(app);
 
                 // add input parameters
                 var timeParam = builder.addParam('float', 'uTime', 0.0);
-                var emissiveTexParam = builder.addParam('sampler2D', 'uEmissiveMap', emissiveMap);
+                var emissiveTexParamA = builder.addParam('sampler2D', 'uEmissiveMapA', emissiveMapA);
+                var emissiveTexParamB = builder.addParam('sampler2D', 'uEmissiveMapB', emissiveMapB);
+
                 var emissiveColConst = builder.addConst('vec3', 'emissiveColConst', new pc.Vec3(0.2, 0.3, 0.3));
 
                 // create and hook up graph nodes
  //               var scrollNode = builder.addNode('add', [ builder.addNode('join', [ timeParam, timeParam] ), builder.addNode('uv0') ] );
                 var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
-                var emissiveSampleNode = builder.addNode('texSample', [ emissiveTexParam, scrollNode ] );
-                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNode, port:'rgb'} ] );
+                var emissiveSampleNodeA = builder.addNode('texSample', [ emissiveTexParamA, scrollNode ] );
+                var emissiveSampleNodeB = builder.addNode('texSample', [ emissiveTexParamB, scrollNode ] );
+                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNodeA, port:'rgb'} ] );
+
+                var switchValue = 1;
+                var switchName = 'ALPHA_SWITCH';
+                var staticSwitch = builder.addStaticSwitch(switchName, [ {node:emissiveSampleNodeA, port:'g'}, {node:emissiveSampleNodeB, port:'a'} ], switchValue);                
 
                 // hook up outputs
-                builder.addOutput({node:emissiveSampleNode, port:'g'}, 'float', 'sgAlpha');
+                builder.addOutput(staticSwitch, 'float', 'sgAlpha');
                 builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
 
                 // return built shader graph chunk
@@ -121,15 +130,37 @@
                 });
 
                 // update time parameter and alpha test every frame
+                
+                var flipSwitch = false;
+
                 app.on("update", function (dt) {
                     time += dt;
+
+                    if (time>4.0)
+                    {
+                        time -= 4.0;
+                        flipSwitch = true;
+                        switchValue = 1-switchValue;
+                    } 
+
                     shaderGraphMaterials.forEach(function (material) {
+                        if (flipSwitch)
+                        {
+                            material.setSwitch(switchName, switchValue);
+                            material.update();
+                        }
                         material.setParameter('uTime', time);
-                        material.alphaTest = 1.0 - ((Math.sin(time * 4.0) + 1.7) * 0.5);
+                        material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 1.7) * 0.5);
                     });
+
+                    if (flipSwitch)
+                    {
+                        flipSwitch = false;
+                    }                    
                 });
 
                 app.start();
+            });
             });
         });
     </script>

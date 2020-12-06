@@ -48,6 +48,16 @@ Object.assign(StandardNodeMaterial.prototype, {
         return clone;
     },
 
+    setSwitch: function (name, value) {
+        if (this._shaderGraphChunk) {
+            var currentValue = this._shaderGraphChunk.getSwitchValue(name);
+            if (currentValue !== undefined && currentValue !== value) {
+                this._shaderGraphChunk.setSwitchValue(name, value);
+                this.dirtyShader = true;
+            }
+        }
+    },
+
     /**
      * @private
      * @function

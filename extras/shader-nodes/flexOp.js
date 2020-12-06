@@ -1,6 +1,6 @@
 // node
 var flexOp = {
-    // code: "RET_TYPE opName(in A_TYPE a, in B_TYPE b, )\n{\n    return RET_TYPE(a,A_SWIZZLE)+RET_TYPE(b,B_SWIZZLE);\n}",
+    // code: "RET_TYPE opName(in TYPE_0 arg0, in TYPE_1 arg1, ... )\n{\n    return RET_TYPE(arg0,EXPAND_0) opCode RET_TYPE(arg1,EXPAND_1) ... ;\n}",
     meta: { label: "FLEXIBLE OPERATOR" },
     type2Comp: { float: 1, vec2: 2, vec3: 3, vec4: 4 },
     comp2Type: ['', 'float', 'vec2', 'vec3', 'vec4']
@@ -16,30 +16,38 @@ flexOp.meta.ports[4] = { label: 'D', id: 4 };
 flexOp.meta.ports[5] = { label: 'E', id: 5 };
 flexOp.meta.ports[6] = { label: 'F', id: 6 };
 
-// generator
-flexOp.gen = function ( argTypes, opName, opCode ) {
-    // determine return type
+// utility
+flexOp.getRetType = function ( argTypes ) {
     var maxComp = 0;
-    var argIndex;
-    for (argIndex = 0; argIndex < argTypes.length; argIndex++) {
+    for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
         maxComp = Math.max(maxComp, this.type2Comp[argTypes[argIndex]]);
     }
-    var retType = this.comp2Type[maxComp];
+    return this.comp2Type[maxComp];
+};
 
-    // construct code
-    // head
+flexOp.getHeadCode = function (retType, opName, argTypes ) {
     var code = retType + ' ' + opName + '( ';
-
-    for (argIndex = 0; argIndex < argTypes.length; argIndex++) {
+    for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
         code += 'in ' + argTypes[argIndex] + ' arg' + argIndex;
 
         code += (argIndex === argTypes.length - 1) ? ' )\n' : ', ';
     }
-    // body
-    code += '{\n';
-    code += 'return ';
+    return code;
+};
 
-    for (argIndex = 0; argIndex < argTypes.length; argIndex++) {
+// generator
+flexOp.gen = function ( argTypes, opName, opCode ) {
+    // determine return type
+    var retType = this.getRetType(argTypes);
+
+    // construct head code
+    var code = this.getHeadCode(retType, opName, argTypes);
+
+    // construct body code
+    code += '{\n';
+    code += '    return ';
+
+    for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
         // convert all arguments to return type
         code += retType + '(arg' + argIndex;
 
@@ -48,7 +56,7 @@ flexOp.gen = function ( argTypes, opName, opCode ) {
         var expand = this.type2Comp[retType] - argComp;
         code += (expand > 0 && argComp !== 1) ? ', ' + this.comp2Type[expand] + '(0))' : ')';
 
-        code += (argIndex === argTypes.length - 1) ? ' ;\n' : ' ' + opCode + ' ';
+        code += (argIndex === argTypes.length - 1) ? ';\n' : ' ' + opCode + ' ';
     }
 
     code += '}\n';

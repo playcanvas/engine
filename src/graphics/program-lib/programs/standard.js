@@ -167,7 +167,7 @@ var standard = {
     optionsContext: {},
     optionsContextMin: {},
 
-    generateKey: function (options, graphId) {
+    _generateKey: function (options, graphId) {
         var buildPropertiesList = function (options) {
             var props = [];
             for (var prop in options) {
@@ -212,8 +212,11 @@ var standard = {
             }
         }
 
-        if (graphId) key += graphId;
+        return key;
+    },
 
+    generateKey: function (options) {
+        var key = this._generateKey(options);
         return hashCode(key);
     },
 

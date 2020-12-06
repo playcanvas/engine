@@ -135,6 +135,26 @@ Object.assign(ShaderGraphBuilder.prototype, {
         return argTypes;
     },
 
+    addStaticSwitch: function (name, args, value) {
+        // add a uniform - which is used for dynamic path
+        var switchParam = this.addParam('float', name, value);
+        if (!switchParam) {
+            console.error("pc.ShaderGraphBuilder#addStaticSwitch: failed to add switch param:" + name);
+            return undefined;
+        }
+        // prepend switch param
+        var switchArgs = args.slice();
+        switchArgs.unshift(switchParam);
+        var switchNodeId = this.addNode('select', switchArgs);
+        if (!switchNodeId) {
+            console.error("pc.ShaderGraphBuilder#addStaticSwitch: failed to add static switch:" + name);
+            return undefined;
+        }
+        this._graph.addStaticSwitch(name, switchNodeId, args.length - 1, value);
+
+        return switchNodeId;
+    },
+
     /**
      * @private
      * @function
@@ -240,7 +260,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
             var argNodeIndex = arg;
             this._graph.connect(argNodeIndex, 'ret', -1, ioPort.name);
         } else if (arg.type) {
-            // ioPort (ioPort)
+            // ioPort
             this._graph.connect(-1, arg.name, -1, ioPort.name);
         } else {
             // specific port of a node
