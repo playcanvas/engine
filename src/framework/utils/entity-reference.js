@@ -2,10 +2,13 @@ import { Component } from '../components/component.js';
 import { ComponentSystem } from '../components/system.js';
 import { Entity } from '../entity.js';
 
+import { EventHandler } from '../../core/event-handler.js';
+
 /**
  * @private
  * @class
  * @name pc.EntityReference
+ * @augments pc.EventHandler
  * @description Helper class used for managing component properties that represent entity references.
  * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that
  * refer to entities in the scene graph. Using an EntityReference simplifies the job of dealing with the
@@ -90,6 +93,8 @@ import { Entity } from '../entity.js';
  * "element#set:width" // Called when the width of an ElementComponent is set.
  * ```
  *
+ * When the entity reference changes to another entity (or null) the set:entity event is fired.
+ *
  * ## Ownership and Destruction ##
  *
  * The lifetime of an ElementReference is tied to the parent component that instantiated it. This
@@ -109,6 +114,8 @@ import { Entity } from '../entity.js';
  * @property {pc.Entity} entity A reference to the entity, if present.
  */
 function EntityReference(parentComponent, entityPropertyName, eventConfig) {
+    EventHandler.call(this);
+
     if (!parentComponent || !(parentComponent instanceof Component)) {
         throw new Error('The parentComponent argument is required and must be a Component');
     } else if (!entityPropertyName || typeof entityPropertyName !== 'string') {
@@ -127,6 +134,9 @@ function EntityReference(parentComponent, entityPropertyName, eventConfig) {
     });
     this._toggleLifecycleListeners('on');
 }
+
+EntityReference.prototype = Object.create(EventHandler.prototype);
+EntityReference.prototype.constructor = EntityReference;
 
 Object.assign(EntityReference.prototype, {
     _configureEventListeners: function (externalEventConfig, internalEventConfig) {
@@ -274,6 +284,8 @@ Object.assign(EntityReference.prototype, {
             if (this._entity) {
                 this._onAfterEntityChange();
             }
+
+            this.fire('set:entity', this._entity);
         }
     },
 

@@ -10,6 +10,7 @@
  * @param {object} [callbacks.load] - The function called when the asset loads load(propertyName, parent, asset).
  * @param {object} [callbacks.add] - The function called when the asset is added to the registry add(propertyName, parent, asset).
  * @param {object} [callbacks.remove] - The function called when the asset is remove from the registry remove(propertyName, parent, asset).
+ * @param {object} [callbacks.unload] - The function called when the asset is unloaded unload(propertyName, parent, asset).
  * @param {object} [scope] - The scope to call the callbacks in
  * @property {number} id Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference.
  * @property {string} url Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference.
@@ -36,6 +37,7 @@ function AssetReference(propertyName, parent, registry, callbacks, scope) {
     this._onAssetLoad = callbacks.load;
     this._onAssetAdd = callbacks.add;
     this._onAssetRemove = callbacks.remove;
+    this._onAssetUnload = callbacks.unload;
 }
 
 AssetReference.prototype._bind = function () {
@@ -43,6 +45,7 @@ AssetReference.prototype._bind = function () {
         if (this._onAssetLoad) this._registry.on("load:" + this.id, this._onLoad, this);
         if (this._onAssetAdd) this._registry.once("add:" + this.id, this._onAdd, this);
         if (this._onAssetRemove) this._registry.on("remove:" + this.id, this._onRemove, this);
+        if (this._onAssetUnload) this._registry.on("unload:" + this.id, this._onUnload, this);
     }
 
     if (this.url) {
@@ -57,6 +60,7 @@ AssetReference.prototype._unbind = function () {
         if (this._onAssetLoad) this._registry.off('load:' + this.id, this._onLoad, this);
         if (this._onAssetAdd) this._registry.off('add:' + this.id, this._onAdd, this);
         if (this._onAssetRemove) this._registry.off('remove:' + this.id, this._onRemove, this);
+        if (this._onAssetUnload) this._registry.off("unload:" + this.id, this._onUnload, this);
     }
     if (this.url) {
         if (this._onAssetLoad) this._registry.off('load:' + this.url, this._onLoad, this);
@@ -70,11 +74,17 @@ AssetReference.prototype._onLoad = function (asset) {
 };
 
 AssetReference.prototype._onAdd = function (asset) {
+    this.asset = asset;
     this._onAssetAdd.call(this._scope, this.propertyName, this.parent, asset);
 };
 
 AssetReference.prototype._onRemove = function (asset) {
     this._onAssetRemove.call(this._scope, this.propertyName, this.parent, asset);
+    this.asset = null;
+};
+
+AssetReference.prototype._onUnload = function (asset) {
+    this._onAssetUnload.call(this._scope, this.propertyName, this.parent, asset);
 };
 
 Object.defineProperty(AssetReference.prototype, 'id', {
