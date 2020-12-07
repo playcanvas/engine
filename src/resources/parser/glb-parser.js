@@ -1902,6 +1902,7 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
     // handle case of no buffers
     if (!remaining) {
         callback(null, null);
+        return;
     }
 
     var onLoad = function (index, bufferView) {
