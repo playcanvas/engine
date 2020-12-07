@@ -105,7 +105,7 @@ Object.assign(MorphInstance.prototype, {
 
         this.meshInstance = null;
 
-            // don't destroy shader as it's in the cache and can be used by other materials
+        // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
         if (this.morph) {
@@ -132,6 +132,17 @@ Object.assign(MorphInstance.prototype, {
             this.textureNormals.destroy();
             this.textureNormals = null;
         }
+    },
+
+    /**
+     * @function
+     * @name pc.MorphInstance#clone
+     * @description Clones a MorphInstance. The returned clone uses the same {@link pc.Morph} and weights are set to defaults.
+     * @returns {pc.MorphInstance} A clone of the specified MorphInstance.
+     */
+    clone: function () {
+        var clone = new MorphInstance(this.morph);
+        return clone;
     },
 
     /**

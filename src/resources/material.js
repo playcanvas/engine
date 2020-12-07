@@ -170,10 +170,11 @@ Object.assign(MaterialHandler.prototype, {
 
     _onTextureRemove: function (parameterName, materialAsset, textureAsset) {
         var material = materialAsset.resource;
-
-        if (material[parameterName] === textureAsset.resource) {
-            this._assignTexture(parameterName, materialAsset, null);
-            material.update();
+        if (material) {
+            if (material[parameterName] === textureAsset.resource) {
+                this._assignTexture(parameterName, materialAsset, null);
+                material.update();
+            }
         }
     },
 

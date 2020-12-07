@@ -46,12 +46,14 @@ Object.assign(AnimComponent.prototype, {
         data.layers = [];
 
         var graph;
-        var modelComponent = this.entity.model;
-        if (modelComponent) {
-            var m = modelComponent.model;
+        if (this.entity.model) {
+            var m = this.entity.model.model;
             if (m) {
                 graph = m.getGraph();
             }
+        } else {
+            // animating hierarchy without model
+            graph = this.entity;
         }
 
         function addLayer(name, states, transitions, order) {
