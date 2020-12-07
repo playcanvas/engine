@@ -8,6 +8,10 @@ export var PORT_TYPE_OUT = 2;
 export var PORT_TYPE_CONST = 3;
 export var PORT_TYPE_RET = 4;
 
+// useful LUTs
+export var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
+export var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
+
 var Port = function ( type, name, value, ptype) {
     this.type = type;
     this.name = name;
@@ -315,32 +319,29 @@ Object.assign(ShaderGraphNode.prototype, {
         return ret;
     },
 
-    _generateStaticSwitch: function (switchValue, inNames, outNames) {
-        // useful LUTs - consider making these global somewhere?
-        var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
-        var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
-
+    _generateStaticSwitch: function (switchValue, inVars, outVars) {
         var callString = '';
 
-        // assign selected input tmp var directly to ret tmp var
+        // assign selected input tmp var (plus swizzle) directly to ret tmp var (include casting)
         var retPort = this.graphData.ioPorts[0];
-        callString += outNames[retPort.name] + ' = ' + retPort.type + '(';
+        callString += outVars[retPort.name].name + ' = ' + retPort.type + '(';
 
         // NB case ports start at port index 2
         var argPort = this.graphData.ioPorts[switchValue + 2];
-        callString += inNames[argPort.name];
+        callString += inVars[argPort.name].name + ((inVars[argPort.name].swizzle) ? '.' + inVars[argPort.name].swizzle : '');
+        var swizzleType = (inVars[argPort.name].swizzle) ? comp2Type[inVars[argPort.name].swizzle.length] : inVars[argPort.name].type;
 
         // deal with casting - flexOp style
-        var argComp = type2Comp[argPort.type];
-        var expand = type2Comp[retPort.type] - argComp;
-        callString += (expand > 0 && argComp !== 1) ? ', ' + comp2Type[expand] + '(0));' : ');';
+        var swizzleComp = type2Comp[swizzleType];
+        var extend = type2Comp[retPort.type] - swizzleComp;
+        callString += (extend > 0 && swizzleComp !== 1) ? ', ' + comp2Type[extend] + '(0));' : ');';
 
-        callString += ' // ' + this._generateSubGraphCall(inNames, outNames);
+        callString += ' // ' + this._generateSubGraphCall(inVars, outVars);
 
         return callString;
     },
 
-    _generateSubGraphCall: function (inNames, outNames) {
+    _generateSubGraphCall: function (inVars, outVars) {
         var i;
         var ioPort;
         var callString = '';
@@ -349,8 +350,8 @@ Object.assign(ShaderGraphNode.prototype, {
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.ptype === PORT_TYPE_RET) {
-                if (outNames[ioPort.name] !== undefined) {
-                    callString += outNames[ioPort.name] + ' = ';
+                if (outVars[ioPort.name] !== undefined) {
+                    callString += outVars[ioPort.name].name + ' = ';
                 } else {
                     // I guess this is actually valid (return value not assigned to anything)
                 }
@@ -367,8 +368,24 @@ Object.assign(ShaderGraphNode.prototype, {
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.ptype === PORT_TYPE_IN) {
-                if (inNames && inNames[ioPort.name] !== undefined) {
-                    callString += inNames[ioPort.name] + ', ';
+                if (inVars && inVars[ioPort.name] !== undefined) {
+                    if (ioPort.type === 'sampler2D') {
+                        callString += inVars[ioPort.name].name + ', ';
+                    } else {
+                        var inVar = inVars[ioPort.name];
+
+                        // cast to port type - with swizzle and extending or truncation of channels
+                        var swizzleType = (inVar.swizzle) ? comp2Type[inVar.swizzle.length] : inVar.type;
+                        var swizzleComp = type2Comp[swizzleType];
+                        var extend = type2Comp[ioPort.type] - swizzleComp;
+                        if (extend >= 0) {
+                            callString += ioPort.type + '(' + inVar.name + ((inVar.swizzle) ? '.' + inVar.swizzle : '');
+                            callString += (extend > 0 && swizzleComp !== 1) ? ', ' + comp2Type[extend] + '(0)), ' : '), ';
+                        } else {
+                            var truncatedSwizzle = ((inVar.swizzle) ? '.' + inVar.swizzle.slice(0, extend) : '.rgba'.slice(0, extend + swizzleComp - 4));
+                            callString += ioPort.type + '(' + inVar.name + truncatedSwizzle + '), ';
+                        }
+                    }
                 } else {
                     var ioPortCached = this._getCachedPort(i); // use port cache
                     callString += ioPortCached.nameId + ', ';
@@ -380,8 +397,8 @@ Object.assign(ShaderGraphNode.prototype, {
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
             if (ioPort.ptype === PORT_TYPE_OUT && ioPort.ptype !== PORT_TYPE_RET) {
-                if (outNames[ioPort.name] !== undefined) {
-                    callString += outNames[ioPort.name] + ', ';
+                if (outVars[ioPort.name] !== undefined) {
+                    callString += outVars[ioPort.name].name + ', ';
                 } else {
                     // this shouldn't be possible - because all outputs from connected subgraphs will have a tmpVar declared.
                 }
@@ -530,22 +547,22 @@ Object.assign(ShaderGraphNode.prototype, {
         var generatedCodeString = '';
 
         // generate input and output names for function call and run through outputs to declare variables
-        var inNames = {};
-        var outNames = {};
+        var inVars = {};
+        var outVars = {};
 
         for (var i = 0; i < this.graphData.ioPorts.length; i++) {
             var ioPort = this.graphData.ioPorts[i];
             var ioPortCached = this._getCachedPort(i); // use port cache
             if (ioPort.ptype === PORT_TYPE_IN) {
-                inNames[ioPort.name] = ioPortCached.nameId;
+                inVars[ioPort.name] = { name: ioPortCached.nameId, type: ioPort.type };
             }
             if (ioPort.ptype === PORT_TYPE_OUT || ioPort.ptype === PORT_TYPE_RET ) {
                 generatedCodeString += ioPort.type + ' ' + ioPort.name + ';\n';
-                outNames[ioPort.name] = ioPort.name;
+                outVars[ioPort.name] = { name: ioPort.name, type: ioPort.type };
             }
         }
 
-        generatedCodeString += this._generateSubGraphCall(inNames, outNames);
+        generatedCodeString += this._generateSubGraphCall(inVars, outVars);
 
         return generatedCodeString;
     },
@@ -623,7 +640,7 @@ Object.assign(ShaderGraphNode.prototype, {
                             var outputVar = srcSubGraph.graphData.ioPorts[o];
                             if (outputVar.ptype === PORT_TYPE_OUT || outputVar.ptype === PORT_TYPE_RET) {
                                 generatedCodeString += outputVar.type + ' temp_' + outputVar.type + '_' + tmpVarCounter + ';\n';
-                                srcTmpVarMap[con.srcIndex][outputVar.name] = 'temp_' + outputVar.type + '_' + tmpVarCounter;
+                                srcTmpVarMap[con.srcIndex][outputVar.name] = { name: 'temp_' + outputVar.type + '_' + tmpVarCounter, type: outputVar.type };
                                 tmpVarCounter++;
                             }
                         }
@@ -640,19 +657,22 @@ Object.assign(ShaderGraphNode.prototype, {
                         dstConnectedMap[con.dstIndex].push(con.srcIndex);
 
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstName] = srcTmpVarMap[con.srcIndex][con.srcName] + ((con.swizzle) ? '.' + con.swizzle : '');
+                        // dstTmpVarMap[con.dstIndex][con.dstName] = srcTmpVarMap[con.srcIndex][con.srcName] + ((con.swizzle) ? '.' + con.swizzle : '');
+                        dstTmpVarMap[con.dstIndex][con.dstName] = { name: srcTmpVarMap[con.srcIndex][con.srcName].name, type: srcTmpVarMap[con.srcIndex][con.srcName].type, swizzle: con.swizzle };
+
                     } else {
                         // root graph input/const var
                         if (dstTmpVarMap[con.dstIndex] === undefined) dstTmpVarMap[con.dstIndex] = {};
-                        dstTmpVarMap[con.dstIndex][con.dstName] = con.srcName + ((con.swizzle) ? '.' + con.swizzle : '');
+                        // dstTmpVarMap[con.dstIndex][con.dstName] = con.srcName + ((con.swizzle) ? '.' + con.swizzle : '');
+                        dstTmpVarMap[con.dstIndex][con.dstName] = { name: con.srcName, type: this.getIoPortByName(con.srcName).type, swizzle: con.swizzle };
                     }
                 } else {
                     if (con.srcIndex >= 0) {
                         // root graph output var
-                        graphOutputVarTmpVarMap[con.dstName] = srcTmpVarMap[con.srcIndex][con.srcName];
+                        graphOutputVarTmpVarMap[con.dstName] = { name: srcTmpVarMap[con.srcIndex][con.srcName].name, type: srcTmpVarMap[con.srcIndex][con.srcName].type, swizzle: con.swizzle };
                     } else {
                         // this is a direct conection between an input port and an output io port - this happens on all input port editor previews
-                        graphOutputVarTmpVarMap[con.dstName] = con.srcName;
+                        graphOutputVarTmpVarMap[con.dstName] = { name: con.srcName, type: this.getIoPortByName(con.srcName).type, swizzle: con.swizzle };
                     }
                 }
             }
@@ -720,7 +740,21 @@ Object.assign(ShaderGraphNode.prototype, {
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
                 if (ioPort.ptype === PORT_TYPE_OUT && ioPort.ptype !== PORT_TYPE_RET) {
-                    generatedCodeString += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
+                    // generatedCodeString += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
+                    generatedCodeString += ioPort.name + ' = ';
+
+                    var outVar = graphOutputVarTmpVarMap[ioPort.name];
+                    // cast to output type - with swizzle and extending or truncation of channels
+                    var swizzleType = (outVar.swizzle) ? comp2Type[outVar.swizzle.length] : outVar.type;
+                    var swizzleComp = type2Comp[swizzleType];
+                    var extend = type2Comp[ioPort.type] - swizzleComp;
+                    if (extend >= 0) {
+                        generatedCodeString += ioPort.type + '(' + outVar.name + ((outVar.swizzle) ? '.' + outVar.swizzle : '');
+                        generatedCodeString += (extend > 0 && swizzleComp !== 1) ? ', ' + comp2Type[extend] + '(0));\n' : ');\n';
+                    } else {
+                        var truncatedSwizzle = ((outVar.swizzle) ? '.' + outVar.swizzle.slice(0, extend) : '.rgba'.slice(0, extend + swizzleComp - 4));
+                        generatedCodeString += ioPort.type + '(' + outVar.name + truncatedSwizzle + ');\n';
+                    }
                 }
             }
 

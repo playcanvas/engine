@@ -75,93 +75,92 @@
             var model = modelComponent.model;
 
             // load a texture asset
-            app.assets.loadFromUrl("../assets/textures/particles-numbers.png", "texture", function (err, asset) {    
-                var emissiveMapB = asset.resource;            
             app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {    
-                var emissiveMapA = asset.resource;
+                    var cloudsMap = asset.resource;            
+                app.assets.loadFromUrl("../assets/textures/particles-numbers.png", "texture", function (err, asset) {    
+                    var numbersMap = asset.resource;            
 
-                // create a shader graph builder
-                var builder = new pc.ShaderGraphBuilder(app);
+                    // create a shader graph builder
+                    var builder = new pc.ShaderGraphBuilder(app);
 
-                // add input parameters
-                var timeParam = builder.addParam('float', 'uTime', 0.0);
-                var emissiveTexParamA = builder.addParam('sampler2D', 'uEmissiveMapA', emissiveMapA);
-                var emissiveTexParamB = builder.addParam('sampler2D', 'uEmissiveMapB', emissiveMapB);
+                    // add input parameters
+                    var timeParam = builder.addParam('float', 'uTime', 0.0);
+                    var texParamA = builder.addParam('sampler2D', 'uTexMapA', cloudsMap);
+                    var texParamB = builder.addParam('sampler2D', 'uTexMapB', numbersMap);
+                    var colConst = builder.addConst('vec3', 'colConst', new pc.Vec3(0.2, 0.3, 0.3));
 
-                var emissiveColConst = builder.addConst('vec3', 'emissiveColConst', new pc.Vec3(0.2, 0.3, 0.3));
+                    // create and hook up graph nodes
+                    var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
+                    var texSampNodeA = builder.addTextureSample( texParamA, scrollNode );
+                    var texSampNodeB = builder.addTextureSample( texParamB, scrollNode );
+                    var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ] );
 
-                // create and hook up graph nodes
- //               var scrollNode = builder.addNode('add', [ builder.addNode('join', [ timeParam, timeParam] ), builder.addNode('uv0') ] );
-                var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
-                var emissiveSampleNodeA = builder.addTextureSample( emissiveTexParamA, scrollNode );
-                var emissiveSampleNodeB = builder.addTextureSample( emissiveTexParamB, scrollNode );
-                var emissiveCalcNode = builder.addNode('mul', [ emissiveColConst, {node:emissiveSampleNodeA, swizzle:'rgb'} ] );
+                    // create a static switch to choose alpha source
+                    var switchValue = 1;
+                    var switchName = 'switchAlpha';
+                    var staticSwitchAlpha = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'gb' }, { node: texSampNodeB, swizzle: 'ar' } ], switchValue);                
 
-                var switchValue = 1;
-                var switchName = 'switchAlpha';
-                var staticSwitchAlpha = builder.addStaticSwitch(switchName, [ {node:emissiveSampleNodeA, swizzle:'g'}, {node:emissiveSampleNodeB, swizzle:'a'} ], switchValue);                
+                    // hook up outputs
+                    builder.addOutput( staticSwitchAlpha, 'float', 'sgAlpha' );
+                    builder.addOutput( { node: emisCalcNode, swizzle: 'brgb' }, 'vec3', 'sgEmission');
 
-                // hook up outputs
-                builder.addOutput(staticSwitchAlpha, 'float', 'sgAlpha');
-                builder.addOutput(emissiveCalcNode, 'vec3', 'sgEmission');
+                    // return built shader graph chunk
+                    var shaderGraphChunk = builder.getShaderGraphChunk();
 
-                // return built shader graph chunk
-                var shaderGraphChunk = builder.getShaderGraphChunk();
+                    // replace model's materials with standard node materials
+                    var originalMaterials = [];
+                    var shaderGraphMaterials = [];
+                    
+                    model.meshInstances.forEach(function (meshInstance) {
+                        if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
+                            var index = originalMaterials.indexOf(meshInstance.material);
 
-                // replace model's materials with standard node materials
-                var originalMaterials = [];
-                var shaderGraphMaterials = [];
-                
-                model.meshInstances.forEach(function (meshInstance) {
-                    if (!(meshInstance.material instanceof pc.StandardNodeMaterial)) {
-                        var index = originalMaterials.indexOf(meshInstance.material);
+                            if (index === -1) {
+                                index = shaderGraphMaterials.length;
 
-                        if (index === -1) {
-                            index = shaderGraphMaterials.length;
+                                originalMaterials.push(meshInstance.material);                            
+                                shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
+                            }
 
-                            originalMaterials.push(meshInstance.material);                            
-                            shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
+                            meshInstance.material = shaderGraphMaterials[index];
+                            
+                            meshInstance.material.alphaTest = 0.5;
+                            meshInstance.material.update();
                         }
-
-                        meshInstance.material = shaderGraphMaterials[index];
-                        
-                        meshInstance.material.alphaTest = 0.5;
-                        meshInstance.material.update();
-                    }
-                });
-
-                // update time parameter and alpha test every frame
-                
-                var flipSwitch = false;
-
-                app.on("update", function (dt) {
-                    time += dt;
-
-                    if (time>4.0)
-                    {
-                        time -= 4.0;
-                        flipSwitch = true;
-                        switchValue = 1-switchValue;
-                    } 
-
-                    shaderGraphMaterials.forEach(function (material) {
-                        if (flipSwitch)
-                        {
-                            material.setSwitch(switchName, switchValue);
-                            material.update();
-                        }
-                        material.setParameter('uTime', time);
-                        material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 1.7) * 0.5);
                     });
 
-                    if (flipSwitch)
-                    {
-                        flipSwitch = false;
-                    }                    
-                });
+                    // update time parameter and alpha test every frame
+                    
+                    var flipSwitch = false;
 
-                app.start();
-            });
+                    app.on("update", function (dt) {
+                        time += dt;
+
+                        if (time>4.0)
+                        {
+                            time -= 4.0;
+                            flipSwitch = true;
+                            switchValue = 1-switchValue;
+                        } 
+
+                        shaderGraphMaterials.forEach(function (material) {
+                            if (flipSwitch)
+                            {
+                                material.setSwitch(switchName, switchValue);
+                                material.update();
+                            }
+                            material.setParameter('uTime', time);
+                            material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 1.7) * 0.5);
+                        });
+
+                        if (flipSwitch)
+                        {
+                            flipSwitch = false;
+                        }                    
+                    });
+
+                    app.start();
+                });
             });
         });
     </script>

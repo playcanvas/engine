@@ -1,4 +1,4 @@
-import { ShaderGraphNode, PORT_TYPE_IN } from './shader-graph-node.js';
+import { ShaderGraphNode, PORT_TYPE_IN, comp2Type } from './shader-graph-node.js';
 
 // import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE } from '../../graphics/graphics.js';
 import { TEXTURETYPE_RGBM } from '../../graphics/graphics.js';
@@ -117,10 +117,6 @@ Object.assign(ShaderGraphBuilder.prototype, {
     },
 
     _getArgTypes: function (args, err) {
-        // useful LUTs - consider making these global somewhere?
-        // var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
-        var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
-
         var argTypes = [];
         var argIndex;
         for (argIndex = 0; argIndex < args.length; argIndex++) {
@@ -186,7 +182,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         }
 
         var switchArgs = [{ node: texNode, port: 'rgba' }, { node: texNode, port: 'srgba' }, { node: texNode, port: 'rgbm' }];
-        var switchNodeId = this.addStaticSwitch(switchName, switchArgs, switchValue, { isTexSwitch: true });
+        var switchNodeId = this.addStaticSwitch(switchName, switchArgs, switchValue);
 
         return switchNodeId;
     },
