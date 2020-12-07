@@ -47,12 +47,12 @@
             material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
             material.update();
 
-            // create primitive
+            // create primitive with a render component
             var primitive = new pc.Entity();
-            primitive.addComponent('model', {
-                type: primitiveType
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale
             primitive.setLocalPosition(position);

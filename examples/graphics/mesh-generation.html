@@ -56,7 +56,7 @@
             material.update();
 
             // add sphere at the position of light
-            light.addComponent("model", {
+            light.addComponent("render", {
                 type: "sphere",
                 material: material
             });
@@ -145,20 +145,16 @@
         var material = new pc.StandardMaterial();
         var meshInstance = new pc.MeshInstance(node, this.mesh, material);
 
-        // Create a model and add the mesh instance to it
-        var model = new pc.Model();
-        model.graph = node;
-        model.meshInstances = [meshInstance];
-
         // Create Entity and add it to the scene
         this.entity = new pc.Entity();
-        app.root.addChild(this.entity);
 
-        // Add a model compoonent
-        app.systems.model.addComponent(this.entity, {
-            type: 'asset'
-        });
-        this.entity.model.model = model;
+        var material = new pc.StandardMaterial();
+        var meshInstance = new pc.MeshInstance(this.entity, this.mesh, material);
+
+        this.entity.addComponent("render");
+        this.entity.render.meshInstances = [meshInstance];
+
+        app.root.addChild(this.entity);
 
         // load a texture, create material and apply it to our MeshInstance
         app.assets.loadFromUrl("../assets/textures/playcanvas-grey.png", "texture", function (err, asset) {
@@ -166,7 +162,7 @@
             material.diffuseMap = asset.resource;
             material.update();
 
-            self.entity.model.model.meshInstances[0].material = material;
+            self.entity.render.meshInstances[0].material = material;
 
             // start application update loop when texture is loaded
             app.start();
