@@ -448,6 +448,20 @@ Object.assign(Http.prototype, {
     _onReadyStateChange: function (method, url, options, xhr) {
         if (xhr.readyState === 4) {
             switch (xhr.status) {
+                case 0: {
+                    // If status code 0, it is assumed that the browser has cancelled the request
+
+                    // Add support for running Chrome browsers in 'allow-file-access-from-file'
+                    // This is to allow for specialised programs and libraries such as CefSharp
+                    // which embed Chromium in the native app.
+                    if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
+                        // Assume that any file loaded from disk is fine
+                        this._onSuccess(method, url, options, xhr);
+                    } else {
+                        this._onError(method, url, options, xhr);
+                    }
+                    break;
+                }
                 case 200:
                 case 201:
                 case 206:
