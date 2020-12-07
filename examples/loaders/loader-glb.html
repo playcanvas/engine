@@ -35,30 +35,25 @@
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // Load a glb file as a container
+        // Load a model file and create a Entity with a model component
         var url = "../assets/models/playcanvas-cube.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
-            // create instance using model component
-            var entity1 = asset.resource.instantiateModelEntity({
+            var entity = new pc.Entity();
+            entity.addComponent("model", {
+                type: "asset",
+                asset: asset.resource.model,
                 castShadows: true
             });
-            app.root.addChild(entity1);
-
-            // create instance using render component
-            var entity2 = asset.resource.instantiateRenderEntity({
-                castShadows: true
-            });
-            entity2.setLocalPosition(0, 1.5, 0);
-            app.root.addChild(entity2);
+            app.root.addChild(entity);
 
             // Create an Entity with a camera component
             var camera = new pc.Entity();
             camera.addComponent("camera", {
-                clearColor: new pc.Color(0.2, 0.2, 0.2)
+                clearColor: new pc.Color(0.4, 0.45, 0.5)
             });
-            camera.translate(0, 0.75, 4);
+            camera.translate(0, 0, 3);
             app.root.addChild(camera);
 
             // Create an entity with a directional light component
@@ -70,11 +65,8 @@
             app.root.addChild(light);
 
             app.on("update", function (dt) {
-                if (entity1) {
-                    entity1.rotate(-4 * dt, 20 * dt, 0);
-                }
-                if (entity2) {
-                    entity2.rotate(4 * dt, -20 * dt, 0);
+                if (entity) {
+                    entity.rotate(0, 10 * dt, 0);
                 }
             });
         });

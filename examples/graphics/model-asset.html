@@ -45,11 +45,12 @@
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
-            // create an entity with model assets
-            var entity = asset.resource.instantiateRenderEntity({
+            entity = new pc.Entity();
+            entity.addComponent("model", {
+                type: "asset",
+                asset: asset.resource.model,
                 castShadows: true
-            }); 
-
+            });
             app.root.addChild(entity);
 
             // Create an Entity with a camera component
