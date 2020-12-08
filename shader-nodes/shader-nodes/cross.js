@@ -1,16 +1,26 @@
 // node
 var cross = {
     code: "vec3 cross(in vec3 a, in vec3 b)\n{\n    return cross(a,b);\n}",
-    meta: { label: "CROSS PRODUCT" }
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: {
+        ports: [
+            { id: 0 },
+            { id: 1 },
+            { id: 2 }
+        ]
+    },
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "CROSS PRODUCT",
+        ports: [
+            { label: '' },
+            { label: 'TEXTURE' },
+            { label: 'UV' }
+        ]
+    }
 };
 
-// ports
-cross.meta.ports = [];
-cross.meta.ports[0] = { label: '', id: 0 };
-cross.meta.ports[1] = { label: 'A', id: 1 };
-cross.meta.ports[2] = { label: 'B', id: 2 };
-
-// generator - TODO: make flexible
+// generator
 cross.gen = function ( argTypes, options ) {
     var code = this.code;
 

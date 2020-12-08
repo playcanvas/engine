@@ -1,28 +1,42 @@
 // node
 var flexOp = {
-    // code: "RET_TYPE opName(in TYPE_0 arg0, in TYPE_1 arg1, ... )\n{\n    return RET_TYPE(arg0,EXPAND_0) opCode RET_TYPE(arg1,EXPAND_1) ... ;\n}",
-    meta: { label: "FLEXIBLE OPERATOR" },
-    type2Comp: { float: 1, vec2: 2, vec3: 3, vec4: 4 },
-    comp2Type: ['', 'float', 'vec2', 'vec3', 'vec4']
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: {
+        ports: [
+            { id: 0 },
+            { id: 1 },
+            { id: 2 },
+            { id: 3 },
+            { id: 4 },
+            { id: 5 },
+            { id: 6 }
+        ]
+    },
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "FLEXIBLE OPERATOR",
+        ports: [
+            { label: '' },
+            { label: 'A' },
+            { label: 'B' },
+            { label: 'C' },
+            { label: 'D' },
+            { label: 'E' },
+            { label: 'F' }
+        ]
+    }
 };
 
-// ports
-flexOp.meta.ports = [];
-flexOp.meta.ports[0] = { label: '', id: 0 };
-flexOp.meta.ports[1] = { label: 'A', id: 1 };
-flexOp.meta.ports[2] = { label: 'B', id: 2 };
-flexOp.meta.ports[3] = { label: 'C', id: 3 };
-flexOp.meta.ports[4] = { label: 'D', id: 4 };
-flexOp.meta.ports[5] = { label: 'E', id: 5 };
-flexOp.meta.ports[6] = { label: 'F', id: 6 };
-
 // utility
+export var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
+export var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
+
 flexOp.getRetType = function ( argTypes ) {
     var maxComp = 0;
     for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
-        maxComp = Math.max(maxComp, this.type2Comp[argTypes[argIndex]]);
+        maxComp = Math.max(maxComp, type2Comp[argTypes[argIndex]]);
     }
-    return this.comp2Type[maxComp];
+    return comp2Type[maxComp];
 };
 
 flexOp.getHeadCode = function (retType, opName, argTypes, outputRetComponents ) {
@@ -32,7 +46,7 @@ flexOp.getHeadCode = function (retType, opName, argTypes, outputRetComponents ) 
 
         code += (argIndex === argTypes.length - 1) ? ' )\n' : ', ';
     }
-    if (outputRetComponents && this.type2Comp[retType] === 4) {
+    if (outputRetComponents && type2Comp[retType] === 4) {
         code.replace(' )\n', ', out vec3 rgb, out float r, out float g, out float b, out float a )\n');
     }
 
@@ -68,23 +82,16 @@ flexOp.gen = function ( argTypes, options ) {
         code += retType + '(arg' + argIndex;
 
         // expand if needed - extra components are set to zero - NB scalar values are broadcast to all components
-        var argComp = this.type2Comp[argTypes[argIndex]];
-        var extend = this.type2Comp[retType] - argComp;
-        code += (extend > 0 && argComp !== 1) ? ', ' + this.comp2Type[expand] + '(0))' : ')';
+        var argComp = type2Comp[argTypes[argIndex]];
+        var extend = type2Comp[retType] - argComp;
+        code += (extend > 0 && argComp !== 1) ? ', ' + comp2Type[expand] + '(0))' : ')';
 
         code += (argIndex === argTypes.length - 1) ? ';\n' : ' ' + opCode + ' ';
     }
 
     code += '}\n';
 
- /*   if (options && options.precision)
-    {
-        var pcode = code.replace('float ')
-    }
-    else*/
-    // {
-        return code;
-    // }
+    return code;
 };
 
 export { flexOp };

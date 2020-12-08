@@ -1,19 +1,36 @@
-import { flexOp } from "./flexOp";
+import { flexOp, type2Comp, comp2Type } from "./flexOp";
+
 // node
 var select = {
-    // code: "vec3 select(in float s, in vec3 c0, in vec3 c1, ... )\n{\n    if (s>=0.0 && s<1.0){return c0} if (s>=1.0 && s<2.0){return c1} ... \n}",
-    meta: { label: "SELECT" }
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: {
+        ports: [
+            { id: 0 },
+            { id: 1 },
+            { id: 2 },
+            { id: 3 },
+            { id: 4 },
+            { id: 5 },
+            { id: 6 },
+            { id: 7 }
+        ]
+    },
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "SELECT",
+        ports: [
+            { label: '' },
+            { label: 'S' },
+            { label: 'S==0' },
+            { label: 'S==1' },
+            { label: 'S==2' },
+            { label: 'S==3' },
+            { label: 'S==4' },
+            { label: 'S==5' }
+        ]
+    }
 };
 
-// ports
-select.meta.ports = [];
-select.meta.ports[0] = { label: 'S', id: 0 };
-select.meta.ports[1] = { label: 'C0', id: 1 };
-select.meta.ports[2] = { label: 'C1', id: 2 };
-select.meta.ports[1] = { label: 'C2', id: 3 };
-select.meta.ports[2] = { label: 'C3', id: 4 };
-select.meta.ports[1] = { label: 'C4', id: 5 };
-select.meta.ports[2] = { label: 'C5', id: 6 };
 
 // generator
 select.gen = function ( argTypes, options ) {
@@ -39,9 +56,9 @@ select.gen = function ( argTypes, options ) {
         code += '{\n';
         code += '    return ';
         code += retType + '(arg' + argIndex;
-        var argComp = flexOp.type2Comp[argTypes[argIndex]];
-        var extend = flexOp.type2Comp[retType] - argComp;
-        code += (extend > 0 && argComp !== 1) ? ', ' + flexOp.comp2Type[extend] + '(0))' : ')';
+        var argComp = type2Comp[argTypes[argIndex]];
+        var extend = type2Comp[retType] - argComp;
+        code += (extend > 0 && argComp !== 1) ? ', ' + comp2Type[extend] + '(0))' : ')';
         code += ';\n';
         code += '}\n';
     }

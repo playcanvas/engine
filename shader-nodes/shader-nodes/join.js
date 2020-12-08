@@ -1,16 +1,28 @@
 // node
 var join = {
     code: "vec2 join(in float x, in float y){\n    return vec2(x,y);\n}\n",
-    meta: { label: "JOIN" }
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: {
+        ports: [
+            { id: 0 },
+            { id: 1 },
+            { id: 2 },
+            { id: 3 },
+            { id: 4 }
+        ]
+    },
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "JOIN",
+        ports: [
+            { label: '' },
+            { label: 'R' },
+            { label: 'G' },
+            { label: 'B' },
+            { label: 'A' }
+        ]
+    }
 };
-
-// ports
-join.meta.ports = [];
-join.meta.ports[0] = { label: '', id: 0 };
-join.meta.ports[1] = { label: 'R', id: 1 };
-join.meta.ports[2] = { label: 'G', id: 2 };
-join.meta.ports[3] = { label: 'B', id: 3 };
-join.meta.ports[4] = { label: 'A', id: 4 };
 
 // generator - TODO: make flexible
 join.gen = function ( argTypes, options ) {

@@ -1,13 +1,21 @@
 // node
 var texSample = {
-    // code: "void texSample(in sampler2D tex, in vec2 uv, out vec4 rgba, out vec4 srgba, out vec3 rgbm)\n",
-    meta: { label: "TEXTURE SAMPLE" }
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: {
+        ports: [
+            { id: 0 },
+            { id: 1 }
+        ]
+    },
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "TEXTURE SAMPLE",
+        ports: [
+            { label: 'TEXTURE' },
+            { label: 'UV' }
+        ]
+    }
 };
-
-// ports
-texSample.meta.ports = [];
-texSample.meta.ports[0] = { label: 'TEXTURE', id: 0 };
-texSample.meta.ports[1] = { label: 'UV', id: 1 };
 
 // generator
 texSample.gen = function ( argTypes, options ) {

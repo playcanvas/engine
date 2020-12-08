@@ -2,11 +2,14 @@ import flexOp from './flexOp.js';
 
 // node
 var mul = {
-    meta: { label: "MUL" }
+    // placeholder meta data - structure will be finalized in MVP S3
+    meta: flexOp.meta.ports,
+    // placeholder editor data - structure will be finalized in MVP S3
+    editor: {
+        label: "MUL",
+        ports: flexOp.editor.ports
+    }
 };
-
-// ports
-mul.meta.ports = flexOp.meta.ports;
 
 // generator
 mul.gen = function ( argTypes, options ) {
