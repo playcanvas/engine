@@ -16,14 +16,22 @@ select.meta.ports[1] = { label: 'C4', id: 5 };
 select.meta.ports[2] = { label: 'C5', id: 6 };
 
 // generator
-select.gen = function ( argTypes ) {
+select.gen = function ( argTypes, options ) {
     var retType = flexOp.getRetType(argTypes);
 
     // construct head code
     var code = flexOp.getHeadCode(retType, 'select', argTypes);
 
+    // precision - alter name to create variant
+    if (options && options.precision) {
+        code = code.replace(' select', ' select_' + options.precision);
+    }
+
     // construct body code
     code += '{\n';
+
+    // precision - tmp: useful comment
+    code += ((options && options.precision) ? '// precision ' + options.precision + ' float;\n' : '');
 
     for (var argIndex = 1; argIndex < argTypes.length; argIndex++) {
 
@@ -32,8 +40,8 @@ select.gen = function ( argTypes ) {
         code += '    return ';
         code += retType + '(arg' + argIndex;
         var argComp = flexOp.type2Comp[argTypes[argIndex]];
-        var expand = flexOp.type2Comp[retType] - argComp;
-        code += (expand > 0 && argComp !== 1) ? ', ' + flexOp.comp2Type[expand] + '(0))' : ')';
+        var extend = flexOp.type2Comp[retType] - argComp;
+        code += (extend > 0 && argComp !== 1) ? ', ' + flexOp.comp2Type[extend] + '(0))' : ')';
         code += ';\n';
         code += '}\n';
     }

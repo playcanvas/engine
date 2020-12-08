@@ -50,8 +50,17 @@ flexOp.gen = function ( argTypes, options ) {
     // construct head code
     var code = this.getHeadCode(retType, opName, argTypes);
 
+    // precision - alter name to create variant
+    if (options && options.precision) {
+        code = code.replace(' ' + opName, ' ' + opName + '_' + options.precision);
+    }
+
     // construct body code
     code += '{\n';
+
+    // precision - tmp: useful comment
+    code += ((options && options.precision) ? '// precision ' + options.precision + ' float;\n' : '');
+
     code += '    return ';
 
     for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
@@ -60,15 +69,22 @@ flexOp.gen = function ( argTypes, options ) {
 
         // expand if needed - extra components are set to zero - NB scalar values are broadcast to all components
         var argComp = this.type2Comp[argTypes[argIndex]];
-        var expand = this.type2Comp[retType] - argComp;
-        code += (expand > 0 && argComp !== 1) ? ', ' + this.comp2Type[expand] + '(0))' : ')';
+        var extend = this.type2Comp[retType] - argComp;
+        code += (extend > 0 && argComp !== 1) ? ', ' + this.comp2Type[expand] + '(0))' : ')';
 
         code += (argIndex === argTypes.length - 1) ? ';\n' : ' ' + opCode + ' ';
     }
 
     code += '}\n';
 
-    return code;
+ /*   if (options && options.precision)
+    {
+        var pcode = code.replace('float ')
+    }
+    else*/
+    // {
+        return code;
+    // }
 };
 
 export { flexOp };

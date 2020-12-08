@@ -171,9 +171,9 @@ Object.assign(ShaderGraphBuilder.prototype, {
         return argTypes;
     },
 
-    addTextureSample: function (texParam, uv) {
+    addTextureSample: function (texParam, uv, options) {
         var texArgs = [texParam, uv];
-        var texNode = this.addNode('texSample', texArgs);
+        var texNode = this.addNode('texSample', texArgs, options);
 
         var switchName = 'switch_' + texNode;
         var switchValue = 0;

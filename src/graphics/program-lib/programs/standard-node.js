@@ -1,7 +1,7 @@
 import { standard } from './standard.js';
 import { hashCode } from '../../../core/hash.js';
 
-// just do a shallow copy standard
+// just do a shallow copy of standard generator
 var standardnode = Object.assign({}, standard);
 
 // override a couple of functions - the overridden functions have been altered in standard

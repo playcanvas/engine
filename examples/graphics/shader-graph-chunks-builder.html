@@ -87,13 +87,13 @@
                     var timeParam = builder.addParam('float', 'uTime', 0.0);
                     var texParamA = builder.addParam('sampler2D', 'uTexMapA', cloudsMap);
                     var texParamB = builder.addParam('sampler2D', 'uTexMapB', numbersMap);
-                    var colConst = builder.addConst('vec3', 'colConst', new pc.Vec3(0.2, 0.3, 0.3));
+                    var colConst = builder.addConst('vec3', 'colConst', new pc.Vec3(0.2, 0.3, 0.3) );
 
                     // create and hook up graph nodes
                     var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
-                    var texSampNodeA = builder.addTextureSample( texParamA, scrollNode );
+                    var texSampNodeA = builder.addTextureSample( texParamA, scrollNode, { precision: 'lowp' } );
                     var texSampNodeB = builder.addTextureSample( texParamB, scrollNode );
-                    var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ] );
+                    var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ], { precision: 'lowp' } );
 
                     // create a static switch to choose alpha source
                     var switchValue = 1;
@@ -106,6 +106,9 @@
 
                     // return built shader graph chunk
                     var shaderGraphChunk = builder.getShaderGraphChunk();
+
+                    //tmp - directly set private 
+                    shaderGraphChunk._precision = 'lowp';
 
                     // replace model's materials with standard node materials
                     var originalMaterials = [];
@@ -125,6 +128,9 @@
                             meshInstance.material = shaderGraphMaterials[index];
                             
                             meshInstance.material.alphaTest = 0.5;
+
+                            // meshInstance.material.forceFragmentPrecision = "lowp";
+
                             meshInstance.material.update();
                         }
                     });
@@ -132,13 +138,14 @@
                     // update time parameter and alpha test every frame
                     
                     var flipSwitch = false;
+                    var flipTime = 4.0;
 
                     app.on("update", function (dt) {
                         time += dt;
 
-                        if (time>4.0)
+                        if (time>flipTime)
                         {
-                            time -= 4.0;
+                            flipTime += 4.0;
                             flipSwitch = true;
                             switchValue = 1-switchValue;
                         } 

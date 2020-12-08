@@ -9,8 +9,10 @@ var add = {
 add.meta.ports = flexOp.meta.ports;
 
 // generator
-add.gen = function ( argTypes ) {
-    return flexOp.gen(argTypes, { opName: 'add', opCode: '+' } );
+add.gen = function ( argTypes, options ) {
+    var opt = { opName: 'add', opCode: '+' };
+    Object.assign(opt, options);
+    return flexOp.gen(argTypes, opt );
 };
 
 // export { add };

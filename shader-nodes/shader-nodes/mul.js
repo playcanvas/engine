@@ -9,8 +9,10 @@ var mul = {
 mul.meta.ports = flexOp.meta.ports;
 
 // generator
-mul.gen = function ( argTypes ) {
-    return flexOp.gen( argTypes, { opName: 'mul', opCode: '*' } );
+mul.gen = function ( argTypes, options ) {
+    var opt = { opName: 'mul', opCode: '*' };
+    Object.assign(opt, options);
+    return flexOp.gen(argTypes, opt );
 };
 
 // export { mul };

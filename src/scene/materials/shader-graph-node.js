@@ -77,6 +77,9 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
     this._switchMap = {};
     this._switchId2Name = {};
 
+    // precision - use device.precision if none supplied
+    this._precision = '';
+
     // graph
     this.graphData = {};
 
@@ -361,7 +364,8 @@ Object.assign(ShaderGraphNode.prototype, {
         if (this.graphData.funcCodeString) {
             callString += this.name + '( ';
         } else {
-            callString += this.name + '_' + this.id + '( ';
+            // precision - alter name to create variant
+            callString += this.name + '_' + this.id + (this._precision ? '_' + this._precision : '') + '( ';
         }
 
         // input params
@@ -470,7 +474,7 @@ Object.assign(ShaderGraphNode.prototype, {
                             var ioPort = subGraph.graphData.ioPorts[v];
                             var ioPortCached = subGraph._getCachedPort(v); // use port cache
                             if (ioPortCached.isUniform) {
-                                var depIoPort = 'uniform ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
+                                var depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
                                 depIoPortList.push(depIoPort);
                             }
                         }
@@ -495,7 +499,7 @@ Object.assign(ShaderGraphNode.prototype, {
             ioPortCached = this._getCachedPort(i); // use port cache
 
             if (ioPortCached.isUniform) {
-                generatedCodeString += 'uniform ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
+                generatedCodeString += 'uniform ' + this._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
             }
         }
 
@@ -585,10 +589,12 @@ Object.assign(ShaderGraphNode.prototype, {
                     retUsed = true;
                 }
             }
+
+            // precision - alter name to create variant
             if (retUsed === true) {
-                generatedCodeString += this.name + '_' + this.id + '( ';
+                generatedCodeString += this.name + '_' + this.id + (this._precision ? '_' + this._precision : '') + '( ';
             } else {
-                generatedCodeString = 'void ' + this.name + '_' + this.id + '( ';
+                generatedCodeString = 'void ' + this.name + '_' + this.id + (this._precision ? '_' + this._precision : '') + '( ';
             }
 
             // input params
@@ -611,11 +617,14 @@ Object.assign(ShaderGraphNode.prototype, {
 
             generatedCodeString += ' ) {\n';
 
+            // precision - tmp: useful comment
+            generatedCodeString += ((this._precision) ? '// precision ' + this._precision + ' float;\n' : '');
+
             // input constants (not including samplers)
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
                 if (ioPort.ptype === PORT_TYPE_CONST && (ioPort.type !== 'sampler2D' )) {
-                    generatedCodeString += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
+                    generatedCodeString += this._precision + ' ' + ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
                 }
             }
 
@@ -639,7 +648,7 @@ Object.assign(ShaderGraphNode.prototype, {
                         for (var o = 0; o < srcSubGraph.graphData.ioPorts.length; o++) {
                             var outputVar = srcSubGraph.graphData.ioPorts[o];
                             if (outputVar.ptype === PORT_TYPE_OUT || outputVar.ptype === PORT_TYPE_RET) {
-                                generatedCodeString += outputVar.type + ' temp_' + outputVar.type + '_' + tmpVarCounter + ';\n';
+                                generatedCodeString += srcSubGraph._precision + ' ' + outputVar.type + ' temp_' + outputVar.type + '_' + tmpVarCounter + ';\n';
                                 srcTmpVarMap[con.srcIndex][outputVar.name] = { name: 'temp_' + outputVar.type + '_' + tmpVarCounter, type: outputVar.type };
                                 tmpVarCounter++;
                             }

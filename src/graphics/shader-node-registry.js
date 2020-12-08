@@ -77,6 +77,9 @@ ShaderNodeRegistry.prototype.get = function (name, argTypes, options) {
         var variantCode = this._nodeDef[name].gen(argTypes, options);
         if (variantCode) {
             this._nodeCache[name][variantKey] = new ShaderGraphNode(variantCode);
+
+            this._nodeCache[name][variantKey]._precision = ((options && options.precision) ? options.precision : '');
+
             return this._nodeCache[name][variantKey];
         }
     }
