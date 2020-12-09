@@ -15,7 +15,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    FUNC_ALWAYS, FUNC_LESS,
+    FUNC_ALWAYS, FUNC_LESS, FUNC_LESSEQUAL,
     PIXELFORMAT_DEPTH, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR, SEMANTIC_POSITION,
@@ -1813,7 +1813,16 @@ Object.assign(ForwardRenderer.prototype, {
                     }
                     device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                     device.setDepthWrite(material.depthWrite);
-                    device.setDepthTest(material.depthTest);
+
+                    // this fixes the case where the user wishes to turn off depth testing but wants to write depth
+                    if (material.depthWrite && !material.depthTest){
+                        device.setDepthFunc(FUNC_ALWAYS);
+                        device.setDepthTest(true);
+                    } else {
+                        device.setDepthFunc(FUNC_LESSEQUAL);
+                        device.setDepthTest(material.depthTest);
+                    }
+
                     device.setAlphaToCoverage(material.alphaToCoverage);
 
                     if (material.depthBias || material.slopeDepthBias) {
