@@ -262,9 +262,6 @@ var GraphicsDevice = function (canvas, options) {
     this.renderTarget = null;
     this.feedback = null;
 
-    // enable temporary texture unit workaround on desktop safari
-    this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
-
     // local width/height without pixelRatio applied
     this._width = 0;
     this._height = 0;
@@ -329,6 +326,14 @@ var GraphicsDevice = function (canvas, options) {
     }
 
     this.gl = gl;
+
+    // enable temporary texture unit workaround on desktop safari
+    this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+
+    // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
+    var isChrome = !!window.chrome;
+    var isMac = navigator.appVersion.indexOf("Mac") !== -1;
+    this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
     // init polyfill for VAOs
     window.setupVertexArrayObject(gl);
@@ -685,7 +690,10 @@ var GraphicsDevice = function (canvas, options) {
     this._spectorCurrentMarker = "";
     // #endif
 
-    this.createGrabPass(options.alpha, options.antialias);
+    // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
+    this.grabPassAvailable = true;
+
+    this.createGrabPass(options.alpha);
 
     VertexFormat.init(this);
 };
@@ -1020,11 +1028,8 @@ Object.assign(GraphicsDevice.prototype, {
         this.transformFeedbackBuffer = null;
     },
 
-    createGrabPass: function (alpha, antialias) {
+    createGrabPass: function (alpha) {
         if (this.grabPassTexture) return;
-
-        // blitFramebuffer is throwing errors on Chromium when antialias is true and alpha is false, use webgl1 path in that case
-        this.grabPassUseWebGl2Path = this.webgl2 && (!(alpha === false && antialias === true));
 
         var grabPassTexture = new Texture(this, {
             format: alpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
@@ -1053,6 +1058,16 @@ Object.assign(GraphicsDevice.prototype, {
     updateGrabPass: function () {
         var gl = this.gl;
 
+        // print error if we cannot grab framebuffer at this point
+        if (!this.grabPassAvailable) {
+
+            // #ifdef DEBUG
+            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
+            // #endif
+
+            return false;
+        }
+
         var renderTarget = this.renderTarget;
         var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
         var grabPassTexture = this.grabPassTexture;
@@ -1063,8 +1078,10 @@ Object.assign(GraphicsDevice.prototype, {
         this.pushMarker("grabPass");
         // #endif
 
-        if (this.grabPassUseWebGl2Path && width === grabPassTexture._width && height === grabPassTexture._height) {
-            if (resolveRenderTarget) renderTarget.resolve(true);
+        if (this.webgl2 && !this._tempMacChromeBlitFramebufferWorkaround && width === grabPassTexture._width && height === grabPassTexture._height) {
+            if (resolveRenderTarget) {
+                renderTarget.resolve(true);
+            }
 
             var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
             var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
@@ -1074,7 +1091,10 @@ Object.assign(GraphicsDevice.prototype, {
 
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
+
+            // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
             gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
 
         } else {
@@ -1096,6 +1116,8 @@ Object.assign(GraphicsDevice.prototype, {
         // #ifdef DEBUG
         this.popMarker();
         // #endif
+
+        return true;
     },
 
     destroyGrabPass: function () {
@@ -2126,10 +2148,16 @@ Object.assign(GraphicsDevice.prototype, {
                 texture._parameterFlags = 0;
             }
 
+            // grag framebuffer to be used as a texture - this returns false when not supported for current render pass
+            // (for example when rendering to shadow map), in which case previous content is used
+            var processed = false;
             if (texture === this.grabPassTexture) {
-                this.updateGrabPass();
+                processed = this.updateGrabPass();
 
-            } else if (texture._needsUpload || texture._needsMipmapsUpload) {
+                processed = true;
+            }
+
+            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
