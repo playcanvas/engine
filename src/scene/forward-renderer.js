@@ -1840,14 +1840,6 @@ Object.assign(ForwardRenderer.prototype, {
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
-
-                        // Upload the LTC Luts's if neccesary
-                        if (sortedLights[LIGHTTYPE_AREA].length > 0 ) {
-                            var ltcs = this.scene._areaLightLuts;
-                            material.setParameter('ltc_1', ltcs[0]);
-                            material.setParameter('ltc_2', ltcs[1]);
-                        }
-
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
 

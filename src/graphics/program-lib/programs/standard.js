@@ -1001,8 +1001,8 @@ var standard = {
         });
 
         if (hasAreaLights) {
-            code += "uniform sampler2D ltc_1;\n";
-            code += "uniform sampler2D ltc_2;\n";
+            code += "uniform sampler2D areaLightsLutTex1;\n";
+            code += "uniform sampler2D areaLightsLutTex2;\n";
         }
 
         for (i = 0; i < options.lights.length; i++) {

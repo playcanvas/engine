@@ -33,7 +33,6 @@
 
     <script>
 
-
         // helper function to create a primitive with shape type, position, scale, color
         function createPrimitive(primitiveType, position, scale, color, assetManifest) {
 
@@ -67,6 +66,7 @@
             return primitive;
         }
 
+        // helper function to create area light including its visual representation in the world
         function createAreaLight(position, scale, color) {
 
             var light = new pc.Entity();
@@ -105,7 +105,6 @@
             backMaterial.useLighting = false;
             backMaterial.update();
 
-
             var backFace = new pc.Entity();
             backFace.addComponent("model", {
                 type: "plane",
@@ -117,8 +116,6 @@
 
             return light;
         }
-
-
 
         // A list of assets that need to be loaded
         var assetManifest = [
@@ -190,10 +187,6 @@
             });
 
 
-
-
-
-
             // create ground plane
             createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assetManifest);
 
@@ -205,7 +198,6 @@
             });
             statue.setLocalScale(0.4, 0.4, 0.4);
             app.root.addChild(statue);
-
 
 
             // Create the camera, which renders entities 

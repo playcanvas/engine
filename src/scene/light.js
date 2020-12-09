@@ -7,7 +7,7 @@ import { Vec4 } from '../math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
@@ -310,6 +310,96 @@ Object.assign(Light.prototype, {
         }
 
         this.key = key;
+    },
+
+    // creates LUT texture used by area lights
+    uploadAreaLightLUTs: function () {
+
+        function createTexture (device, data, format) {
+            var tex = new pc.Texture(device, {
+                width: 64,
+                height: 64,
+                format: format,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                type: pc.TEXTURETYPE_RGBE,
+                magFilter: pc.FILTER_LINEAR,
+                minFilter: pc.FILTER_NEAREST,
+                anisotropy: 1
+            });
+            
+            tex.lock().set(data);
+            tex.unlock();
+            tex.upload();
+
+            return tex;
+        }
+
+        function convertToHalfFloat (data) {
+
+            var count = data.length;
+            var ret = new Uint16Array(count);
+            var float2Half = math.float2Half;
+            for (var i = 0; i < count; i++) {
+                ret[i] = float2Half(data[i]);
+            }
+
+            return ret;
+        }
+
+        function convertToUint (data) {
+
+            var count = data.length;
+            var ret = new Uint8ClampedArray(count);
+            for (var i = 0; i < count; i++) {
+                ret[i] = data[i] * 255;
+            }
+
+            return ret;
+        }
+
+        // create texture if not already
+        var app = Application.getApplication();
+        var luts = app.scene.areaLightLuts;
+        if (!luts.ready) {
+
+            luts.ready = true;
+            var device = app.graphicsDevice;
+            var data1, data2;
+            var format;
+
+            // pick format for lut texture
+            if (device.extTextureFloat) {
+
+                // float
+                format = pc.PIXELFORMAT_RGBA32F;
+                data1 = luts.data1;
+                data2 = luts.data2;
+    
+            } else if (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) {
+
+                // half float
+                format = pc.PIXELFORMAT_RGBA16F;
+                data1 = convertToHalfFloat(luts.data1);
+                data2 = convertToHalfFloat(luts.data2);
+
+            } else {
+
+                // low precision format
+                // TODO: we clip some range here on LUT1 - we could address this by scaling to range and expanding in shader
+                // Note: shader only uses texture2.xy and not zw at the moment
+                format = pc.PIXELFORMAT_R8_G8_B8_A8;
+                data1 = convertToUint(luts.data1);
+                data2 = convertToUint(luts.data2);
+            }
+
+            var tex1 = createTexture(device, data1, format);
+            var tex2 = createTexture(device, data2, format);
+
+            // assign to scope variables
+            device.scope.resolve('areaLightsLutTex1').setValue(tex1);
+            device.scope.resolve('areaLightsLutTex2').setValue(tex2);
+        }
     }
 });
 
@@ -320,6 +410,10 @@ Object.defineProperty(Light.prototype, 'type', {
     set: function (value) {
         if (this._type === value)
             return;
+
+        if (value === LIGHTTYPE_AREA) {
+            this.uploadAreaLightLUTs();
+        }
 
         this._type = value;
         this._destroyShadowMap();
