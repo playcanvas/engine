@@ -2148,7 +2148,7 @@ Object.assign(GraphicsDevice.prototype, {
                 texture._parameterFlags = 0;
             }
 
-            // grag framebuffer to be used as a texture - this returns false when not supported for current render pass
+            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
             // (for example when rendering to shadow map), in which case previous content is used
             var processed = false;
             if (texture === this.grabPassTexture) {
