@@ -1336,9 +1336,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     renderShadows: function (lights, cameraPass) {
         var device = this.device;
+        device.grabPassAvailable = false;
+
         // #ifdef PROFILER
         var shadowMapStartTime = now();
         // #endif
+
         var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
         var numInstances;
         var meshInstance, mesh, material;
@@ -1590,6 +1593,8 @@ Object.assign(ForwardRenderer.prototype, {
             this.polygonOffset[1] = 0;
             this.polygonOffsetId.setValue(this.polygonOffset);
         }
+
+        device.grabPassAvailable = true;
 
         // #ifdef PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
