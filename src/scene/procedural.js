@@ -35,6 +35,9 @@ import { Mesh } from './mesh.js';
 var primitiveUv1Padding = 4.0 / 64;
 var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 
+// cached mesh primitives
+var shapePrimitiveMap = new Map();
+
 function calculateNormals(positions, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
@@ -1057,4 +1060,54 @@ function createBox(device, opts) {
     return createMesh(device, positions, options);
 }
 
-export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus };
+// returns Primitive data, used by ModelComponent and RenderComponent
+function getShapePrimitive(device, type) {
+
+    var primData = shapePrimitiveMap.get(type);
+    if (!primData) {
+
+        var mesh, area;
+        switch (type) {
+
+            case 'box':
+                mesh = createBox(device, { halfExtents: new Vec3(0.5, 0.5, 0.5) });
+                area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
+                break;
+
+            case 'capsule':
+                mesh = createCapsule(device, { radius: 0.5, height: 2 });
+                area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                break;
+
+            case 'cone':
+                mesh = createCone(device, { baseRadius: 0.5, peakRadius: 0, height: 1 });
+                area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
+                break;
+
+            case 'cylinder':
+                mesh = createCylinder(device, { radius: 0.5, height: 1 });
+                area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                break;
+
+            case 'plane':
+                mesh = createPlane(device, { halfExtents: new Vec2(0.5, 0.5), widthSegments: 1, lengthSegments: 1 });
+                area = { x: 0, y: 1, z: 0, uv: 1 };
+                break;
+
+            case 'sphere':
+                mesh = createSphere(device, { radius: 0.5 });
+                area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
+                break;
+
+            default:
+                throw new Error("Invalid primitive type: " + type);
+        }
+
+        primData = { mesh: mesh, area: area };
+        shapePrimitiveMap.set(type, primData);
+    }
+
+    return primData;
+}
+
+export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus, getShapePrimitive };

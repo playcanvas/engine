@@ -146,8 +146,8 @@ LayerComposition.prototype._update = function () {
             if (!layer.passThrough) {
 
                 // add meshInstances from both opaque and transparent lists
-                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances);
-                this._dirtyBlend = this._dirtyBlend || addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances);
+                this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances) || this._dirtyBlend;
+                this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances) || this._dirtyBlend;
             }
 
             layer._dirty = false;

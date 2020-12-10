@@ -30,6 +30,7 @@ import combineDiffuseSpecularOldPS from './combineDiffuseSpecularOld.frag';
 import cookiePS from './cookie.frag';
 import cubeMapProjectBoxPS from './cubeMapProjectBox.frag';
 import cubeMapProjectNonePS from './cubeMapProjectNone.frag';
+import cubeMapRotatePS from './cubeMapRotate.frag';
 import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
@@ -233,6 +234,7 @@ var shaderChunks = {
     cookiePS: cookiePS,
     cubeMapProjectBoxPS: cubeMapProjectBoxPS,
     cubeMapProjectNonePS: cubeMapProjectNonePS,
+    cubeMapRotatePS: cubeMapRotatePS,
     detailModesPS: detailModesPS,
     diffusePS: diffusePS,
     diffuseDetailMapPS: diffuseDetailMapPS,

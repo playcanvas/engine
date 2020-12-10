@@ -1394,9 +1394,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     renderShadows: function (lights, cameraPass) {
         var device = this.device;
+        device.grabPassAvailable = false;
+
         // #ifdef PROFILER
         var shadowMapStartTime = now();
         // #endif
+
         var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
         var numInstances;
         var meshInstance, mesh, material;
@@ -1649,6 +1652,8 @@ Object.assign(ForwardRenderer.prototype, {
             this.polygonOffsetId.setValue(this.polygonOffset);
         }
 
+        device.grabPassAvailable = true;
+
         // #ifdef PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
@@ -1656,6 +1661,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
+
+        // if material has dirtyBlend set, notify scene here
+        if (meshInstance.material._dirtyBlend) {
+            this.scene.layers._dirtyBlend = true;
+        }
+
         meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
         meshInstance._shader[pass] = meshInstance.material.shader;
     },

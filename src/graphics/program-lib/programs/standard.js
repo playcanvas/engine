@@ -630,7 +630,10 @@ var standard = {
             }
         }
 
-        if (options.forceUv1) useUv[1] = true;
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+        }
 
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
@@ -1123,7 +1126,17 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
+        if (options.useCubeMapRotation) {
+            code += "#define CUBEMAP_ROTATION\n";
+        }
+
+        if (options.useRightHandedCubeMap) {
+            code += "#define RIGHT_HANDED_CUBEMAP\n";
+        }
+
         if (needsNormal) {
+            code += chunks.cubeMapRotatePS;
+
             code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
@@ -1456,10 +1469,6 @@ var standard = {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
-            }
-
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {

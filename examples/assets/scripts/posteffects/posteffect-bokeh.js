@@ -39,11 +39,12 @@ Object.assign(pc, function () {
             ].join("\n"),
             fshader: [
                 "precision " + graphicsDevice.precision + " float;",
+                (graphicsDevice.webgl2) ? "#define GL2" : "",
+                pc.shaderChunks.screenDepthPS,
                 "",
                 "varying vec2 vUv0;",
                 "",
                 "uniform sampler2D uColorBuffer;",
-                "uniform sampler2D uDepthMap;",
                 "",
                 "uniform float uMaxBlur;",  // max blur amount
                 "uniform float uAperture;", // uAperture - bigger values for shallower depth of field
@@ -55,9 +56,7 @@ Object.assign(pc, function () {
                 "{",
                 "    vec2 aspectCorrect = vec2( 1.0, uAspect );",
                 "",
-                "    vec4 depth1 = texture2D( uDepthMap, vUv0 );",
-                "",
-                "    float factor = depth1.x - uFocus;",
+                "    float factor = ((getLinearScreenDepth(vUv0) * -1.0) - uFocus) / camera_params.y;",
                 "",
                 "    vec2 dofblur = vec2 ( clamp( factor * uAperture, -uMaxBlur, uMaxBlur ) );",
                 "",
@@ -119,10 +118,10 @@ Object.assign(pc, function () {
         });
 
         // Uniforms
-        this.maxBlur = 1;
-        this.aperture = 0.025;
+        this.maxBlur = 0.02;
+        this.aperture = 1;
         this.focus = 1;
-        this.aspect = 1;
+        this.aspect = graphicsDevice.width / graphicsDevice.height;
     };
 
     BokehEffect.prototype = Object.create(pc.PostEffect.prototype);
@@ -138,7 +137,7 @@ Object.assign(pc, function () {
             scope.resolve("uFocus").setValue(this.focus);
             scope.resolve("uAspect").setValue(this.aspect);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            scope.resolve("uDepthMap").setValue(this.depthMap);
+
             pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });

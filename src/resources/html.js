@@ -1,7 +1,7 @@
 import { http } from '../net/http.js';
 
 function HtmlHandler() {
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(HtmlHandler.prototype, {
@@ -14,7 +14,8 @@ Object.assign(HtmlHandler.prototype, {
         }
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);

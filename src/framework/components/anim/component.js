@@ -5,7 +5,7 @@ import { AnimEvaluator } from '../../../anim/anim.js';
 import { Component } from '../component.js';
 
 import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
 } from './constants.js';
 import { AnimComponentBinder } from './binder.js';
 import { AnimComponentLayer } from './layer.js';
@@ -46,12 +46,14 @@ Object.assign(AnimComponent.prototype, {
         data.layers = [];
 
         var graph;
-        var modelComponent = this.entity.model;
-        if (modelComponent) {
-            var m = modelComponent.model;
+        if (this.entity.model) {
+            var m = this.entity.model.model;
             if (m) {
                 graph = m.getGraph();
             }
+        } else {
+            // animating hierarchy without model
+            graph = this.entity;
         }
 
         function addLayer(name, states, transitions, order) {
@@ -81,7 +83,7 @@ Object.assign(AnimComponent.prototype, {
             var layerName = layer.name;
             for (var j = 0; j < layer.states.length; j++) {
                 var stateName = layer.states[j];
-                if (stateName !== 'START' && stateName !== 'END') {
+                if (stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END && stateName !== ANIM_STATE_ANY) {
                     var stateKey = layerName + ':' + stateName;
                     if (!this.data.animationAssets[stateKey]) {
                         this.data.animationAssets[stateKey] = {
