@@ -10,7 +10,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME, LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
 
 import { Application } from '../framework/application.js';
@@ -62,7 +62,8 @@ var Light = function Light() {
     this._innerConeAngle = 40;
     this._outerConeAngle = 45;
 
-    // Area Light properties
+    // Light source shape properties
+    this.shape = LIGHTSHAPE_PUNCTUAL;
     this._size = new Vec2(1, 1);
 
     // Cache of light property data in a format more friendly for shader uniforms
@@ -135,8 +136,9 @@ Object.assign(Light.prototype, {
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
 
-        // area properties
-        clone.size = this._size.clone();
+        // shape properties
+        clone.shape = this.shape;
+        clone._size = this._size.clone();
 
         // Shadow properties
         clone.shadowBias = this.shadowBias;

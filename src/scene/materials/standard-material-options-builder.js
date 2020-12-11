@@ -7,7 +7,7 @@ import {
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR,
@@ -223,7 +223,6 @@ StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options
             this._collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
             this._collectLights(LIGHTTYPE_POINT, sortedLights[LIGHTTYPE_POINT], lightsFiltered, mask, staticLightList);
             this._collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
-            this._collectLights(LIGHTTYPE_AREA, sortedLights[LIGHTTYPE_AREA], lightsFiltered, mask, staticLightList);
         }
         options.lights = lightsFiltered;
     } else {

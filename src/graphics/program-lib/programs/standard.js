@@ -12,7 +12,8 @@ import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTSHAPE_RECT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
@@ -1000,7 +1001,7 @@ var standard = {
         var light;
 
         var hasAreaLights = options.lights.some(function (light){
-            return light.type === LIGHTTYPE_AREA;
+            return light.shape === LIGHTSHAPE_RECT;
         });
 
         if (hasAreaLights) {
@@ -1014,10 +1015,6 @@ var standard = {
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
-            } else if (lightType === LIGHTTYPE_AREA) {
-                code += "uniform vec3 light" + i + "_position;\n";
-                code += "uniform vec3 light" + i + "_halfWidth;\n";
-                code += "uniform vec3 light" + i + "_halfHeight;\n";
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
@@ -1026,6 +1023,10 @@ var standard = {
                     code += "uniform float light" + i + "_innerConeAngle;\n";
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
+            }
+            if (light.shape === LIGHTSHAPE_RECT) {
+                code += "uniform vec3 light" + i + "_halfWidth;\n";
+                code += "uniform vec3 light" + i + "_halfHeight;\n";
             }
             if (light.castShadows && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
@@ -1281,12 +1282,15 @@ var standard = {
         if (options.enableGGXSpecular) code += "uniform float material_anisotropy;\n";
 
         if (lighting) {
-            code += chunks.lightDiffuseLambertPS;
-            if ( hasAreaLights ) code += chunks.ltc;
+            if ( !hasAreaLights ) {
+                code += chunks.lightDiffuseLambertPS;
+            } else {
+                code += chunks.ltc;
+            }
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
-            if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
+            if (lighting) code += hasAreaLights ? '' : options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
@@ -1482,16 +1486,15 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
+                if (light.shape === LIGHTSHAPE_RECT) {
+                    code += "   gRectCoords = getRectAreaLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                }
+
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   dLightDirNormW = light" + i + "_direction;\n";
                     code += "   dAtten = 1.0;\n";
                     code += "   dAtten *= getLightDiffuse();\n";
-                } else if (lightType === LIGHTTYPE_AREA) {
-
-                    code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
-                    code += "   calculateRectAreaLight(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight, light" + i + "_color, roughness, vPositionW, dViewDirW);\n";
-
                 } else {
 
                     if (light._cookie) {
@@ -1531,7 +1534,8 @@ var standard = {
                             usesSpot = true;
                         }
                     }
-                    code += "       dAtten *= getLightDiffuse();\n";
+                    code += "       dAttenD = 1.0;\n";
+                    code += "       dAttenD *= getLightDiffuse();\n";
                 }
 
                 if (light.castShadows && !options.noShadow) {
@@ -1577,21 +1581,23 @@ var standard = {
                     }
                 }
 
-                if (lightType !== LIGHTTYPE_AREA) {
-                    code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
-                    if (options.clearCoat > 0 ) {
-                        code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    }
+                if (light.shape !== LIGHTSHAPE_RECT) {
+                    code += "       dAtten *= dAttenD;\n";
+                }
 
-                    if (options.useSpecular) {
-                        code += "       dAtten *= getLightSpecular();\n";
-                        code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    }
+                if (options.clearCoat > 0 ) {
+                    code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                }
+
+                if (options.useSpecular) {
+                    code += "       dAtten *= getLightSpecular();\n";
+                    code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
 
 
-                if (lightType !== LIGHTTYPE_DIRECTIONAL && lightType !== LIGHTTYPE_AREA) {
+                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "   }\n"; // BRANCH END
                 }
 
@@ -1676,6 +1682,7 @@ var standard = {
         if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
+        if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";

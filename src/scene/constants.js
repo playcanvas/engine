@@ -195,13 +195,22 @@ export var LIGHTTYPE_POINT = 1;
  * @description Spot (local) light source.
  */
 export var LIGHTTYPE_SPOT = 2;
+
 /**
  * @constant
- * @name pc.LIGHTTYPE_AREA
+ * @name pc.LIGHTSHAPE_PUNCTUAL
  * @type {number}
- * @description Area (local) light source.
+ * @description Rectangle shape of light source.
  */
-export var LIGHTTYPE_AREA = 3;
+export var LIGHTSHAPE_PUNCTUAL = 0;
+
+/**
+ * @constant
+ * @name pc.LIGHTSHAPE_RECT
+ * @type {number}
+ * @description Rectangle shape of light source.
+ */
+export var LIGHTSHAPE_RECT = 1;
 
 /**
  * @constant

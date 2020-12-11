@@ -2,7 +2,7 @@ import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA } from '../../../scene/constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
@@ -21,8 +21,7 @@ import { LightComponentData } from './data.js';
 var lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
     'point': LIGHTTYPE_POINT,
-    'spot': LIGHTTYPE_SPOT,
-    'area': LIGHTTYPE_AREA
+    'spot': LIGHTTYPE_SPOT
 };
 
 function LightComponentSystem(app) {
@@ -74,6 +73,7 @@ Object.assign(LightComponentSystem.prototype, {
 
         var light = new Light();
         light.type = lightTypes[data.type];
+        light.shape = data.shape;
         light._node = component.entity;
         light._scene = this.app.scene;
         component.data.light = light;

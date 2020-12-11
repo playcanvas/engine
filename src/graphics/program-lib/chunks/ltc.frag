@@ -41,17 +41,17 @@ vec3 LTC_EdgeVectorFormFactor( const in vec3 v1, const in vec3 v2 ) {
 	return cross( v1, v2 ) * theta_sintheta;
 }
 
-vec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in vec3 rectCoords[ 4 ] ) {
+float LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in vec3 rectCoords[ 4 ] ) {
 	// bail if point is on back side of plane of light
-	// assumes ccw winding order of light vertices
+	// assumes cw winding order of light vertices
 	vec3 v1 = rectCoords[ 1 ] - rectCoords[ 0 ];
 	vec3 v2 = rectCoords[ 3 ] - rectCoords[ 0 ];
-	vec3 lightNormal = cross( v1, v2 );
-	if( dot( lightNormal, P - rectCoords[ 0 ] ) < 0.0 ) return vec3( 0.0 );
+	vec3 lightNormal = cross( v2, v1 );
+	if( dot( lightNormal, P - rectCoords[ 0 ] ) < 0.0 ) return 0.0;
 	// construct orthonormal basis around N
 	vec3 T1, T2;
 	T1 = normalize( V - N * dot( V, N ) );
-	T2 = - cross( N, T1 ); // negated from paper; possibly due to a different handedness of world coordinate system
+	T2 = cross( N, T1 );
 	// compute transform
 	mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );
 	// transform rect
@@ -74,8 +74,10 @@ vec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in m
 	// adjust for horizon clipping
 	float result = LTC_ClippedSphereFormFactor( vectorFormFactor );
 
-	return vec3( result );
+	return result;
 }
+
+vec3[ 4 ] gRectCoords;
 
 vec3[ 4 ] getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	vec3 coords[ 4 ];
@@ -86,6 +88,35 @@ vec3[ 4 ] getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
 	return coords;
 }
 
+float getLightDiffuse() {
+	return LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), gRectCoords );
+}
+
+float calcLightSpecular(float tGlossiness, vec3 tReflDirW) {
+	float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
+
+	vec2 uv = LTC_Uv( tReflDirW, dViewDirW, roughness );
+	vec4 t1 = texture2D( ltc_1, uv );
+	// vec4 t2 = texture2D( ltc_2, uv );
+
+	mat3 mInv = mat3(
+		vec3( t1.x, 0, t1.y ),
+		vec3(    0, 1,    0 ),
+		vec3( t1.z, 0, t1.w )
+	);
+
+    return LTC_Evaluate( tReflDirW, dViewDirW, vPositionW, mInv, gRectCoords );
+}
+
+float getLightSpecular() {
+    return calcLightSpecular(dGlossiness, dNormalW);
+}
+
+float getLightSpecularCC() {
+    return calcLightSpecular(ccGlossiness, ccNormalW);
+}
+
+/*
 void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 lightColor, float roughness, vec3 position, vec3 viewDir){
 
 	vec3[ 4 ] coords = getRectAreaLightCoords(lightPos, hWidth, hHeight);
@@ -96,7 +127,7 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 	mat3 mInv;
 
 	// Diffuse
-	dDiffuseLight += lightColor * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), coords );
+	dDiffuseLight += lightColor * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), rectCoords );
 
 	// Specular
 	uv = LTC_Uv( dNormalW, viewDir, roughness );
@@ -126,4 +157,5 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 	ccSpecularLight += lightColor * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
 	#endif
 }
+*/
 

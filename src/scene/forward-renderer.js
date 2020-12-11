@@ -36,7 +36,8 @@ import {
     BLUR_GAUSSIAN,
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTSHAPE_RECT,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
@@ -984,36 +985,9 @@ Object.assign(ForwardRenderer.prototype, {
         }
     },
 
-    dispatchAreaLight: function (scene, scope, area, cnt) {
-        var wtm = area._node.getWorldTransform();
-        var quat = new Quat();
-        quat.setFromMat4(wtm);
-
-        if (!this.lightColorId[cnt]) {
-            this._resolveLight(scope, cnt);
-        }
-
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? area._linearFinalColor : area._finalColor);
-        wtm.getTranslation(area._position);
-        this.lightPos[cnt][0] = area._position.x;
-        this.lightPos[cnt][1] = area._position.y;
-        this.lightPos[cnt][2] = area._position.z;
-        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
-
-        var hWidth = quat.transformVector(new Vec3(area._size.x * 0.5, 0, 0));
-        this.lightWidth[cnt][0] = hWidth.x;
-        this.lightWidth[cnt][1] = hWidth.y;
-        this.lightWidth[cnt][2] = hWidth.z;
-        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-
-        var hHeight = quat.transformVector(new Vec3(0, 0, area._size.y * 0.5));
-        this.lightHeight[cnt][0] = hHeight.x;
-        this.lightHeight[cnt][1] = hHeight.y;
-        this.lightHeight[cnt][2] = hHeight.z;
-        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
-    },
-
     dispatchSpotLight: function (scene, scope, spot, cnt) {
+        var nonPunctualCount = 0;
+
         var wtm = spot._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
@@ -1036,6 +1010,25 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightDir[cnt][1] = spot._direction.y;
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
+
+        if (spot.shape === LIGHTSHAPE_RECT) {
+            nonPunctualCount++;
+
+            var quat = new Quat(); // NB should probably avoid dynamic allocation in this loop?
+            quat.setFromMat4(wtm);
+
+            var hWidth = quat.transformVector(new Vec3(spot._size.x * 0.5, 0, 0));
+            this.lightWidth[cnt][0] = hWidth.x;
+            this.lightWidth[cnt][1] = hWidth.y;
+            this.lightWidth[cnt][2] = hWidth.z;
+            this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+            var hHeight = quat.transformVector(new Vec3(0, 0, spot._size.y * 0.5));
+            this.lightHeight[cnt][0] = hHeight.x;
+            this.lightHeight[cnt][1] = hHeight.y;
+            this.lightHeight[cnt][2] = hHeight.z;
+            this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+        }
 
         if (spot.castShadows) {
             var bias;
@@ -1093,21 +1086,22 @@ Object.assign(ForwardRenderer.prototype, {
                 this.lightCookieOffsetId[cnt].setValue(spot._cookieOffsetUniform);
             }
         }
+
+        return nonPunctualCount;
     },
 
     dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
         var i;
-        var point, spot, area;
+        var point, spot;
 
         var pnts = sortedLights[LIGHTTYPE_POINT];
         var spts = sortedLights[LIGHTTYPE_SPOT];
-        var areas = sortedLights[LIGHTTYPE_AREA];
 
         var numDirs = usedDirLights;
         var numPnts = pnts.length;
         var numSpts = spts.length;
-        var numAreas = areas.length;
         var cnt = numDirs;
+        var nonPunctualCount = 0;
 
         var scope = this.device.scope;
 
@@ -1134,37 +1128,21 @@ Object.assign(ForwardRenderer.prototype, {
             spot = spts[i];
             if (!(spot.mask & mask)) continue;
             if (spot.isStatic) continue;
-            this.dispatchSpotLight(scene, scope, spot, cnt);
+            nonPunctualCount += this.dispatchSpotLight(scene, scope, spot, cnt);
             cnt++;
         }
 
         if (staticLightList) {
             spot = staticLightList[staticId];
             while (spot && spot._type === LIGHTTYPE_SPOT) {
-                this.dispatchSpotLight(scene, scope, spot, cnt);
+                nonPunctualCount += this.dispatchSpotLight(scene, scope, spot, cnt);
                 cnt++;
                 staticId++;
                 spot = staticLightList[staticId];
             }
         }
 
-        for (i = 0; i < numAreas; i++) {
-            area = areas[i];
-            if (!(area.mask & mask)) continue;
-            if (area.isStatic) continue;
-            this.dispatchAreaLight(scene, scope, area, cnt);
-            cnt++;
-        }
-
-        if (staticLightList) {
-            area = staticLightList[staticId];
-            while (area && area._type === LIGHTTYPE_AREA) {
-                this.dispatchAreaLight(scene, scope, area, cnt);
-                cnt++;
-                staticId++;
-                area = staticLightList[staticId];
-            }
-        }
+        return nonPunctualCount;
     },
 
     cull: function (camera, drawCalls, visibleList) {
@@ -1775,7 +1753,7 @@ Object.assign(ForwardRenderer.prototype, {
         var forwardStartTime = now();
         // #endif
 
-        var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
+        var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights, usedNonPunctualLights;
         var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
         var stencilFront, stencilBack;
 
@@ -1855,15 +1833,16 @@ Object.assign(ForwardRenderer.prototype, {
                     if (!prevMaterial || lightMask !== prevLightMask) {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
 
+                        usedNonPunctualLights = this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+
                         // Upload the LTC Luts's if neccesary
-                        if (sortedLights[LIGHTTYPE_AREA].length > 0 ) {
+                        if (usedNonPunctualLights > 0 ) {
                             // response is cached
                             var ltcs = fetchLTCLuts(this.device);
                             material.setParameter('ltc_1', ltcs[0]);
                             // material.setParameter('ltc_2', ltcs[1]);
                         }
 
-                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
 
                     this.alphaTestId.setValue(material.alphaTest);
