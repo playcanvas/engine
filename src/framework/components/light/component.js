@@ -6,6 +6,7 @@ import { Vec4 } from '../../../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LAYERID_WORLD,
+    LIGHTSHAPE_PUNCTUAL,
     LIGHTFALLOFF_LINEAR,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOW_PCF3,
@@ -163,7 +164,7 @@ var _defineProps = function () {
     _defineProperty("intensity", 1, function (newValue, oldValue) {
         this.light.intensity = newValue;
     });
-    _defineProperty("shape", 1, function (newValue, oldValue) {
+    _defineProperty("shape", LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
     });
     _defineProperty("width", 1, function (newValue, oldValue) {

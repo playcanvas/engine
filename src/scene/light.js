@@ -63,7 +63,7 @@ var Light = function Light() {
     this._outerConeAngle = 45;
 
     // Light source shape properties
-    this.shape = LIGHTSHAPE_PUNCTUAL;
+    this._shape = LIGHTSHAPE_PUNCTUAL;
     this._size = new Vec2(1, 1);
 
     // Cache of light property data in a format more friendly for shader uniforms
@@ -137,7 +137,7 @@ Object.assign(Light.prototype, {
         clone.outerConeAngle = this._outerConeAngle;
 
         // shape properties
-        clone.shape = this.shape;
+        clone.shape = this._shape;
         clone._size = this._size.clone();
 
         // Shadow properties
@@ -297,6 +297,7 @@ Object.assign(Light.prototype, {
         // 16 - 17 : cookie channel G
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
+        // 11      : light source shape
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -306,6 +307,7 @@ Object.assign(Light.prototype, {
                ((this._cookie ? 1 : 0)                    << 21) |
                ((this._cookieFalloff ? 1 : 0)             << 20) |
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
+               ((this._shape != LIGHTSHAPE_PUNCTUAL ? 1 : 0) << 11) |
                ((this._cookieTransform ? 1 : 0)           << 12);
 
         if (this._cookieChannel.length === 3) {
@@ -336,6 +338,24 @@ Object.defineProperty(Light.prototype, 'type', {
         var stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
+    }
+});
+
+Object.defineProperty(Light.prototype, 'shape', {
+    get: function () {
+        return this._shape;
+    },
+    set: function (value) {
+        if (this._shape === value)
+            return;
+
+        this._shape = value;
+        this._destroyShadowMap();
+        this.updateKey();
+
+        var stype = this._shadowType;
+        this._shadowType = null;
+        this.shadowType = stype; // refresh shadow type; switching shape and back may change it
     }
 });
 

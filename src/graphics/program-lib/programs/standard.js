@@ -1001,7 +1001,7 @@ var standard = {
         var light;
 
         var hasAreaLights = options.lights.some(function (light){
-            return light.shape === LIGHTSHAPE_RECT;
+            return light._shape === LIGHTSHAPE_RECT;
         });
 
         if (hasAreaLights) {
@@ -1024,7 +1024,7 @@ var standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (light.shape === LIGHTSHAPE_RECT) {
+            if (light._shape === LIGHTSHAPE_RECT) {
                 code += "uniform vec3 light" + i + "_halfWidth;\n";
                 code += "uniform vec3 light" + i + "_halfHeight;\n";
             }
@@ -1486,7 +1486,7 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
-                if (light.shape === LIGHTSHAPE_RECT) {
+                if (light._shape === LIGHTSHAPE_RECT) {
                     code += "   gRectCoords = getRectAreaLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
                 }
 
@@ -1583,7 +1583,7 @@ var standard = {
 
                 code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
-                if (light.shape !== LIGHTSHAPE_RECT) {
+                if (light._shape !== LIGHTSHAPE_RECT) {
                     code += "       dAtten *= dAttenD;\n";
                 }
 

@@ -200,7 +200,7 @@ export var LIGHTTYPE_SPOT = 2;
  * @constant
  * @name pc.LIGHTSHAPE_PUNCTUAL
  * @type {number}
- * @description Rectangle shape of light source.
+ * @description Punctual shape of light source.
  */
 export var LIGHTSHAPE_PUNCTUAL = 0;
 

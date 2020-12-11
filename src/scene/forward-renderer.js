@@ -1011,7 +1011,7 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightDir[cnt][2] = spot._direction.z;
         this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
-        if (spot.shape === LIGHTSHAPE_RECT) {
+        if (spot._shape === LIGHTSHAPE_RECT) {
             nonPunctualCount++;
 
             var quat = new Quat(); // NB should probably avoid dynamic allocation in this loop?
