@@ -1832,7 +1832,6 @@ Object.assign(ForwardRenderer.prototype, {
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
                         usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
-
                         usedNonPunctualLights = this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
 
                         // Upload the LTC Luts's if neccesary

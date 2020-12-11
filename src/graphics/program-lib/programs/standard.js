@@ -1480,6 +1480,7 @@ var standard = {
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
+
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
                 light = options.lights[i];
