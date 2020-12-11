@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import {
     BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT
 } from './constants.js';
 
 /**
@@ -50,7 +50,7 @@ function LayerComposition() {
     this._lightShadowCastersSets = [];
 
     // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
-    this._splitLights = [[], [], [], []];
+    this._splitLights = [[], [], []];
 
     // for each directional light (in _splitLights[LIGHTTYPE_DIRECTIONAL]), this stores array of unique cameras that are on the same layer as the light
     this._globalLightCameras = [];
@@ -80,7 +80,7 @@ LayerComposition.prototype._splitLightsArray = function (target) {
     target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
     target._splitLights[LIGHTTYPE_POINT].length = 0;
     target._splitLights[LIGHTTYPE_SPOT].length = 0;
-    target._splitLights[LIGHTTYPE_AREA].length = 0;
+
     for (var i = 0; i < lights.length; i++) {
         light = lights[i];
         if (light.enabled) {

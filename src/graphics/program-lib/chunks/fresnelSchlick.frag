@@ -1,7 +1,22 @@
 // Schlick's approximation
 uniform float material_fresnelFactor; // unused
 
+#ifdef HAS_AREA_LIGHTS
+    vec3 dSpecularity_LTC;
+#ifdef CLEARCOAT    
+    vec3 ccSpecularity_LTC;
+#endif
+#endif
+
 void getFresnel() {
+    
+#ifdef HAS_AREA_LIGHTS
+    vec3 dSpecularity_LTC = dSpecularity;
+#ifdef CLEARCOAT    
+    vec3 ccSpecularity_LTC = ccSpecularity;
+#endif
+#endif
+
     float fresnel = 1.0 - max(dot(dNormalW, dViewDirW), 0.0);
     float fresnel2 = fresnel * fresnel;
     fresnel *= fresnel2 * fresnel2;

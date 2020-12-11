@@ -35,7 +35,8 @@ import {
     BLUR_GAUSSIAN,
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTSHAPE_RECT,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
@@ -983,33 +984,6 @@ Object.assign(ForwardRenderer.prototype, {
         }
     },
 
-    dispatchAreaLight: function (scene, scope, area, cnt) {
-        var wtm = area._node.getWorldTransform();
-
-        if (!this.lightColorId[cnt]) {
-            this._resolveLight(scope, cnt);
-        }
-
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? area._linearFinalColor : area._finalColor);
-        wtm.getTranslation(area._position);
-        this.lightPos[cnt][0] = area._position.x;
-        this.lightPos[cnt][1] = area._position.y;
-        this.lightPos[cnt][2] = area._position.z;
-        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
-
-        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
-        this.lightWidth[cnt][0] = hWidth.x;
-        this.lightWidth[cnt][1] = hWidth.y;
-        this.lightWidth[cnt][2] = hWidth.z;
-        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-
-        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
-        this.lightHeight[cnt][0] = hHeight.x;
-        this.lightHeight[cnt][1] = hHeight.y;
-        this.lightHeight[cnt][2] = hHeight.z;
-        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
-    },
-
     dispatchSpotLight: function (scene, scope, spot, cnt) {
         var wtm = spot._node.getWorldTransform();
 
@@ -1026,8 +1000,25 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][1] = spot._position.y;
         this.lightPos[cnt][2] = spot._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        // rectangle shape
+        if (spot.shape === LIGHTSHAPE_RECT) {
+            var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+            this.lightWidth[cnt][0] = hWidth.x;
+            this.lightWidth[cnt][1] = hWidth.y;
+            this.lightWidth[cnt][2] = hWidth.z;
+            this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+            var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+            this.lightHeight[cnt][0] = hHeight.x;
+            this.lightHeight[cnt][1] = hHeight.y;
+            this.lightHeight[cnt][2] = hHeight.z;
+            this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+        }
+
         // Spots shine down the negative Y axis
         wtm.getY(spot._direction).scale(-1);
+
         spot._direction.normalize();
         this.lightDir[cnt][0] = spot._direction.x;
         this.lightDir[cnt][1] = spot._direction.y;
@@ -1094,16 +1085,14 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
         var i;
-        var point, spot, area;
+        var point, spot;
 
         var pnts = sortedLights[LIGHTTYPE_POINT];
         var spts = sortedLights[LIGHTTYPE_SPOT];
-        var areas = sortedLights[LIGHTTYPE_AREA];
 
         var numDirs = usedDirLights;
         var numPnts = pnts.length;
         var numSpts = spts.length;
-        var numAreas = areas.length;
         var cnt = numDirs;
 
         var scope = this.device.scope;
@@ -1142,24 +1131,6 @@ Object.assign(ForwardRenderer.prototype, {
                 cnt++;
                 staticId++;
                 spot = staticLightList[staticId];
-            }
-        }
-
-        for (i = 0; i < numAreas; i++) {
-            area = areas[i];
-            if (!(area.mask & mask)) continue;
-            if (area.isStatic) continue;
-            this.dispatchAreaLight(scene, scope, area, cnt);
-            cnt++;
-        }
-
-        if (staticLightList) {
-            area = staticLightList[staticId];
-            while (area && area._type === LIGHTTYPE_AREA) {
-                this.dispatchAreaLight(scene, scope, area, cnt);
-                cnt++;
-                staticId++;
-                area = staticLightList[staticId];
             }
         }
     },
@@ -1234,7 +1205,7 @@ Object.assign(ForwardRenderer.prototype, {
             light = lights[i];
             type = light._type;
             if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                if (type !== LIGHTTYPE_DIRECTIONAL && type !== LIGHTTYPE_AREA) {
+                if (type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (!camera.frustum.containsSphere(tempSphere)) continue;
                     light.visibleThisFrame = true;

@@ -67,20 +67,18 @@
         }
 
         // helper function to create area light including its visual representation in the world
-        function createAreaLight(position, scale, color) {
+        function createLight(position, scale, color, shape) {
 
             var light = new pc.Entity();
             light.addComponent("light", {
-                type: "area",
-                //type: "spot",
+                type: "spot",
+                shape: shape,
                 color: color,
                 intensity: 20,
                 range: 10,
                 castShadows: false,
-
-
-                innerConeAngle: 60,
-                outerConeAngle: 90
+                innerConeAngle: 80,
+                outerConeAngle: 85
             });
 
             // front face quad
@@ -210,9 +208,9 @@
             camera.setLocalPosition(0, 6, 12);
             camera.lookAt(pc.Vec3.ZERO);
 
-            // Create an area light
-            light1 = createAreaLight(new pc.Vec3(-5, 3, 2), 4, new pc.Color(1, 1, 1));
-            light2 = createAreaLight(new pc.Vec3(5, 3, -2), 5, new pc.Color(1, 1, 0));
+            // Create rectangle shape lights 
+            light1 = createLight(new pc.Vec3(-5, 3, 2), 4, new pc.Color(1, 1, 1), pc.LIGHTSHAPE_RECT);
+            light2 = createLight(new pc.Vec3(5, 3, -2), 5, new pc.Color(1, 1, 0), pc.LIGHTSHAPE_RECT);
         }
 
         // update things each frame

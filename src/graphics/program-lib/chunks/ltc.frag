@@ -48,13 +48,13 @@ struct Coords {
 	vec3 coord3;
 };
 
-vec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in Coords rectCoords) {
+float LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in Coords rectCoords) {
 	// bail if point is on back side of plane of light
 	// assumes ccw winding order of light vertices
 	vec3 v1 = rectCoords.coord1 - rectCoords.coord0;
 	vec3 v2 = rectCoords.coord3 - rectCoords.coord0;
 	vec3 lightNormal = cross( v1, v2 );
-	if( dot( lightNormal, P - rectCoords.coord0 ) < 0.0 ) return vec3( 0.0 );
+	if( dot( lightNormal, P - rectCoords.coord0 ) < 0.0 ) return 0.0;
 	// construct orthonormal basis around N
 	vec3 T1, T2;
 	T1 = normalize( V - N * dot( V, N ) );
@@ -81,16 +81,50 @@ vec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in m
 	// adjust for horizon clipping
 	float result = LTC_ClippedSphereFormFactor( vectorFormFactor );
 
-	return vec3( result );
+	return result;
 }
 
-void getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight, out Coords coords) {
+Coords gRectCoords;
+Coords getRectAreaLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
+	Coords coords;
 	coords.coord0 = lightPos + halfWidth - halfHeight;
 	coords.coord1 = lightPos - halfWidth - halfHeight;
 	coords.coord2 = lightPos - halfWidth + halfHeight;
 	coords.coord3 = lightPos + halfWidth + halfHeight;
+	return coords;
 }
 
+float getLightDiffuse_LTC() {
+	return LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), gRectCoords );
+}
+
+vec3 calcLightSpecular_LTC(float tGlossiness, vec3 tNormalW, vec3 tSpecularity) {
+	float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
+
+	vec2 uv = LTC_Uv( tNormalW, dViewDirW, roughness );
+	vec4 t1 = texture2D( areaLightsLutTex1, uv );
+	vec4 t2 = texture2D( areaLightsLutTex2, uv );
+
+	mat3 mInv = mat3(
+		vec3( t1.x, 0, t1.y ),
+		vec3(    0, 1,    0 ),
+		vec3( t1.z, 0, t1.w )
+	);
+
+	vec3 fresnel = tSpecularity * t2.x + ( vec3( 1.0 ) - tSpecularity) * t2.y;
+    return fresnel * LTC_Evaluate( tNormalW, dViewDirW, vPositionW, mInv, gRectCoords );
+}
+
+vec3 getLightSpecular_LTC() {
+    return calcLightSpecular_LTC(dGlossiness, dNormalW, dSpecularity_LTC);
+}
+
+#ifdef CLEARCOAT
+vec3 getLightSpecularCC_LTC() {
+    return calcLightSpecular_LTC(ccGlossiness, ccNormalW, ccSpecularity_LTC);
+}
+#endif
+/*
 void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 lightColor, float roughness, vec3 position, vec3 viewDir){
 
 	Coords coords;
@@ -133,4 +167,5 @@ void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 light
 	ccSpecularLight += lightColor * fresnel * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
 	#endif
 }
+*/
 

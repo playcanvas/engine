@@ -1,4 +1,5 @@
 import { Color } from '../core/color.js';
+
 import { math } from '../math/math.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec2 } from '../math/vec2.js';
@@ -7,10 +8,11 @@ import { Vec4 } from '../math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT
 } from './constants.js';
 
 import { Application } from '../framework/application.js';
@@ -61,6 +63,9 @@ var Light = function Light() {
     // Spot properties
     this._innerConeAngle = 40;
     this._outerConeAngle = 45;
+
+    // Light source shape properties
+    this._shape = LIGHTSHAPE_PUNCTUAL;
 
     // Cache of light property data in a format more friendly for shader uniforms
     this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
@@ -131,6 +136,9 @@ Object.assign(Light.prototype, {
         // Spot properties
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
+
+        // shape properties
+        clone.shape = this._shape;
 
         // Shadow properties
         clone.shadowBias = this.shadowBias;
@@ -289,6 +297,7 @@ Object.assign(Light.prototype, {
         // 16 - 17 : cookie channel G
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
+        // 11      : light source shape
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -298,6 +307,7 @@ Object.assign(Light.prototype, {
                ((this._cookie ? 1 : 0)                    << 21) |
                ((this._cookieFalloff ? 1 : 0)             << 20) |
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
+               ((this._shape != LIGHTSHAPE_PUNCTUAL ? 1 : 0) << 11) |
                ((this._cookieTransform ? 1 : 0)           << 12);
 
         if (this._cookieChannel.length === 3) {
@@ -327,7 +337,7 @@ Object.assign(Light.prototype, {
                 minFilter: pc.FILTER_NEAREST,
                 anisotropy: 1
             });
-            
+
             tex.lock().set(data);
             tex.unlock();
             tex.upload();
@@ -411,10 +421,6 @@ Object.defineProperty(Light.prototype, 'type', {
         if (this._type === value)
             return;
 
-        if (value === LIGHTTYPE_AREA) {
-            this.uploadAreaLightLUTs();
-        }
-
         this._type = value;
         this._destroyShadowMap();
         this.updateKey();
@@ -424,6 +430,30 @@ Object.defineProperty(Light.prototype, 'type', {
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
     }
 });
+
+Object.defineProperty(Light.prototype, 'shape', {
+    get: function () {
+        return this._shape;
+    },
+    set: function (value) {
+        if (this._shape === value)
+            return;
+
+        if (value === LIGHTSHAPE_RECT) {
+            this.uploadAreaLightLUTs();
+        }
+
+        this._shape = value;
+        this._destroyShadowMap();
+        this.updateKey();
+
+        var stype = this._shadowType;
+        this._shadowType = null;
+        this.shadowType = stype; // refresh shadow type; switching shape and back may change it
+
+    }
+});
+
 
 Object.defineProperty(Light.prototype, 'shadowType', {
     get: function () {
