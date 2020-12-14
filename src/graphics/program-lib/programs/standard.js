@@ -1492,7 +1492,6 @@ var standard = {
                     // directional
                     code += "   dLightDirNormW = light" + i + "_direction;\n";
                     code += "   dAtten = 1.0;\n";
-                    code += "   dAtten *= getLightDiffuse();\n";
                 } else {
 
                     if (light._cookie) {
@@ -1532,13 +1531,13 @@ var standard = {
                             usesSpot = true;
                         }
                     }
+                }
 
-                    if (light._shape === LIGHTSHAPE_RECT) {
-                        // rect lights do not mix diffuse lighting into specular attenuation
-                        code += "       dAttenD = getLightDiffuse_LTC();\n";
-                    } else {
-                        code += "       dAtten *= getLightDiffuse();\n";
-                    }
+                if (light._shape === LIGHTSHAPE_RECT) {
+                    // rect lights do not mix diffuse lighting into specular attenuation
+                    code += "       dAttenD = getLightDiffuse_LTC();\n";
+                } else {
+                    code += "       dAtten *= getLightDiffuse();\n";
                 }
 
                 if (light.castShadows && !options.noShadow) {

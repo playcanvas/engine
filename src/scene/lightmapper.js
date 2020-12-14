@@ -544,7 +544,7 @@ Object.assign(Lightmapper.prototype, {
         for (j = 0; j < lights.length; j++)
             lights[j].enabled = false;
 
-        var lightArray = [[], [], [], []];
+        var lightArray = [[], [], []];
 
         // Accumulate lights into RGBM textures
         var shadersUpdatedOn1stPass = false;

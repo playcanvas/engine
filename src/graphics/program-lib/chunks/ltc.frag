@@ -124,48 +124,5 @@ vec3 getLightSpecularCC_LTC() {
     return calcLightSpecular_LTC(ccGlossiness, ccNormalW, ccSpecularity_LTC);
 }
 #endif
-/*
-void calculateRectAreaLight(vec3 lightPos, vec3 hWidth, vec3 hHeight, vec3 lightColor, float roughness, vec3 position, vec3 viewDir){
 
-	Coords coords;
-	getRectAreaLightCoords(lightPos, hWidth, hHeight, coords);
-
-	vec2 uv;
-	vec4 t1;
-	vec4 t2;
-	vec3 fresnel;
-	mat3 mInv;
-
-	// Diffuse
-	dDiffuseLight += lightColor * LTC_Evaluate( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), coords );
-
-	// Specular
-	uv = LTC_Uv( dNormalW, viewDir, roughness );
-	t1 = texture2D( areaLightsLutTex1, uv );
-	t2 = texture2D( areaLightsLutTex2, uv );
-
-	mInv = mat3(
-		vec3( t1.x, 0, t1.y ),
-		vec3(    0, 1,    0 ),
-		vec3( t1.z, 0, t1.w )
-	);
-	fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
-	dSpecularLight += lightColor * fresnel * LTC_Evaluate( dNormalW, viewDir, position, mInv, coords );
-
-
-	#ifdef CLEARCOAT
-	uv = LTC_Uv( ccNormalW, viewDir, roughness );
-	t1 = texture2D( areaLightsLutTex1, uv );
-	t2 = texture2D( areaLightsLutTex2, uv );
-
-	mInv = mat3(
-		vec3( t1.x, 0, t1.y ),
-		vec3(    0, 1,    0 ),
-		vec3( t1.z, 0, t1.w )
-	);
-	fresnel = dSpecularity * t2.x + ( vec3( 1.0 ) - dSpecularity) * t2.y;
-	ccSpecularLight += lightColor * fresnel * LTC_Evaluate( ccNormalW, viewDir, position, mInv, coords );
-	#endif
-}
-*/
 

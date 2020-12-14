@@ -167,12 +167,6 @@ var _defineProps = function () {
     _defineProperty("shape", LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
     });
-    //_defineProperty("width", 1, function (newValue, oldValue) {
-    //    this.light.width = newValue;
-    //});
-    //_defineProperty("height", 1, function (newValue, oldValue) {
-    //    this.light.height = newValue;
-    //});
     _defineProperty("castShadows", false, function (newValue, oldValue) {
         this.light.castShadows = newValue;
     });
