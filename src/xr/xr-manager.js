@@ -10,6 +10,7 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 
 /**
  * @class
@@ -54,6 +55,7 @@ function XrManager(app) {
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
+    this.domOverlay = new XrDomOverlay(this);
 
     this._camera = null;
     this.views = [];
@@ -207,23 +209,28 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     // 3. probably immersive-vr will fail to be created
     // 4. call makeXRCompatible, very likely will lead to context loss
 
-    var optionalFeatures = [];
+    var opts = {
+        requiredFeatures: [spaceType],
+        optionalFeatures: []
+    };
 
     if (type === XRTYPE_AR) {
-        optionalFeatures.push('light-estimation');
-        optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('light-estimation');
+        opts.optionalFeatures.push('hit-test');
+
+        if (this.domOverlay.root) {
+            opts.optionalFeatures.push('dom-overlay');
+            opts.domOverlay = { root: this.domOverlay.root };
+        }
     } else if (type === XRTYPE_VR) {
-        optionalFeatures.push('hand-tracking');
+        opts.optionalFeatures.push('hand-tracking');
     }
 
     if (options && options.optionalFeatures) {
-        optionalFeatures = optionalFeatures.concat(options.optionalFeatures);
+        opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
     }
 
-    navigator.xr.requestSession(type, {
-        requiredFeatures: [spaceType],
-        optionalFeatures: optionalFeatures
-    }).then(function (session) {
+    navigator.xr.requestSession(type, opts).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;
