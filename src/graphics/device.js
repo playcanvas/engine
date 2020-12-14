@@ -1072,8 +1072,10 @@ Object.assign(GraphicsDevice.prototype, {
             return false;
         }
 
+        // render target currenly being rendered to (these are null if default framebuffer is active)
         var renderTarget = this.renderTarget;
         var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+
         var grabPassTexture = this.grabPassTexture;
         var width = this.width;
         var height = this.height;
@@ -1087,16 +1089,22 @@ Object.assign(GraphicsDevice.prototype, {
                 renderTarget.resolve(true);
             }
 
+            // these are null if rendering to default framebuffer
             var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
             var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
 
+            // init grab pass framebuffer (only does it once)
             this.initRenderTarget(this.grabPassRenderTarget);
             var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
 
+            // going to blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
+
+            // going to blit to grab pass framebuffer
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
 
             // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
+            // blit color from current framebuffer's color attachment to grab pass color attachment
             gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
@@ -1107,6 +1115,7 @@ Object.assign(GraphicsDevice.prototype, {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
             }
 
+            // this allocates texture (grabPassTexture was already bound to gl)
             var format = grabPassTexture._glFormat;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
             grabPassTexture._width = width;
