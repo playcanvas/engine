@@ -1072,7 +1072,7 @@ Object.assign(GraphicsDevice.prototype, {
             return false;
         }
 
-        // render target currenly being rendered to (these are null if default framebuffer is active)
+        // render target currently being rendered to (these are null if default framebuffer is active)
         var renderTarget = this.renderTarget;
         var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
 
