@@ -1097,7 +1097,7 @@ Object.assign(GraphicsDevice.prototype, {
             this.initRenderTarget(this.grabPassRenderTarget);
             var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
 
-            // going to blit from currently used render target (or default framebuffer if null)
+            // blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
 
             // going to blit to grab pass framebuffer
