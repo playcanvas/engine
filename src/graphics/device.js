@@ -1100,7 +1100,7 @@ Object.assign(GraphicsDevice.prototype, {
             // blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
 
-            // going to blit to grab pass framebuffer
+            // blit to grab pass framebuffer
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
 
             // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
