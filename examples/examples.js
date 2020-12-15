@@ -58,7 +58,8 @@ var categories = [
         name: "loaders",
         examples: [
             "loader-glb",
-            "loader-obj"
+            "loader-obj",
+            "loader-loaders.gl"
         ]
     }, {
         name: "input",

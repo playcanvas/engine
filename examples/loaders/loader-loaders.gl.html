@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Loaders.gl</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@loaders.gl/ply@2.3.6/dist/dist.min.js"></script>
+
+
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+            color: #cccfcf;
+            font-family: "Proxima Nova", Helvetica, arial, sans-serif;
+        }
+
+        a {
+            color: orange
+        }
+
+        @media only screen and (max-width: 800px) {
+            .overlay {
+                font-size: 12px;
+                height: 80%; 
+                margin: 20% auto auto auto;
+            }
+            .info {
+                padding: 0 10% 0 10%
+            }
+
+            .formatDisplay {
+                padding: 0 10% 0 10%
+            }
+        }
+
+        .overlay {
+            text-align: center;
+            display: flex; 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            flex-direction: column;
+        }
+
+        .info {
+            margin: 1% auto auto auto;
+        }
+
+        .formatDisplay {
+            margin: 5% auto 2% auto;
+        }
+
+        .no-display {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+        <!-- shaders -->
+        <script id="vshader" type="x-shader/x-vertex">
+            // Attributes per vertex: position
+            attribute vec4 aPosition;
+            attribute vec4 aColor;
+
+            uniform mat4   matrix_viewProjection;
+            uniform mat4   matrix_model;
+            uniform mat4   matrix_view;
+
+            // Color to fragment program
+            varying vec4 outColor;
+
+
+            void main(void)
+            {
+                // Transform the geometry
+                mat4 modelView = matrix_view * matrix_model;
+                mat4 modelViewProj = matrix_viewProjection * matrix_model;
+                gl_Position = modelViewProj * aPosition;
+
+                gl_PointSize = 1.5;
+            
+                outColor = aColor;
+            }
+        </script>
+
+        <script id="fshader" type="x-shader/x-fragment">
+            precision mediump float;
+            varying vec4 outColor;
+    
+            void main(void)
+            {
+                float r = 0.0, delta = 0.0, alpha = 1.0;
+                
+                vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+                r = dot(cxy, cxy);
+            
+                if (r > 1.0) {
+                    discard;
+                }
+             
+                    
+                // just output color supplied by vertex shader
+                gl_FragColor = outColor;
+            }
+        </script>
+    <div class="overlay no-display">
+        <div class="formatDisplay">
+            <h3 id="formatName"></h3>
+        </div>
+        <div class="info">
+            <span>Press the left or right arrow or double tap on mobile to load a different format with <a href="https://loaders.gl/" target="_blank">loaders.gl</a></span>
+        </div>
+    </div>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body),
+            keyboard: new pc.Keyboard(document.body)
+        });
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        app.assets.loadFromUrl('../assets/scripts/camera/orbit-camera.js', 'script', function (err, asset) {
+            if (!err && asset) {
+                run();
+            }
+        })
+
+        // Create shader to render mesh as circular points with colour
+        var shaderDefinition = {
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION, 
+            aColor: pc.SEMANTIC_COLOR
+        },
+            vshader: document.getElementById("vshader").textContent,
+            fshader: document.getElementById("fshader").textContent
+        };
+    
+        var shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+
+        var modelSources = [
+            {
+                name: 'Draco Pointcloud Mesh (.drc)',
+                url: '../assets/models/photogrammetry.drc',
+                loader: loadDraco
+            },
+            {
+                name: 'Polygon Mesh (.ply)',
+                url: '../assets/models/photogrammetry.ply',
+                loader: loadPly
+            }
+        ]
+        
+        var loadedEntity;
+        var camera;
+        var currentTime = 0;    
+        var index = 0;
+        app.keyboard.on(pc.EVENT_KEYDOWN, (event) => {
+            if (event.key === pc.KEY_RIGHT) {
+                index = (index + 1) % modelSources.length;
+                changeModel();
+            }
+
+            if (event.key === pc.KEY_LEFT) {
+                index = Math.abs(index - 1) % modelSources.length;
+                changeModel();
+            }    
+        }, this);
+
+        var timeSinceLastTap = 0;
+        var doubleTapSpeed = 0.5;
+
+        app.touch.on(pc.EVENT_TOUCHSTART, (touchEvent) => {
+            if (touchEvent.touches.length > 1) {
+                return;
+            }
+            
+            // Check if user has previously tapped within the time window to be registered as a double tap
+            if (timeSinceLastTap < doubleTapSpeed) {
+                index = (index + 1) % modelSources.length;
+                changeModel();
+                timeSinceLastTap = doubleTapSpeed;  
+            }
+            else {
+                timeSinceLastTap = 0;
+            }
+            touchEvent.event.preventDefault();
+        })
+
+        app.on('update', (dt) => {
+            timeSinceLastTap += dt
+        })
+
+        function resetScene() {
+            app.root.removeChild(loadedEntity);
+            loadedEntity.destroy();
+        }
+
+        function changeModel() {
+            resetScene();
+            loadModel(modelSources[index].name, modelSources[index].url, modelSources[index].loader);
+        }
+
+        async function loadDraco(filePath) {
+            const data = await load(filePath, DracoLoader);
+            return data;
+        }
+
+        async function loadPly(filePath) {
+            const data = await load(filePath, PLYLoader);
+            return data;
+        }
+
+        function convertToFloat32(incomingData) { // incoming data is a UInt8Array
+            var i, l = incomingData.length;
+            var outputData = new Float32Array(incomingData.length);
+            for (i = 0; i < l; i++) {
+                outputData[i] = (incomingData[i]) / 255.0;
+            }
+            return outputData;
+        }
+
+        async function loadModel(formatName, filePath, loader) {
+            const modelData = await loader(filePath);
+            var entity = new pc.Entity();
+            var model = new pc.Model();
+            var mesh = new pc.Mesh(app.graphicsDevice);
+            
+            mesh.clear(true, false);
+
+
+            if (modelData.attributes.POSITION) {
+                mesh.setPositions(modelData.attributes.POSITION.value, modelData.attributes.POSITION.size);
+            }
+
+            if (modelData.attributes.COLOR_0) {
+                mesh.setColors(convertToFloat32(modelData.attributes.COLOR_0.value), modelData.attributes.COLOR_0.size);
+            }
+
+            if (modelData.attributes.NORMAL) {
+                mesh.setNormals(data.attributes.NORMAL.value, data.attributes.NORMAL.size);
+            }
+
+            mesh.update(pc.PRIMITIVE_POINTS, true);
+
+            var material = new pc.Material();
+            material.shader = shader;
+            material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
+            material.cull = pc.CULLFACE_NONE;  
+
+            var node = new pc.GraphNode();
+            var meshInstance = new pc.MeshInstance(node, mesh, material);
+            meshInstance.material = material;
+            model.graph = node;
+            model.meshInstances = [meshInstance];
+
+            // Add a model compoonent
+            app.systems.model.addComponent(entity, {
+                type: 'asset',
+                asset: model
+            });
+            entity.model.model = model;
+
+            entity.rotate(95, 200, 180);
+
+            app.root.addChild(entity);
+            camera.script.orbitCamera.focusEntity = entity;
+            loadedEntity = entity;
+            document.getElementById("formatName").innerHTML = `Format Loaded: ${formatName}`
+        }
+
+        async function createCamera() {
+            // Create an Entity with a camera component
+            camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.0, 0.0, 0.0)
+            });
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2 // Override default of 0 (no inertia)
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
+        }
+
+        function run() {
+            // Load a model file using loaders.gl and create mesh from data
+            createCamera()
+            .then(() => {
+                return loadModel(modelSources[index].name, modelSources[index].url, modelSources[index].loader);
+            })
+            .finally(() => {
+                app.start();
+                document.querySelector('.overlay').classList.toggle('no-display');
+            });
+        }
+    </script>
+</body>
+</html>
