@@ -167,8 +167,8 @@
             }
         ]
         
-        var loadedEntity;
-        var camera;
+        var entity;
+        var cameraEntity;
         var index = 0;
         var timeSinceLastTap = 0;
         var doubleTapSpeed = 0.5;
@@ -206,8 +206,8 @@
         });
 
         function resetScene() {
-            app.root.removeChild(loadedEntity);
-            loadedEntity.destroy();
+            app.root.removeChild(entity);
+            entity.destroy();
         }
 
         function changeModel() {
@@ -216,12 +216,12 @@
         }
 
         async function loadDraco(filePath) {
-            const data = await load(filePath, DracoLoader);
+            var data = await load(filePath, DracoLoader);
             return data;
         }
 
         async function loadPly(filePath) {
-            const data = await load(filePath, PLYLoader);
+            var data = await load(filePath, PLYLoader);
             return data;
         }
 
@@ -235,8 +235,8 @@
         }
 
         async function loadModel(formatName, filePath, loader) {
-            const modelData = await loader(filePath);
-            var entity = new pc.Entity();
+            var modelData = await loader(filePath);
+            entity = new pc.Entity();
             var model = new pc.Model();
             var mesh = new pc.Mesh(app.graphicsDevice);
             
@@ -278,31 +278,31 @@
             entity.rotate(95, 200, 180);
 
             app.root.addChild(entity);
-            camera.script.orbitCamera.focusEntity = entity;
-            loadedEntity = entity;
+            cameraEntity.script.orbitCamera.focusEntity = entity;
+            entity = entity;
             document.getElementById("formatName").innerHTML = `Format Loaded: ${formatName}`
         }
 
         async function createCamera() {
             // Create an Entity with a camera component
-            camera = new pc.Entity();
-            camera.addComponent("camera", {
+            cameraEntity = new pc.Entity();
+            cameraEntity.addComponent("camera", {
                 clearColor: new pc.Color(0.0, 0.0, 0.0)
             });
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
+            cameraEntity.addComponent("script");
+            cameraEntity.script.create("orbitCamera", {
                 attributes: {
                     inertiaFactor: 0.2 // Override default of 0 (no inertia)
                 }
             });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
-            app.root.addChild(camera);
+            cameraEntity.script.create("orbitCameraInputMouse");
+            cameraEntity.script.create("orbitCameraInputTouch");
+            app.root.addChild(cameraEntity);
         }
 
         function run() {
             // Load a model file using loaders.gl and create mesh from data
-            createCamera()
+            createCameraEntity()
             .then(() => {
                 return loadModel(modelSources[index].name, modelSources[index].url, modelSources[index].loader);
             })
