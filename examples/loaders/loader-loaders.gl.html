@@ -143,7 +143,7 @@
             if (!err && asset) {
                 run();
             }
-        })
+        });
 
         // Create shader to render mesh as circular points with colour
         var shaderDefinition = {
@@ -172,8 +172,10 @@
         
         var loadedEntity;
         var camera;
-        var currentTime = 0;    
         var index = 0;
+        var timeSinceLastTap = 0;
+        var doubleTapSpeed = 0.5;
+
         app.keyboard.on(pc.EVENT_KEYDOWN, (event) => {
             if (event.key === pc.KEY_RIGHT) {
                 index = (index + 1) % modelSources.length;
@@ -184,10 +186,7 @@
                 index = Math.abs(index - 1) % modelSources.length;
                 changeModel();
             }    
-        }, this);
-
-        var timeSinceLastTap = 0;
-        var doubleTapSpeed = 0.5;
+        });
 
         app.touch.on(pc.EVENT_TOUCHSTART, (touchEvent) => {
             if (touchEvent.touches.length > 1) {
@@ -204,11 +203,11 @@
                 timeSinceLastTap = 0;
             }
             touchEvent.event.preventDefault();
-        })
+        });
 
         app.on('update', (dt) => {
             timeSinceLastTap += dt
-        })
+        });
 
         function resetScene() {
             app.root.removeChild(loadedEntity);
