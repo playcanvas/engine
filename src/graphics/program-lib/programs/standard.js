@@ -997,11 +997,11 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasLTCLights = options.lights.some(function (light){
+        var hasAreaLights = options.lights.some(function (light){
             return light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
-        if (hasLTCLights) {
+        if (hasAreaLights) {
             code += "#define HAS_AREA_LIGHTS\n";
             code += "uniform sampler2D areaLightsLutTex1;\n";
             code += "uniform sampler2D areaLightsLutTex2;\n";
@@ -1274,14 +1274,14 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if ( hasLTCLights ) code += chunks.ltc;
+            if ( hasAreaLights ) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !hasLTCLights) {
+                    if (options.conserveEnergy && !hasAreaLights) {
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                     } else {
                         code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
@@ -1467,7 +1467,7 @@ var standard = {
                 code += "   addDirLightMap();\n";
             }
 
-            if (hasLTCLights){
+            if (hasAreaLights){
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
                 code += "   dSpecularLight *= dSpecularity;\n";
@@ -1632,7 +1632,7 @@ var standard = {
                         break;
                     case LIGHTSHAPE_PUNCTUAL:
                     default:
-                        if (hasLTCLights) {
+                        if (hasAreaLights) {
                             // if LTC lights are present, specular must be accumulated with specularity
                             if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                             if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
@@ -1650,7 +1650,7 @@ var standard = {
                 code += "\n";
             }
 
-            if (hasLTCLights) {
+            if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.clearCoat > 0 ) {
                     code += "   ccSpecularity = vec3(1);\n";

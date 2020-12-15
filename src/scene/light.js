@@ -297,7 +297,7 @@ Object.assign(Light.prototype, {
         // 16 - 17 : cookie channel G
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
-        // 11      : light source shape
+        //  9 - 11 : light source shape
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -307,8 +307,8 @@ Object.assign(Light.prototype, {
                ((this._cookie ? 1 : 0)                    << 21) |
                ((this._cookieFalloff ? 1 : 0)             << 20) |
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
-               ((this._shape != LIGHTSHAPE_PUNCTUAL ? 1 : 0) << 11) |
-               ((this._cookieTransform ? 1 : 0)           << 12);
+               ((this._cookieTransform ? 1 : 0)           << 12) |
+               ((this._shape)                             <<  9);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
