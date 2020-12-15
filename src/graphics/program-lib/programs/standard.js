@@ -1023,6 +1023,9 @@ var standard = {
                 }
             }
             if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    code += "uniform vec3 light" + i + "_position;\n";
+                }
                 code += "uniform vec3 light" + i + "_halfWidth;\n";
                 code += "uniform vec3 light" + i + "_halfHeight;\n";
             }

@@ -67,11 +67,14 @@
         }
 
         // helper function to create area light including its visual representation in the world
-        function createLight(position, scale, color, shape, shadows, range) {
+        function createLight(type, shape, position, scale, color, shadows, range) {
+            var lightParent = new pc.Entity();
+            lightParent.translate(position);
+            app.root.addChild(lightParent);
 
             var light = new pc.Entity();
             light.addComponent("light", {
-                type: "spot",
+                type: type,
                 shape: shape,
                 color: color,
                 intensity: 20,
@@ -91,14 +94,17 @@
             frontMaterial.update();
 
             // add plane that represents the area light
-            light.addComponent("model", {
-                type: (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
-                material: frontMaterial
-            });
+            if (type === "spot")
+            {
+                light.addComponent("model", {
+                    type: (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
+                    material: frontMaterial
+                });
+            }
 
-            light.setLocalScale(scale, (shape===pc.LIGHTSHAPE_DISK) ? 0.001 : scale, scale);
-            light.translate(position);
-            app.root.addChild(light);
+            light.setLocalScale(scale, (shape===pc.LIGHTSHAPE_DISK ) ? 0.001 : scale, scale);
+            light.setLocalEulerAngles( (type === "directional") ? 90 : 0, 0, 0);
+            lightParent.addChild(light);
 
             // black back face quad
             var backMaterial = new pc.StandardMaterial();
@@ -109,13 +115,13 @@
             var backFace = new pc.Entity();
             backFace.addComponent("model", {
                 type: (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
-                material: backMaterial
+                material: backMaterial,
+                castShadows: (type === "directional") ? false : true
             });
             backFace.setLocalEulerAngles(-180, 0, 0);
-            backFace.setLocalPosition(0, (shape===pc.LIGHTSHAPE_DISK) ? -10 : -0.001, 0);
-            light.addChild(backFace);
+            light.addChild(backFace); 
 
-            return light;
+            return lightParent;
         }
 
         // A list of assets that need to be loaded
@@ -151,8 +157,10 @@
                 }
             });
         });
+        
+        var camera;
 
-        var light1, light2;
+        var light1, light2, light3;
         function run() {
 
             app.start();
@@ -187,7 +195,6 @@
                 app.scene.setSkybox(cubemapAsset.resources);
             });
 
-
             // create ground plane
             createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assetManifest);
 
@@ -202,18 +209,22 @@
 
 
             // Create the camera, which renders entities 
-            var camera = new pc.Entity();
+            camera = new pc.Entity();
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.2, 0.2, 0.2),
                 fov: 60
             });
             app.root.addChild(camera);
-            camera.setLocalPosition(0, 6, 12);
-            camera.lookAt(pc.Vec3.ZERO);
+            camera.setLocalPosition(0, 3, 12);
+            camera.lookAt(0,2,0);
 
-            // Create rectangle shape lights 
-            light1 = createLight(new pc.Vec3(-5, 2, 2), 2, new pc.Color(1, 1, 1), pc.LIGHTSHAPE_RECT, true, 20);
-            light2 = createLight(new pc.Vec3(5, 4, -2), 5, new pc.Color(1, 1, 0), pc.LIGHTSHAPE_DISK, true, 20);
+            // Create lights with light source shape 
+            light1 = createLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-5, 3, 2), 5, new pc.Color(1, 1, 1), true, 20);
+            light2 = createLight("point", pc.LIGHTSHAPE_DISK, new pc.Vec3(5, 2, -2), 3, new pc.Color(1, 1, 0),  false, 20);
+            light3 = createLight("directional", pc.LIGHTSHAPE_DISK, new pc.Vec3(0, 30, -160), 20, new pc.Color(0.7, 0.7, 1),  true, 1000);
+
+            light3.lookAt(camera.getPosition());
+            //light3.rotate(90, 0, 0);
         }
 
         // update things each frame
@@ -232,6 +243,12 @@
                 light2.setLocalEulerAngles(pc.math.lerp(50, 250, factor2), 0, 90);
             }
 
+            if (light3) {
+                var factor3 = (Math.sin(time * 0.6) + 1) * 0.5;
+                light3.setLocalPosition(pc.math.lerp(-100, 100, factor3), 50, -120);
+
+                light3.lookAt(camera.getPosition());
+            }
         });
     </script>
 </body>

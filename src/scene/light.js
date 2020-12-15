@@ -325,7 +325,7 @@ Object.assign(Light.prototype, {
     // creates LUT texture used by area lights
     uploadAreaLightLUTs: function () {
 
-        function createTexture (device, data, format) {
+        function createTexture(device, data, format) {
             var tex = new pc.Texture(device, {
                 width: 64,
                 height: 64,
@@ -345,7 +345,7 @@ Object.assign(Light.prototype, {
             return tex;
         }
 
-        function convertToHalfFloat (data) {
+        function convertToHalfFloat(data) {
 
             var count = data.length;
             var ret = new Uint16Array(count);
@@ -357,7 +357,7 @@ Object.assign(Light.prototype, {
             return ret;
         }
 
-        function convertToUint (data) {
+        function convertToUint(data){
 
             var count = data.length;
             var ret = new Uint8ClampedArray(count);
@@ -385,7 +385,7 @@ Object.assign(Light.prototype, {
                 format = pc.PIXELFORMAT_RGBA32F;
                 data1 = luts.data1;
                 data2 = luts.data2;
-    
+
             } else if (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) {
 
                 // half float

@@ -881,6 +881,27 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
     },
 
+    setLTCDirectionallLight: function (wtm, cnt, dir, pos) {
+        // var dist = 100.0;
+
+        this.lightPos[cnt][0] = pos.x;// + dir.x * dist;
+        this.lightPos[cnt][1] = pos.y;// + dir.y * dist;
+        this.lightPos[cnt][2] = pos.z;// + dir.z * dist;
+        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        this.lightWidth[cnt][0] = hWidth.x;
+        this.lightWidth[cnt][1] = hWidth.y;
+        this.lightWidth[cnt][2] = hWidth.z;
+        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        this.lightHeight[cnt][0] = hHeight.x;
+        this.lightHeight[cnt][1] = hHeight.y;
+        this.lightHeight[cnt][2] = hHeight.z;
+        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+    },
+
     dispatchDirectLights: function (dirs, scene, mask) {
         var numDirs = dirs.length;
         var i;
@@ -909,6 +930,11 @@ Object.assign(ForwardRenderer.prototype, {
             this.lightDir[cnt][1] = directional._direction.y;
             this.lightDir[cnt][2] = directional._direction.z;
             this.lightDirId[cnt].setValue(this.lightDir[cnt]);
+
+            if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
+                // non-punctual shape
+                this.setLTCDirectionallLight(wtm, cnt, directional._direction, directional._node.getPosition());
+            }
 
             if (directional.castShadows) {
                 var shadowMap = directional._isPcf && this.device.webgl2 ?
@@ -951,6 +977,20 @@ Object.assign(ForwardRenderer.prototype, {
         return cnt;
     },
 
+    setLTCPositionalLight: function (wtm, cnt) {
+        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        this.lightWidth[cnt][0] = hWidth.x;
+        this.lightWidth[cnt][1] = hWidth.y;
+        this.lightWidth[cnt][2] = hWidth.z;
+        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        this.lightHeight[cnt][0] = hHeight.x;
+        this.lightHeight[cnt][1] = hHeight.y;
+        this.lightHeight[cnt][2] = hHeight.z;
+        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+    },
+
     dispatchPointLight: function (scene, scope, point, cnt) {
         var wtm = point._node.getWorldTransform();
 
@@ -965,6 +1005,11 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][1] = point._position.y;
         this.lightPos[cnt][2] = point._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        if (point.shape !== LIGHTSHAPE_PUNCTUAL) {
+            // non-punctual shape
+            this.setLTCPositionalLight(wtm, cnt);
+        }
 
         if (point.castShadows) {
             var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
@@ -1001,19 +1046,9 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][2] = spot._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        // rectangle shape
         if (spot.shape !== LIGHTSHAPE_PUNCTUAL) {
-            var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
-            this.lightWidth[cnt][0] = hWidth.x;
-            this.lightWidth[cnt][1] = hWidth.y;
-            this.lightWidth[cnt][2] = hWidth.z;
-            this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-
-            var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
-            this.lightHeight[cnt][0] = hHeight.x;
-            this.lightHeight[cnt][1] = hHeight.y;
-            this.lightHeight[cnt][2] = hHeight.z;
-            this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+            // non-punctual shape
+            this.setLTCPositionalLight(wtm, cnt);
         }
 
         // Spots shine down the negative Y axis

@@ -207,8 +207,8 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     V1 = Minv * V1;
     V2 = Minv * V2;
 
-    if(dot(cross(V1, V2), C) > 0.0)
-        return 0.0;
+    //if(dot(cross(V1, V2), C) > 0.0)
+    //    return 0.0;
 
     // compute eigenvectors of ellipse
     float a, b;
