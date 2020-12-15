@@ -121,7 +121,7 @@
     <script>
         var canvas = document.getElementById("application-canvas");
 
-        // Create the app and start the update loop
+        // Create the app
         var app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -142,7 +142,7 @@
             }
         });
 
-        // Create shader to render mesh as circular points with colour
+        // Create shader to render mesh as circular points with color
         var shaderDefinition = {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION, 
@@ -190,7 +190,6 @@
                 return;
             }
             
-            // Check if user has previously tapped within the time window to be registered as a double tap
             if (timeSinceLastTap < doubleTapSpeed) {
                 index = (index + 1) % modelSources.length;
                 changeModel();
