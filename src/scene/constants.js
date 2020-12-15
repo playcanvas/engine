@@ -214,6 +214,14 @@ export var LIGHTSHAPE_RECT = 1;
 
 /**
  * @constant
+ * @name pc.LIGHTSHAPE_DISK
+ * @type {number}
+ * @description Disk shape of light source.
+ */
+export var LIGHTSHAPE_DISK = 2;
+
+/**
+ * @constant
  * @name pc.LIGHTFALLOFF_LINEAR
  * @type {number}
  * @description Linear distance falloff model for light attenuation.

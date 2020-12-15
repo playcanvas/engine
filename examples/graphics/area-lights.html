@@ -67,7 +67,7 @@
         }
 
         // helper function to create area light including its visual representation in the world
-        function createLight(position, scale, color, shape) {
+        function createLight(position, scale, color, shape, shadows, range) {
 
             var light = new pc.Entity();
             light.addComponent("light", {
@@ -75,10 +75,13 @@
                 shape: shape,
                 color: color,
                 intensity: 20,
-                range: 10,
-                castShadows: false,
+                range: range,
+                castShadows: shadows,
                 innerConeAngle: 80,
-                outerConeAngle: 85
+                outerConeAngle: 85,
+                shadowBias: 0.005,
+                normalOffsetBias: 0.01,
+                shadowResolution: 2048                
             });
 
             // front face quad
@@ -89,11 +92,11 @@
 
             // add plane that represents the area light
             light.addComponent("model", {
-                type: "plane",
+                type: (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: frontMaterial
             });
 
-            light.setLocalScale(scale, scale, scale);
+            light.setLocalScale(scale, (shape===pc.LIGHTSHAPE_DISK) ? 0.001 : scale, scale);
             light.translate(position);
             app.root.addChild(light);
 
@@ -105,11 +108,11 @@
 
             var backFace = new pc.Entity();
             backFace.addComponent("model", {
-                type: "plane",
+                type: (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: backMaterial
             });
             backFace.setLocalEulerAngles(-180, 0, 0);
-            backFace.setLocalPosition(0, 0.001, 0);
+            backFace.setLocalPosition(0, (shape===pc.LIGHTSHAPE_DISK) ? -10 : -0.001, 0);
             light.addChild(backFace);
 
             return light;
@@ -209,8 +212,8 @@
             camera.lookAt(pc.Vec3.ZERO);
 
             // Create rectangle shape lights 
-            light1 = createLight(new pc.Vec3(-5, 3, 2), 4, new pc.Color(1, 1, 1), pc.LIGHTSHAPE_RECT);
-            light2 = createLight(new pc.Vec3(5, 3, -2), 5, new pc.Color(1, 1, 0), pc.LIGHTSHAPE_RECT);
+            light1 = createLight(new pc.Vec3(-5, 2, 2), 2, new pc.Color(1, 1, 1), pc.LIGHTSHAPE_RECT, true, 20);
+            light2 = createLight(new pc.Vec3(5, 4, -2), 5, new pc.Color(1, 1, 0), pc.LIGHTSHAPE_DISK, true, 20);
         }
 
         // update things each frame

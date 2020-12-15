@@ -12,7 +12,7 @@ import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
-    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
@@ -997,11 +997,11 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(function (light){
-            return light._shape === LIGHTSHAPE_RECT;
+        var hasLTCLights = options.lights.some(function (light){
+            return light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
-        if (hasAreaLights) {
+        if (hasLTCLights) {
             code += "#define HAS_AREA_LIGHTS\n";
             code += "uniform sampler2D areaLightsLutTex1;\n";
             code += "uniform sampler2D areaLightsLutTex2;\n";
@@ -1022,7 +1022,7 @@ var standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (light._shape === LIGHTSHAPE_RECT) {
+            if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
                 code += "uniform vec3 light" + i + "_halfWidth;\n";
                 code += "uniform vec3 light" + i + "_halfHeight;\n";
             }
@@ -1271,14 +1271,14 @@ var standard = {
 
         if (lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if ( hasAreaLights ) code += chunks.ltc;
+            if ( hasLTCLights ) code += chunks.ltc;
         }
         var useOldAmbient = false;
         if (options.useSpecular) {
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy && !hasAreaLights) {
+                    if (options.conserveEnergy && !hasLTCLights) {
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                     } else {
                         code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
@@ -1464,7 +1464,7 @@ var standard = {
                 code += "   addDirLightMap();\n";
             }
 
-            if (hasAreaLights){
+            if (hasLTCLights){
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
                 code += "   dSpecularLight *= dSpecularity;\n";
@@ -1484,8 +1484,8 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
-                if (light._shape === LIGHTSHAPE_RECT) {
-                    code += "   gRectCoords = getRectAreaLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
+                    code += "   gLTCCoords = getLTCLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
                 }
 
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1533,15 +1533,21 @@ var standard = {
                     }
                 }
 
-                if (light._shape === LIGHTSHAPE_RECT) {
-                    // rect lights do not mix diffuse lighting into specular attenuation
-                    code += "       dAttenD = getLightDiffuse_LTC();\n";
-                } else {
-                    code += "       dAtten *= getLightDiffuse();\n";
+                // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
+                switch (light._shape) {
+                    case LIGHTSHAPE_RECT:
+                        code += "       dAttenD = getRectLightDiffuse();\n";
+                        break;
+                    case LIGHTSHAPE_DISK:
+                        code += "       dAttenD = getDiskLightDiffuse();\n";
+                        break;
+                    case LIGHTSHAPE_PUNCTUAL:
+                    default:
+                        code += "       dAtten *= getLightDiffuse();\n";
+                        break;
                 }
 
                 if (light.castShadows && !options.noShadow) {
-
                     var shadowReadMode = null;
                     var evsmExp;
                     if (light._shadowType === SHADOW_VSM8) {
@@ -1583,37 +1589,38 @@ var standard = {
                     }
                 }
 
-                if (light._shape === LIGHTSHAPE_RECT) {
-                    // rect lights do not mix diffuse lighting into specular attenuation
-                    code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                // non-punctual lights do not mix diffuse lighting into specular attenuation
+                switch (light._shape) {
+                    case LIGHTSHAPE_RECT:
+                    case LIGHTSHAPE_DISK:
+                        code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        break;
+                    case LIGHTSHAPE_PUNCTUAL:
+                    default:
+                        code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        break;
+                }
 
-                    // rect lights have custom fresnel and does not use the frsenel which is baked into specularity
-                    if (options.clearCoat > 0 ) {
-                        code += "       ccSpecularLight += getLightSpecularCC_LTC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    }
-
-                    if (options.useSpecular) {
-                        code += "       dSpecularLight += getLightSpecular_LTC()* dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    }
-                } else {
-                    code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-
-                    if (hasAreaLights) {
-                        // if rect lights are present, standard and rect lights should accumulate specular light pre-multiplied by specularity because rect lights have custom fresnel
-                        if (options.clearCoat > 0 ) {
-                            code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                switch (light._shape) {
+                    case LIGHTSHAPE_RECT:
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getRectLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getRectLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        break;
+                    case LIGHTSHAPE_DISK:
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getDiskLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getDiskLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        break;
+                    case LIGHTSHAPE_PUNCTUAL:
+                    default:
+                        if (hasLTCLights) {
+                            // if LTC lights are present, specular must be accumulated with specularity
+                            if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                            if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        } else {
+                            if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                            if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         }
-                        if (options.useSpecular) {
-                            code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        }
-                    } else {
-                        if (options.clearCoat > 0 ) {
-                            code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        }
-                        if (options.useSpecular) {
-                            code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        }
-                    }
+                        break;
                 }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
@@ -1623,7 +1630,7 @@ var standard = {
                 code += "\n";
             }
 
-            if (hasAreaLights) {
+            if (hasLTCLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.clearCoat > 0 ) {
                     code += "   ccSpecularity = vec3(1);\n";

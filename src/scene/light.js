@@ -12,7 +12,7 @@ import {
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT
+    LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
 
 import { Application } from '../framework/application.js';
@@ -439,7 +439,7 @@ Object.defineProperty(Light.prototype, 'shape', {
         if (this._shape === value)
             return;
 
-        if (value === LIGHTSHAPE_RECT) {
+        if (value !== LIGHTSHAPE_PUNCTUAL) {
             this.uploadAreaLightLUTs();
         }
 

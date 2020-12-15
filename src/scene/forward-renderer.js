@@ -36,7 +36,7 @@ import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
-    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_PUNCTUAL,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
@@ -1002,7 +1002,7 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
         // rectangle shape
-        if (spot.shape === LIGHTSHAPE_RECT) {
+        if (spot.shape !== LIGHTSHAPE_PUNCTUAL) {
             var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
             this.lightWidth[cnt][0] = hWidth.x;
             this.lightWidth[cnt][1] = hWidth.y;
@@ -1018,7 +1018,6 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Spots shine down the negative Y axis
         wtm.getY(spot._direction).scale(-1);
-
         spot._direction.normalize();
         this.lightDir[cnt][0] = spot._direction.x;
         this.lightDir[cnt][1] = spot._direction.y;

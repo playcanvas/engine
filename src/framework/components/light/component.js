@@ -54,8 +54,9 @@ import { Component } from '../component.js';
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
  * @property {number} shape The light source shape. Can be:
- * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point
- * * {@link pc.LIGHTSHAPE_RECT}: Rectangle
+ * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
+ * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
  * Affects spot lights only. Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
