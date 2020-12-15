@@ -1,136 +1,27 @@
-import { now } from  '../core/time.js';
+import { now } from  '../../core/time.js';
 
-import { Vec3 } from '../math/vec3.js';
-import { Mat4 } from '../math/mat4.js';
+import { Vec3 } from '../../math/vec3.js';
+import { Mat4 } from '../../math/mat4.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
-} from '../graphics/graphics.js';
-import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
+} from '../../graphics/graphics.js';
 
-import { LAYERID_WORLD, SPRITE_RENDERMODE_SIMPLE } from './constants.js';
-import { Mesh } from './mesh.js';
-import { MeshInstance } from './mesh-instance.js';
-import { Model } from './model.js';
-import { SkinInstance } from './skin-instance.js';
+import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 
-/**
- * @class
- * @name pc.Batch
- * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
- * @param {pc.MeshInstance[]} meshInstances - The mesh instances to be batched.
- * @param {boolean} dynamic - Whether this batch is dynamic (supports transforming mesh instances at runtime).
- * @param {number} batchGroupId - Link this batch to a specific batch group. This is done automatically with default batches.
- * @property {pc.MeshInstance[]} origMeshInstances An array of original mesh instances, from which this batch was generated.
- * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
- * @property {pc.Model} model A handy model object.
- * @property {boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
- * @property {number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
- */
-function Batch(meshInstances, dynamic, batchGroupId) {
-    this.origMeshInstances = meshInstances;
-    this._aabb = new BoundingBox();
-    this.meshInstance = null;
-    this.model = null;
-    this.dynamic = dynamic;
-    this.batchGroupId = batchGroupId;
-    this.refCounter = 0;
-}
+import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
+import { Mesh } from '../mesh.js';
+import { MeshInstance } from '../mesh-instance.js';
+import { Model } from '../model.js';
 
-/**
- * @class
- * @name pc.BatchGroup
- * @classdesc Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
- * @param {number} id - Unique id. Can be assigned to model and element components.
- * @param {string} name - The name of the group.
- * @param {boolean} dynamic - Whether objects within this batch group should support transforming at runtime.
- * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
- * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
- * @param {number[]} [layers] - Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
- * to these layers. Layers of source models will be ignored.
- * @property {boolean} dynamic Whether objects within this batch group should support transforming at runtime.
- * @property {number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
- * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
- * @property {number} id Unique id. Can be assigned to model and element components.
- * @property {string} name Name of the group.
- * @property {number[]} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
- * to these layers. Layers of source models will be ignored.
- */
-function BatchGroup(id, name, dynamic, maxAabbSize, layers) {
-    this.dynamic = dynamic;
-    this.maxAabbSize = maxAabbSize;
-    this.id = id;
-    this.name = name;
-    this.layers = layers === undefined ? [LAYERID_WORLD] : layers;
-    this._ui = false;
-    this._sprite = false;
-    this._obj = {
-        model: [],
-        element: [],
-        sprite: [],
-        render: []
-    };
-}
-
-BatchGroup.MODEL = 'model';
-BatchGroup.ELEMENT = 'element';
-BatchGroup.SPRITE = 'sprite';
-BatchGroup.RENDER = 'render';
-
-// Class derived from SkinInstance with changes to make it suitable for batching
-function SkinBatchInstance(device, nodes, rootNode) {
-    SkinInstance.call(this);
-
-    var numBones = nodes.length;
-    SkinInstance.prototype.init.call(this, device, numBones);
-
-    this.device = device;
-    this.rootNode = rootNode;
-
-    // Unique bones per clone
-    this.bones = nodes;
-}
-
-SkinBatchInstance.prototype = Object.create(SkinInstance.prototype);
-SkinBatchInstance.prototype.constructor = SkinBatchInstance;
-
-Object.assign(SkinBatchInstance.prototype, {
-    updateMatrices: function (rootNode, skinUpdateIndex) {
-    },
-
-    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
-        var pe;
-        var mp = this.matrixPalette;
-        var base;
-
-        var count = this.bones.length;
-        for (var i = 0; i < count; i++) {
-            pe = this.bones[i].getWorldTransform().data;
-
-            // Copy the matrix into the palette, ready to be sent to the vertex shader, transpose matrix from 4x4 to 4x3 format as well
-            base = i * 12;
-            mp[base] = pe[0];
-            mp[base + 1] = pe[4];
-            mp[base + 2] = pe[8];
-            mp[base + 3] = pe[12];
-            mp[base + 4] = pe[1];
-            mp[base + 5] = pe[5];
-            mp[base + 6] = pe[9];
-            mp[base + 7] = pe[13];
-            mp[base + 8] = pe[2];
-            mp[base + 9] = pe[6];
-            mp[base + 10] = pe[10];
-            mp[base + 11] = pe[14];
-        }
-
-        SkinInstance.prototype.uploadBones.call(this, this.device);
-    }
-});
+import { Batch } from './batch.js';
+import { BatchGroup } from './batch-group.js';
+import { SkinBatchInstance } from './skin-batch-instance.js';
 
 /**
  * @class
@@ -1092,4 +983,4 @@ BatchManager.prototype.decrement = function (batch) {
     }
 };
 
-export { Batch, BatchGroup, BatchManager };
+export { BatchManager };
