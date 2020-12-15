@@ -70,7 +70,6 @@
 
         uniform mat4   matrix_viewProjection;
         uniform mat4   matrix_model;
-        uniform mat4   matrix_view;
 
         // Color to fragment program
         varying vec4 outColor;
@@ -78,8 +77,6 @@
 
         void main(void)
         {
-            // Transform the geometry
-            mat4 modelView = matrix_view * matrix_model;
             mat4 modelViewProj = matrix_viewProjection * matrix_model;
             gl_Position = modelViewProj * aPosition;
 
