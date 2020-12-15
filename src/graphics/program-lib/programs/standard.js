@@ -12,7 +12,7 @@ import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
-    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
@@ -1488,7 +1488,11 @@ var standard = {
                 usesCookieNow = false;
 
                 if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
-                    code += "   gLTCCoords = getLTCLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                    if (light._shape === LIGHTSHAPE_SPHERE) {
+                        code += "   gLTCCoords = getSphereLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                    } else {
+                        code += "   gLTCCoords = getLTCLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                    }
                 }
 
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1537,12 +1541,20 @@ var standard = {
                 }
 
                 // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
+
                 switch (light._shape) {
                     case LIGHTSHAPE_RECT:
                         code += "       dAttenD = getRectLightDiffuse();\n";
                         break;
                     case LIGHTSHAPE_DISK:
-                        code += "       dAttenD = getDiskLightDiffuse();\n";
+                        if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                            code += "       dAttenD *= getLightDiffuse();\n";
+                        } else {
+                            code += "       dAttenD = getDiskLightDiffuse();\n";
+                        }
+                        break;
+                    case LIGHTSHAPE_SPHERE:
+                        code += "       dAttenD = getSphereLightDiffuse();\n";
                         break;
                     case LIGHTSHAPE_PUNCTUAL:
                     default:
@@ -1596,6 +1608,7 @@ var standard = {
                 switch (light._shape) {
                     case LIGHTSHAPE_RECT:
                     case LIGHTSHAPE_DISK:
+                    case LIGHTSHAPE_SPHERE:
                         code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         break;
                     case LIGHTSHAPE_PUNCTUAL:
@@ -1612,6 +1625,10 @@ var standard = {
                     case LIGHTSHAPE_DISK:
                         if (options.clearCoat > 0 ) code += "       ccSpecularLight += getDiskLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         if (options.useSpecular) code += "       dSpecularLight += getDiskLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        break;
+                    case LIGHTSHAPE_SPHERE:
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getSphereLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getSphereLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                         break;
                     case LIGHTSHAPE_PUNCTUAL:
                     default:

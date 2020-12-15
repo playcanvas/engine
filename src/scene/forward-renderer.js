@@ -882,11 +882,9 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     setLTCDirectionallLight: function (wtm, cnt, dir, pos) {
-        // var dist = 100.0;
-
-        this.lightPos[cnt][0] = pos.x;// + dir.x * dist;
-        this.lightPos[cnt][1] = pos.y;// + dir.y * dist;
-        this.lightPos[cnt][2] = pos.z;// + dir.z * dist;
+        this.lightPos[cnt][0] = pos.x;
+        this.lightPos[cnt][1] = pos.y;
+        this.lightPos[cnt][2] = pos.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
         var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));

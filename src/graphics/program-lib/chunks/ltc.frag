@@ -92,6 +92,21 @@ Coords getLTCLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	return coords;
 }
 
+Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
+	Coords coords;
+	float radius = length(halfWidth);
+
+	vec3 f = normalize(lightPos-view_position);
+	vec3 w = normalize(cross(f, halfHeight));
+	vec3 h = normalize(cross(f, w));
+
+	coords.coord0 = lightPos + w*radius - h*radius;
+	coords.coord1 = lightPos - w*radius - h*radius;
+	coords.coord2 = lightPos - w*radius + h*radius;
+	coords.coord3 = lightPos + w*radius + h*radius;
+	return coords;
+}
+
 // An extended version of the implementation from
 // "How to solve a cubic equation, revisited"
 // http://momentsingraphics.de/?p=105
@@ -306,8 +321,14 @@ float getRectLightDiffuse() {
 	return LTC_EvaluateRect( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), gLTCCoords );
 }
 
-float getDiskLightDiffuse() {
+float getDiskLightDiffuse() {	
 	return LTC_EvaluateDisk( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), gLTCCoords );
+}
+
+float getSphereLightDiffuse() {
+	return getLightDiffuse();
+	// TODO: implement a cheaper approximation: distance based wrap lighting
+//	return LTC_EvaluateDisk( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), gLTCCoords );
 }
 
 void calcLTCLightSpecularCommon(float tGlossiness, vec3 tNormalW, vec3 tSpecularity, out mat3 mInv, out vec3 fresnel)
@@ -359,6 +380,16 @@ vec3 getDiskLightSpecular() {
 
 #ifdef CLEARCOAT
 vec3 getDiskLightSpecularCC() {
+    return calcDiskLightSpecular(ccGlossiness, ccNormalW, ccSpecularity_LTC);
+}
+#endif
+
+vec3 getSphereLightSpecular() {
+    return calcDiskLightSpecular(dGlossiness, dNormalW, dSpecularity_LTC);
+}
+
+#ifdef CLEARCOAT
+vec3 getSphereLightSpecularCC() {
     return calcDiskLightSpecular(ccGlossiness, ccNormalW, ccSpecularity_LTC);
 }
 #endif

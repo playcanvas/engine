@@ -57,6 +57,7 @@ import { Component } from '../component.js';
  * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
  * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
  * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
+ * * {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
  * Affects spot lights only. Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows

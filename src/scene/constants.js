@@ -222,6 +222,14 @@ export var LIGHTSHAPE_DISK = 2;
 
 /**
  * @constant
+ * @name pc.LIGHTSHAPE_SPHERE
+ * @type {number}
+ * @description Sphere shape of light source.
+ */
+export var LIGHTSHAPE_SPHERE = 3;
+
+/**
+ * @constant
  * @name pc.LIGHTFALLOFF_LINEAR
  * @type {number}
  * @description Linear distance falloff model for light attenuation.
