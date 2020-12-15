@@ -62,53 +62,53 @@
 </head>
 
 <body>
-        <!-- shaders -->
-        <script id="vshader" type="x-shader/x-vertex">
-            // Attributes per vertex: position
-            attribute vec4 aPosition;
-            attribute vec4 aColor;
+    <!-- shaders -->
+    <script id="vshader" type="x-shader/x-vertex">
+        // Attributes per vertex: position
+        attribute vec4 aPosition;
+        attribute vec4 aColor;
 
-            uniform mat4   matrix_viewProjection;
-            uniform mat4   matrix_model;
-            uniform mat4   matrix_view;
+        uniform mat4   matrix_viewProjection;
+        uniform mat4   matrix_model;
+        uniform mat4   matrix_view;
 
-            // Color to fragment program
-            varying vec4 outColor;
+        // Color to fragment program
+        varying vec4 outColor;
 
 
-            void main(void)
-            {
-                // Transform the geometry
-                mat4 modelView = matrix_view * matrix_model;
-                mat4 modelViewProj = matrix_viewProjection * matrix_model;
-                gl_Position = modelViewProj * aPosition;
+        void main(void)
+        {
+            // Transform the geometry
+            mat4 modelView = matrix_view * matrix_model;
+            mat4 modelViewProj = matrix_viewProjection * matrix_model;
+            gl_Position = modelViewProj * aPosition;
 
-                gl_PointSize = 1.5;
+            gl_PointSize = 1.5;
+        
+            outColor = aColor;
+        }
+    </script>
+
+    <script id="fshader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 outColor;
+
+        void main(void)
+        {
+            float r = 0.0, delta = 0.0, alpha = 1.0;
             
-                outColor = aColor;
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            r = dot(cxy, cxy);
+        
+            if (r > 1.0) {
+                discard;
             }
-        </script>
-
-        <script id="fshader" type="x-shader/x-fragment">
-            precision mediump float;
-            varying vec4 outColor;
-    
-            void main(void)
-            {
-                float r = 0.0, delta = 0.0, alpha = 1.0;
+            
                 
-                vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-                r = dot(cxy, cxy);
-            
-                if (r > 1.0) {
-                    discard;
-                }
-             
-                    
-                // just output color supplied by vertex shader
-                gl_FragColor = outColor;
-            }
-        </script>
+            // just output color supplied by vertex shader
+            gl_FragColor = outColor;
+        }
+    </script>
     <div class="overlay no-display">
         <div class="formatDisplay">
             <h3 id="formatName"></h3>
