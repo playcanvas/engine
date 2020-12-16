@@ -142,6 +142,17 @@ SceneRegistry.prototype.remove = function (name) {
     }
 };
 
+/**
+ * @function
+ * @name pc.SceneRegistry#loadSceneData
+ * @description Use to load the scene data and handles caching of that data to reduce the number of the network
+ * requests when the same scenes are loaded multiple times. Can also be used to load data ahead of
+ * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry.loadSceneSettings} calls to make
+ * scene loading quicker for the user.
+ * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.callbacks.LoadSceneData} callback - The function to call after loading,
+ * passed (err, sceneItem) where err is null if no errors occurred.
+ */
 SceneRegistry.prototype.loadSceneData = function (sceneItem, callback) {
     // If it's a sceneItem, we want to be able to cache the data
     // that is loaded so we don't do a subsequent http requests
@@ -195,6 +206,28 @@ SceneRegistry.prototype.loadSceneData = function (sceneItem, callback) {
         sceneItem._loaded = true;
         callback(err, sceneItem);
     });
+};
+
+/**
+ * @function
+ * @name pc.SceneRegistry#unloadSceneData
+ * @description Unloads scene data that has been loaded previously.
+ * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ */
+SceneRegistry.prototype.unloadSceneData = function (sceneItem, callback) {
+    var url = sceneItem;
+
+    if (sceneItem instanceof SceneRegistryItem) {
+        url = sceneItem.url;
+    } else {
+        var sceneItem = this.findByUrl(url);
+        if (!sceneItem) {
+            sceneItem = new SceneRegistryItem('Untitled', url);
+        }
+    }
+
+    sceneItem.data = null;
+    sceneItem._loaded = false;
 };
 
 /**
@@ -275,19 +308,9 @@ SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
 SceneRegistry.prototype.loadSceneSettings = function (sceneItem, callback) {
     var self = this;
 
-    var url = sceneItem;
-    if (url instanceof SceneRegistryItem) {
-        url = sceneItem.url;
-    }
-
-    // include asset prefix if present
-    if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
-        url = path.join(this._app.assets.prefix, url);
-    }
-
-    this._app.loader.load(url, "scenesettings", function (err, settings) {
+    this.loadSceneData(sceneItem, function (err, sceneItem) {
         if (!err) {
-            self._app.applySceneSettings(settings);
+            self._app.applySceneSettings(sceneItem.data.settings);
             if (callback) {
                 callback(null);
             }
