@@ -32,7 +32,7 @@ import {
     SHADER_DEPTH,
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
-import { BatchManager } from '../scene/batching.js';
+import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { ImmediateData, LineBatch } from '../scene/immediate.js';

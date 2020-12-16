@@ -1,5 +1,5 @@
 import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../scene/constants.js';
-import { BatchGroup } from '../../../scene/batching.js';
+import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { SkinInstance } from '../../../scene/skin-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
