@@ -667,7 +667,7 @@ Object.assign(AssetRegistry.prototype, {
      * var asset = app.assets.find("myTextureAsset", "texture");
      */
     find: function (name, type) {
-        // findAll returns an empty array the asset cannot be found so asset is
+        // findAll returns an empty array the if the asset cannot be found so `asset` is
         // never null/undefined
         var asset = this.findAll(name, type);
         return asset.length > 0 ? asset[0] : null;
