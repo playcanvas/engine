@@ -965,9 +965,6 @@ Object.assign(GraphicsDevice.prototype, {
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     },
 
-
-
-
     initializeContextCaches: function () {
 
         // Shader code to WebGL shader cache
