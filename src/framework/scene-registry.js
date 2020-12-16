@@ -142,6 +142,60 @@ SceneRegistry.prototype.remove = function (name) {
     }
 };
 
+SceneRegistry.prototype.loadSceneData = function (sceneItem, callback) {
+    // If it's a sceneItem, we want to be able to cache the data
+    // that is loaded so we don't do a subsequent http requests
+    // on the same scene later
+
+    // If it's just a URL then attempt to find the scene item in
+    // the registry else create a temp SceneRegistryItem to use
+    // for this function
+    var url = sceneItem;
+
+    if (sceneItem instanceof SceneRegistryItem) {
+        url = sceneItem.url;
+    } else {
+        var sceneItem = this.findByUrl(url);
+        if (!sceneItem) {
+            sceneItem = new SceneRegistryItem('Untitled', url);
+        }
+    }
+
+    if (!sceneItem.url) {
+        callback("URL or SceneRegistryItem is null when loading a scene");
+        return;
+    }
+
+    // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+    // Split loading into load and open
+    var handler = this._app.loader.getHandler("hierarchy");
+
+    // include asset prefix if present
+    if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+        url = path.join(this._app.assets.prefix, url);
+    }
+
+    if (sceneItem._loading) {
+        callback("Scene " + sceneItem.name + " is already loading");
+        return;
+    }
+
+    // If we have the data already loaded, no need to do another HTTP request
+    if (sceneItem._loaded) {
+        callback(null, sceneItem);
+        return;
+    }
+
+    sceneItem._loading = true;
+
+    handler.load(url, function (err, data) {
+        sceneItem.data = data;
+
+        sceneItem._loading = false;
+        sceneItem._loaded = true;
+        callback(err, sceneItem);
+    });
+};
 
 /**
  * @function
@@ -165,25 +219,16 @@ SceneRegistry.prototype.remove = function (name) {
 SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
     var self = this;
 
-    var url = sceneItem;
-    if (url instanceof SceneRegistryItem) {
-        url = sceneItem.url;
-    }
-
-    // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-    // Split loading into load and open
     var handler = this._app.loader.getHandler("hierarchy");
 
-    // include asset prefix if present
-    if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
-        url = path.join(this._app.assets.prefix, url);
-    }
-
-    handler.load(url, function (err, data) {
+    this.loadSceneData(sceneItem, function (err, sceneItem) {
         if (err) {
             if (callback) callback(err);
             return;
         }
+
+        var url = sceneItem. url;
+        var data = sceneItem.data;
 
         // called after scripts are preloaded
         var _loaded = function () {
@@ -205,7 +250,7 @@ SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
         };
 
         // load priority and referenced scripts before opening scene
-        self._app._preloadScripts(data, _loaded);
+        self._app._preloadScripts(sceneItem.data, _loaded);
     });
 };
 
@@ -258,8 +303,9 @@ SceneRegistry.prototype.loadSceneSettings = function (sceneItem, callback) {
 /**
  * @function
  * @name  pc.SceneRegistry#loadScene
- * @description Load the scene hierarchy and scene settings. This is an internal method used
- * by the pc.Application.
+ * @description Load the scene hierarchy and scene settings for the very start of the application.
+ * This is an internal method used by the pc.Application. Unless you are an engine only user and
+ * loading the very first scene, please do not use.
  * @param {string} url - The URL of the scene file.
  * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
  * applied. Passed (err, scene) where err is null if no error occurred and scene is the
