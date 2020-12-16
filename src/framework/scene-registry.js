@@ -12,11 +12,27 @@ import { ComponentSystem } from './components/system.js';
  * @param {string} url - The url of the scene file.
  * @property {string} name - The name of the scene.
  * @property {string} url - The url of the scene file.
+ * @property {boolean} loaded - Returns true if the scene data is still being loaded
  */
 function SceneRegistryItem(name, url) {
     this.name = name;
     this.url = url;
+    this.data = null;
+    this._loaded = false;
+    this._loading = false;
 }
+
+Object.defineProperty(SceneRegistryItem.prototype, "loaded", {
+    get: function () {
+        return this._loaded;
+    }
+});
+
+Object.defineProperty(SceneRegistryItem.prototype, "loading", {
+    get: function () {
+        return this._loading;
+    }
+});
 
 /**
  * @class
@@ -132,13 +148,13 @@ SceneRegistry.prototype.remove = function (name) {
  * @name pc.SceneRegistry#loadSceneHierarchy
  * @description Load a scene file, create and initialize the Entity hierarchy
  * and add the hierarchy to the application root Entity.
- * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
  * passed (err, entity) where err is null if no errors occurred.
  * @example
  *
- * var url = app.scenes.getSceneUrl("Scene Name");
- * app.scenes.loadSceneHierarchy(url, function (err, entity) {
+ * var sceneItem = app.scenes.find("Scene Name");
+ * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
  *     if (!err) {
  *         var e = app.root.find("My New Entity");
  *     } else {
@@ -146,8 +162,13 @@ SceneRegistry.prototype.remove = function (name) {
  *     }
  * });
  */
-SceneRegistry.prototype.loadSceneHierarchy = function (url, callback) {
+SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
     var self = this;
+
+    var url = sceneItem;
+    if (url instanceof SceneRegistryItem) {
+        url = sceneItem.url;
+    }
 
     // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
     // Split loading into load and open
@@ -192,22 +213,27 @@ SceneRegistry.prototype.loadSceneHierarchy = function (url, callback) {
  * @function
  * @name pc.SceneRegistry#loadSceneSettings
  * @description Load a scene file and apply the scene settings to the current scene.
- * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
+ * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
  * are applied. Passed (err) where err is null if no error occurred.
  * @example
  *
- * var url = app.getSceneUrl("Scene Name");
- * app.loadSceneSettings(url, function (err) {
+ * var sceneItem = app.scenes.find("Scene Name");
+ * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
  *     if (!err) {
- *       // success
+ *         var e = app.root.find("My New Entity");
  *     } else {
- *       // error
+ *         // error
  *     }
  * });
  */
-SceneRegistry.prototype.loadSceneSettings = function (url, callback) {
+SceneRegistry.prototype.loadSceneSettings = function (sceneItem, callback) {
     var self = this;
+
+    var url = sceneItem;
+    if (url instanceof SceneRegistryItem) {
+        url = sceneItem.url;
+    }
 
     // include asset prefix if present
     if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
