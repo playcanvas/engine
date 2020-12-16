@@ -24,6 +24,15 @@ function Graph(name, app, watermark, textRefreshRate, timer) {
 }
 
 Object.assign(Graph.prototype, {
+
+    // called when context was lost, function releases all context related resources
+    loseContext: function () {
+        // if timer implements loseContext
+        if (this.timer && (typeof this.timer.loseContext === 'function')) {
+            this.timer.loseContext();
+        }
+    },
+
     update: function (ms) {
         var timings = this.timer.timings;
 
