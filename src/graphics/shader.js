@@ -54,7 +54,6 @@ function Shader(graphicsDevice, definition) {
 Object.assign(Shader.prototype, {
 
     init: function () {
-
         this.attributes = [];
         this.uniforms = [];
         this.samplers = [];
