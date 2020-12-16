@@ -105,7 +105,6 @@ Object.assign(IndexBuffer.prototype, {
 
     // called when context was lost, function releases all context related resources
     loseContext: function () {
-
         this.bufferId = undefined;
     },
 
