@@ -247,20 +247,10 @@ var GraphicsDevice = function (canvas, options) {
 
     var i;
     this.canvas = canvas;
-    this.shader = null;
-    this.indexBuffer = null;
-    this.vertexBuffers = [];
     this._enableAutoInstancing = false;
     this.autoInstancingMaxObjects = 16384;
     this.defaultFramebuffer = null;
-    this.boundVao = null;
-    this.transformFeedbackBuffer = null;
-    this.activeFramebuffer = null;
-    this.textureUnit = 0;
-    this.textureUnits = [];
     this._maxPixelRatio = 1;
-    this.renderTarget = null;
-    this.feedback = null;
 
     // local width/height without pixelRatio applied
     this._width = 0;
@@ -268,18 +258,11 @@ var GraphicsDevice = function (canvas, options) {
 
     this.updateClientRect();
 
-    // Shader code to WebGL shader cache
-    this.vertexShaderCache = {};
-    this.fragmentShaderCache = {};
-
     // Array of WebGL objects that need to be re-initialized after a context restore event
     this.shaders = [];
     this.buffers = [];
     this.textures = [];
     this.targets = [];
-
-    // cache of VAOs
-    this._vaoMap = new Map();
 
     // Add handlers for when the WebGL context is lost or restored
     this.contextLost = false;
@@ -287,6 +270,7 @@ var GraphicsDevice = function (canvas, options) {
     this._contextLostHandler = function (event) {
         event.preventDefault();
         this.contextLost = true;
+        this.loseContext();
         // #ifdef DEBUG
         console.log('pc.GraphicsDevice: WebGL context lost.');
         // #endif
@@ -297,7 +281,7 @@ var GraphicsDevice = function (canvas, options) {
         // #ifdef DEBUG
         console.log('pc.GraphicsDevice: WebGL context restored.');
         // #endif
-        this.initializeContext();
+        this.restoreContext();
         this.contextLost = false;
         this.fire('devicerestored');
     }.bind(this);
@@ -344,10 +328,7 @@ var GraphicsDevice = function (canvas, options) {
     this.initializeExtensions();
     this.initializeCapabilities();
     this.initializeRenderState();
-
-    for (i = 0; i < this.maxCombinedTextures; i++) {
-        this.textureUnits.push([null, null, null]);
-    }
+    this.initializeContextCaches();
 
     this.defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -693,7 +674,8 @@ var GraphicsDevice = function (canvas, options) {
     // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
     this.grabPassAvailable = true;
 
-    this.createGrabPass(options.alpha);
+    this.grabPassApha = options.alpha;
+    this.createGrabPass();
 
     VertexFormat.init(this);
 
@@ -983,60 +965,91 @@ Object.assign(GraphicsDevice.prototype, {
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     },
 
-    initializeContext: function () {
+
+
+
+    initializeContextCaches: function () {
+
+        // Shader code to WebGL shader cache
+        this.vertexShaderCache = {};
+        this.fragmentShaderCache = {};
+
+        // cache of VAOs
+        this._vaoMap = new Map();
+
+        this.boundVao = null;
+        this.indexBuffer = null;
+        this.vertexBuffers = [];
+        this.shader = null;
+        this.renderTarget = null;
+        this.activeFramebuffer = null;
+        this.feedback = null;
+        this.transformFeedbackBuffer = null;
+
+        this.textureUnit = 0;
+        this.textureUnits = [];
+        for (var i = 0; i < this.maxCombinedTextures; i++) {
+            this.textureUnits.push([null, null, null]);
+        }
+    },
+
+    loseContext: function () {
+
+        // release shaders
+        var i;
+        for (i = 0; i < this.shaders.length; i++) {
+            this.shaders[i].loseContext();
+        }
+
+        // grab pass
+        this.destroyGrabPass();
+
+        // release textures - they will be recreated with new context
+        while (this.textures.length > 0) {
+            var texture = this.textures[0];
+            this.destroyTexture(texture);
+            texture.dirtyAll();
+        }
+
+        // release vertex and index buffers
+        for (i = 0; i < this.buffers.length; i++) {
+            this.buffers[i].loseContext();
+        }
+
+        // Reset all render targets so they'll be recreated as required.
+        // TODO: a solution for the case where a render target contains something
+        // that was previously generated that needs to be re-rendered.
+        for (i = 0; i < this.targets.length; i++) {
+            this.targets[i].loseContext();
+        }
+    },
+
+    restoreContext: function () {
+
         this.initializeExtensions();
         this.initializeCapabilities();
         this.initializeRenderState();
+        this.initializeContextCaches();
 
         // Recompile all shaders (they'll be linked when they're next actually used)
         var i, len;
         for (i = 0, len = this.shaders.length; i < len; i++) {
             this.compileAndLinkShader(this.shaders[i]);
         }
-        this.shader = null;
 
         // Recreate buffer objects and reupload buffer data to the GPU
         for (i = 0, len = this.buffers.length; i < len; i++) {
-            this.buffers[i].bufferId = undefined;
             this.buffers[i].unlock();
         }
-        this.boundVao = null;
-        this.indexBuffer = null;
-        this.vertexBuffers = [];
 
-        // Force all textures to be recreated and reuploaded
-        for (i = 0, len = this.textures.length; i < len; i++) {
-            var texture = this.textures[i];
-            this.destroyTexture(texture);
-            texture.dirtyAll();
-        }
-        this.textureUnit = 0;
-        this.textureUnits.length = 0;
-        for (i = 0; i < this.maxCombinedTextures; i++) {
-            this.textureUnits.push([null, null, null]);
-        }
-
-        // Reset all render targets so they'll be recreated as required.
-        // TODO: a solution for the case where a render target contains something
-        // that was previously generated that needs to be re-rendered.
-        for (i = 0, len = this.targets.length; i < len; i++) {
-            this.targets[i]._glFrameBuffer = undefined;
-            this.targets[i]._glDepthBuffer = undefined;
-            this.targets[i]._glResolveFrameBuffer = undefined;
-            this.targets[i]._glMsaaColorBuffer = undefined;
-            this.targets[i]._glMsaaDepthBuffer = undefined;
-        }
-        this.renderTarget = null;
-        this.activeFramebuffer = null;
-        this.feedback = null;
-        this.transformFeedbackBuffer = null;
+        this.createGrabPass();
     },
 
-    createGrabPass: function (alpha) {
+    createGrabPass: function () {
         if (this.grabPassTexture) return;
 
         var grabPassTexture = new Texture(this, {
-            format: alpha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
+            format: this.grabPassApha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,

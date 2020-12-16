@@ -19,6 +19,14 @@ function GpuTimer(app) {
 }
 
 Object.assign(GpuTimer.prototype, {
+
+    // called when context was lost, function releases all context related resources
+    loseContext: function () {
+        this._freeQueries = [];                     // pool of free queries
+        this._frameQueries = [];                    // current frame's queries
+        this._frames = [];                          // list of previous frame queries
+    },
+
     // mark the beginning of the frame
     begin: function (name) {
         if (!this.enabled) {
