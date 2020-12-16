@@ -139,7 +139,7 @@ describe('pc.AssetRegistry', () => {
 
         this.assets.remove(asset1);
 
-        expect(this.assets.find(asset1.name)).to.equal(undefined);
+        expect(this.assets.find(asset1.name)).to.equal(null);
         expect(this.assets.find(asset2.name)).to.equal(asset2);
         expect(this.assets.find(asset3.name)).to.equal(asset3);
     });
