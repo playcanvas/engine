@@ -36,7 +36,7 @@ var primitiveUv1Padding = 4.0 / 64;
 var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 
 // cached mesh primitives
-var shapePrimitiveMap = new Map();
+var shapePrimitives = [];
 
 function calculateNormals(positions, indices) {
     var triangleCount = indices.length / 3;
@@ -1063,7 +1063,15 @@ function createBox(device, opts) {
 // returns Primitive data, used by ModelComponent and RenderComponent
 function getShapePrimitive(device, type) {
 
-    var primData = shapePrimitiveMap.get(type);
+    // find in cache
+    var primData = null;
+    for (var i = 0; i < shapePrimitives.length; i++) {
+        if (shapePrimitives[i].type === type && shapePrimitives[i].device === device) {
+            primData = shapePrimitives[i].primData;
+        }
+    }
+
+    // not in cache, create new
     if (!primData) {
 
         var mesh, area;
@@ -1104,7 +1112,13 @@ function getShapePrimitive(device, type) {
         }
 
         primData = { mesh: mesh, area: area };
-        shapePrimitiveMap.set(type, primData);
+
+        // add to cache
+        shapePrimitives.push({
+            type: type,
+            device: device,
+            primData: primData
+        });
     }
 
     return primData;
