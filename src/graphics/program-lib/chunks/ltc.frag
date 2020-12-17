@@ -376,7 +376,7 @@ float getDiskLightDiffuse() {
 }
 
 float getSphereLightDiffuse() {
-	return getLightDiffuse();
+	return getLightDiffuse()*0.25;
 	// TODO: implement a cheaper approximation: distance based wrap lighting
 //	return LTC_EvaluateDisk( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
 }

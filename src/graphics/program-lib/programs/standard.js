@@ -1533,12 +1533,23 @@ var standard = {
                         }
                     }
 
-                    if (light._falloffMode === LIGHTFALLOFF_LINEAR && lightShape !== LIGHTSHAPE_SPHERE) {
-                        code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
-                        usesLinearFalloff = true;
+                    if (lightShape === LIGHTSHAPE_PUNCTUAL) {
+                        if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
+                            code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
+                            usesLinearFalloff = true;
+                        } else {
+                            code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
+                            usesInvSquaredFalloff = true;
+                        }
                     } else {
-                        code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
-                        usesInvSquaredFalloff = true;
+                        // non punctual lights uses windowed inverse square falloff
+                        if (lightShape === LIGHTSHAPE_SPHERE) {
+                            code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
+                            usesInvSquaredFalloff = true;
+                        } else {
+                            code += "   dAtten = getFalloffWindow(light" + i + "_radius);\n";
+                            usesInvSquaredFalloff = true;
+                        }
                     }
 
                     code += "   if (dAtten > 0.00001) {\n"; // BRANCH START
@@ -1556,7 +1567,8 @@ var standard = {
                     if (lightType === LIGHTTYPE_DIRECTIONAL) {
                         code += "       dAttenD = getLightDiffuse();\n";
                     } else {
-                        code += "       dAttenD = get" + shapeString + "LightDiffuse();\n";
+                        // 4.0 is a constant that is used to line with the 16.0 constant in getFalloffInvSquared()
+                        code += "       dAttenD = get" + shapeString + "LightDiffuse()*4.0;\n";
                     }
                 } else {
                     code += "       dAtten *= getLightDiffuse();\n";
