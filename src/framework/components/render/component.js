@@ -286,11 +286,13 @@ Object.assign(RenderComponent.prototype, {
         // remove existing instances
         this.destroyMeshInstances();
 
-        var render = this._assetReference.asset.resource;
-        render.off('set:meshes', this._onSetMeshes, this);
-        render.on('set:meshes', this._onSetMeshes, this);
-        if (render.meshes) {
-            this._onSetMeshes(render.meshes);
+        if (this._assetReference.asset) {
+            var render = this._assetReference.asset.resource;
+            render.off('set:meshes', this._onSetMeshes, this);
+            render.on('set:meshes', this._onSetMeshes, this);
+            if (render.meshes) {
+                this._onSetMeshes(render.meshes);
+            }
         }
     },
 
