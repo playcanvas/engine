@@ -1282,6 +1282,7 @@ var standard = {
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy && !hasAreaLights) {
+                        // NB if there are area lights, energy conservation is done differently
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                     } else {
                         code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
@@ -1468,6 +1469,7 @@ var standard = {
             }
 
             if (hasAreaLights){
+                // specular has to be accumulated differently if we want area lights to look correct
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
                 code += "   dReflection.rgb *= dSpecularity;\n";
                 code += "   dSpecularLight *= dSpecularity;\n";
@@ -1475,11 +1477,21 @@ var standard = {
                 code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
             }
 
+            // light source shape support
+            var shapeStringMap = [];
+            shapeStringMap[LIGHTSHAPE_RECT] = 'Rect';
+            shapeStringMap[LIGHTSHAPE_DISK] = 'Disk';
+            shapeStringMap[LIGHTSHAPE_SPHERE] = 'Sphere';
+
+            var lightShape = LIGHTSHAPE_PUNCTUAL;
+            var shapeString = '';
+
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
+                // - different light source shapes
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
@@ -1487,12 +1499,11 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
-                if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
-                    if (light._shape === LIGHTSHAPE_SPHERE) {
-                        code += "   gLTCCoords = getSphereLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
-                    } else {
-                        code += "   gLTCCoords = getLTCLightCoords(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
-                    }
+                lightShape = light._shape;
+                shapeString = shapeStringMap[lightShape];
+
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    code += "   calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
                 }
 
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1522,7 +1533,7 @@ var standard = {
                         }
                     }
 
-                    if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
+                    if (light._falloffMode === LIGHTFALLOFF_LINEAR && lightShape !== LIGHTSHAPE_SPHERE) {
                         code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
                         usesLinearFalloff = true;
                     } else {
@@ -1541,25 +1552,14 @@ var standard = {
                 }
 
                 // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
-
-                switch (light._shape) {
-                    case LIGHTSHAPE_RECT:
-                        code += "       dAttenD = getRectLightDiffuse();\n";
-                        break;
-                    case LIGHTSHAPE_DISK:
-                        if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                            code += "       dAttenD *= getLightDiffuse();\n";
-                        } else {
-                            code += "       dAttenD = getDiskLightDiffuse();\n";
-                        }
-                        break;
-                    case LIGHTSHAPE_SPHERE:
-                        code += "       dAttenD = getSphereLightDiffuse();\n";
-                        break;
-                    case LIGHTSHAPE_PUNCTUAL:
-                    default:
-                        code += "       dAtten *= getLightDiffuse();\n";
-                        break;
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                        code += "       dAttenD = getLightDiffuse();\n";
+                    } else {
+                        code += "       dAttenD = get" + shapeString + "LightDiffuse();\n";
+                    }
+                } else {
+                    code += "       dAtten *= getLightDiffuse();\n";
                 }
 
                 if (light.castShadows && !options.noShadow) {
@@ -1605,42 +1605,32 @@ var standard = {
                 }
 
                 // non-punctual lights do not mix diffuse lighting into specular attenuation
-                switch (light._shape) {
-                    case LIGHTSHAPE_RECT:
-                    case LIGHTSHAPE_DISK:
-                    case LIGHTSHAPE_SPHERE:
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
+                    } else {
                         code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        break;
-                    case LIGHTSHAPE_PUNCTUAL:
-                    default:
+                    }
+                } else {
+                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
+                    } else {
                         code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        break;
+                    }
                 }
 
-                switch (light._shape) {
-                    case LIGHTSHAPE_RECT:
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getRectLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "       dSpecularLight += getRectLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        break;
-                    case LIGHTSHAPE_DISK:
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getDiskLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "       dSpecularLight += getDiskLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        break;
-                    case LIGHTSHAPE_SPHERE:
-                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getSphereLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "       dSpecularLight += getSphereLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        break;
-                    case LIGHTSHAPE_PUNCTUAL:
-                    default:
-                        if (hasAreaLights) {
-                            // if LTC lights are present, specular must be accumulated with specularity
-                            if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                            if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        } else {
-                            if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                            if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        }
-                        break;
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                } else {
+                    if (hasAreaLights) {
+                        // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    } else {
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    }
                 }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {

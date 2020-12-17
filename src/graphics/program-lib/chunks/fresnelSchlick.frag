@@ -2,18 +2,18 @@
 uniform float material_fresnelFactor; // unused
 
 #ifdef HAS_AREA_LIGHTS
-    vec3 dSpecularity_LTC;
+    vec3 dSpecularityNoFres;
 #ifdef CLEARCOAT    
-    vec3 ccSpecularity_LTC;
+    vec3 ccSpecularityNoFres;
 #endif
 #endif
 
 void getFresnel() {
     
 #ifdef HAS_AREA_LIGHTS
-    vec3 dSpecularity_LTC = dSpecularity;
+    vec3 dSpecularityNoFres = dSpecularity;
 #ifdef CLEARCOAT    
-    vec3 ccSpecularity_LTC = ccSpecularity;
+    vec3 ccSpecularityNoFres = ccSpecularity;
 #endif
 #endif
 

@@ -67,7 +67,7 @@
         }
 
         // helper function to create area light including its visual representation in the world
-        function createLight(type, shape, position, scale, color, shadows, range) {
+        function createAreaLight(type, shape, position, scale, color, shadows, range) {
             var lightParent = new pc.Entity();
             lightParent.translate(position);
             app.root.addChild(lightParent);
@@ -87,39 +87,42 @@
                 shadowResolution: 2048                
             });
 
-            // front face quad
-            var frontMaterial = new pc.StandardMaterial();
-            frontMaterial.diffuse = new pc.Color(0, 0, 0);
-            frontMaterial.useLighting = false;
-            frontMaterial.update();
-
-            // add plane that represents the area light
-            if (type === "spot")
-            {
-                light.addComponent("model", {
-                    type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
-                    material: frontMaterial
-                });
-            }
-
+            // emissive material that is the light source color
+            var shapeMaterial = new pc.StandardMaterial();
+            shapeMaterial.emissive = color;
+            shapeMaterial.useLighting = false;
+            shapeMaterial.cull = (shape===pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+            shapeMaterial.update();
+            
+            // primitive shape that matches light source shape            
+            light.addComponent("model", {
+                type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
+                material: shapeMaterial,
+                castShadows: (type === "directional") ? false : true
+            });
             light.setLocalScale(scale, (shape===pc.LIGHTSHAPE_DISK ) ? 0.001 : scale, scale);
             light.setLocalEulerAngles( (type === "directional") ? 90 : 0, 0, 0);
             lightParent.addChild(light);
 
-            // black back face quad
-            var backMaterial = new pc.StandardMaterial();
-            backMaterial.emissive = color;
-            backMaterial.useLighting = false;
-            backMaterial.update();
+            // add black primitive shape if not omni-directional or global directional
+            if (type === "spot")
+            {
+                // black material 
+                var blackMaterial = new pc.StandardMaterial();
+                blackMaterial.diffuse = new pc.Color(0, 0, 0);
+                blackMaterial.useLighting = false;
+                blackMaterial.cull = (shape===pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+                blackMaterial.update();
 
-            var backFace = new pc.Entity();
-            backFace.addComponent("model", {
-                type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
-                material: backMaterial,
-                castShadows: (type === "directional") ? false : true
-            });
-            backFace.setLocalEulerAngles(-180, 0, 0);
-            light.addChild(backFace); 
+                var blackShape = new pc.Entity();
+                blackShape.addComponent("model", {
+                    type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
+                    material: blackMaterial
+                });
+                blackShape.setLocalPosition(0, 0.01/scale, 0);
+                blackShape.setLocalEulerAngles(-180, 0, 0);
+                light.addChild(blackShape);                 
+            }
 
             return lightParent;
         }
@@ -220,12 +223,9 @@
             camera.lookAt(0,1.5,0);
 
             // Create lights with light source shape 
-            light1 = createLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-5, 3, 2), 5, new pc.Color(1, 1, 1), true, 10);
-            light2 = createLight("point", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0),  true, 10);
-            light3 = createLight("directional", pc.LIGHTSHAPE_DISK, new pc.Vec3(0, 500, -2000), 600, new pc.Color(0.7, 0.7, 1),  true, 1000);
-
-            light3.lookAt(camera.getPosition());
-            //light3.rotate(90, 0, 0);
+            light1 = createAreaLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-3, 4, 0), 4, new pc.Color(1, 1, 1), true, 30);
+            light2 = createAreaLight("point", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0),  true, 10);
+            light3 = createAreaLight("directional", pc.LIGHTSHAPE_DISK, new pc.Vec3(0, 500, -2000), 600, new pc.Color(0.7, 0.7, 1),  true, 1000);
         }
 
         // update things each frame
@@ -234,21 +234,21 @@
         app.on("update", function (dt) {
             time += dt;
 
+            var factor1 = (Math.sin(time) + 1) * 0.5;
+            var factor2 = (Math.sin(time * 0.6) + 1) * 0.5;
+            var factor3 = (Math.sin(time * 0.4) + 1) * 0.5;
+
             if (light1) {
-                var factor1 = (Math.sin(time) + 1) * 0.5;
                 light1.setLocalEulerAngles(pc.math.lerp(-90, 110, factor1), 0, 90);
+                light1.setLocalPosition(-4, pc.math.lerp(2, 4, factor3), pc.math.lerp(-2, 2, factor2));
             }
 
             if (light2) {
-                var factor2 = (Math.sin(time * 0.4) + 1) * 0.5;
-                //light2.setLocalEulerAngles(pc.math.lerp(50, 250, factor2), 0, 90);
                 light2.setLocalPosition(5, pc.math.lerp(1, 3, factor1), pc.math.lerp(-2, 2, factor2));
             }
 
             if (light3) {
-                var factor3 = (Math.sin(time * 0.6) + 1) * 0.5;
                 light3.setLocalPosition(pc.math.lerp(-2500, 2500, factor3), 1500, -5000);
-
                 light3.lookAt(camera.getPosition());
             }
         });
