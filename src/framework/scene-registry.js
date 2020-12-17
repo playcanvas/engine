@@ -20,6 +20,7 @@ function SceneRegistryItem(name, url) {
     this.data = null;
     this._loaded = false;
     this._loading = false;
+    this._onLoadedCallbacks = [];
 }
 
 Object.defineProperty(SceneRegistryItem.prototype, "loaded", {
@@ -186,26 +187,29 @@ SceneRegistry.prototype.loadSceneData = function (sceneItem, callback) {
         url = path.join(this._app.assets.prefix, url);
     }
 
-    if (sceneItem._loading) {
-        callback("Scene " + sceneItem.name + " is already loading");
-        return;
-    }
-
     // If we have the data already loaded, no need to do another HTTP request
     if (sceneItem._loaded) {
         callback(null, sceneItem);
         return;
     }
 
+    sceneItem._onLoadedCallbacks.push(callback);
+
+    if (!sceneItem._loading) {
+        handler.load(url, function (err, data) {
+            sceneItem.data = data;
+
+            sceneItem._loading = false;
+            sceneItem._loaded = true;
+            for (var i = 0; i < sceneItem._onLoadedCallbacks.length; i++) {
+                sceneItem._onLoadedCallbacks[i](err, sceneItem);
+            }
+
+            sceneItem._onLoadedCallbacks.length = 0;
+        });
+    }
+
     sceneItem._loading = true;
-
-    handler.load(url, function (err, data) {
-        sceneItem.data = data;
-
-        sceneItem._loading = false;
-        sceneItem._loaded = true;
-        callback(err, sceneItem);
-    });
 };
 
 /**
@@ -260,7 +264,7 @@ SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
             return;
         }
 
-        var url = sceneItem. url;
+        var url = sceneItem.url;
         var data = sceneItem.data;
 
         // called after scripts are preloaded
