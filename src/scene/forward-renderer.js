@@ -881,22 +881,22 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
     },
 
-    setLTCDirectionallLight: function (wtm, cnt, dir, campos) {
-        this.lightPos[cnt][0] = campos.x + dir.x * 2000.0;
-        this.lightPos[cnt][1] = campos.y + dir.y * 2000.0;
-        this.lightPos[cnt][2] = campos.z + dir.z * 2000.0;
+    setLTCDirectionallLight: function (wtm, cnt, dir, campos, far) {
+        this.lightPos[cnt][0] = campos.x - dir.x * far;
+        this.lightPos[cnt][1] = campos.y - dir.y * far;
+        this.lightPos[cnt][2] = campos.z - dir.z * far;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
         var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
-        this.lightWidth[cnt][0] = hWidth.x;
-        this.lightWidth[cnt][1] = hWidth.y;
-        this.lightWidth[cnt][2] = hWidth.z;
+        this.lightWidth[cnt][0] = hWidth.x * far;
+        this.lightWidth[cnt][1] = hWidth.y * far;
+        this.lightWidth[cnt][2] = hWidth.z * far;
         this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
 
         var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
-        this.lightHeight[cnt][0] = hHeight.x;
-        this.lightHeight[cnt][1] = hHeight.y;
-        this.lightHeight[cnt][2] = hHeight.z;
+        this.lightHeight[cnt][0] = hHeight.x * far;
+        this.lightHeight[cnt][1] = hHeight.y * far;
+        this.lightHeight[cnt][2] = hHeight.z * far;
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     },
 
@@ -930,8 +930,8 @@ Object.assign(ForwardRenderer.prototype, {
             this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
             if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
-                // non-punctual shape
-                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition());
+                // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
+                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
             }
 
             if (directional.castShadows) {
