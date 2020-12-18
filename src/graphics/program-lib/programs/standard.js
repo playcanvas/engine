@@ -1560,7 +1560,7 @@ var standard = {
                 // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                        // NB: A better aproximation perhaps using wrap lighting could be implemented here 
+                        // NB: A better aproximation perhaps using wrap lighting could be implemented here
                         code += "       dAttenD = getLightDiffuse();\n";
                     } else {
                         // 16.0 is a constant that is in getFalloffInvSquared()
