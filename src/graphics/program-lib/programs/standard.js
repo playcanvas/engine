@@ -13,7 +13,7 @@ import {
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
@@ -907,7 +907,7 @@ var standard = {
                 code += chunks.alphaTestPS;
             }
 
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_POINT)) {
+            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
                 code += chunks.packDepthPS;
             } else if (shadowType === SHADOW_VSM8) {
                 code += "vec2 encodeFloatRG( float v ) {\n";
@@ -927,13 +927,13 @@ var standard = {
 
             var isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
 
-            if (lightType === LIGHTTYPE_POINT || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
+            if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
                 code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
             } else {
                 code += "   float depth = gl_FragCoord.z;\n";
             }
 
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_POINT)) {
+            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
                 if (device.extStandardDerivatives && !device.webgl2) {
                     code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
                     code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
@@ -1036,7 +1036,7 @@ var standard = {
                 } else {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
-                if (lightType === LIGHTTYPE_POINT) {
+                if (lightType === LIGHTTYPE_OMNI) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
                     if (light._isPcf && device.webgl2) {
@@ -1052,7 +1052,7 @@ var standard = {
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
-                    if (lightType === LIGHTTYPE_POINT) {
+                    if (lightType === LIGHTTYPE_OMNI) {
                         code += "uniform samplerCube light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
@@ -1516,7 +1516,7 @@ var standard = {
                         if (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap) {
                             usesCookie = true;
                             usesCookieNow = true;
-                        } else if (lightType === LIGHTTYPE_POINT && light._cookie._cubemap) {
+                        } else if (lightType === LIGHTTYPE_OMNI && light._cookie._cubemap) {
                             usesCookie = true;
                             usesCookieNow = true;
                         }
@@ -1542,14 +1542,9 @@ var standard = {
                             usesInvSquaredFalloff = true;
                         }
                     } else {
-                        // non punctual lights uses windowed inverse square falloff
-                        if (lightShape === LIGHTSHAPE_SPHERE) {
-                            code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
-                            usesInvSquaredFalloff = true;
-                        } else {
-                            code += "   dAtten = getFalloffWindow(light" + i + "_radius);\n";
-                            usesInvSquaredFalloff = true;
-                        }
+                        // non punctual lights only gets the range window here
+                        code += "   dAtten = getFalloffWindow(light" + i + "_radius);\n";
+                        usesInvSquaredFalloff = true;
                     }
 
                     code += "   if (dAtten > 0.00001) {\n"; // BRANCH START
@@ -1565,10 +1560,11 @@ var standard = {
                 // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                        // NB: A better aproximation perhaps using wrap lighting could be implemented here 
                         code += "       dAttenD = getLightDiffuse();\n";
                     } else {
-                        // 4.0 is a constant that is used to line with the 16.0 constant in getFalloffInvSquared()
-                        code += "       dAttenD = get" + shapeString + "LightDiffuse()*4.0;\n";
+                        // 16.0 is a constant that is in getFalloffInvSquared()
+                        code += "       dAttenD = get" + shapeString + "LightDiffuse() * 16.0;\n";
                     }
                 } else {
                     code += "       dAtten *= getLightDiffuse();\n";
@@ -1597,7 +1593,7 @@ var standard = {
                     }
 
                     if (shadowReadMode !== null) {
-                        if (lightType === LIGHTTYPE_POINT) {
+                        if (lightType === LIGHTTYPE_OMNI) {
                             shadowCoordArgs = "(light" + i + "_shadowMap, light" + i + "_shadowParams);\n";
                             if (light._normalOffsetBias) {
                                 code += "       normalOffsetPointShadow(light" + i + "_shadowParams);\n";

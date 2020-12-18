@@ -47,8 +47,9 @@ import { Component } from '../component.js';
  * entity.light.range = 20;
  * @property {string} type The type of light. Can be:
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
- * * "point": A light that illuminates in all directions from a point.
- * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
+ * * "omni": A omni-directional light that illuminates in all directions from the light source.
+ * * "point": A omni-directional light but light source shape is {@link pc.LIGHTSHAPE_PUNCTUAL}.
+ * * "spot": A omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {pc.Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).

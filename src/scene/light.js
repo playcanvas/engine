@@ -8,7 +8,7 @@ import { Vec4 } from '../math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
@@ -182,7 +182,7 @@ Object.assign(Light.prototype, {
 
             sphere.radius = spotEndPoint.length() * 0.5;
 
-        } else if (this._type === LIGHTTYPE_POINT) {
+        } else if (this._type === LIGHTTYPE_OMNI) {
             sphere.center = this._node.getPosition();
             sphere.radius = this.attenuationEnd;
         }
@@ -201,7 +201,7 @@ Object.assign(Light.prototype, {
 
             box.setFromTransformedAabb(box, node.getWorldTransform());
 
-        } else if (this._type === LIGHTTYPE_POINT) {
+        } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
             box.halfExtents.set(this.attenuationEnd, this.attenuationEnd, this.attenuationEnd);
         }
@@ -465,7 +465,7 @@ Object.defineProperty(Light.prototype, 'shadowType', {
 
         var device = Application.getApplication().graphicsDevice;
 
-        if (this._type === LIGHTTYPE_POINT)
+        if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for point lights is not supported yet
 
         if (value === SHADOW_PCF5 && !device.webgl2) {
@@ -509,7 +509,7 @@ Object.defineProperty(Light.prototype, 'shadowResolution', {
             return;
 
         var device = Application.getApplication().graphicsDevice;
-        if (this._type === LIGHTTYPE_POINT) {
+        if (this._type === LIGHTTYPE_OMNI) {
             value = Math.min(value, device.maxCubeMapSize);
         } else {
             value = Math.min(value, device.maxTextureSize);

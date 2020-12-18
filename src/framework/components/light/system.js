@@ -2,7 +2,7 @@ import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
@@ -20,7 +20,8 @@ import { LightComponentData } from './data.js';
  */
 var lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
-    'point': LIGHTTYPE_POINT,
+    'omni': LIGHTTYPE_OMNI,
+    'point': LIGHTTYPE_OMNI,
     'spot': LIGHTTYPE_SPOT
 };
 

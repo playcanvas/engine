@@ -22,7 +22,7 @@ import { Texture } from '../graphics/texture.js';
 import {
     BAKE_COLORDIR,
     FOG_NONE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM,
@@ -625,7 +625,7 @@ Object.assign(Lightmapper.prototype, {
 
                 if (lights[i]._type === LIGHTTYPE_DIRECTIONAL) {
                     lightArray[LIGHTTYPE_DIRECTIONAL][0] = lights[i];
-                    lightArray[LIGHTTYPE_POINT].length = 0;
+                    lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
                     if (!shadowMapRendered && lights[i].castShadows) {
                         this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
@@ -634,16 +634,16 @@ Object.assign(Lightmapper.prototype, {
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (lights[i]._type === LIGHTTYPE_POINT) {
-                        lightArray[LIGHTTYPE_POINT][0] = lights[i];
+                    if (lights[i]._type === LIGHTTYPE_OMNI) {
+                        lightArray[LIGHTTYPE_OMNI][0] = lights[i];
                         lightArray[LIGHTTYPE_SPOT].length = 0;
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
-                            this.renderer.renderShadows(lightArray[LIGHTTYPE_POINT]);
+                            this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
                             shadowMapRendered = true;
                         }
                     } else {
-                        lightArray[LIGHTTYPE_POINT].length = 0;
+                        lightArray[LIGHTTYPE_OMNI].length = 0;
                         lightArray[LIGHTTYPE_SPOT][0] = lights[i];
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);

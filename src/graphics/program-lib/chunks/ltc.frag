@@ -94,10 +94,13 @@ Coords getLTCLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	coords.coord3 = lightPos + halfWidth + halfHeight;
 	return coords;
 }
-
+//used for simple sphere light falloff
+float dSphereRadius;
 Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	Coords coords;
 	float radius = length(halfWidth);
+
+	dSphereRadius = radius;
 
 	vec3 f = normalize(lightPos-view_position);
 	vec3 w = normalize(cross(f, halfHeight));
@@ -376,9 +379,9 @@ float getDiskLightDiffuse() {
 }
 
 float getSphereLightDiffuse() {
-	return getLightDiffuse()*0.25;
-	// TODO: implement a cheaper approximation: distance based wrap lighting
-//	return LTC_EvaluateDisk( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
+	// NB: this could be improved further with distance based wrap lighting
+	float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
+	return getLightDiffuse()*falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)
