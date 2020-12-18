@@ -183,11 +183,11 @@ export var LAYERID_UI = 4;
 export var LIGHTTYPE_DIRECTIONAL = 0;
 /**
  * @constant
- * @name pc.LIGHTTYPE_POINT
+ * @name pc.LIGHTTYPE_OMNI
  * @type {number}
  * @description Point (local) light source.
  */
-export var LIGHTTYPE_POINT = 1;
+export var LIGHTTYPE_OMNI = 1;
 /**
  * @constant
  * @name pc.LIGHTTYPE_SPOT
@@ -195,13 +195,38 @@ export var LIGHTTYPE_POINT = 1;
  * @description Spot (local) light source.
  */
 export var LIGHTTYPE_SPOT = 2;
+
 /**
  * @constant
- * @name pc.LIGHTTYPE_AREA
+ * @name pc.LIGHTSHAPE_PUNCTUAL
  * @type {number}
- * @description Area (local) light source.
+ * @description Infinitesimally small point light source shape.
  */
-export var LIGHTTYPE_AREA = 3;
+export var LIGHTSHAPE_PUNCTUAL = 0;
+
+/**
+ * @constant
+ * @name pc.LIGHTSHAPE_RECT
+ * @type {number}
+ * @description Rectangle shape of light source.
+ */
+export var LIGHTSHAPE_RECT = 1;
+
+/**
+ * @constant
+ * @name pc.LIGHTSHAPE_DISK
+ * @type {number}
+ * @description Disk shape of light source.
+ */
+export var LIGHTSHAPE_DISK = 2;
+
+/**
+ * @constant
+ * @name pc.LIGHTSHAPE_SPHERE
+ * @type {number}
+ * @description Sphere shape of light source.
+ */
+export var LIGHTSHAPE_SPHERE = 3;
 
 /**
  * @constant

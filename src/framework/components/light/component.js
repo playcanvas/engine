@@ -6,6 +6,7 @@ import { Vec4 } from '../../../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LAYERID_WORLD,
+    LIGHTSHAPE_PUNCTUAL,
     LIGHTFALLOFF_LINEAR,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     SHADOW_PCF3,
@@ -46,13 +47,19 @@ import { Component } from '../component.js';
  * entity.light.range = 20;
  * @property {string} type The type of light. Can be:
  * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
- * * "point": A light that illuminates in all directions from a point.
- * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
- * * "area": A light in the shape of a quad that illuminates in one direction.
+ * * "omni": A omni-directional light that illuminates in all directions from the light source.
+ * * "point": A omni-directional light but light source shape is {@link pc.LIGHTSHAPE_PUNCTUAL}.
+ * * "spot": A omni-directional light but is bounded by a cone.
  * Defaults to "directional".
  * @property {pc.Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
+ * @property {number} shape The light source shape. Can be:
+ * * {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * * {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
+ * * {@link pc.LIGHTSHAPE_DISK}: Disk shape.
+ * * {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
+ * Affects spot lights only. Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
  * are no longer rendered. Affects directional lights only. Defaults to 40.
@@ -159,6 +166,9 @@ var _defineProps = function () {
     }, true);
     _defineProperty("intensity", 1, function (newValue, oldValue) {
         this.light.intensity = newValue;
+    });
+    _defineProperty("shape", LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
+        this.light.shape = newValue;
     });
     _defineProperty("castShadows", false, function (newValue, oldValue) {
         this.light.castShadows = newValue;

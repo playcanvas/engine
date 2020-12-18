@@ -9,4 +9,4 @@ var LTC_MAT_2 = [1, 0, 0, 0, 1, 7.91421e-31, 0, 0, 1, 1.04392e-24, 0, 0, 1, 3.49
 pc.app.scene.areaLightLuts = {
     data1: new Float32Array(LTC_MAT_1),
     data2: new Float32Array(LTC_MAT_2)
-}
+};

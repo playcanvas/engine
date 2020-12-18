@@ -12,7 +12,8 @@ import {
     BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT, LIGHTTYPE_AREA,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
@@ -906,7 +907,7 @@ var standard = {
                 code += chunks.alphaTestPS;
             }
 
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_POINT)) {
+            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
                 code += chunks.packDepthPS;
             } else if (shadowType === SHADOW_VSM8) {
                 code += "vec2 encodeFloatRG( float v ) {\n";
@@ -926,13 +927,13 @@ var standard = {
 
             var isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
 
-            if (lightType === LIGHTTYPE_POINT || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
+            if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
                 code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
             } else {
                 code += "   float depth = gl_FragCoord.z;\n";
             }
 
-            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_POINT)) {
+            if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
                 if (device.extStandardDerivatives && !device.webgl2) {
                     code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
                     code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
@@ -997,10 +998,11 @@ var standard = {
         var light;
 
         var hasAreaLights = options.lights.some(function (light){
-            return light.type === LIGHTTYPE_AREA;
+            return light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
         if (hasAreaLights) {
+            code += "#define HAS_AREA_LIGHTS\n";
             code += "uniform sampler2D areaLightsLutTex1;\n";
             code += "uniform sampler2D areaLightsLutTex2;\n";
         }
@@ -1011,10 +1013,6 @@ var standard = {
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
-            } else if (lightType === LIGHTTYPE_AREA) {
-                code += "uniform vec3 light" + i + "_position;\n";
-                code += "uniform vec3 light" + i + "_halfWidth;\n";
-                code += "uniform vec3 light" + i + "_halfHeight;\n";
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
@@ -1024,6 +1022,13 @@ var standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
+            if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    code += "uniform vec3 light" + i + "_position;\n";
+                }
+                code += "uniform vec3 light" + i + "_halfWidth;\n";
+                code += "uniform vec3 light" + i + "_halfHeight;\n";
+            }
             if (light.castShadows && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
@@ -1031,7 +1036,7 @@ var standard = {
                 } else {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
-                if (lightType === LIGHTTYPE_POINT) {
+                if (lightType === LIGHTTYPE_OMNI) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
                     if (light._isPcf && device.webgl2) {
@@ -1047,7 +1052,7 @@ var standard = {
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
-                    if (lightType === LIGHTTYPE_POINT) {
+                    if (lightType === LIGHTTYPE_OMNI) {
                         code += "uniform samplerCube light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
@@ -1276,7 +1281,8 @@ var standard = {
             if (lighting) code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
-                    if (options.conserveEnergy) {
+                    if (options.conserveEnergy && !hasAreaLights) {
+                        // NB if there are area lights, energy conservation is done differently
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                     } else {
                         code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
@@ -1462,38 +1468,55 @@ var standard = {
                 code += "   addDirLightMap();\n";
             }
 
-
             if (hasAreaLights){
+                // specular has to be accumulated differently if we want area lights to look correct
+                code += "   ccReflection.rgb *= ccSpecularity;\n";
+                code += "   dReflection.rgb *= dSpecularity;\n";
+                code += "   dSpecularLight *= dSpecularity;\n";
+
                 code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
             }
+
+            // light source shape support
+            var shapeStringMap = [];
+            shapeStringMap[LIGHTSHAPE_RECT] = 'Rect';
+            shapeStringMap[LIGHTSHAPE_DISK] = 'Disk';
+            shapeStringMap[LIGHTSHAPE_SPHERE] = 'Sphere';
+
+            var lightShape = LIGHTSHAPE_PUNCTUAL;
+            var shapeString = '';
 
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
+                // - different light source shapes
+
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
                 light = options.lights[i];
                 lightType = light._type;
                 usesCookieNow = false;
 
+                lightShape = light._shape;
+                shapeString = shapeStringMap[lightShape];
+
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    code += "   calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                }
+
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   dLightDirNormW = light" + i + "_direction;\n";
                     code += "   dAtten = 1.0;\n";
-                    code += "   dAtten *= getLightDiffuse();\n";
-                } else if (lightType === LIGHTTYPE_AREA) {
-
-                    code += "   calculateRectAreaLight(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight, light" + i + "_color, roughness, vPositionW, dViewDirW);\n";
-
                 } else {
 
                     if (light._cookie) {
                         if (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap) {
                             usesCookie = true;
                             usesCookieNow = true;
-                        } else if (lightType === LIGHTTYPE_POINT && light._cookie._cubemap) {
+                        } else if (lightType === LIGHTTYPE_OMNI && light._cookie._cubemap) {
                             usesCookie = true;
                             usesCookieNow = true;
                         }
@@ -1510,11 +1533,17 @@ var standard = {
                         }
                     }
 
-                    if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
-                        code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
-                        usesLinearFalloff = true;
+                    if (lightShape === LIGHTSHAPE_PUNCTUAL) {
+                        if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
+                            code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
+                            usesLinearFalloff = true;
+                        } else {
+                            code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
+                            usesInvSquaredFalloff = true;
+                        }
                     } else {
-                        code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
+                        // non punctual lights only gets the range window here
+                        code += "   dAtten = getFalloffWindow(light" + i + "_radius);\n";
                         usesInvSquaredFalloff = true;
                     }
 
@@ -1526,11 +1555,22 @@ var standard = {
                             usesSpot = true;
                         }
                     }
+                }
+
+                // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                        // NB: A better aproximation perhaps using wrap lighting could be implemented here
+                        code += "       dAttenD = getLightDiffuse();\n";
+                    } else {
+                        // 16.0 is a constant that is in getFalloffInvSquared()
+                        code += "       dAttenD = get" + shapeString + "LightDiffuse() * 16.0;\n";
+                    }
+                } else {
                     code += "       dAtten *= getLightDiffuse();\n";
                 }
 
                 if (light.castShadows && !options.noShadow) {
-
                     var shadowReadMode = null;
                     var evsmExp;
                     if (light._shadowType === SHADOW_VSM8) {
@@ -1553,7 +1593,7 @@ var standard = {
                     }
 
                     if (shadowReadMode !== null) {
-                        if (lightType === LIGHTTYPE_POINT) {
+                        if (lightType === LIGHTTYPE_OMNI) {
                             shadowCoordArgs = "(light" + i + "_shadowMap, light" + i + "_shadowParams);\n";
                             if (light._normalOffsetBias) {
                                 code += "       normalOffsetPointShadow(light" + i + "_shadowParams);\n";
@@ -1572,25 +1612,50 @@ var standard = {
                     }
                 }
 
-                if (lightType !== LIGHTTYPE_AREA) {
-                    code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-
-                    if (options.clearCoat > 0 ) {
-                        code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                // non-punctual lights do not mix diffuse lighting into specular attenuation
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
+                    } else {
+                        code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
-
-                    if (options.useSpecular) {
-                        code += "       dAtten *= getLightSpecular();\n";
-                        code += "       dSpecularLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                } else {
+                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                        code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
+                    } else {
+                        code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
 
+                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                    if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                } else {
+                    if (hasAreaLights) {
+                        // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    } else {
+                        if (options.clearCoat > 0 ) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    }
+                }
 
-                if (lightType !== LIGHTTYPE_DIRECTIONAL && lightType !== LIGHTTYPE_AREA) {
+                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
                     code += "   }\n"; // BRANCH END
                 }
 
                 code += "\n";
+            }
+
+            if (hasAreaLights) {
+                // specular has to be accumulated differently if we want area lights to look correct
+                if (options.clearCoat > 0 ) {
+                    code += "   ccSpecularity = vec3(1);\n";
+                }
+                if (options.useSpecular) {
+                    code += "   dSpecularity = vec3(1);\n";
+                }
             }
 
             if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
@@ -1671,6 +1736,7 @@ var standard = {
         if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
+        if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
