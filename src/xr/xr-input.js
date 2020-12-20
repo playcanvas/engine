@@ -84,6 +84,36 @@ XrInput.prototype.constructor = XrInput;
  * @param {object} evt - XRInputSourceEvent event data from WebXR API
  */
 
+/**
+ * @event
+ * @name pc.XrInput#squeeze
+ * @description Fired when {pc.XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
+ * @param {pc.XrInputSource} inputSource - Input source that triggered squeeze event
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ * @example
+ * app.xr.input.on('squeeze', function (inputSource, evt) {
+ *     if (obj.containsPoint(inputSource.getPosition())) {
+ *         // grabbed an object with input source
+ *     }
+ * });
+ */
+
+/**
+ * @event
+ * @name pc.XrInput#squeezestart
+ * @description Fired when {pc.XrInputSource} has started to trigger sqeeze action.
+ * @param {pc.XrInputSource} inputSource - Input source that triggered squeezestart event
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ */
+
+/**
+ * @event
+ * @name pc.XrInput#squeezeend
+ * @description Fired when {pc.XrInputSource} has ended triggerring sqeeze action.
+ * @param {pc.XrInputSource} inputSource - Input source that triggered squeezeend event
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ */
+
 XrInput.prototype._onSessionStart = function () {
     this._session = this.manager.session;
     this._session.addEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
@@ -109,6 +139,27 @@ XrInput.prototype._onSessionStart = function () {
         inputSource._selecting = false;
         inputSource.fire('selectend', evt);
         self.fire('selectend', inputSource, evt);
+    });
+
+    this._session.addEventListener('squeeze', function (evt) {
+        var inputSource = self._getByInputSource(evt.inputSource);
+        inputSource.update(evt.frame);
+        inputSource.fire('squeeze', evt);
+        self.fire('squeeze', inputSource, evt);
+    });
+    this._session.addEventListener('squeezestart', function (evt) {
+        var inputSource = self._getByInputSource(evt.inputSource);
+        inputSource.update(evt.frame);
+        inputSource._squeezing = true;
+        inputSource.fire('squeezestart', evt);
+        self.fire('squeezestart', inputSource, evt);
+    });
+    this._session.addEventListener('squeezeend', function (evt) {
+        var inputSource = self._getByInputSource(evt.inputSource);
+        inputSource.update(evt.frame);
+        inputSource._squeezing = false;
+        inputSource.fire('squeezeend', evt);
+        self.fire('squeezeend', inputSource, evt);
     });
 
     // add input sources
