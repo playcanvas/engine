@@ -90,12 +90,6 @@ XrInput.prototype.constructor = XrInput;
  * @description Fired when {pc.XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
  * @param {pc.XrInputSource} inputSource - Input source that triggered squeeze event
  * @param {object} evt - XRInputSourceEvent event data from WebXR API
- * @example
- * app.xr.input.on('squeeze', function (inputSource, evt) {
- *     if (obj.containsPoint(inputSource.getPosition())) {
- *         // grabbed an object with input source
- *     }
- * });
  */
 
 /**
@@ -104,6 +98,12 @@ XrInput.prototype.constructor = XrInput;
  * @description Fired when {pc.XrInputSource} has started to trigger sqeeze action.
  * @param {pc.XrInputSource} inputSource - Input source that triggered squeezestart event
  * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ * @example
+ * app.xr.input.on('squeezestart', function (inputSource, evt) {
+ *     if (obj.containsPoint(inputSource.getPosition())) {
+ *         // grabbed an object
+ *     }
+ * });
  */
 
 /**
