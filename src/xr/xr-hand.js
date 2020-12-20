@@ -148,34 +148,7 @@ XrHand.prototype.update = function (frame) {
     }
 
     // emulate squeeze events by folding all 4 fingers
-    var squeezing = false;
-    var squeezeTolerance = -0.8;
-
-    // first finger
-    vecA.sub2(this._fingers[1].joints[0]._localPosition, this._fingers[1].joints[1]._localPosition).normalize();
-    vecB.sub2(this._fingers[1].joints[2]._localPosition, this._fingers[1].joints[3]._localPosition).normalize();
-    if (vecA.dot(vecB) < squeezeTolerance) {
-
-        // second finger
-        vecA.sub2(this._fingers[2].joints[0]._localPosition, this._fingers[2].joints[1]._localPosition).normalize();
-        vecB.sub2(this._fingers[2].joints[2]._localPosition, this._fingers[2].joints[3]._localPosition).normalize();
-        if (vecA.dot(vecB) < squeezeTolerance) {
-
-            // third finger
-            vecA.sub2(this._fingers[3].joints[0]._localPosition, this._fingers[3].joints[1]._localPosition).normalize();
-            vecB.sub2(this._fingers[3].joints[2]._localPosition, this._fingers[3].joints[3]._localPosition).normalize();
-
-            if (vecA.dot(vecB) < squeezeTolerance) {
-                // fourth finger
-                vecA.sub2(this._fingers[4].joints[0]._localPosition, this._fingers[4].joints[1]._localPosition).normalize();
-                vecB.sub2(this._fingers[4].joints[2]._localPosition, this._fingers[4].joints[3]._localPosition).normalize();
-
-                if (vecA.dot(vecB) < squeezeTolerance) {
-                    squeezing = true;
-                }
-            }
-        }
-    }
+    var squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
 
     if (squeezing) {
         if (! this._inputSource._squeezing) {
@@ -194,6 +167,13 @@ XrHand.prototype.update = function (frame) {
             this._manager.input.fire('squeezeend', this._inputSource);
         }
     }
+};
+
+XrHand.prototype._fingerIsClosed = function (index) {
+    var finger = this._fingers[index];
+    vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
+    vecB.sub2(finger.joints[2]._localPosition, finger.joints[3]._localPosition).normalize();
+    return vecA.dot(vecB) < -0.8;
 };
 
 /**
