@@ -147,27 +147,51 @@ XrHand.prototype.update = function (frame) {
         this._inputSource._rayLocal.direction.lerp(vecC, vecA, 0.5).normalize();
     }
 
-    // emulate select events by touching thumb tip and index tips
-    if (j4 && j9) {
-        vecA.copy(j4._localPosition);
-        var d = vecA.distance(j9._localPosition);
+    // emulate squeeze events by folding all 4 fingers
+    var squeezing = false;
+    var squeezeTolerance = -0.8;
 
-        if (d < 0.015) { // 15 mm
-            if (! this._inputSource._selecting) {
-                this._inputSource._selecting = true;
-                this._inputSource.fire('selectstart');
-                this._manager.input.fire('selectstart', this._inputSource);
+    // first finger
+    vecA.sub2(this._fingers[1].joints[0]._localPosition, this._fingers[1].joints[1]._localPosition).normalize();
+    vecB.sub2(this._fingers[1].joints[2]._localPosition, this._fingers[1].joints[3]._localPosition).normalize();
+    if (vecA.dot(vecB) < squeezeTolerance) {
+
+        // second finger
+        vecA.sub2(this._fingers[2].joints[0]._localPosition, this._fingers[2].joints[1]._localPosition).normalize();
+        vecB.sub2(this._fingers[2].joints[2]._localPosition, this._fingers[2].joints[3]._localPosition).normalize();
+        if (vecA.dot(vecB) < squeezeTolerance) {
+
+            // third finger
+            vecA.sub2(this._fingers[3].joints[0]._localPosition, this._fingers[3].joints[1]._localPosition).normalize();
+            vecB.sub2(this._fingers[3].joints[2]._localPosition, this._fingers[3].joints[3]._localPosition).normalize();
+
+            if (vecA.dot(vecB) < squeezeTolerance) {
+                // fourth finger
+                vecA.sub2(this._fingers[4].joints[0]._localPosition, this._fingers[4].joints[1]._localPosition).normalize();
+                vecB.sub2(this._fingers[4].joints[2]._localPosition, this._fingers[4].joints[3]._localPosition).normalize();
+
+                if (vecA.dot(vecB) < squeezeTolerance) {
+                    squeezing = true;
+                }
             }
-        } else {
-            if (this._inputSource._selecting) {
-                this._inputSource._selecting = false;
+        }
+    }
 
-                this._inputSource.fire('select');
-                this._manager.input.fire('select', this._inputSource);
+    if (squeezing) {
+        if (! this._inputSource._squeezing) {
+            this._inputSource._squeezing = true;
+            this._inputSource.fire('squeezestart');
+            this._manager.input.fire('squeezestart', this._inputSource);
+        }
+    } else {
+        if (this._inputSource._squeezing) {
+            this._inputSource._squeezing = false;
 
-                this._inputSource.fire('selectend');
-                this._manager.input.fire('selectend', this._inputSource);
-            }
+            this._inputSource.fire('squeeze');
+            this._manager.input.fire('squeeze', this._inputSource);
+
+            this._inputSource.fire('squeezeend');
+            this._manager.input.fire('squeezeend', this._inputSource);
         }
     }
 };
