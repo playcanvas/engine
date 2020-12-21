@@ -183,11 +183,19 @@ export var LAYERID_UI = 4;
 export var LIGHTTYPE_DIRECTIONAL = 0;
 /**
  * @constant
+ * @private
  * @name pc.LIGHTTYPE_OMNI
+ * @type {number}
+ * @description Omni-directional (local) light source.
+ */
+export var LIGHTTYPE_OMNI = 1;
+/**
+ * @constant
+ * @name pc.LIGHTTYPE_POINT
  * @type {number}
  * @description Point (local) light source.
  */
-export var LIGHTTYPE_OMNI = 1;
+export var LIGHTTYPE_POINT = LIGHTTYPE_OMNI;
 /**
  * @constant
  * @name pc.LIGHTTYPE_SPOT
