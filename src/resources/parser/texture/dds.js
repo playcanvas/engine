@@ -87,8 +87,8 @@ fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for dds files.
  */
-function DdsParser(registry, retryRequests) {
-    this.retryRequests = !!retryRequests;
+function DdsParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(DdsParser.prototype, {
@@ -97,7 +97,8 @@ Object.assign(DdsParser.prototype, {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(url.load, options, callback);
     },

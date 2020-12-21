@@ -6,7 +6,7 @@ import { Vec4 } from '../../../math/vec4.js';
 import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/graphics.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
-import { BatchGroup } from '../../../scene/batching.js';
+import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
 import { Entity } from '../../entity.js';
@@ -634,9 +634,15 @@ Object.assign(ElementComponent.prototype, {
     },
 
     _onScreenRemove: function () {
-        // if there is a screen and it is not being destroyed
-        if (this.screen && !this.screen._destroying) {
-            this._updateScreen(null);
+        if (this.screen) {
+            if (this.screen._destroying) {
+                // If the screen entity is being destroyed, we don't call
+                // _updateScreen() as an optimization but we should still
+                // set it to null to clean up dangling references
+                this.screen = null;
+            } else {
+                this._updateScreen(null);
+            }
         }
     },
 

@@ -39,7 +39,7 @@ var ie = (function () {
  */
 function AudioHandler(manager) {
     this.manager = manager;
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(AudioHandler.prototype, {
@@ -121,7 +121,8 @@ if (hasAudioContext()) {
 
         // if this is a blob URL we need to set the response type to arraybuffer
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.startsWith('blob:')) {

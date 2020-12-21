@@ -16,7 +16,7 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
  * @classdesc Resource handler used for loading {@link pc.Animation} resources.
  */
 function AnimationHandler() {
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(AnimationHandler.prototype, {
@@ -30,7 +30,8 @@ Object.assign(AnimationHandler.prototype, {
 
         // we need to specify JSON for blob URLs
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {

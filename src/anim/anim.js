@@ -640,6 +640,26 @@ function DefaultAnimBinder(graph) {
     };
     flatten(graph);
 
+    var findMeshInstances = function (node) {
+
+        // walk up to the first parent node of entity type (skips internal nodes of Model)
+        var object = node;
+        while (object && !(object instanceof Entity)) {
+            object = object.parent;
+        }
+
+        // get meshInstances from either model or render component
+        var meshInstances;
+        if (object) {
+            if (object.render) {
+                meshInstances = object.render.meshInstances;
+            } else if (object.model) {
+                meshInstances = object.model.meshInstances;
+            }
+        }
+        return meshInstances;
+    };
+
     this.nodes = nodes;                 // map of node name -> { node, count }
     this.activeNodes = [];              // list of active nodes
     this.handlers = {
@@ -668,63 +688,50 @@ function DefaultAnimBinder(graph) {
         },
 
         'weights': function (node) {
-            var object = node;
-            while (object && object.constructor !== Entity) {
-                object = object.parent;
-            }
-            if (!object ||
-                !object.model ||
-                !object.model.model ||
-                !object.model.model.morphInstances) {
-                return null;
-            }
-            var meshInstances = object.model.meshInstances;
-            var morphInstance;
-            for (var i = 0; i < meshInstances.length; ++i) {
-                if (meshInstances[i].node.name === node.name) {
-                    morphInstance = meshInstances[i].morphInstance;
-                    break;
+            var meshInstances = findMeshInstances(node);
+            if (meshInstances) {
+                var morphInstance;
+                for (var i = 0; i < meshInstances.length; ++i) {
+                    if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
+                        morphInstance = meshInstances[i].morphInstance;
+                        break;
+                    }
+                }
+                if (morphInstance) {
+                    var func = function (value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            morphInstance.setWeight(i, value[i]);
+                        }
+                    };
+                    return new AnimTarget(func, 'vector', morphInstance.morph._targets.length);
                 }
             }
-            if (!morphInstance) {
-                return null;
-            }
-            var func = function (value) {
-                for (var i = 0; i < value.length; ++i) {
-                    morphInstance.setWeight(i, value[i]);
-                }
-            };
-            return new AnimTarget(func, 'vector', morphInstance.morph._targets.length);
+
+            return null;
         },
         'materialTexture': function (node, textureName) {
-            var object = node;
-            while (object && object.constructor !== Entity) {
-                object = object.parent;
-            }
-            if (!object ||
-                !object.model ||
-                !object.model.model) {
-                return null;
-            }
-            var meshInstances = object.model.meshInstances;
-            var meshInstance;
-            for (var i = 0; i < meshInstances.length; ++i) {
-                if (meshInstances[i].node.name === node.name) {
-                    meshInstance = meshInstances[i];
-                    break;
+            var meshInstances = findMeshInstances(node);
+            if (meshInstances) {
+                var meshInstance;
+                for (var i = 0; i < meshInstances.length; ++i) {
+                    if (meshInstances[i].node.name === node.name) {
+                        meshInstance = meshInstances[i];
+                        break;
+                    }
+                }
+                if (meshInstance) {
+                    var func = function (value) {
+                        var textureAsset = this.animComponent.system.app.assets.get(value[0]);
+                        if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
+                            meshInstance.material[textureName] = textureAsset.resource;
+                            meshInstance.material.update();
+                        }
+                    }.bind(this);
+                    return new AnimTarget(func, 'vector', 1);
                 }
             }
-            if (!meshInstance) {
-                return null;
-            }
-            var func = function (value) {
-                var textureAsset = this.animComponent.system.app.assets.get(value[0]);
-                if (textureAsset && textureAsset.resource && textureAsset.type === 'texture') {
-                    meshInstance.material[textureName] = textureAsset.resource;
-                    meshInstance.material.update();
-                }
-            }.bind(this);
-            return new AnimTarget(func, 'vector', 1);
+
+            return null;
         }.bind(this)
     };
 

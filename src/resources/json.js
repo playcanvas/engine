@@ -1,7 +1,7 @@
 import { http, Http } from '../net/http.js';
 
 function JsonHandler() {
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(JsonHandler.prototype, {
@@ -15,7 +15,8 @@ Object.assign(JsonHandler.prototype, {
 
         // if this a blob URL we need to set the response type as json
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {
