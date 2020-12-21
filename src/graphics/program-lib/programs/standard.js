@@ -1004,6 +1004,11 @@ var standard = {
             return light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
+        if (!(device.extTextureFloat || (device.extTextureHalfFloat && device.textureHalfFloatUpdatable))) {
+            // use offset and scale for rgb8 format luts
+            code += "#define HAS_R8_G8_B8_A8_LUTS\n";
+        }
+
         if (hasAreaLights) {
             code += "#define HAS_AREA_LIGHTS\n";
             code += "uniform sampler2D areaLightsLutTex1;\n";
@@ -1512,8 +1517,13 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
-                lightShape = light._shape;
-                shapeString = shapeStringMap[lightShape];
+                if (hasAreaLights) {
+                    lightShape = light._shape;
+                    shapeString = shapeStringMap[lightShape];
+                } else {
+                    lightShape = LIGHTSHAPE_PUNCTUAL;
+                    shapeString = '';
+                }
 
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     code += "   calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";

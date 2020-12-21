@@ -345,6 +345,17 @@ Object.assign(Light.prototype, {
             return tex;
         }
 
+        function offsetScale(data, offset, scale) {
+
+            var count = data.length;
+            var ret = new Float32Array(count);
+            for (var i = 0; i < count; i++) {
+                var n = i % 4;
+                ret[i] = (data[i] + offset[n]) * scale[n];
+            }
+            return ret;
+        }
+
         function convertToHalfFloat(data) {
 
             var count = data.length;
@@ -396,11 +407,18 @@ Object.assign(Light.prototype, {
             } else {
 
                 // low precision format
-                // TODO: we clip some range here on LUT1 - we could address this by scaling to range and expanding in shader
-                // Note: shader only uses texture2.xy and not zw at the moment
+                // offset and scale to avoid clipping and increase precision - this is undone in the shader
+
+                var o1 = [0.0, 0.2976, 0.01381, 0.0];
+                var s1 = [0.999, 3.08737, 1.6546, 0.603249];
+
+                var o2 = [-0.306897, 0.0, 0.0, 0.0];
+                var s2 = [1.442787, 1.0, 1.0, 1.0];
+
                 format = pc.PIXELFORMAT_R8_G8_B8_A8;
-                data1 = convertToUint(luts.data1);
-                data2 = convertToUint(luts.data2);
+                data1 = convertToUint(offsetScale(luts.data1, o1, s1));
+                data2 = convertToUint(offsetScale(luts.data2, o2, s2));
+              
             }
 
             var tex1 = createTexture(device, data1, format);
