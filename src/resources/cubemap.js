@@ -213,6 +213,12 @@ Object.assign(CubemapHandler.prototype, {
         return true;
     },
 
+    // convert string id to int
+    resolveId: function (value) {
+        var valueInt = parseInt(value, 10);
+        return ((valueInt === value) || (valueInt.toString() === value)) ? valueInt : value;
+    },
+
     loadAssets: function (cubemapAsset, callback) {
         // initialize asset structures for tracking load requests
         if (!cubemapAsset.hasOwnProperty('_handlerState')) {
@@ -289,7 +295,7 @@ Object.assign(CubemapHandler.prototype, {
 
         var texAsset;
         for (var i = 0; i < 7; ++i) {
-            var assetId = assetIds[i];
+            var assetId = this.resolveId(assetIds[i]);
 
             if (!assetId) {
                 // no asset

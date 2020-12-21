@@ -247,23 +247,10 @@ var GraphicsDevice = function (canvas, options) {
 
     var i;
     this.canvas = canvas;
-    this.shader = null;
-    this.indexBuffer = null;
-    this.vertexBuffers = [];
     this._enableAutoInstancing = false;
     this.autoInstancingMaxObjects = 16384;
     this.defaultFramebuffer = null;
-    this.boundVao = null;
-    this.transformFeedbackBuffer = null;
-    this.activeFramebuffer = null;
-    this.textureUnit = 0;
-    this.textureUnits = [];
     this._maxPixelRatio = 1;
-    this.renderTarget = null;
-    this.feedback = null;
-
-    // enable temporary texture unit workaround on desktop safari
-    this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
 
     // local width/height without pixelRatio applied
     this._width = 0;
@@ -271,18 +258,11 @@ var GraphicsDevice = function (canvas, options) {
 
     this.updateClientRect();
 
-    // Shader code to WebGL shader cache
-    this.vertexShaderCache = {};
-    this.fragmentShaderCache = {};
-
     // Array of WebGL objects that need to be re-initialized after a context restore event
     this.shaders = [];
     this.buffers = [];
     this.textures = [];
     this.targets = [];
-
-    // cache of VAOs
-    this._vaoMap = new Map();
 
     // Add handlers for when the WebGL context is lost or restored
     this.contextLost = false;
@@ -290,6 +270,7 @@ var GraphicsDevice = function (canvas, options) {
     this._contextLostHandler = function (event) {
         event.preventDefault();
         this.contextLost = true;
+        this.loseContext();
         // #ifdef DEBUG
         console.log('pc.GraphicsDevice: WebGL context lost.');
         // #endif
@@ -300,7 +281,7 @@ var GraphicsDevice = function (canvas, options) {
         // #ifdef DEBUG
         console.log('pc.GraphicsDevice: WebGL context restored.');
         // #endif
-        this.initializeContext();
+        this.restoreContext();
         this.contextLost = false;
         this.fire('devicerestored');
     }.bind(this);
@@ -330,6 +311,14 @@ var GraphicsDevice = function (canvas, options) {
 
     this.gl = gl;
 
+    // enable temporary texture unit workaround on desktop safari
+    this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+
+    // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
+    var isChrome = !!window.chrome;
+    var isMac = navigator.appVersion.indexOf("Mac") !== -1;
+    this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
+
     // init polyfill for VAOs
     window.setupVertexArrayObject(gl);
 
@@ -339,10 +328,7 @@ var GraphicsDevice = function (canvas, options) {
     this.initializeExtensions();
     this.initializeCapabilities();
     this.initializeRenderState();
-
-    for (i = 0; i < this.maxCombinedTextures; i++) {
-        this.textureUnits.push([null, null, null]);
-    }
+    this.initializeContextCaches();
 
     this.defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -685,6 +671,10 @@ var GraphicsDevice = function (canvas, options) {
     this._spectorCurrentMarker = "";
     // #endif
 
+    // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
+    this.grabPassAvailable = true;
+
+    this.grabPassApha = options.alpha;
     this.createGrabPass();
 
     VertexFormat.init(this);
@@ -975,60 +965,88 @@ Object.assign(GraphicsDevice.prototype, {
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     },
 
-    initializeContext: function () {
+    initializeContextCaches: function () {
+
+        // Shader code to WebGL shader cache
+        this.vertexShaderCache = {};
+        this.fragmentShaderCache = {};
+
+        // cache of VAOs
+        this._vaoMap = new Map();
+
+        this.boundVao = null;
+        this.indexBuffer = null;
+        this.vertexBuffers = [];
+        this.shader = null;
+        this.renderTarget = null;
+        this.activeFramebuffer = null;
+        this.feedback = null;
+        this.transformFeedbackBuffer = null;
+
+        this.textureUnit = 0;
+        this.textureUnits = [];
+        for (var i = 0; i < this.maxCombinedTextures; i++) {
+            this.textureUnits.push([null, null, null]);
+        }
+    },
+
+    loseContext: function () {
+
+        // release shaders
+        var i;
+        for (i = 0; i < this.shaders.length; i++) {
+            this.shaders[i].loseContext();
+        }
+
+        // grab pass
+        this.destroyGrabPass();
+
+        // release textures - they will be recreated with new context
+        while (this.textures.length > 0) {
+            var texture = this.textures[0];
+            this.destroyTexture(texture);
+            texture.dirtyAll();
+        }
+
+        // release vertex and index buffers
+        for (i = 0; i < this.buffers.length; i++) {
+            this.buffers[i].loseContext();
+        }
+
+        // Reset all render targets so they'll be recreated as required.
+        // TODO: a solution for the case where a render target contains something
+        // that was previously generated that needs to be re-rendered.
+        for (i = 0; i < this.targets.length; i++) {
+            this.targets[i].loseContext();
+        }
+    },
+
+    restoreContext: function () {
+
         this.initializeExtensions();
         this.initializeCapabilities();
         this.initializeRenderState();
+        this.initializeContextCaches();
 
         // Recompile all shaders (they'll be linked when they're next actually used)
         var i, len;
         for (i = 0, len = this.shaders.length; i < len; i++) {
             this.compileAndLinkShader(this.shaders[i]);
         }
-        this.shader = null;
 
         // Recreate buffer objects and reupload buffer data to the GPU
         for (i = 0, len = this.buffers.length; i < len; i++) {
-            this.buffers[i].bufferId = undefined;
             this.buffers[i].unlock();
         }
-        this.boundVao = null;
-        this.indexBuffer = null;
-        this.vertexBuffers = [];
 
-        // Force all textures to be recreated and reuploaded
-        for (i = 0, len = this.textures.length; i < len; i++) {
-            var texture = this.textures[i];
-            this.destroyTexture(texture);
-            texture.dirtyAll();
-        }
-        this.textureUnit = 0;
-        this.textureUnits.length = 0;
-        for (i = 0; i < this.maxCombinedTextures; i++) {
-            this.textureUnits.push([null, null, null]);
-        }
-
-        // Reset all render targets so they'll be recreated as required.
-        // TODO: a solution for the case where a render target contains something
-        // that was previously generated that needs to be re-rendered.
-        for (i = 0, len = this.targets.length; i < len; i++) {
-            this.targets[i]._glFrameBuffer = undefined;
-            this.targets[i]._glDepthBuffer = undefined;
-            this.targets[i]._glResolveFrameBuffer = undefined;
-            this.targets[i]._glMsaaColorBuffer = undefined;
-            this.targets[i]._glMsaaDepthBuffer = undefined;
-        }
-        this.renderTarget = null;
-        this.activeFramebuffer = null;
-        this.feedback = null;
-        this.transformFeedbackBuffer = null;
+        this.createGrabPass();
     },
 
     createGrabPass: function () {
         if (this.grabPassTexture) return;
 
         var grabPassTexture = new Texture(this, {
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: this.grabPassApha === false ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8,
             minFilter: FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -1054,8 +1072,20 @@ Object.assign(GraphicsDevice.prototype, {
     updateGrabPass: function () {
         var gl = this.gl;
 
+        // print error if we cannot grab framebuffer at this point
+        if (!this.grabPassAvailable) {
+
+            // #ifdef DEBUG
+            console.error("texture_grabPass cannot be used when rendering shadows and similar passes, exclude your object from rendering to them");
+            // #endif
+
+            return false;
+        }
+
+        // render target currently being rendered to (these are null if default framebuffer is active)
         var renderTarget = this.renderTarget;
         var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+
         var grabPassTexture = this.grabPassTexture;
         var width = this.width;
         var height = this.height;
@@ -1064,18 +1094,29 @@ Object.assign(GraphicsDevice.prototype, {
         this.pushMarker("grabPass");
         // #endif
 
-        if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
-            if (resolveRenderTarget) renderTarget.resolve(true);
+        if (this.webgl2 && !this._tempMacChromeBlitFramebufferWorkaround && width === grabPassTexture._width && height === grabPassTexture._height) {
+            if (resolveRenderTarget) {
+                renderTarget.resolve(true);
+            }
 
+            // these are null if rendering to default framebuffer
             var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
             var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
 
+            // init grab pass framebuffer (only does it once)
             this.initRenderTarget(this.grabPassRenderTarget);
             var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
 
+            // blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
+
+            // blit to grab pass framebuffer
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
+
+            // Note: This fails on Chromium Mac when Antialasing is On and Alpha is off
+            // blit color from current framebuffer's color attachment to grab pass color attachment
             gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
 
         } else {
@@ -1084,6 +1125,7 @@ Object.assign(GraphicsDevice.prototype, {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
             }
 
+            // this allocates texture (grabPassTexture was already bound to gl)
             var format = grabPassTexture._glFormat;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
             grabPassTexture._width = width;
@@ -1097,6 +1139,8 @@ Object.assign(GraphicsDevice.prototype, {
         // #ifdef DEBUG
         this.popMarker();
         // #endif
+
+        return true;
     },
 
     destroyGrabPass: function () {
@@ -2136,10 +2180,16 @@ Object.assign(GraphicsDevice.prototype, {
                 texture._parameterFlags = 0;
             }
 
+            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
+            // (for example when rendering to shadow map), in which case previous content is used
+            var processed = false;
             if (texture === this.grabPassTexture) {
-                this.updateGrabPass();
+                processed = this.updateGrabPass();
 
-            } else if (texture._needsUpload || texture._needsMipmapsUpload) {
+                processed = true;
+            }
+
+            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
                 this.uploadTexture(texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;

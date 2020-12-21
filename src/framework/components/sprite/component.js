@@ -8,7 +8,7 @@ import {
     LAYERID_WORLD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-import { BatchGroup } from '../../../scene/batching.js';
+import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';

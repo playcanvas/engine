@@ -476,12 +476,16 @@ Object.assign(LightComponent.prototype, {
     },
 
     onRemove: function () {
+
+        // remove from layers
+        this.onDisable();
+
         // destroy light node
         this.light.destroy();
+
         // remove cookie asset events
         this.cookieAsset = null;
     }
-
 });
 
 var _lightProps = _props;

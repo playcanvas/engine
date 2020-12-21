@@ -11,6 +11,19 @@ import { math } from '../../src/math/math.js';
 function MiniStats(app, options) {
 
     var device = app.graphicsDevice;
+
+    // handle context lost
+    this._contextLostHandler = function (event) {
+        event.preventDefault();
+
+        if (this.graphs) {
+            for (var i = 0; i < this.graphs.length; i++) {
+                this.graphs[i].loseContext();
+            }
+        }
+    }.bind(this);
+    device.canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+
     options = options || MiniStats.getDefaultOptions();
 
     // create graphs based on options

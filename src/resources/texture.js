@@ -164,12 +164,12 @@ function TextureHandler(device, assets, loader) {
 
     // img parser handles all broswer-supported image formats, this
     // parser will be used when other more specific parsers are not found.
-    this.imgParser = new ImgParser(assets, false);
+    this.imgParser = new ImgParser(assets);
 
     this.parsers = {
-        dds: new LegacyDdsParser(assets, false),
-        ktx: new KtxParser(assets, false),
-        basis: new BasisParser(assets, false)
+        dds: new LegacyDdsParser(assets),
+        ktx: new KtxParser(assets),
+        basis: new BasisParser(assets)
     };
 }
 
@@ -183,15 +183,15 @@ Object.defineProperties(TextureHandler.prototype, {
         }
     },
 
-    retryRequests: {
+    maxRetries: {
         get: function () {
-            return this.imgParser.retryRequests;
+            return this.imgParser.maxRetries;
         },
         set: function (value) {
-            this.imgParser.retryRequests = value;
+            this.imgParser.maxRetries = value;
             for (var parser in this.parsers) {
                 if (this.parsers.hasOwnProperty(parser)) {
-                    this.parsers[parser].retryRequests = value;
+                    this.parsers[parser].maxRetries = value;
                 }
             }
         }

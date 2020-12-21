@@ -21,6 +21,7 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { Application } from '../../framework/application.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { Quat } from '../../math/quat.js';
 
 /**
  * @class
@@ -292,6 +293,8 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
  * * fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.
  * * refraction: if refraction is used.
  * * skyboxIntensity: if reflected skybox intensity should be modulated.
+ * * useCubeMapRotation: if cube map rotation is enabled.
+ * * useRightHandedCubeMap: if the cube map uses a right-handed coordinate system. The convention for pre-generated cubemaps is left-handed.
  * * useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.
  * * useInstancing: if hardware instancing compatible shader should be generated. Transform is read from per-instance {@link pc.VertexBuffer} instead of shader's uniforms.
  * * useMorphPosition: if morphing code should be generated to morph positions.
@@ -1006,6 +1009,10 @@ Object.assign(StandardMaterial.prototype, {
                 this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
             } else {
                 console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+            }
+
+            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
 

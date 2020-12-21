@@ -11,8 +11,8 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for basis files.
  */
-function BasisParser(registry, retryRequests) {
-    this.retryRequests = !!retryRequests;
+function BasisParser(registry) {
+    this.maxRetries = 0;
 }
 
 Object.assign(BasisParser.prototype, {
@@ -20,7 +20,8 @@ Object.assign(BasisParser.prototype, {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(
             url.load,
