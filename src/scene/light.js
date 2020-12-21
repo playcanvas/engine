@@ -371,7 +371,7 @@ Object.assign(Light.prototype, {
         // create texture if not already
         var app = Application.getApplication();
         var luts = app.scene.areaLightLuts;
-        if (!luts.ready) {
+        if (luts && !luts.ready) {
 
             luts.ready = true;
             var device = app.graphicsDevice;
