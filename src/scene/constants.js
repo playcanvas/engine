@@ -198,6 +198,7 @@ export var LIGHTTYPE_SPOT = 2;
 
 /**
  * @constant
+ * @private
  * @name pc.LIGHTSHAPE_PUNCTUAL
  * @type {number}
  * @description Infinitesimally small point light source shape.
@@ -206,6 +207,7 @@ export var LIGHTSHAPE_PUNCTUAL = 0;
 
 /**
  * @constant
+ * @private
  * @name pc.LIGHTSHAPE_RECT
  * @type {number}
  * @description Rectangle shape of light source.
@@ -214,6 +216,7 @@ export var LIGHTSHAPE_RECT = 1;
 
 /**
  * @constant
+ * @private
  * @name pc.LIGHTSHAPE_DISK
  * @type {number}
  * @description Disk shape of light source.
@@ -222,6 +225,7 @@ export var LIGHTSHAPE_DISK = 2;
 
 /**
  * @constant
+ * @private
  * @name pc.LIGHTSHAPE_SPHERE
  * @type {number}
  * @description Sphere shape of light source.
