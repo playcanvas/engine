@@ -418,7 +418,7 @@ Object.assign(Light.prototype, {
                 format = pc.PIXELFORMAT_R8_G8_B8_A8;
                 data1 = convertToUint(offsetScale(luts.data1, o1, s1));
                 data2 = convertToUint(offsetScale(luts.data2, o2, s2));
-              
+
             }
 
             var tex1 = createTexture(device, data1, format);
