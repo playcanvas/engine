@@ -50,6 +50,9 @@ import { Component } from '../component.js';
  * * "point": A light that illuminates in all directions from a point.
  * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
  * Defaults to "directional".
+ * @property {pc.Color} color The Color of the light. The alpha component of the color is
+ * ignored. Defaults to white (1, 1, 1).
+ * @property {number} intensity The brightness of the light. Defaults to 1.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows
  * are no longer rendered. Affects directional lights only. Defaults to 40.

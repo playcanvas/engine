@@ -4,7 +4,8 @@ import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
-    SHADERTAG_MATERIAL
+    SHADERTAG_MATERIAL,
+    PIXELFORMAT_R8_G8_B8_A8
 } from '../../graphics.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
@@ -1004,7 +1005,7 @@ var standard = {
             return light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
-        if (!(device.extTextureFloat || (device.extTextureHalfFloat && device.textureHalfFloatUpdatable))) {
+        if (device._areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
             code += "#define HAS_R8_G8_B8_A8_LUTS\n";
         }

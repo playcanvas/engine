@@ -387,20 +387,18 @@ Object.assign(Light.prototype, {
             luts.ready = true;
             var device = app.graphicsDevice;
             var data1, data2;
-            var format;
+            var format = device._areaLightLutFormat;
 
             // pick format for lut texture
-            if (device.extTextureFloat) {
+            if (format === pc.PIXELFORMAT_RGBA32F) {
 
                 // float
-                format = pc.PIXELFORMAT_RGBA32F;
                 data1 = luts.data1;
                 data2 = luts.data2;
 
-            } else if (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) {
+            } else if (format === pc.PIXELFORMAT_RGBA16F) {
 
                 // half float
-                format = pc.PIXELFORMAT_RGBA16F;
                 data1 = convertToHalfFloat(luts.data1);
                 data2 = convertToHalfFloat(luts.data2);
 
@@ -415,7 +413,6 @@ Object.assign(Light.prototype, {
                 var o2 = [-0.306897, 0.0, 0.0, 0.0];
                 var s2 = [1.442787, 1.0, 1.0, 1.0];
 
-                format = pc.PIXELFORMAT_R8_G8_B8_A8;
                 data1 = convertToUint(offsetScale(luts.data1, o1, s1));
                 data2 = convertToUint(offsetScale(luts.data2, o2, s2));
 
@@ -427,6 +424,7 @@ Object.assign(Light.prototype, {
             // assign to scope variables
             device.scope.resolve('areaLightsLutTex1').setValue(tex1);
             device.scope.resolve('areaLightsLutTex2').setValue(tex2);
+
         }
     }
 });
