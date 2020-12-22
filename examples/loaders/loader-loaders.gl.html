@@ -157,12 +157,12 @@
         var modelSources = [
             {
                 name: 'Draco Pointcloud Mesh (.drc)',
-                url: '../assets/models/photogrammetry.drc',
+                url: '../assets/models/park_points.drc',
                 loader: loadDraco
             },
             {
                 name: 'Polygon Mesh (.ply)',
-                url: '../assets/models/photogrammetry.ply',
+                url: '../assets/models/park_points.ply',
                 loader: loadPly
             }
         ]
@@ -275,7 +275,6 @@
             });
             entity.model.model = model;
 
-            entity.rotate(95, 200, 180);
 
             app.root.addChild(entity);
             cameraEntity.script.orbitCamera.focusEntity = entity;
