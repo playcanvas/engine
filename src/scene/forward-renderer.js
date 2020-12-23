@@ -2293,51 +2293,47 @@ Object.assign(ForwardRenderer.prototype, {
         // #endif
     },
 
-    // function returns unique set of materials from drawCalls
-    // material parameter is expected to be a Set to allow for fast duplicates removal
-    getUniqueMaterials: function (materials, drawCalls) {
-
-        var mat;
-        for (var i = 0; i < drawCalls.length; i++) {
+    updateShaders: function (drawCalls) {
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
             mat = drawCalls[i].material;
             if (mat) {
-                materials.add(mat);
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
+
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
+                }
             }
         }
-
-        return materials;
-    },
-
-    updateShaders: function (drawCalls) {
-
-        // Clear material shaders
-        this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-
-        _tempMaterialSet.forEach(function (mat) {
-            if (mat.updateShader !== Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
-            }
-        });
 
         // keep temp set empty
         _tempMaterialSet.clear();
     },
 
     updateLitShaders: function (drawCalls) {
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        // Clear material shaders
-        this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-        _tempMaterialSet.forEach(function (mat) {
-            if (mat.updateShader !== Material.prototype.updateShader) {
+                    if (mat.updateShader !== Material.prototype.updateShader) {
 
-                // only process lit materials
-                if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
-                    mat.clearVariants();
-                    mat.shader = null;
+                        // only process lit materials
+                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
+                            mat.clearVariants();
+                            mat.shader = null;
+                        }
+                    }
                 }
             }
-        });
+        }
 
         // keep temp set empty
         _tempMaterialSet.clear();
