@@ -2293,7 +2293,7 @@ Object.assign(ForwardRenderer.prototype, {
         // #endif
     },
 
-    // funtion returns unique set of materials from drawCalls
+    // function returns unique set of materials from drawCalls
     // material parameter is expected to be a Set to allow for fast duplicates removal
     getUniqueMaterials: function (materials, drawCalls) {
 
@@ -2312,12 +2312,13 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Clear material shaders
         this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-        for (var mat of _tempMaterialSet) {
+
+        _tempMaterialSet.forEach(function (mat) {
             if (mat.updateShader !== Material.prototype.updateShader) {
                 mat.clearVariants();
                 mat.shader = null;
             }
-        }
+        });
 
         // keep temp set empty
         _tempMaterialSet.clear();
@@ -2327,18 +2328,16 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Clear material shaders
         this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-        for (var mat of _tempMaterialSet) {
+        _tempMaterialSet.forEach(function (mat) {
             if (mat.updateShader !== Material.prototype.updateShader) {
 
-                // skip unlit standard and particles materials
-                if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                    continue;
+                // only process lit materials
+                if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
+                    mat.clearVariants();
+                    mat.shader = null;
                 }
-
-                mat.clearVariants();
-                mat.shader = null;
             }
-        }
+        });
 
         // keep temp set empty
         _tempMaterialSet.clear();
