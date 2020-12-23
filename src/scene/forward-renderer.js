@@ -119,6 +119,9 @@ var skipRenderAfter = 0;
 
 var _skinUpdateIndex = 0;
 
+var _tempMaterialSet = new Set();
+
+
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
 for (var fp = 0; fp < 8; fp++) {
@@ -2290,59 +2293,55 @@ Object.assign(ForwardRenderer.prototype, {
         // #endif
     },
 
-    updateShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+    // funtion returns unique set of materials from drawCalls
+    // material parameter is expected to be a Set to allow for fast duplicates removal
+    getUniqueMaterials: function (materials, drawCalls) {
 
-        var i;
-        // Collect materials
-        var materials = [];
-        for (i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                if (materials.indexOf(drawCall.material) === -1) {
-                    materials.push(drawCall.material);
-                }
+        var mat;
+        for (var i = 0; i < drawCalls.length; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                materials.add(mat);
             }
         }
+
+        return materials;
+    },
+
+    updateShaders: function (drawCalls) {
+
         // Clear material shaders
-        for (i = 0; i < materials.length; i++) {
-            var mat = materials[i];
+        this.getUniqueMaterials(_tempMaterialSet, drawCalls);
+        for (let mat of _tempMaterialSet) {
             if (mat.updateShader !== Material.prototype.updateShader) {
                 mat.clearVariants();
                 mat.shader = null;
             }
         }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     updateLitShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
 
-        for (var i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                var mat = drawCall.material;
-                if (mat.updateShader !== Material.prototype.updateShader) {
-                    if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                        // skip unlit standard and particles materials
-                        continue;
-                    }
-                    mat.clearVariants();
-                    mat.shader = null;
+        // Clear material shaders
+        this.getUniqueMaterials(_tempMaterialSet, drawCalls);
+        for (let mat of _tempMaterialSet) {
+            if (mat.updateShader !== Material.prototype.updateShader) {
+
+                // skip unlit standard and particles materials
+                if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                    continue;
                 }
+
+                mat.clearVariants();
+                mat.shader = null;
             }
         }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     beginFrame: function (comp) {
