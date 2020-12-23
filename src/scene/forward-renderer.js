@@ -2312,7 +2312,7 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Clear material shaders
         this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-        for (let mat of _tempMaterialSet) {
+        for (var mat of _tempMaterialSet) {
             if (mat.updateShader !== Material.prototype.updateShader) {
                 mat.clearVariants();
                 mat.shader = null;
@@ -2327,7 +2327,7 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Clear material shaders
         this.getUniqueMaterials(_tempMaterialSet, drawCalls);
-        for (let mat of _tempMaterialSet) {
+        for (var mat of _tempMaterialSet) {
             if (mat.updateShader !== Material.prototype.updateShader) {
 
                 // skip unlit standard and particles materials
