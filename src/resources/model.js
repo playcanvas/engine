@@ -42,7 +42,7 @@ Object.assign(ModelHandler.prototype, {
             maxRetries: this.maxRetries
         };
 
-        if (url.load.startsWith('blob:')) {
+        if (url.load.startsWith('blob:') || url.load.startsWith('data:')) {
             if (path.getExtension(url.original).toLowerCase() === '.glb') {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             } else {

@@ -876,13 +876,10 @@ Object.assign(AnimController.prototype, {
             }
         }
 
-        // start a new transition based on the current transitions information
-        if (transition.time > 0) {
-            this._isTransitioning = true;
-            this._totalTransitionTime = transition.time;
-            this._currTransitionTime = 0;
-            this._transitionInterruptionSource = transition.interruptionSource;
-        }
+        this._isTransitioning = true;
+        this._totalTransitionTime = transition.time;
+        this._currTransitionTime = 0;
+        this._transitionInterruptionSource = transition.interruptionSource;
 
         var hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
         var activeState = this.activeState;

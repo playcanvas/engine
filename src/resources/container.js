@@ -5,6 +5,9 @@ import { http, Http } from '../net/http.js';
 import { Asset } from '../asset/asset.js';
 
 import { GlbParser } from './parser/glb-parser.js';
+import { Entity } from '../framework/entity.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
+import { SkinInstance } from '../scene/skin-instance.js';
 
 /**
  * @class
@@ -18,6 +21,7 @@ import { GlbParser } from './parser/glb-parser.js';
 function ContainerResource(data) {
     this.data = data;
     this.model = null;
+    this.renders = [];
     this.materials = [];
     this.textures = [];
     this.animations = [];
@@ -25,6 +29,99 @@ function ContainerResource(data) {
 }
 
 Object.assign(ContainerResource.prototype, {
+
+    instantiateModelEntity: function (options) {
+
+        var entity = new pc.Entity();
+        entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
+        return entity;
+    },
+
+    instantiateRenderEntity: function (options) {
+
+        // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
+        var cloneToEntity = function (skinInstances, model, node) {
+
+            if (node) {
+                var entity = new Entity();
+                node._cloneInternal(entity);
+
+                // find all mesh instances attached to this node
+                var attachedMi = null;
+                for (var m = 0; m < model.meshInstances.length; m++) {
+                    var mi = model.meshInstances[m];
+                    if (mi.node === node) {
+
+                        // clone mesh instance
+                        var cloneMi = new MeshInstance(entity, mi.mesh, mi.material);
+
+                        // clone morph instance
+                        if (mi.morphInstance) {
+                            cloneMi.morphInstance = mi.morphInstance.clone();
+                        }
+
+                        // skin instance - store info to clone later after the hierarchy is created
+                        if (mi.skinInstance) {
+                            skinInstances.push({
+                                src: mi.skinInstance,
+                                dst: cloneMi
+                            });
+                        }
+
+                        // add it to list
+                        if (!attachedMi) {
+                            attachedMi = [];
+                        }
+                        attachedMi.push(cloneMi);
+                    }
+                }
+
+                // create render components for mesh instances
+                if (attachedMi) {
+                    entity.addComponent("render", Object.assign( { type: "asset" }, options));
+                    entity.render.meshInstances = attachedMi;
+                }
+
+                // recursivelly clone children
+                var children = node.children;
+                for (var i = 0; i < children.length; i++) {
+                    var childClone = cloneToEntity(skinInstances, model, children[i]);
+                    entity.addChild(childClone);
+                }
+
+                return entity;
+            }
+
+            return null;
+        };
+
+        // clone GraphNode hierarchy from model to Entity hierarchy
+        var skinInstances = [];
+        var entity = cloneToEntity(skinInstances, this.model.resource, this.model.resource.graph);
+
+        // clone skin instances - now that all entities (bones) are created
+        for (var i = 0; i < skinInstances.length; i++) {
+            var srcSkinInstance = skinInstances[i].src;
+            var dstMeshInstance = skinInstances[i].dst;
+
+            var skin = srcSkinInstance.skin;
+            var cloneSkinInstance = new SkinInstance(skin);
+
+            // Resolve bone IDs to cloned entities
+            var bones = [];
+            for (var j = 0; j < skin.boneNames.length; j++) {
+                var boneName = skin.boneNames[j];
+                var bone = entity.findByName(boneName);
+                bones.push(bone);
+            }
+
+            cloneSkinInstance.bones = bones;
+            dstMeshInstance.skinInstance = cloneSkinInstance;
+        }
+
+        return entity;
+    },
+
     destroy: function () {
 
         var registry = this.registry;
@@ -188,6 +285,12 @@ Object.assign(ContainerHandler.prototype, {
             // create model asset
             var model = createAsset('model', GlbParser.createModel(data, this._defaultMaterial), 0);
 
+            // render assets
+            var renders = [];
+            for (i = 0; i < data.meshes.length; ++i) {
+                renders.push(createAsset('render', data.meshes[i], i));
+            }
+
             // create material assets
             var materials = [];
             for (i = 0; i < data.materials.length; ++i) {
@@ -202,6 +305,7 @@ Object.assign(ContainerHandler.prototype, {
 
             container.data = null;              // since assets are created, release GLB data
             container.model = model;
+            container.renders = renders;
             container.materials = materials;
             container.textures = data.textures; // texture assets are created directly
             container.animations = animations;

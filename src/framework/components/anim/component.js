@@ -40,18 +40,29 @@ Object.assign(AnimComponent.prototype, {
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      */
     loadStateGraph: function (stateGraph) {
+        var i;
         var data = this.data;
         data.stateGraph = stateGraph;
-        data.parameters = stateGraph.parameters;
+        data.parameters = {};
+        var paramKeys = Object.keys(stateGraph.parameters);
+        for (i = 0; i < paramKeys.length; i++) {
+            var paramKey = paramKeys[i];
+            data.parameters[paramKey] = {
+                type: stateGraph.parameters[paramKey].type,
+                value: stateGraph.parameters[paramKey].value
+            };
+        }
         data.layers = [];
 
         var graph;
-        var modelComponent = this.entity.model;
-        if (modelComponent) {
-            var m = modelComponent.model;
+        if (this.entity.model) {
+            var m = this.entity.model.model;
             if (m) {
                 graph = m.getGraph();
             }
+        } else {
+            // animating hierarchy without model
+            graph = this.entity;
         }
 
         function addLayer(name, states, transitions, order) {
@@ -68,7 +79,7 @@ Object.assign(AnimComponent.prototype, {
             data.layerIndices[name] = order;
         }
 
-        for (var i = 0; i < stateGraph.layers.length; i++) {
+        for (i = 0; i < stateGraph.layers.length; i++) {
             var layer = stateGraph.layers[i];
             addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }

@@ -137,6 +137,15 @@ Object.assign(RenderTarget.prototype, {
         }
     },
 
+    // called when context was lost, function releases all context related resources
+    loseContext: function () {
+        this._glFrameBuffer = undefined;
+        this._glDepthBuffer = undefined;
+        this._glResolveFrameBuffer = undefined;
+        this._glMsaaColorBuffer = undefined;
+        this._glMsaaDepthBuffer = undefined;
+    },
+
     /**
      * @function
      * @name pc.RenderTarget#resolve

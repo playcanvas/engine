@@ -43,7 +43,7 @@ var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  *     filename: "filename.txt",
  *     url: "/example/filename.txt"
  * };
- * @param {object} [data] - JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
+ * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
  * @param {object} [options] - The asset handler options. For container options see {@link pc.ContainerHandler}
  * @param {boolean} [options.crossOrigin] - For use with texture resources. For browser-supported image formats only, enable cross origin.
  * @example
@@ -61,7 +61,7 @@ var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data field or null if hash was set (e.g from using {@link pc.AssetRegistry#loadFromUrl})
  * @property {ArrayBuffer} [file.contents] Optional file contents. This is faster than wrapping the data
  * in a (base64 encoded) blob. Currently only used by container assets.
- * @property {object} [data] Optional JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
+ * @property {object} [data] Optional JSON data that contains either the complete resource data. (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
  * @property {object} [options] - Optional JSON data that contains the asset handler options.
  * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
  * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps

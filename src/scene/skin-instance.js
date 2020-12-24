@@ -58,6 +58,14 @@ Object.assign(SkinInstance.prototype, {
         }
     },
 
+    destroy: function () {
+
+        if (this.boneTexture) {
+            this.boneTexture.destroy();
+            this.boneTexture = null;
+        }
+    },
+
     initSkin: function (skin) {
 
         this.skin = skin;
