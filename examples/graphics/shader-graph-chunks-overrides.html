@@ -186,22 +186,17 @@
                             
                             shaderGraphChunk.update(app.graphicsDevice);
 
-                            if (entityB && matB)
-                            {
+                            if (entityB && matB) {
                                 var tB=time%1.0;
-                                if (tB>=0.5)
-                                {
+                                if (tB>=0.5) {
                                      matB.overrideGraphSwitch(switchName, 1);
-                                }
-                                else
-                                {
+                                } else {
                                      matB.overrideGraphSwitch(switchName, 0);
                                 }
                                 matB.update();
                             }             
                             
-                            if (entityC && matC)
-                            {
+                            if (entityC && matC) {
                                 matC.overrideGraphParameter("uTime", time*-0.5 );                                 
                                 matC.overrideGraphParameter("uTexMapA", numbersMap ); 
                                 matC.overrideGraphParameter("uTileA", 1.0 );

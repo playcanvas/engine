@@ -50,7 +50,6 @@ import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { VisibleInstanceList } from './layer.js';
-import { StandardMaterial } from './materials/standard-material.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(

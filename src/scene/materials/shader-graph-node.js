@@ -513,10 +513,8 @@ Object.assign(ShaderGraphNode.prototype, {
 
     setParameter: function (name, value) {
         var ioPort = this.getIoPortByName(name);
-        if (ioPort && value !== undefined)
-        {
-            if (!((value instanceof Texture || typeof(value) === 'number') ? value === ioPort._value : value.equals(ioPort._value)))
-            {
+        if (ioPort && value !== undefined) {
+            if (!((value instanceof Texture || typeof(value) === 'number') ? value === ioPort._value : value.equals(ioPort._value))) {
                 this._addIoPort(ioPort.type, name, value, ioPort.ptype );
             }
         }
