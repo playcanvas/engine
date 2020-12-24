@@ -1,21 +1,21 @@
 import { flexOp } from './flexOp.js';
 
 // node
-var mul = {
+var sub = {
     // placeholder meta data - structure will be finalized in MVP S3
     meta: flexOp.meta.ports,
     // placeholder editor data - structure will be finalized in MVP S3
     editor: {
-        label: "MUL",
+        label: "SUB",
         ports: flexOp.editor.ports
     }
 };
 
 // generator
-mul.gen = function ( argTypes, options ) {
-    var opt = { opName: 'mul', opCode: '*' };
+sub.gen = function ( argTypes, options ) {
+    var opt = { opName: 'sub', opCode: '-' };
     Object.assign(opt, options);
     return flexOp.gen(argTypes, opt );
 };
 
-export { mul };
+export { sub };

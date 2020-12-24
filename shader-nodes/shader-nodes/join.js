@@ -38,5 +38,4 @@ join.gen = function ( argTypes, options ) {
     return code;
 };
 
-// export { join };
-export default join;
+export { join };

@@ -34,5 +34,4 @@ cross.gen = function ( argTypes, options ) {
     return code;
 };
 
-// export { cross };
-export default cross;
+export { cross };

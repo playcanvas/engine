@@ -18,5 +18,4 @@ add.gen = function ( argTypes, options ) {
     return flexOp.gen(argTypes, opt );
 };
 
-// export { add };
-export default add;
+export { add };

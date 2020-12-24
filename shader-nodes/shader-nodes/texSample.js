@@ -48,5 +48,4 @@ texSample.gen = function ( argTypes, options ) {
     return code;
 };
 
-// export { texSample };
-export default texSample;
+export { texSample };

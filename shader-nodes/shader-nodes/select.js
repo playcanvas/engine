@@ -68,5 +68,4 @@ select.gen = function ( argTypes, options ) {
     return code;
 };
 
-// export { cross };
-export default select;
+export { select };

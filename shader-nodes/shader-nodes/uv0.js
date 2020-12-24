@@ -19,5 +19,4 @@ uv0.gen = function ( argTypes, options ) {
 
     return code;};
 
-// export { uv0 };
-export default uv0;
+export { uv0 };

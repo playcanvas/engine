@@ -95,4 +95,3 @@ flexOp.gen = function ( argTypes, options ) {
 };
 
 export { flexOp };
-export default flexOp;
