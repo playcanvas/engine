@@ -84,7 +84,7 @@ ProgramLibrary.prototype.storeNewProgram = function (name, options) {
         var defaultMat = this._getDefaultStdMatOptions(options.pass);
 
         for (var p in options) {
-            if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p] && p !== '_shaderGraphChunk') || p === "pass")
+            if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p] && p !== '_shaderGraphChunk' && p !== '_graphSwitchOverrides' && p !== '_graphParamOverrides') || p === "pass")
                 opt[p] = options[p];
         }
     } else {

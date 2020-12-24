@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Shader Graph Chunks Builder</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../../build/playcanvas-shader-nodes.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+    
+    <!-- The script -->
+    <script>
+        var light, camera;
+        var time = 0;
+
+        var entityA, entityB, entityC;
+        var matA, matB, matC;
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        // register core nodes
+        app.shaderNodes.register(pcsg.shaderNodes);
+
+        // set ambient light
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // Create an Entity with a camera component
+        camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 25);
+        app.root.addChild(camera);
+
+        // Create an entity with a directional light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1.0, 1.0)
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(15, -20, 0);
+
+        // load in a model
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            entityA = new pc.Entity();
+
+            var modelComponent = entityA.addComponent("model", {
+                    type: "asset",
+                    asset: asset.resource.model
+                });
+            var model = modelComponent.model;
+
+            app.root.addChild(entityA);
+           
+
+            entityB = entityA.clone();
+            app.root.addChild(entityB);
+            
+            entityC = entityA.clone();
+            app.root.addChild(entityC);
+
+            entityA.translate(-6, 0, 0);
+            entityB.translate( 0, 0, 0);
+            entityC.translate( 6, 0, 0);
+
+            // load a texture asset
+            app.assets.loadFromUrl("../assets/textures/logo.jpg", "texture", function (err, asset) {    
+                var logoMap = asset.resource;                
+                app.assets.loadFromUrl("../assets/textures/smiley.jpg", "texture", function (err, asset) {    
+                    var smileyMap = asset.resource;            
+                    app.assets.loadFromUrl("../assets/textures/particles-numbers.png", "texture", function (err, asset) {    
+                        var numbersMap = asset.resource;            
+
+                        // build one graph
+                        // create a shader graph builder
+                        var builder = new pc.ShaderGraphBuilder(app);
+
+                        // add input parameters
+                        var timeParam = builder.addParam('float', 'uTime', 0.0);
+                        var texParamA = builder.addParam('sampler2D', 'uTexMapA', logoMap);
+                        var texParamB = builder.addParam('sampler2D', 'uTexMapB', numbersMap);
+                        var tileParamA = builder.addParam('float', 'uTileA', 4.0 );
+                        var tileParamB = builder.addParam('float', 'uTileB', 1.0 );
+                        var colParam = builder.addParam('vec4', 'uCol', new pc.Vec4(0.5, 0.5, 1.0, 1.0) );                        
+                        var usefulConsts = builder.addConst('vec4', 'usefulConsts', new pc.Vec4(0.0, 0.5, 2.0, 1.0) );
+
+                        // create and hook up graph nodes
+                        var uv0Node = builder.addNode('uv0');
+                        var wposNode = builder.addNode('worldPos');
+                        var wnormNode = builder.addNode('worldNorm');
+                        var albedoNode = builder.addNode('stdAlbedo');
+
+                        var mulNodeA = builder.addNode('mul', [ timeParam, { node: usefulConsts, swizzle: 'gr' }, { node: usefulConsts, swizzle: 'g' } ] );
+                        var mulNodeB = builder.addNode('mul', [ timeParam, { node: usefulConsts, swizzle: 'rg' }, { node: usefulConsts, swizzle: 'g' } ] );
+                        var scrollNodeA = builder.addNode('add', [ mulNodeA, uv0Node ] );
+                        var scrollNodeB = builder.addNode('add', [ mulNodeB, uv0Node ] );
+                        var texSampNodeA = builder.addTextureSample( texParamA, builder.addNode('mul', [scrollNodeA, tileParamA]), { precision: 'lowp' } );
+                        var texSampNodeB = builder.addTextureSample( texParamB, builder.addNode('mul', [scrollNodeB, tileParamB]) );
+
+                        // create a static switch to choose alpha source
+                        var switchValue = 0;
+                        var switchName = 'switchAlpha';
+                        var staticSwitch = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'rgbg' }, { node: texSampNodeB, swizzle: 'rgbg' } ], switchValue);                
+
+                        var calcNodeA = builder.addNode('mul', [{ node: usefulConsts, swizzle: 'g' }, { node: usefulConsts, swizzle: 'g' }, { node: staticSwitch, swizzle: 'g' }]);
+
+                        var calcNodeS = builder.addNode('mul', [{ node: calcNodeA }, { node: colParam, swizzle: 'rgb' }, { node: albedoNode, swizzle: 'rgb' }]);
+                        var calcNodeIA = builder.addNode('sub', [{ node: usefulConsts, swizzle: 'a' }, { node: calcNodeA }]);
+                        var calcNodeD = builder.addNode('mul', [{ node: calcNodeIA }, { node: albedoNode, swizzle: 'rgb' }]);
+
+                        // hook up outputs
+                        builder.addOutput( { node: staticSwitch, swizzle: 'a' } , 'float', 'sgGlossiness' );
+                        builder.addOutput( builder.addNode('mul', [{ node: usefulConsts, swizzle: 'ggg' }, { node: staticSwitch, swizzle: 'ggg' }]), 'vec3', 'sgSpecularity');
+                        builder.addOutput( builder.addNode('add', [{ node: calcNodeS, swizzle: 'rgb' }, { node: calcNodeD, swizzle: 'rgb' }]), 'vec3', 'sgAlbedo');
+
+                        // return built shader graph chunk
+                        var shaderGraphChunk = builder.getShaderGraphChunk();
+
+                        // assign to 3 materials - each assigned to a model
+                        matA = new pc.StandardNodeMaterial(model.meshInstances[0].material, shaderGraphChunk);
+                        matA.alphaTest = 1.0;
+                        matA.update();
+
+                        matB = matA.clone();
+                        matC = matA.clone();
+
+                        // replace model's materials with standard node materials    
+                        for (var i=0; i<model.meshInstances.length; i++)
+                        {
+                            entityA.model.model.meshInstances[i].material = matA;
+                            entityB.model.model.meshInstances[i].material = matB;
+                            entityC.model.model.meshInstances[i].material = matC;
+                        }
+
+                        var redCol=new pc.Vec4(1,0,0,1);
+                        var blueCol=new pc.Vec4(0,0,1,1);
+
+                        // update
+                        app.on("update", function (dt) {
+                            prevTime = time;
+                            time += dt;
+                            
+                            // graph parameters
+                            shaderGraphChunk.setParameter('uTime', time);
+                            
+                            var t0=(time*2)%1.0;
+                            if (t0>=0.5) {
+                                shaderGraphChunk.setParameter('uCol', redCol);
+                            } else {
+                                shaderGraphChunk.setParameter('uCol', blueCol);
+                            }
+
+                            var t4=time%4.0;
+                            if (t4>=2.0) {
+                                shaderGraphChunk.setSwitchValue(switchName, 0);
+                            } else {
+                                shaderGraphChunk.setSwitchValue(switchName, 1);
+                            }
+                            
+                            shaderGraphChunk.update(app.graphicsDevice);
+
+                            if (entityB && matB)
+                            {
+                                var tB=time%1.0;
+                                if (tB>=0.5)
+                                {
+                                     matB.overrideGraphSwitch(switchName, 1);
+                                }
+                                else
+                                {
+                                     matB.overrideGraphSwitch(switchName, 0);
+                                }
+                                matB.update();
+                            }             
+                            
+                            if (entityC && matC)
+                            {
+                                matC.overrideGraphParameter("uTime", time*-0.5 );                                 
+                                matC.overrideGraphParameter("uTexMapA", numbersMap ); 
+                                matC.overrideGraphParameter("uTileA", 1.0 );
+                                matC.overrideGraphParameter("uTexMapB", smileyMap );
+                                matC.overrideGraphParameter("uTileB", 4.0 );
+                            }                                              
+                        });
+
+                        app.start();
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -50,6 +50,7 @@ import { Material } from './materials/material.js';
 import { Mesh } from './mesh.js';
 import { MeshInstance } from './mesh-instance.js';
 import { VisibleInstanceList } from './layer.js';
+import { StandardMaterial } from './materials/standard-material.js';
 
 // Global shadowmap resources
 var scaleShift = new Mat4().mul2(
@@ -1944,6 +1945,13 @@ Object.assign(ForwardRenderer.prototype, {
                 // Unset meshInstance overrides back to material values if next draw call will use the same material
                 if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
                     material.setParameters(device, drawCall.parameters);
+                }
+
+                // Unset material overrides back to shadergraph chunk defaults
+                if (i >= drawCallsCount - 1 || drawCalls[i + 1].material !== material) {
+                    if (material.shaderGraphChunk) {
+                        material.setParameters(device, undefined, true);
+                    }
                 }
 
                 prevMaterial = material;

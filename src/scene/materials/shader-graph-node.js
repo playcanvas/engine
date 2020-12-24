@@ -7,6 +7,7 @@ export var PORT_TYPE_IN = 1;
 export var PORT_TYPE_OUT = 2;
 export var PORT_TYPE_CONST = 3;
 export var PORT_TYPE_RET = 4;
+export var PORT_TYPE_SWITCH = 5;
 
 // useful LUTs
 export var type2Comp = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
@@ -15,8 +16,9 @@ export var comp2Type = ['', 'float', 'vec2', 'vec3', 'vec4'];
 var Port = function ( type, name, value, ptype) {
     this.type = type;
     this.name = name;
+    this._value = value;
 
-    if (value) {
+    if (value != undefined) {
         if (value instanceof Texture) {
             this.valueTex = value;
         } else if (value instanceof Vec4) {
@@ -32,7 +34,7 @@ var Port = function ( type, name, value, ptype) {
             this.valueX = value.x;
             this.valueY = value.y;
         } else if (typeof(value) === 'number') {
-            this.valueX = value.x;
+            this.valueX = value;
         }
     }
 
@@ -82,7 +84,6 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
 
     // graph
     this.graphData = {};
-
     this.graphData.ioPorts = []; // input, output or constant variables
 
     if (funcCodeString) {
@@ -93,6 +94,14 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
         this.graphData.subGraphs = [];
         this.graphData.connections = [];
     }
+
+    // referencing materials
+    this._materials = [];
+
+    // default params
+    this._defaultParams = {};
+    this._defaultParamsDirty = true;
+    this._defaultSwitchesDirty = true;
 };
 
 ShaderGraphNode.prototype.constructor = ShaderGraphNode;
@@ -124,33 +133,52 @@ Object.assign(ShaderGraphNode.prototype, {
         return this._portCache[ioPort.name];
     },
 
-    updateUniforms: function (mat) {
+    setParameters: function (device, names, params) {
+        var parameters = params || this._defaultParams;
+        var paramNames = names || Object.keys(parameters);
+
+        for (var i = 0; i < paramNames.length; i++) {
+            var paramName = paramNames[i];
+            var parameter = parameters[paramName];
+            if (parameter && parameter.data) {
+                if (!parameter.scopeId) {
+                    parameter.scopeId = device.scope.resolve(this.getIoPortUniformName(paramName));
+                }
+                parameter.scopeId.setValue(parameter.data);
+            }
+        }
+    },
+
+    updateUniforms: function () {
         for (var n = 0; n < this.graphData.ioPorts.length; n++) {
             var ioPort = this.graphData.ioPorts[n];
             var ioPortCached = this._getCachedPort(n); // use port cache
 
-            if (ioPortCached.isUniform) {
+            if (ioPortCached.isUniform || ioPort.ptype === PORT_TYPE_SWITCH) {
+                var data;
                 switch (ioPort.type) {
                     case 'sampler2D':
-                        mat.setParameter(ioPortCached.nameId, ioPort.valueTex);
+                        data = ioPort.valueTex;
                         break;
                     case 'float':
-                        mat.setParameter(ioPortCached.nameId, ioPort.valueX);
+                        data = ioPort.valueX;
                         break;
                     case 'vec2':
-                        mat.setParameter(ioPortCached.nameId, [ioPort.valueX, ioPort.valueY]);
+                        data = [ioPort.valueX, ioPort.valueY];
                         break;
                     case 'vec3':
-                        mat.setParameter(ioPortCached.nameId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ]);
+                        data = [ioPort.valueX, ioPort.valueY, ioPort.valueZ];
                         break;
                     case 'vec4':
-                        mat.setParameter(ioPortCached.nameId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW]);
+                        data = [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW];
                         break;
                     case 'samplerCube':
                     default:
-                        // error
+                        // currently unsupported type
                         break;
                 }
+
+                this._defaultParams[ioPort.name] = { scopeId: null, data: data };
             }
         }
     },
@@ -163,7 +191,7 @@ Object.assign(ShaderGraphNode.prototype, {
                 var ioPort = this.graphData.ioPorts[i];
                 if (ioPort && ioPort.name && ioPort.type) {
                     // input and constant ports must have a valid value
-                    if (ioPort.ptype === PORT_TYPE_IN || ioPort.ptype === PORT_TYPE_CONST) {
+                    if (ioPort.ptype === PORT_TYPE_IN || ioPort.ptype === PORT_TYPE_CONST || ioPort.ptype === PORT_TYPE_SWITCH) {
                         if (ioPort.type === 'sampler2D' ) {
                             if (!(ioPort.valueTex && ioPort.valueTex instanceof Texture)) {
                                 return false;
@@ -246,10 +274,20 @@ Object.assign(ShaderGraphNode.prototype, {
     _addIoPort: function (type, name, value, ptype) {
         var ioPort = new Port(type, name, value, ptype);
 
-        this._portMap[name] = this.graphData.ioPorts.length;
-        this.graphData.ioPorts.push(ioPort);
+        var i = this._portMap[name];
+        if (i === undefined) {
+            i = this.graphData.ioPorts.length;
+            this._portMap[name] = i;
+        }
+        this.graphData.ioPorts[i] = ioPort;
+
+        this._defaultParamsDirty = true;
 
         return ioPort;
+    },
+
+    addSwitch: function (type, name, value) {
+        return this._addIoPort(type, name, value, PORT_TYPE_SWITCH);
     },
 
     addInput: function (type, name, value) {
@@ -371,7 +409,7 @@ Object.assign(ShaderGraphNode.prototype, {
         // input params
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             ioPort = this.graphData.ioPorts[i];
-            if (ioPort.ptype === PORT_TYPE_IN) {
+            if (ioPort.ptype === PORT_TYPE_IN || ioPort.ptype === PORT_TYPE_SWITCH) {
                 if (inVars && inVars[ioPort.name] !== undefined) {
                     if (ioPort.type === 'sampler2D') {
                         callString += inVars[ioPort.name].name + ', ';
@@ -427,29 +465,61 @@ Object.assign(ShaderGraphNode.prototype, {
 
     getSwitchValue: function (name) {
         if (this._switchMap[name]) {
-            return this._switchMap[name].value;
+            return ((this._switchOverrides && this._switchOverrides[name] !== undefined) ? this._switchOverrides[name] : this._switchMap[name].value);
         }
     },
 
     setSwitchValue: function (name, value) {
         if (this._switchMap[name]) {
-            if (value >= 0 && value <= this._switchMap[name].maxValue) {
-                this._switchMap[name].value = value;
+            if (value !== undefined && value >= 0 && value <= this._switchMap[name].maxValue) {
+                if (this._switchMap[name].value != value) {
+                    this._switchMap[name].value = value;
+                    this._defaultParamsDirty = true;
+                    this._defaultSwitchesDirty = true;
+                }
             }
         }
     },
 
     getSwitchKey: function () {
-        var switchKeys = Object.keys(this._switchMap);
+        var switchNames = Object.keys(this._switchMap);
 
-        var key = this.id;
+        var key = "graph_" + this.id;
 
-        for (var k = 0; k < switchKeys.length; k++) {
-            key += this._switchMap[switchKeys[k]].id;
-            key += this._switchMap[switchKeys[k]].value;
+        for (var k = 0; k < switchNames.length; k++) {
+            var switchName = switchNames[k];
+            key += "switch_" + this._switchMap[switchName].id;
+            key += ":" + this.getSwitchValue(switchName);
         }
 
         return key;
+    },
+
+    update: function (device) {
+        if (this._defaultParamsDirty === true) {
+            this.updateUniforms();
+            this.setParameters(device);
+            this._defaultParamsDirty = false;
+        }
+        if (this._defaultSwitchesDirty === true) {
+            // any material using this graph directly will need to switch shader variant
+            for (var m = 0; m < this._materials.length; m++) {
+                this._materials[m].dirty = true;
+                this._materials[m].dirtyShader = true;
+            }
+            this._defaultSwitchesDirty = false;
+        }
+    },
+
+    setParameter: function (name, value) {
+        var ioPort = this.getIoPortByName(name);
+        if (ioPort && value !== undefined)
+        {
+            if (!((value instanceof Texture || typeof(value) === 'number') ? value === ioPort._value : value.equals(ioPort._value)))
+            {
+                this._addIoPort(ioPort.type, name, value, ioPort.ptype );
+            }
+        }
     },
 
     getIoPortByName: function (name) {
@@ -473,21 +543,27 @@ Object.assign(ShaderGraphNode.prototype, {
                         for (var v = 0; v < subGraph.graphData.ioPorts.length; v++) {
                             var ioPort = subGraph.graphData.ioPorts[v];
                             var ioPortCached = subGraph._getCachedPort(v); // use port cache
+                            var depIoPort;
                             if (ioPortCached.isUniform) {
-                                var depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
+                                depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
+                                depIoPortList.push(depIoPort);
+                            }
+                            if (ioPort.ptype === PORT_TYPE_SWITCH) {
+                                 // assume it is a dynamic switch in sub graph (if a static is passed as a param, then compiler can still optimize)
+                                depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + subGraph.getSwitchValue(ioPort.name) + ');\n';
                                 depIoPortList.push(depIoPort);
                             }
                         }
                     }
 
-                    depGraphFuncs[key] = subGraph._generateFuncCodeString();
+                    depGraphFuncs[key] = { graph: subGraph, code: subGraph._generateFuncCodeString() };
                     subGraph._generateSubGraphFuncs(depGraphFuncs, depIoPortList);
                 }
             }
         }
     },
 
-    generateRootDeclCodeString: function () {
+    generateRootDeclCodeString: function (device) {
         var i;
         var ioPort;
         var ioPortCached;
@@ -501,15 +577,18 @@ Object.assign(ShaderGraphNode.prototype, {
             if (ioPortCached.isUniform) {
                 generatedCodeString += 'uniform ' + this._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ';\n';
             }
+            if (ioPort.ptype === PORT_TYPE_SWITCH) {
+                // assume it is a static switch in root
+                generatedCodeString += 'const ' + this._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + this.getSwitchValue(ioPort.name) + ');\n';
+            }
         }
 
         // get all sub graph function definitions (including functions in sub graphs' sub graphs ...)
-        // assumes names are unique - maybe should be id or key?
         var depGraphFuncs = {};
         var depIoPortList = [];
 
         var depKey = this.id + '_' + this.name;
-        depGraphFuncs[depKey] = this._generateFuncCodeString(); // this should prevent infinite recursion?
+        depGraphFuncs[depKey] = { graph: this, code: this._generateFuncCodeString() }; // this should prevent infinite recursion
 
         this._generateSubGraphFuncs(depGraphFuncs, depIoPortList);
 
@@ -521,6 +600,10 @@ Object.assign(ShaderGraphNode.prototype, {
         // add all the graph definitions
         var depGraphList = []; // reverse order
         for (var funcKey in depGraphFuncs) {
+
+            // update dependent graphs default params if needed
+            depGraphFuncs[funcKey].graph.update(device);
+
             var funcString = '';
 
             if ( funcKey.endsWith('PS') ) {
@@ -529,7 +612,7 @@ Object.assign(ShaderGraphNode.prototype, {
                 funcString += '#ifdef SHADERGRAPH_VS\n';
             }
 
-            funcString += depGraphFuncs[funcKey] + '\n';
+            funcString += depGraphFuncs[funcKey].code + '\n';
 
             if ( funcKey.endsWith('PS') ) {
                 funcString += '#endif //SHADERGRAPH_PS\n';
@@ -557,11 +640,11 @@ Object.assign(ShaderGraphNode.prototype, {
         for (var i = 0; i < this.graphData.ioPorts.length; i++) {
             var ioPort = this.graphData.ioPorts[i];
             var ioPortCached = this._getCachedPort(i); // use port cache
-            if (ioPort.ptype === PORT_TYPE_IN) {
+            if (ioPort.ptype === PORT_TYPE_IN || ioPort.ptype === PORT_TYPE_SWITCH) {
                 inVars[ioPort.name] = { name: ioPortCached.nameId, type: ioPort.type };
             }
             if (ioPort.ptype === PORT_TYPE_OUT || ioPort.ptype === PORT_TYPE_RET ) {
-                generatedCodeString += ioPort.type + ' ' + ioPort.name + ';\n';
+                generatedCodeString += this._precision + ' ' + ioPort.type + ' ' + ioPort.name + ';\n';
                 outVars[ioPort.name] = { name: ioPort.name, type: ioPort.type };
             }
         }
@@ -600,7 +683,7 @@ Object.assign(ShaderGraphNode.prototype, {
             // input params
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
-                if (ioPort.ptype === PORT_TYPE_IN) {
+                if (ioPort.ptype === PORT_TYPE_IN || ioPort.ptype === PORT_TYPE_SWITCH) {
                     generatedCodeString += 'in ' + ioPort.type + ' ' + ioPort.name + ', ';
                 }
             }
@@ -624,7 +707,7 @@ Object.assign(ShaderGraphNode.prototype, {
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
                 if (ioPort.ptype === PORT_TYPE_CONST && (ioPort.type !== 'sampler2D' )) {
-                    generatedCodeString += this._precision + ' ' + ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
+                    generatedCodeString += 'const ' + this._precision + ' ' + ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
                 }
             }
 
@@ -730,12 +813,13 @@ Object.assign(ShaderGraphNode.prototype, {
                         generatedCodeString += '#ifdef SHADERGRAPH_VS\n';
                     }
 
-                    if (this._switchId2Name[subGraphIndex]) {
+                    // if (this._switchId2Name[subGraphIndex]) {
                         // static switch
-                        generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateStaticSwitch(this._switchMap[this._switchId2Name[subGraphIndex]].value, dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
-                    } else {
-                        generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateSubGraphCall(dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
-                    }
+                    //     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateStaticSwitch(this.getSwitchValue(this._switchId2Name[subGraphIndex]), dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
+                    // } else {
+                    //     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateSubGraphCall(dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
+                    // }
+                    generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateSubGraphCall(dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
 
                     if ( func.endsWith('PS')  ) {
                         generatedCodeString += '#endif //SHADERGRAPH_PS\n';

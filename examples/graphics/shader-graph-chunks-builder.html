@@ -91,9 +91,9 @@
 
                     // create and hook up graph nodes
                     var scrollNode = builder.addNode('add', [ timeParam, builder.addNode('uv0') ] );
-                    var texSampNodeA = builder.addTextureSample( texParamA, scrollNode, { precision: 'lowp' } );
+                    var texSampNodeA = builder.addTextureSample( texParamA, scrollNode, { precision: 'highp' } );
                     var texSampNodeB = builder.addTextureSample( texParamB, scrollNode );
-                    var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ], { precision: 'lowp' } );
+                    var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ], { precision: 'highp' } );
 
                     // create a static switch to choose alpha source
                     var switchValue = 1;
@@ -108,7 +108,7 @@
                     var shaderGraphChunk = builder.getShaderGraphChunk();
 
                     //tmp - directly set private 
-                    shaderGraphChunk._precision = 'lowp';
+                    // shaderGraphChunk._precision = 'lowp';
 
                     // replace model's materials with standard node materials
                     var originalMaterials = [];
@@ -123,6 +123,7 @@
 
                                 originalMaterials.push(meshInstance.material);                            
                                 shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material, shaderGraphChunk));
+                                // shaderGraphMaterials.push(new pc.StandardNodeMaterial(meshInstance.material));
                             }
 
                             meshInstance.material = shaderGraphMaterials[index];
@@ -153,11 +154,11 @@
                         shaderGraphMaterials.forEach(function (material) {
                             if (flipSwitch)
                             {
-                                material.setSwitch(switchName, switchValue);
+                                material.overrideGraphSwitch(switchName, switchValue);
                                 material.update();
                             }
-                            material.setParameter('uTime', time);
-                            material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 1.7) * 0.5);
+                            material.overrideGraphParameter('uTime', time);
+                            material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 2.0) * 0.5);
                         });
 
                         if (flipSwitch)

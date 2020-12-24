@@ -10,7 +10,9 @@ standardnode.generateKey = function (options) {
     var key = this._generateKey(options);
 
     if (options._shaderGraphChunk) {
+        if (options._graphSwitchOverrides) options._shaderGraphChunk._switchOverrides = options._graphSwitchOverrides;
         key += options._shaderGraphChunk.getSwitchKey();
+        if (options._graphSwitchOverrides) options._shaderGraphChunk._switchOverrides = null;
     }
 
     return hashCode(key);
@@ -27,10 +29,13 @@ standardnode.createShaderDefinition = function (device, options) {
     graphCode.needsNormal = false;
 
     if (options._shaderGraphChunk) {
+
+        if (options._graphSwitchOverrides) options._shaderGraphChunk._switchOverrides = options._graphSwitchOverrides;
+
         rootShaderGraph = options._shaderGraphChunk;
 
-        rootDeclGLSL = rootShaderGraph.generateRootDeclCodeString();
-        rootCallGLSL = rootShaderGraph.generateRootCallCodeString();
+        rootDeclGLSL = rootShaderGraph.generateRootDeclCodeString(device);
+        rootCallGLSL = rootShaderGraph.generateRootCallCodeString(device);
 
         graphCode.vsDecl = '';
         if (rootShaderGraph.getIoPortByName('sgVertOff')) {
@@ -87,6 +92,8 @@ standardnode.createShaderDefinition = function (device, options) {
         if (rootShaderGraph.getIoPortByName('sgFragOut')) {
             graphCode.psEnd +=  'gl_FragColor = sgFragOut;\n';
         }
+
+        if (options._graphSwitchOverrides) options._shaderGraphChunk._switchOverrides = null;
     }
 
     return this._createShaderDefinition(device, options, graphCode);
