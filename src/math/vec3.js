@@ -501,6 +501,7 @@ class Vec3 {
      * @description A constant vector set to [0, 0, 0].
      */
     static ZERO = Object.freeze(new Vec3(0, 0, 0));
+
     /**
      * @field
      * @static
@@ -510,6 +511,7 @@ class Vec3 {
      * @description A constant vector set to [1, 1, 1].
      */
     static ONE = Object.freeze(new Vec3(1, 1, 1));
+
     /**
      * @field
      * @static
@@ -519,6 +521,7 @@ class Vec3 {
      * @description A constant vector set to [0, 1, 0].
      */
     static UP = Object.freeze(new Vec3(0, 1, 0));
+
     /**
      * @field
      * @static
@@ -528,6 +531,7 @@ class Vec3 {
      * @description A constant vector set to [0, -1, 0].
      */
     static DOWN = Object.freeze(new Vec3(0, -1, 0));
+
     /**
      * @field
      * @static
@@ -537,6 +541,7 @@ class Vec3 {
      * @description A constant vector set to [1, 0, 0].
      */
     static RIGHT = Object.freeze(new Vec3(1, 0, 0));
+
     /**
      * @field
      * @static
@@ -546,6 +551,7 @@ class Vec3 {
      * @description A constant vector set to [-1, 0, 0].
      */
     static LEFT = Object.freeze(new Vec3(-1, 0, 0));
+
     /**
      * @field
      * @static
@@ -555,6 +561,7 @@ class Vec3 {
      * @description A constant vector set to [0, 0, -1].
      */
     static FORWARD = Object.freeze(new Vec3(0, 0, -1));
+
     /**
      * @field
      * @static

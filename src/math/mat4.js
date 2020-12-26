@@ -1297,6 +1297,7 @@ class Mat4 {
      * @description A constant matrix set to the identity.
      */
     static IDENTITY = Object.freeze(new Mat4());
+
     /**
      * @field
      * @static

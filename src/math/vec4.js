@@ -460,6 +460,7 @@ class Vec4 {
      * @description A constant vector set to [0, 0, 0, 0].
      */
     static ZERO = Object.freeze(new Vec4(0, 0, 0, 0));
+
     /**
      * @field
      * @static

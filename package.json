@@ -27,7 +27,8 @@
     "url": "https://github.com/playcanvas/engine.git"
   },
   "eslintConfig": {
-    "extends": "@playcanvas/eslint-config"
+    "extends": "@playcanvas/eslint-config",
+    "parser": "babel-eslint"
   },
   "eslintIgnore": [
     "examples/lib/*",
@@ -42,6 +43,7 @@
     "@rollup/plugin-babel": "^5.2.2",
     "@rollup/plugin-replace": "^2.3.4",
     "@rollup/pluginutils": "^4.1.0",
+    "babel-eslint": "10.1.0",
     "chai": "^4.2.0",
     "eslint": "^7.16.0",
     "google-closure-compiler": "^20201207.0.0",

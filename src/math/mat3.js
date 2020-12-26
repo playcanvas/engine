@@ -209,6 +209,7 @@ class Mat3 {
      * @description A constant matrix set to the identity.
      */
     static IDENTITY = Object.freeze(new Mat3());
+
     /**
      * @field
      * @static

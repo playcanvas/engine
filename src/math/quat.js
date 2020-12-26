@@ -712,6 +712,7 @@ class Quat {
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
     static IDENTITY = Object.freeze(new Quat(0, 0, 0, 1));
+
     /**
      * @field
      * @static
