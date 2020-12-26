@@ -11,7 +11,7 @@
 class Frustum {
     constructor() {
         this.planes = [];
-        for (var i = 0; i < 6; i++)
+        for (let i = 0; i < 6; i++)
             this.planes[i] = [];
     }
 
@@ -30,10 +30,10 @@ class Frustum {
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {
-        var vpm = matrix.data;
+        const vpm = matrix.data;
 
-        var plane;
-        var planes = this.planes;
+        let plane;
+        const planes = this.planes;
 
         // Extract the numbers for the RIGHT plane
         plane = planes[0];
@@ -42,7 +42,7 @@ class Frustum {
         plane[2] = vpm[11] - vpm[8];
         plane[3] = vpm[15] - vpm[12];
         // Normalize the result
-        var t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
+        let t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
         plane[0] /= t;
         plane[1] /= t;
         plane[2] /= t;
@@ -123,9 +123,8 @@ class Frustum {
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
-        var p, plane;
-        for (p = 0; p < 6; p++) {
-            plane = this.planes[p];
+        for (let p = 0; p < 6; p++) {
+            const plane = this.planes[p];
             if (plane[0] * point.x + plane[1] * point.y + plane[2] * point.z + plane[3] <= 0) {
                 return false;
             }
@@ -145,21 +144,18 @@ class Frustum {
      * it is contained by the frustum.
      */
     containsSphere(sphere) {
-        var c = 0;
-        var d;
-        var p;
+        let c = 0;
 
-        var sr = sphere.radius;
-        var sc = sphere.center;
-        var scx = sc.x;
-        var scy = sc.y;
-        var scz = sc.z;
-        var planes = this.planes;
-        var plane;
+        const sr = sphere.radius;
+        const sc = sphere.center;
+        const scx = sc.x;
+        const scy = sc.y;
+        const scz = sc.z;
+        const planes = this.planes;
 
-        for (p = 0; p < 6; p++) {
-            plane = planes[p];
-            d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
+        for (let p = 0; p < 6; p++) {
+            const plane = planes[p];
+            const d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
             if (d <= -sr)
                 return 0;
             if (d > sr)

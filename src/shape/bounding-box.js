@@ -1,10 +1,10 @@
 import { Vec3 } from '../math/vec3.js';
 
-var tmpVecA = new Vec3();
-var tmpVecB = new Vec3();
-var tmpVecC = new Vec3();
-var tmpVecD = new Vec3();
-var tmpVecE = new Vec3();
+const tmpVecA = new Vec3();
+const tmpVecB = new Vec3();
+const tmpVecC = new Vec3();
+const tmpVecD = new Vec3();
+const tmpVecE = new Vec3();
 
 /**
  * @class
@@ -31,35 +31,35 @@ class BoundingBox {
      * @param {pc.BoundingBox} other - Bounding box to add.
      */
     add(other) {
-        var tc = this.center;
-        var tcx = tc.x;
-        var tcy = tc.y;
-        var tcz = tc.z;
-        var th = this.halfExtents;
-        var thx = th.x;
-        var thy = th.y;
-        var thz = th.z;
-        var tminx = tcx - thx;
-        var tmaxx = tcx + thx;
-        var tminy = tcy - thy;
-        var tmaxy = tcy + thy;
-        var tminz = tcz - thz;
-        var tmaxz = tcz + thz;
+        const tc = this.center;
+        const tcx = tc.x;
+        const tcy = tc.y;
+        const tcz = tc.z;
+        const th = this.halfExtents;
+        const thx = th.x;
+        const thy = th.y;
+        const thz = th.z;
+        let tminx = tcx - thx;
+        let tmaxx = tcx + thx;
+        let tminy = tcy - thy;
+        let tmaxy = tcy + thy;
+        let tminz = tcz - thz;
+        let tmaxz = tcz + thz;
 
-        var oc = other.center;
-        var ocx = oc.x;
-        var ocy = oc.y;
-        var ocz = oc.z;
-        var oh = other.halfExtents;
-        var ohx = oh.x;
-        var ohy = oh.y;
-        var ohz = oh.z;
-        var ominx = ocx - ohx;
-        var omaxx = ocx + ohx;
-        var ominy = ocy - ohy;
-        var omaxy = ocy + ohy;
-        var ominz = ocz - ohz;
-        var omaxz = ocz + ohz;
+        const oc = other.center;
+        const ocx = oc.x;
+        const ocy = oc.y;
+        const ocz = oc.z;
+        const oh = other.halfExtents;
+        const ohx = oh.x;
+        const ohy = oh.y;
+        const ohz = oh.z;
+        const ominx = ocx - ohx;
+        const omaxx = ocx + ohx;
+        const ominy = ocy - ohy;
+        const omaxy = ocy + ohy;
+        const ominz = ocz - ohz;
+        const omaxz = ocz + ohz;
 
         if (ominx < tminx) tminx = ominx;
         if (omaxx > tmaxx) tmaxx = omaxx;
@@ -106,10 +106,10 @@ class BoundingBox {
      * @returns {boolean} True if there is an intersection.
      */
     intersects(other) {
-        var aMax = this.getMax();
-        var aMin = this.getMin();
-        var bMax = other.getMax();
-        var bMin = other.getMin();
+        const aMax = this.getMax();
+        const aMin = this.getMin();
+        const bMax = other.getMax();
+        const bMin = other.getMin();
 
         return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
                (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
@@ -117,9 +117,9 @@ class BoundingBox {
     }
 
     _intersectsRay(ray, point) {
-        var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin);
-        var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
-        var dir = ray.direction;
+        const tMin = tmpVecA.copy(this.getMin()).sub(ray.origin);
+        const tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
+        const dir = ray.direction;
 
         // Ensure that we are not dividing it by zero
         if (dir.x === 0) {
@@ -144,13 +144,13 @@ class BoundingBox {
             tMax.z /= dir.z;
         }
 
-        var realMin = tmpVecC.set(Math.min(tMin.x, tMax.x), Math.min(tMin.y, tMax.y), Math.min(tMin.z, tMax.z));
-        var realMax = tmpVecD.set(Math.max(tMin.x, tMax.x), Math.max(tMin.y, tMax.y), Math.max(tMin.z, tMax.z));
+        const realMin = tmpVecC.set(Math.min(tMin.x, tMax.x), Math.min(tMin.y, tMax.y), Math.min(tMin.z, tMax.z));
+        const realMax = tmpVecD.set(Math.max(tMin.x, tMax.x), Math.max(tMin.y, tMax.y), Math.max(tMin.z, tMax.z));
 
-        var minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
-        var maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
+        const minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
+        const maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
-        var intersects = minMax >= maxMin && maxMin >= 0;
+        const intersects = minMax >= maxMin && maxMin >= 0;
 
         if (intersects)
             point.copy(ray.direction).scale(maxMin).add(ray.origin);
@@ -159,12 +159,12 @@ class BoundingBox {
     }
 
     _fastIntersectsRay(ray) {
-        var diff = tmpVecA;
-        var cross = tmpVecB;
-        var prod = tmpVecC;
-        var absDiff = tmpVecD;
-        var absDir = tmpVecE;
-        var rayDir = ray.direction;
+        const diff = tmpVecA;
+        const cross = tmpVecB;
+        const prod = tmpVecC;
+        const absDiff = tmpVecD;
+        const absDir = tmpVecE;
+        const rayDir = ray.direction;
 
         diff.sub2(ray.origin, this.center);
         absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
@@ -253,8 +253,8 @@ class BoundingBox {
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
     containsPoint(point) {
-        var min = this.getMin();
-        var max = this.getMax();
+        const min = this.getMin();
+        const max = this.getMax();
 
         if (point.x < min.x || point.x > max.x ||
             point.y < min.y || point.y > max.y ||
@@ -274,19 +274,19 @@ class BoundingBox {
      * @param {pc.Mat4} m - Transformation matrix to apply to source AABB.
      */
     setFromTransformedAabb(aabb, m) {
-        var ac = aabb.center;
-        var ar = aabb.halfExtents;
+        const ac = aabb.center;
+        const ar = aabb.halfExtents;
 
-        var d = m.data;
-        var mx0 = d[0];
-        var mx1 = d[4];
-        var mx2 = d[8];
-        var my0 = d[1];
-        var my1 = d[5];
-        var my2 = d[9];
-        var mz0 = d[2];
-        var mz1 = d[6];
-        var mz2 = d[10];
+        const d = m.data;
+        const mx0 = d[0];
+        const mx1 = d[4];
+        const mx2 = d[8];
+        const my0 = d[1];
+        const my1 = d[5];
+        const my2 = d[9];
+        const mz0 = d[2];
+        const mz1 = d[6];
+        const mz2 = d[10];
 
         this.center.set(
             d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
@@ -311,13 +311,13 @@ class BoundingBox {
     compute(vertices, numVerts) {
         numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
         if (numVerts > 0) {
-            var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
-            var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
+            const min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
+            const max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
 
-            for (var i = 1; i < numVerts; i++) {
-                var x = vertices[i * 3 + 0];
-                var y = vertices[i * 3 + 1];
-                var z = vertices[i * 3 + 2];
+            for (let i = 1; i < numVerts; i++) {
+                const x = vertices[i * 3 + 0];
+                const y = vertices[i * 3 + 1];
+                const z = vertices[i * 3 + 2];
                 if (x < min.x) min.x = x;
                 if (y < min.y) min.y = y;
                 if (z < min.z) min.z = z;
@@ -338,7 +338,7 @@ class BoundingBox {
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
      */
     intersectsBoundingSphere(sphere) {
-        var sq = this._distanceToBoundingSphereSq(sphere);
+        const sq = this._distanceToBoundingSphereSq(sphere);
         if (sq <= sphere.radius * sphere.radius) {
             return true;
         }
@@ -347,11 +347,11 @@ class BoundingBox {
     }
 
     _distanceToBoundingSphereSq(sphere) {
-        var boxMin = this.getMin();
-        var boxMax = this.getMax();
+        const boxMin = this.getMin();
+        const boxMax = this.getMax();
 
-        var sq = 0;
-        var axis = ['x', 'y', 'z'];
+        let sq = 0;
+        const axis = ['x', 'y', 'z'];
 
         for (var i = 0; i < 3; ++i) {
             var out = 0;

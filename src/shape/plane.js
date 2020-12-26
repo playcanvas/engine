@@ -1,6 +1,6 @@
 import { Vec3 } from '../math/vec3.js';
 
-var tmpVecA = new Vec3();
+const tmpVecA = new Vec3();
 
 /**
  * @private
@@ -28,12 +28,12 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsLine(start, end, point) {
-        var d = -this.normal.dot(this.point);
-        var d0 = this.normal.dot(start) + d;
-        var d1 = this.normal.dot(end) + d;
+        const d = -this.normal.dot(this.point);
+        const d0 = this.normal.dot(start) + d;
+        const d1 = this.normal.dot(end) + d;
 
-        var t = d0 / (d0 - d1);
-        var intersects = t >= 0 && t <= 1;
+        const t = d0 / (d0 - d1);
+        const intersects = t >= 0 && t <= 1;
         if (intersects && point)
             point.lerp(start, end, t);
 
@@ -50,9 +50,9 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
-        var pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
-        var t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
-        var intersects = t >= 0;
+        const pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
+        const t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
+        const intersects = t >= 0;
 
         if (intersects && point)
             point.copy(ray.direction).scale(t).add(ray.origin);

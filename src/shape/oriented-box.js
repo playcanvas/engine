@@ -5,10 +5,10 @@ import { BoundingBox } from './bounding-box.js';
 import { BoundingSphere } from './bounding-sphere.js';
 import { Ray } from './ray.js';
 
-var tmpRay = new Ray();
-var tmpVec3 = new Vec3();
-var tmpSphere = new BoundingSphere();
-var tmpMat4 = new Mat4();
+const tmpRay = new Ray();
+const tmpVec3 = new Vec3();
+const tmpSphere = new BoundingSphere();
+const tmpMat4 = new Mat4();
 
 /**
  * @class
@@ -41,7 +41,7 @@ class OrientedBox {
         this._modelTransform.transformVector(ray.direction, tmpRay.direction);
 
         if (point) {
-            var result = this._aabb._intersectsRay(tmpRay, point);
+            const result = this._aabb._intersectsRay(tmpRay, point);
             tmpMat4.copy(this._modelTransform).invert().transformPoint(point, point);
             return result;
         }
