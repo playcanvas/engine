@@ -11,20 +11,6 @@ import { Vec3 } from './vec3.js';
  * @param {number} [z] - The quaternion's z component. Default value 0.
  * @param {number} [w] - The quaternion's w component. Default value 1.
  */
-function Quat(x, y, z, w) {
-    if (x && x.length === 4) {
-        this.x = x[0];
-        this.y = x[1];
-        this.z = x[2];
-        this.w = x[3];
-    } else {
-        this.x = (x === undefined) ? 0 : x;
-        this.y = (y === undefined) ? 0 : y;
-        this.z = (z === undefined) ? 0 : z;
-        this.w = (w === undefined) ? 1 : w;
-    }
-}
-
 /**
  * @field
  * @name pc.Quat#x
@@ -81,8 +67,21 @@ function Quat(x, y, z, w) {
  * // Set w
  * quat.w = 0;
  */
+class Quat {
+    constructor(x, y, z, w) {
+        if (x && x.length === 4) {
+            this.x = x[0];
+            this.y = x[1];
+            this.z = x[2];
+            this.w = x[3];
+        } else {
+            this.x = (x === undefined) ? 0 : x;
+            this.y = (y === undefined) ? 0 : y;
+            this.z = (z === undefined) ? 0 : z;
+            this.w = (w === undefined) ? 1 : w;
+        }
+    }
 
-Object.assign(Quat.prototype, {
     /**
      * @function
      * @name pc.Quat#clone
@@ -94,17 +93,17 @@ Object.assign(Quat.prototype, {
      *
      * console.log("The result of the cloning is: " + q.toString());
      */
-    clone: function () {
+    clone() {
         return new Quat(this.x, this.y, this.z, this.w);
-    },
+    }
 
-    conjugate: function () {
+    conjugate() {
         this.x *= -1;
         this.y *= -1;
         this.z *= -1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -118,14 +117,14 @@ Object.assign(Quat.prototype, {
      * dst.copy(src, src);
      * console.log("The two quaternions are " + (src.equals(dst) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs) {
         this.x = rhs.x;
         this.y = rhs.y;
         this.z = rhs.z;
         this.w = rhs.w;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -138,9 +137,9 @@ Object.assign(Quat.prototype, {
      * var b = new pc.Quat();
      * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs) {
         return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
-    },
+    }
 
     /**
      * @function
@@ -162,7 +161,7 @@ Object.assign(Quat.prototype, {
      * // Should output [0, 1, 0]
      * console.log(v.toString());
      */
-    getAxisAngle: function (axis) {
+    getAxisAngle(axis) {
         var rad = Math.acos(this.w) * 2;
         var s = Math.sin(rad / 2);
         if (s !== 0) {
@@ -183,7 +182,7 @@ Object.assign(Quat.prototype, {
             axis.z = 0;
         }
         return rad * math.RAD_TO_DEG;
-    },
+    }
 
     /**
      * @function
@@ -193,7 +192,7 @@ Object.assign(Quat.prototype, {
      * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
      */
-    getEulerAngles: function (eulers) {
+    getEulerAngles(eulers) {
         var x, y, z, qx, qy, qz, qw, a2;
 
         eulers = (eulers === undefined) ? new Vec3() : eulers;
@@ -219,7 +218,7 @@ Object.assign(Quat.prototype, {
         }
 
         return eulers.set(x, y, z).scale(math.RAD_TO_DEG);
-    },
+    }
 
     /**
      * @function
@@ -233,9 +232,9 @@ Object.assign(Quat.prototype, {
      * // Invert in place
      * rot.invert();
      */
-    invert: function () {
+    invert() {
         return this.conjugate().normalize();
-    },
+    }
 
     /**
      * @function
@@ -248,9 +247,9 @@ Object.assign(Quat.prototype, {
      * // Should output 5
      * console.log("The length of the quaternion is: " + len);
      */
-    length: function () {
+    length() {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-    },
+    }
 
     /**
      * @function
@@ -263,9 +262,9 @@ Object.assign(Quat.prototype, {
      * // Should output 25
      * console.log("The length squared of the quaternion is: " + lenSq);
      */
-    lengthSq: function () {
+    lengthSq() {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-    },
+    }
 
     /**
      * @function
@@ -283,7 +282,7 @@ Object.assign(Quat.prototype, {
      *
      * console.log("The result of the multiplication is: " + a.toString());
      */
-    mul: function (rhs) {
+    mul(rhs) {
         var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
 
         q1x = this.x;
@@ -302,7 +301,7 @@ Object.assign(Quat.prototype, {
         this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -322,7 +321,7 @@ Object.assign(Quat.prototype, {
      *
      * console.log("The result of the multiplication is: " + r.toString());
      */
-    mul2: function (lhs, rhs) {
+    mul2(lhs, rhs) {
         var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
 
         q1x = lhs.x;
@@ -341,7 +340,7 @@ Object.assign(Quat.prototype, {
         this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -356,7 +355,7 @@ Object.assign(Quat.prototype, {
      * // Should output 0, 0, 0, 1
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize: function () {
+    normalize() {
         var len = this.length();
         if (len === 0) {
             this.x = this.y = this.z = 0;
@@ -370,7 +369,7 @@ Object.assign(Quat.prototype, {
         }
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -388,14 +387,14 @@ Object.assign(Quat.prototype, {
      * // Should output 1, 0, 0, 0
      * console.log("The result of the vector set is: " + q.toString());
      */
-    set: function (x, y, z, w) {
+    set(x, y, z, w) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.w = w;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -408,7 +407,7 @@ Object.assign(Quat.prototype, {
      * var q = new pc.Quat();
      * q.setFromAxisAngle(pc.Vec3.UP, 90);
      */
-    setFromAxisAngle: function (axis, angle) {
+    setFromAxisAngle(axis, angle) {
         var sa, ca;
 
         angle *= 0.5 * math.DEG_TO_RAD;
@@ -422,7 +421,7 @@ Object.assign(Quat.prototype, {
         this.w = ca;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -436,7 +435,7 @@ Object.assign(Quat.prototype, {
      * var q = new pc.Quat();
      * q.setFromEulerAngles(45, 90, 180);
      */
-    setFromEulerAngles: function (ex, ey, ez) {
+    setFromEulerAngles(ex, ey, ez) {
         var sx, cx, sy, cy, sz, cz, halfToRad;
 
         halfToRad = 0.5 * math.DEG_TO_RAD;
@@ -457,7 +456,7 @@ Object.assign(Quat.prototype, {
         this.w = cx * cy * cz + sx * sy * sz;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -474,7 +473,7 @@ Object.assign(Quat.prototype, {
      * // Convert to a quaternion
      * var q = new pc.Quat().setFromMat4(rot);
      */
-    setFromMat4: function (m) {
+    setFromMat4(m) {
         var m00, m01, m02, m10, m11, m12, m20, m21, m22,
             tr, s, rs, lx, ly, lz;
 
@@ -572,7 +571,7 @@ Object.assign(Quat.prototype, {
         }
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -594,7 +593,7 @@ Object.assign(Quat.prototype, {
      * result = new pc.Quat().slerp(q1, q2, 0.5); // Return the midpoint interpolant
      * result = new pc.Quat().slerp(q1, q2, 1);   // Return q2
      */
-    slerp: function (lhs, rhs, alpha) {
+    slerp(lhs, rhs, alpha) {
         // Algorithm sourced from:
         // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
         var lx, ly, lz, lw, rx, ry, rz, rw;
@@ -650,7 +649,7 @@ Object.assign(Quat.prototype, {
         this.y = (ly * ratioA + ry * ratioB);
         this.z = (lz * ratioA + rz * ratioB);
         return this;
-    },
+    }
 
     /**
      * @function
@@ -668,7 +667,7 @@ Object.assign(Quat.prototype, {
      *
      * var tv = q.transformVector(v);
      */
-    transformVector: function (vec, res) {
+    transformVector(vec, res) {
         if (res === undefined) {
             res = new Vec3();
         }
@@ -688,7 +687,7 @@ Object.assign(Quat.prototype, {
         res.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
 
         return res;
-    },
+    }
 
     /**
      * @function
@@ -700,35 +699,28 @@ Object.assign(Quat.prototype, {
      * // Should output '[0, 0, 0, 1]'
      * console.log(v.toString());
      */
-    toString: function () {
+    toString() {
         return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Quat.IDENTITY
- * @type {pc.Quat}
- * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
- */
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Quat.ZERO
- * @type {pc.Quat}
- * @description A constant quaternion set to [0, 0, 0, 0].
- */
-
-Object.defineProperties(Quat, {
-    ZERO: { value: new Quat(0, 0, 0, 0) },
-    IDENTITY: { value: new Quat(0, 0, 0, 1) }
-});
-
-Object.freeze(Quat.ZERO);
-Object.freeze(Quat.IDENTITY);
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Quat.IDENTITY
+     * @type {pc.Quat}
+     * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
+     */
+    static IDENTITY = Object.freeze(new Quat(0, 0, 0, 1));
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Quat.ZERO
+     * @type {pc.Quat}
+     * @description A constant quaternion set to [0, 0, 0, 0].
+     */
+    static ZERO = Object.freeze(new Quat(0, 0, 0, 0));
+}
 
 export { Quat };

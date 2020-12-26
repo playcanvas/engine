@@ -1,6 +1,6 @@
+import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
-import cleanup from 'rollup-plugin-cleanup';
 import { version } from './package.json';
 import Preprocessor from 'preprocessor';
 
@@ -26,7 +26,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/    /g, '\t'), // eslint-disable-line no-regex-spaces
+                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
                 map: { mappings: '' }
             };
         }
@@ -87,6 +87,32 @@ function shaderChunks(removeComments) {
     };
 }
 
+const babelOptions = {
+    babelHelpers: 'bundled',
+    babelrc: false,
+    comments: false,
+    compact: false,
+    minified: false,
+    presets: [
+        [
+            '@babel/preset-env', {
+                loose: true,
+                modules: false,
+                targets: {
+                    "ie": "11"
+                }
+            }
+        ]
+    ],
+    plugins: [
+        [
+            '@babel/plugin-proposal-class-properties', {
+                loose: true
+            }
+        ]
+    ]
+};
+
 export default [{
     input: 'src/index.js',
     output: {
@@ -107,9 +133,7 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(babelOptions),
         spacesToTabs()
     ]
 }, {
@@ -132,9 +156,7 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(babelOptions),
         spacesToTabs()
     ]
 }, {
@@ -157,9 +179,7 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(babelOptions),
         spacesToTabs()
     ]
 }, {
@@ -172,9 +192,7 @@ export default [{
         name: 'pcx'
     },
     plugins: [
-        cleanup({
-            comments: 'some'
-        }),
+        babel(babelOptions),
         spacesToTabs()
     ]
 }];
