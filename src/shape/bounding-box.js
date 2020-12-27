@@ -85,7 +85,6 @@ class BoundingBox {
     copy(src) {
         this.center.copy(src.center);
         this.halfExtents.copy(src.halfExtents);
-        this.type = src.type;
     }
 
     /**
