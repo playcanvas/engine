@@ -96,11 +96,11 @@ foo();
 bar(1, 2);
 ```
 
-### Use spaces between [ ] and { } brackets
+### Use spaces between [ ] and { } brackets, unless it is empty
 ```javascript
-let a = { };
+let a = {};
 let b = { key: 'value' };
-let c = [ ];
+let c = [];
 let d = [ 32, 64 ];
 ```
 

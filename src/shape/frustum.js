@@ -10,9 +10,9 @@
  */
 class Frustum {
     constructor() {
-        this.planes = [ ];
+        this.planes = [];
         for (let i = 0; i < 6; i++)
-            this.planes[i] = [ ];
+            this.planes[i] = [];
     }
 
     /**
@@ -123,7 +123,7 @@ class Frustum {
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
-        for(const plane of this.planes) {
+        for (const plane of this.planes) {
             if (plane[0] * point.x + plane[1] * point.y + plane[2] * point.z + plane[3] <= 0) {
                 return false;
             }
@@ -151,7 +151,7 @@ class Frustum {
         const scy = sc.y;
         const scz = sc.z;
 
-        for(const plane of this.planes) {
+        for (const plane of this.planes) {
             const d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
             if (d <= -sr)
                 return 0;

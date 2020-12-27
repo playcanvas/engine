@@ -351,7 +351,7 @@ class BoundingBox {
         const boxMax = this.getMax();
 
         let sq = 0;
-        const axes = ['x', 'y', 'z'];
+        const axis = ['x', 'y', 'z'];
 
         for (let i = 0; i < 3; ++i) {
             let out = 0;
