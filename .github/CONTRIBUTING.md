@@ -35,6 +35,7 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 ### Whitelisted ES6+ features:
 
 * `let`, `const` instead of `var`
+* `for of` loop
 * `class` instead of `prototype`
 * `import`/`export` handled by build scripts for bundling
 * function default parameters
@@ -77,7 +78,7 @@ On save, set your text editor to remove trailing spaces and ensure there is an e
 ```javascript
 let foo = 16 + 32 / 4;
 
-for (let i = 0, len = list.length; i < len; i++) {
+for (let i = 0; i < list.length; i++) {
     // ...
 }
 ```
@@ -120,11 +121,24 @@ let fn = function () {
 ### `let` and `const` instead of `var` (ES6)
 
 ```javascript
-for(let i = 0; i < items.length; i++) {
+for (let i = 0; i < items.length; i++) {
     const item = items[i];
 }
 
 var a = 10; // not good
+```
+
+### For of loop (ES6)
+```javascript
+// ok
+for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+}
+
+// better (although is slower)
+for (const item of items) {
+
+}
 ```
 
 ### Exit logic early
@@ -141,7 +155,7 @@ let foo = function (bar) {
 
 Same for iterators:
 ```javascript
-for(let i = 0; i < items.length; i++) {
+for (let i = 0; i < items.length; i++) {
     if (! items[i].test)
         continue;
 

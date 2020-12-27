@@ -351,14 +351,14 @@ class BoundingBox {
         const boxMax = this.getMax();
 
         let sq = 0;
-        const axis = ['x', 'y', 'z'];
+        const axes = ['x', 'y', 'z'];
 
-        for (var i = 0; i < 3; ++i) {
-            var out = 0;
-            var pn = sphere.center[axis[i]];
-            var bMin = boxMin[axis[i]];
-            var bMax = boxMax[axis[i]];
-            var val = 0;
+        for (let i = 0; i < 3; ++i) {
+            let out = 0;
+            const pn = sphere.center[axis[i]];
+            const bMin = boxMin[axis[i]];
+            const bMax = boxMax[axis[i]];
+            let val = 0;
 
             if (pn < bMin) {
                 val = (bMin - pn);
