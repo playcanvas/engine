@@ -37,13 +37,13 @@
  * vec.y = 0;
  */
 class Vec2 {
-    constructor(x, y) {
+    constructor(x = 0, y = 0) {
         if (x && x.length === 2) {
             this.x = x[0];
             this.y = x[1];
         } else {
-            this.x = x || 0;
-            this.y = y || 0;
+            this.x = x;
+            this.y = y;
         }
     }
 
@@ -104,7 +104,7 @@ class Vec2 {
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec2().copy(this);
+        return new Vec2(this.x, this.y);
     }
 
     /**

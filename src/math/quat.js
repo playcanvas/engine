@@ -68,17 +68,17 @@ import { Vec3 } from './vec3.js';
  * quat.w = 0;
  */
 class Quat {
-    constructor(x, y, z, w) {
+    constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x && x.length === 4) {
             this.x = x[0];
             this.y = x[1];
             this.z = x[2];
             this.w = x[3];
         } else {
-            this.x = (x === undefined) ? 0 : x;
-            this.y = (y === undefined) ? 0 : y;
-            this.z = (z === undefined) ? 0 : z;
-            this.w = (w === undefined) ? 1 : w;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
         }
     }
 
@@ -192,10 +192,8 @@ class Quat {
      * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
      */
-    getEulerAngles(eulers) {
+    getEulerAngles(eulers = new Vec3()) {
         var x, y, z, qx, qy, qz, qw, a2;
-
-        eulers = (eulers === undefined) ? new Vec3() : eulers;
 
         qx = this.x;
         qy = this.y;
@@ -667,11 +665,7 @@ class Quat {
      *
      * var tv = q.transformVector(v);
      */
-    transformVector(vec, res) {
-        if (res === undefined) {
-            res = new Vec3();
-        }
-
+    transformVector(vec, res = new Vec3()) {
         var x = vec.x, y = vec.y, z = vec.z;
         var qx = this.x, qy = this.y, qz = this.z, qw = this.w;
 

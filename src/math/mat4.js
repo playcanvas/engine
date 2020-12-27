@@ -395,7 +395,7 @@ class Mat4 {
      *
      * var tv = m.transformPoint(v);
      */
-    transformPoint(vec, res) {
+    transformPoint(vec, res = new Vec3()) {
         var x, y, z, m;
 
         m = this.data;
@@ -403,8 +403,6 @@ class Mat4 {
         x = vec.x;
         y = vec.y;
         z = vec.z;
-
-        res = (res === undefined) ? new Vec3() : res;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
@@ -429,7 +427,7 @@ class Mat4 {
      *
      * var tv = m.transformVector(v);
      */
-    transformVector(vec, res) {
+    transformVector(vec, res = new Vec3()) {
         var x, y, z, m;
 
         m = this.data;
@@ -437,8 +435,6 @@ class Mat4 {
         x = vec.x;
         y = vec.y;
         z = vec.z;
-
-        res = (res === undefined) ? new Vec3() : res;
 
         res.x = x * m[0] + y * m[4] + z * m[8];
         res.y = x * m[1] + y * m[5] + z * m[9];
@@ -466,7 +462,7 @@ class Mat4 {
      *
      * m.transformVec4(v, result);
      */
-    transformVec4(vec, res) {
+    transformVec4(vec, res = new Vec4()) {
         var x, y, z, w, m;
 
         m = this.data;
@@ -475,8 +471,6 @@ class Mat4 {
         y = vec.y;
         z = vec.z;
         w = vec.w;
-
-        res = (res === undefined) ? new Vec4() : res;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
@@ -1073,9 +1067,7 @@ class Mat4 {
      * var t = new pc.Vec3();
      * m.getTranslation(t);
      */
-    getTranslation(t) {
-        t = (t === undefined) ? new Vec3() : t;
-
+    getTranslation(t = new Vec3()) {
         return t.set(this.data[12], this.data[13], this.data[14]);
     }
 
@@ -1093,9 +1085,7 @@ class Mat4 {
      * var x = new pc.Vec3();
      * m.getX(x);
      */
-    getX(x) {
-        x = (x === undefined) ? new Vec3() : x;
-
+    getX(x = new Vec3()) {
         return x.set(this.data[0], this.data[1], this.data[2]);
     }
 
@@ -1113,9 +1103,7 @@ class Mat4 {
      * var y = new pc.Vec3();
      * m.getY(y);
      */
-    getY(y) {
-        y = (y === undefined) ? new Vec3() : y;
-
+    getY(y = new Vec3()) {
         return y.set(this.data[4], this.data[5], this.data[6]);
     }
 
@@ -1133,9 +1121,7 @@ class Mat4 {
      * var z = new pc.Vec3();
      * m.getZ(z);
      */
-    getZ(z) {
-        z = (z === undefined) ? new Vec3() : z;
-
+    getZ(z = new Vec3()) {
         return z.set(this.data[8], this.data[9], this.data[10]);
     }
 
@@ -1152,9 +1138,7 @@ class Mat4 {
      * // Query the scale component
      * var scale = m.getScale();
      */
-    getScale(scale) {
-        scale = (scale === undefined) ? new Vec3() : scale;
-
+    getScale(scale = new Vec3()) {
         this.getX(x);
         this.getY(y);
         this.getZ(z);
@@ -1233,10 +1217,8 @@ class Mat4 {
      *
      * var eulers = m.getEulerAngles();
      */
-    getEulerAngles(eulers) {
+    getEulerAngles(eulers = new Vec3()) {
         var x, y, z, sx, sy, sz, m, halfPi;
-
-        eulers = (eulers === undefined) ? new Vec3() : eulers;
 
         this.getScale(scale);
         sx = scale.x;

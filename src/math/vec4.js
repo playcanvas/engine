@@ -67,17 +67,17 @@
  * vec.w = 0;
  */
 class Vec4 {
-    constructor(x, y, z, w) {
+    constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x && x.length === 4) {
             this.x = x[0];
             this.y = x[1];
             this.z = x[2];
             this.w = x[3];
         } else {
-            this.x = x || 0;
-            this.y = y || 0;
-            this.z = z || 0;
-            this.w = w || 0;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
         }
     }
 
@@ -142,7 +142,7 @@ class Vec4 {
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec4().copy(this);
+        return new Vec4(this.x, this.y, this.z, this.w);
     }
 
     /**

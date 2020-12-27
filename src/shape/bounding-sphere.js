@@ -17,9 +17,9 @@ var tmpVecD = new Vec3();
  * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
  */
 class BoundingSphere {
-    constructor(center, radius) {
-        this.center = center || new Vec3(0, 0, 0);
-        this.radius = radius === undefined ? 0.5 : radius;
+    constructor(center = new Vec3(), radius = 0.5) {
+        this.center = center;
+        this.radius = radius;
     }
 
     containsPoint(point) {

@@ -49,15 +49,15 @@
  * vec.z = 0;
  */
 class Vec3 {
-    constructor(x, y, z) {
+    constructor(x = 0, y = 0, z = 0) {
         if (x && x.length === 3) {
             this.x = x[0];
             this.y = x[1];
             this.z = x[2];
         } else {
-            this.x = x || 0;
-            this.y = y || 0;
-            this.z = z || 0;
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
     }
 
@@ -120,7 +120,7 @@ class Vec3 {
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec3().copy(this);
+        return new Vec3(this.x, this.y, this.z);
     }
 
     /**

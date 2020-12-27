@@ -17,9 +17,9 @@ var tmpVecE = new Vec3();
  * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
  */
 class BoundingBox {
-    constructor(center, halfExtents) {
-        this.center = center || new Vec3(0, 0, 0);
-        this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
+    constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+        this.center = center;
+        this.halfExtents = halfExtents;
         this._min = new Vec3();
         this._max = new Vec3();
     }

@@ -76,9 +76,8 @@ class CurveSet {
      * to return the result.
      * @returns {number[]} The interpolated curve values at the specified time.
      */
-    value(time, result) {
+    value(time, result = []) {
         var length = this.curves.length;
-        result = result || [];
         result.length = length;
 
         for (var i = 0; i < length; i++) {

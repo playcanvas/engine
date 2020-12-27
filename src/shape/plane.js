@@ -12,9 +12,9 @@ var tmpVecA = new Vec3();
  * @param {pc.Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
  */
 class Plane {
-    constructor(point, normal) {
-        this.normal = normal || new Vec3(0, 0, 1);
-        this.point = point || new Vec3(0, 0, 0);
+    constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
+        this.normal = normal;
+        this.point = point;
     }
 
     /**

@@ -20,10 +20,9 @@ var tmpMat4 = new Mat4();
  * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
  */
 class OrientedBox {
-    constructor(worldTransform, halfExtents) {
-        this.halfExtents = halfExtents || new Vec3(0.5, 0.5, 0.5);
+    constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+        this.halfExtents = halfExtents;
 
-        worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
 
         this._worldTransform = worldTransform.clone(); // temp - currently only used in the worldTransform accessor, see future PR for more use

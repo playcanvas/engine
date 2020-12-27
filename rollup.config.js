@@ -87,7 +87,7 @@ function shaderChunks(removeComments) {
     };
 }
 
-const babelOptions = {
+const es5Options = {
     babelHelpers: 'bundled',
     babelrc: false,
     comments: false,
@@ -99,7 +99,33 @@ const babelOptions = {
                 loose: true,
                 modules: false,
                 targets: {
-                    "ie": "11"
+                    ie: "11"
+                }
+            }
+        ]
+    ],
+    plugins: [
+        [
+            '@babel/plugin-proposal-class-properties', {
+                loose: true
+            }
+        ]
+    ]
+};
+
+const moduleOptions = {
+    babelHelpers: 'bundled',
+    babelrc: false,
+    comments: false,
+    compact: false,
+    minified: false,
+    presets: [
+        [
+            '@babel/preset-env', {
+                loose: true,
+                modules: false,
+                targets: {
+                    esmodules: true
                 }
             }
         ]
@@ -133,7 +159,30 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        babel(babelOptions),
+        babel(es5Options),
+        spacesToTabs()
+    ]
+}, {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.mjs',
+        format: 'es',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(moduleOptions),
         spacesToTabs()
     ]
 }, {
@@ -156,7 +205,7 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        babel(babelOptions),
+        babel(es5Options),
         spacesToTabs()
     ]
 }, {
@@ -179,7 +228,7 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        babel(babelOptions),
+        babel(es5Options),
         spacesToTabs()
     ]
 }, {
@@ -192,7 +241,7 @@ export default [{
         name: 'pcx'
     },
     plugins: [
-        babel(babelOptions),
+        babel(es5Options),
         spacesToTabs()
     ]
 }];

@@ -17,9 +17,9 @@ import { Vec3 } from '../math/vec3.js';
  * @property {pc.Vec3} direction The direction of the ray.
  */
 class Ray {
-    constructor(origin, direction) {
-        this.origin = origin || new Vec3(0, 0, 0);
-        this.direction = direction || new Vec3(0, 0, -1);
+    constructor(origin = new Vec3(), direction = new Vec3(0, 0, -1)) {
+        this.origin = origin;
+        this.direction = direction;
     }
 
     /**
