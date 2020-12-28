@@ -122,6 +122,7 @@ const moduleOptions = {
     presets: [
         [
             '@babel/preset-env', {
+                bugfixes: true,
                 loose: true,
                 modules: false,
                 targets: {
