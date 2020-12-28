@@ -1,11 +1,11 @@
 import { http } from '../net/http.js';
 
-function ShaderHandler() {
-    this.maxRetries = 0;
-}
+class ShaderHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(ShaderHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -23,14 +23,14 @@ Object.assign(ShaderHandler.prototype, {
                 callback("Error loading shader resource: " + url.original + " [" + err + "]");
             }
         });
-    },
-
-    open: function (url, data) {
-        return data;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 export { ShaderHandler };

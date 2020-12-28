@@ -1,11 +1,11 @@
 import { http } from '../net/http.js';
 
-function HtmlHandler() {
-    this.maxRetries = 0;
-}
+class HtmlHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(HtmlHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -23,14 +23,14 @@ Object.assign(HtmlHandler.prototype, {
                 callback("Error loading html resource: " + url.original + " [" + err + "]");
             }
         });
-    },
-
-    open: function (url, data) {
-        return data;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 export { HtmlHandler };

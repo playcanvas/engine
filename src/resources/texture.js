@@ -41,9 +41,9 @@ var JSON_TEXTURE_TYPE = {
  * @description Interface to a texture parser. Implementations of this interface handle the loading
  * and opening of texture assets.
  */
-function TextureParser() {}
+class TextureParser {
+    constructor() {}
 
-Object.assign(TextureParser.prototype, {
     /**
      * @function
      * @name pc.TextureParser#load
@@ -56,9 +56,9 @@ Object.assign(TextureParser.prototype, {
      * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     /* eslint-disable jsdoc/require-returns-check */
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         throw new Error('not implemented');
-    },
+    }
     /* eslint-enable jsdoc/require-returns-check */
 
     /**
@@ -72,11 +72,11 @@ Object.assign(TextureParser.prototype, {
      * @returns {pc.Texture} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */
-    open: function (url, data, device) {
+    open(url, data, device) {
         throw new Error('not implemented');
     }
     /* eslint-enable jsdoc/require-returns-check */
-});
+}
 
 // In the case where a texture has more than 1 level of mip data specified, but not the full
 // mip chain, we generate the missing levels here.
@@ -157,58 +157,54 @@ var _completePartialMipmapChain = function (texture) {
  * @param {pc.AssetRegistry} assets - The asset registry.
  * @param {pc.ResourceLoader} loader - The resource loader.
  */
-function TextureHandler(device, assets, loader) {
-    this._device = device;
-    this._assets = assets;
-    this._loader = loader;
+class TextureHandler {
+    constructor(device, assets, loader) {
+        this._device = device;
+        this._assets = assets;
+        this._loader = loader;
 
-    // img parser handles all broswer-supported image formats, this
-    // parser will be used when other more specific parsers are not found.
-    this.imgParser = new ImgParser(assets);
+        // img parser handles all broswer-supported image formats, this
+        // parser will be used when other more specific parsers are not found.
+        this.imgParser = new ImgParser(assets);
 
-    this.parsers = {
-        dds: new LegacyDdsParser(assets),
-        ktx: new KtxParser(assets),
-        basis: new BasisParser(assets)
-    };
-}
+        this.parsers = {
+            dds: new LegacyDdsParser(assets),
+            ktx: new KtxParser(assets),
+            basis: new BasisParser(assets)
+        };
+    }
 
-Object.defineProperties(TextureHandler.prototype, {
-    crossOrigin: {
-        get: function () {
-            return this.imgParser.crossOrigin;
-        },
-        set: function (value) {
-            this.imgParser.crossOrigin = value;
-        }
-    },
+    get crossOrigin() {
+        return this.imgParser.crossOrigin;
+    }
 
-    maxRetries: {
-        get: function () {
-            return this.imgParser.maxRetries;
-        },
-        set: function (value) {
-            this.imgParser.maxRetries = value;
-            for (var parser in this.parsers) {
-                if (this.parsers.hasOwnProperty(parser)) {
-                    this.parsers[parser].maxRetries = value;
-                }
+    set crossOrigin(value) {
+        this.imgParser.crossOrigin = value;
+    }
+
+    get maxRetries() {
+        return this.imgParser.maxRetries;
+    }
+
+    set maxRetries(value) {
+        this.imgParser.maxRetries = value;
+        for (var parser in this.parsers) {
+            if (this.parsers.hasOwnProperty(parser)) {
+                this.parsers[parser].maxRetries = value;
             }
         }
     }
-});
 
-Object.assign(TextureHandler.prototype, {
-    _getUrlWithoutParams: function (url) {
+    _getUrlWithoutParams(url) {
         return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    },
+    }
 
-    _getParser: function (url) {
+    _getParser(url) {
         var ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
         return this.parsers[ext] || this.imgParser;
-    },
+    }
 
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -217,9 +213,9 @@ Object.assign(TextureHandler.prototype, {
         }
 
         this._getParser(url.original).load(url, callback, asset);
-    },
+    }
 
-    open: function (url, data, asset) {
+    open(url, data, asset) {
         if (!url)
             return;
 
@@ -238,9 +234,9 @@ Object.assign(TextureHandler.prototype, {
         }
 
         return texture;
-    },
+    }
 
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         var texture = asset.resource;
         if (!texture) {
             return;
@@ -297,6 +293,6 @@ Object.assign(TextureHandler.prototype, {
             }
         }
     }
-});
+}
 
 export { TextureHandler, TextureParser };
