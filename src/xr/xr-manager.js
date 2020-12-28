@@ -27,7 +27,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
- * @property {object|null} session provides access to [XRSession](https://developer.mozilla.org/en-US/docs/Web/API/XRSession) of WebXR
+ * @property {object|null} session provides access to XRSession of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
