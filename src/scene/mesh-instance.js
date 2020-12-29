@@ -25,10 +25,7 @@ var _tempSphere = new BoundingSphere();
  * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
- * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
- * mesh instance.
- * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
- * Defaults to false.
+ * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {pc.GraphNode} node The graph node defining the transform for this instance.
