@@ -106,10 +106,11 @@ Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	vec3 w = normalize(cross(f, halfHeight));
 	vec3 h = normalize(cross(f, w));
 
-	coords.coord0 = lightPos + w*radius - h * radius;
-	coords.coord1 = lightPos - w*radius - h * radius;
-	coords.coord2 = lightPos - w*radius + h * radius;
-	coords.coord3 = lightPos + w*radius + h * radius;
+	coords.coord0 = lightPos + w * radius - h * radius;
+	coords.coord1 = lightPos - w * radius - h * radius;
+	coords.coord2 = lightPos - w * radius + h * radius;
+	coords.coord3 = lightPos + w * radius + h * radius;
+    
 	return coords;
 }
 
