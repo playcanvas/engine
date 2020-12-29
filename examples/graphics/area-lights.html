@@ -89,7 +89,6 @@
             });
             
             light.setLocalScale( scale, scale, scale);
-            light.setLocalEulerAngles( (type === "directional") ? 90 : 0, 0, 0);
             lightParent.addChild(light);
 
             // emissive material that is the light source color
@@ -107,7 +106,6 @@
                 castShadows: (type === "directional") ? false : true
             });
             brightShape.setLocalScale( ((type === "directional") ? scale * range : scale), (shape === pc.LIGHTSHAPE_DISK ) ? 0.001 : ((type === "directional") ? scale * range : scale), ((type === "directional") ? scale * range : scale));
-            brightShape.setLocalEulerAngles( (type === "directional") ? 90 : 0, 0, 0);
             lightParent.addChild(brightShape);
 
             // add black primitive shape if not omni-directional or global directional
@@ -255,9 +253,9 @@
 
             if (light3) {
 
-                light3.setLocalEulerAngles(pc.math.lerp(140, 220, factor2), pc.math.lerp(-30, 0, factor3), 90);
+                light3.setLocalEulerAngles(pc.math.lerp(230, 310, factor2), pc.math.lerp(-30, 0, factor3), 90);
 
-                var dir = light3.getWorldTransform().getZ();
+                var dir = light3.getWorldTransform().getY();
                 var campos = camera.getPosition();
 
                 light3.setPosition(campos.x + dir.x * far, campos.y + dir.y * far, campos.z + dir.z * far);
