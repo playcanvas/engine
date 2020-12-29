@@ -14,7 +14,6 @@ import { BoundingBox } from '../../shape/bounding-box.js';
  * @property {number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
  */
 class Batch {
-
     constructor(meshInstances, dynamic, batchGroupId) {
         this.origMeshInstances = meshInstances;
         this._aabb = new BoundingBox();

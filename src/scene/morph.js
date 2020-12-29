@@ -17,7 +17,6 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
  * from the {@link pc.Application}.
  */
 class Morph {
-
     constructor(targets, graphicsDevice) {
 
         this.device = graphicsDevice || Application.getApplication().graphicsDevice;

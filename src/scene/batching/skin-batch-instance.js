@@ -2,7 +2,6 @@ import { SkinInstance } from '../skin-instance.js';
 
 // Class derived from SkinInstance with changes to make it suitable for batching
 class SkinBatchInstance extends SkinInstance {
-
     constructor(device, nodes, rootNode) {
 
         super();

@@ -15,7 +15,6 @@ import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/graphics.js';
  * @property {number} writeMask Sets stencil test writing mask. See {@link pc.GraphicsDevice#setStencilOperation}.
  */
 class StencilParameters {
-
     constructor(options) {
         this.func = options.func === undefined ? FUNC_ALWAYS : options.func;
         this.ref = options.ref || 0;

@@ -87,7 +87,6 @@ function getScaleSign(mi) {
  * @param {pc.Scene} scene - The scene that the batch manager affects.
  */
 class BatchManager {
-
     constructor(device, root, scene) {
         this.device = device;
         this.rootNode = root;

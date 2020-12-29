@@ -21,7 +21,6 @@ var textureMorphVertexShader =
  * @param {pc.Morph} morph - The pc.Morph to instance.
  */
 class MorphInstance {
-
     constructor(morph) {
         this.morph = morph;
         this.device = morph.device;

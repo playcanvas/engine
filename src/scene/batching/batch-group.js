@@ -20,7 +20,6 @@ import { LAYERID_WORLD } from '../constants.js';
  * to these layers. Layers of source models will be ignored.
  */
 class BatchGroup {
-
     constructor(id, name, dynamic, maxAabbSize, layers = [LAYERID_WORLD]) {
         this.dynamic = dynamic;
         this.maxAabbSize = maxAabbSize;

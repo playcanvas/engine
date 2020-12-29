@@ -24,7 +24,6 @@ var _invViewProjMat = new Mat4();
  * @classdesc A camera.
  */
 class Camera {
-
     constructor() {
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;

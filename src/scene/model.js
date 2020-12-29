@@ -18,7 +18,6 @@ import { SkinInstance } from './skin-instance.js';
  * @property {pc.MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
  */
 class Model {
-
     constructor() {
         this.graph = null;
         this.meshInstances = [];

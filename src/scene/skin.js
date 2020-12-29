@@ -10,7 +10,6 @@
  */
 
 class Skin {
-
     constructor(graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;

@@ -16,7 +16,6 @@ var _invMatrix = new Mat4();
  * @property {pc.GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
 class SkinInstance {
-
     constructor(skin) {
         this._dirty = true;
 

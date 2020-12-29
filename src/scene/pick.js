@@ -28,7 +28,6 @@ var _prepareDeprecationWarning = false;
  * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
  */
 class Picker {
-
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = Application.getApplication();

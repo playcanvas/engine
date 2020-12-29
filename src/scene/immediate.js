@@ -13,7 +13,6 @@ import { MeshInstance } from '../scene/mesh-instance.js';
 var identityGraphNode = new GraphNode();
 
 class ImmediateData {
-
     constructor(device) {
         this.lineVertexFormat = new VertexFormat(device, [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
@@ -43,7 +42,6 @@ class ImmediateData {
 }
 
 class LineBatch {
-
     constructor() {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
         this.numLinesAllocated = 128;
