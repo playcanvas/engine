@@ -10,8 +10,6 @@ import { GraphNode } from '../scene/graph-node.js';
 
 import { Asset } from '../asset/asset.js';
 
-import { createScript } from './script.js';
-
 var components = ['x', 'y', 'z', 'w'];
 var vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
@@ -166,6 +164,12 @@ function ScriptAttributes(scriptType) {
     this.index = { };
 }
 
+ScriptAttributes.reservedNames = [
+    'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
+    '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
+    '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+].reduce((acc, curr) => (acc[curr] = 1, acc), {});
+
 /**
  * @function
  * @name pc.ScriptAttributes#add
@@ -239,7 +243,7 @@ ScriptAttributes.prototype.add = function (name, args) {
         console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
         // #endif
         return;
-    } else if (createScript.reservedAttributes[name]) {
+    } else if (ScripAttributes.reservedNames[name]) {
         // #ifdef DEBUG
         console.warn('attribute \'' + name + '\' is a reserved attribute name');
         // #endif

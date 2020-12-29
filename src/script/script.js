@@ -6,6 +6,16 @@ import { Application } from '../framework/application.js';
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
 
+var reservedScriptNames = [
+    'system', 'entity', 'create', 'destroy', 'swap', 'move',
+    'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
+    'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
+    '_onSetEnabled', '_checkState', '_onBeforeRemove',
+    '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
+    '_onUpdate', '_onPostUpdate',
+    '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+].reduce((acc, curr) => (acc[curr] = 1, acc), {});
+
 /* eslint-disable jsdoc/no-undefined-types */
 /**
  * @static
@@ -47,7 +57,7 @@ function createScript(name, app) {
         return null;
     }
 
-    if (createScript.reservedScripts[name])
+    if (reservedScriptNames[name])
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     var scriptType = function (args) {
@@ -63,6 +73,10 @@ function createScript(name, app) {
     registerScript(scriptType, name, app);
     return scriptType;
 }
+
+// Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
+createScript.reservedAttributes = ScriptAttributes.reservedNames;
+
 
 /* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/check-examples */
@@ -119,7 +133,7 @@ function registerScript(script, name, app) {
 
     name = name || script.__name || ScriptType.__getScriptName(script);
 
-    if (createScript.reservedScripts[name])
+    if (reservedScriptNames[name])
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     script.__name = name;
@@ -130,33 +144,5 @@ function registerScript(script, name, app) {
 
     ScriptHandler._push(script);
 }
-
-// reserved scripts
-createScript.reservedScripts = [
-    'system', 'entity', 'create', 'destroy', 'swap', 'move',
-    'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
-    'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
-    '_onSetEnabled', '_checkState', '_onBeforeRemove',
-    '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
-    '_onUpdate', '_onPostUpdate',
-    '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
-];
-var reservedScripts = { };
-var i;
-for (i = 0; i < createScript.reservedScripts.length; i++)
-    reservedScripts[createScript.reservedScripts[i]] = 1;
-createScript.reservedScripts = reservedScripts;
-
-
-// reserved script attribute names
-createScript.reservedAttributes = [
-    'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
-    '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-    '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
-];
-var reservedAttributes = { };
-for (i = 0; i < createScript.reservedAttributes.length; i++)
-    reservedAttributes[createScript.reservedAttributes[i]] = 1;
-createScript.reservedAttributes = reservedAttributes;
 
 export { createScript, registerScript };

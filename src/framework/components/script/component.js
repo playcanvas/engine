@@ -1,4 +1,4 @@
-import { createScript } from '../../../script/script.js';
+import { reservedAttributes } from '../../../script/script-attributes.js';
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
@@ -970,7 +970,7 @@ Object.defineProperty(ScriptComponent.prototype, 'scripts', {
                 // attributes
                 if (typeof value[key].attributes === 'object') {
                     for (var attr in value[key].attributes) {
-                        if (createScript.reservedAttributes[attr])
+                        if (reservedAttributes[attr])
                             continue;
 
                         if (!script.__attributes.hasOwnProperty(attr)) {
