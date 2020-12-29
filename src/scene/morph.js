@@ -16,78 +16,67 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
  * from the {@link pc.Application}.
  */
-function Morph(targets, graphicsDevice) {
+class Morph {
 
-    this.device = graphicsDevice || Application.getApplication().graphicsDevice;
-    this._targets = targets;
+    constructor(targets, graphicsDevice) {
 
-    // default to texture based morphing if available
-    if (this.device.supportsMorphTargetTexturesCore) {
+        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this._targets = targets;
 
-        // pick renderable format - prefer half-float
-        if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
-            this._renderTextureFormat = Morph.FORMAT_HALF_FLOAT;
-        } else if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
-            this._renderTextureFormat = Morph.FORMAT_FLOAT;
+        // default to texture based morphing if available
+        if (this.device.supportsMorphTargetTexturesCore) {
+
+            // pick renderable format - prefer half-float
+            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
+                this._renderTextureFormat = Morph.FORMAT_HALF_FLOAT;
+            } else if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
+                this._renderTextureFormat = Morph.FORMAT_FLOAT;
+            }
+
+            // pick texture format - prefer half-float
+            if (this.device.extTextureHalfFloat && this.device.textureHalfFloatUpdatable) {
+                this._textureFormat = Morph.FORMAT_HALF_FLOAT;
+            } else  if (this.device.extTextureFloat) {
+                this._textureFormat = Morph.FORMAT_FLOAT;
+            }
+
+            // if both available, enable texture morphing
+            if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
+                this._useTextureMorph = true;
+            }
         }
 
-        // pick texture format - prefer half-float
-        if (this.device.extTextureHalfFloat && this.device.textureHalfFloatUpdatable) {
-            this._textureFormat = Morph.FORMAT_HALF_FLOAT;
-        } else  if (this.device.extTextureFloat) {
-            this._textureFormat = Morph.FORMAT_FLOAT;
-        }
-
-        // if both available, enable texture morphing
-        if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
-            this._useTextureMorph = true;
-        }
+        this._init();
+        this._updateMorphFlags();
+        this._calculateAabb();
     }
 
-    this._init();
-    this._updateMorphFlags();
-    this._calculateAabb();
-}
+    static FORMAT_FLOAT = 0;
 
-Object.defineProperties(Morph, {
-    FORMAT_FLOAT: { value: 0 },
-    FORMAT_HALF_FLOAT: { value: 1 }
-});
+    static FORMAT_HALF_FLOAT = 1;
 
-Object.defineProperties(Morph.prototype, {
-    'morphPositions': {
-        get: function () {
-            return this._morphPositions;
-        }
-    },
-
-    'morphNormals': {
-        get: function () {
-            return this._morphNormals;
-        }
-    },
-
-    'maxActiveTargets': {
-        get: function () {
-
-            // no limit when texture morph based
-            if (this._useTextureMorph)
-                return this._targets.length;
-
-            return (this._morphPositions && this._morphNormals) ? 4 : 8;
-        }
-    },
-
-    'useTextureMorph': {
-        get: function () {
-            return this._useTextureMorph;
-        }
+    get morphPositions() {
+        return this._morphPositions;
     }
-});
 
-Object.assign(Morph.prototype, {
+    get morphNormals() {
+        return this._morphNormals;
+    }
 
-    _init: function () {
+    get maxActiveTargets() {
+
+        // no limit when texture morph based
+        if (this._useTextureMorph)
+            return this._targets.length;
+
+        return (this._morphPositions && this._morphNormals) ? 4 : 8;
+    }
+
+    get useTextureMorph() {
+        return this._useTextureMorph;
+    }
+
+    _init() {
 
         // try to init texture based morphing
         if (this._useTextureMorph) {
@@ -106,9 +95,9 @@ Object.assign(Morph.prototype, {
         for (i = 0; i < this._targets.length; i++) {
             this._targets[i]._postInit();
         }
-    },
+    }
 
-    _initTextureBased: function () {
+    _initTextureBased() {
         var target, i, v;
 
         // collect all source delta arrays to find sparse set of vertices
@@ -212,14 +201,14 @@ Object.assign(Morph.prototype, {
         this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc), ids.length, BUFFER_STATIC, new Float32Array(ids));
 
         return true;
-    },
+    }
 
-        /**
-         * @function
-         * @name pc.Morph#destroy
-         * @description Frees video memory allocated by this object.
-         */
-    destroy: function () {
+    /**
+     * @function
+     * @name pc.Morph#destroy
+     * @description Frees video memory allocated by this object.
+     */
+    destroy() {
         if (this.vertexBufferIds) {
             this.vertexBufferIds.destroy();
             this.vertexBufferIds = null;
@@ -229,7 +218,7 @@ Object.assign(Morph.prototype, {
             this._targets[i].destroy();
         }
         this._targets.length = 0;
-    },
+    }
 
     /**
      * @function
@@ -238,11 +227,11 @@ Object.assign(Morph.prototype, {
      * @param {number} index - An index of morph target.
      * @returns {pc.MorphTarget} A morph target object.
      */
-    getTarget: function (index) {
+    getTarget(index) {
         return this._targets[index];
-    },
+    }
 
-    _updateMorphFlags: function () {
+    _updateMorphFlags() {
 
         // find out if this morph needs to morph positions and normals
         this._morphPositions = false;
@@ -257,9 +246,9 @@ Object.assign(Morph.prototype, {
                 this._morphNormals = true;
             }
         }
-    },
+    }
 
-    _calculateAabb: function () {
+    _calculateAabb() {
 
         this.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
         var target;
@@ -269,10 +258,10 @@ Object.assign(Morph.prototype, {
             target = this._targets[i];
             this.aabb._expand(target.aabb.getMin(), target.aabb.getMax());
         }
-    },
+    }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
-    _createTexture: function (name, format, pixelData) {
+    _createTexture(name, format, pixelData) {
 
         var texture = new Texture(this.device, {
             width: this.morphTextureWidth,
@@ -295,6 +284,6 @@ Object.assign(Morph.prototype, {
 
         return texture;
     }
-});
+}
 
 export { Morph };

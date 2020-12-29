@@ -18,54 +18,48 @@ import { VertexFormat } from '../graphics/vertex-format.js';
  * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
  * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
  */
-function MorphTarget(options) {
+class MorphTarget {
+    
+    constructor(options) {
 
-    if (arguments.length === 2) {
-        // #ifdef DEBUG
-        console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
-        // #endif
-        options = arguments[1];
-    }
-
-    this.options = options;
-    this.name = options.name;
-    this.defaultWeight = options.defaultWeight || 0;
-
-    // bounds
-    this.aabb = options.aabb;
-    if (!this.aabb) {
-        this.aabb = new BoundingBox();
-        if (options.deltaPositions)
-            this.aabb.compute(options.deltaPositions);
-    }
-
-    // store delta positions, used by aabb evaluation
-    this.deltaPositions = options.deltaPositions;
-}
-
-Object.defineProperties(MorphTarget.prototype, {
-    'morphPositions': {
-        get: function () {
-            return !!this._vertexBufferPositions || !!this.texturePositions;
+        if (arguments.length === 2) {
+            // #ifdef DEBUG
+            console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
+            // #endif
+            options = arguments[1];
         }
-    },
 
-    'morphNormals': {
-        get: function () {
-            return !!this._vertexBufferNormals || !!this.textureNormals;
+        this.options = options;
+        this.name = options.name;
+        this.defaultWeight = options.defaultWeight || 0;
+
+        // bounds
+        this.aabb = options.aabb;
+        if (!this.aabb) {
+            this.aabb = new BoundingBox();
+            if (options.deltaPositions)
+                this.aabb.compute(options.deltaPositions);
         }
+
+        // store delta positions, used by aabb evaluation
+        this.deltaPositions = options.deltaPositions;
     }
-});
 
-Object.assign(MorphTarget.prototype, {
+    get morphPositions() {
+        return !!this._vertexBufferPositions || !!this.texturePositions;
+    }
 
-    _postInit: function () {
+    get morphNormals() {
+        return !!this._vertexBufferNormals || !!this.textureNormals;
+    }
+
+    _postInit() {
 
         // release original data
         this.options = null;
-    },
+    }
 
-    _initVertexBuffers: function (graphicsDevice) {
+    _initVertexBuffers(graphicsDevice) {
 
         var options = this.options;
         this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
@@ -75,25 +69,25 @@ Object.assign(MorphTarget.prototype, {
         if (this._vertexBufferPositions) {
             this.deltaPositions = this._vertexBufferPositions.lock();
         }
-    },
+    }
 
-    _createVertexBuffer: function (device, data, dataType) {
+    _createVertexBuffer(device, data, dataType = TYPE_FLOAT32) {
 
         if (data) {
 
             // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
-            var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType || TYPE_FLOAT32 }];
+            var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
             return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
         }
 
         return null;
-    },
+    }
 
-    _setTexture: function (name, texture) {
+    _setTexture(name, texture) {
         this[name] = texture;
-    },
+    }
 
-    destroy: function () {
+    destroy() {
 
         if (this._vertexBufferPositions) {
             this._vertexBufferPositions.destroy();
@@ -114,6 +108,6 @@ Object.assign(MorphTarget.prototype, {
             this.textureNormals = null;
         }
     }
-});
+}
 
 export { MorphTarget };
