@@ -4,11 +4,11 @@ import { BoundingSphere } from '../shape/bounding-sphere.js';
 import {
     BLEND_NONE, BLEND_NORMAL,
     LAYER_WORLD,
-    MASK_DYNAMIC,
+    MASK_DYNAMIC, MASK_LIGHTMAP, MASK_BAKED,
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -25,10 +25,7 @@ var _tempSphere = new BoundingSphere();
  * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
- * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
- * mesh instance.
- * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
- * Defaults to false.
+ * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
  * @property {pc.GraphNode} node The graph node defining the transform for this instance.
@@ -134,9 +131,15 @@ Object.defineProperty(MeshInstance.prototype, 'mesh', {
         return this._mesh;
     },
     set: function (mesh) {
-        if (this._mesh) this._mesh.decReference();
+        if (this._mesh) {
+            this._mesh.decReference();
+        }
+
         this._mesh = mesh;
-        if (mesh) mesh.incReference();
+
+        if (mesh) {
+            mesh.incReference();
+        }
     }
 });
 
@@ -375,6 +378,35 @@ Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
 });
 
 Object.assign(MeshInstance.prototype, {
+
+    destroy: function () {
+
+        var mesh = this.mesh;
+        if (mesh) {
+            this.mesh = null;   // this calls decReference on mesh
+            if (mesh.refCount < 1) {
+                mesh.destroy();
+            }
+        }
+
+        this.destroySkinInstance();
+
+        if (this.morphInstance) {
+            this.morphInstance.destroy();
+            this.morphInstance = null;
+        }
+
+        // make sure material clears references to this meshInstance
+        this.material = null;
+    },
+
+    destroySkinInstance: function () {
+        if (this._skinInstance) {
+            this._skinInstance.destroy();
+            this._skinInstance = null;
+        }
+    },
+
     syncAabb: function () {
         // Deprecated
     },
@@ -516,6 +548,17 @@ Object.assign(MeshInstance.prototype, {
                 }
                 parameter.scopeId.setValue(parameter.data);
             }
+        }
+    },
+
+    setLightmapped: function (value) {
+        if (value) {
+            this.mask = (this.mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
+        } else {
+            this.deleteParameter("texture_lightMap");
+            this.deleteParameter("texture_dirLightMap");
+            this._shaderDefs &= ~SHADERDEF_LM;
+            this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     },
 

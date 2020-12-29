@@ -32,22 +32,22 @@ import { CurveEvaluator } from './curve-evaluator.js';
  *     [1, 3]
  * ]);
  */
-function Curve(data) {
-    this.keys = [];
-    this.type = CURVE_SMOOTHSTEP;
-    this.tension = 0.5;                     // used for CURVE_SPLINE
-    this._eval = new CurveEvaluator(this);
+class Curve {
+    constructor(data) {
+        this.keys = [];
+        this.type = CURVE_SMOOTHSTEP;
+        this.tension = 0.5;                     // used for CURVE_SPLINE
+        this._eval = new CurveEvaluator(this);
 
-    if (data) {
-        for (var i = 0; i < data.length - 1; i += 2) {
-            this.keys.push([data[i], data[i + 1]]);
+        if (data) {
+            for (var i = 0; i < data.length - 1; i += 2) {
+                this.keys.push([data[i], data[i + 1]]);
+            }
         }
+
+        this.sort();
     }
 
-    this.sort();
-}
-
-Object.assign(Curve.prototype, {
     /**
      * @function
      * @name pc.Curve#add
@@ -56,7 +56,7 @@ Object.assign(Curve.prototype, {
      * @param {number} value - Value of new key.
      * @returns {number[]} [time, value] pair.
      */
-    add: function (time, value) {
+    add(time, value) {
         var keys = this.keys;
         var len = keys.length;
         var i = 0;
@@ -70,7 +70,7 @@ Object.assign(Curve.prototype, {
         var key = [time, value];
         this.keys.splice(i, 0, key);
         return key;
-    },
+    }
 
     /**
      * @function
@@ -79,20 +79,20 @@ Object.assign(Curve.prototype, {
      * @param {number} index - The index of the key to return.
      * @returns {number[]} The key at the specified index.
      */
-    get: function (index) {
+    get(index) {
         return this.keys[index];
-    },
+    }
 
     /**
      * @function
      * @name pc.Curve#sort
      * @description Sort keys by time.
      */
-    sort: function () {
+    sort() {
         this.keys.sort(function (a, b) {
             return a[0] - b[0];
         });
-    },
+    }
 
     /**
      * @function
@@ -101,13 +101,13 @@ Object.assign(Curve.prototype, {
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
      */
-    value: function (time) {
+    value(time) {
         // we for the evaluation because keys may have changed since the last evaluate
         // (we can't know)
         return this._eval.evaluate(time, true);
-    },
+    }
 
-    closest: function (time) {
+    closest(time) {
         var keys = this.keys;
         var length = keys.length;
         var min = 2;
@@ -124,7 +124,7 @@ Object.assign(Curve.prototype, {
         }
 
         return result;
-    },
+    }
 
     /**
      * @function
@@ -132,13 +132,13 @@ Object.assign(Curve.prototype, {
      * @description Returns a clone of the specified curve object.
      * @returns {pc.Curve} A clone of the specified curve.
      */
-    clone: function () {
+    clone() {
         var result = new Curve();
         result.keys = extend(result.keys, this.keys);
         result.type = this.type;
         result.tension = this.tension;
         return result;
-    },
+    }
 
     /**
      * @private
@@ -148,7 +148,7 @@ Object.assign(Curve.prototype, {
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
      */
-    quantize: function (precision) {
+    quantize(precision) {
         precision = Math.max(precision, 2);
 
         var values = new Float32Array(precision);
@@ -161,7 +161,7 @@ Object.assign(Curve.prototype, {
         }
 
         return values;
-    },
+    }
 
     /**
      * @private
@@ -174,19 +174,17 @@ Object.assign(Curve.prototype, {
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
      */
-    quantizeClamped: function (precision, min, max) {
+    quantizeClamped(precision, min, max) {
         var result = this.quantize(precision);
         for (var i = 0; i < result.length; ++i) {
             result[i] = Math.min(max, Math.max(min, result[i]));
         }
         return result;
     }
-});
 
-Object.defineProperty(Curve.prototype, 'length', {
-    get: function () {
+    get length() {
         return this.keys.length;
     }
-});
+}
 
 export { Curve };

@@ -6,7 +6,7 @@ import { Vec4 } from '../../../math/vec4.js';
 import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/graphics.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
-import { BatchGroup } from '../../../scene/batching.js';
+import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
 import { Entity } from '../../entity.js';

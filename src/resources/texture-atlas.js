@@ -37,14 +37,14 @@ var regexFrame = /^data\.frames\.(\d+)$/;
  * @classdesc Resource handler used for loading {@link pc.TextureAtlas} resources.
  * @param {pc.ResourceLoader} loader - The resource loader.
  */
-function TextureAtlasHandler(loader) {
-    this._loader = loader;
-    this.retryRequests = false;
-}
+class TextureAtlasHandler {
+    constructor(loader) {
+        this._loader = loader;
+        this.maxRetries = 0;
+    }
 
-Object.assign(TextureAtlasHandler.prototype, {
     // Load the texture atlas texture using the texture resource loader
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -59,7 +59,8 @@ Object.assign(TextureAtlasHandler.prototype, {
         // load json data then load texture of same name
         if (path.getExtension(url.original) === '.json') {
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 if (!err) {
                     // load texture
@@ -81,10 +82,10 @@ Object.assign(TextureAtlasHandler.prototype, {
         } else {
             return handler.load(url, callback);
         }
-    },
+    }
 
     // Create texture atlas resource using the texture from the texture loader
-    open: function (url, data) {
+    open(url, data) {
         var resource = new TextureAtlas();
         if (data.texture && data.data) {
             resource.texture = data.texture;
@@ -96,9 +97,9 @@ Object.assign(TextureAtlasHandler.prototype, {
             resource.texture = texture;
         }
         return resource;
-    },
+    }
 
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         if (asset.resource.__data) {
             // engine-only, so copy temporary asset data from texture atlas into asset and delete temp property
             if (asset.resource.__data.minfilter !== undefined) asset.data.minfilter = asset.resource.__data.minfilter;
@@ -161,9 +162,9 @@ Object.assign(TextureAtlasHandler.prototype, {
 
         asset.off('change', this._onAssetChange, this);
         asset.on('change', this._onAssetChange, this);
-    },
+    }
 
-    _onAssetChange: function (asset, attribute, value) {
+    _onAssetChange(asset, attribute, value) {
         var frame;
 
         if (attribute === 'data' || attribute === 'data.frames') {
@@ -211,6 +212,6 @@ Object.assign(TextureAtlasHandler.prototype, {
             }
         }
     }
-});
+}
 
 export { TextureAtlasHandler };

@@ -1,11 +1,11 @@
 import { http } from '../net/http.js';
 
-function TextHandler() {
-    this.retryRequests = false;
-}
+class TextHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(TextHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -14,7 +14,8 @@ Object.assign(TextHandler.prototype, {
         }
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);
@@ -22,14 +23,14 @@ Object.assign(TextHandler.prototype, {
                 callback("Error loading text resource: " + url.original + " [" + err + "]");
             }
         });
-    },
-
-    open: function (url, data) {
-        return data;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 export { TextHandler };

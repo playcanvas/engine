@@ -169,35 +169,10 @@ Object.assign(Model.prototype, {
      */
     destroy: function () {
         var meshInstances = this.meshInstances;
-        var meshInstance, mesh, skin, morph, boneTex;
         for (var i = 0; i < meshInstances.length; i++) {
-            meshInstance = meshInstances[i];
-
-            mesh = meshInstance.mesh;
-            if (mesh) {
-                meshInstance.mesh = null;   // this calls decReference on mesh
-                if (mesh.refCount < 1) {
-                    mesh.destroy();
-                }
-            }
-
-            skin = meshInstance.skinInstance;
-            if (skin) {
-                boneTex = skin.boneTexture;
-                if (boneTex) {
-                    boneTex.destroy();
-                }
-            }
-            meshInstance.skinInstance = null;
-
-            morph = meshInstance.morphInstance;
-            if (morph) {
-                morph.destroy();
-            }
-            meshInstance.morphInstance = null;
-
-            meshInstance.material = null; // make sure instance and material clear references
+            meshInstances[i].destroy();
         }
+        this.meshInstances.length = 0;
     },
 
     /**

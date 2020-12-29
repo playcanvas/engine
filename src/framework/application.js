@@ -32,7 +32,7 @@ import {
     SHADER_DEPTH,
     SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
-import { BatchManager } from '../scene/batching.js';
+import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { ImmediateData, LineBatch } from '../scene/immediate.js';
@@ -62,6 +62,7 @@ import { HtmlHandler } from '../resources/html.js';
 import { JsonHandler } from '../resources/json.js';
 import { MaterialHandler } from '../resources/material.js';
 import { ModelHandler } from '../resources/model.js';
+import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
 import { SceneHandler } from '../resources/scene.js';
 import { SceneSettingsHandler } from '../resources/scene-settings.js';
@@ -99,6 +100,7 @@ import { LayoutChildComponentSystem } from './components/layout-child/system.js'
 import { LayoutGroupComponentSystem } from './components/layout-group/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ModelComponentSystem } from './components/model/system.js';
+import { RenderComponentSystem } from './components/render/system.js';
 import { ParticleSystemComponentSystem } from './components/particle-system/system.js';
 import { RigidBodyComponentSystem } from './components/rigid-body/system.js';
 import { ScreenComponentSystem } from './components/screen/system.js';
@@ -419,6 +421,8 @@ function Application(canvas, options) {
 
     options.graphicsDeviceOptions.xrCompatible = true;
 
+    options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
+
     this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
     this.stats = new ApplicationStats(this.graphicsDevice);
     this._soundManager = new SoundManager(options);
@@ -714,6 +718,7 @@ function Application(canvas, options) {
     this.loader.addHandler("animclip", new AnimClipHandler());
     this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
     this.loader.addHandler("model", new ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
+    this.loader.addHandler("render", new RenderHandler(this.assets));
     this.loader.addHandler("material", new MaterialHandler(this));
     this.loader.addHandler("texture", new TextureHandler(this.graphicsDevice, this.assets, this.loader));
     this.loader.addHandler("text", new TextHandler());
@@ -741,6 +746,7 @@ function Application(canvas, options) {
     this.systems.add(new AnimationComponentSystem(this));
     this.systems.add(new AnimComponentSystem(this));
     this.systems.add(new ModelComponentSystem(this));
+    this.systems.add(new RenderComponentSystem(this));
     this.systems.add(new CameraComponentSystem(this));
     this.systems.add(new LightComponentSystem(this));
     if (script.legacy) {
@@ -1109,6 +1115,11 @@ Object.assign(Application.prototype, {
     _parseApplicationProperties: function (props, callback) {
         var i;
         var len;
+
+        // configure retrying assets
+        if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
+            this.loader.enableRetry(props.maxAssetRetries);
+        }
 
         // TODO: remove this temporary block after migrating properties
         if (!props.useDevicePixelRatio)

@@ -4,20 +4,6 @@ import { http } from '../net/http.js';
 
 import { Sprite } from '../scene/sprite.js';
 
-/**
- * @class
- * @name pc.SpriteHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Sprite} resources.
- * @param {pc.AssetRegistry} assets - The asset registry.
- * @param {pc.GraphicsDevice} device - The graphics device.
- */
-function SpriteHandler(assets, device) {
-    this._assets = assets;
-    this._device = device;
-    this.retryRequests = false;
-}
-
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
     var spriteAsset = this;
@@ -32,8 +18,22 @@ function onTextureAtlasAdded(atlasAsset) {
     spriteAsset.registry.load(atlasAsset);
 }
 
-Object.assign(SpriteHandler.prototype, {
-    load: function (url, callback) {
+/**
+ * @class
+ * @name pc.SpriteHandler
+ * @implements {pc.ResourceHandler}
+ * @classdesc Resource handler used for loading {@link pc.Sprite} resources.
+ * @param {pc.AssetRegistry} assets - The asset registry.
+ * @param {pc.GraphicsDevice} device - The graphics device.
+ */
+class SpriteHandler {
+    constructor(assets, device) {
+        this._assets = assets;
+        this._device = device;
+        this.maxRetries = 0;
+    }
+
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -44,7 +44,8 @@ Object.assign(SpriteHandler.prototype, {
         // if given a json file (probably engine-only use case)
         if (path.getExtension(url.original) === '.json') {
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 if (!err) {
                     callback(null, response);
@@ -53,10 +54,10 @@ Object.assign(SpriteHandler.prototype, {
                 }
             });
         }
-    },
+    }
 
     // Create sprite resource
-    open: function (url, data) {
+    open(url, data) {
         var sprite = new Sprite(this._device);
         if (url) {
             // if url field is present json data is being loaded from file
@@ -65,10 +66,10 @@ Object.assign(SpriteHandler.prototype, {
         }
 
         return sprite;
-    },
+    }
 
     // Set sprite data
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         var sprite = asset.resource;
         if (sprite.__data) {
             // loading from a json file we have asset data store temporarily on the sprite resource
@@ -100,10 +101,10 @@ Object.assign(SpriteHandler.prototype, {
 
         asset.off('change', this._onAssetChange, this);
         asset.on('change', this._onAssetChange, this);
-    },
+    }
 
     // Load atlas
-    _updateAtlas: function (asset) {
+    _updateAtlas(asset) {
         var sprite = asset.resource;
         if (!asset.data.textureAtlasAsset) {
             sprite.atlas = null;
@@ -124,9 +125,9 @@ Object.assign(SpriteHandler.prototype, {
                 this._assets.load(atlasAsset);
             }
         }
-    },
+    }
 
-    _onAssetChange: function (asset, attribute, value, oldValue) {
+    _onAssetChange(asset, attribute, value, oldValue) {
         if (attribute === 'data') {
             // if the texture atlas changed, clear events for old atlas asset
             if (value && value.textureAtlasAsset && oldValue && value.textureAtlasAsset !== oldValue.textureAtlasAsset) {
@@ -135,6 +136,6 @@ Object.assign(SpriteHandler.prototype, {
             }
         }
     }
-});
+}
 
 export { SpriteHandler };

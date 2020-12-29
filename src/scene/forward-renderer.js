@@ -15,7 +15,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    FUNC_ALWAYS, FUNC_LESS,
+    FUNC_ALWAYS, FUNC_LESS, FUNC_LESSEQUAL,
     PIXELFORMAT_DEPTH, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR, SEMANTIC_POSITION,
@@ -118,6 +118,9 @@ var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
 
 var _skinUpdateIndex = 0;
+
+var _tempMaterialSet = new Set();
+
 
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
@@ -1336,9 +1339,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     renderShadows: function (lights, cameraPass) {
         var device = this.device;
+        device.grabPassAvailable = false;
+
         // #ifdef PROFILER
         var shadowMapStartTime = now();
         // #endif
+
         var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
         var numInstances;
         var meshInstance, mesh, material;
@@ -1591,6 +1597,8 @@ Object.assign(ForwardRenderer.prototype, {
             this.polygonOffsetId.setValue(this.polygonOffset);
         }
 
+        device.grabPassAvailable = true;
+
         // #ifdef PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
@@ -1598,6 +1606,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
+
+        // if material has dirtyBlend set, notify scene here
+        if (meshInstance.material._dirtyBlend) {
+            this.scene.layers._dirtyBlend = true;
+        }
+
         meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
         meshInstance._shader[pass] = meshInstance.material.shader;
     },
@@ -1802,7 +1816,16 @@ Object.assign(ForwardRenderer.prototype, {
                     }
                     device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                     device.setDepthWrite(material.depthWrite);
-                    device.setDepthTest(material.depthTest);
+
+                    // this fixes the case where the user wishes to turn off depth testing but wants to write depth
+                    if (material.depthWrite && !material.depthTest){
+                        device.setDepthFunc(FUNC_ALWAYS);
+                        device.setDepthTest(true);
+                    } else {
+                        device.setDepthFunc(FUNC_LESSEQUAL);
+                        device.setDepthTest(material.depthTest);
+                    }
+
                     device.setAlphaToCoverage(material.alphaToCoverage);
 
                     if (material.depthBias || material.slopeDepthBias) {
@@ -2271,58 +2294,49 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        var i;
-        // Collect materials
-        var materials = [];
-        for (i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                if (materials.indexOf(drawCall.material) === -1) {
-                    materials.push(drawCall.material);
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
                 }
             }
         }
-        // Clear material shaders
-        for (i = 0; i < materials.length; i++) {
-            var mat = materials[i];
-            if (mat.updateShader !== Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
-            }
-        }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     updateLitShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        for (var i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                var mat = drawCall.material;
-                if (mat.updateShader !== Material.prototype.updateShader) {
-                    if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                        // skip unlit standard and particles materials
-                        continue;
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+
+                        // only process lit materials
+                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
+                            mat.clearVariants();
+                            mat.shader = null;
+                        }
                     }
-                    mat.clearVariants();
-                    mat.shader = null;
                 }
             }
         }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     beginFrame: function (comp) {

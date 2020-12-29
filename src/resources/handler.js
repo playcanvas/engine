@@ -3,9 +3,8 @@
  * @name pc.ResourceHandler
  * @description Interface for ResourceHandlers used by {@link pc.ResourceLoader}.
  */
-function ResourceHandler() {}
-
-Object.assign(ResourceHandler.prototype, {
+class ResourceHandler {
+    constructor() {}
 
     /**
      * @function
@@ -20,9 +19,9 @@ Object.assign(ResourceHandler.prototype, {
      * @param {pc.callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
      * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         throw new Error('not implemented');
-    },
+    }
 
     /**
      * @function
@@ -34,9 +33,9 @@ Object.assign(ResourceHandler.prototype, {
      * @returns {*} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */
-    open: function (url, data, asset) {
+    open(url, data, asset) {
         throw new Error('not implemented');
-    },
+    }
     /* eslint-enable jsdoc/require-returns-check */
 
     /**
@@ -47,9 +46,9 @@ Object.assign(ResourceHandler.prototype, {
      * @param {pc.Asset} asset - The asset to patch.
      * @param {pc.AssetRegistry} assets - The asset registry.
      */
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         // optional function
     }
-});
+}
 
 export { ResourceHandler };
