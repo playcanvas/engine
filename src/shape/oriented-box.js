@@ -25,7 +25,7 @@ class OrientedBox {
 
         this._modelTransform = worldTransform.clone().invert();
 
-        this._worldTransform = worldTransform.clone(); // temp - currently only used in the worldTransform accessor, see future PR for more use
+        this._worldTransform = worldTransform.clone();
         this._aabb = new BoundingBox(new Vec3(), this.halfExtents);
     }
 
