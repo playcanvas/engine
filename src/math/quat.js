@@ -69,7 +69,7 @@ import { Vec3 } from './vec3.js';
  */
 class Quat {
     constructor(x = 0, y = 0, z = 0, w = 1) {
-        if (x && x.length === 4) {
+        if (x.length === 4) {
             this.x = x[0];
             this.y = x[1];
             this.z = x[2];
