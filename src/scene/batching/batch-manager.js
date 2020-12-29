@@ -310,7 +310,7 @@ class BatchManager {
         return arr;
     }
 
-    _extractModel = function (node, arr, group, groupMeshInstances) {
+    _extractModel(node, arr, group, groupMeshInstances) {
         if (node.model && node.model.model) {
             var i;
             if (node.model.isStatic) {
