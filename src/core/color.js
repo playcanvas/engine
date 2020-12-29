@@ -16,7 +16,7 @@ import { math } from '../math/math.js';
  */
 class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
-        var length = r && r.length;
+        var length = r.length;
         if (length === 3 || length === 4) {
             this.r = r[0];
             this.g = r[1];
