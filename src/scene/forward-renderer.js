@@ -352,7 +352,7 @@ function getShadowMapFromCache(device, res, mode, layer) {
 function createShadowBuffer(device, light) {
     var shadowBuffer;
     if (light._type === LIGHTTYPE_OMNI) {
-        if (light._shadowType > SHADOW_PCF3) light._shadowType = SHADOW_PCF3; // no VSM or HW PCF point lights yet
+        if (light._shadowType > SHADOW_PCF3) light._shadowType = SHADOW_PCF3; // no VSM or HW PCF omni lights yet
         if (light._cacheShadowMap) {
             shadowBuffer = shadowMapCubeCache[light._shadowResolution];
             if (!shadowBuffer) {
@@ -989,41 +989,41 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     },
 
-    dispatchPointLight: function (scene, scope, point, cnt) {
-        var wtm = point._node.getWorldTransform();
+    dispatchOmniLight: function (scene, scope, omni, cnt) {
+        var wtm = omni._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
         }
 
-        this.lightRadiusId[cnt].setValue(point.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? point._linearFinalColor : point._finalColor);
-        wtm.getTranslation(point._position);
-        this.lightPos[cnt][0] = point._position.x;
-        this.lightPos[cnt][1] = point._position.y;
-        this.lightPos[cnt][2] = point._position.z;
+        this.lightRadiusId[cnt].setValue(omni.attenuationEnd);
+        this.lightColorId[cnt].setValue(scene.gammaCorrection ? omni._linearFinalColor : omni._finalColor);
+        wtm.getTranslation(omni._position);
+        this.lightPos[cnt][0] = omni._position.x;
+        this.lightPos[cnt][1] = omni._position.y;
+        this.lightPos[cnt][2] = omni._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        if (point.shape !== LIGHTSHAPE_PUNCTUAL) {
+        if (omni.shape !== LIGHTSHAPE_PUNCTUAL) {
             // non-punctual shape
             this.setLTCPositionalLight(wtm, cnt);
         }
 
-        if (point.castShadows) {
-            var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
+        if (omni.castShadows) {
+            var shadowMap = omni._shadowCamera.renderTarget.colorBuffer;
             this.lightShadowMapId[cnt].setValue(shadowMap);
-            var params = point._rendererParams;
+            var params = omni._rendererParams;
             if (params.length !== 4) params.length = 4;
-            params[0] = point._shadowResolution;
-            params[1] = point._normalOffsetBias;
-            params[2] = point.shadowBias;
-            params[3] = 1.0 / point.attenuationEnd;
+            params[0] = omni._shadowResolution;
+            params[1] = omni._normalOffsetBias;
+            params[2] = omni.shadowBias;
+            params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
-        if (point._cookie) {
-            this.lightCookieId[cnt].setValue(point._cookie);
+        if (omni._cookie) {
+            this.lightCookieId[cnt].setValue(omni._cookie);
             this.lightShadowMatrixId[cnt].setValue(wtm.data);
-            this.lightCookieIntId[cnt].setValue(point.cookieIntensity);
+            this.lightCookieIntId[cnt].setValue(omni.cookieIntensity);
         }
     },
 
@@ -1117,34 +1117,34 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
         var i;
-        var point, spot;
+        var omni, spot;
 
-        var pnts = sortedLights[LIGHTTYPE_OMNI];
+        var omnis = sortedLights[LIGHTTYPE_OMNI];
         var spts = sortedLights[LIGHTTYPE_SPOT];
 
         var numDirs = usedDirLights;
-        var numPnts = pnts.length;
+        var numOmnis = omnis.length;
         var numSpts = spts.length;
         var cnt = numDirs;
 
         var scope = this.device.scope;
 
-        for (i = 0; i < numPnts; i++) {
-            point = pnts[i];
-            if (!(point.mask & mask)) continue;
-            if (point.isStatic) continue;
-            this.dispatchPointLight(scene, scope, point, cnt);
+        for (i = 0; i < numOmnis; i++) {
+            omni = omnis[i];
+            if (!(omni.mask & mask)) continue;
+            if (omni.isStatic) continue;
+            this.dispatchOmniLight(scene, scope, omni, cnt);
             cnt++;
         }
 
         var staticId = 0;
         if (staticLightList) {
-            point = staticLightList[staticId];
-            while (point && point._type === LIGHTTYPE_OMNI) {
-                this.dispatchPointLight(scene, scope, point, cnt);
+            omni = staticLightList[staticId];
+            while (omni && omni._type === LIGHTTYPE_OMNI) {
+                this.dispatchOmniLight(scene, scope, omni, cnt);
                 cnt++;
                 staticId++;
-                point = staticLightList[staticId];
+                omni = staticLightList[staticId];
             }
         }
 
@@ -1498,7 +1498,7 @@ Object.assign(ForwardRenderer.prototype, {
                 if (pass) {
                     passes = pass + 1; // predefined single pass
                 } else {
-                    pass = 0; // point light passes
+                    pass = 0; // omni light passes
                 }
 
                 while (pass < passes) {

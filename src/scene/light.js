@@ -41,7 +41,7 @@ var Light = function Light() {
     this.key = 0;
     this.bakeDir = true;
 
-    // Point and spot properties
+    // Omni and spot properties
     this.attenuationStart = 10;
     this.attenuationEnd = 10;
     this._falloffMode = 0;
@@ -49,7 +49,7 @@ var Light = function Light() {
     this._vsmBlurSize = 11;
     this.vsmBlurMode = BLUR_GAUSSIAN;
     this.vsmBias = 0.01 * 0.25;
-    this._cookie = null; // light cookie texture (2D for spot, cubemap for point)
+    this._cookie = null; // light cookie texture (2D for spot, cubemap for omni)
     this.cookieIntensity = 1;
     this._cookieFalloff = true;
     this._cookieChannel = "rgb";
@@ -96,7 +96,7 @@ var Light = function Light() {
     this._isCachedShadowMap = false;
 
     this._visibleLength = [0]; // lengths of passes in culledList
-    this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
+    this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for omni, cameraCount for directional)
     this._visibleCameraSettings = []; // camera settings used in each directional light pass
 };
 
@@ -122,7 +122,7 @@ Object.assign(Light.prototype, {
         clone.castShadows = this.castShadows;
         clone.enabled = this.enabled;
 
-        // Point and spot properties
+        // Omni and spot properties
         clone.attenuationStart = this.attenuationStart;
         clone.attenuationEnd = this.attenuationEnd;
         clone.falloffMode = this._falloffMode;
@@ -443,7 +443,7 @@ Object.defineProperty(Light.prototype, 'type', {
 
         var stype = this._shadowType;
         this._shadowType = null;
-        this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
+        this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
 });
 
@@ -482,7 +482,7 @@ Object.defineProperty(Light.prototype, 'shadowType', {
         var device = Application.getApplication().graphicsDevice;
 
         if (this._type === LIGHTTYPE_OMNI)
-            value = SHADOW_PCF3; // VSM or HW PCF for point lights is not supported yet
+            value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
         if (value === SHADOW_PCF5 && !device.webgl2) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF

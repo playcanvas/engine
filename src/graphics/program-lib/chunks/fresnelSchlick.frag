@@ -1,7 +1,7 @@
 // Schlick's approximation
 uniform float material_fresnelFactor; // unused
 
-#ifdef HAS_AREA_LIGHTS
+#ifdef AREA_LIGHTS
     vec3 dSpecularityNoFres;
 #ifdef CLEARCOAT    
     vec3 ccSpecularityNoFres;
@@ -10,7 +10,7 @@ uniform float material_fresnelFactor; // unused
 
 void getFresnel() {
     
-#ifdef HAS_AREA_LIGHTS
+#ifdef AREA_LIGHTS
     vec3 dSpecularityNoFres = dSpecularity;
 #ifdef CLEARCOAT    
     vec3 ccSpecularityNoFres = ccSpecularity;

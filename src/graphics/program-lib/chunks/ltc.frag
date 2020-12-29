@@ -98,7 +98,7 @@ Coords getLTCLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 float dSphereRadius;
 Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	Coords coords;
-	float radius = length(halfWidth);
+	float radius = max(length(halfWidth), length(halfWidth));
 
 	dSphereRadius = radius;
 
@@ -106,10 +106,10 @@ Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 	vec3 w = normalize(cross(f, halfHeight));
 	vec3 h = normalize(cross(f, w));
 
-	coords.coord0 = lightPos + w*radius - h*radius;
-	coords.coord1 = lightPos - w*radius - h*radius;
-	coords.coord2 = lightPos - w*radius + h*radius;
-	coords.coord3 = lightPos + w*radius + h*radius;
+	coords.coord0 = lightPos + w*radius - h * radius;
+	coords.coord1 = lightPos - w*radius - h * radius;
+	coords.coord2 = lightPos - w*radius + h * radius;
+	coords.coord3 = lightPos + w*radius + h * radius;
 	return coords;
 }
 
@@ -133,7 +133,7 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 {
 	vec4 t2 = texture2D( areaLightsLutTex2, uv );
 
-	#ifdef HAS_R8_G8_B8_A8_LUTS
+	#ifdef AREA_R8_G8_B8_A8_LUTS
 	t2 *= vec4(0.693103,1,1,1);
 	t2 += vec4(0.306897,0,0,0);
 	#endif
@@ -185,12 +185,12 @@ vec3 SolveCubic(vec4 Coefficient)
 
     // Compute the Hessian and the discriminant
     vec3 Delta = vec3(
-        -Coefficient.z*Coefficient.z + Coefficient.y,
-        -Coefficient.y*Coefficient.z + Coefficient.x,
+        -Coefficient.z * Coefficient.z + Coefficient.y,
+        -Coefficient.y * Coefficient.z + Coefficient.x,
         dot(vec2(Coefficient.z, -Coefficient.y), Coefficient.xy)
     );
 
-    float Discriminant = dot(vec2(4.0*Delta.x, -Delta.y), Delta.zy);
+    float Discriminant = dot(vec2(4.0 * Delta.x, -Delta.y), Delta.zy);
 
     vec3 RootsA, RootsD;
 
@@ -200,16 +200,16 @@ vec3 SolveCubic(vec4 Coefficient)
     {
         float A_a = 1.0;
         float C_a = Delta.x;
-        float D_a = -2.0*B*Delta.x + Delta.y;
+        float D_a = -2.0 * B * Delta.x + Delta.y;
 
         // Take the cubic root of a normalized complex number
-        float Theta = atan(sqrt(Discriminant), -D_a)/3.0;
+        float Theta = atan(sqrt(Discriminant), -D_a) / 3.0;
 
-        float x_1a = 2.0*sqrt(-C_a)*cos(Theta);
-        float x_3a = 2.0*sqrt(-C_a)*cos(Theta + (2.0/3.0)*pi);
+        float x_1a = 2.0 * sqrt(-C_a) * cos(Theta);
+        float x_3a = 2.0 * sqrt(-C_a) * cos(Theta + (2.0 / 3.0) * pi);
 
         float xl;
-        if ((x_1a + x_3a) > 2.0*B)
+        if ((x_1a + x_3a) > 2.0 * B)
             xl = x_1a;
         else
             xl = x_3a;
@@ -221,16 +221,16 @@ vec3 SolveCubic(vec4 Coefficient)
     {
         float A_d = D;
         float C_d = Delta.z;
-        float D_d = -D*Delta.y + 2.0*C*Delta.z;
+        float D_d = -D * Delta.y + 2.0 * C * Delta.z;
 
         // Take the cubic root of a normalized complex number
-        float Theta = atan(D*sqrt(Discriminant), -D_d)/3.0;
+        float Theta = atan(D * sqrt(Discriminant), -D_d) / 3.0;
 
-        float x_1d = 2.0*sqrt(-C_d)*cos(Theta);
-        float x_3d = 2.0*sqrt(-C_d)*cos(Theta + (2.0/3.0)*pi);
+        float x_1d = 2.0 * sqrt(-C_d) * cos(Theta);
+        float x_3d = 2.0 * sqrt(-C_d) * cos(Theta + (2.0 / 3.0) * pi);
 
         float xs;
-        if (x_1d + x_3d < 2.0*C)
+        if (x_1d + x_3d < 2.0 * C)
             xs = x_1d;
         else
             xs = x_3d;
@@ -238,13 +238,13 @@ vec3 SolveCubic(vec4 Coefficient)
         xsc = vec2(-D, xs + C);
     }
 
-    float E =  xlc.y*xsc.y;
-    float F = -xlc.x*xsc.y - xlc.y*xsc.x;
-    float G =  xlc.x*xsc.x;
+    float E =  xlc.y * xsc.y;
+    float F = -xlc.x * xsc.y - xlc.y * xsc.x;
+    float G =  xlc.x * xsc.x;
 
-    vec2 xmc = vec2(C*F - B*G, -B*F + C*E);
+    vec2 xmc = vec2(C * F - B * G, -B * F + C * E);
 
-    vec3 Root = vec3(xsc.x/xsc.y, xmc.x/xmc.y, xlc.x/xlc.y);
+    vec3 Root = vec3(xsc.x / xsc.y, xmc.x / xmc.y, xlc.x / xlc.y);
 
     if (Root.x < Root.y && Root.x < Root.z)
         Root.xyz = Root.yxz;
@@ -258,7 +258,7 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
 {
     // construct orthonormal basis around N
     vec3 T1, T2;
-    T1 = normalize(V - N*dot(V, N));
+    T1 = normalize(V - N * dot(V, N));
     T2 = cross(N, T1);
 
     // rotate area light in (T1, T2, N) basis
@@ -289,24 +289,24 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     float d11 = dot(V1, V1);
     float d22 = dot(V2, V2);
     float d12 = dot(V1, V2);
-    if (abs(d12)/sqrt(d11*d22) > 0.0001)
+    if (abs(d12) / sqrt(d11 * d22) > 0.0001)
     {
         float tr = d11 + d22;
-        float det = -d12*d12 + d11*d22;
+        float det = -d12 * d12 + d11 * d22;
 
         // use sqrt matrix to solve for eigenvalues
         det = sqrt(det);
-        float u = 0.5*sqrt(tr - 2.0*det);
-        float v = 0.5*sqrt(tr + 2.0*det);
-        float e_max = (u + v)*(u + v);
-        float e_min = (u - v)*(u - v);
+        float u = 0.5 * sqrt(tr - 2.0 * det);
+        float v = 0.5 * sqrt(tr + 2.0 * det);
+        float e_max = (u + v) * (u + v);
+        float e_min = (u - v) * (u - v);
 
         vec3 V1_, V2_;
 
         if (d11 > d22)
         {
-            V1_ = d12*V1 + (e_max - d11)*V2;
-            V2_ = d12*V1 + (e_min - d11)*V2;
+            V1_ = d12 * V1 + (e_max - d11) * V2;
+            V2_ = d12 * V1 + (e_min - d11) * V2;
         }
         else
         {
@@ -338,12 +338,12 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     float E1 = inversesqrt(a);
     float E2 = inversesqrt(b);
 
-    a *= L*L;
-    b *= L*L;
+    a *= L * L;
+    b *= L * L;
 
-    float c0 = a*b;
-    float c1 = a*b*(1.0 + x0*x0 + y0*y0) - a - b;
-    float c2 = 1.0 - a*(1.0 + x0*x0) - b*(1.0 + y0*y0);
+    float c0 = a * b;
+    float c1 = a * b * (1.0 + x0 * x0 + y0 * y0) - a - b;
+    float c2 = 1.0 - a * (1.0 + x0 * x0) - b * (1.0 + y0 * y0);
     float c3 = 1.0;
 
     vec3 roots = SolveCubic(vec4(c0, c1, c2, c3));
@@ -351,24 +351,24 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     float e2 = roots.y;
     float e3 = roots.z;
 
-    vec3 avgDir = vec3(a*x0/(a - e2), b*y0/(b - e2), 1.0);
+    vec3 avgDir = vec3(a * x0 / (a - e2), b * y0 / (b - e2), 1.0);
 
     mat3 rotate = mat3(V1, V2, V3);
 
-    avgDir = rotate*avgDir;
+    avgDir = rotate * avgDir;
     avgDir = normalize(avgDir);
 
-    float L1 = sqrt(-e2/e3);
-    float L2 = sqrt(-e2/e1);
+    float L1 = sqrt(-e2 / e3);
+    float L2 = sqrt(-e2 / e1);
 
-    float formFactor = L1*L2*inversesqrt((1.0 + L1*L1)*(1.0 + L2*L2));
+    float formFactor = L1 * L2 * inversesqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
 	
 	const float LUT_SIZE = 64.0;
 	const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;
 	const float LUT_BIAS = 0.5 / LUT_SIZE;
 
     // use tabulated horizon-clipped sphere
-    vec2 uv = vec2(avgDir.z*0.5 + 0.5, formFactor);
+    vec2 uv = vec2(avgDir.z * 0.5 + 0.5, formFactor);
     uv = uv*LUT_SCALE + LUT_BIAS;
 
 	float scale = texture2D( areaLightsLutTex2, uv ).w;
@@ -394,7 +394,7 @@ mat3 getLTCLightInvMat(vec2 uv)
 {
 	vec4 t1 = texture2D( areaLightsLutTex1, uv );
 
-	#ifdef HAS_R8_G8_B8_A8_LUTS
+	#ifdef AREA_R8_G8_B8_A8_LUTS
 	t1 *= vec4(1.001, 0.3239, 0.60437568, 1.0);
 	t1 += vec4(0.0, -0.2976, -0.01381, 0.0);
 	#endif

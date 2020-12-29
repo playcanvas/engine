@@ -378,6 +378,19 @@ var standard = {
         return code.indexOf(name) >= 0 ? ("varying " + type + " " + name + ";\n") : "";
     },
 
+    _getLightSourceShapeString: function (shape) {
+        switch (shape) {
+            case LIGHTSHAPE_RECT:
+                return 'Rect';
+            case LIGHTSHAPE_DISK:
+                return 'Disk';
+            case LIGHTSHAPE_SPHERE:
+                return 'Sphere';
+            default:
+                return '';
+        }
+    },
+
     _vsAddTransformCode: function (code, device, chunks, options) {
         code += chunks.transformVS;
 
@@ -1007,11 +1020,11 @@ var standard = {
 
         if (device._areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
-            code += "#define HAS_R8_G8_B8_A8_LUTS\n";
+            code += "#define AREA_R8_G8_B8_A8_LUTS\n";
         }
 
         if (hasAreaLights) {
-            code += "#define HAS_AREA_LIGHTS\n";
+            code += "#define AREA_LIGHTS\n";
             code += "uniform sampler2D areaLightsLutTex1;\n";
             code += "uniform sampler2D areaLightsLutTex2;\n";
         }
@@ -1497,10 +1510,6 @@ var standard = {
             }
 
             // light source shape support
-            var shapeStringMap = [];
-            shapeStringMap[LIGHTSHAPE_RECT] = 'Rect';
-            shapeStringMap[LIGHTSHAPE_DISK] = 'Disk';
-            shapeStringMap[LIGHTSHAPE_SPHERE] = 'Sphere';
 
             var lightShape = LIGHTSHAPE_PUNCTUAL;
             var shapeString = '';
@@ -1508,7 +1517,7 @@ var standard = {
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs
-                // - different shadow coords (point shadows will use drastically different genShadowCoord)
+                // - different shadow coords (omni shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
                 // - different light source shapes
 
@@ -1520,7 +1529,7 @@ var standard = {
 
                 if (hasAreaLights) {
                     lightShape = light._shape;
-                    shapeString = shapeStringMap[lightShape];
+                    shapeString = this._getLightSourceShapeString(lightShape);
                 } else {
                     lightShape = LIGHTSHAPE_PUNCTUAL;
                     shapeString = '';

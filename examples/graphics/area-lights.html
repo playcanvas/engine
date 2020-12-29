@@ -96,36 +96,35 @@
             var brightMaterial = new pc.StandardMaterial();
             brightMaterial.emissive = color;
             brightMaterial.useLighting = false;
-            brightMaterial.cull = (shape===pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+            brightMaterial.cull = (shape === pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
             brightMaterial.update();
             
             var brightShape = new pc.Entity();
             // primitive shape that matches light source shape            
             brightShape.addComponent("model", {
-                type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
+                type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: brightMaterial,
                 castShadows: (type === "directional") ? false : true
             });
-            brightShape.setLocalScale( ((type === "directional") ? scale*range : scale), (shape===pc.LIGHTSHAPE_DISK ) ? 0.001 : ((type === "directional") ? scale*range : scale), ((type === "directional") ? scale*range : scale));
+            brightShape.setLocalScale( ((type === "directional") ? scale * range : scale), (shape === pc.LIGHTSHAPE_DISK ) ? 0.001 : ((type === "directional") ? scale * range : scale), ((type === "directional") ? scale * range : scale));
             brightShape.setLocalEulerAngles( (type === "directional") ? 90 : 0, 0, 0);
             lightParent.addChild(brightShape);
 
             // add black primitive shape if not omni-directional or global directional
-            if (type === "spot")
-            {
+            if (type === "spot") {
                 // black material 
                 var blackMaterial = new pc.StandardMaterial();
                 blackMaterial.diffuse = new pc.Color(0, 0, 0);
                 blackMaterial.useLighting = false;
-                blackMaterial.cull = (shape===pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+                blackMaterial.cull = (shape === pc.LIGHTSHAPE_RECT) ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
                 blackMaterial.update();
 
                 var blackShape = new pc.Entity();
                 blackShape.addComponent("model", {
-                    type: (shape===pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape===pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
+                    type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                     material: blackMaterial
                 });
-                blackShape.setLocalPosition(0, 0.01/scale, 0);
+                blackShape.setLocalPosition(0, 0.01 / scale, 0);
                 blackShape.setLocalEulerAngles(-180, 0, 0);
                 brightShape.addChild(blackShape);                 
             }
@@ -227,7 +226,7 @@
             });
             app.root.addChild(camera);
             camera.setLocalPosition(0, 2.5, 12);
-            camera.lookAt(0,0,0);
+            camera.lookAt(0, 0, 0);
 
             // Create lights with light source shape 
             light1 = createAreaLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-3, 4, 0), 4, new pc.Color(1, 1, 1), 2, true, 10);
