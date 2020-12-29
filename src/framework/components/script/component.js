@@ -970,7 +970,7 @@ Object.defineProperty(ScriptComponent.prototype, 'scripts', {
                 // attributes
                 if (typeof value[key].attributes === 'object') {
                     for (var attr in value[key].attributes) {
-                        if (ScriptAttributes.reservedNames[attr])
+                        if (ScriptAttributes.reservedNames.has(attr))
                             continue;
 
                         if (!script.__attributes.hasOwnProperty(attr)) {

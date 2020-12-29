@@ -164,11 +164,11 @@ function ScriptAttributes(scriptType) {
     this.index = { };
 }
 
-ScriptAttributes.reservedNames = [
+ScriptAttributes.reservedNames = new Set([
     'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
     '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
     '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
-].reduce((acc, curr) => (acc[curr] = 1, acc), {});
+]);
 
 /**
  * @function
@@ -243,7 +243,7 @@ ScriptAttributes.prototype.add = function (name, args) {
         console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
         // #endif
         return;
-    } else if (ScripAttributes.reservedNames[name]) {
+    } else if (ScripAttributes.reservedNames.has(name)) {
         // #ifdef DEBUG
         console.warn('attribute \'' + name + '\' is a reserved attribute name');
         // #endif

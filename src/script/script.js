@@ -6,7 +6,7 @@ import { Application } from '../framework/application.js';
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
 
-var reservedScriptNames = [
+const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move',
     'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
     'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
@@ -14,7 +14,7 @@ var reservedScriptNames = [
     '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
     '_onUpdate', '_onPostUpdate',
     '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
-].reduce((acc, curr) => (acc[curr] = 1, acc), {});
+]);
 
 /* eslint-disable jsdoc/no-undefined-types */
 /**
@@ -57,7 +57,7 @@ function createScript(name, app) {
         return null;
     }
 
-    if (reservedScriptNames[name])
+    if (reservedScriptNames.has(name))
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     var scriptType = function (args) {
@@ -75,7 +75,11 @@ function createScript(name, app) {
 }
 
 // Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
-createScript.reservedAttributes = ScriptAttributes.reservedNames;
+var reservedAttributes = {};
+ScriptAttributes.reservedNames.forEach((value, value2, set) => {
+    reservedAttributes[value] = 1;
+});
+createScript.reservedAttributes = reservedAttributes;
 
 
 /* eslint-disable jsdoc/no-undefined-types */
@@ -133,7 +137,7 @@ function registerScript(script, name, app) {
 
     name = name || script.__name || ScriptType.__getScriptName(script);
 
-    if (reservedScriptNames[name])
+    if (reservedScriptNames.has(name))
         throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
     script.__name = name;
