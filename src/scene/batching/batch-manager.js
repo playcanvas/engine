@@ -955,11 +955,10 @@ class BatchManager {
      * @private
      * @function
      * @name pc.BatchManager#destroy
-     * @description Mark the batches ref counter to 0, remove the batch model out of all layers and destroy it.
+     * @description Removes the batch model out of all layers and destroy it.
      * @param {pc.Batch} batch - A batch object.
      */
     destroy(batch) {
-        batch.refCounter = 0;
         if (!batch.model)
             return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
@@ -969,20 +968,6 @@ class BatchManager {
                 layer.removeMeshInstances(batch.model.meshInstances);
         }
         batch.model.destroy();
-    }
-
-    /**
-     * @private
-     * @function
-     * @name pc.BatchManager#decrement
-     * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
-     * @param {pc.Batch} batch - A batch object.
-     */
-    decrement(batch) {
-        batch.refCounter--;
-        if (batch.refCounter === 0) {
-            this.destroy(batch);
-        }
     }
 }
 

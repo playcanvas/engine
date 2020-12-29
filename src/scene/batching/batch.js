@@ -21,7 +21,6 @@ class Batch {
         this.model = null;
         this.dynamic = dynamic;
         this.batchGroupId = batchGroupId;
-        this.refCounter = 0;
     }
 }
 
