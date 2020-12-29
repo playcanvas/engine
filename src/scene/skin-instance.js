@@ -15,23 +15,23 @@ var _invMatrix = new Mat4();
  * generate the final matrix palette.
  * @property {pc.GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
-function SkinInstance(skin) {
-    this._dirty = true;
+class SkinInstance {
 
-    // sequencial index of when the bone update was performed the last time
-    this._skinUpdateIndex = -1;
+    constructor(skin) {
+        this._dirty = true;
 
-    // true if bones need to be updated before the frustum culling (bones are needed to update bounds of the MeshInstance)
-    this._updateBeforeCull = true;
+        // sequencial index of when the bone update was performed the last time
+        this._skinUpdateIndex = -1;
 
-    if (skin) {
-        this.initSkin(skin);
+        // true if bones need to be updated before the frustum culling (bones are needed to update bounds of the MeshInstance)
+        this._updateBeforeCull = true;
+
+        if (skin) {
+            this.initSkin(skin);
+        }
     }
-}
 
-Object.assign(SkinInstance.prototype, {
-
-    init: function (device, numBones) {
+    init(device, numBones) {
 
         if (device.supportsBoneTextures) {
 
@@ -56,17 +56,17 @@ Object.assign(SkinInstance.prototype, {
         } else {
             this.matrixPalette = new Float32Array(numBones * 12);
         }
-    },
+    }
 
-    destroy: function () {
+    destroy() {
 
         if (this.boneTexture) {
             this.boneTexture.destroy();
             this.boneTexture = null;
         }
-    },
+    }
 
-    initSkin: function (skin) {
+    initSkin(skin) {
 
         this.skin = skin;
 
@@ -80,18 +80,18 @@ Object.assign(SkinInstance.prototype, {
         for (var i = 0; i < numBones; i++) {
             this.matrices[i] = new Mat4();
         }
-    },
+    }
 
-    uploadBones: function (device) {
+    uploadBones(device) {
 
         // TODO: this is a bit strange looking. Change the Texture API to do a reupload
         if (device.supportsBoneTextures) {
             this.boneTexture.lock();
             this.boneTexture.unlock();
         }
-    },
+    }
 
-    _updateMatrices: function (rootNode, skinUpdateIndex) {
+    _updateMatrices(rootNode, skinUpdateIndex) {
 
         // if not already up to date
         if (this._skinUpdateIndex !== skinUpdateIndex) {
@@ -103,16 +103,16 @@ Object.assign(SkinInstance.prototype, {
                 this.matrices[i].mulAffine2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
             }
         }
-    },
+    }
 
-    updateMatrices: function (rootNode, skinUpdateIndex) {
+    updateMatrices(rootNode, skinUpdateIndex) {
 
         if (this._updateBeforeCull) {
             this._updateMatrices(rootNode, skinUpdateIndex);
         }
-    },
+    }
 
-    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
+    updateMatrixPalette(rootNode, skinUpdateIndex) {
 
         // make sure matrices are up to date
         this._updateMatrices(rootNode, skinUpdateIndex);
@@ -144,6 +144,6 @@ Object.assign(SkinInstance.prototype, {
 
         this.uploadBones(this.skin.device);
     }
-});
+}
 
 export { SkinInstance };

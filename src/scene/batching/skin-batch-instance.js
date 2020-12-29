@@ -1,27 +1,26 @@
 import { SkinInstance } from '../skin-instance.js';
 
 // Class derived from SkinInstance with changes to make it suitable for batching
-function SkinBatchInstance(device, nodes, rootNode) {
-    SkinInstance.call(this);
+class SkinBatchInstance extends SkinInstance {
 
-    var numBones = nodes.length;
-    SkinInstance.prototype.init.call(this, device, numBones);
+    constructor(device, nodes, rootNode) {
 
-    this.device = device;
-    this.rootNode = rootNode;
+        super();
 
-    // Unique bones per clone
-    this.bones = nodes;
-}
+        var numBones = nodes.length;
+        SkinInstance.prototype.init.call(this, device, numBones);
 
-SkinBatchInstance.prototype = Object.create(SkinInstance.prototype);
-SkinBatchInstance.prototype.constructor = SkinBatchInstance;
+        this.device = device;
+        this.rootNode = rootNode;
 
-Object.assign(SkinBatchInstance.prototype, {
-    updateMatrices: function (rootNode, skinUpdateIndex) {
-    },
+        // Unique bones per clone
+        this.bones = nodes;
+    }
 
-    updateMatrixPalette: function (rootNode, skinUpdateIndex) {
+    updateMatrices(rootNode, skinUpdateIndex) {
+    }
+
+    updateMatrixPalette(rootNode, skinUpdateIndex) {
         var pe;
         var mp = this.matrixPalette;
         var base;
@@ -46,8 +45,8 @@ Object.assign(SkinBatchInstance.prototype, {
             mp[base + 11] = pe[14];
         }
 
-        SkinInstance.prototype.uploadBones.call(this, this.device);
+        super.uploadBones(this.device);
     }
-});
+}
 
 export { SkinBatchInstance };
