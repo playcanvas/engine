@@ -955,7 +955,7 @@ class BatchManager {
      * @private
      * @function
      * @name pc.BatchManager#destroy
-     * @description Removes the batch model out of all layers and destroy it.
+     * @description Removes the batch model from all layers and destroys it.
      * @param {pc.Batch} batch - A batch object.
      */
     destroy(batch) {
