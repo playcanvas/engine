@@ -19,25 +19,31 @@ import { LAYERID_WORLD } from '../constants.js';
  * @property {number[]} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
  * to these layers. Layers of source models will be ignored.
  */
-function BatchGroup(id, name, dynamic, maxAabbSize, layers) {
-    this.dynamic = dynamic;
-    this.maxAabbSize = maxAabbSize;
-    this.id = id;
-    this.name = name;
-    this.layers = layers === undefined ? [LAYERID_WORLD] : layers;
-    this._ui = false;
-    this._sprite = false;
-    this._obj = {
-        model: [],
-        element: [],
-        sprite: [],
-        render: []
-    };
-}
+class BatchGroup {
 
-BatchGroup.MODEL = 'model';
-BatchGroup.ELEMENT = 'element';
-BatchGroup.SPRITE = 'sprite';
-BatchGroup.RENDER = 'render';
+    constructor(id, name, dynamic, maxAabbSize, layers = [LAYERID_WORLD]) {
+        this.dynamic = dynamic;
+        this.maxAabbSize = maxAabbSize;
+        this.id = id;
+        this.name = name;
+        this.layers = layers;
+        this._ui = false;
+        this._sprite = false;
+        this._obj = {
+            model: [],
+            element: [],
+            sprite: [],
+            render: []
+        };
+    }
+
+    static MODEL = 'model';
+
+    static ELEMENT = 'element';
+
+    static SPRITE = 'sprite';
+
+    static RENDER = 'render';
+}
 
 export { BatchGroup };
