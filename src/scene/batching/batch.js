@@ -13,14 +13,16 @@ import { BoundingBox } from '../../shape/bounding-box.js';
  * @property {boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
  * @property {number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
  */
-function Batch(meshInstances, dynamic, batchGroupId) {
-    this.origMeshInstances = meshInstances;
-    this._aabb = new BoundingBox();
-    this.meshInstance = null;
-    this.model = null;
-    this.dynamic = dynamic;
-    this.batchGroupId = batchGroupId;
-    this.refCounter = 0;
+class Batch {
+    constructor(meshInstances, dynamic, batchGroupId) {
+        this.origMeshInstances = meshInstances;
+        this._aabb = new BoundingBox();
+        this.meshInstance = null;
+        this.model = null;
+        this.dynamic = dynamic;
+        this.batchGroupId = batchGroupId;
+        this.refCounter = 0;
+    }
 }
 
 export { Batch };
