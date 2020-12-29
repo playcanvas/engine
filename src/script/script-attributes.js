@@ -243,7 +243,7 @@ ScriptAttributes.prototype.add = function (name, args) {
         console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
         // #endif
         return;
-    } else if (ScripAttributes.reservedNames.has(name)) {
+    } else if (ScriptAttributes.reservedNames.has(name)) {
         // #ifdef DEBUG
         console.warn('attribute \'' + name + '\' is a reserved attribute name');
         // #endif
