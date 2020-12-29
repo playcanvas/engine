@@ -19,7 +19,7 @@ import { VertexFormat } from '../graphics/vertex-format.js';
  * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
  */
 class MorphTarget {
-    
+
     constructor(options) {
 
         if (arguments.length === 2) {
