@@ -88,11 +88,11 @@ class Color {
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {pc.Color} Self for chaining.
      */
-    set(r, g, b, a) {
+    set(r, g, b, a = 1) {
         this.r = r;
         this.g = g;
         this.b = b;
-        this.a = (a === undefined) ? 1 : a;
+        this.a = a;
 
         return this;
     }
