@@ -10,8 +10,8 @@ import {
 import { Texture } from '../../../graphics/texture.js';
 
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
-var IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
-var KNOWN_FORMATS = {
+const IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
+const KNOWN_FORMATS = {
     0x83F0: PIXELFORMAT_DXT1,
     0x83F2: PIXELFORMAT_DXT3,
     0x83F3: PIXELFORMAT_DXT5,
@@ -30,13 +30,12 @@ var KNOWN_FORMATS = {
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for ktx files.
  */
-function KtxParser(registry) {
-    this.maxRetries = 0;
-}
+class KtxParser {
+    constructor(registry) {
+        this.maxRetries = 0;
+    }
 
-Object.assign(KtxParser.prototype, {
-
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var options = {
             cache: true,
             responseType: "arraybuffer",
@@ -44,9 +43,9 @@ Object.assign(KtxParser.prototype, {
             maxRetries: this.maxRetries
         };
         http.get(url.load, options, callback);
-    },
+    }
 
-    open: function (url, data, device) {
+    open(url, data, device) {
         var textureData = this.parse(data);
 
         if (!textureData) {
@@ -70,9 +69,9 @@ Object.assign(KtxParser.prototype, {
         texture.upload();
 
         return texture;
-    },
+    }
 
-    parse: function (data) {
+    parse(data) {
         var headerU32 = new Uint32Array(data, 0, 16);
 
         if (IDENTIFIER[0] !== headerU32[0] || IDENTIFIER[1] !== headerU32[1] || IDENTIFIER[2] !== headerU32[2]) {
@@ -168,6 +167,6 @@ Object.assign(KtxParser.prototype, {
             cubemap: isCubeMap
         };
     }
-});
+}
 
 export { KtxParser };

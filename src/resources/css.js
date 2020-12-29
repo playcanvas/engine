@@ -1,11 +1,11 @@
 import { http } from '../net/http.js';
 
-function CssHandler() {
-    this.maxRetries = 0;
-}
+class CssHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(CssHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -23,15 +23,15 @@ Object.assign(CssHandler.prototype, {
                 callback("Error loading css resource: " + url.original + " [" + err + "]");
             }
         });
-    },
-
-    open: function (url, data) {
-        return data;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 /**
  * @function

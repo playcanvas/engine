@@ -5,14 +5,14 @@
  * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
  * multiple requests. Add ResourceHandlers to handle different types of resources.
  */
-function ResourceLoader(app) {
-    this._handlers = {};
-    this._requests = {};
-    this._cache = {};
-    this._app = app;
-}
+class ResourceLoader {
+    constructor(app) {
+        this._handlers = {};
+        this._requests = {};
+        this._cache = {};
+        this._app = app;
+    }
 
-Object.assign(ResourceLoader.prototype, {
     /**
      * @function
      * @name pc.ResourceLoader#addHandler
@@ -40,10 +40,10 @@ Object.assign(ResourceLoader.prototype, {
      * var loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
      */
-    addHandler: function (type, handler) {
+    addHandler(type, handler) {
         this._handlers[type] = handler;
         handler._loader = this;
-    },
+    }
 
     /**
      * @function
@@ -51,9 +51,9 @@ Object.assign(ResourceLoader.prototype, {
      * @description Remove a {@link pc.ResourceHandler} for a resource type.
      * @param {string} type - The name of the type that the handler will be removed.
      */
-    removeHandler: function (type) {
+    removeHandler(type) {
         delete this._handlers[type];
-    },
+    }
 
     /**
      * @function
@@ -62,9 +62,9 @@ Object.assign(ResourceLoader.prototype, {
      * @param {string} type - The name of the resource type that the handler is registered with.
      * @returns {pc.ResourceHandler} The registered handler.
      */
-    getHandler: function (type) {
+    getHandler(type) {
         return this._handlers[type];
-    },
+    }
 
     /**
      * @function
@@ -82,7 +82,7 @@ Object.assign(ResourceLoader.prototype, {
      *     // use texture here
      * });
      */
-    load: function (url, type, callback, asset) {
+    load(url, type, callback, asset) {
         var handler = this._handlers[type];
         if (!handler) {
             var err = "No handler for asset type: " + type;
@@ -156,10 +156,10 @@ Object.assign(ResourceLoader.prototype, {
                 });
             }
         }
-    },
+    }
 
     // load an asset with no url, skipping bundles and caching
-    _loadNull: function (handler, callback, asset) {
+    _loadNull(handler, callback, asset) {
         var onLoad = function (err, data, extra) {
             if (err) {
                 callback(err);
@@ -172,17 +172,17 @@ Object.assign(ResourceLoader.prototype, {
             }
         };
         handler.load(null, onLoad, asset);
-    },
+    }
 
-    _onSuccess: function (key, result, extra) {
+    _onSuccess(key, result, extra) {
         this._cache[key] = result;
         for (var i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);
         }
         delete this._requests[key];
-    },
+    }
 
-    _onFailure: function (key, err) {
+    _onFailure(key, err) {
         console.error(err);
         if (this._requests[key]) {
             for (var i = 0; i < this._requests[key].length; i++) {
@@ -190,7 +190,7 @@ Object.assign(ResourceLoader.prototype, {
             }
             delete this._requests[key];
         }
-    },
+    }
 
     /**
      * @function
@@ -200,7 +200,7 @@ Object.assign(ResourceLoader.prototype, {
      * @param {*} data - The raw resource data.
      * @returns {*} The parsed resource data.
      */
-    open: function (type, data) {
+    open(type, data) {
         var handler = this._handlers[type];
         if (!handler) {
             console.warn("No resource handler found for: " + type);
@@ -209,7 +209,7 @@ Object.assign(ResourceLoader.prototype, {
 
         return handler.open(null, data);
 
-    },
+    }
 
     /**
      * @function
@@ -219,7 +219,7 @@ Object.assign(ResourceLoader.prototype, {
      * @param {pc.Asset} asset - The asset to patch.
      * @param {pc.AssetRegistry} assets - The asset registry.
      */
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         var handler = this._handlers[asset.type];
         if (!handler)  {
             console.warn("No resource handler found for: " + asset.type);
@@ -229,7 +229,7 @@ Object.assign(ResourceLoader.prototype, {
         if (handler.patch) {
             handler.patch(asset, assets);
         }
-    },
+    }
 
     /**
      * @function
@@ -238,9 +238,9 @@ Object.assign(ResourceLoader.prototype, {
      * @param {string} url - The URL of the resource.
      * @param {string} type - The type of resource.
      */
-    clearCache: function (url, type) {
+    clearCache(url, type) {
         delete this._cache[url + type];
-    },
+    }
 
     /**
      * @function
@@ -250,11 +250,11 @@ Object.assign(ResourceLoader.prototype, {
      * @param {string} type - The type of the resource.
      * @returns {*} The resource loaded from the cache.
      */
-    getFromCache: function (url, type) {
+    getFromCache(url, type) {
         if (this._cache[url + type]) {
             return this._cache[url + type];
         }
-    },
+    }
 
     /**
      * @private
@@ -263,17 +263,13 @@ Object.assign(ResourceLoader.prototype, {
      * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
      * @description Enables retrying of failed requests when loading assets.
      */
-    enableRetry: function (maxRetries) {
-        if (maxRetries === undefined) {
-            maxRetries = 5;
-        }
-
+    enableRetry(maxRetries = 5) {
         maxRetries = Math.max(0, maxRetries) || 0;
 
         for (var key in this._handlers) {
             this._handlers[key].maxRetries = maxRetries;
         }
-    },
+    }
 
     /**
      * @private
@@ -281,22 +277,22 @@ Object.assign(ResourceLoader.prototype, {
      * @name pc.ResourceLoader#disableRetry
      * @description Disables retrying of failed requests when loading assets.
      */
-    disableRetry: function () {
+    disableRetry() {
         for (var key in this._handlers) {
             this._handlers[key].maxRetries = 0;
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.ResourceLoader#destroy
      * @description Destroys the resource loader.
      */
-    destroy: function () {
+    destroy() {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
     }
-});
+}
 
 export { ResourceLoader };

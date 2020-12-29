@@ -1,39 +1,38 @@
 // Realtime performance graph visual
-function Graph(name, app, watermark, textRefreshRate, timer) {
-    this.name = name;
-    this.device = app.graphicsDevice;
-    this.timer = timer;
-    this.watermark = watermark;
-    this.enabled = false;
-    this.textRefreshRate = textRefreshRate;
+class Graph {
+    constructor(name, app, watermark, textRefreshRate, timer) {
+        this.name = name;
+        this.device = app.graphicsDevice;
+        this.timer = timer;
+        this.watermark = watermark;
+        this.enabled = false;
+        this.textRefreshRate = textRefreshRate;
 
-    this.avgTotal = 0;
-    this.avgTimer = 0;
-    this.avgCount = 0;
-    this.timingText = "";
+        this.avgTotal = 0;
+        this.avgTimer = 0;
+        this.avgCount = 0;
+        this.timingText = "";
 
-    this.texture = null;
-    this.yOffset = 0;
-    this.cursor = 0;
-    this.sample = new Uint8ClampedArray(4);
-    this.sample.set([0, 0, 0, 255]);
+        this.texture = null;
+        this.yOffset = 0;
+        this.cursor = 0;
+        this.sample = new Uint8ClampedArray(4);
+        this.sample.set([0, 0, 0, 255]);
 
-    app.on('frameupdate', this.update.bind(this));
+        app.on('frameupdate', this.update.bind(this));
 
-    this.counter = 0;
-}
-
-Object.assign(Graph.prototype, {
+        this.counter = 0;
+    }
 
     // called when context was lost, function releases all context related resources
-    loseContext: function () {
+    loseContext() {
         // if timer implements loseContext
         if (this.timer && (typeof this.timer.loseContext === 'function')) {
             this.timer.loseContext();
         }
-    },
+    }
 
-    update: function (ms) {
+    update(ms) {
         var timings = this.timer.timings;
 
         // calculate stacked total
@@ -86,9 +85,9 @@ Object.assign(Graph.prototype, {
                 this.cursor = 0;
             }
         }
-    },
+    }
 
-    render: function (render2d, x, y, w, h) {
+    render(render2d, x, y, w, h) {
         render2d.quad(this.texture,
                       x + w,
                       y,
@@ -99,6 +98,6 @@ Object.assign(Graph.prototype, {
                       -w, 0,
                       this.enabled);
     }
-});
+}
 
 export { Graph };

@@ -5,25 +5,25 @@
  * @param {pc.AssetRegistry} assets - The asset registry.
  * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
  */
-function BundleRegistry(assets) {
-    this._assets = assets;
+class BundleRegistry {
+    constructor(assets) {
+        this._assets = assets;
 
-    // index of bundle assets
-    this._bundleAssets = {};
-    // index asset id to one more bundle assets
-    this._assetsInBundles = {};
-    // index file urls to one or more bundle assets
-    this._urlsInBundles = {};
-    // contains requests to load file URLs indexed by URL
-    this._fileRequests = {};
+        // index of bundle assets
+        this._bundleAssets = {};
+        // index asset id to one more bundle assets
+        this._assetsInBundles = {};
+        // index file urls to one or more bundle assets
+        this._urlsInBundles = {};
+        // contains requests to load file URLs indexed by URL
+        this._fileRequests = {};
 
-    this._assets.on('add', this._onAssetAdded, this);
-    this._assets.on('remove', this._onAssetRemoved, this);
-}
+        this._assets.on('add', this._onAssetAdded, this);
+        this._assets.on('remove', this._onAssetRemoved, this);
+    }
 
-Object.assign(BundleRegistry.prototype, {
     // Add asset in internal indexes
-    _onAssetAdded: function (asset) {
+    _onAssetAdded(asset) {
         // if this is a bundle asset then add it and
         // index its referenced assets
         if (asset.type === 'bundle') {
@@ -40,21 +40,21 @@ Object.assign(BundleRegistry.prototype, {
                 this._indexAssetFileUrls(asset);
             }
         }
-    },
+    }
 
-    _registerBundleEventListeners: function (bundleAssetId) {
+    _registerBundleEventListeners(bundleAssetId) {
         this._assets.on('load:' + bundleAssetId, this._onBundleLoaded, this);
         this._assets.on('error:' + bundleAssetId, this._onBundleError, this);
-    },
+    }
 
-    _unregisterBundleEventListeners: function (bundleAssetId) {
+    _unregisterBundleEventListeners(bundleAssetId) {
         this._assets.off('load:' + bundleAssetId, this._onBundleLoaded, this);
         this._assets.off('error:' + bundleAssetId, this._onBundleError, this);
-    },
+    }
 
     // Index the specified asset id and its file URLs so that
     // the registry knows that the asset is in that bundle
-    _indexAssetInBundle: function (assetId, bundleAsset) {
+    _indexAssetInBundle(assetId, bundleAsset) {
         if (! this._assetsInBundles[assetId]) {
             this._assetsInBundles[assetId] = [bundleAsset];
         } else {
@@ -69,10 +69,10 @@ Object.assign(BundleRegistry.prototype, {
         if (asset) {
             this._indexAssetFileUrls(asset);
         }
-    },
+    }
 
     // Index the file URLs of the specified asset
-    _indexAssetFileUrls: function (asset) {
+    _indexAssetFileUrls(asset) {
         var urls = this._getAssetFileUrls(asset);
         if (! urls) return;
 
@@ -85,10 +85,10 @@ Object.assign(BundleRegistry.prototype, {
             // be removed too.
             this._urlsInBundles[url] = this._assetsInBundles[asset.id];
         }
-    },
+    }
 
     // Get all the possible URLs of an asset
-    _getAssetFileUrls: function (asset) {
+    _getAssetFileUrls(asset) {
         var url = asset.getFileUrl();
         if (! url) return null;
 
@@ -105,15 +105,15 @@ Object.assign(BundleRegistry.prototype, {
         }
 
         return urls;
-    },
+    }
 
     // Removes query parameters from a URL
-    _normalizeUrl: function (url) {
+    _normalizeUrl(url) {
         return url && url.split('?')[0];
-    },
+    }
 
     // Remove asset from internal indexes
-    _onAssetRemoved: function (asset) {
+    _onAssetRemoved(asset) {
         if (asset.type === 'bundle') {
             // remove bundle from index
             delete this._bundleAssets[asset.id];
@@ -155,13 +155,12 @@ Object.assign(BundleRegistry.prototype, {
                 delete this._urlsInBundles[urls[i]];
             }
         }
-
-    },
+    }
 
     // If we have any pending file requests
     // that can be satisfied by the specified bundle
     // then resolve them
-    _onBundleLoaded: function (bundleAsset) {
+    _onBundleLoaded(bundleAsset) {
         // this can happen if the bundleAsset failed
         // to create its resource
         if (! bundleAsset.resource) {
@@ -200,14 +199,14 @@ Object.assign(BundleRegistry.prototype, {
                 delete this._fileRequests[url];
             }
         }.bind(this));
-    },
+    }
 
     // If we have outstanding file requests for any
     // of the URLs in the specified bundle then search for
     // other bundles that can satisfy these requests.
     // If we do not find any other bundles then fail
     // those pending file requests with the specified error.
-    _onBundleError: function (err, bundleAsset) {
+    _onBundleError(err, bundleAsset) {
         for (var url in this._fileRequests) {
             var bundle = this._findLoadedOrLoadingBundleForUrl(url);
             if (! bundle) {
@@ -220,11 +219,11 @@ Object.assign(BundleRegistry.prototype, {
 
             }
         }
-    },
+    }
 
     // Finds a bundle that contains the specified URL but
     // only returns the bundle if it's either loaded or being loaded
-    _findLoadedOrLoadingBundleForUrl: function (url) {
+    _findLoadedOrLoadingBundleForUrl(url) {
         var bundles = this._urlsInBundles[url];
         if (! bundles) return null;
 
@@ -247,7 +246,7 @@ Object.assign(BundleRegistry.prototype, {
         }
 
         return null;
-    },
+    }
 
     /**
      * @private
@@ -257,9 +256,9 @@ Object.assign(BundleRegistry.prototype, {
      * @param {pc.Asset} asset - The asset.
      * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
      */
-    listBundlesForAsset: function (asset) {
+    listBundlesForAsset(asset) {
         return this._assetsInBundles[asset.id] || null;
-    },
+    }
 
     /**
      * @private
@@ -268,14 +267,14 @@ Object.assign(BundleRegistry.prototype, {
      * @description Lists all of the available bundles. This includes bundles that are not loaded.
      * @returns {pc.Asset[]} An array of bundle assets.
      */
-    list: function () {
+    list() {
         var result = [];
         for (var id in this._bundleAssets) {
             result.push(this._bundleAssets[id]);
         }
 
         return result;
-    },
+    }
 
     /**
      * @private
@@ -285,9 +284,9 @@ Object.assign(BundleRegistry.prototype, {
      * @param {string} url - The url.
      * @returns {boolean} True or false.
      */
-    hasUrl: function (url) {
+    hasUrl(url) {
         return !!this._urlsInBundles[url];
-    },
+    }
 
     /**
      * @private
@@ -298,9 +297,9 @@ Object.assign(BundleRegistry.prototype, {
      * @param {string} url - The url.
      * @returns {boolean} True or false.
      */
-    canLoadUrl: function (url) {
+    canLoadUrl(url) {
         return !!this._findLoadedOrLoadingBundleForUrl(url);
-    },
+    }
 
     /**
      * @private
@@ -316,7 +315,7 @@ Object.assign(BundleRegistry.prototype, {
      *     // do something with the blob URL
      * });
      */
-    loadUrl: function (url, callback) {
+    loadUrl(url, callback) {
         var bundle = this._findLoadedOrLoadingBundleForUrl(url);
         if (! bundle) {
             callback('URL ' + url + ' not found in any bundles');
@@ -337,7 +336,7 @@ Object.assign(BundleRegistry.prototype, {
         } else {
             this._fileRequests[url] = [callback];
         }
-    },
+    }
 
     /**
      * @private
@@ -346,7 +345,7 @@ Object.assign(BundleRegistry.prototype, {
      * @description Destroys the registry, and releases its resources. Does not unload bundle assets
      * as these should be unloaded by the {@link pc.AssetRegistry}.
      */
-    destroy: function () {
+    destroy() {
         this._assets.off('add', this._onAssetAdded, this);
         this._assets.off('remove', this._onAssetRemoved, this);
 
@@ -360,6 +359,6 @@ Object.assign(BundleRegistry.prototype, {
         this._urlsInBundles = null;
         this._fileRequests = null;
     }
-});
+}
 
 export { BundleRegistry };
