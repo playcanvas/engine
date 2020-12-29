@@ -1,4 +1,4 @@
-# CONTRIBUTING
+# CONTRIBUTING
 
 # HOW TO CONTRIBUTE
 
@@ -8,7 +8,7 @@
 4. Keep PR simple and focused - one PR per feature.
 5. Make a Pull Request.
 6. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
-7. Happy Days! :)
+7. Happy Days! 🎉
 
 #### Tips
 
@@ -22,7 +22,7 @@ Try to keep PR focused on a single feature, small PR's are easier to review and 
 
 ## General
 
-These coding standards are based on the [Google JavaScript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml). If something is not defined here, use this guide as a backup.
+Our coding standards are derived from the [Google JavaScript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml) which are based on ES5 (ECMA2009). Also we have a whitelist of modern JavaScript features (ES6+), explicitly listed below.
 
 ### Keep it simple
 
@@ -31,6 +31,14 @@ Simple code is always better. Modular (horizontal dependencies) code is easier t
 ### Use International/American English spelling
 
 For example, use "Initialize" instead of "Initialise", and "color" instead of "colour".
+
+### Whitelisted ES6+ features:
+
+* `let`, `const` instead of `var`
+* `for of` loop
+* `class` instead of `prototype`
+* `import`/`export` handled by build scripts for bundling
+* function default parameters
 
 ### Opening braces should be on the same line as the statement
 
@@ -68,16 +76,16 @@ On save, set your text editor to remove trailing spaces and ensure there is an e
 ### Use spaces between operators
 
 ```javascript
-var foo = 16 + 32 / 4;
+let foo = 16 + 32 / 4;
 
-for (var i = 0, len = list.length; i < len; i++) {
+for (let i = 0; i < list.length; i++) {
     // ...
 }
 ```
 
 ### Leave a space after the function keyword for anonymous functions
 ```javascript
-var fn = function () {
+let fn = function () {
 
 };
 ```
@@ -88,51 +96,34 @@ foo();
 bar(1, 2);
 ```
 
-### Use spaces between [ ] and { } brackets
+### Use spaces between [ ] and { } brackets, unless they are empty
 ```javascript
-var a = { };
-var b = { key: 'value' };
-var c = [ ];
-var d = [ 32, 64 ];
+let a = {};
+let b = { key: 'value' };
+let c = [];
+let d = [ 32, 64 ];
 ```
 
-### No semicolon on closing function brace
-
-Semicolons are not needed to delimit the ends of functions. Follow the convention below:
-```javascript
-function class() {
-} // Note the lack of semicolon here
-```
-
-Semicolons **are** needed if you're function is declared as a variable
-```javascript
-var fn = function () {
-}; // Note the semicolon here
-```
-
-### Put all variable declarations at the top of functions
-
-Variable declarations should all be placed first or close to the top of functions. This is because variables have a function-level scope.
-
-Variables should be declared one per line.
+### `let` and `const` instead of `var` (ES6)
 
 ```javascript
-function fn() {
-    var a = 0;
-    var b = 1;
-    var c = 2;
+for (let i = 0; i < items.length; i++) {
+    const item = items[i];
 }
+
+var a = 10; // not good
 ```
+
+### For of loop (ES6)
 ```javascript
-function fn() {
-    var i;
-    var bar = 0;
+// ok
+for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+}
 
-    for(i = 0; i < 32; ++i) {
-        bar += i;
-    }
+// more readable but generally slower
+for (const item of items) {
 
-    for(var i = 0; i < 32; i++) { } // don't do this, as i is already defined
 }
 ```
 
@@ -140,7 +131,7 @@ function fn() {
 
 In functions exit early to simplify logic flow and avoid building indention-hell:
 ```javascript
-var foo = function (bar) {
+let foo = function (bar) {
     if (! bar)
         return;
 
@@ -150,7 +141,7 @@ var foo = function (bar) {
 
 Same for iterators:
 ```javascript
-for(var i = 0; i < items.length; i++) {
+for (let i = 0; i < items.length; i++) {
     if (! items[i].test)
         continue;
 
@@ -164,36 +155,36 @@ for(var i = 0; i < items.length; i++) {
 
 ```javascript
 // Namespace should have short lowercase names
-var namespace = { };
+let namespace = { };
 
-// Classes (or rather Constructors) should be CamelCase
-var MyClass = function () { };
+// Classes should be CamelCase
+class MyClass { }
 
 // Variables should be mixedCase
-var mixedCase = 1;
+let mixedCase = 1;
 
 // Function are usually variables so should be mixedCase
 // (unless they are class constructors)
-var myFunction = function () { };
+let myFunction = function () { };
 
 // Constants should be ALL_CAPITALS separated by underscores.
 // Note, ES5 doesn't support constants,
 // so this is just convention.
-var THIS_IS_CONSTANT = "well, kind of";
+let THIS_IS_CONSTANT = "well, kind of";
 
 // Private variables should start with a leading underscore.
 // Note, you should attempt to make private variables actually private using
 // a closure.
-var _private = "private";
-var _privateFn = function () { };
+let _private = "private";
+let _privateFn = function () { };
 ```
 
 ### Acronyms should not be upper-case, they should follow coding standards
 
 Treat acronyms like a normal word. e.g.
 ```javascript
-var json = ""; // not "JSON";
-var id = 1; // not "ID";
+let json = ""; // not "JSON";
+let id = 1; // not "ID";
 
 function getId() { }; // not "getID"
 function loadJson() { }; // not "loadJSON"
@@ -223,7 +214,7 @@ function asyncFunction(callback) {
 It is often useful to be able to cache the 'this' object to get around the scoping behavior of JavaScript. If you need to do this, cache it in a variable called 'self'.
 
 ```javascript
-var self = this;
+let self = this;
 ```
 
 ### Avoid using function.bind(scope)
@@ -236,11 +227,29 @@ setTimeout(function() {
 
 Instead use `self` reference in upper scope:
 ```javascript
-var self = this;
+let self = this;
 setTimeout(function() {
     self.foo();
 });
 ```
+
+### Default function parameters (ES6)
+
+Use this notation for function default parameters:
+```javascript
+// good
+function foo(a, b = 10) {
+    return a + b;
+}
+
+// not good
+function foo(a, b) {
+    if (b === undefined)
+        b = 10;
+    return a + b;
+}
+```
+
 
 ## Privacy
 
@@ -248,14 +257,17 @@ setTimeout(function() {
 
 Variables that should be accessible only within class should start with `_`:
 ```javascript
-var Item = function () {
-    this._a = "private";
-};
-Item.prototype.bar = function() {
-    this._a += "!";
-};
+class Item {
+    constructor() {
+        this._a = "private";
+    }
 
-var foo = new Item();
+    bar() {
+        this._a += "!";
+    }
+}
+
+let foo = new Item();
 foo._a += "?"; // not good
 ```
 
@@ -264,7 +276,7 @@ foo._a += "?"; // not good
 The hasOwnProperty() function should be used when iterating over an object's members. This is to avoid accidentally picking up unintended members that may have been added to the object's prototype. For example:
 
 ```javascript
-for (var key in values) {
+for (let key in values) {
     if (! values.hasOwnProperty(key))
         continue;
 
@@ -285,51 +297,48 @@ asset-registry.js
 graph-node.js
 ```
 
-## Namespaces and Classes
+## Namespaces and Classes (ES6)
 
-The entire PlayCanvas API must be declared under the ```pc``` namespace. The vast majority of the PlayCanvas codebase is made up of 'class' definitions. These have the following structure (which should be adhered to):
+The entire PlayCanvas API must be declared under the ```pc``` namespace. This is handled by build script, so ES6 notation of `import`/`export` should be used. The vast majority of the PlayCanvas codebase is made up of `class` definitions. These have the following structure (which should be adhered to):
 
 ```javascript
-Object.assign(pc, function() {
-    // Closure to define new class
+class Class {
+    someFunc(x) { }
+}
 
-    var Class = function () {
-    };
-
-    Object.assign(Class.prototype, {
-        someFunc: function () {
-
-        }
-    });
-
-    return {
-        Class: Class
-    };
-}());
+export { Class };
 ```
 
-You can also subclass existing classes:
+You can also extend existing classes:
 
 ```javascript
-Object.assign(pc, function() {
-    // Closure to define new class
+import { Class } from './class.js';
 
-    var SubClass = function () {
-        pc.SuperClass.call(this);
-    };
+class SubClass extends Class {
+    constructor() {
+        // call parent class constructor
+        super();
+    }
 
-    // optionally can inherit
-    SubClass.prototype = Object.create(pc.SuperClass.prototype);
-    SubClass.prototype.constructor = SubClass;
+    someFunc(x) {
+        // if method is overriden
+        // this is the way to call parent class method
+        super.someFunc(x);
+    }
+}
 
-    Object.assign(SubClass.prototype, {
-        someFunc: function () {
-            SuperClass.prototype.someFunc.call(this);
-        }
-    });
+export { SubClass };
+```
 
-    return {
-        SubClass: SubClass
-    };
-}());
+Use `class` instead of `prototype` for defining Classes:
+
+```javascript
+// good
+class Class {
+    someFunc() { }
+}
+
+// not good
+function Class() { }
+Class.prototype.someFunc = function() { };
 ```
