@@ -170,7 +170,7 @@ let myFunction = function () { };
 // Constants should be ALL_CAPITALS separated by underscores.
 // Note, ES5 doesn't support constants,
 // so this is just convention.
-let THIS_IS_CONSTANT = "well, kind of";
+const THIS_IS_CONSTANT = "well, kind of";
 
 // Private variables should start with a leading underscore.
 // Note, you should attempt to make private variables actually private using
