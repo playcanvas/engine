@@ -23,7 +23,6 @@ function ImmediateData(device) {
     this.quadMesh = null;
     this.cubeLocalPos = null;
     this.cubeWorldPos = null;
-    this.identityGraphNode = new GraphNode();
 }
 
 ImmediateData.prototype.addLayer = function (layer) {
