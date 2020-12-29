@@ -8,7 +8,7 @@ class SkinBatchInstance extends SkinInstance {
         super();
 
         var numBones = nodes.length;
-        SkinInstance.prototype.init.call(this, device, numBones);
+        this.init(device, numBones);
 
         this.device = device;
         this.rootNode = rootNode;
@@ -45,7 +45,7 @@ class SkinBatchInstance extends SkinInstance {
             mp[base + 11] = pe[14];
         }
 
-        super.uploadBones(this.device);
+        this.uploadBones(this.device);
     }
 }
 
