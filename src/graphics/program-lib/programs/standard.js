@@ -1015,7 +1015,7 @@ var standard = {
         var light;
 
         var hasAreaLights = options.lights.some(function (light){
-            return light._shape !== LIGHTSHAPE_PUNCTUAL;
+            return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
         if (device._areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
@@ -1029,9 +1029,18 @@ var standard = {
             code += "uniform sampler2D areaLightsLutTex2;\n";
         }
 
+        var lightShape = LIGHTSHAPE_PUNCTUAL;
+
         for (i = 0; i < options.lights.length; i++) {
             light = options.lights[i];
             lightType = light._type;
+
+            if (hasAreaLights && light._shape) {
+                lightShape = light._shape;
+            } else {
+                lightShape = LIGHTSHAPE_PUNCTUAL;
+            }
+
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
@@ -1044,7 +1053,7 @@ var standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (light._shape !== LIGHTSHAPE_PUNCTUAL) {
+            if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec3 light" + i + "_position;\n";
                 }
@@ -1472,6 +1481,17 @@ var standard = {
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity();\n";
             if (!getGlossinessCalled) code += "   getGlossiness();\n";
+
+            // this is needed to allow custom area light fresnel calculations
+            if (hasAreaLights) {
+                code += "   #ifdef AREA_LIGHTS\n";
+                code += "   dSpecularityNoFres = dSpecularity;\n";
+                code += "   #ifdef CLEARCOAT\n";
+                code += "   ccSpecularityNoFres = ccSpecularity;\n";
+                code += "   #endif\n";
+                code += "   #endif\n";
+            }
+
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
@@ -1510,8 +1530,6 @@ var standard = {
             }
 
             // light source shape support
-
-            var lightShape = LIGHTSHAPE_PUNCTUAL;
             var shapeString = '';
 
             for (i = 0; i < options.lights.length; i++) {
@@ -1527,7 +1545,7 @@ var standard = {
                 lightType = light._type;
                 usesCookieNow = false;
 
-                if (hasAreaLights) {
+                if (hasAreaLights && light._shape) {
                     lightShape = light._shape;
                     shapeString = this._getLightSourceShapeString(lightShape);
                 } else {
@@ -1765,6 +1783,7 @@ var standard = {
         if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
         if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
         if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
+        if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
         if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
         if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
@@ -1778,6 +1797,7 @@ var standard = {
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
+        if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
         if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         code = codeBegin + structCode + code;
