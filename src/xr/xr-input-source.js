@@ -38,6 +38,7 @@ var ids = 0;
  * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null.
  * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
  * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
+ * @property {boolean} squeezing True if input source is in active squeeze action between squeezestart and squeezeend events.
  * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
  * @property {pc.Entity} elementEntity If {@link pc.XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
  * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
@@ -67,6 +68,7 @@ function XrInputSource(manager, xrInputSource) {
     this._dirtyLocal = true;
 
     this._selecting = false;
+    this._squeezing = false;
 
     this._elementInput = true;
     this._elementEntity = null;
@@ -112,6 +114,33 @@ XrInputSource.prototype.constructor = XrInputSource;
  * @event
  * @name pc.XrInputSource#selectend
  * @description Fired when input source has ended triggerring primary action.
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ */
+
+/**
+ * @event
+ * @name pc.XrInputSource#squeeze
+ * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ */
+
+/**
+ * @event
+ * @name pc.XrInputSource#squeezestart
+ * @description Fired when input source has started to trigger sqeeze action.
+ * @param {object} evt - XRInputSourceEvent event data from WebXR API
+ * @example
+ * inputSource.on('squeezestart', function (evt) {
+ *     if (obj.containsPoint(inputSource.getPosition())) {
+ *         // grabbed an object
+ *     }
+ * });
+ */
+
+/**
+ * @event
+ * @name pc.XrInputSource#squeezeend
+ * @description Fired when input source has ended triggerring sqeeze action.
  * @param {object} evt - XRInputSourceEvent event data from WebXR API
  */
 
@@ -413,6 +442,12 @@ Object.defineProperty(XrInputSource.prototype, 'gamepad', {
 Object.defineProperty(XrInputSource.prototype, 'selecting', {
     get: function () {
         return this._selecting;
+    }
+});
+
+Object.defineProperty(XrInputSource.prototype, 'squeezing', {
+    get: function () {
+        return this._squeezing;
     }
 });
 
