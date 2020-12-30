@@ -1079,6 +1079,9 @@ var standard = {
                     tbn = tbn.replace(/\$UV/g, normalMapUv);
                 }
                 code += tbn;
+            } else if (options.enableGGXSpecular && !options.heightMap) {
+                code += chunks.normalVertexPS;
+                code += chunks.TBNObjectSpacePS;
             }
         }
 
@@ -1094,12 +1097,8 @@ var standard = {
                 } else {
                     code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-            } else {
+            } else if (!(options.enableGGXSpecular && !options.heightMap)) {
                 code += chunks.normalVertexPS;
-
-                if (options.enableGGXSpecular) {
-                    code += chunks.TBNObjectSpacePS;
-                }
             }
         }
 
@@ -1138,7 +1137,9 @@ var standard = {
         }
         code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
-        if (options.useSpecular && (lighting || reflections)) {
+        //if (options.useSpecular && (lighting || reflections)) {
+
+        if ((lighting && options.useSpecular) || reflections) {
             if (options.specularAntialias && options.normalMap) {
                 if (options.normalizeNormalMap && needsNormal) {
                     code += chunks.specularAaToksvigPS;
@@ -1207,7 +1208,7 @@ var standard = {
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-            if (options.clearCoat > 0){
+            if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
             if (options.refraction){
@@ -1292,7 +1293,7 @@ var standard = {
             code += chunks.combineDiffusePS;
         }
 
-        if (options.clearCoat > 0 ) {
+        if (options.clearCoat > 0) {
             code += chunks.combineClearCoatPS;
         }
 
@@ -1448,7 +1449,7 @@ var standard = {
 
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-                if (options.clearCoat > 0){
+                if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
@@ -1557,7 +1558,7 @@ var standard = {
 
                 code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
-                if (options.clearCoat > 0 ) {
+                if (options.clearCoat > 0) {
                     code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 }
 

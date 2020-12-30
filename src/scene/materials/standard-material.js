@@ -72,8 +72,8 @@ import { Quat } from '../../math/quat.js';
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  *
- * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables anisotropy parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires enableGGXSpecular is set to true.
+ * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link pc.Material#anisotropy}  parameter to set material anisotropy.
+ * @property {number} anisotropy Defines amount of anisotropy. Requires {@link pc.Material#enableGGXSpecular} is set to true.
  * * When anisotropy == 0, specular is isotropic.
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
@@ -793,10 +793,10 @@ Object.assign(StandardMaterial.prototype, {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
+        }
 
-            if (this.enableGGXSpecular){
-                this._setParameter('material_anisotropy', this.anisotropy);
-            }
+        if (this.enableGGXSpecular){
+            this._setParameter('material_anisotropy', this.anisotropy);
         }
 
         if (this.clearCoat > 0) {
