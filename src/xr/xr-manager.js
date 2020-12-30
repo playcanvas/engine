@@ -221,6 +221,7 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
 
         if (options && options.imageTracking) {
             opts.optionalFeatures.push('image-tracking');
+        }
 
         if (this.domOverlay.root) {
             opts.optionalFeatures.push('dom-overlay');
