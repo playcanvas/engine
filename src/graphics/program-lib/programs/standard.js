@@ -630,7 +630,10 @@ var standard = {
             }
         }
 
-        if (options.forceUv1) useUv[1] = true;
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+        }
 
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
@@ -1449,10 +1452,6 @@ var standard = {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
-            }
-
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {

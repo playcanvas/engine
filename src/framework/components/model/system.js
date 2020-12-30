@@ -28,14 +28,6 @@ function ModelComponentSystem(app) {
     this.DataType = ModelComponentData;
 
     this.schema = _schema;
-
-    this.box = null;
-    this.capsule = null;
-    this.cone = null;
-    this.cylinder = null;
-    this.plane = null;
-    this.sphere = null;
-
     this.defaultMaterial = app.scene.defaultMaterial;
 
     this.on('beforeremove', this.onRemove, this);

@@ -12,8 +12,6 @@ import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
 
-import { Application } from '../framework/application.js';
-
 function syncToCpu(device, targ, face) {
     var tex = targ._colorBuffer;
     if (tex.format != PIXELFORMAT_R8_G8_B8_A8) return;
@@ -41,7 +39,9 @@ function prefilterCubemap(options) {
     var cpuSync = options.cpuSync;
 
     if (cpuSync && !sourceCubemap._levels[0]) {
+        // #ifdef DEBUG
         console.error("ERROR: prefilter: cubemap must have _levels");
+        // #endif
         return;
     }
 
@@ -306,24 +306,27 @@ function texelCoordSolidAngle(u, v, size) {
     return solidAngle;
 }
 
-function shFromCubemap(source, dontFlipX) {
+function shFromCubemap(device, source, dontFlipX) {
     var face;
     var cubeSize = source.width;
     var x, y;
 
-    if (source.format != PIXELFORMAT_R8_G8_B8_A8) {
+    if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
+        // #ifdef DEBUG
         console.error("ERROR: SH: cubemap must be RGBA8");
+        // #endif
         return;
     }
     if (!source._levels[0]) {
+        // #ifdef DEBUG
         console.error("ERROR: SH: cubemap must be synced to CPU");
+        // #endif
         return;
     }
     if (!source._levels[0][0].length) {
         // Cubemap is not composed of arrays
         if (source._levels[0][0] instanceof HTMLImageElement) {
             // Cubemap is made of imgs - convert to arrays
-            var device = Application.getApplication().graphicsDevice;
             var gl = device.gl;
             var shader = createShaderFromCode(device,
                                               shaderChunks.fullscreenQuadVS,
@@ -368,7 +371,9 @@ function shFromCubemap(source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
+            // #ifdef DEBUG
             console.error("ERROR: SH: cubemap must be composed of arrays or images");
+            // #endif
             return;
         }
     }

@@ -11,6 +11,7 @@ import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 
 /**
  * @class
@@ -28,7 +29,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
- * @property {object|null} session provides access to [XRSession](https://developer.mozilla.org/en-US/docs/Web/API/XRSession) of WebXR
+ * @property {object|null} session provides access to XRSession of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
@@ -56,6 +57,7 @@ function XrManager(app) {
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
     this.depthSensing = new XrDepthSensing(this);
+    this.domOverlay = new XrDomOverlay(this);
 
     this._camera = null;
     this.views = [];
@@ -209,24 +211,29 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     // 3. probably immersive-vr will fail to be created
     // 4. call makeXRCompatible, very likely will lead to context loss
 
-    var optionalFeatures = [];
+    var opts = {
+        requiredFeatures: [spaceType],
+        optionalFeatures: []
+    };
 
     if (type === XRTYPE_AR) {
-        optionalFeatures.push('light-estimation');
-        optionalFeatures.push('hit-test');
-        optionalFeatures.push('depth-sensing');
+        opts.optionalFeatures.push('light-estimation');
+        opts.optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('depth-sensing');
+
+        if (this.domOverlay.root) {
+            opts.optionalFeatures.push('dom-overlay');
+            opts.domOverlay = { root: this.domOverlay.root };
+        }
     } else if (type === XRTYPE_VR) {
-        optionalFeatures.push('hand-tracking');
+        opts.optionalFeatures.push('hand-tracking');
     }
 
     if (options && options.optionalFeatures) {
-        optionalFeatures = optionalFeatures.concat(options.optionalFeatures);
+        opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
     }
 
-    navigator.xr.requestSession(type, {
-        requiredFeatures: [spaceType],
-        optionalFeatures: optionalFeatures
-    }).then(function (session) {
+    navigator.xr.requestSession(type, opts).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;

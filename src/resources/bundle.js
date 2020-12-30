@@ -14,14 +14,14 @@ import { Untar, UntarWorker } from './untar.js';
  * @param {pc.AssetRegistry} assets - The asset registry.
  * @classdesc Loads Bundle Assets.
  */
-function BundleHandler(assets) {
-    this._assets = assets;
-    this._worker = null;
-    this.retryRequests = false;
-}
+class BundleHandler {
+    constructor(assets) {
+        this._assets = assets;
+        this._worker = null;
+        this.maxRetries = 0;
+    }
 
-Object.assign(BundleHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -33,7 +33,8 @@ Object.assign(BundleHandler.prototype, {
 
         http.get(url.load, {
             responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (! err) {
                 try {
@@ -45,9 +46,9 @@ Object.assign(BundleHandler.prototype, {
                 callback("Error loading bundle resource " + url.original + ": " + err);
             }
         });
-    },
+    }
 
-    _untar: function (response, callback) {
+    _untar(response, callback) {
         var self = this;
 
         // use web workers if available otherwise
@@ -73,14 +74,14 @@ Object.assign(BundleHandler.prototype, {
             var files = archive.untar(self._assets.prefix);
             callback(null, files);
         }
-    },
-
-    open: function (url, data) {
-        return new Bundle(data);
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return new Bundle(data);
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 export { BundleHandler };

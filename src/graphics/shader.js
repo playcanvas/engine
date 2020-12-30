@@ -46,17 +46,22 @@ function Shader(graphicsDevice, definition) {
     this.device = graphicsDevice;
     this.definition = definition;
 
-    this.attributes = [];
-    this.uniforms = [];
-    this.samplers = [];
-
-    this.ready = false;
-    this.failed = false;
+    this.init();
 
     this.device.createShader(this);
 }
 
 Object.assign(Shader.prototype, {
+
+    init: function () {
+        this.attributes = [];
+        this.uniforms = [];
+        this.samplers = [];
+
+        this.ready = false;
+        this.failed = false;
+    },
+
     /**
      * @function
      * @name pc.Shader#destroy
@@ -64,6 +69,11 @@ Object.assign(Shader.prototype, {
      */
     destroy: function () {
         this.device.destroyShader(this);
+    },
+
+    // called when context was lost, function releases all context related resources
+    loseContext: function () {
+        this.init();
     }
 });
 

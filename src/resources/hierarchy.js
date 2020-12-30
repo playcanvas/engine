@@ -4,13 +4,13 @@ import { SceneParser } from './parser/scene.js';
 
 import { TemplateUtils } from '../templates/template-utils.js';
 
-function HierarchyHandler(app) {
-    this._app = app;
-    this.retryRequests = false;
-}
+class HierarchyHandler {
+    constructor(app) {
+        this._app = app;
+        this.maxRetries = 0;
+    }
 
-Object.assign(HierarchyHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -21,7 +21,8 @@ Object.assign(HierarchyHandler.prototype, {
         var assets = this._app.assets;
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 TemplateUtils.waitForTemplatesInScene(
@@ -42,9 +43,9 @@ Object.assign(HierarchyHandler.prototype, {
                 callback(errMsg);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         // prevent script initialization until entire scene is open
         this._app.systems.script.preloading = true;
 
@@ -56,6 +57,6 @@ Object.assign(HierarchyHandler.prototype, {
 
         return parent;
     }
-});
+}
 
 export { HierarchyHandler };
