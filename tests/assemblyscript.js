@@ -109,7 +109,7 @@ async function main() {
     requireUncached("./math/test_vec2")
     requireUncached("./math/test_vec3")
     requireUncached("./math/test_vec4")
-    requireUncached("./scene/test_graphnode")
+    //requireUncached("./scene/test_graphnode")
 
     console.log(`32bit: ${counter} tests (${success} succeeded, ${error} failed)`);
 
@@ -129,7 +129,7 @@ async function main() {
     requireUncached("./math/test_vec2")
     requireUncached("./math/test_vec3")
     requireUncached("./math/test_vec4")
-    requireUncached("./scene/test_graphnode")
+    //requireUncached("./scene/test_graphnode")
 
     console.log(`64bit: ${counter} tests (${success} succeeded, ${error} failed)`);
 }

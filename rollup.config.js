@@ -102,6 +102,7 @@ function importAssemblyScriptInstead(options) {
             code = code.replace(/math\/vec2\.js/g, "math_assemblyscript/vec2.js");
             code = code.replace(/math\/vec3\.js/g, "math_assemblyscript/vec3.js");
             code = code.replace(/math\/vec4\.js/g, "math_assemblyscript/vec4.js");
+            //code = code.replace(/scene\/graph-node\.js/g, "scene_assemblyscript/graph-node.ts");
             return {
                 code: code,
                 map: { mappings: '' }
