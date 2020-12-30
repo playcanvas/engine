@@ -276,6 +276,8 @@ export { XrDepthSensing } from './xr/xr-depth-sensing.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';
+export { XrImageTracking } from './xr/xr-image-tracking.js';
+export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
 
 // BACKWARDS COMPATIBILITY
