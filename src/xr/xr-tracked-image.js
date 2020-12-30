@@ -5,15 +5,15 @@ import { Quat } from '../math/quat.js';
 /**
  * @class
  * @name pc.XrTrackedImage
- * @classdesc Tracked image interface, that is created by Image Tracking system and is provided as list from {@link pc.XrImageTracking#images}. It contains information about tracking state as well as position and rotation of tracked image.
- * @description Tracked image interface, that is created by Image Tracking system and is provided as list from {@link pc.XrImageTracking#images}. It contains information about tracking state as well as position and rotation of tracked image.
- * @param {object} image - Image that is matching real world image as close as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
- * @param {number} width - Width (in meters) of image in real world. Providing this value as close to real value will improve tracking quality.
+ * @classdesc The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
+ * @description The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
+ * @param {object} image - Image that is matching the real world image as closely as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
+ * @param {number} width - Width (in meters) of image in real world. Providing this value as close to the real value will improve tracking quality.
  * @property {object} image Image that is used for tracking.
- * @property {number} width Width that is provided to assist tracking performance. This property can be updated only when AR session is not running.
- * @property {boolean} trackable True if image is trackable. Too small resolution or invalid images can be untrackable by underlying AR system.
- * @property {boolean} tracking True if image is in tracking state, and being tracked in real world by underlying AR system.
- * @property {boolean} emulated True if image was recently tracked but currently is not actively tracked due to inability of identifying image by underlying AR system. Position and rotation will be based on previously known transformation assuming tracked image has not moved.
+ * @property {number} width Width that is provided to assist tracking performance. This property can be updated only when the AR session is not running.
+ * @property {boolean} trackable True if image is trackable. A too small resolution or invalid images can be untrackable by the underlying AR system.
+ * @property {boolean} tracking True if image is in tracking state and being tracked in real world by the underlying AR system.
+ * @property {boolean} emulated True if image was recently tracked but currently is not actively tracked due to inability of identifying the image by the underlying AR system. Position and rotation will be based on the previously known transformation assuming the tracked image has not moved.
  */
 function XrTrackedImage(image, width) {
     EventHandler.call(this);
@@ -81,7 +81,7 @@ XrTrackedImage.prototype.destroy = function () {
 /**
  * @function
  * @name pc.XrTrackedImage#getPosition
- * @description Get position of tracked image. The position is most recent based on tracked image state.
+ * @description Get the position of the tracked image. The position is the most recent one based on the tracked image state.
  * @returns {pc.Vec3} Position in world space.
  * @example
  * // update entity position to match tracked image position
@@ -95,7 +95,7 @@ XrTrackedImage.prototype.getPosition = function () {
 /**
  * @function
  * @name pc.XrTrackedImage#getRotation
- * @description Get rotation of tracked image. The rotation is most recent based on tracked image state.
+ * @description Get the rotation of the tracked image. The rotation is the most recent based on the tracked image state.
  * @returns {pc.Quat} Rotation in world space.
  * @example
  * // update entity rotation to match tracked image rotation
