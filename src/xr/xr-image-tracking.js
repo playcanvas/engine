@@ -4,11 +4,11 @@ import { XrTrackedImage } from './xr-tracked-image.js';
 /**
  * @class
  * @name pc.XrImageTracking
- * @classdesc Image Tracking provides ability to track real world images by provided image samples and their estimate sizes.
- * @description Image Tracking provides ability to track real world images by provided image samples and their estimate sizes.
+ * @classdesc Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
+ * @description Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
  * @param {pc.XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Image Tracking is supported.
- * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for AR session or there was an error processing provided images.
+ * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
  * @property {pc.XrTrackedImage[]} images List of {@link pc.XrTrackedImage} that contain tracking information.
  */
 function XrImageTracking(manager) {
@@ -31,17 +31,17 @@ XrImageTracking.prototype.constructor = XrImageTracking;
 /**
  * @event
  * @name pc.XrImageTracking#error
- * @param {Error} error - Error object related to failure of image tracking.
- * @description Fired when XR session is started, but image tracking failed to process provided images.
+ * @param {Error} error - Error object related to a failure of image tracking.
+ * @description Fired when the XR session is started, but image tracking failed to process the provided images.
  */
 
 /**
  * @function
  * @name pc.XrImageTracking#add
- * @description Add image for image tracking, as well as width that helps underlying system to estimate proper transformation. Modifying tracked images list is only possible before AR session is started.
+ * @description Add an image for image tracking. A width can also be provided to help the underlying system estimate the appropriate transformation. Modifying the tracked images list is only possible before an AR session is started.
  * @param {object} image - Image that is matching real world image as close as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
- * @param {number} width - Width (in meters) of image in real world. Providing this value as close to real value will improve tracking quality.
- * @returns {pc.XrTrackedImage} tracked image object that will contain tracking information.
+ * @param {number} width - Width (in meters) of image in the real world. Providing this value as close to the real value will improve tracking quality.
+ * @returns {pc.XrTrackedImage} Tracked image object that will contain tracking information.
  * @example
  * // image with width of 20cm (0.2m)
  * app.xr.imageTracking.add(bookCoverImg, 0.2);
@@ -57,8 +57,8 @@ XrImageTracking.prototype.add = function (image, width) {
 /**
  * @function
  * @name pc.XrImageTracking#remove
- * @description Add image for image tracking, as well as width that helps underlying system to estimate proper transformation.
- * @param {pc.XrTrackedImage} trackedImage - Tracked image to be removed. Modifying tracked images list is only possible before AR session is started.
+ * @description Remove an image from image tracking.
+ * @param {pc.XrTrackedImage} trackedImage - Tracked image to be removed. Modifying the tracked images list is only possible before an AR session is started.
  */
 XrImageTracking.prototype.remove = function (trackedImage) {
     if (this._manager.active) return;
