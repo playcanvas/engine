@@ -194,7 +194,7 @@ Object.defineProperty(XrLightEstimation.prototype, 'supported', {
  */
 Object.defineProperty(XrLightEstimation.prototype, 'available', {
     get: function () {
-        return !! this._available;
+        return this._available;
     }
 });
 
