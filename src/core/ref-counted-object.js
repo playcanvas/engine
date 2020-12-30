@@ -1,5 +1,5 @@
 // base class for reference counted objects
-class RefCount {
+class RefCountedObject {
     constructor() {
         // counter
         this._refCount = 0;
@@ -25,9 +25,9 @@ class RefCount {
     // default version of destroy functionality
     destroy() {
         // #ifdef DEBUG
-        console.error("Class extended from the RefCount class needs to have a destroy function implemented.");
+        console.error("Class extended from the RefCountedObject class needs to have a destroy function implemented.");
         // #endif
     }
 }
 
-export { RefCount };
+export { RefCountedObject };
