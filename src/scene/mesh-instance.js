@@ -156,6 +156,10 @@ class MeshInstance {
     }
 
     set mesh(mesh) {
+
+        if (mesh === this._mesh)
+            return;
+
         if (this._mesh) {
             // this destroys the mesh if refcount gets to 0
             this._mesh.decRefCount();

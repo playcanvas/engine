@@ -258,11 +258,8 @@ Sprite.prototype.destroy = function () {
     // destroy old meshes
     for (i = 0, len = this._meshes.length; i < len; i++) {
         var mesh = this._meshes[i];
-        if (!mesh) continue;
-
-        mesh.vertexBuffer.destroy();
-        for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
-            mesh.indexBuffer[j].destroy();
+        if (mesh) {
+            mesh.destroy();
         }
     }
     this._meshes.length = 0;
