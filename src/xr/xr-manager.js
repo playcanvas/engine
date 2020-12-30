@@ -10,9 +10,9 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
-import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
@@ -54,12 +54,12 @@ function XrManager(app) {
     this._baseLayer = null;
     this._referenceSpace = null;
 
-    this.input = new XrInput(this);
-    this.hitTest = new XrHitTest(this);
-    this.lightEstimation = new XrLightEstimation(this);
     this.depthSensing = new XrDepthSensing(this);
-    this.imageTracking = new XrImageTracking(this);
     this.domOverlay = new XrDomOverlay(this);
+    this.hitTest = new XrHitTest(this);
+    this.imageTracking = new XrImageTracking(this);
+    this.input = new XrInput(this);
+    this.lightEstimation = new XrLightEstimation(this);
 
     this._camera = null;
     this.views = [];
