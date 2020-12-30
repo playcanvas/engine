@@ -33,9 +33,9 @@ var DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
 var DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
 
 var DDS_CUBEMAP_ALLFACES = DDSCAPS2_CUBEMAP |
-    DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
-    DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
-    DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ;
+      DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
+      DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
+      DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ;
 
 // Defined here:
 // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-pixelformat
@@ -49,12 +49,12 @@ var DDPF_LUMINANCE = 0x20000;
 /* eslint-enable no-unused-vars */
 
 // FourCC construction
-var makeFourCC = function (str) {
+function makeFourCC(str) {
     return str.charCodeAt(0) +
            (str.charCodeAt(1) << 8) +
            (str.charCodeAt(2) << 16) +
            (str.charCodeAt(3) << 24);
-};
+}
 
 var DDS_MAGIC = makeFourCC('DDS ');
 
@@ -87,22 +87,22 @@ fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for dds files.
  */
-function DdsParser(registry, retryRequests) {
-    this.retryRequests = !!retryRequests;
-}
+class DdsParser {
+    constructor(registry) {
+        this.maxRetries = 0;
+    }
 
-Object.assign(DdsParser.prototype, {
-
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(url.load, options, callback);
-    },
+    }
 
-    open: function (url, data, device) {
+    open(url, data, device) {
         var textureData = this.parse(data);
 
         if (!textureData) {
@@ -126,9 +126,9 @@ Object.assign(DdsParser.prototype, {
         texture.upload();
 
         return texture;
-    },
+    }
 
-    parse: function (data) {
+    parse(data) {
         var arrayBuffer = data;
 
         var headerU32 = new Uint32Array(arrayBuffer, 0, 32);
@@ -251,6 +251,6 @@ Object.assign(DdsParser.prototype, {
             cubemap: isCubeMap
         };
     }
-});
+}
 
 export { DdsParser };

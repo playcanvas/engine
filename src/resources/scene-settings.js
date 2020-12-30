@@ -1,12 +1,12 @@
 import { http } from '../net/http.js';
 
-function SceneSettingsHandler(app) {
-    this._app = app;
-    this.retryRequests = false;
-}
+class SceneSettingsHandler {
+    constructor(app) {
+        this._app = app;
+        this.maxRetries = 0;
+    }
 
-Object.assign(SceneSettingsHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -15,7 +15,8 @@ Object.assign(SceneSettingsHandler.prototype, {
         }
 
         http.get(url.load, {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);
@@ -33,11 +34,11 @@ Object.assign(SceneSettingsHandler.prototype, {
                 callback(errMsg);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         return data.settings;
     }
-});
+}
 
 export { SceneSettingsHandler };

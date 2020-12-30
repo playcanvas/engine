@@ -9,11 +9,13 @@
  * @param {string[]} boneNames - The array of bone names for the bones referenced by this skin.
  */
 
-function Skin(graphicsDevice, ibp, boneNames) {
-    // Constant between clones
-    this.device = graphicsDevice;
-    this.inverseBindPose = ibp;
-    this.boneNames = boneNames;
+class Skin {
+    constructor(graphicsDevice, ibp, boneNames) {
+        // Constant between clones
+        this.device = graphicsDevice;
+        this.inverseBindPose = ibp;
+        this.boneNames = boneNames;
+    }
 }
 
 export { Skin };

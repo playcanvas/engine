@@ -1454,10 +1454,6 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
-            }
-
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviors like:
                 // - different falloffs

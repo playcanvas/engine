@@ -1,11 +1,11 @@
 import { http, Http } from '../net/http.js';
 
-function JsonHandler() {
-    this.retryRequests = false;
-}
+class JsonHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(JsonHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -15,7 +15,8 @@ Object.assign(JsonHandler.prototype, {
 
         // if this a blob URL we need to set the response type as json
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {
@@ -29,14 +30,14 @@ Object.assign(JsonHandler.prototype, {
                 callback("Error loading JSON resource: " + url.original + " [" + err + "]");
             }
         });
-    },
-
-    open: function (url, data) {
-        return data;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
 
 export { JsonHandler };

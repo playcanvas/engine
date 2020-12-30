@@ -1,13 +1,13 @@
-function FolderHandler() {}
+class FolderHandler {
+    constructor() {}
 
-Object.assign(FolderHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         callback(null, null);
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         return data;
     }
-});
+}
 
 export { FolderHandler };

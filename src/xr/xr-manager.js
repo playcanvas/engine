@@ -11,6 +11,7 @@ import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrImageTracking } from './xr-image-tracking.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 
 /**
  * @class
@@ -28,7 +29,7 @@ import { XrImageTracking } from './xr-image-tracking.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
- * @property {object|null} session provides access to [XRSession](https://developer.mozilla.org/en-US/docs/Web/API/XRSession) of WebXR
+ * @property {object|null} session provides access to XRSession of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
@@ -56,6 +57,7 @@ function XrManager(app) {
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
     this.imageTracking = new XrImageTracking(this);
+    this.domOverlay = new XrDomOverlay(this);
 
     this._camera = null;
     this.views = [];
@@ -219,6 +221,10 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
 
         if (options && options.imageTracking) {
             opts.optionalFeatures.push('image-tracking');
+
+        if (this.domOverlay.root) {
+            opts.optionalFeatures.push('dom-overlay');
+            opts.domOverlay = { root: this.domOverlay.root };
         }
     } else if (type === XRTYPE_VR) {
         opts.optionalFeatures.push('hand-tracking');
