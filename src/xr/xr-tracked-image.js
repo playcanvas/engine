@@ -7,9 +7,9 @@ import { Quat } from '../math/quat.js';
  * @name pc.XrTrackedImage
  * @classdesc The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
  * @description The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
- * @param {object} image - Image that is matching the real world image as closely as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
+ * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching the real world image as closely as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
  * @param {number} width - Width (in meters) of image in real world. Providing this value as close to the real value will improve tracking quality.
- * @property {object} image Image that is used for tracking.
+ * @property {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image Image that is used for tracking.
  * @property {number} width Width that is provided to assist tracking performance. This property can be updated only when the AR session is not running.
  * @property {boolean} trackable True if image is trackable. A too small resolution or invalid images can be untrackable by the underlying AR system.
  * @property {boolean} tracking True if image is in tracking state and being tracked in real world by the underlying AR system.
@@ -55,10 +55,7 @@ XrTrackedImage.prototype.prepare = function () {
         };
     }
 
-    return this._image.decode()
-        .then(function () {
-            return createImageBitmap(self._image);
-        })
+    return createImageBitmap(this._image)
         .then(function (bitmap) {
             self._bitmap = bitmap;
             return {
