@@ -1,7 +1,6 @@
 // base class for reference counted objects
 class RefCount {
     constructor() {
-
         // counter
         this._refCount = 0;
     }
