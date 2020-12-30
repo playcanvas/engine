@@ -380,8 +380,8 @@ Object.assign(Light.prototype, {
         }
 
         // create texture if not already
-        // lut source data is included as a js file and assigned to a global var
-        var luts = LTC_areaLightLutData;
+        var app = Application.getApplication();
+        var luts = pc._areaLightLutData;
         if (luts && !luts.ready) {
 
             luts.ready = true;
