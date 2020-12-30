@@ -3,6 +3,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Texture } from '../graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8 } from '../graphics/graphics.js';
 
+/* eslint-disable */
 /**
  * @class
  * @name pc.XrDepthSensing
@@ -31,29 +32,30 @@ import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8 } from '../graphics/graphics.j
  *     material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
  * });
  * @example
- * // // GLSL shader to unpack depth texture
- * // varying vec2 vUv0;
- * //
- * // uniform sampler2D texture_depthSensingMap;
- * // uniform mat4 matrix_depth_uv;
- * //
- * // void main(void) {
- * //     // transform UVs using depth matrix
- * //     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
- * //
- * //     // get luminance alpha components from depth texture
- * //     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
- * //
- * //     // unpack into single value in millimeters
- * //     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
- * //
- * //     // normalize: 0m to 8m distance
- * //     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
- * //
- * //     // paint scene from black to white based on distance
- * //     gl_FragColor = vec4(depth, depth, depth, 1.0);
- * // }
+ * // GLSL shader to unpack depth texture
+ * varying vec2 vUv0;
+ *
+ * uniform sampler2D texture_depthSensingMap;
+ * uniform mat4 matrix_depth_uv;
+ *
+ * void main(void) {
+ *     // transform UVs using depth matrix
+ *     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
+ *
+ *     // get luminance alpha components from depth texture
+ *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
+ *
+ *     // unpack into single value in millimeters
+ *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
+ *
+ *     // normalize: 0m to 8m distance
+ *     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
+ *
+ *     // paint scene from black to white based on distance
+ *     gl_FragColor = vec4(depth, depth, depth, 1.0);
+ * }
  */
+/* eslint-enable */
 function XrDepthSensing(manager) {
     EventHandler.call(this);
 
@@ -70,7 +72,9 @@ function XrDepthSensing(manager) {
         format: PIXELFORMAT_L8_A8,
         mipmaps: false,
         addressU: ADDRESS_CLAMP_TO_EDGE,
-        addressV: ADDRESS_CLAMP_TO_EDGE
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR
     });
 
     this._manager.on('end', this._onSessionEnd, this);
@@ -229,6 +233,7 @@ Object.defineProperty(XrDepthSensing.prototype, 'height', {
     }
 });
 
+/* eslint-disable */
 /**
  * @name pc.XrDepthSensing#texture
  * @type {pc.Texture}
@@ -236,29 +241,30 @@ Object.defineProperty(XrDepthSensing.prototype, 'height', {
  * @example
  * material.diffuseMap = depthSensing.texture;
  * @example
- * // // GLSL shader to unpack depth texture
- * // varying vec2 vUv0;
- * //
- * // uniform sampler2D texture_depthSensingMap;
- * // uniform mat4 matrix_depth_uv;
- * //
- * // void main(void) {
- * //     // transform UVs using depth matrix
- * //     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
- * //
- * //     // get luminance alpha components from depth texture
- * //     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
- * //
- * //     // unpack into single value in millimeters
- * //     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
- * //
- * //     // normalize: 0m to 8m distance
- * //     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
- * //
- * //     // paint scene from black to white based on distance
- * //     gl_FragColor = vec4(depth, depth, depth, 1.0);
- * // }
+ * // GLSL shader to unpack depth texture
+ * varying vec2 vUv0;
+ *
+ * uniform sampler2D texture_depthSensingMap;
+ * uniform mat4 matrix_depth_uv;
+ *
+ * void main(void) {
+ *     // transform UVs using depth matrix
+ *     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
+ *
+ *     // get luminance alpha components from depth texture
+ *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
+ *
+ *     // unpack into single value in millimeters
+ *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)); // mm
+ *
+ *     // normalize: 0m to 8m distance
+ *     depth = min(depth / 8000.0, 1.0); // 0..1 = 0m..8m
+ *
+ *     // paint scene from black to white based on distance
+ *     gl_FragColor = vec4(depth, depth, depth, 1.0);
+ * }
  */
+/* eslint-enable */
 Object.defineProperty(XrDepthSensing.prototype, 'texture', {
     get: function () {
         return this._texture;
