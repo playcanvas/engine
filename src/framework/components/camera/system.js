@@ -139,11 +139,12 @@ Object.assign(CameraComponentSystem.prototype, {
             for (var id in components) {
                 var component = components[id];
 
-                if (component.enabled && component.entity.enabled) {
-                    var vrDisplay = component.vrDisplay;
+                if (component.data.enabled && component.entity.enabled) {
+                    var cameraComponent = component.entity.camera;
+                    var vrDisplay = cameraComponent.vrDisplay;
                     if (vrDisplay) {
                         // Change WebVR near/far planes based on the stereo camera
-                        vrDisplay.setClipPlanes(component.nearClip, component.farClip);
+                        vrDisplay.setClipPlanes(cameraComponent.nearClip, cameraComponent.farClip);
 
                         // update camera node transform from VrDisplay
                         if (component.entity) {

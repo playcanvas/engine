@@ -21,6 +21,9 @@ function VertexBuffer(graphicsDevice, format, numVertices, usage, initialData) {
     this.numVertices = numVertices;
     this.id = id++;
 
+    // vertex array object
+    this._vao = null;
+
     // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
     this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
     graphicsDevice._vram.vb += this.numBytes;
@@ -63,6 +66,12 @@ Object.assign(VertexBuffer.prototype, {
             device._vram.vb -= this.storage.byteLength;
             this.bufferId = null;
         }
+    },
+
+    // called when context was lost, function releases all context related resources
+    loseContext: function () {
+        this.bufferId = undefined;
+        this._vao = null;
     },
 
     /**

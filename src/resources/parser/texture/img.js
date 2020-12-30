@@ -12,16 +12,16 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for browser-supported image formats.
  */
-function ImgParser(registry, retryRequests) {
-    // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
-    this.crossOrigin = registry.prefix ? 'anonymous' : null;
-    this.retryRequests = !!retryRequests;
-    // disable ImageBitmap
-    this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
-}
+class ImgParser {
+    constructor(registry) {
+        // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
+        this.crossOrigin = registry.prefix ? 'anonymous' : null;
+        this.maxRetries = 0;
+        // disable ImageBitmap
+        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
+    }
 
-Object.assign(ImgParser.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
@@ -33,9 +33,9 @@ Object.assign(ImgParser.prototype, {
         } else {
             this._loadImage(url.load, url.original, crossOrigin, callback);
         }
-    },
+    }
 
-    open: function (url, data, device) {
+    open(url, data, device) {
         var ext = path.getExtension(url).toLowerCase();
         var format = (ext === ".jpg" || ext === ".jpeg") ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
         var texture = new Texture(device, {
@@ -49,18 +49,17 @@ Object.assign(ImgParser.prototype, {
         });
         texture.setSource(data);
         return texture;
-    },
+    }
 
-    _loadImage: function (url, originalUrl, crossOrigin, callback) {
+    _loadImage(url, originalUrl, crossOrigin, callback) {
         var image = new Image();
         if (crossOrigin) {
             image.crossOrigin = crossOrigin;
         }
 
         var retries = 0;
-        var maxRetries = 5;
+        var maxRetries = this.maxRetries;
         var retryTimeout;
-        var retryRequests = this.retryRequests;
 
         // Call success callback after opening Texture
         image.onload = function () {
@@ -71,7 +70,7 @@ Object.assign(ImgParser.prototype, {
             // Retry a few times before failing
             if (retryTimeout) return;
 
-            if (retryRequests && ++retries <= maxRetries) {
+            if (maxRetries > 0 && ++retries <= maxRetries) {
                 var retryDelay = Math.pow(2, retries) * 100;
                 console.log("Error loading Texture from: '" + originalUrl + "' - Retrying in " + retryDelay + "ms...");
 
@@ -91,13 +90,14 @@ Object.assign(ImgParser.prototype, {
         };
 
         image.src = url;
-    },
+    }
 
-    _loadImageBitmap: function (url, originalUrl, crossOrigin, callback) {
+    _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
         var options = {
             cache: true,
             responseType: "blob",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(url, options, function (err, blob) {
             if (err) {
@@ -116,6 +116,6 @@ Object.assign(ImgParser.prototype, {
             }
         });
     }
-});
+}
 
 export { ImgParser };

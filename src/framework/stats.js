@@ -71,6 +71,12 @@ function ApplicationStats(device) {
         }
     });
 
+    Object.defineProperty(this.vram, 'geom', {
+        get: function () {
+            return this.vb + this.ib;
+        }
+    });
+
     Object.defineProperty(this, 'scene', {
         get: function () {
             return Application._currentApplication.scene._stats;

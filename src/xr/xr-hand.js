@@ -147,29 +147,33 @@ XrHand.prototype.update = function (frame) {
         this._inputSource._rayLocal.direction.lerp(vecC, vecA, 0.5).normalize();
     }
 
-    // emulate select events by touching thumb tip and index tips
-    if (j4 && j9) {
-        vecA.copy(j4._localPosition);
-        var d = vecA.distance(j9._localPosition);
+    // emulate squeeze events by folding all 4 fingers
+    var squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
 
-        if (d < 0.015) { // 15 mm
-            if (! this._inputSource._selecting) {
-                this._inputSource._selecting = true;
-                this._inputSource.fire('selectstart');
-                this._manager.input.fire('selectstart', this._inputSource);
-            }
-        } else {
-            if (this._inputSource._selecting) {
-                this._inputSource._selecting = false;
+    if (squeezing) {
+        if (! this._inputSource._squeezing) {
+            this._inputSource._squeezing = true;
+            this._inputSource.fire('squeezestart');
+            this._manager.input.fire('squeezestart', this._inputSource);
+        }
+    } else {
+        if (this._inputSource._squeezing) {
+            this._inputSource._squeezing = false;
 
-                this._inputSource.fire('select');
-                this._manager.input.fire('select', this._inputSource);
+            this._inputSource.fire('squeeze');
+            this._manager.input.fire('squeeze', this._inputSource);
 
-                this._inputSource.fire('selectend');
-                this._manager.input.fire('selectend', this._inputSource);
-            }
+            this._inputSource.fire('squeezeend');
+            this._manager.input.fire('squeezeend', this._inputSource);
         }
     }
+};
+
+XrHand.prototype._fingerIsClosed = function (index) {
+    var finger = this._fingers[index];
+    vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
+    vecB.sub2(finger.joints[2]._localPosition, finger.joints[3]._localPosition).normalize();
+    return vecA.dot(vecB) < -0.8;
 };
 
 /**

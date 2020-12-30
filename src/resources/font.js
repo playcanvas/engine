@@ -36,13 +36,13 @@ function upgradeDataSchema(data) {
  * @classdesc Resource handler used for loading {@link pc.Font} resources.
  * @param {pc.ResourceLoader} loader - The resource loader.
  */
-function FontHandler(loader) {
-    this._loader = loader;
-    this.retryRequests = false;
-}
+class FontHandler {
+    constructor(loader) {
+        this._loader = loader;
+        this.maxRetries = 0;
+    }
 
-Object.assign(FontHandler.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -54,11 +54,12 @@ Object.assign(FontHandler.prototype, {
         if (path.getExtension(url.original) === '.json') {
             // load json data then load texture of same name
             http.get(url.load, {
-                retry: this.retryRequests
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
             }, function (err, response) {
                 // update asset data
-                var data = upgradeDataSchema(response);
                 if (!err) {
+                    var data = upgradeDataSchema(response);
                     self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
                         if (err) return callback(err);
 
@@ -79,9 +80,9 @@ Object.assign(FontHandler.prototype, {
             }
             this._loadTextures(url.load, asset && asset.data, callback);
         }
-    },
+    }
 
-    _loadTextures: function (url, data, callback) {
+    _loadTextures(url, data, callback) {
         var numTextures = data.info.maps.length;
         var numLoaded = 0;
         var error = null;
@@ -115,9 +116,9 @@ Object.assign(FontHandler.prototype, {
 
         for (var i = 0; i < numTextures; i++)
             loadTexture(i);
-    },
+    }
 
-    open: function (url, data, asset) {
+    open(url, data, asset) {
         var font;
         if (data.textures) {
             // both data and textures exist
@@ -127,9 +128,9 @@ Object.assign(FontHandler.prototype, {
             font = new Font(data, null);
         }
         return font;
-    },
+    }
 
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         // if not already set, get font data block from asset
         // and assign to font resource
         var font = asset.resource;
@@ -145,6 +146,6 @@ Object.assign(FontHandler.prototype, {
             asset.data = upgradeDataSchema(asset.data);
         }
     }
-});
+}
 
 export { FontHandler };

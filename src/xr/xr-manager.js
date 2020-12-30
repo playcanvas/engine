@@ -10,6 +10,7 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 
 /**
  * @class
@@ -27,6 +28,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
+ * @property {object|null} session provides access to XRSession of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
@@ -53,6 +55,7 @@ function XrManager(app) {
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
+    this.domOverlay = new XrDomOverlay(this);
 
     this._camera = null;
     this.views = [];
@@ -126,6 +129,18 @@ XrManager.prototype.constructor = XrManager;
 
 /**
  * @event
+ * @name pc.XrManager#update
+ * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
+ * @description Fired when XR session is updated, providing relevant XRFrame object.
+ * @example
+ * app.xr.on('update', function (frame) {
+ *
+ * });
+ */
+
+
+/**
+ * @event
  * @name pc.XrManager#error
  * @param {Error} error - Error object related to failure of session start or check of session type support.
  * @description Fired when XR session is failed to start or failed to check for session type support.
@@ -158,9 +173,17 @@ XrManager.prototype.constructor = XrManager;
  * button.on('click', function () {
  *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
  * });
- * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+ * @param {object} [options] - object with additional options for XR session initialization.
+ * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
+ * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
  */
-XrManager.prototype.start = function (camera, type, spaceType, callback) {
+XrManager.prototype.start = function (camera, type, spaceType, options) {
+    var self = this;
+    var callback = options;
+
+    if (typeof(options) === 'object')
+        callback = options.callback;
+
     if (! this._available[type]) {
         if (callback) callback(new Error('XR is not available'));
         return;
@@ -170,8 +193,6 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
         if (callback) callback(new Error('XR session is already started'));
         return;
     }
-
-    var self = this;
 
     this._camera = camera;
     this._camera.camera.xr = this;
@@ -188,20 +209,28 @@ XrManager.prototype.start = function (camera, type, spaceType, callback) {
     // 3. probably immersive-vr will fail to be created
     // 4. call makeXRCompatible, very likely will lead to context loss
 
-    var optionalFeatures = [];
+    var opts = {
+        requiredFeatures: [spaceType],
+        optionalFeatures: []
+    };
 
     if (type === XRTYPE_AR) {
-        optionalFeatures.push('light-estimation');
-        optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('light-estimation');
+        opts.optionalFeatures.push('hit-test');
+
+        if (this.domOverlay.root) {
+            opts.optionalFeatures.push('dom-overlay');
+            opts.domOverlay = { root: this.domOverlay.root };
+        }
+    } else if (type === XRTYPE_VR) {
+        opts.optionalFeatures.push('hand-tracking');
     }
 
-    if (type === XRTYPE_VR)
-        optionalFeatures.push('hand-tracking');
+    if (options && options.optionalFeatures) {
+        opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
+    }
 
-    navigator.xr.requestSession(type, {
-        requiredFeatures: [spaceType],
-        optionalFeatures: optionalFeatures
-    }).then(function (session) {
+    navigator.xr.requestSession(type, opts).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;
@@ -457,7 +486,7 @@ XrManager.prototype.update = function (frame) {
         }
     }
 
-    this.fire('update');
+    this.fire('update', frame);
 };
 
 Object.defineProperty(XrManager.prototype, 'supported', {

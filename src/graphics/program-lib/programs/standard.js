@@ -630,7 +630,10 @@ var standard = {
             }
         }
 
-        if (options.forceUv1) useUv[1] = true;
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+        }
 
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
@@ -985,6 +988,10 @@ var standard = {
             code += '#define CLEARCOAT\n';
         }
 
+        if (options.opacityFadesSpecular === false) {
+            code += 'uniform float material_alphaFade;\n';
+        }
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         var shadowTypeUsed = [];
@@ -1105,7 +1112,17 @@ var standard = {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
+        if (options.useCubeMapRotation) {
+            code += "#define CUBEMAP_ROTATION\n";
+        }
+
+        if (options.useRightHandedCubeMap) {
+            code += "#define RIGHT_HANDED_CUBEMAP\n";
+        }
+
         if (needsNormal) {
+            code += chunks.cubeMapRotatePS;
+
             code += options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
@@ -1328,20 +1345,31 @@ var standard = {
         var usesCookie = false;
         var usesCookieNow;
 
+        if (options.twoSidedLighting) code += "uniform float twoSidedLightingNegScaleFactor;\n";
+
         // FRAGMENT SHADER BODY
 
         code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
-            if (options.twoSidedLighting) {
-                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+            if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
+                } else {
+                    code += "   dVertexNormalW = normalize(vNormalW);\n";
+                }
             } else {
-                code += "   dVertexNormalW = vNormalW;\n";
+                if (options.twoSidedLighting) {
+                    code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
+                } else {
+                    code += "   dVertexNormalW = vNormalW;\n";
+                }
             }
+
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                    code += "   dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
+                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
                 } else {
                     code += "   dTangentW = vTangentW;\n";
                     code += "   dBinormalW = vBinormalW;\n";
@@ -1424,10 +1452,6 @@ var standard = {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
-            }
-
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {
@@ -1563,6 +1587,15 @@ var standard = {
             if (options.occludeSpecular) {
                 code += "    occludeSpecular();\n";
             }
+        }
+
+        if (options.opacityFadesSpecular === false) {
+            if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
+                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
+            }
+            code += "dAlpha *= material_alphaFade;\n";
         }
 
         code += chunks.endPS;

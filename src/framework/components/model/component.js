@@ -1,17 +1,11 @@
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
-
-import { createBox, createCapsule, createCone, createCylinder, createPlane, createSphere } from '../../../scene/procedural.js';
-
 import {
-    LAYERID_WORLD,
-    MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
-    SHADERDEF_LM
+    LAYERID_WORLD
 } from '../../../scene/constants.js';
-import { BatchGroup } from '../../../scene/batching.js';
+import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
+import { getShapePrimitive } from '../../../scene/procedural.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -47,6 +41,8 @@ import { Component } from '../component.js';
  * @property {boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark model as non-movable (optimization).
+ * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
  * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
@@ -77,6 +73,9 @@ function ModelComponent(system, entity)   {
 
     this._layers = [LAYERID_WORLD]; // assign to the default world layer
     this._batchGroupId = -1;
+
+    // bounding box which can be set to override bounding box based on mesh
+    this._aabb = null;
 
     this._area = null;
 
@@ -438,7 +437,7 @@ Object.assign(ModelComponent.prototype, {
     },
 
     _onModelAssetAdded: function (asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdd, this);
+        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdded, this);
         if (asset.id === this._asset) {
             this._bindModelAsset(asset);
         }
@@ -494,6 +493,26 @@ Object.defineProperty(ModelComponent.prototype, "meshInstances", {
     }
 });
 
+Object.defineProperties(ModelComponent.prototype, {
+
+    'aabb': {
+        get: function () {
+            return this._aabb;
+        },
+        set: function (value) {
+            this._aabb = value;
+
+            // set it on meshInstances
+            var mi = this._model.meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setOverrideAabb(this._aabb);
+                }
+            }
+        }
+    }
+});
+
 Object.defineProperty(ModelComponent.prototype, "type", {
     get: function () {
         return this._type;
@@ -501,8 +520,6 @@ Object.defineProperty(ModelComponent.prototype, "type", {
 
     set: function (value) {
         if (this._type === value) return;
-
-        var mesh = null;
 
         this._area = null;
 
@@ -515,82 +532,19 @@ Object.defineProperty(ModelComponent.prototype, "type", {
                 this.model = null;
             }
         } else {
-            var system = this.system;
-            var gd = system.app.graphicsDevice;
 
-            switch (value) {
-                case 'box':
-                    if (!system.box) {
-                        system.box = createBox(gd, {
-                            halfExtents: new Vec3(0.5, 0.5, 0.5)
-                        });
-                    }
-                    mesh = system.box;
-                    this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
-                    break;
-                case 'capsule':
-                    if (!system.capsule) {
-                        system.capsule = createCapsule(gd, {
-                            radius: 0.5,
-                            height: 2
-                        });
-                    }
-                    mesh = system.capsule;
-                    this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                    break;
-                case 'cone':
-                    if (!system.cone) {
-                        system.cone = createCone(gd, {
-                            baseRadius: 0.5,
-                            peakRadius: 0,
-                            height: 1
-                        });
-                    }
-                    mesh = system.cone;
-                    this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
-                    break;
-                case 'cylinder':
-                    if (!system.cylinder) {
-                        system.cylinder = createCylinder(gd, {
-                            radius: 0.5,
-                            height: 1
-                        });
-                    }
-                    mesh = system.cylinder;
-                    this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                    break;
-                case 'plane':
-                    if (!system.plane) {
-                        system.plane = createPlane(gd, {
-                            halfExtents: new Vec2(0.5, 0.5),
-                            widthSegments: 1,
-                            lengthSegments: 1
-                        });
-                    }
-                    mesh = system.plane;
-                    this._area = { x: 0, y: 1, z: 0, uv: 1 };
-                    break;
-                case 'sphere':
-                    if (!system.sphere) {
-                        system.sphere = createSphere(gd, {
-                            radius: 0.5
-                        });
-                    }
-                    mesh = system.sphere;
-                    this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
-                    break;
-                default:
-                    throw new Error("Invalid model type: " + value);
-            }
+            // get / create mesh of type
+            var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
+            this._area = primData.area;
+            var mesh = primData.mesh;
 
             var node = new GraphNode();
-
             var model = new Model();
             model.graph = node;
 
             model.meshInstances = [new MeshInstance(node, mesh, this._material)];
 
-            if (system._inTools)
+            if (this.system._inTools)
                 model.generateWireframe();
 
             this.model = model;
@@ -683,6 +637,7 @@ Object.defineProperty(ModelComponent.prototype, "model", {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
                 meshInstances[i].isStatic = this._isStatic;
+                meshInstances[i].setOverrideAabb(this._aabb);
             }
 
             this.lightmapped = this._lightmapped; // update meshInstances
@@ -720,34 +675,19 @@ Object.defineProperty(ModelComponent.prototype, "lightmapped", {
         return this._lightmapped;
     },
     set: function (value) {
-        if (value === this._lightmapped) return;
+        if (value !== this._lightmapped) {
 
-        var i, m, mask;
+            this._lightmapped = value;
 
-        this._lightmapped = value;
-
-        if (this._model) {
-            var rcv = this._model.meshInstances;
-            if (value) {
-                for (i = 0; i < rcv.length; i++) {
-                    m = rcv[i];
-                    mask = m.mask;
-                    m.mask = (mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
-                }
-            } else {
-                for (i = 0; i < rcv.length; i++) {
-                    m = rcv[i];
-                    m.deleteParameter("texture_lightMap");
-                    m.deleteParameter("texture_dirLightMap");
-                    m._shaderDefs &= ~SHADERDEF_LM;
-                    mask = m.mask;
-                    m.mask = (mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
+            if (this._model) {
+                var mi = this._model.meshInstances;
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setLightmapped(value);
                 }
             }
         }
     }
 });
-
 
 Object.defineProperty(ModelComponent.prototype, "castShadows", {
     get: function () {

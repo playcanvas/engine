@@ -71,7 +71,10 @@ export { VertexIterator } from './graphics/vertex-iterator.js';
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
-export { Batch, BatchGroup, BatchManager } from './scene/batching.js';
+export { Batch } from './scene/batching/batch.js';
+export { BatchGroup } from './scene/batching/batch-group.js';
+export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
+export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/forward-renderer.js';
@@ -141,6 +144,7 @@ export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 export { MaterialHandler } from './resources/material.js';
 export { ModelHandler } from './resources/model.js';
+export { RenderHandler } from './resources/render.js';
 export { ResourceHandler } from './resources/handler.js';
 export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
@@ -274,6 +278,7 @@ export { XrLightEstimation } from './xr/xr-light-estimation.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';
+export { XrDomOverlay } from './xr/xr-dom-overlay.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';

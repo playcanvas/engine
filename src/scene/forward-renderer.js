@@ -15,7 +15,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    FUNC_ALWAYS, FUNC_LESS,
+    FUNC_ALWAYS, FUNC_LESS, FUNC_LESSEQUAL,
     PIXELFORMAT_DEPTH, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR, SEMANTIC_POSITION,
@@ -116,6 +116,11 @@ var _autoInstanceBuffer = null;
 var skipRenderCamera = null;
 var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
+
+var _skinUpdateIndex = 0;
+
+var _tempMaterialSet = new Set();
+
 
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
@@ -413,6 +418,7 @@ function ForwardRenderer(graphicsDevice) {
     this._skinTime = 0;
     this._morphTime = 0;
     this._instancingTime = 0;
+    this._layerCompositionUpdateTime = 0;
 
     // Shaders
     var library = device.getProgramLibrary();
@@ -490,6 +496,8 @@ function ForwardRenderer(graphicsDevice) {
     this.blurVsmShader = [{}, {}];
     this.blurPackedVsmShader = [{}, {}];
     this.blurVsmWeights = {};
+
+    this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
 
     this.polygonOffsetId = scope.resolve("polygonOffset");
     this.polygonOffset = new Float32Array(2);
@@ -811,6 +819,10 @@ Object.assign(ForwardRenderer.prototype, {
         device.setScissor(x, y, w, h);
 
         if (clear) {
+            // use camera clear options if any
+            if (!options)
+                options = camera._clearOptions;
+
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -1180,6 +1192,9 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateCpuSkinMatrices: function (drawCalls) {
+
+        _skinUpdateIndex++;
+
         var drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
@@ -1187,12 +1202,12 @@ Object.assign(ForwardRenderer.prototype, {
         var skinTime = now();
         // #endif
 
-        var i, skin;
+        var i, si;
         for (i = 0; i < drawCallsCount; i++) {
-            skin = drawCalls[i].skinInstance;
-            if (skin) {
-                skin.updateMatrices(drawCalls[i].node);
-                skin._dirty = true;
+            si = drawCalls[i].skinInstance;
+            if (si) {
+                si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
+                si._dirty = true;
             }
         }
 
@@ -1213,7 +1228,7 @@ Object.assign(ForwardRenderer.prototype, {
             skin = drawCalls[i].skinInstance;
             if (skin) {
                 if (skin._dirty) {
-                    skin.updateMatrixPalette();
+                    skin.updateMatrixPalette(drawCalls[i].node, _skinUpdateIndex);
                     skin._dirty = false;
                 }
             }
@@ -1308,8 +1323,7 @@ Object.assign(ForwardRenderer.prototype, {
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
-                device.setVertexBuffer(instancingData.vertexBuffer);
-                device.draw(mesh.primitive[style], instancingData.count);
+                device.draw(mesh.primitive[style], instancingData.count, true);
                 if (instancingData.vertexBuffer === _autoInstanceBuffer) {
                     this._removedByInstancing += instancingData.count;
                     meshInstance.instancingData = null;
@@ -1325,9 +1339,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     renderShadows: function (lights, cameraPass) {
         var device = this.device;
+        device.grabPassAvailable = false;
+
         // #ifdef PROFILER
         var shadowMapStartTime = now();
         // #endif
+
         var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
         var numInstances;
         var meshInstance, mesh, material;
@@ -1580,6 +1597,8 @@ Object.assign(ForwardRenderer.prototype, {
             this.polygonOffsetId.setValue(this.polygonOffset);
         }
 
+        device.grabPassAvailable = true;
+
         // #ifdef PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
         // #endif
@@ -1587,6 +1606,12 @@ Object.assign(ForwardRenderer.prototype, {
 
     updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
         meshInstance.material._scene = this.scene;
+
+        // if material has dirtyBlend set, notify scene here
+        if (meshInstance.material._dirtyBlend) {
+            this.scene.layers._dirtyBlend = true;
+        }
+
         meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
         meshInstance._shader[pass] = meshInstance.material.shader;
     },
@@ -1609,8 +1634,9 @@ Object.assign(ForwardRenderer.prototype, {
                 wt.getY(worldMatY);
                 wt.getZ(worldMatZ);
                 worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0)
+                if (worldMatX.dot(worldMatZ) < 0) {
                     flipFaces *= -1;
+                }
             }
 
             if (flipFaces < 0) {
@@ -1620,6 +1646,19 @@ Object.assign(ForwardRenderer.prototype, {
             }
         }
         this.device.setCullMode(mode);
+
+        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
+            var wt2 = drawCall.node.worldTransform;
+            wt2.getX(worldMatX);
+            wt2.getY(worldMatY);
+            wt2.getZ(worldMatZ);
+            worldMatX.cross(worldMatX, worldMatY);
+            if (worldMatX.dot(worldMatZ) < 0) {
+                this.twoSidedLightingNegScaleFactorId.setValue(-1.0);
+            } else {
+                this.twoSidedLightingNegScaleFactorId.setValue(1.0);
+            }
+        }
     },
 
     setVertexBuffers: function (device, mesh) {
@@ -1777,7 +1816,16 @@ Object.assign(ForwardRenderer.prototype, {
                     }
                     device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                     device.setDepthWrite(material.depthWrite);
-                    device.setDepthTest(material.depthTest);
+
+                    // this fixes the case where the user wishes to turn off depth testing but wants to write depth
+                    if (material.depthWrite && !material.depthTest){
+                        device.setDepthFunc(FUNC_ALWAYS);
+                        device.setDepthTest(true);
+                    } else {
+                        device.setDepthFunc(FUNC_LESSEQUAL);
+                        device.setDepthTest(material.depthTest);
+                    }
+
                     device.setAlphaToCoverage(material.alphaToCoverage);
 
                     if (material.depthBias || material.slopeDepthBias) {
@@ -2246,58 +2294,49 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        var i;
-        // Collect materials
-        var materials = [];
-        for (i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                if (materials.indexOf(drawCall.material) === -1) {
-                    materials.push(drawCall.material);
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
                 }
             }
         }
-        // Clear material shaders
-        for (i = 0; i < materials.length; i++) {
-            var mat = materials[i];
-            if (mat.updateShader !== Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
-            }
-        }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     updateLitShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        for (var i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                var mat = drawCall.material;
-                if (mat.updateShader !== Material.prototype.updateShader) {
-                    if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                        // skip unlit standard and particles materials
-                        continue;
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+
+                        // only process lit materials
+                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
+                            mat.clearVariants();
+                            mat.shader = null;
+                        }
                     }
-                    mat.clearVariants();
-                    mat.shader = null;
                 }
             }
         }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     beginFrame: function (comp) {
@@ -2659,11 +2698,19 @@ Object.assign(ForwardRenderer.prototype, {
 
         this.beginLayers(comp);
 
+        // #ifdef PROFILER
+        var layerCompositionUpdateTime = now();
+        // #endif
+
         // Update static layer data, if something's changed
         var updated = comp._update();
         if (updated & COMPUPDATED_LIGHTS) {
             this.scene.updateLitShaders = true;
         }
+
+        // #ifdef PROFILER
+        this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
+        // #endif
 
         // #ifdef PROFILER
         if (updated & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
@@ -2807,8 +2854,8 @@ Object.assign(ForwardRenderer.prototype, {
         this.gpuUpdate(comp._meshInstances);
 
         // Shadow render for all local visible culled lights
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._sortedLights[LIGHTTYPE_POINT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_POINT]);
 
         // Rendering
         renderedLength = 0;
@@ -2873,7 +2920,7 @@ Object.assign(ForwardRenderer.prototype, {
                 // #ifdef PROFILER
                 draws = this._shadowDrawCalls;
                 // #endif
-                this.renderShadows(layer._sortedLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
+                this.renderShadows(layer._splitLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
                 // #ifdef PROFILER
                 layer._shadowDrawCalls += this._shadowDrawCalls - draws;
                 // #endif
@@ -2902,7 +2949,7 @@ Object.assign(ForwardRenderer.prototype, {
                 this.renderForward(camera.camera,
                                    visible.list,
                                    visible.length,
-                                   layer._sortedLights,
+                                   layer._splitLights,
                                    layer.shaderPass,
                                    layer.cullingMask,
                                    layer.onDrawCall,
