@@ -3,7 +3,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Texture } from '../graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../graphics/graphics.js';
 
-/* eslint-disable */
+/* eslint-disable jsdoc/check-examples */
 /**
  * @class
  * @name pc.XrDepthSensing
@@ -55,7 +55,7 @@ import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../grap
  *     gl_FragColor = vec4(depth, depth, depth, 1.0);
  * }
  */
-/* eslint-enable */
+/* eslint-enable jsdoc/check-examples */
 function XrDepthSensing(manager) {
     EventHandler.call(this);
 
@@ -233,7 +233,7 @@ Object.defineProperty(XrDepthSensing.prototype, 'height', {
     }
 });
 
-/* eslint-disable */
+/* eslint-disable jsdoc/check-examples */
 /**
  * @name pc.XrDepthSensing#texture
  * @type {pc.Texture}
@@ -264,7 +264,7 @@ Object.defineProperty(XrDepthSensing.prototype, 'height', {
  *     gl_FragColor = vec4(depth, depth, depth, 1.0);
  * }
  */
-/* eslint-enable */
+/* eslint-enable jsdoc/check-examples */
 Object.defineProperty(XrDepthSensing.prototype, 'texture', {
     get: function () {
         return this._texture;
