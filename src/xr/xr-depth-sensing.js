@@ -1,7 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 import { Mat4 } from '../math/mat4.js';
 import { Texture } from '../graphics/texture.js';
-import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8 } from '../graphics/graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../graphics/graphics.js';
 
 /* eslint-disable */
 /**
