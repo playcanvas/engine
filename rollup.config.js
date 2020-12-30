@@ -140,7 +140,7 @@ const moduleOptions = {
     ]
 };
 
-export default [{
+const target_release_es5 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -163,7 +163,9 @@ export default [{
         babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_release_es6 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -186,7 +188,9 @@ export default [{
         babel(moduleOptions),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_debug = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (DEBUG PROFILER)'),
@@ -209,7 +213,9 @@ export default [{
         babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_profiler = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (PROFILER)'),
@@ -232,7 +238,9 @@ export default [{
         babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_extras = {
     input: 'extras/index.js',
     output: {
         banner: getBanner(''),
@@ -245,4 +253,24 @@ export default [{
         babel(es5Options),
         spacesToTabs()
     ]
-}];
+};
+
+let targets = [
+    target_release_es5,
+    target_release_es6,
+    target_debug,
+    target_profiler,
+    target_extras
+];
+
+// Build all targets by default, unless a specific target is chosen
+if (process.env.target) {
+    switch (process.env.target.toLowerCase()) {
+        case "es5"     : targets = [target_release_es5, target_extras]; break;
+        case "es6"     : targets = [target_release_es6, target_extras]; break;
+        case "debug"   : targets = [target_debug      , target_extras]; break;
+        case "profiler": targets = [target_profiler   , target_extras]; break;
+    }
+}
+
+export default targets;
