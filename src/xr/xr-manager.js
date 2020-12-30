@@ -10,6 +10,7 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 
 /**
@@ -55,6 +56,7 @@ function XrManager(app) {
     this.input = new XrInput(this);
     this.hitTest = new XrHitTest(this);
     this.lightEstimation = new XrLightEstimation(this);
+    this.imageTracking = new XrImageTracking(this);
     this.domOverlay = new XrDomOverlay(this);
 
     this._camera = null;
@@ -138,7 +140,6 @@ XrManager.prototype.constructor = XrManager;
  * });
  */
 
-
 /**
  * @event
  * @name pc.XrManager#error
@@ -218,6 +219,10 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
         opts.optionalFeatures.push('light-estimation');
         opts.optionalFeatures.push('hit-test');
 
+        if (options && options.imageTracking) {
+            opts.optionalFeatures.push('image-tracking');
+        }
+
         if (this.domOverlay.root) {
             opts.optionalFeatures.push('dom-overlay');
             opts.domOverlay = { root: this.domOverlay.root };
@@ -226,11 +231,31 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
         opts.optionalFeatures.push('hand-tracking');
     }
 
-    if (options && options.optionalFeatures) {
+    if (options && options.optionalFeatures)
         opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
-    }
 
-    navigator.xr.requestSession(type, opts).then(function (session) {
+    if (this.imageTracking.images.length) {
+        this.imageTracking.prepareImages(function (err, trackedImages) {
+            if (err) {
+                if (callback) callback(err);
+                self.fire('error', err);
+                return;
+            }
+
+            if (trackedImages !== null)
+                opts.trackedImages = trackedImages;
+
+            self._onStartOptionsReady(type, spaceType, opts, callback);
+        });
+    } else {
+        self._onStartOptionsReady(type, spaceType, opts, callback);
+    }
+};
+
+XrManager.prototype._onStartOptionsReady = function (type, spaceType, options, callback) {
+    var self = this;
+
+    navigator.xr.requestSession(type, options).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;
@@ -483,6 +508,9 @@ XrManager.prototype.update = function (frame) {
         }
         if (this.lightEstimation.supported) {
             this.lightEstimation.update(frame);
+        }
+        if (this.imageTracking.supported) {
+            this.imageTracking.update(frame);
         }
     }
 

@@ -293,7 +293,7 @@ class Camera {
         this._scissorRect.copy(newValue);
     }
 
-    get viewMatrixviewMatrix() {
+    get viewMatrix() {
         if (this._viewMatDirty) {
             var wtm = this._node.getWorldTransform();
             this._viewMat.copy(wtm).invert();

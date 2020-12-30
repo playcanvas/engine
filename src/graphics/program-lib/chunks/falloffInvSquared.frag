@@ -1,3 +1,9 @@
+float getFalloffWindow(float lightRadius) {
+    float sqrDist = dot(dLightDirW, dLightDirW);
+    float invRadius = 1.0 / lightRadius;
+    return square( saturate( 1.0 - square( sqrDist * square(invRadius) ) ) );
+}
+
 float getFalloffInvSquared(float lightRadius) {
     float sqrDist = dot(dLightDirW, dLightDirW);
     float falloff = 1.0 / (sqrDist + 1.0);
@@ -8,3 +14,5 @@ float getFalloffInvSquared(float lightRadius) {
 
     return falloff;
 }
+
+
