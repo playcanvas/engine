@@ -13,7 +13,7 @@ class RefCount {
 
     // decrements the counter. When the value reaches zero, destroy is called
     decRefCount() {
-        if (--this._refCount == 0) {
+        if (--this._refCount === 0) {
             this.destroy();
         }
     }
