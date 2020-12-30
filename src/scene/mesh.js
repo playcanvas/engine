@@ -1,3 +1,4 @@
+import { RefCount } from '../core/ref-count.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
@@ -175,9 +176,9 @@ class GeometryVertexStream {
  * @property {pc.Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
  * @property {pc.Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
  */
-class Mesh {
+class Mesh extends RefCount {
     constructor(graphicsDevice) {
-        this._refCount = 0;
+        super();
         this.id = id++;
         this.device = graphicsDevice || Application.getApplication().graphicsDevice;
         this.vertexBuffer = null;
@@ -204,18 +205,6 @@ class Mesh {
 
     set aabb(aabb) {
         this._aabb = aabb;
-    }
-
-    get refCount() {
-        return this._refCount;
-    }
-
-    incReference() {
-        this._refCount++;
-    }
-
-    decReference() {
-        this._refCount--;
     }
 
     /**

@@ -22,6 +22,7 @@ export { IndexedList } from './core/indexed-list.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { RefCount } from './core/ref-count.js';
 
 // NET
 export { http, Http } from './net/http.js';

@@ -23,6 +23,7 @@ var textureMorphVertexShader =
 class MorphInstance {
     constructor(morph) {
         this.morph = morph;
+        morph.incRefCount();
         this.device = morph.device;
         this.meshInstance = null;
 
@@ -108,7 +109,8 @@ class MorphInstance {
         this.shader = null;
 
         if (this.morph) {
-            this.morph.destroy();
+            // this destroys morph if refcount gets to 0
+            this.morph.decRefCount();
             this.morph = null;
         }
 
