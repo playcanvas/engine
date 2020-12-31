@@ -164,14 +164,12 @@ class RenderTarget {
         if (!this._device.webgl2) return;
 
         var gl = this._device.gl;
-
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
         gl.blitFramebuffer( 0, 0, this.width, this.height,
                             0, 0, this.width, this.height,
                             (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
                             gl.NEAREST);
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
     }
 
