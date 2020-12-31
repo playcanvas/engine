@@ -12,6 +12,7 @@ import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrImageTracking } from './xr-image-tracking.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
@@ -53,11 +54,12 @@ function XrManager(app) {
     this._baseLayer = null;
     this._referenceSpace = null;
 
-    this.input = new XrInput(this);
-    this.hitTest = new XrHitTest(this);
-    this.lightEstimation = new XrLightEstimation(this);
-    this.imageTracking = new XrImageTracking(this);
+    this.depthSensing = new XrDepthSensing(this);
     this.domOverlay = new XrDomOverlay(this);
+    this.hitTest = new XrHitTest(this);
+    this.imageTracking = new XrImageTracking(this);
+    this.input = new XrInput(this);
+    this.lightEstimation = new XrLightEstimation(this);
 
     this._camera = null;
     this.views = [];
@@ -218,6 +220,7 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     if (type === XRTYPE_AR) {
         opts.optionalFeatures.push('light-estimation');
         opts.optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('depth-sensing');
 
         if (options && options.imageTracking) {
             opts.optionalFeatures.push('image-tracking');
@@ -503,15 +506,17 @@ XrManager.prototype.update = function (frame) {
     this.input.update(frame);
 
     if (this._type === XRTYPE_AR) {
-        if (this.hitTest.supported) {
+        if (this.hitTest.supported)
             this.hitTest.update(frame);
-        }
-        if (this.lightEstimation.supported) {
+
+        if (this.lightEstimation.supported)
             this.lightEstimation.update(frame);
-        }
-        if (this.imageTracking.supported) {
+
+        if (this.depthSensing.supported)
+            this.depthSensing.update(frame, pose && pose.views[0]);
+
+        if (this.imageTracking.supported)
             this.imageTracking.update(frame);
-        }
     }
 
     this.fire('update', frame);
