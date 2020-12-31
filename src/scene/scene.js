@@ -140,7 +140,7 @@ function Scene() {
         lastStaticPrepareWriteTime: 0,
         lastStaticPrepareTriAabbTime: 0,
         lastStaticPrepareCombineTime: 0,
-        updateShadersTime: 0
+        updateShadersTime: 0 // deprecated
     };
 
     this.updateShaders = true;

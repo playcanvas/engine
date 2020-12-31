@@ -9,23 +9,24 @@ import { script } from '../framework/script.js';
  * or regular JavaScript files, such as third-party libraries.
  * @param {pc.Application} app - The running {@link pc.Application}.
  */
-function ScriptHandler(app) {
-    this._app = app;
-    this._scripts = { };
-    this._cache = { };
-}
-
-ScriptHandler._types = [];
-ScriptHandler._push = function (Type) {
-    if (script.legacy && ScriptHandler._types.length > 0) {
-        console.assert("Script Ordering Error. Contact support@playcanvas.com");
-    } else {
-        ScriptHandler._types.push(Type);
+class ScriptHandler {
+    constructor(app) {
+        this._app = app;
+        this._scripts = { };
+        this._cache = { };
     }
-};
 
-Object.assign(ScriptHandler.prototype, {
-    load: function (url, callback) {
+    static _types = [];
+
+    static _push(Type) {
+        if (script.legacy && ScriptHandler._types.length > 0) {
+            console.assert("Script Ordering Error. Contact support@playcanvas.com");
+        } else {
+            ScriptHandler._types.push(Type);
+        }
+    }
+
+    load(url, callback) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {
             url = {
@@ -72,15 +73,15 @@ Object.assign(ScriptHandler.prototype, {
                 callback(err);
             }
         }.bind(this));
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         return data;
-    },
+    }
 
-    patch: function (asset, assets) { },
+    patch(asset, assets) { }
 
-    _loadScript: function (url, callback) {
+    _loadScript(url, callback) {
         var head = document.head;
         var element = document.createElement('script');
         this._cache[url] = element;
@@ -104,6 +105,6 @@ Object.assign(ScriptHandler.prototype, {
 
         head.appendChild(element);
     }
-});
+}
 
 export { ScriptHandler };

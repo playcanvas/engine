@@ -573,7 +573,8 @@ function Application(canvas, options) {
                 var layers = self.scene.layers.layerList;
                 var subLayerEnabled = self.scene.layers.subLayerEnabled;
                 var isTransparent = self.scene.layers.subLayerList;
-                var rt = self.defaultLayerWorld.renderTarget;
+                // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
+                var rt = self.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;
                 var cam = this.cameras[cameraPass];
                 var layer;
                 var j;

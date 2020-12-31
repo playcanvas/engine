@@ -11,12 +11,12 @@ var tmpVecA = new Vec3();
  * @param {pc.Vec3} [point] - Point position on the plane. The constructor takes a reference of this parameter.
  * @param {pc.Vec3} [normal] - Normal of the plane. The constructor takes a reference of this parameter.
  */
-function Plane(point, normal) {
-    this.normal = normal || new Vec3(0, 0, 1);
-    this.point = point || new Vec3(0, 0, 0);
-}
+class Plane {
+    constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
+        this.normal = normal;
+        this.point = point;
+    }
 
-Object.assign(Plane.prototype, {
     /**
      * @private
      * @function
@@ -27,7 +27,7 @@ Object.assign(Plane.prototype, {
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
      */
-    intersectsLine: function (start, end, point) {
+    intersectsLine(start, end, point) {
         var d = -this.normal.dot(this.point);
         var d0 = this.normal.dot(start) + d;
         var d1 = this.normal.dot(end) + d;
@@ -38,7 +38,7 @@ Object.assign(Plane.prototype, {
             point.lerp(start, end, t);
 
         return intersects;
-    },
+    }
 
     /**
      * @private
@@ -49,7 +49,7 @@ Object.assign(Plane.prototype, {
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
      */
-    intersectsRay: function (ray, point) {
+    intersectsRay(ray, point) {
         var pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
         var t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
         var intersects = t >= 0;
@@ -59,6 +59,6 @@ Object.assign(Plane.prototype, {
 
         return intersects;
     }
-});
+}
 
 export { Plane };

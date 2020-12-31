@@ -35,7 +35,8 @@ import {
     BLUR_GAUSSIAN,
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTSHAPE_PUNCTUAL,
     MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
@@ -118,6 +119,9 @@ var _skipRenderCounter = 0;
 var skipRenderAfter = 0;
 
 var _skinUpdateIndex = 0;
+
+var _tempMaterialSet = new Set();
+
 
 // The 8 points of the camera frustum transformed to light space
 var frustumPoints = [];
@@ -316,7 +320,7 @@ function gaussWeights(kernelSize) {
 function createShadowCamera(device, shadowType, type) {
     // We don't need to clear the color buffer if we're rendering a depth map
     var hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
-    if (type === LIGHTTYPE_POINT) {
+    if (type === LIGHTTYPE_OMNI) {
         hwPcf = false;
     }
 
@@ -350,8 +354,8 @@ function getShadowMapFromCache(device, res, mode, layer) {
 
 function createShadowBuffer(device, light) {
     var shadowBuffer;
-    if (light._type === LIGHTTYPE_POINT) {
-        if (light._shadowType > SHADOW_PCF3) light._shadowType = SHADOW_PCF3; // no VSM or HW PCF point lights yet
+    if (light._type === LIGHTTYPE_OMNI) {
+        if (light._shadowType > SHADOW_PCF3) light._shadowType = SHADOW_PCF3; // no VSM or HW PCF omni lights yet
         if (light._cacheShadowMap) {
             shadowBuffer = shadowMapCubeCache[light._shadowResolution];
             if (!shadowBuffer) {
@@ -472,6 +476,10 @@ function ForwardRenderer(graphicsDevice) {
     this.lightRadiusId = [];
     this.lightPos = [];
     this.lightPosId = [];
+    this.lightWidth = [];
+    this.lightWidthId = [];
+    this.lightHeight = [];
+    this.lightHeightId = [];
     this.lightInAngleId = [];
     this.lightOutAngleId = [];
     this.lightPosVsId = [];
@@ -863,6 +871,10 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightRadiusId[i] = scope.resolve(light + "_radius");
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + "_position");
+        this.lightWidth[i] = new Float32Array(3);
+        this.lightWidthId[i] = scope.resolve(light + "_halfWidth");
+        this.lightHeight[i] = new Float32Array(3);
+        this.lightHeightId[i] = scope.resolve(light + "_halfHeight");
         this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
         this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
         this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
@@ -872,7 +884,26 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
     },
 
-    dispatchDirectLights: function (dirs, scene, mask) {
+    setLTCDirectionallLight: function (wtm, cnt, dir, campos, far) {
+        this.lightPos[cnt][0] = campos.x - dir.x * far;
+        this.lightPos[cnt][1] = campos.y - dir.y * far;
+        this.lightPos[cnt][2] = campos.z - dir.z * far;
+        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        this.lightWidth[cnt][0] = hWidth.x * far;
+        this.lightWidth[cnt][1] = hWidth.y * far;
+        this.lightWidth[cnt][2] = hWidth.z * far;
+        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        this.lightHeight[cnt][0] = hHeight.x * far;
+        this.lightHeight[cnt][1] = hHeight.y * far;
+        this.lightHeight[cnt][2] = hHeight.z * far;
+        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+    },
+
+    dispatchDirectLights: function (dirs, scene, mask, camera) {
         var numDirs = dirs.length;
         var i;
         var directional, wtm;
@@ -900,6 +931,11 @@ Object.assign(ForwardRenderer.prototype, {
             this.lightDir[cnt][1] = directional._direction.y;
             this.lightDir[cnt][2] = directional._direction.z;
             this.lightDirId[cnt].setValue(this.lightDir[cnt]);
+
+            if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
+                // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
+                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
+            }
 
             if (directional.castShadows) {
                 var shadowMap = directional._isPcf && this.device.webgl2 ?
@@ -942,36 +978,55 @@ Object.assign(ForwardRenderer.prototype, {
         return cnt;
     },
 
-    dispatchPointLight: function (scene, scope, point, cnt) {
-        var wtm = point._node.getWorldTransform();
+    setLTCPositionalLight: function (wtm, cnt) {
+        var hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
+        this.lightWidth[cnt][0] = hWidth.x;
+        this.lightWidth[cnt][1] = hWidth.y;
+        this.lightWidth[cnt][2] = hWidth.z;
+        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
+
+        var hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
+        this.lightHeight[cnt][0] = hHeight.x;
+        this.lightHeight[cnt][1] = hHeight.y;
+        this.lightHeight[cnt][2] = hHeight.z;
+        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
+    },
+
+    dispatchOmniLight: function (scene, scope, omni, cnt) {
+        var wtm = omni._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
             this._resolveLight(scope, cnt);
         }
 
-        this.lightRadiusId[cnt].setValue(point.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? point._linearFinalColor : point._finalColor);
-        wtm.getTranslation(point._position);
-        this.lightPos[cnt][0] = point._position.x;
-        this.lightPos[cnt][1] = point._position.y;
-        this.lightPos[cnt][2] = point._position.z;
+        this.lightRadiusId[cnt].setValue(omni.attenuationEnd);
+        this.lightColorId[cnt].setValue(scene.gammaCorrection ? omni._linearFinalColor : omni._finalColor);
+        wtm.getTranslation(omni._position);
+        this.lightPos[cnt][0] = omni._position.x;
+        this.lightPos[cnt][1] = omni._position.y;
+        this.lightPos[cnt][2] = omni._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
-        if (point.castShadows) {
-            var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
+        if (omni.shape !== LIGHTSHAPE_PUNCTUAL) {
+            // non-punctual shape
+            this.setLTCPositionalLight(wtm, cnt);
+        }
+
+        if (omni.castShadows) {
+            var shadowMap = omni._shadowCamera.renderTarget.colorBuffer;
             this.lightShadowMapId[cnt].setValue(shadowMap);
-            var params = point._rendererParams;
+            var params = omni._rendererParams;
             if (params.length !== 4) params.length = 4;
-            params[0] = point._shadowResolution;
-            params[1] = point._normalOffsetBias;
-            params[2] = point.shadowBias;
-            params[3] = 1.0 / point.attenuationEnd;
+            params[0] = omni._shadowResolution;
+            params[1] = omni._normalOffsetBias;
+            params[2] = omni.shadowBias;
+            params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
         }
-        if (point._cookie) {
-            this.lightCookieId[cnt].setValue(point._cookie);
+        if (omni._cookie) {
+            this.lightCookieId[cnt].setValue(omni._cookie);
             this.lightShadowMatrixId[cnt].setValue(wtm.data);
-            this.lightCookieIntId[cnt].setValue(point.cookieIntensity);
+            this.lightCookieIntId[cnt].setValue(omni.cookieIntensity);
         }
     },
 
@@ -991,6 +1046,12 @@ Object.assign(ForwardRenderer.prototype, {
         this.lightPos[cnt][1] = spot._position.y;
         this.lightPos[cnt][2] = spot._position.z;
         this.lightPosId[cnt].setValue(this.lightPos[cnt]);
+
+        if (spot.shape !== LIGHTSHAPE_PUNCTUAL) {
+            // non-punctual shape
+            this.setLTCPositionalLight(wtm, cnt);
+        }
+
         // Spots shine down the negative Y axis
         wtm.getY(spot._direction).scale(-1);
         spot._direction.normalize();
@@ -1059,34 +1120,34 @@ Object.assign(ForwardRenderer.prototype, {
 
     dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
         var i;
-        var point, spot;
+        var omni, spot;
 
-        var pnts = sortedLights[LIGHTTYPE_POINT];
+        var omnis = sortedLights[LIGHTTYPE_OMNI];
         var spts = sortedLights[LIGHTTYPE_SPOT];
 
         var numDirs = usedDirLights;
-        var numPnts = pnts.length;
+        var numOmnis = omnis.length;
         var numSpts = spts.length;
         var cnt = numDirs;
 
         var scope = this.device.scope;
 
-        for (i = 0; i < numPnts; i++) {
-            point = pnts[i];
-            if (!(point.mask & mask)) continue;
-            if (point.isStatic) continue;
-            this.dispatchPointLight(scene, scope, point, cnt);
+        for (i = 0; i < numOmnis; i++) {
+            omni = omnis[i];
+            if (!(omni.mask & mask)) continue;
+            if (omni.isStatic) continue;
+            this.dispatchOmniLight(scene, scope, omni, cnt);
             cnt++;
         }
 
         var staticId = 0;
         if (staticLightList) {
-            point = staticLightList[staticId];
-            while (point && point._type === LIGHTTYPE_POINT) {
-                this.dispatchPointLight(scene, scope, point, cnt);
+            omni = staticLightList[staticId];
+            while (omni && omni._type === LIGHTTYPE_OMNI) {
+                this.dispatchOmniLight(scene, scope, omni, cnt);
                 cnt++;
                 staticId++;
-                point = staticLightList[staticId];
+                omni = staticLightList[staticId];
             }
         }
 
@@ -1383,7 +1444,7 @@ Object.assign(ForwardRenderer.prototype, {
                     this.viewPosId.setValue(this.viewPos);
                     this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
 
-                } else if (type === LIGHTTYPE_POINT) {
+                } else if (type === LIGHTTYPE_OMNI) {
                     cameraPos = shadowCamNode.getPosition();
                     this.viewPos[0] = cameraPos.x;
                     this.viewPos[1] = cameraPos.y;
@@ -1398,21 +1459,21 @@ Object.assign(ForwardRenderer.prototype, {
                 this.device.pushMarker("SHADOW " + light._node.name);
                 // #endif
 
-                if (type !== LIGHTTYPE_POINT) {
+                if (type !== LIGHTTYPE_OMNI) {
                     shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
                     shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
                     light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                 }
 
                 if (device.webgl2) {
-                    if (type === LIGHTTYPE_POINT) {
+                    if (type === LIGHTTYPE_OMNI) {
                         device.setDepthBias(false);
                     } else {
                         device.setDepthBias(true);
                         device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
                     }
                 } else if (device.extStandardDerivatives) {
-                    if (type === LIGHTTYPE_POINT) {
+                    if (type === LIGHTTYPE_OMNI) {
                         this.polygonOffset[0] = 0;
                         this.polygonOffset[1] = 0;
                         this.polygonOffsetId.setValue(this.polygonOffset);
@@ -1431,7 +1492,7 @@ Object.assign(ForwardRenderer.prototype, {
                 device.setBlending(false);
                 device.setDepthWrite(true);
                 device.setDepthTest(true);
-                if (light._isPcf && device.webgl2 && type !== LIGHTTYPE_POINT) {
+                if (light._isPcf && device.webgl2 && type !== LIGHTTYPE_OMNI) {
                     device.setColorWrite(false, false, false, false);
                 } else {
                     device.setColorWrite(true, true, true, true);
@@ -1440,7 +1501,7 @@ Object.assign(ForwardRenderer.prototype, {
                 if (pass) {
                     passes = pass + 1; // predefined single pass
                 } else {
-                    pass = 0; // point light passes
+                    pass = 0; // omni light passes
                 }
 
                 while (pass < passes) {
@@ -1453,12 +1514,12 @@ Object.assign(ForwardRenderer.prototype, {
                     }
                     // #endif
 
-                    if (type === LIGHTTYPE_POINT) {
+                    if (type === LIGHTTYPE_OMNI) {
                         shadowCamNode.setRotation(pointLightRotations[pass]);
                         shadowCam.renderTarget = light._shadowCubeMap[pass];
                     }
 
-                    this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== LIGHTTYPE_POINT);
+                    this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== LIGHTTYPE_OMNI);
 
                     visibleList = light._visibleList[pass];
                     visibleLength = light._visibleLength[pass];
@@ -1795,7 +1856,7 @@ Object.assign(ForwardRenderer.prototype, {
                     material.setParameters(device);
 
                     if (!prevMaterial || lightMask !== prevLightMask) {
-                        usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask);
+                        usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
                         this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                     }
 
@@ -2050,7 +2111,7 @@ Object.assign(ForwardRenderer.prototype, {
             } else {
                 aabb = drawCall.aabb;
                 staticLights.length = 0;
-                for (lightTypePass = LIGHTTYPE_POINT; lightTypePass <= LIGHTTYPE_SPOT; lightTypePass++) {
+                for (lightTypePass = LIGHTTYPE_OMNI; lightTypePass <= LIGHTTYPE_SPOT; lightTypePass++) {
                     for (j = 0; j < lights.length; j++) {
                         light = lights[j];
                         if (light._type !== lightTypePass) continue;
@@ -2298,58 +2359,49 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     updateShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        var i;
-        // Collect materials
-        var materials = [];
-        for (i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                if (materials.indexOf(drawCall.material) === -1) {
-                    materials.push(drawCall.material);
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
                 }
             }
         }
-        // Clear material shaders
-        for (i = 0; i < materials.length; i++) {
-            var mat = materials[i];
-            if (mat.updateShader !== Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
-            }
-        }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     updateLitShaders: function (drawCalls) {
-        // #ifdef PROFILER
-        var time = now();
-        // #endif
+        var mat, count = drawCalls.length;
+        for (var i = 0; i < count; i++) {
+            mat = drawCalls[i].material;
+            if (mat) {
+                // material not processed yet
+                if (!_tempMaterialSet.has(mat)) {
+                    _tempMaterialSet.add(mat);
 
-        for (var i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                var mat = drawCall.material;
-                if (mat.updateShader !== Material.prototype.updateShader) {
-                    if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                        // skip unlit standard and particles materials
-                        continue;
+                    if (mat.updateShader !== Material.prototype.updateShader) {
+
+                        // only process lit materials
+                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
+                            mat.clearVariants();
+                            mat.shader = null;
+                        }
                     }
-                    mat.clearVariants();
-                    mat.shader = null;
                 }
             }
         }
 
-        // #ifdef PROFILER
-        this.scene._stats.updateShadersTime += now() - time;
-        // #endif
+        // keep temp set empty
+        _tempMaterialSet.clear();
     },
 
     beginFrame: function (comp) {
@@ -2479,7 +2531,7 @@ Object.assign(ForwardRenderer.prototype, {
         }
 
         for (pass = 0; pass < passes; pass++) {
-            if (type === LIGHTTYPE_POINT) {
+            if (type === LIGHTTYPE_OMNI) {
                 shadowCamNode.setRotation(pointLightRotations[pass]);
                 shadowCam.renderTarget = light._shadowCubeMap[pass];
             }
@@ -2868,7 +2920,7 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Shadow render for all local visible culled lights
         this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
-        this.renderShadows(comp._splitLights[LIGHTTYPE_POINT]);
+        this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
 
         // Rendering
         renderedLength = 0;

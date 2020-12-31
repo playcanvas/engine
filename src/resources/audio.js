@@ -125,7 +125,7 @@ if (hasAudioContext()) {
             maxRetries: this.maxRetries
         };
 
-        if (url.startsWith('blob:')) {
+        if (url.startsWith('blob:') || url.startsWith('data:')) {
             options.responseType = Http.ResponseType.ARRAY_BUFFER;
         }
 

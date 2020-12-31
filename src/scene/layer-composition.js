@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 import {
     BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from './constants.js';
 
 /**
@@ -78,7 +78,7 @@ LayerComposition.prototype._splitLightsArray = function (target) {
     var light;
     var lights = target._lights;
     target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-    target._splitLights[LIGHTTYPE_POINT].length = 0;
+    target._splitLights[LIGHTTYPE_OMNI].length = 0;
     target._splitLights[LIGHTTYPE_SPOT].length = 0;
 
     for (var i = 0; i < lights.length; i++) {

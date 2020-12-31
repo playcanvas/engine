@@ -10,6 +10,9 @@ import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR } from './constants.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
+import { XrImageTracking } from './xr-image-tracking.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
@@ -27,7 +30,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
  * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
  * @property {pc.XrInput} input provides access to Input Sources.
  * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
- * @property {object|null} session provides access to [XRSession](https://developer.mozilla.org/en-US/docs/Web/API/XRSession) of WebXR
+ * @property {object|null} session provides access to XRSession of WebXR
  */
 function XrManager(app) {
     EventHandler.call(this);
@@ -51,8 +54,11 @@ function XrManager(app) {
     this._baseLayer = null;
     this._referenceSpace = null;
 
-    this.input = new XrInput(this);
+    this.depthSensing = new XrDepthSensing(this);
+    this.domOverlay = new XrDomOverlay(this);
     this.hitTest = new XrHitTest(this);
+    this.imageTracking = new XrImageTracking(this);
+    this.input = new XrInput(this);
     this.lightEstimation = new XrLightEstimation(this);
 
     this._camera = null;
@@ -136,7 +142,6 @@ XrManager.prototype.constructor = XrManager;
  * });
  */
 
-
 /**
  * @event
  * @name pc.XrManager#error
@@ -207,23 +212,53 @@ XrManager.prototype.start = function (camera, type, spaceType, options) {
     // 3. probably immersive-vr will fail to be created
     // 4. call makeXRCompatible, very likely will lead to context loss
 
-    var optionalFeatures = [];
+    var opts = {
+        requiredFeatures: [spaceType],
+        optionalFeatures: []
+    };
 
     if (type === XRTYPE_AR) {
-        optionalFeatures.push('light-estimation');
-        optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('light-estimation');
+        opts.optionalFeatures.push('hit-test');
+        opts.optionalFeatures.push('depth-sensing');
+
+        if (options && options.imageTracking) {
+            opts.optionalFeatures.push('image-tracking');
+        }
+
+        if (this.domOverlay.root) {
+            opts.optionalFeatures.push('dom-overlay');
+            opts.domOverlay = { root: this.domOverlay.root };
+        }
     } else if (type === XRTYPE_VR) {
-        optionalFeatures.push('hand-tracking');
+        opts.optionalFeatures.push('hand-tracking');
     }
 
-    if (options && options.optionalFeatures) {
-        optionalFeatures = optionalFeatures.concat(options.optionalFeatures);
-    }
+    if (options && options.optionalFeatures)
+        opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
 
-    navigator.xr.requestSession(type, {
-        requiredFeatures: [spaceType],
-        optionalFeatures: optionalFeatures
-    }).then(function (session) {
+    if (this.imageTracking.images.length) {
+        this.imageTracking.prepareImages(function (err, trackedImages) {
+            if (err) {
+                if (callback) callback(err);
+                self.fire('error', err);
+                return;
+            }
+
+            if (trackedImages !== null)
+                opts.trackedImages = trackedImages;
+
+            self._onStartOptionsReady(type, spaceType, opts, callback);
+        });
+    } else {
+        self._onStartOptionsReady(type, spaceType, opts, callback);
+    }
+};
+
+XrManager.prototype._onStartOptionsReady = function (type, spaceType, options, callback) {
+    var self = this;
+
+    navigator.xr.requestSession(type, options).then(function (session) {
         self._onSessionStart(session, spaceType, callback);
     }).catch(function (ex) {
         self._camera.camera.xr = null;
@@ -471,12 +506,17 @@ XrManager.prototype.update = function (frame) {
     this.input.update(frame);
 
     if (this._type === XRTYPE_AR) {
-        if (this.hitTest.supported) {
+        if (this.hitTest.supported)
             this.hitTest.update(frame);
-        }
-        if (this.lightEstimation.supported) {
+
+        if (this.lightEstimation.supported)
             this.lightEstimation.update(frame);
-        }
+
+        if (this.depthSensing.supported)
+            this.depthSensing.update(frame, pose && pose.views[0]);
+
+        if (this.imageTracking.supported)
+            this.imageTracking.update(frame);
     }
 
     this.fire('update', frame);

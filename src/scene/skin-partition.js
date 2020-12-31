@@ -1,30 +1,32 @@
-function PartitionedVertex() {
-    this.index = 0;
-    this.boneIndices = [0, 0, 0, 0];
+class PartitionedVertex {
+    constructor() {
+        this.index = 0;
+        this.boneIndices = [0, 0, 0, 0];
+    }
 }
 
-function SkinPartition() {
-    this.partition = 0;
-    this.vertexStart = 0;
-    this.vertexCount = 0;
-    this.indexStart = 0;
-    this.indexCount = 0;
+class SkinPartition {
+    constructor() {
+        this.partition = 0;
+        this.vertexStart = 0;
+        this.vertexCount = 0;
+        this.indexStart = 0;
+        this.indexCount = 0;
 
-    // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
-    this.boneIndices = [];
+        // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
+        this.boneIndices = [];
 
-    // Partitioned vertex attributes
-    this.vertices = [];
-    // Partitioned vertex indices
-    this.indices = [];
-    // Maps the index of an un-partitioned vertex to that same vertex if it has been added
-    // to this particular partition. speeds up checking for duplicate vertices so we don't
-    // add the same vertex more than once.
-    this.indexMap = {};
-}
+        // Partitioned vertex attributes
+        this.vertices = [];
+        // Partitioned vertex indices
+        this.indices = [];
+        // Maps the index of an un-partitioned vertex to that same vertex if it has been added
+        // to this particular partition. speeds up checking for duplicate vertices so we don't
+        // add the same vertex more than once.
+        this.indexMap = {};
+    }
 
-Object.assign(SkinPartition.prototype, {
-    addVertex: function (vertex, idx, vertexArray) {
+    addVertex(vertex, idx, vertexArray) {
         var remappedIndex = -1;
         if (this.indexMap[idx] !== undefined) {
             remappedIndex = this.indexMap[idx];
@@ -43,9 +45,9 @@ Object.assign(SkinPartition.prototype, {
             this.vertices.push(vertex);
             this.indexMap[idx] = remappedIndex;
         }
-    },
+    }
 
-    addPrimitive: function (vertices, vertexIndices, vertexArray, boneLimit) {
+    addPrimitive(vertices, vertexIndices, vertexArray, boneLimit) {
         // Build a list of all the bones used by the vertex that aren't currently in this partition
         var i, j;
         var bonesToAdd = [];
@@ -89,9 +91,9 @@ Object.assign(SkinPartition.prototype, {
         }
 
         return true;
-    },
+    }
 
-    getBoneRemap: function (boneIndex) {
+    getBoneRemap(boneIndex) {
         for (var i = 0; i < this.boneIndices.length; i++ ) {
             if (this.boneIndices[i] === boneIndex) {
                 return i;
@@ -99,7 +101,7 @@ Object.assign(SkinPartition.prototype, {
         }
         return -1;
     }
-});
+}
 
 function indicesToReferences(model) {
     var i;

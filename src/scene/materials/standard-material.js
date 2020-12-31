@@ -982,7 +982,7 @@ Object.assign(StandardMaterial.prototype, {
                     var atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
                         prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
                     prefilteredCubeMap128.dpAtlas = generateDpAtlas(device, atlas);
-                    prefilteredCubeMap128.sh = shFromCubemap(prefilteredCubeMap16);
+                    prefilteredCubeMap128.sh = shFromCubemap(device, prefilteredCubeMap16);
                 }
                 this.dpAtlas = prefilteredCubeMap128.dpAtlas;
                 this.ambientSH = prefilteredCubeMap128.sh;
