@@ -97,8 +97,8 @@ class MeshInstance {
         this._staticSource = null;
 
         this.node = node;           // The node that defines the transform of the mesh instance
-        this._mesh = mesh;           // The mesh that this instance renders
-        mesh.incReference();
+        this._mesh = mesh;          // The mesh that this instance renders
+        mesh.incRefCount();
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = MASK_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_DYNAMIC
@@ -156,14 +156,19 @@ class MeshInstance {
     }
 
     set mesh(mesh) {
+
+        if (mesh === this._mesh)
+            return;
+
         if (this._mesh) {
-            this._mesh.decReference();
+            // this destroys the mesh if refcount gets to 0
+            this._mesh.decRefCount();
         }
 
         this._mesh = mesh;
 
         if (mesh) {
-            mesh.incReference();
+            mesh.incRefCount();
         }
     }
 
@@ -392,15 +397,15 @@ class MeshInstance {
 
     destroy() {
 
-        var mesh = this.mesh;
-        if (mesh) {
-            this.mesh = null;   // this calls decReference on mesh
-            if (mesh.refCount < 1) {
-                mesh.destroy();
-            }
+        if (this.mesh) {
+            // release previous mesh
+            this.mesh = null;
         }
 
-        this.destroySkinInstance();
+        if (this._skinInstance) {
+            this._skinInstance.destroy();
+            this._skinInstance = null;
+        }
 
         if (this.morphInstance) {
             this.morphInstance.destroy();
@@ -409,13 +414,6 @@ class MeshInstance {
 
         // make sure material clears references to this meshInstance
         this.material = null;
-    }
-
-    destroySkinInstance() {
-        if (this._skinInstance) {
-            this._skinInstance.destroy();
-            this._skinInstance = null;
-        }
     }
 
     syncAabb() {

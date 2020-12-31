@@ -8,10 +8,11 @@ import { Vec4 } from '../math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
+    LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
 
 import { Application } from '../framework/application.js';
@@ -40,7 +41,7 @@ var Light = function Light() {
     this.key = 0;
     this.bakeDir = true;
 
-    // Point and spot properties
+    // Omni and spot properties
     this.attenuationStart = 10;
     this.attenuationEnd = 10;
     this._falloffMode = 0;
@@ -48,7 +49,7 @@ var Light = function Light() {
     this._vsmBlurSize = 11;
     this.vsmBlurMode = BLUR_GAUSSIAN;
     this.vsmBias = 0.01 * 0.25;
-    this._cookie = null; // light cookie texture (2D for spot, cubemap for point)
+    this._cookie = null; // light cookie texture (2D for spot, cubemap for omni)
     this.cookieIntensity = 1;
     this._cookieFalloff = true;
     this._cookieChannel = "rgb";
@@ -62,6 +63,9 @@ var Light = function Light() {
     // Spot properties
     this._innerConeAngle = 40;
     this._outerConeAngle = 45;
+
+    // Light source shape properties
+    this._shape = LIGHTSHAPE_PUNCTUAL;
 
     // Cache of light property data in a format more friendly for shader uniforms
     this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
@@ -92,7 +96,7 @@ var Light = function Light() {
     this._isCachedShadowMap = false;
 
     this._visibleLength = [0]; // lengths of passes in culledList
-    this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
+    this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for omni, cameraCount for directional)
     this._visibleCameraSettings = []; // camera settings used in each directional light pass
 };
 
@@ -118,7 +122,7 @@ Object.assign(Light.prototype, {
         clone.castShadows = this.castShadows;
         clone.enabled = this.enabled;
 
-        // Point and spot properties
+        // Omni and spot properties
         clone.attenuationStart = this.attenuationStart;
         clone.attenuationEnd = this.attenuationEnd;
         clone.falloffMode = this._falloffMode;
@@ -132,6 +136,9 @@ Object.assign(Light.prototype, {
         // Spot properties
         clone.innerConeAngle = this._innerConeAngle;
         clone.outerConeAngle = this._outerConeAngle;
+
+        // shape properties
+        clone.shape = this._shape;
 
         // Shadow properties
         clone.shadowBias = this.shadowBias;
@@ -175,7 +182,7 @@ Object.assign(Light.prototype, {
 
             sphere.radius = spotEndPoint.length() * 0.5;
 
-        } else if (this._type === LIGHTTYPE_POINT) {
+        } else if (this._type === LIGHTTYPE_OMNI) {
             sphere.center = this._node.getPosition();
             sphere.radius = this.attenuationEnd;
         }
@@ -194,7 +201,7 @@ Object.assign(Light.prototype, {
 
             box.setFromTransformedAabb(box, node.getWorldTransform());
 
-        } else if (this._type === LIGHTTYPE_POINT) {
+        } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
             box.halfExtents.set(this.attenuationEnd, this.attenuationEnd, this.attenuationEnd);
         }
@@ -290,6 +297,7 @@ Object.assign(Light.prototype, {
         // 16 - 17 : cookie channel G
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
+        //  9 - 11 : light source shape
         var key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -299,7 +307,8 @@ Object.assign(Light.prototype, {
                ((this._cookie ? 1 : 0)                    << 21) |
                ((this._cookieFalloff ? 1 : 0)             << 20) |
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
-               ((this._cookieTransform ? 1 : 0)           << 12);
+               ((this._cookieTransform ? 1 : 0)           << 12) |
+               ((this._shape)                             <<  9);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
@@ -311,6 +320,112 @@ Object.assign(Light.prototype, {
         }
 
         this.key = key;
+    },
+
+    // creates LUT texture used by area lights
+    uploadAreaLightLUTs: function () {
+
+        function createTexture(device, data, format) {
+            var tex = new pc.Texture(device, {
+                width: 64,
+                height: 64,
+                format: format,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                type: pc.TEXTURETYPE_RGBE,
+                magFilter: pc.FILTER_LINEAR,
+                minFilter: pc.FILTER_NEAREST,
+                anisotropy: 1
+            });
+
+            tex.lock().set(data);
+            tex.unlock();
+            tex.upload();
+
+            return tex;
+        }
+
+        function offsetScale(data, offset, scale) {
+
+            var count = data.length;
+            var ret = new Float32Array(count);
+            for (var i = 0; i < count; i++) {
+                var n = i % 4;
+                ret[i] = (data[i] + offset[n]) * scale[n];
+            }
+            return ret;
+        }
+
+        function convertToHalfFloat(data) {
+
+            var count = data.length;
+            var ret = new Uint16Array(count);
+            var float2Half = math.float2Half;
+            for (var i = 0; i < count; i++) {
+                ret[i] = float2Half(data[i]);
+            }
+
+            return ret;
+        }
+
+        function convertToUint(data){
+
+            var count = data.length;
+            var ret = new Uint8ClampedArray(count);
+            for (var i = 0; i < count; i++) {
+                ret[i] = data[i] * 255;
+            }
+
+            return ret;
+        }
+
+        // create texture if not already
+        var app = Application.getApplication();
+        var luts = pc._areaLightLutData;
+        if (luts && !luts.ready) {
+
+            luts.ready = true;
+            var device = app.graphicsDevice;
+            var data1, data2;
+            var format = device._areaLightLutFormat;
+
+            // pick format for lut texture
+            if (format === pc.PIXELFORMAT_RGBA32F) {
+
+                // float
+                data1 = luts.data1;
+                data2 = luts.data2;
+
+            } else if (format === pc.PIXELFORMAT_RGBA16F) {
+
+                // half float
+                data1 = convertToHalfFloat(luts.data1);
+                data2 = convertToHalfFloat(luts.data2);
+
+            } else {
+
+                // low precision format
+                // offset and scale to avoid clipping and increase precision - this is undone in the shader
+
+                var o1 = [0.0, 0.2976, 0.01381, 0.0];
+                var s1 = [0.999, 3.08737, 1.6546, 0.603249];
+
+                var o2 = [-0.306897, 0.0, 0.0, 0.0];
+                var s2 = [1.442787, 1.0, 1.0, 1.0];
+
+                data1 = convertToUint(offsetScale(luts.data1, o1, s1));
+                data2 = convertToUint(offsetScale(luts.data2, o2, s2));
+
+            }
+
+            var tex1 = createTexture(device, data1, format);
+            var tex2 = createTexture(device, data2, format);
+
+            // assign to scope variables
+            device.scope.resolve('areaLightsLutTex1').setValue(tex1);
+            device.scope.resolve('areaLightsLutTex2').setValue(tex2);
+
+        }
     }
 });
 
@@ -328,9 +443,33 @@ Object.defineProperty(Light.prototype, 'type', {
 
         var stype = this._shadowType;
         this._shadowType = null;
-        this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
+        this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
 });
+
+Object.defineProperty(Light.prototype, 'shape', {
+    get: function () {
+        return this._shape;
+    },
+    set: function (value) {
+        if (this._shape === value)
+            return;
+
+        if (value !== LIGHTSHAPE_PUNCTUAL) {
+            this.uploadAreaLightLUTs();
+        }
+
+        this._shape = value;
+        this._destroyShadowMap();
+        this.updateKey();
+
+        var stype = this._shadowType;
+        this._shadowType = null;
+        this.shadowType = stype; // refresh shadow type; switching shape and back may change it
+
+    }
+});
+
 
 Object.defineProperty(Light.prototype, 'shadowType', {
     get: function () {
@@ -342,8 +481,8 @@ Object.defineProperty(Light.prototype, 'shadowType', {
 
         var device = Application.getApplication().graphicsDevice;
 
-        if (this._type === LIGHTTYPE_POINT)
-            value = SHADOW_PCF3; // VSM or HW PCF for point lights is not supported yet
+        if (this._type === LIGHTTYPE_OMNI)
+            value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
         if (value === SHADOW_PCF5 && !device.webgl2) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
@@ -386,7 +525,7 @@ Object.defineProperty(Light.prototype, 'shadowResolution', {
             return;
 
         var device = Application.getApplication().graphicsDevice;
-        if (this._type === LIGHTTYPE_POINT) {
+        if (this._type === LIGHTTYPE_OMNI) {
             value = Math.min(value, device.maxCubeMapSize);
         } else {
             value = Math.min(value, device.maxTextureSize);

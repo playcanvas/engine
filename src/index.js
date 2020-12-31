@@ -22,6 +22,7 @@ export { IndexedList } from './core/indexed-list.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { RefCountedObject } from './core/ref-counted-object.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -275,9 +276,12 @@ export * from './xr/constants.js';
 export { XrInput } from './xr/xr-input.js';
 export { XrInputSource } from './xr/xr-input-source.js';
 export { XrLightEstimation } from './xr/xr-light-estimation.js';
+export { XrDepthSensing } from './xr/xr-depth-sensing.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';
+export { XrImageTracking } from './xr/xr-image-tracking.js';
+export { XrTrackedImage } from './xr/xr-tracked-image.js';
 export { XrDomOverlay } from './xr/xr-dom-overlay.js';
 
 // BACKWARDS COMPATIBILITY
