@@ -15,6 +15,9 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from './graphics.js';
 
+var _pixelSizeTable = null;
+var _blockSizeTable = null;
+
 /**
  * @class
  * @name pc.Texture
@@ -102,116 +105,116 @@ import {
  * texture.unlock();
  * @property {string} name The name of the texture. Defaults to null.
  */
-function Texture(graphicsDevice, options) {
-    this.device = graphicsDevice;
+class Texture {
+    constructor(graphicsDevice, options) {
+        this.device = graphicsDevice;
 
-    this.name = null;
-    this._width = 4;
-    this._height = 4;
-    this._depth = 1;
+        this.name = null;
+        this._width = 4;
+        this._height = 4;
+        this._depth = 1;
 
-    this._format = PIXELFORMAT_R8_G8_B8_A8;
-    this.type = TEXTURETYPE_DEFAULT;
+        this._format = PIXELFORMAT_R8_G8_B8_A8;
+        this.type = TEXTURETYPE_DEFAULT;
 
-    this._cubemap = false;
-    this._volume = false;
-    this.fixCubemapSeams = false;
-    this._flipY = true;
-    this._premultiplyAlpha = false;
+        this._cubemap = false;
+        this._volume = false;
+        this.fixCubemapSeams = false;
+        this._flipY = true;
+        this._premultiplyAlpha = false;
 
-    this._isRenderTarget = false;
+        this._isRenderTarget = false;
 
-    this._mipmaps = true;
+        this._mipmaps = true;
 
-    this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
-    this._magFilter = FILTER_LINEAR;
-    this._anisotropy = 1;
-    this._addressU = ADDRESS_REPEAT;
-    this._addressV = ADDRESS_REPEAT;
-    this._addressW = ADDRESS_REPEAT;
+        this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
+        this._magFilter = FILTER_LINEAR;
+        this._anisotropy = 1;
+        this._addressU = ADDRESS_REPEAT;
+        this._addressV = ADDRESS_REPEAT;
+        this._addressW = ADDRESS_REPEAT;
 
-    this._compareOnRead = false;
-    this._compareFunc = FUNC_LESS;
-
-    // #ifdef PROFILER
-    this.profilerHint = 0;
-    // #endif
-
-    if (options !== undefined) {
-        if (options.name !== undefined) {
-            this.name = options.name;
-        }
-        this._width = (options.width !== undefined) ? options.width : this._width;
-        this._height = (options.height !== undefined) ? options.height : this._height;
-
-        this._format = (options.format !== undefined) ? options.format : this._format;
-
-        if (options.hasOwnProperty('type')) {
-            this.type = options.type;
-        } else if (options.hasOwnProperty('rgbm')) {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
-            // #endif
-            this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-        } else if (options.hasOwnProperty('swizzleGGGR')) {
-            // #ifdef DEBUG
-            console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
-            // #endif
-            this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
-        }
-
-        if (options.mipmaps !== undefined) {
-            this._mipmaps = options.mipmaps;
-        } else {
-            this._mipmaps = (options.autoMipmap !== undefined) ? options.autoMipmap : this._mipmaps;
-        }
-
-        this._levels = options.levels;
-
-        this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
-        this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
-
-        this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
-        this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
-        this._anisotropy = (options.anisotropy !== undefined) ? options.anisotropy : this._anisotropy;
-        this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
-        this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
-
-        this._compareOnRead = (options.compareOnRead !== undefined) ? options.compareOnRead : this._compareOnRead;
-        this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
-
-        this._flipY = (options.flipY !== undefined) ? options.flipY : this._flipY;
-        this._premultiplyAlpha = (options.premultiplyAlpha !== undefined) ? options.premultiplyAlpha : this._premultiplyAlpha;
-
-        if (graphicsDevice.webgl2) {
-            this._depth = (options.depth !== undefined) ? options.depth : this._depth;
-            this._volume = (options.volume !== undefined) ? options.volume : this._volume;
-            this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
-        }
+        this._compareOnRead = false;
+        this._compareFunc = FUNC_LESS;
 
         // #ifdef PROFILER
-        this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
+        this.profilerHint = 0;
         // #endif
+
+        if (options !== undefined) {
+            if (options.name !== undefined) {
+                this.name = options.name;
+            }
+            this._width = (options.width !== undefined) ? options.width : this._width;
+            this._height = (options.height !== undefined) ? options.height : this._height;
+
+            this._format = (options.format !== undefined) ? options.format : this._format;
+
+            if (options.hasOwnProperty('type')) {
+                this.type = options.type;
+            } else if (options.hasOwnProperty('rgbm')) {
+                // #ifdef DEBUG
+                console.warn("DEPRECATED: options.rgbm is deprecated. Use options.type instead.");
+                // #endif
+                this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+            } else if (options.hasOwnProperty('swizzleGGGR')) {
+                // #ifdef DEBUG
+                console.warn("DEPRECATED: options.swizzleGGGR is deprecated. Use options.type instead.");
+                // #endif
+                this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+            }
+
+            if (options.mipmaps !== undefined) {
+                this._mipmaps = options.mipmaps;
+            } else {
+                this._mipmaps = (options.autoMipmap !== undefined) ? options.autoMipmap : this._mipmaps;
+            }
+
+            this._levels = options.levels;
+
+            this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
+            this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
+
+            this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
+            this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
+            this._anisotropy = (options.anisotropy !== undefined) ? options.anisotropy : this._anisotropy;
+            this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
+            this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
+
+            this._compareOnRead = (options.compareOnRead !== undefined) ? options.compareOnRead : this._compareOnRead;
+            this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
+
+            this._flipY = (options.flipY !== undefined) ? options.flipY : this._flipY;
+            this._premultiplyAlpha = (options.premultiplyAlpha !== undefined) ? options.premultiplyAlpha : this._premultiplyAlpha;
+
+            if (graphicsDevice.webgl2) {
+                this._depth = (options.depth !== undefined) ? options.depth : this._depth;
+                this._volume = (options.volume !== undefined) ? options.volume : this._volume;
+                this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
+            }
+
+            // #ifdef PROFILER
+            this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
+            // #endif
+        }
+
+        this._compressed = (this._format === PIXELFORMAT_DXT1 ||
+                            this._format === PIXELFORMAT_DXT3 ||
+                            this._format === PIXELFORMAT_DXT5 ||
+                            this._format >= PIXELFORMAT_ETC1);
+
+        // Mip levels
+        this._invalid = false;
+        this._lockedLevel = -1;
+        if (!this._levels) {
+            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+        }
+
+        this.dirtyAll();
+
+        this._gpuSize = 0;
     }
 
-    this._compressed = (this._format === PIXELFORMAT_DXT1 ||
-                        this._format === PIXELFORMAT_DXT3 ||
-                        this._format === PIXELFORMAT_DXT5 ||
-                        this._format >= PIXELFORMAT_ETC1);
-
-    // Mip levels
-    this._invalid = false;
-    this._lockedLevel = -1;
-    if (!this._levels) {
-        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
-    }
-
-    this.dirtyAll();
-
-    this._gpuSize = 0;
-}
-
-Object.defineProperties(Texture.prototype, {
     /**
      * @name pc.Texture#minFilter
      * @type {number}
@@ -223,17 +226,16 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.FILTER_LINEAR_MIPMAP_NEAREST}
      * * {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
      */
-    minFilter: {
-        get: function () {
-            return this._minFilter;
-        },
-        set: function (v) {
-            if (this._minFilter !== v) {
-                this._minFilter = v;
-                this._parameterFlags |= 1;
-            }
+    get minFilter() {
+        return this._minFilter;
+    }
+
+    set minFilter(v) {
+        if (this._minFilter !== v) {
+            this._minFilter = v;
+            this._parameterFlags |= 1;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#magFilter
@@ -242,17 +244,16 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.FILTER_NEAREST}
      * * {@link pc.FILTER_LINEAR}
      */
-    magFilter: {
-        get: function () {
-            return this._magFilter;
-        },
-        set: function (v) {
-            if (this._magFilter !== v) {
-                this._magFilter = v;
-                this._parameterFlags |= 2;
-            }
+    get magFilter() {
+        return this._magFilter;
+    }
+
+    set magFilter(v) {
+        if (this._magFilter !== v) {
+            this._magFilter = v;
+            this._parameterFlags |= 2;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#addressU
@@ -262,17 +263,16 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
      * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
-    addressU: {
-        get: function () {
-            return this._addressU;
-        },
-        set: function (v) {
-            if (this._addressU !== v) {
-                this._addressU = v;
-                this._parameterFlags |= 4;
-            }
+    get addressU() {
+        return this._addressU;
+    }
+
+    set addressU(v) {
+        if (this._addressU !== v) {
+            this._addressU = v;
+            this._parameterFlags |= 4;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#addressV
@@ -282,17 +282,16 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
      * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
-    addressV: {
-        get: function () {
-            return this._addressV;
-        },
-        set: function (v) {
-            if (this._addressV !== v) {
-                this._addressV = v;
-                this._parameterFlags |= 8;
-            }
+    get addressV() {
+        return this._addressV;
+    }
+
+    set addressV(v) {
+        if (this._addressV !== v) {
+            this._addressV = v;
+            this._parameterFlags |= 8;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#addressW
@@ -302,24 +301,23 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
      * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
-    addressW: {
-        get: function () {
-            return this._addressW;
-        },
-        set: function (addressW) {
-            if (!this.device.webgl2) return;
-            if (!this._volume) {
-                // #ifdef DEBUG
-                console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
-                // #endif
-                return;
-            }
-            if (addressW !== this._addressW) {
-                this._addressW = addressW;
-                this._parameterFlags |= 16;
-            }
+    get addressW() {
+        return this._addressW;
+    }
+
+    set addressW(addressW) {
+        if (!this.device.webgl2) return;
+        if (!this._volume) {
+            // #ifdef DEBUG
+            console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+            // #endif
+            return;
         }
-    },
+        if (addressW !== this._addressW) {
+            this._addressW = addressW;
+            this._parameterFlags |= 16;
+        }
+    }
 
     /**
      * @name pc.Texture#compareOnRead
@@ -327,17 +325,16 @@ Object.defineProperties(Texture.prototype, {
      * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
-    compareOnRead: {
-        get: function () {
-            return this._compareOnRead;
-        },
-        set: function (v) {
-            if (this._compareOnRead !== v) {
-                this._compareOnRead = v;
-                this._parameterFlags |= 32;
-            }
+    get compareOnRead() {
+        return this._compareOnRead;
+    }
+
+    set compareOnRead(v) {
+        if (this._compareOnRead !== v) {
+            this._compareOnRead = v;
+            this._parameterFlags |= 32;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#compareFunc
@@ -351,17 +348,16 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.FUNC_EQUAL}
      * * {@link pc.FUNC_NOTEQUAL}
      */
-    compareFunc: {
-        get: function () {
-            return this._compareFunc;
-        },
-        set: function (v) {
-            if (this._compareFunc !== v) {
-                this._compareFunc = v;
-                this._parameterFlags |= 64;
-            }
+    get compareFunc() {
+        return this._compareFunc;
+    }
+
+    set compareFunc(v) {
+        if (this._compareFunc !== v) {
+            this._compareFunc = v;
+            this._parameterFlags |= 64;
         }
-    },
+    }
 
     /**
      * @name pc.Texture#anisotropy
@@ -369,17 +365,16 @@ Object.defineProperties(Texture.prototype, {
      * @description Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
-    anisotropy: {
-        get: function () {
-            return this._anisotropy;
-        },
-        set: function (v) {
-            if (this._anisotropy !== v) {
-                this._anisotropy = v;
-                this._parameterFlags |= 128;
-            }
+    get anisotropy() {
+        return this._anisotropy;
+    }
+
+    set anisotropy(v) {
+        if (this._anisotropy !== v) {
+            this._anisotropy = v;
+            this._parameterFlags |= 128;
         }
-    },
+    }
 
     /**
      * @private
@@ -388,33 +383,31 @@ Object.defineProperties(Texture.prototype, {
      * @type {boolean}
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
-    autoMipmap: {
-        get: function () {
-            return this._mipmaps;
-        },
-        set: function (v) {
-            this._mipmaps = v;
-        }
-    },
+    get autoMipmap() {
+        return this._mipmaps;
+    }
+
+    set autoMipmap(v) {
+        this._mipmaps = v;
+    }
 
     /**
      * @name pc.Texture#mipmaps
      * @type {boolean}
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
-    mipmaps: {
-        get: function () {
-            return this._mipmaps;
-        },
-        set: function (v) {
-            if (this._mipmaps !== v) {
-                this._mipmaps = v;
-                this._minFilterDirty = true;
+    get mipmaps() {
+        return this._mipmaps;
+    }
 
-                if (v) this._needsMipmapsUpload = true;
-            }
+    set mipmaps(v) {
+        if (this._mipmaps !== v) {
+            this._mipmaps = v;
+            this._minFilterDirty = true;
+
+            if (v) this._needsMipmapsUpload = true;
         }
-    },
+    }
 
     /**
      * @readonly
@@ -422,11 +415,9 @@ Object.defineProperties(Texture.prototype, {
      * @type {number}
      * @description The width of the texture in pixels.
      */
-    width: {
-        get: function () {
-            return this._width;
-        }
-    },
+    get width() {
+        return this._width;
+    }
 
     /**
      * @readonly
@@ -434,11 +425,9 @@ Object.defineProperties(Texture.prototype, {
      * @type {number}
      * @description The height of the texture in pixels.
      */
-    height: {
-        get: function () {
-            return this._height;
-        }
-    },
+    get height() {
+        return this._height;
+    }
 
     /**
      * @readonly
@@ -446,11 +435,9 @@ Object.defineProperties(Texture.prototype, {
      * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
-    depth: {
-        get: function () {
-            return this._depth;
-        }
-    },
+    get depth() {
+        return this._depth;
+    }
 
     /**
      * @readonly
@@ -482,11 +469,9 @@ Object.defineProperties(Texture.prototype, {
      * * {@link pc.PIXELFORMAT_ATC_RGB}
      * * {@link pc.PIXELFORMAT_ATC_RGBA}
      */
-    format: {
-        get: function () {
-            return this._format;
-        }
-    },
+    get format() {
+        return this._format;
+    }
 
     /**
      * @readonly
@@ -494,18 +479,14 @@ Object.defineProperties(Texture.prototype, {
      * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
      */
-    cubemap: {
-        get: function () {
-            return this._cubemap;
-        }
-    },
+    get cubemap() {
+        return this._cubemap;
+    }
 
-    gpuSize: {
-        get: function () {
-            var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-            return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
-        }
-    },
+    get gpuSize() {
+        var mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
+        return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+    }
 
     /**
      * @readonly
@@ -513,11 +494,9 @@ Object.defineProperties(Texture.prototype, {
      * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
-    volume: {
-        get: function () {
-            return this._volume;
-        }
-    },
+    get volume() {
+        return this._volume;
+    }
 
     /**
      * @name pc.Texture#flipY
@@ -526,29 +505,27 @@ Object.defineProperties(Texture.prototype, {
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
      * or textures set from raw pixel data. Defaults to true.
      */
-    flipY: {
-        get: function () {
-            return this._flipY;
-        },
-        set: function (flipY) {
-            if (this._flipY !== flipY) {
-                this._flipY = flipY;
-                this._needsUpload = true;
-            }
-        }
-    },
+    get flipY() {
+        return this._flipY;
+    }
 
-    premultiplyAlpha: {
-        get: function () {
-            return this._premultiplyAlpha;
-        },
-        set: function (premultiplyAlpha) {
-            if (this._premultiplyAlpha !== premultiplyAlpha) {
-                this._premultiplyAlpha = premultiplyAlpha;
-                this._needsUpload = true;
-            }
+    set flipY(flipY) {
+        if (this._flipY !== flipY) {
+            this._flipY = flipY;
+            this._needsUpload = true;
         }
-    },
+    }
+
+    get premultiplyAlpha() {
+        return this._premultiplyAlpha;
+    }
+
+    set premultiplyAlpha(premultiplyAlpha) {
+        if (this._premultiplyAlpha !== premultiplyAlpha) {
+            this._premultiplyAlpha = premultiplyAlpha;
+            this._needsUpload = true;
+        }
+    }
 
     /**
      * @readonly
@@ -556,18 +533,11 @@ Object.defineProperties(Texture.prototype, {
      * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
-    pot: {
-        get: function () {
-            return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
-        }
+    get pot() {
+        return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
     }
-});
 
-var _pixelSizeTable = null;
-var _blockSizeTable = null;
-
-// static functions
-Object.assign(Texture, {
+    // static functions
     /**
      * @private
      * @function
@@ -581,7 +551,7 @@ Object.assign(Texture, {
      * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
      * @returns {number} The amount of GPU memory required for the texture, in bytes.
      */
-    calcGpuSize: function (width, height, depth, format, mipmaps, cubemap) {
+    static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
         if (!_pixelSizeTable) {
             _pixelSizeTable = [];
             _pixelSizeTable[PIXELFORMAT_A8] = 1;
@@ -653,25 +623,23 @@ Object.assign(Texture, {
 
         return result * (cubemap ? 6 : 1);
     }
-});
 
-// Public methods
-Object.assign(Texture.prototype, {
+    // Public methods
     /**
      * @function
      * @name pc.Texture#destroy
      * @description Forcibly free up the underlying WebGL resource owned by the texture.
      */
-    destroy: function () {
+    destroy() {
         if (this.device) {
             this.device.destroyTexture(this);
         }
         this.device = null;
         this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
-    },
+    }
 
     // Force a full resubmission of the texture to WebGL (used on a context restore event)
-    dirtyAll: function () {
+    dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
         this._needsUpload = true;
@@ -679,7 +647,7 @@ Object.assign(Texture.prototype, {
         this._mipmapsUploaded = false;
 
         this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
-    },
+    }
 
     /**
      * @function
@@ -690,9 +658,8 @@ Object.assign(Texture.prototype, {
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
      * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
      */
-    lock: function (options) {
+    lock(options = {}) {
         // Initialize options to some sensible defaults
-        options = options || { level: 0, face: 0, mode: TEXTURELOCK_WRITE };
         if (options.level === undefined) {
             options.level = 0;
         }
@@ -748,7 +715,7 @@ Object.assign(Texture.prototype, {
         }
 
         return this._levels[options.level];
-    },
+    }
 
     /**
      * @function
@@ -760,12 +727,10 @@ Object.assign(Texture.prototype, {
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
      * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
      */
-    setSource: function (source, mipLevel) {
+    setSource(source, mipLevel = 0) {
         var i;
         var invalid = false;
         var width, height;
-
-        mipLevel = mipLevel || 0;
 
         if (this._cubemap) {
             if (source[0]) {
@@ -845,7 +810,7 @@ Object.assign(Texture.prototype, {
             // reupload
             this.upload();
         }
-    },
+    }
 
     /**
      * @function
@@ -856,17 +821,16 @@ Object.assign(Texture.prototype, {
      * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
      * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
      */
-    getSource: function (mipLevel) {
-        mipLevel = mipLevel || 0;
+    getSource(mipLevel = 0) {
         return this._levels[mipLevel];
-    },
+    }
 
     /**
      * @function
      * @name pc.Texture#unlock
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
-    unlock: function () {
+    unlock() {
         // #ifdef DEBUG
         if (this._lockedLevel === -1) {
             console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
@@ -876,7 +840,7 @@ Object.assign(Texture.prototype, {
         // Upload the new pixel data
         this.upload();
         this._lockedLevel = -1;
-    },
+    }
 
     /**
      * @function
@@ -886,14 +850,16 @@ Object.assign(Texture.prototype, {
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
      * this is done once every frame before video textured geometry is rendered.
      */
-    upload: function () {
+    upload() {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
-    },
+    }
 
-    getDds: function () {
+    getDds() {
+        // #ifdef DEBUG
         if (this.format !== PIXELFORMAT_R8_G8_B8_A8)
             console.error("This format is not implemented yet");
+        // #endif
 
         var fsize = 128;
         var i = 0;
@@ -904,19 +870,25 @@ Object.assign(Texture.prototype, {
             if (!this.cubemap) {
                 mipSize = this._levels[i].length;
                 if (!mipSize) {
+                    // #ifdef DEBUG
                     console.error("No byte array for mip " + i);
+                    // #endif
                     return;
                 }
                 fsize += mipSize;
             } else {
                 for (face = 0; face < 6; face++) {
                     if (!this._levels[i][face]) {
+                        // #ifdef DEBUG
                         console.error('No level data for mip ' + i + ', face ' + face);
+                        // #endif
                         return;
                     }
                     mipSize = this._levels[i][face].length;
                     if (!mipSize) {
+                        // #ifdef DEBUG
                         console.error("No byte array for mip " + i + ", face " + face);
+                        // #endif
                         return;
                     }
                     fsize += mipSize;
@@ -994,6 +966,6 @@ Object.assign(Texture.prototype, {
 
         return buff;
     }
-});
+}
 
 export { Texture };
