@@ -10,11 +10,6 @@ class Version {
                this.revision === other.revision;
     }
 
-    notequals(other) {
-        return this.globalId !== other.globalId ||
-               this.revision !== other.revision;
-    }
-
     copy(other) {
         this.globalId = other.globalId;
         this.revision = other.revision;
