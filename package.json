@@ -33,7 +33,9 @@
   },
   "eslintIgnore": [
     "examples/lib/*",
-    "src/polyfill/*"
+    "src/polyfill/*",
+    "examples/assemblyscript/Loader.js",
+    "src/math_assemblyscript/*"
   ],
   "devDependencies": {
     "@babel/core": "^7.12.10",

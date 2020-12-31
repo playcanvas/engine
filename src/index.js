@@ -80,9 +80,6 @@ export { Camera } from './scene/camera.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
-// #ifdef X32
-//export { GraphNode as GraphNodeAS } from './scene_assemblyscript/graph-node.ts';
-// #endif
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/layer-composition.js';
 export { Light } from './scene/light.js';
