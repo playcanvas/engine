@@ -445,7 +445,7 @@ class Light {
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
 
-    get shapeshape() {
+    get shape() {
         return this._shape;
     }
 
