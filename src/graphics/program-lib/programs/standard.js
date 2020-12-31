@@ -1184,8 +1184,6 @@ var standard = {
         }
         code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
-        //if (options.useSpecular && (lighting || reflections)) {
-
         if ((lighting && options.useSpecular) || reflections) {
             if (options.specularAntialias && options.normalMap) {
                 if (options.normalizeNormalMap && needsNormal) {
