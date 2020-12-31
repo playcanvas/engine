@@ -3,6 +3,7 @@ import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
 import { version } from './package.json';
 import Preprocessor from 'preprocessor';
+import typescript from 'rollup-plugin-typescript';
 
 const execSync = require('child_process').execSync;
 const revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -81,6 +82,52 @@ function shaderChunks(removeComments) {
 
             return {
                 code: `export default ${JSON.stringify(code)};`,
+                map: { mappings: '' }
+            };
+        }
+    };
+}
+
+function importAssemblyScriptInstead(options) {
+    const filter = createFilter([
+        '**/*.js'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+            code = code.replace(/math\/quat\.js/g, "math_assemblyscript/quat.js");
+            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript/mat3.js");
+            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript/mat4.js");
+            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript/vec2.js");
+            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript/vec3.js");
+            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript/vec4.js");
+            //code = code.replace(/scene\/graph-node\.js/g, "scene_assemblyscript/graph-node.ts");
+            return {
+                code: code,
+                map: { mappings: '' }
+            };
+        }
+    };
+}
+
+function importAssemblyScriptAsJavaScriptInstead(options) {
+    const filter = createFilter([
+        '**/*.js',
+        '**/*.ts'
+    ], []);
+
+    return {
+        transform(code, id) {
+            if (!filter(id)) return;
+            code = code.replace(/math\/quat\.js/g, "math_assemblyscript_js/quat.ts");
+            code = code.replace(/math\/mat3\.js/g, "math_assemblyscript_js/mat3.ts");
+            code = code.replace(/math\/mat4\.js/g, "math_assemblyscript_js/mat4.ts");
+            code = code.replace(/math\/vec2\.js/g, "math_assemblyscript_js/vec2.ts");
+            code = code.replace(/math\/vec3\.js/g, "math_assemblyscript_js/vec3.ts");
+            code = code.replace(/math\/vec4\.js/g, "math_assemblyscript_js/vec4.ts");
+            return {
+                code: code,
                 map: { mappings: '' }
             };
         }
@@ -255,6 +302,88 @@ const target_extras = {
     ]
 };
 
+
+const target_as32 = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.assemblyscript_32.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true,
+            X32: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(es5Options),
+        spacesToTabs(),
+        importAssemblyScriptInstead()
+    ]
+};
+
+const target_as64 = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.assemblyscript_64.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true,
+            X64: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(es5Options),
+        spacesToTabs(),
+        importAssemblyScriptInstead()
+    ]
+};
+
+const target_asjs = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.assemblyscriptjs.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(es5Options),
+        spacesToTabs(),
+        typescript(),
+        importAssemblyScriptAsJavaScriptInstead()
+    ]
+};
+
 let targets = [
     target_release_es5,
     target_release_es6,
@@ -270,6 +399,9 @@ if (process.env.target) {
         case "es6":      targets = [target_release_es6, target_extras]; break;
         case "debug":    targets = [target_debug,       target_extras]; break;
         case "profiler": targets = [target_profiler,    target_extras]; break;
+        case "as32":     targets = [target_as32,        target_extras]; break;
+        case "as64":     targets = [target_as64,        target_extras]; break;
+        case "asjs":     targets = [target_asjs,        target_extras]; break;
     }
 }
 
