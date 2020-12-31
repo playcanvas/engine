@@ -8,8 +8,8 @@ import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../grap
  * @class
  * @name pc.XrDepthSensing
  * @augments pc.EventHandler
- * @classdesc Depth Sensing provides depth information which is reconstructed using underlying AR system. It provides ability to query depth value (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for: reconstructing real world geometry; virtual object placement; occlusion of virtual objects by real world geometry; and more.
- * @description Depth Sensing provides depth information which is reconstructed using underlying AR system. It provides ability to query depth value (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for: reconstructing real world geometry; virtual object placement; occlusion of virtual objects by real world geometry; and more.
+ * @classdesc Depth Sensing provides depth information which is reconstructed using the underlying AR system. It provides the ability to query depth values (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for reconstructing real world geometry, virtual object placement, occlusion of virtual objects by real world geometry and more.
+ * @description Depth Sensing provides depth information which is reconstructed using the underlying AR system. It provides the ability to query depth values (CPU path) or access a depth texture (GPU path). Depth information can be used (not limited to) for reconstructing real world geometry, virtual object placement, occlusion of virtual objects by real world geometry and more.
  * @param {pc.XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Depth Sensing is supported.
  * @property {number} width Width of depth texture or 0 if not available.
@@ -97,7 +97,7 @@ XrDepthSensing.prototype.constructor = XrDepthSensing;
 /**
  * @event
  * @name pc.XrDepthSensing#resize
- * @description Fired when depth sensing texture been resized. So {@link pc.XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
+ * @description Fired when the depth sensing texture been resized. {@link pc.XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
  * @param {number} width - The new width of the depth texture in pixels.
  * @param {number} height - The new height of the depth texture in pixels.
  * @example
@@ -185,7 +185,7 @@ XrDepthSensing.prototype.update = function (frame, view) {
  * @name pc.XrDepthSensing#getDepth
  * @param {number} x - x coordinate of pixel in depth texture.
  * @param {number} y - y coordinate of pixel in depth texture.
- * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link pc.XrDepthSensing#width} and {@link pc.XrDepthSensing#height}. This is not using GPU texture, and is a CPU path.
+ * @description Get depth value from depth information in meters. X and Y coordinates are in depth texture space, use {@link pc.XrDepthSensing#width} and {@link pc.XrDepthSensing#height}. This is not using a GPU texture and is a CPU path.
  * @example
  * var depth = app.xr.depthSensing.getDepth(x, y);
  * if (depth !== null) {
@@ -237,7 +237,7 @@ Object.defineProperty(XrDepthSensing.prototype, 'height', {
 /**
  * @name pc.XrDepthSensing#texture
  * @type {pc.Texture}
- * @description Texture that contains packed depth information. Format of this texture is {@link pc.PIXELFORMAT_L8_A8}. And is UV transformed based on onderlying AR system, which can be normalized using {@link pc.XrDepthSensing#uvMatrix}.
+ * @description Texture that contains packed depth information. The format of this texture is {@link pc.PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can be normalized using {@link pc.XrDepthSensing#uvMatrix}.
  * @example
  * material.diffuseMap = depthSensing.texture;
  * @example
@@ -274,7 +274,7 @@ Object.defineProperty(XrDepthSensing.prototype, 'texture', {
 /**
  * @name pc.XrDepthSensing#uvMatrix
  * @type {pc.Mat4}
- * @description Data of 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when depth texture is resized, refer to {@link pc.XrDepthSensing#resize}
+ * @description 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when the depth texture is resized. Refer to {@link pc.XrDepthSensing#resize}.
  * @example
  * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
  */
