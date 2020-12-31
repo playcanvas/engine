@@ -130,37 +130,37 @@ function collectModels(node, nodes, nodesMeshInstances, allNodes) {
  * @param {pc.ForwardRenderer} renderer - The renderer.
  * @param {pc.AssetRegistry} assets - Registry of assets to lightmap.
  */
-function Lightmapper(device, root, scene, renderer, assets) {
-    this.device = device;
-    this.root = root;
-    this.scene = scene;
-    this.renderer = renderer;
-    this.assets = assets;
+class Lightmapper {
+    constructor(device, root, scene, renderer, assets) {
+        this.device = device;
+        this.root = root;
+        this.scene = scene;
+        this.renderer = renderer;
+        this.assets = assets;
 
-    // #ifdef PROFILER
-    this._stats = {
-        renderPasses: 0,
-        lightmapCount: 0,
-        totalRenderTime: 0,
-        forwardTime: 0,
-        fboTime: 0,
-        shadowMapTime: 0,
-        compileTime: 0,
-        shadersLinked: 0
-    };
-    // #endif
-}
+        // #ifdef PROFILER
+        this._stats = {
+            renderPasses: 0,
+            lightmapCount: 0,
+            totalRenderTime: 0,
+            forwardTime: 0,
+            fboTime: 0,
+            shadowMapTime: 0,
+            compileTime: 0,
+            shadersLinked: 0
+        };
+        // #endif
+    }
 
-Object.assign(Lightmapper.prototype, {
-    destroy: function () {
+    destroy() {
         this.device = null;
         this.root = null;
         this.scene = null;
         this.renderer = null;
         this.assets = null;
-    },
+    }
 
-    calculateLightmapSize: function (node) {
+    calculateLightmapSize(node) {
         var data, parent;
         var sizeMult = this.scene.lightmapSizeMultiplier || 16;
         var scale = tempVec;
@@ -226,7 +226,7 @@ Object.assign(Lightmapper.prototype, {
         totalArea = Math.sqrt(totalArea);
 
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
-    },
+    }
 
     /**
      * @function
@@ -242,7 +242,7 @@ Object.assign(Lightmapper.prototype, {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      */
-    bake: function (nodes, mode) {
+    bake(nodes, mode) {
 
         // #ifdef PROFILER
         var startTime = now();
@@ -878,6 +878,6 @@ Object.assign(Lightmapper.prototype, {
         stats.fboTime = device._renderTargetCreationTime - startFboTime;
         // #endif
     }
-});
+}
 
 export { Lightmapper };
