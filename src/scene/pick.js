@@ -1,24 +1,36 @@
-Object.assign(pc, function () {
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
+import { GraphicsDevice } from '../graphics/device.js';
+import { RenderTarget } from '../graphics/render-target.js';
+import { Texture } from '../graphics/texture.js';
 
-    var _deviceDeprecationWarning = false;
-    var _getSelectionDeprecationWarning = false;
-    var _prepareDeprecationWarning = false;
+import { ASPECT_MANUAL, SHADER_PICK, SORTMODE_NONE } from './constants.js';
+import { Camera } from './camera.js';
+import { Command } from './mesh-instance.js';
+import { Layer } from './layer.js';
+import { LayerComposition } from './layer-composition.js';
 
-    /**
-     * @class
-     * @name pc.Picker
-     * @classdesc Picker object used to select mesh instances from screen coordinates.
-     * @description Create a new instance of a Picker object.
-     * @param {pc.Application} app - The application managing this picker instance.
-     * @param {number} width - The width of the pick buffer in pixels.
-     * @param {number} height - The height of the pick buffer in pixels.
-     * @property {number} width Width of the pick buffer in pixels (read-only).
-     * @property {number} height Height of the pick buffer in pixels (read-only).
-     * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
-     */
-    var Picker = function (app, width, height) {
-        if (app instanceof pc.GraphicsDevice) {
-            app = pc.Application.getApplication();
+import { Application } from '../framework/application.js';
+
+var _deviceDeprecationWarning = false;
+var _getSelectionDeprecationWarning = false;
+var _prepareDeprecationWarning = false;
+
+/**
+ * @class
+ * @name pc.Picker
+ * @classdesc Picker object used to select mesh instances from screen coordinates.
+ * @description Create a new instance of a Picker object.
+ * @param {pc.Application} app - The application managing this picker instance.
+ * @param {number} width - The width of the pick buffer in pixels.
+ * @param {number} height - The height of the pick buffer in pixels.
+ * @property {number} width Width of the pick buffer in pixels (read-only).
+ * @property {number} height Height of the pick buffer in pixels (read-only).
+ * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ */
+class Picker {
+    constructor(app, width, height) {
+        if (app instanceof GraphicsDevice) {
+            app = Application.getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
                 // #ifdef DEBUG
@@ -36,6 +48,9 @@ Object.assign(pc, function () {
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
 
+        // mapping table from ids to meshInstances
+        this.mapping = [];
+
         this.scene = null;
         this.drawCalls = [];
         this.layer = null;
@@ -44,22 +59,22 @@ Object.assign(pc, function () {
         this.clearOptions = {
             color: [1, 1, 1, 1],
             depth: 1,
-            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
         };
 
         var self = this;
         this._clearDepthOptions = {
             depth: 1.0,
-            flags: pc.CLEARFLAG_DEPTH
+            flags: CLEARFLAG_DEPTH
         };
-        this.clearDepthCommand = new pc.Command(0, 0, function (){
+        this.clearDepthCommand = new Command(0, 0, function (){
             device.clear(self._clearDepthOptions);
         });
 
         this.resize(width, height);
 
         this._ignoreOpacityFor = null; // meshInstance
-    };
+    }
 
     /**
      * @function
@@ -78,7 +93,7 @@ Object.assign(pc, function () {
      * // Get all models in rectangle with corners at (10,20) and (20,40)
      * var selection = picker.getSelection(10, 20, 10, 20);
      */
-    Picker.prototype.getSelection = function (x, y, width, height) {
+    getSelection(x, y, width, height) {
         var device = this.device;
 
         if (typeof x === 'object') {
@@ -98,8 +113,11 @@ Object.assign(pc, function () {
             y = this.layer.renderTarget.height - (y + (height || 1));
         }
 
-        width = width || 1;
-        height = height || 1;
+        // make sure we have nice numbers to work with
+        x = Math.floor(x);
+        y = Math.floor(y);
+        width = Math.floor(Math.max(width || 1, 1));
+        height = Math.floor(Math.max(height || 1, 1));
 
         // Cache active render target
         var prevRenderTarget = device.renderTarget;
@@ -117,8 +135,7 @@ Object.assign(pc, function () {
         device.setRenderTarget(prevRenderTarget);
 
         var selection = [];
-
-        var drawCalls = this.layer.instances.visibleOpaque[0].list;
+        var mapping = this.mapping;
 
         var r, g, b, index;
         for (var i = 0; i < width * height; i++) {
@@ -128,7 +145,8 @@ Object.assign(pc, function () {
             index = r << 16 | g << 8 | b;
             // White is 'no selection'
             if (index !== 0xffffff) {
-                var selectedMeshInstance = drawCalls[index];
+                // TODO: optimize search using set instead of array
+                var selectedMeshInstance = mapping[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
                 }
@@ -136,7 +154,7 @@ Object.assign(pc, function () {
         }
 
         return selection;
-    };
+    }
 
     /**
      * @function
@@ -147,29 +165,31 @@ Object.assign(pc, function () {
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {pc.CameraComponent} camera - The camera component used to render the scene.
      * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
-     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
+     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
-    Picker.prototype.prepare = function (camera, scene, arg) {
+    prepare(camera, scene, arg) {
         var device = this.device;
         var i, j;
         var self = this;
 
-        if (camera instanceof pc.Camera) {
+        if (camera instanceof Camera) {
             // #ifdef DEBUG
             if (!_getSelectionDeprecationWarning) {
                 _getSelectionDeprecationWarning = true;
                 console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
             }
-
             // #endif
-            camera = camera._component;
+
+            // Get the camera component
+            camera = camera.node.camera;
         }
 
         this.scene = scene;
         var sourceLayer = null;
         var sourceRt = null;
 
-        if (arg instanceof pc.Layer) {
+        if (arg instanceof Layer) {
             sourceLayer = arg;
         } else {
             sourceRt = arg;
@@ -179,24 +199,25 @@ Object.assign(pc, function () {
         if (!this.layer) {
             var pickColorId = device.scope.resolve('uColor');
 
-            this.layer = new pc.Layer({
+            this.layer = new Layer({
                 name: "Picker",
-                shaderPass: pc.SHADER_PICK,
-                opaqueSortMode: pc.SORTMODE_NONE,
+                shaderPass: SHADER_PICK,
+                opaqueSortMode: SORTMODE_NONE,
 
                 onEnable: function () {
                     if (this.renderTarget) return;
-                    var colorBuffer = new pc.Texture(device, {
-                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    var colorBuffer = new Texture(device, {
+                        format: PIXELFORMAT_R8_G8_B8_A8,
                         width: self.width,
-                        height: self.height
+                        height: self.height,
+                        mipmaps: false
                     });
                     colorBuffer.name = 'pick';
-                    colorBuffer.minFilter = pc.FILTER_NEAREST;
-                    colorBuffer.magFilter = pc.FILTER_NEAREST;
-                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new pc.RenderTarget(device, colorBuffer, {
+                    colorBuffer.minFilter = FILTER_NEAREST;
+                    colorBuffer.magFilter = FILTER_NEAREST;
+                    colorBuffer.addressU = ADDRESS_CLAMP_TO_EDGE;
+                    colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new RenderTarget(device, colorBuffer, {
                         depth: true
                     });
                 },
@@ -214,10 +235,11 @@ Object.assign(pc, function () {
                     self.pickColor[2] = (index & 0xff) / 255;
                     pickColorId.setValue(self.pickColor);
                     device.setBlending(false);
+                    self.mapping[index] = meshInstance;
                 }
             });
 
-            this.layerComp = new pc.LayerComposition();
+            this.layerComp = new LayerComposition();
             this.layerComp.pushOpaque(this.layer);
 
             this.meshInstances = this.layer.opaqueMeshInstances;
@@ -287,33 +309,42 @@ Object.assign(pc, function () {
         // save old camera state
         this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
 
+        // clear registered meshes, rendering will register them again
+        self.mapping.length = 0;
+
         // Render
         this.app.renderer.renderComposition(this.layerComp);
 
         // restore old camera state
         this.onLayerPostRender(this.layer);
-    };
+    }
 
-    Picker.prototype.onLayerPreRender = function (layer, sourceLayer, sourceRt) {
+    onLayerPreRender(layer, sourceLayer, sourceRt) {
         if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
             layer.onDisable();
             layer.onEnable();
         }
+
+        // back up original settings
         layer.oldClear = layer.cameras[0].camera._clearOptions;
         layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
         layer.oldAspect = layer.cameras[0].aspectRatio;
+
+        // set up new settings
         layer.cameras[0].camera._clearOptions = this.clearOptions;
-        layer.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+        layer.cameras[0].aspectRatioMode = ASPECT_MANUAL;
         var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
         layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
         this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
-    };
+    }
 
-    Picker.prototype.onLayerPostRender = function (layer) {
+    onLayerPostRender(layer) {
+
+        // restore original settings
         layer.cameras[0].camera._clearOptions = layer.oldClear;
         layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
         layer.cameras[0].aspectRatio = layer.oldAspect;
-    };
+    }
 
     /**
      * @function
@@ -326,18 +357,14 @@ Object.assign(pc, function () {
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
-    Picker.prototype.resize = function (width, height) {
+    resize(width, height) {
         this.width = width;
         this.height = height;
-    };
+    }
 
-    Object.defineProperty(Picker.prototype, 'renderTarget', {
-        get: function () {
-            return this.layer.renderTarget;
-        }
-    });
+    get renderTarget() {
+        return this.layer.renderTarget;
+    }
+}
 
-    return {
-        Picker: Picker
-    };
-}());
+export { Picker };

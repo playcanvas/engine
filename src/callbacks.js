@@ -52,21 +52,20 @@
 
 /**
  * @callback pc.callbacks.LoadHierarchy
- * @description Callback used by {@link pc.Application#loadSceneHierarchy}.
+ * @description Callback used by {@link pc.SceneRegistry#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
  * @callback pc.callbacks.LoadSettings
- * @description Callback used by {@link pc.Application#loadSceneSettings}.
+ * @description Callback used by {@link pc.SceneRegistry#loadSceneSettings}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
- * @private
  * @callback pc.callbacks.LoadScene
- * @description Callback used by {@link pc.Application#loadScene}.
+ * @description Callback used by {@link pc.SceneRegistry#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
  */
@@ -176,4 +175,11 @@
  * @callback pc.callbacks.XrError
  * @description Callback used by {@link pc.XrManager#endXr} and {@link pc.XrManager#startXr}.
  * @param {Error|null} err - The Error object or null if operation was successfull.
+ */
+
+/**
+ * @callback pc.callbacks.XrHitTestStart
+ * @description Callback used by {@link pc.XrHitTest#start} and {@link pc.XrHitTest#startForInputSource}.
+ * @param {Error|null} err - The Error object if failed to create hit test source or null.
+ * @param {pc.XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
  */

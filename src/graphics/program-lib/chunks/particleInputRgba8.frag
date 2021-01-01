@@ -38,4 +38,3 @@ void readInput(float uv) {
     float maxPosLife = lifetime+1.0;
     inLife = inLife * (maxNegLife + maxPosLife) - maxNegLife;
 }
-

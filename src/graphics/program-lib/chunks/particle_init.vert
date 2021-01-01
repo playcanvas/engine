@@ -21,9 +21,9 @@ uniform vec3 wrapBounds;
 uniform vec3 emitterScale, emitterPos, faceTangent, faceBinorm;
 uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed, delta;
 uniform sampler2D particleTexOUT, particleTexIN;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
+uniform highp sampler2D internalTex0;
+uniform highp sampler2D internalTex1;
+uniform highp sampler2D internalTex2;
 
 #ifndef CAMERAPLANES
 #define CAMERAPLANES
@@ -37,4 +37,3 @@ vec3 inVel;
 float inAngle;
 bool inShow;
 float inLife;
-

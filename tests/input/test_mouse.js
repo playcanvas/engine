@@ -24,7 +24,7 @@ describe('pc.mouse', function () {
     });
 
     it("mousedown: middlebutton", function () {
-        m.on(pc.input.EVENT_MOUSEDOWN, function (event) {
+        m.on(pc.EVENT_MOUSEDOWN, function (event) {
             equal(event.x, 8);
             equal(event.y, 8);
             equal(event.dx, 8);
@@ -43,7 +43,7 @@ describe('pc.mouse', function () {
     });
 
     it("mouseup: middlebutton", function () {
-        m.on(pc.input.EVENT_MOUSEUP, function (event) {
+        m.on(pc.EVENT_MOUSEUP, function (event) {
             equal(event.x, 8);
             equal(event.y, 8);
             equal(event.dx, 8);
@@ -68,7 +68,7 @@ describe('pc.mouse', function () {
             pointerY: 16
         });
 
-        m.on(pc.input.EVENT_MOUSEMOVE, function (event) {
+        m.on(pc.EVENT_MOUSEMOVE, function (event) {
             equal(event.x, 24);
             equal(event.y, 24);
             equal(event.dx, 16);
@@ -88,7 +88,7 @@ describe('pc.mouse', function () {
     });
 
     it("mousewheel: fires", function () {
-        m.on(pc.input.EVENT_MOUSEWHEEL, function (event) {
+        m.on(pc.EVENT_MOUSEWHEEL, function (event) {
             equal(event.x, 8);
             equal(event.y, 8);
             equal(event.dx, 8);

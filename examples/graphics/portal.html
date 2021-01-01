@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body { 
             margin: 0;
@@ -36,6 +37,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         app.start();
 
         ///////////////////////////////
@@ -43,8 +46,11 @@
         ///////////////////////////////
         var Rotator = pc.createScript('rotator');
 
-        Rotator.prototype.update = function(dt) {
-            this.entity.setEulerAngles(0, Math.sin(new Date().getTime() / 500) * 20, 0);
+        var t = 0;
+
+        Rotator.prototype.update = function (dt) {
+            t += dt;
+            this.entity.setEulerAngles(0, Math.sin(t) * 20, 0);
         };
 
         //////////////////////////////////////////////////////////////////
@@ -52,7 +58,7 @@
         //////////////////////////////////////////////////////////////////
         var InsidePortal = pc.createScript('insidePortal');
 
-        InsidePortal.prototype.initialize = function() {
+        InsidePortal.prototype.initialize = function () {
             var meshInstances = this.entity.model.meshInstances;
             var mat, i;
             var stencil = new pc.StencilParameters({
@@ -64,7 +70,7 @@
                 mat = meshInstances[i].material;
                 mat.stencilBack = mat.stencilFront = stencil;
             }
-            
+        
             var prt = this.entity.particlesystem;
             if (prt) {
                 prt.emitter.meshInstance.layer -= 2;
@@ -78,7 +84,7 @@
         ///////////////////////////////////////////////////////////////////
         var OutsidePortal = pc.createScript('outsidePortal');
 
-        OutsidePortal.prototype.initialize = function() {
+        OutsidePortal.prototype.initialize = function () {
             var meshInstances = this.entity.model.meshInstances;
             var mat, i;
             var stencil = new pc.StencilParameters({
@@ -90,7 +96,7 @@
                 mat = meshInstances[i].material;
                 mat.stencilBack = mat.stencilFront = stencil;
             }
-            
+        
             var prt = this.entity.particlesystem;
             if (prt) {
                 prt.emitter.meshInstance.meshes[i].layer--;
@@ -105,7 +111,7 @@
         var Portal = pc.createScript('portal');
 
         // initialize code called once per entity
-        Portal.prototype.initialize = function() {
+        Portal.prototype.initialize = function () {
             // We only want to write to the stencil buffer
             var mat = this.entity.model.meshInstances[0].material;
             mat.depthWrite = false;
@@ -139,7 +145,6 @@
             type: 'directional',
             color: new pc.Color(1, 1, 1)
         });
-        light.setLocalPosition(2, 2, -2);
         light.setEulerAngles(45, 135, 0);
 
         // Create a root for the graphical scene
@@ -150,7 +155,7 @@
         // Create a Entity with a Box model component
         var box = new pc.Entity();
         box.addComponent('model', {
-            type: 'box',
+            type: 'box'
         });
         box.model.material = insideMat;
         box.addComponent('particlesystem', {
@@ -171,7 +176,7 @@
         // Create the portal entity
         var portal = new pc.Entity();
         portal.addComponent('model', {
-            type: 'plane',
+            type: 'plane'
         });
         portal.model.material = portalMat;
         portal.addComponent('script');
@@ -183,7 +188,7 @@
         // Create the portal border entity
         var border = new pc.Entity();
         border.addComponent('model', {
-            type: 'plane',
+            type: 'plane'
         });
         border.model.material = borderMat;
         border.addComponent('script');
@@ -195,7 +200,7 @@
         // Create an entity with a sphere model component
         var sphere = new pc.Entity();
         sphere.addComponent('model', {
-            type: 'sphere',
+            type: 'sphere'
         });
         sphere.model.material = outsideMat;
         sphere.addComponent('script');

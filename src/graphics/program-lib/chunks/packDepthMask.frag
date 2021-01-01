@@ -8,4 +8,3 @@ vec4 packFloat(float depth) {
     res -= res.xxyz * bit_mask;
     return res;
 }
-
