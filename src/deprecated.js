@@ -926,6 +926,38 @@ Application.prototype.disableFullscreen = function (success) {
     document.exitFullscreen();
 };
 
+Application.prototype.getSceneUrl = function (name) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
+    // #endif
+    var entry = this.scenes.find(name);
+    if (entry) {
+        return entry.url;
+    }
+    return null;
+};
+
+Application.prototype.loadScene = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
+    // #endif
+    this.scenes.loadScene(url, callback);
+};
+
+Application.prototype.loadSceneHierarchy = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
+    // #endif
+    this.scenes.loadSceneHierarchy(url, callback);
+};
+
+Application.prototype.loadSceneSettings = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
+    // #endif
+    this.scenes.loadSceneSettings(url, callback);
+};
+
 Object.defineProperty(CameraComponent.prototype, "node", {
     get: function () {
         // #ifdef DEBUG
