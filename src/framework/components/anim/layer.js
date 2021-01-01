@@ -1,4 +1,4 @@
-import { AnimTrack } from '../../../anim/anim.js';
+import { AnimTrack } from '../../../anim/anim-track.js';
 
 /**
  * @private

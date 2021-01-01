@@ -68,8 +68,8 @@ import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
 
-import { Animation, Key, Node } from './anim/animation.js';
-import { Skeleton } from './anim/skeleton.js';
+import { Animation, Key, Node } from './animation/animation.js';
+import { Skeleton } from './animation/skeleton.js';
 
 import { Channel } from './audio/channel.js';
 import { Channel3d } from './audio/channel3d.js';

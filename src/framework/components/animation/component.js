@@ -1,5 +1,9 @@
-import { AnimClip, AnimEvaluator, AnimTrack, DefaultAnimBinder } from '../../../anim/anim.js';
-import { Skeleton } from '../../../anim/skeleton.js';
+import { AnimClip } from '../../../anim/anim-clip.js';
+import { AnimEvaluator } from '../../../anim/anim-evaluator.js';
+import { AnimTrack } from '../../../anim/anim-track.js';
+import { DefaultAnimBinder } from '../../../anim/default-anim-binder.js';
+
+import { Skeleton } from '../../../animation/skeleton.js';
 
 import { Asset } from '../../../asset/asset.js';
 
