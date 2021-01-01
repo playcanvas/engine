@@ -1,6 +1,6 @@
 import { Asset } from '../../../asset/asset.js';
 
-import { AnimEvaluator } from '../../../anim/anim.js';
+import { AnimEvaluator } from '../../../anim/anim-evaluator.js';
 
 import { Component } from '../component.js';
 

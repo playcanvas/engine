@@ -1,4 +1,4 @@
-import { AnimClip } from '../../../anim/anim.js';
+import { AnimClip } from '../../../anim/anim-clip.js';
 
 import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,

@@ -102,10 +102,20 @@ export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // ANIMATION
+export { Animation, Key, Node } from './animation/animation.js';
+export { Skeleton } from './animation/skeleton.js';
+
+// ANIM
 export * from './anim/constants.js';
-export { Animation, Key, Node } from './anim/animation.js';
-export { Skeleton } from './anim/skeleton.js';
-export { AnimBinder, AnimClip, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
+export { AnimBinder } from './anim/anim-binder.js';
+export { AnimClip } from './anim/anim-clip.js';
+export { AnimCurve } from './anim/anim-curve.js';
+export { AnimData } from './anim/anim-data.js';
+export { AnimEvaluator } from './anim/anim-evaluator.js';
+export { AnimSnapshot } from './anim/anim-snapshot.js';
+export { AnimTarget } from './anim/anim-target.js';
+export { AnimTrack } from './anim/anim-track.js';
+export { DefaultAnimBinder } from './anim/default-anim-binder.js';
 
 // SOUND
 export * from './audio/constants.js';

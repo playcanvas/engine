@@ -1,4 +1,5 @@
-import { AnimTarget, DefaultAnimBinder } from '../../../anim/anim.js';
+import { AnimTarget } from '../../../anim/anim-target.js';
+import { DefaultAnimBinder } from '../../../anim/default-anim-binder.js';
 
 import { Color } from '../../../core/color.js';
 

@@ -1,4 +1,4 @@
-import { AnimBinder } from '../../../anim/anim.js';
+import { AnimBinder } from '../../../anim/anim-binder.js';
 
 /**
  * @private
