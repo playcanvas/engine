@@ -10,7 +10,6 @@ import {
 
 /**
  * @private
- * @component AnimNode
  * @class
  * @name pc.AnimNode
  * @classdesc AnimNodes are used to represent a single animation track in the current state. Each state can contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will control the weight (contribution to the states final animation) of it's child AnimNodes.
@@ -85,7 +84,6 @@ Object.defineProperties(AnimNode.prototype, {
 
 /**
  * @private
- * @component BlendTree
  * @class
  * @name pc.BlendTree
  * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other BlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
@@ -296,7 +294,6 @@ Object.assign(BlendTree.prototype, {
 
 /**
  * @private
- * @component AnimState
  * @class
  * @name pc.AnimState
  * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a BlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
@@ -418,7 +415,6 @@ Object.defineProperties(AnimState.prototype, {
 
 /**
  * @private
- * @component AnimTransition
  * @class
  * @name pc.AnimTransition
  * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
@@ -528,7 +524,6 @@ Object.defineProperties(AnimTransition.prototype, {
 
 /**
  * @private
- * @component AnimController
  * @class
  * @name pc.AnimController
  * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.

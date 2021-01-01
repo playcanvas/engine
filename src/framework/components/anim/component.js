@@ -14,7 +14,7 @@ import { AnimStateGraph } from './state-graph.js';
 
 /**
  * @private
- * @component Anim
+ * @component
  * @class
  * @name pc.AnimComponent
  * @augments pc.Component
