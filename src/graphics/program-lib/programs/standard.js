@@ -1281,11 +1281,11 @@ var standard = {
                 }
             }
 
-            if (device.webgl2 || device.extStandardDerivatives) {
-                // bias is applied on render
-            } else {
+            if (!(device.webgl2 || device.extStandardDerivatives)) {
                 code += chunks.biasConstPS;
             }
+            // otherwise bias is applied on render
+
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
 

@@ -112,19 +112,21 @@ StandardMaterialValidator.prototype.validate = function (data) {
             }
         } else if (type === 'texture') {
             if (!pathMapping) {
-                if (typeof(data[key]) === 'number' || data[key] === null) {
-                    // materials are often initialized with the asset id of textures which are assigned later
-                    // this counts as a valid input
-                    // null texture reference is also valid
-                } else if (!(data[key] instanceof Texture)) {
-                    this.setInvalid(key, data);
+                if (!(typeof(data[key]) === 'number' || data[key] === null)) {
+                    if (!(data[key] instanceof Texture)) {
+                        this.setInvalid(key, data);
+                    }
                 }
+                // OTHERWISE: materials are often initialized with the asset id of textures which are assigned later
+                // this counts as a valid input
+                // null texture reference is also valid
             } else {
-                if (typeof(data[key]) === 'string' || data[key === null]) {
-                    // fpr path mapped we expect a string not an asset id
-                } else if (!(data[key] instanceof Texture)) {
-                    this.setInvalid(key, data);
+                if (!(typeof(data[key]) === 'string' || data[key === null])) {
+                    if (!(data[key] instanceof Texture)) {
+                        this.setInvalid(key, data);
+                    }
                 }
+                // OTHERWISE: fpr path mapped we expect a string not an asset id
             }
         } else if (type === 'boundingbox') {
             if (!(data[key].center && data[key].center instanceof Array && data[key].center.length === 3)) {
@@ -134,13 +136,15 @@ StandardMaterialValidator.prototype.validate = function (data) {
                 this.setInvalid(key, data);
             }
         } else if (type === 'cubemap') {
-            if (typeof(data[key]) === 'number' || data[key] === null || data[key] === undefined) {
-                // materials are often initialized with the asset id of textures which are assigned later
-                // this counts as a valid input
-                // null texture reference is also valid
-            } else if (!(data[key] instanceof Texture && data[key].cubemap)) {
-                this.setInvalid(key, data);
+            if (!(typeof(data[key]) === 'number' || data[key] === null || data[key] === undefined)) {
+
+                if (!(data[key] instanceof Texture && data[key].cubemap)) {
+                    this.setInvalid(key, data);
+                }
             }
+            // OTHERWISE: materials are often initialized with the asset id of textures which are assigned later
+            // this counts as a valid input
+            // null texture reference is also valid
         } else if (type === 'chunks') {
             var chunkNames = Object.keys(data[key]);
             for (i = 0; i < chunkNames.length; i++) {

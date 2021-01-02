@@ -242,9 +242,8 @@ Object.assign(ElementComponentSystem.prototype, {
             if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
             if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
             if (data.enableMarkup !== undefined) component.enableMarkup = data.enableMarkup;
-        } else {
-            // group
         }
+        // OTHERWISE: group
 
 
         // find screen

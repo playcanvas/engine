@@ -1641,9 +1641,8 @@ Object.assign(Application.prototype, {
         } else if (this._fillMode === FILLMODE_FILL_WINDOW) {
             width = windowWidth;
             height = windowHeight;
-        } else {
-            // FILLMODE_NONE use width and height that are provided
         }
+        // OTHERWISE: FILLMODE_NONE use width and height that are provided
 
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
