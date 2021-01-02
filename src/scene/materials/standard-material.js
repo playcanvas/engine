@@ -72,8 +72,8 @@ import { Quat } from '../../math/quat.js';
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  *
- * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link pc.Material#anisotropy}  parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires {@link pc.Material#enableGGXSpecular} is set to true.
+ * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables {@link pc.StandardMaterial#anisotropy}  parameter to set material anisotropy.
+ * @property {number} anisotropy Defines amount of anisotropy. Requires {@link pc.StandardMaterial#enableGGXSpecular} is set to true.
  * * When anisotropy == 0, specular is isotropic.
  * * When anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
  * * When anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
@@ -155,8 +155,8 @@ import { Quat } from '../../math/quat.js';
  * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
  *
- * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.Material#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when {@link pc.Material#opacityFadesSpecular} is set to false.
+ * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are faded out using {@link pc.StandardMaterial#opacity}. Default is true. When set to false use {@link pc.Material#alphaFade} to fade out materials.
+ * @property {number} alphaFade used to fade out materials when {@link pc.StandardMaterial#opacityFadesSpecular} is set to false.
  *
  * @property {pc.Texture|null} normalMap The main (primary) normal map of the material (default is null).
  * The texture must contains normalized, tangent space normals.
