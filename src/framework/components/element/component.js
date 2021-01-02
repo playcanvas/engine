@@ -45,7 +45,7 @@ var matD = new Mat4();
  * ~~~javascript
  * // Add an element component to an entity with the default options
  * let entity = pc.Entity();
- * entity.addComponent('element'); // This defaults to a 'group' element
+ * entity.addComponent("element"); // This defaults to a 'group' element
  * ~~~
  *
  * To create a simple text-based element:
