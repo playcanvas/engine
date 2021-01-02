@@ -79,7 +79,7 @@ class JsonStandardMaterialParser {
                     material[key] = null;
                 }
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
-                // leave current texture (probably a placeholder) until the asset is loaded                
+                // leave current texture (probably a placeholder) until the asset is loaded
             } else if (type === 'boundingbox') {
                 var center = new Vec3(value.center[0], value.center[1], value.center[2]);
                 var halfExtents = new Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
