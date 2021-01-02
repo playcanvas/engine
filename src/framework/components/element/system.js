@@ -176,7 +176,10 @@ Object.assign(ElementComponentSystem.prototype, {
             component.layers = data.layers.slice(0);
         }
 
-        component.type = data.type;
+        if (data.type !== undefined) {
+            component.type = data.type;
+        }
+
         if (component.type === ELEMENTTYPE_IMAGE) {
             if (data.rect !== undefined) {
                 component.rect = data.rect;
