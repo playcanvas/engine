@@ -22,7 +22,6 @@ export { IndexedList } from './core/indexed-list.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
-export { RefCountedObject } from './core/ref-counted-object.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -248,7 +247,8 @@ export { PostEffectQueue } from './framework/components/camera/post-effect-queue
 export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
-export { SceneRegistry, SceneRegistryItem } from './framework/scene-registry.js';
+export { SceneRegistry } from './framework/scene-registry.js';
+export { SceneRegistryItem } from './framework/scene-registry-item.js';
 export * from './framework/components/screen/constants.js';
 export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
