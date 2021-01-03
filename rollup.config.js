@@ -87,6 +87,19 @@ function shaderChunks(removeComments) {
     };
 }
 
+function exportDefault() {
+    return {
+        /**
+         * @param {string} code - Input code.
+         * @param {RenderedChunk} chunk - See https://github.com/rollup/rollup/blob/master/src/rollup/types.d.ts
+         * @returns {string} Output code.
+         */
+        renderChunk(code, chunk) {
+            return `${code}\n\nexport default { ${chunk.exports.join(', ')} };\n`;
+        }
+    };
+};
+
 const es5Options = {
     babelHelpers: 'bundled',
     babelrc: false,
@@ -186,7 +199,8 @@ const target_release_es6 = {
             __CURRENT_SDK_VERSION__: version
         }),
         babel(moduleOptions),
-        spacesToTabs()
+        spacesToTabs(),
+        exportDefault()
     ]
 };
 
