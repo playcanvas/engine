@@ -38,110 +38,118 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        // Create a camera
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+        // Load a font
+        var fontAsset = new pc.Asset('arial.json', "font", {
+            url: "../assets/fonts/arial.json"
         });
-        app.root.addChild(camera);
+        fontAsset.on('load', run);
+        app.assets.add(fontAsset);
+        app.assets.load(fontAsset);
 
-        // Create a 2D screen
-        var screen = new pc.Entity();
-        screen.addComponent("screen", {
-            screenSpace: true,
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleMode: pc.SCALEMODE_BLEND,
-            scaleBlend: 0.5
-        });
-        app.root.addChild(screen);
-
-        function createScollbar(horizontal) {
-            var handle = new pc.Entity('Handle');
-            if (!horizontal) {
-                handle.setLocalPosition(20, 0, 0);
-            }
-            var handleOptions = {
-                type: pc.ELEMENTTYPE_IMAGE,
-                color: new pc.Color(1, 1, 1),
-                opacity: 1,
-                rect: new pc.Vec4(0, 0, 1, 1),
-                mask: false,
-                useInput: true
-            };
-            if (horizontal) {
-                handleOptions.anchor = new pc.Vec4(0, 0, 0, 1);  // Split in Y
-                handleOptions.pivot = new pc.Vec2(0, 0);         // Bottom left
-                handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
-                handleOptions.width = 32;
-            } else {
-                handleOptions.anchor = new pc.Vec4(0, 1, 1, 1);  // Split in X
-                handleOptions.pivot = new pc.Vec2(1, 1);         // Top right
-                handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
-                handleOptions.height = 32;
-            }
-            handle.addComponent('element', handleOptions);
-            handle.addComponent('button', {
-                active: true,
-                imageEntity: handle,
-                hitPadding: new pc.Vec4(0, 0, 0, 0),
-                transitionMode: pc.BUTTON_TRANSITION_MODE_TINT, // This is undocumented
-                hoverTint: new pc.Color(1, 1, 1),
-                pressedTint: new pc.Color(1, 1, 1),
-                inactiveTint: new pc.Color(1, 1, 1),
-                fadeDuration: 0
+        function run() {
+            // Create a camera
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
             });
+            app.root.addChild(camera);
 
-            var scrollbar = new pc.Entity(horizontal ? 'HorizontalScrollbar' : 'VerticalScrollbar');
-            if (!horizontal) {
-                scrollbar.setLocalPosition(0, 200, 0);
-            }
-            var scrollbarOptions = {
-                type: pc.ELEMENTTYPE_IMAGE,
-                color: new pc.Color(0.5, 0.5, 0.5),
-                opacity: 1,
-                rect: new pc.Vec4(0, 0, 1, 1),
-                mask: false,
-                useInput: false
-            };
-            if (horizontal) {
-                scrollbarOptions.anchor = new pc.Vec4(0, 0, 1, 0);
-                scrollbarOptions.pivot = new pc.Vec2(0, 0);
-                scrollbarOptions.margin = new pc.Vec4(0, 0, 20, -20);
-                scrollbarOptions.height = 20;
-            } else {
-                scrollbarOptions.anchor = new pc.Vec4(1, 0, 1, 1);
-                scrollbarOptions.pivot = new pc.Vec2(1, 1);
-                scrollbarOptions.margin = new pc.Vec4(-20, 20, 0, 0);
-                scrollbarOptions.width = 20;
-            }
-            scrollbar.addComponent('element', scrollbarOptions);
-            scrollbar.addComponent('scrollbar', {
-                orientation: horizontal ? pc.ORIENTATION_HORIZONTAL : pc.ORIENTATION_VERTICAL,
-                value: 0,
-                handleEntity: handle,
-                handleSize: 0.5
+            // Create a 2D screen
+            var screen = new pc.Entity();
+            screen.addComponent("screen", {
+                screenSpace: true,
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleMode: pc.SCALEMODE_BLEND,
+                scaleBlend: 0.5
             });
+            app.root.addChild(screen);
 
-            scrollbar.addChild(handle);
+            function createScollbar(horizontal) {
+                var handle = new pc.Entity('Handle');
+                if (!horizontal) {
+                    handle.setLocalPosition(20, 0, 0);
+                }
+                var handleOptions = {
+                    type: pc.ELEMENTTYPE_IMAGE,
+                    color: new pc.Color(1, 1, 1),
+                    opacity: 1,
+                    rect: new pc.Vec4(0, 0, 1, 1),
+                    mask: false,
+                    useInput: true
+                };
+                if (horizontal) {
+                    handleOptions.anchor = new pc.Vec4(0, 0, 0, 1);  // Split in Y
+                    handleOptions.pivot = new pc.Vec2(0, 0);         // Bottom left
+                    handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
+                    handleOptions.width = 32;
+                } else {
+                    handleOptions.anchor = new pc.Vec4(0, 1, 1, 1);  // Split in X
+                    handleOptions.pivot = new pc.Vec2(1, 1);         // Top right
+                    handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
+                    handleOptions.height = 32;
+                }
+                handle.addComponent('element', handleOptions);
+                handle.addComponent('button', {
+                    active: true,
+                    imageEntity: handle,
+                    hitPadding: new pc.Vec4(0, 0, 0, 0),
+                    transitionMode: pc.BUTTON_TRANSITION_MODE_TINT, // This is undocumented
+                    hoverTint: new pc.Color(1, 1, 1),
+                    pressedTint: new pc.Color(1, 1, 1),
+                    inactiveTint: new pc.Color(1, 1, 1),
+                    fadeDuration: 0
+                });
 
-            return scrollbar;
-        }
+                var scrollbar = new pc.Entity(horizontal ? 'HorizontalScrollbar' : 'VerticalScrollbar');
+                if (!horizontal) {
+                    scrollbar.setLocalPosition(0, 200, 0);
+                }
+                var scrollbarOptions = {
+                    type: pc.ELEMENTTYPE_IMAGE,
+                    color: new pc.Color(0.5, 0.5, 0.5),
+                    opacity: 1,
+                    rect: new pc.Vec4(0, 0, 1, 1),
+                    mask: false,
+                    useInput: false
+                };
+                if (horizontal) {
+                    scrollbarOptions.anchor = new pc.Vec4(0, 0, 1, 0);
+                    scrollbarOptions.pivot = new pc.Vec2(0, 0);
+                    scrollbarOptions.margin = new pc.Vec4(0, 0, 20, -20);
+                    scrollbarOptions.height = 20;
+                } else {
+                    scrollbarOptions.anchor = new pc.Vec4(1, 0, 1, 1);
+                    scrollbarOptions.pivot = new pc.Vec2(1, 1);
+                    scrollbarOptions.margin = new pc.Vec4(-20, 20, 0, 0);
+                    scrollbarOptions.width = 20;
+                }
+                scrollbar.addComponent('element', scrollbarOptions);
+                scrollbar.addComponent('scrollbar', {
+                    orientation: horizontal ? pc.ORIENTATION_HORIZONTAL : pc.ORIENTATION_VERTICAL,
+                    value: 0,
+                    handleEntity: handle,
+                    handleSize: 0.5
+                });
 
-        function createScollview() {
+                scrollbar.addChild(handle);
+
+                return scrollbar;
+            }
+
             var horizontalScrollbar = createScollbar(true);
             var verticalScrollbar = createScollbar(false);
 
             // Scroll view viewport
             var viewport = new pc.Entity('Viewport');
             viewport.addComponent('element', {
-                type: pc.ELEMENTTYPE_IMAGE,
                 anchor: new pc.Vec4(0, 0, 1, 1),
-                pivot: new pc.Vec2(0, 1),
-                margin: new pc.Vec4(0, 20, 20, 0),
                 color: new pc.Color(0.2, 0.2, 0.2),
-                opacity: 1,
-                rect: new pc.Vec4(0, 0, 1, 1),
+                margin: new pc.Vec4(0, 20, 20, 0),
                 mask: true,
+                opacity: 1,
+                pivot: new pc.Vec2(0, 1),
+                rect: new pc.Vec4(0, 0, 1, 1),
+                type: pc.ELEMENTTYPE_IMAGE,
                 useInput: false
             });
             viewport.setLocalPosition(0, 200, 0);
@@ -149,48 +157,61 @@
             // Group to hold the content inside the scroll view's viewport
             var content = new pc.Entity('Content');
             content.addComponent('element', {
-                type: pc.ELEMENTTYPE_GROUP,
                 anchor: new pc.Vec4(0, 1, 0, 1),
-                pivot: new pc.Vec2(0, 1),
-                width: 400,
                 height: 400,
-                useInput: true
+                pivot: new pc.Vec2(0, 1),
+                type: pc.ELEMENTTYPE_GROUP,
+                useInput: true,
+                width: 400
             });
+
+            // Create some text content
+            var text = new pc.Entity("Text");
+            text.addComponent("element", {
+                alignment: [0, 0],
+                anchor: [0, 1, 0, 1],
+                autoHeight: true,
+                autoWidth: false,
+                fontAsset: fontAsset,
+                fontSize: 32,
+                pivot: [0, 1],
+                text: "The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog.",
+                type: pc.ELEMENTTYPE_TEXT,
+                width: 400,
+                wrapLines: true
+            });
+            content.addChild(text);
 
             // Create a scroll view
             var scrollview = new pc.Entity('ScrollView');
             scrollview.addComponent('element', {
-                type: pc.ELEMENTTYPE_GROUP,
                 anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-                pivot: new pc.Vec2(0, 1),
-                width: 200,
                 height: 200,
-                useInput: false
+                pivot: new pc.Vec2(0, 1),
+                type: pc.ELEMENTTYPE_GROUP,
+                useInput: false,
+                width: 200
             });
             scrollview.addComponent('scrollview', {
-                scrollMode: pc.SCROLL_MODE_BOUNCE,
                 bounceAmount: 0.1,
-                friction: 0.05,
-                viewportEntity: viewport,
                 contentEntity: content,
+                friction: 0.05,
                 horizontal: true,
                 horizontalScrollbarEntity: horizontalScrollbar,
                 horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED, // Not documented
+                scrollMode: pc.SCROLL_MODE_BOUNCE,
                 vertical: true,
                 verticalScrollbarEntity: verticalScrollbar,
-                verticalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED
+                verticalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,
+                viewportEntity: viewport
             });
 
-            viewport.addChild(content);
+            screen.addChild(scrollview);
             scrollview.addChild(viewport);
             scrollview.addChild(horizontalScrollbar);
             scrollview.addChild(verticalScrollbar);
-
-            return scrollview;
+            viewport.addChild(content);
         }
-
-        var scrollview = createScollview();
-        screen.addChild(scrollview);
     </script>
 </body>
 </html>
