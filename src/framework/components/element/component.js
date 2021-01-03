@@ -33,9 +33,50 @@ var matD = new Mat4();
  * @class
  * @name pc.ElementComponent
  * @augments pc.Component
- * @classdesc Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
- * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
- * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
+ * @classdesc ElementComponents are used to construct user interfaces. An ElementComponent's [type](#type)
+ * property can be configured in 3 main ways: as a text element, as an image element or as a group element.
+ * If the ElementComponent has a {@link pc.ScreenComponent} ancestor in the hierarchy, it will be transformed
+ * with respect to the coordinate system of the screen. If there is no {@link pc.ScreenComponent} ancestor,
+ * the ElementComponent will be transformed like any other entity.
+ *
+ * You should never need to use the ElementComponent constructor. To add an ElementComponent to a {@link pc.Entity},
+ * use {@link pc.Entity#addComponent}:
+ *
+ * ~~~javascript
+ * // Add an element component to an entity with the default options
+ * let entity = pc.Entity();
+ * entity.addComponent("element"); // This defaults to a 'group' element
+ * ~~~
+ *
+ * To create a simple text-based element:
+ *
+ * ~~~javascript
+ * entity.addComponent("element", {
+ *     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5), // centered anchor
+ *     fontAsset: fontAsset,
+ *     fontSize: 128,
+ *     pivot: new pc.Vec2(0.5, 0.5),            // centered pivot
+ *     text: "Hello World!",
+ *     type: pc.ELEMENTTYPE_TEXT
+ * });
+ * ~~~
+ *
+ * Once the ElementComponent is added to the entity, you can set and get any of its properties:
+ *
+ * ~~~javascript
+ * entity.element.color = pc.Color.RED; // Set the element's color to red
+ *
+ * console.log(entity.element.color);   // Get the element's color and print it
+ * ~~~
+ *
+ * Relevant 'Engine-only' examples:
+ * * [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
+ * * [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
+ * * [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
+ * * [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
+ * * [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
+ * * [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
+ *
  * @param {pc.ElementComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the ElementComponent. Can be:
@@ -1391,7 +1432,9 @@ Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
             matB.setTRS(Vec3.ZERO, this.entity.getLocalRotation(), this.entity.getLocalScale());
             matC.setTranslate(localPos.x, localPos.y, localPos.z);
 
-            matD.copy(this.entity.parent.getWorldTransform());
+            // get parent world transform (but use this entity if there is no parent)
+            var entity = this.entity.parent ? this.entity.parent : this.entity;
+            matD.copy(entity.getWorldTransform());
             matD.mul(matC).mul(matB).mul(matA);
 
             // bottom left
