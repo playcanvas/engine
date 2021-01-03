@@ -91,14 +91,14 @@ function exportDefault() {
     return {
         /**
          * @param {string} code - Input code.
-         * @param {RenderedChunk} chunk - See https://github.com/rollup/rollup/blob/master/src/rollup/types.d.ts
+         * @param {import('./node_modules/rollup/dist/rollup').RenderedChunk} chunk - See https://github.com/rollup/rollup/blob/master/src/rollup/types.d.ts
          * @returns {string} Output code.
          */
         renderChunk(code, chunk) {
             return `${code}\n\nexport default { ${chunk.exports.join(', ')} };\n`;
         }
     };
-};
+}
 
 const es5Options = {
     babelHelpers: 'bundled',
