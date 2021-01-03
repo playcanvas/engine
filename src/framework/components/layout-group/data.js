@@ -1,5 +1,7 @@
-function LayoutGroupComponentData() {
-    this.enabled = true;
+class LayoutGroupComponentData {
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { LayoutGroupComponentData };

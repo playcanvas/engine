@@ -1,5 +1,7 @@
-function ElementComponentData() {
-    this.enabled = true;
+class ElementComponentData {
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { ElementComponentData };
