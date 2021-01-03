@@ -1,6 +1,8 @@
-function RenderComponentData() {
-    this.enabled = true;
-    this.rootBone = null;
+class RenderComponentData {
+    constructor() {
+        this.enabled = true;
+        this.rootBone = null;
+    }
 }
 
 export { RenderComponentData };
