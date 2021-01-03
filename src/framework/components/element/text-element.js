@@ -16,7 +16,7 @@ import { Model } from '../../../scene/model.js';
 
 import { LocalizedAsset } from '../../../asset/asset-localized.js';
 
-import { FONT_BITMAP, FONT_MSDF } from '../text/font.js';
+import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
 
 import { Markup } from './markup.js';
 

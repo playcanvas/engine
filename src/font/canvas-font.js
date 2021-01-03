@@ -1,13 +1,13 @@
-import { string } from '../../../core/string.js';
-import { Color } from '../../../core/color.js';
-import { EventHandler } from '../../../core/event-handler.js';
+import { string } from '../core/string.js';
+import { Color } from '../core/color.js';
+import { EventHandler } from '../core/event-handler.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/graphics.js';
-import { Texture } from '../../../graphics/texture.js';
+} from '../graphics/graphics.js';
+import { Texture } from '../graphics/texture.js';
 
 var MAX_TEXTURE_SIZE = 4096;
 var DEFAULT_TEXTURE_SIZE = 512;

@@ -117,6 +117,11 @@ export { AnimTarget } from './anim/anim-target.js';
 export { AnimTrack } from './anim/anim-track.js';
 export { DefaultAnimBinder } from './anim/default-anim-binder.js';
 
+// FONT
+export * from './font/constants.js';
+export { Font } from './font/font.js';
+export { CanvasFont } from './font/canvas-font.js';
+
 // SOUND
 export * from './audio/constants.js';
 
@@ -213,7 +218,6 @@ export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';
 export { CameraComponent } from './framework/components/camera/component.js';
 export { CameraComponentSystem } from './framework/components/camera/system.js';
-export { CanvasFont } from './framework/components/text/canvas-font.js';
 export { CollisionComponent } from './framework/components/collision/component.js';
 export { CollisionComponentSystem } from './framework/components/collision/system.js';
 export { Component } from './framework/components/component.js';
@@ -226,7 +230,6 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
-export { Font, FONT_BITMAP, FONT_MSDF } from './framework/components/text/font.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
