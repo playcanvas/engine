@@ -3,7 +3,7 @@ import { string } from '../core/string.js';
 
 import { http } from '../net/http.js';
 
-import { Font } from '../framework/components/text/font.js';
+import { Font } from '../font/font.js';
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
