@@ -258,6 +258,13 @@ ScriptAttributes.prototype.add = function (name, args) {
         },
         set: function (raw) {
             var old = this.__attributes[name];
+            // keep copy of old for the event below
+            var oldCopy = old;
+            // json types might have a 'clone' field in their
+            // schema so make sure it's not that
+            if (old && args.type !== 'json' && old.clone) {
+                oldCopy = old.clone();
+            }
 
             // convert to appropriate type
             if (args.array) {
@@ -273,8 +280,8 @@ ScriptAttributes.prototype.add = function (name, args) {
                 this.__attributes[name] = rawToValue(this.app, args, raw, old);
             }
 
-            this.fire('attr', name, this.__attributes[name], old);
-            this.fire('attr:' + name, this.__attributes[name], old);
+            this.fire('attr', name, this.__attributes[name], oldCopy);
+            this.fire('attr:' + name, this.__attributes[name], oldCopy);
         }
     });
 };
