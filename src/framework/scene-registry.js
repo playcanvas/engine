@@ -150,7 +150,7 @@ SceneRegistry.prototype.remove = function (name) {
  * requests when the same scenes are loaded multiple times. Can also be used to load data ahead of
  * {@link pc.SceneRegistry.loadSceneHierarchy} and {@link pc.SceneRegistry.loadSceneSettings} calls to make
  * scene loading quicker for the user.
- * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  * @param {pc.callbacks.LoadSceneData} callback - The function to call after loading,
  * passed (err, sceneItem) where err is null if no errors occurred.
  */
@@ -216,7 +216,7 @@ SceneRegistry.prototype.loadSceneData = function (sceneItem, callback) {
  * @function
  * @name pc.SceneRegistry#unloadSceneData
  * @description Unloads scene data that has been loaded previously.
- * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  */
 SceneRegistry.prototype.unloadSceneData = function (sceneItem, callback) {
     var url = sceneItem;
@@ -239,7 +239,7 @@ SceneRegistry.prototype.unloadSceneData = function (sceneItem, callback) {
  * @name pc.SceneRegistry#loadSceneHierarchy
  * @description Load a scene file, create and initialize the Entity hierarchy
  * and add the hierarchy to the application root Entity.
- * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
  * passed (err, entity) where err is null if no errors occurred.
  * @example
@@ -295,7 +295,7 @@ SceneRegistry.prototype.loadSceneHierarchy = function (sceneItem, callback) {
  * @function
  * @name pc.SceneRegistry#loadSceneSettings
  * @description Load a scene file and apply the scene settings to the current scene.
- * @param {pc.sceneItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
+ * @param {pc.SceneRegistryItem | string} sceneItem - The scene item or URL of the scene file. Usually this will be "scene_id.json".
  * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
  * are applied. Passed (err) where err is null if no error occurred.
  * @example
