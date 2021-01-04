@@ -7,6 +7,12 @@ import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
 import {
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
+    TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
+} from '../graphics/graphics.js';
+import { Texture } from '../graphics/texture.js';
+
+import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
@@ -14,12 +20,6 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL
 } from './constants.js';
-
-import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
-    TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
-} from '../graphics/graphics.js';
-import { Texture } from '../graphics/texture.js';
 
 import { Application } from '../framework/application.js';
 
