@@ -6,18 +6,11 @@ var texSample = {
     // generator
     gen: function ( argTypes, options ) {
         // header
-        var code = "void texSample(in sampler2D tex, in vec2 uv, out vec4 rgba, out vec4 srgba, out vec3 rgbm)\n";
-
-        // precision - alter name to create variant
-        if (options && options.precision) {
-            code = code.replace(' texSample', ' texSample_' + options.precision);
-        }
+        var precision = (options && options.precision) ? `_${options.precision}` : ''; // alter name to create variant
+        var code = `void texSample${precision}(in sampler2D tex, in vec2 uv, out vec4 rgba, out vec4 srgba, out vec3 rgbm)\n`;
 
         // body
         code += '{\n';
-
-        // precision - tmp: useful comment
-        code += ((options && options.precision) ? '// precision ' + options.precision + ' float;\n' : '');
 
         code += 'rgba = texture2D(tex, uv);\n';
 

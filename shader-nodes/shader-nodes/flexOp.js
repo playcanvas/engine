@@ -10,17 +10,14 @@ var flexOp = {
         }
         return comp2Type[maxComp];
     },
-    getHeadCode: function (retType, opName, argTypes, outputRetComponents ) {
-        var code = retType + ' ' + opName + '( ';
+    getHeadCode: function (retType, opName, argTypes, precision) {
+        precision = precision ? `_${precision}` : '';
+        var code = `${retType} ${opName}${precision}( `; // alter name to create variant
         for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
-            code += 'in ' + argTypes[argIndex] + ' arg' + argIndex;
+            code += `in ${argTypes[argIndex]} arg${argIndex}`;
 
             code += (argIndex === argTypes.length - 1) ? ' )\n' : ', ';
         }
-        if (outputRetComponents && type2Comp[retType] === 4) {
-            code.replace(' )\n', ', out vec3 rgb, out float r, out float g, out float b, out float a )\n');
-        }
-
         return code;
     },
     genOp: function (opName, opCode, label ) {
@@ -40,31 +37,23 @@ var flexOp = {
         var retType = this.getRetType(argTypes);
 
         // construct head code
-        var code = this.getHeadCode(retType, opName, argTypes);
-
-        // precision - alter name to create variant
-        if (options && options.precision) {
-            code = code.replace(' ' + opName, ' ' + opName + '_' + options.precision);
-        }
+        var code = this.getHeadCode(retType, opName, argTypes, options ? options.precision : '');
 
         // construct body code
         code += '{\n';
-
-        // precision - tmp: useful comment
-        code += ((options && options.precision) ? '// precision ' + options.precision + ' float;\n' : '');
 
         code += '    return ';
 
         for (var argIndex = 0; argIndex < argTypes.length; argIndex++) {
             // convert all arguments to return type
-            code += retType + '(arg' + argIndex;
+            code += `${retType}(arg${argIndex}`;
 
             // expand if needed - extra components are set to zero - NB scalar values are broadcast to all components
             var argComp = type2Comp[argTypes[argIndex]];
             var extend = type2Comp[retType] - argComp;
-            code += (extend > 0 && argComp !== 1) ? ', ' + comp2Type[expand] + '(0))' : ')';
+            code += (extend > 0 && argComp !== 1) ? `, ${comp2Type[expand]}(0))` : ')';
 
-            code += (argIndex === argTypes.length - 1) ? ';\n' : ' ' + opCode + ' ';
+            code += (argIndex === argTypes.length - 1) ? ';\n' : ` ${opCode} `;
         }
 
         code += '}\n';
