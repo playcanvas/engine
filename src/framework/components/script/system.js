@@ -1,9 +1,9 @@
+import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
+
 import { ComponentSystem } from '../system.js';
 
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
-
-import { SortedLoopArray } from '../../utils/sorted-loop-array.js';
 
 var METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 var METHOD_INITIALIZE = '_onInitialize';

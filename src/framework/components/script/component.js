@@ -1,8 +1,9 @@
+import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
+
 import { ScriptAttributes } from '../../../script/script-attributes.js';
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
-import { SortedLoopArray } from '../../utils/sorted-loop-array.js';
 
 /**
  * @component
