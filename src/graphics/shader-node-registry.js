@@ -57,29 +57,31 @@ ShaderNodeRegistry.prototype._genVariantKey = function (argTypes, options) {
 };
 
 ShaderNodeRegistry.prototype.get = function (name, argTypes, options) {
-    if (this._nodeCache[name]) {
-        if (!this._nodeDef[name].gen) {
+    var cachedNode = this._nodeCache[name];
+    if (cachedNode) {
+        var nodeDef = this._nodeDef[name];
+        if (!nodeDef.gen) {
             // if no generator, passthrough
-            if (!this._nodeCache[name].def) {
-                this._nodeCache[name].def = new ShaderGraphNode(this._nodeDef[name].code);
+            if (!cachedNode.def) {
+                cachedNode.def = new ShaderGraphNode(nodeDef.code);
             }
-            return this._nodeCache[name].def;
+            return cachedNode.def;
         }
 
         var variantKey = this._genVariantKey(argTypes, options);
-        if (this._nodeCache[name][variantKey]) {
+        if (cachedNode[variantKey]) {
             // return cached variant
-            return this._nodeCache[name][variantKey];
+            return cachedNode[variantKey];
         }
 
         // generate variant, add to cache and return it
-        var variantCode = this._nodeDef[name].gen(argTypes, options);
+        var variantCode = nodeDef.gen(argTypes, options);
         if (variantCode) {
-            this._nodeCache[name][variantKey] = new ShaderGraphNode(variantCode);
+            cachedNode[variantKey] = new ShaderGraphNode(variantCode);
 
-            this._nodeCache[name][variantKey]._precision = ((options && options.precision) ? options.precision : '');
+            cachedNode[variantKey]._precision = ((options && options.precision) ? options.precision : '');
 
-            return this._nodeCache[name][variantKey];
+            return cachedNode[variantKey];
         }
     }
 };
