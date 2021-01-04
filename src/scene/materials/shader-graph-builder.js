@@ -1,9 +1,12 @@
 import { ShaderGraphNode, PORT_TYPE_IN, PORT_TYPE_SWITCH, comp2Type } from './shader-graph-node.js';
 
-// import { TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE } from '../../graphics/graphics.js';
-import { TEXTURETYPE_RGBM } from '../../graphics/graphics.js';
+import { Texture } from '../../graphics/texture.js';
+
+import { PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_RGBM } from '../../graphics/graphics.js';
 
 var id = 0;
+
+var _placeholderTex;
 
 /**
  * @private
@@ -25,6 +28,27 @@ var ShaderGraphBuilder = function (app) {
     this._addedNamedInputs = {};
     this._addedNodes = [];
     this._addedOutputs = {};
+
+    if (!_placeholderTex) {
+        // create texture
+        _placeholderTex = new Texture(this.app.graphicsDevice, {
+            width: 2,
+            height: 2,
+            format: PIXELFORMAT_R8_G8_B8_A8
+        });
+        _placeholderTex.name = 'placeholder';
+
+        // fill pixels with grey
+        var pixels = _placeholderTex.lock();
+        for (var i = 0; i < 4; i++) {
+            for (var c = 0; c < 4; c++) {
+                pixels[i * 4 + c] = [128, 128, 128, 255];
+            }
+        }
+        _placeholderTex.unlock();
+    }
+
+    this._placeholderTex = _placeholderTex;
 };
 
 ShaderGraphBuilder.prototype.constructor = ShaderGraphBuilder;
@@ -44,6 +68,24 @@ Object.assign(ShaderGraphBuilder.prototype, {
         return ioPort;
     },
 
+    /**
+     * @private
+     * @function
+     * @name pc.ShaderGraphBuilder#addTextureParam
+     * @description Adds a parameter input to graph.
+     * @param {string} type - Type of parameter.
+     * @param {string} name - Name of parameter.
+     * @param {pc.Texture} value - Optional texture value parameter.
+     * @returns {any} Returns the created input port.
+     */
+    addTextureParam: function (type, name, value) {
+        if (value && !(value instanceof Texture)) {
+            console.error('pc.ShaderGraphBuilder#addTextureParam: if parameter value specified, the value must be a valid pc.Texture');
+            return null;
+        }
+
+        return this._addParam(type, name, value || this._placeholderTex, false);
+    },
 
     /**
      * @private
@@ -52,12 +94,13 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @description Adds a parameter input to graph.
      * @param {string} type - Type of parameter.
      * @param {string} name - Name of parameter.
-     * @param {any} value - Optional value of parameter.
+     * @param {number|pc.Vec2|pc.Vec3|pc.Vec4} value - Optional value of parameter.
      * @returns {any} Returns the created input port.
      */
     addParam: function (type, name, value) {
         return this._addParam(type, name, value, false);
     },
+
     /**
      * @private
      * @function
@@ -65,7 +108,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @description Adds a constant input to graph.
      * @param {string} type - Type of constant.
      * @param {string} userId - Optional userId of constant.
-     * @param {any} value - Value of constant.
+     * @param {number|pc.Vec2|pc.Vec3|pc.Vec4} value - Value of constant.
      * @returns {any} Returns the created constant port.
      */
     addConst: function (type, userId, value) {
@@ -147,12 +190,12 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 var core = this._addedNodes[arg.node];
                 if (!core) {
                     console.error(err + ": invalid node index: " + arg.node);
-                    return false;
+                    return null;
                 }
                 var port = core.getIoPortByName(arg.port);
                 if (!port) {
                     console.error(err + ": invalid output port: " + core.name + "." + arg.port);
-                    return false;
+                    return null;
                 }
 
                 unswizzledType = port.type;
@@ -163,7 +206,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 // TODO: check if unswizzledType can be swizzled with specified swizzle
                 if (swizzleLen < 1 || swizzleLen > 4) {
                     console.error(err + ": invalid swizzle: " + arg.swizzle);
-                    return false;
+                    return null;
                 }
 
                 argTypes[argIndex] = comp2Type[swizzleLen];
@@ -340,7 +383,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      * @function
      * @name pc.ShaderGraphBuilder#getShaderGraphChunk
      * @description Get shader graph chunk.
-     * @returns {any} Shader graph chunk.
+     * @returns {ShaderGraphNode} Shader graph chunk.
      */
     getShaderGraphChunk: function () {
         return this._graph;

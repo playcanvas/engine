@@ -104,8 +104,8 @@
 
                         // add input parameters
                         var timeParam = builder.addParam('float', 'uTime', 0.0);
-                        var texParamA = builder.addParam('sampler2D', 'uTexMapA', logoMap);
-                        var texParamB = builder.addParam('sampler2D', 'uTexMapB', numbersMap);
+                        var texParamA = builder.addTextureParam('sampler2D', 'uTexMapA', logoMap);
+                        var texParamB = builder.addTextureParam('sampler2D', 'uTexMapB', numbersMap);
                         var tileParamA = builder.addParam('float', 'uTileA', 4.0 );
                         var tileParamB = builder.addParam('float', 'uTileB', 1.0 );
                         var colParam = builder.addParam('vec4', 'uCol', new pc.Vec4(0.5, 0.5, 1.0, 1.0) );                        
@@ -197,11 +197,12 @@
                             }             
                             
                             if (entityC && matC) {
-                                matC.overrideGraphParameter("uTime", time*-0.5 );                                 
-                                matC.overrideGraphParameter("uTexMapA", numbersMap ); 
-                                matC.overrideGraphParameter("uTileA", 1.0 );
-                                matC.overrideGraphParameter("uTexMapB", smileyMap );
-                                matC.overrideGraphParameter("uTileB", 4.0 );
+                                //override graph defaults
+                                matC.setParameter("uTime", time*-0.5 );                                 
+                                matC.setParameter("uTexMapA", numbersMap ); 
+                                matC.setParameter("uTileA", 1.0 );
+                                matC.setParameter("uTexMapB", smileyMap );
+                                matC.setParameter("uTileB", 4.0 );
                             }                                              
                         });
 

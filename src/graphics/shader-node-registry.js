@@ -48,9 +48,8 @@ ShaderNodeRegistry.prototype._genVariantKey = function (argTypes, options) {
     }
 
     if (options) {
-        var optionKeys = Object.keys(options);
-        for (var keyIndex = 0; keyIndex < optionKeys.length; keyIndex++) {
-            variantKey += '_' + optionKeys + '_' + options[optionKeys[keyIndex]];
+        for (var optionName in options) {
+            variantKey += '_' + optionName + '_' + options[optionName];
         }
     }
 

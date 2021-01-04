@@ -73,7 +73,7 @@ var ShaderGraphNode = function (funcCodeString, declCodeString) {
 
     // port map and cache (optimization)
     this._portMap = {};
-    this._portCache = {};
+    this._portCache = [];
 
     // static switches
     this._switchMap = {};
@@ -124,27 +124,31 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     _flushCachedPorts: function () {
-        this._portCache = {};
+        this._portCache = [];
     },
 
     _getCachedPort: function (i) {
         var ioPort = this.graphData.ioPorts[i];
-        if (!this._portCache[ioPort.name]) this._portCache[ioPort.name] = { isUniform: (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D')), nameId: ioPort.name + '_' + this.id, port: ioPort, index: i };
-        return this._portCache[ioPort.name];
+        if (!this._portCache[i]) {
+            this._portCache[i] = { isUniform: (ioPort.ptype === PORT_TYPE_IN || (ioPort.ptype === PORT_TYPE_CONST && ioPort.type === 'sampler2D')), nameId: ioPort.name + '_' + this.id, port: ioPort, index: i };
+        }
+        return this._portCache[i];
     },
 
-    setParameters: function (device, names, params) {
+    setParameters: function (device, params, reset) {
         var parameters = params || this._defaultParams;
-        var paramNames = names || Object.keys(parameters);
-
-        for (var i = 0; i < paramNames.length; i++) {
-            var paramName = paramNames[i];
-            var parameter = parameters[paramName];
-            if (parameter && parameter.data) {
+        for (var paramName in parameters) {
+            var parameter = this._defaultParams[paramName];
+            if (parameter) {
                 if (!parameter.scopeId) {
                     parameter.scopeId = device.scope.resolve(this.getIoPortUniformName(paramName));
                 }
-                parameter.scopeId.setValue(parameter.data);
+
+                if (reset || !params) {
+                    parameter.scopeId.setValue(this._defaultParams[paramName].data);
+                } else {
+                    parameter.scopeId.setValue(params[paramName].data);
+                }
             }
         }
     },
@@ -274,12 +278,12 @@ Object.assign(ShaderGraphNode.prototype, {
     _addIoPort: function (type, name, value, ptype) {
         var ioPort = new Port(type, name, value, ptype);
 
-        var i = this._portMap[name];
-        if (i === undefined) {
-            i = this.graphData.ioPorts.length;
-            this._portMap[name] = i;
+        var portIndex = this._portMap[name];
+        if (portIndex === undefined) {
+            portIndex = this.graphData.ioPorts.length;
+            this._portMap[name] = portIndex;
         }
-        this.graphData.ioPorts[i] = ioPort;
+        this.graphData.ioPorts[portIndex] = ioPort;
 
         this._defaultParamsDirty = true;
 
@@ -521,11 +525,13 @@ Object.assign(ShaderGraphNode.prototype, {
     },
 
     getIoPortByName: function (name) {
-        return (this._portMap[name] === undefined) ? undefined : this.graphData.ioPorts[this._portMap[name]];
+        var portIndex = this._portMap[name];
+        return (portIndex === undefined) ? undefined : this.graphData.ioPorts[portIndex];
     },
 
     getIoPortUniformName: function (name) {
-        return (this._portMap[name] === undefined) ? undefined : this._getCachedPort(this._portMap[name]).nameId;
+        var portIndex = this._portMap[name];
+        return (portIndex === undefined) ? undefined : this._getCachedPort(portIndex).nameId;
     },
 
     _generateSubGraphFuncs: function (depGraphFuncs, depIoPortList) {

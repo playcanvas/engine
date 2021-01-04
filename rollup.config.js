@@ -255,11 +255,11 @@ const target_extras = {
     ]
 };
 
-const target_nodes = {
-    input: 'nodes/index.js',
+const target_shader_nodes = {
+    input: 'shader-nodes/index.js',
     output: {
         banner: getBanner(''),
-        file: 'build/playcanvas-nodes.js',
+        file: 'build/playcanvas-shader-nodes.js',
         format: 'umd',
         indent: '\t',
         name: 'pcsg'
@@ -275,16 +275,17 @@ let targets = [
     target_release_es6,
     target_debug,
     target_profiler,
-    target_extras
+    target_extras,
+    target_shader_nodes
 ];
 
 // Build all targets by default, unless a specific target is chosen
 if (process.env.target) {
     switch (process.env.target.toLowerCase()) {
-        case "es5":      targets = [target_release_es5, target_extras]; break;
-        case "es6":      targets = [target_release_es6, target_extras]; break;
-        case "debug":    targets = [target_debug,       target_extras]; break;
-        case "profiler": targets = [target_profiler,    target_extras]; break;
+        case "es5":      targets = [target_release_es5, target_extras, target_shader_nodes]; break;
+        case "es6":      targets = [target_release_es6, target_extras, target_shader_nodes]; break;
+        case "debug":    targets = [target_debug,       target_extras, target_shader_nodes]; break;
+        case "profiler": targets = [target_profiler,    target_extras, target_shader_nodes]; break;
     }
 }
 

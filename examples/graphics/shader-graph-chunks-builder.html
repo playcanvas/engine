@@ -85,8 +85,8 @@
 
                     // add input parameters
                     var timeParam = builder.addParam('float', 'uTime', 0.0);
-                    var texParamA = builder.addParam('sampler2D', 'uTexMapA', cloudsMap);
-                    var texParamB = builder.addParam('sampler2D', 'uTexMapB', numbersMap);
+                    var texParamA = builder.addTextureParam('sampler2D', 'uTexMapA', cloudsMap);
+                    var texParamB = builder.addTextureParam('sampler2D', 'uTexMapB', numbersMap);
                     var colConst = builder.addConst('vec3', 'colConst', new pc.Vec3(0.2, 0.3, 0.3) );
 
                     // create and hook up graph nodes
@@ -157,7 +157,8 @@
                                 material.overrideGraphSwitch(switchName, switchValue);
                                 material.update();
                             }
-                            material.overrideGraphParameter('uTime', time);
+                            //override graph default
+                            material.setParameter('uTime', time);
                             material.alphaTest = 1.0 - ((Math.sin(time * 3.14159) + 2.0) * 0.5);
                         });
 

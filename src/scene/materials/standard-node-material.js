@@ -3,6 +3,7 @@ import { standard } from '../../graphics/program-lib/programs/standard.js';
 import {
     SHADER_FORWARDHDR, SHADER_PICK
 } from '../constants.js';
+import { ShaderGraphNode } from './shader-graph-node.js';
 
 import { StandardMaterial } from './standard-material.js';
 
@@ -14,7 +15,7 @@ import { StandardMaterial } from './standard-material.js';
  * @classdesc StandardNodeMaterial is sub class of the StandardMaterial, and adds shader graph
  * interop functionality.
  * @param {pc.StandardMaterial} mat - Optional material which is cloned.
- * @param {any} chunk - Optional shader graph node chunk to be used.
+ * @param {ShaderGraphNode} chunk - Optional shader graph node chunk to be used.
  */
 function StandardNodeMaterial(mat, chunk) {
     StandardMaterial.call(this);
@@ -75,6 +76,9 @@ Object.assign(StandardNodeMaterial.prototype, {
      * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
      */
     setParameter: function (name, data) {
+        if (this.shaderGraphChunk && this.shaderGraphChunk.getIoPortUniformName(name)) {
+            this._graphParamOverrides[name] = { scopeId: null, data: data };
+        }
         StandardMaterial.prototype.setParameter.call(this, name, data);
     },
 
@@ -83,34 +87,7 @@ Object.assign(StandardNodeMaterial.prototype, {
 
         // apply / restore graph chunk overrides
         if (this.shaderGraphChunk) {
-            if (restoreGraphDefaults === true) {
-                // restore
-                this.shaderGraphChunk.setParameters(device, Object.keys(this._graphParamOverrides), null);
-            } else {
-                // override
-                this.shaderGraphChunk.setParameters(device, null, this._graphParamOverrides);
-            }
-        }
-    },
-
-    /**
-     * @private
-     * @function
-     * @name pc.StandardNodeMaterial#overrideGraphParameter
-     * @description Sets a shader graph parameter on a StandardNodeMaterial.
-     * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
-     */
-    overrideGraphParameter: function (name, data) {
-        if (this.shaderGraphChunk) {
-            var rootShaderGraph = this.shaderGraphChunk;
-            var portName = rootShaderGraph.getIoPortUniformName(name);
-            if (portName) {
-                this._graphParamOverrides[name] = { scopeId: null, data: data };
-                // StandardMaterial.prototype.setParameter.call(this, portName, data);
-            } else {
-                console.warn('not a shaderGraphChunk parameter - did you want to call setParameter()?');
-            }
+            this.shaderGraphChunk.setParameters(device, this._graphParamOverrides, restoreGraphDefaults);
         }
     },
 
@@ -166,15 +143,15 @@ Object.defineProperty(StandardNodeMaterial.prototype, 'shaderGraphChunk', {
         return this._shaderGraphChunk;
     },
     set: function (value) {
-        if (!value || this._shaderGraphChunk === value)
+        if (this._shaderGraphChunk === value)
             return;
 
         // remove this material from current chunk's material list
         if (this._shaderGraphChunk) {
-            var self = this;
-            this._shaderGraphChunk._materials = this._shaderGraphChunk._materials.filter(function (mat) {
-                return mat !== self;
-            });
+            var index = this._shaderGraphChunk._materials.indexOf(this);
+            if (index >= 0) {
+                this._shaderGraphChunk._materials.splice(index, 1);
+            }
         }
 
         this._shaderGraphChunk = value;
