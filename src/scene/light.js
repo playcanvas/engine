@@ -7,6 +7,12 @@ import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
 import {
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
+    TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
+} from '../graphics/graphics.js';
+import { Texture } from '../graphics/texture.js';
+
+import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
@@ -326,15 +332,15 @@ class Light {
     uploadAreaLightLUTs() {
 
         function createTexture(device, data, format) {
-            var tex = new pc.Texture(device, {
+            var tex = new Texture(device, {
                 width: 64,
                 height: 64,
                 format: format,
-                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-                type: pc.TEXTURETYPE_RGBE,
-                magFilter: pc.FILTER_LINEAR,
-                minFilter: pc.FILTER_NEAREST,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                type: TEXTURETYPE_DEFAULT,
+                magFilter: FILTER_LINEAR,
+                minFilter: FILTER_NEAREST,
                 anisotropy: 1
             });
 
@@ -390,13 +396,13 @@ class Light {
             var format = device._areaLightLutFormat;
 
             // pick format for lut texture
-            if (format === pc.PIXELFORMAT_RGBA32F) {
+            if (format === PIXELFORMAT_RGBA32F) {
 
                 // float
                 data1 = luts.data1;
                 data2 = luts.data2;
 
-            } else if (format === pc.PIXELFORMAT_RGBA16F) {
+            } else if (format === PIXELFORMAT_RGBA16F) {
 
                 // half float
                 data1 = convertToHalfFloat(luts.data1);
