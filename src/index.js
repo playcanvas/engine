@@ -261,7 +261,6 @@ export { ScrollbarComponentSystem } from './framework/components/scrollbar/syste
 export * from './framework/components/scroll-view/constants.js';
 export { ScrollViewComponent } from './framework/components/scroll-view/component.js';
 export { ScrollViewComponentSystem } from './framework/components/scroll-view/system.js';
-export { SortedLoopArray } from './framework/utils/sorted-loop-array.js';
 export { SoundSlot } from './framework/components/sound/slot.js';
 export { SoundComponent } from './framework/components/sound/component.js';
 export { SoundComponentSystem } from './framework/components/sound/system.js';
