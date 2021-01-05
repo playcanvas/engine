@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var SpriteComponentData = function () {
+class SpriteComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        SpriteComponentData: SpriteComponentData
-    };
-}());
+export { SpriteComponentData };

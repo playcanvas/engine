@@ -1,4 +1,3 @@
-
 #ifndef VIEWMATRIX
 #define VIEWMATRIX
 uniform mat4 matrix_view;

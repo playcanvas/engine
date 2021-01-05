@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Lights</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.StandardMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+
+        var entity, light, camera;
+
+        // Load a model file and create a Entity with a model component
+        var url = "../assets/models/statue.glb";
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            entity = new pc.Entity();
+            entity.addComponent("model", {
+                type: "asset",
+                asset: asset.resource.model,
+                castShadows: true
+            });
+            app.root.addChild(entity);
+        });
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 24);
+        camera.rotate(0, 0, 0);
+
+        // Create an Entity for the ground
+        var ground = new pc.Entity();
+        ground.addComponent("model", {
+            type: "box"
+        });
+        ground.setLocalScale(50, 1, 50);
+        ground.setLocalPosition(0, -0.5, 0);
+
+        var material = createMaterial({
+            ambient: new pc.Color(0.1, 0.4, 0.1),
+            diffuse: new pc.Color(0.1, 0.4, 0.1)
+        });
+        ground.model.material = material;
+
+        // Create an spot light
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "spot",
+            color: new pc.Color(1, 1, 1),
+            outerConeAngle: 60,
+            innerConeAngle: 40,
+            range: 100,
+            intensity: 1,
+            castShadows: true,
+            shadowBias: 0.005,
+            normalOffsetBias: 0.01,
+            shadowResolution: 2048
+        });
+
+        var cone = new pc.Entity();
+        cone.addComponent("model", {
+            type: "cone"
+        });
+        cone.model.material = createMaterial({ emissive: new pc.Color(1, 1, 1) });
+        light.addChild(cone);
+
+        // Create a point light
+        var pointlight = new pc.Entity();
+        pointlight.addComponent("light", {
+            type: "point",
+            color: new pc.Color(0, 0, 1),
+            range: 100,
+            intensity: 1
+        });
+        pointlight.addComponent("model", {
+            type: "sphere"
+        });
+        pointlight.model.material = createMaterial({ diffuse: new pc.Color(0, 0, 0), emissive: new pc.Color(0, 0, 1) });
+
+        // Add Entities into the scene hierarchy
+        app.root.addChild(camera);
+        app.root.addChild(light);
+        app.root.addChild(pointlight);
+        app.root.addChild(ground);
+
+        // Simple update loop to rotate the light
+        var radius = 20;
+        var height = 5;
+        var angle = 0;
+
+        var pointRadius = 5;
+        var pointHeight = 10;
+        app.on("update", function (dt) {
+            angle += 20 * dt;
+            if (angle > 360) {
+                angle -= 360;
+            }
+            if (entity) {
+                light.lookAt(entity.getPosition());
+                light.rotateLocal(90, 0, 0);
+                light.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
+
+                pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
+            }
+
+        });
+    </script>
+</body>
+</html>

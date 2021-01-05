@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var ScreenComponentData = function () {
+class ScreenComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        ScreenComponentData: ScreenComponentData
-    };
-}());
+export { ScreenComponentData };

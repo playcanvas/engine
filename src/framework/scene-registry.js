@@ -1,57 +1,48 @@
-Object.assign(pc, function () {
+import { path } from '../core/path.js';
 
-    /**
-     * @private
-     * @constructor
-     * @name pc.SceneRegistryItem
-     * @description Item to be stored in the {@link pc.SceneRegistry}
-     * @param {String} name The name of the scene
-     * @param {String} url The url of the scene file
-     */
-    var SceneRegistryItem = function (name, url) {
-        this.name = name;
-        this.url = url;
-    };
+import { ABSOLUTE_URL } from '../asset/constants.js';
 
-    /**
-     * @private
-     * @constructor
-     * @name pc.SceneRegistry
-     * @description Container for storing the name and url for scene files
-     * @param {pc.Application} app The application
-     */
-    var SceneRegistry = function (app) {
+import { ComponentSystem } from './components/system.js';
+
+import { SceneRegistryItem } from './scene-registry-item.js';
+
+/**
+ * @class
+ * @name pc.SceneRegistry
+ * @description Container for storing the name and url for scene files.
+ * @param {pc.Application} app - The application.
+ */
+class SceneRegistry {
+    constructor(app) {
         this._app = app;
         this._list = [];
         this._index = {};
         this._urlIndex = {};
-    };
+    }
 
-    SceneRegistry.prototype.destroy = function () {
+    destroy() {
         this._app = null;
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#list
-     * @description return the list of scene
-     * @returns {pc.SceneRegistryItem[]} All items in the registry
+     * @description Return the list of scene.
+     * @returns {pc.SceneRegistryItem[]} All items in the registry.
      */
-    SceneRegistry.prototype.list = function () {
+    list() {
         return this._list;
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#add
-     * @description  Add a new item to the scene registry
-     * @param {String} name The name of the scene
-     * @param {String} url  The url of the scene file
-     * @returns {Boolean} Returns true if the scene was successfully added to the registry, false otherwise
+     * @description  Add a new item to the scene registry.
+     * @param {string} name - The name of the scene.
+     * @param {string} url -  The url of the scene file.
+     * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
      */
-    SceneRegistry.prototype.add = function (name, url) {
+    add(name, url) {
         if (this._index.hasOwnProperty(name)) {
             // #ifdef DEBUG
             console.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
@@ -59,54 +50,51 @@ Object.assign(pc, function () {
             return false;
         }
 
-        var item = new pc.SceneRegistryItem(name, url);
+        var item = new SceneRegistryItem(name, url);
 
         var i = this._list.push(item);
         this._index[item.name] = i - 1;
         this._urlIndex[item.url] = i - 1;
 
         return true;
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#find
-     * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}
-     * @param  {String} name The name of the scene
-     * @returns {pc.SceneRegistryItem} The stored data about a scene
+     * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}.
+     * @param  {string} name - The name of the scene.
+     * @returns {pc.SceneRegistryItem} The stored data about a scene.
      */
-    SceneRegistry.prototype.find = function (name) {
+    find(name) {
         if (this._index.hasOwnProperty(name)) {
             return this._list[this._index[name]];
         }
-        return null;
 
-    };
+        return null;
+    }
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#findByUrl
-     * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}
-     * @param  {String} url The URL to search by
-     * @returns {pc.SceneRegistryItem} The stored data about a scene
+     * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}.
+     * @param  {string} url - The URL to search by.
+     * @returns {pc.SceneRegistryItem} The stored data about a scene.
      */
-    SceneRegistry.prototype.findByUrl = function (url) {
+    findByUrl(url) {
         if (this._urlIndex.hasOwnProperty(url)) {
             return this._list[this._urlIndex[url]];
         }
         return null;
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#remove
-     * @description  Remove an item from the scene registry
-     * @param  {String} name The name of the scene
+     * @description  Remove an item from the scene registry.
+     * @param  {string} name - The name of the scene.
      */
-    SceneRegistry.prototype.remove = function (name) {
+    remove(name) {
         if (this._index.hasOwnProperty(name)) {
             var i = this._index[name];
             var item = this._list[i];
@@ -125,30 +113,29 @@ Object.assign(pc, function () {
                 this._urlIndex[item.url] = i;
             }
         }
-    };
+    }
 
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
-     * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-     * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+     * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
+     * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
+     * passed (err, entity) where err is null if no errors occurred.
      * @example
      *
-     * var url = app.getSceneUrl("Scene Name");
-     * app.loadSceneHierarchy(url, function (err, entity) {
+     * var url = app.scenes.getSceneUrl("Scene Name");
+     * app.scenes.loadSceneHierarchy(url, function (err, entity) {
      *     if (!err) {
-     *       var e = app.root.find("My New Entity");
+     *         var e = app.root.find("My New Entity");
      *     } else {
-     *       // error
+     *         // error
      *     }
-     *   }
      * });
      */
-    SceneRegistry.prototype.loadSceneHierarchy = function (url, callback) {
+    loadSceneHierarchy(url, callback) {
         var self = this;
 
         // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
@@ -156,8 +143,8 @@ Object.assign(pc, function () {
         var handler = this._app.loader.getHandler("hierarchy");
 
         // include asset prefix if present
-        if (this._app.assets && this._app.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-            url = pc.path.join(this._app.assets.prefix, url);
+        if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+            url = path.join(this._app.assets.prefix, url);
         }
 
         handler.load(url, function (err, data) {
@@ -179,8 +166,8 @@ Object.assign(pc, function () {
                 self._app.root.addChild(entity);
 
                 // initialize components
-                pc.ComponentSystem.initialize(entity);
-                pc.ComponentSystem.postInitialize(entity);
+                ComponentSystem.initialize(entity);
+                ComponentSystem.postInitialize(entity);
 
                 if (callback) callback(err, entity);
             };
@@ -188,15 +175,15 @@ Object.assign(pc, function () {
             // load priority and referenced scripts before opening scene
             self._app._preloadScripts(data, _loaded);
         });
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name pc.SceneRegistry#loadSceneSettings
-     * @description Load a scene file and apply the scene settings to the current scene
-     * @param {String} url The URL of the scene file. This can be looked up using app.getSceneUrl
-     * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+     * @description Load a scene file and apply the scene settings to the current scene.
+     * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
+     * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
+     * are applied. Passed (err) where err is null if no error occurred.
      * @example
      *
      * var url = app.getSceneUrl("Scene Name");
@@ -206,15 +193,14 @@ Object.assign(pc, function () {
      *     } else {
      *       // error
      *     }
-     *   }
      * });
      */
-    SceneRegistry.prototype.loadSceneSettings = function (url, callback) {
+    loadSceneSettings(url, callback) {
         var self = this;
 
         // include asset prefix if present
-        if (this._app.assets && this._app.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-            url = pc.path.join(this._app.assets.prefix, url);
+        if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+            url = path.join(this._app.assets.prefix, url);
         }
 
         this._app.loader.load(url, "scenesettings", function (err, settings) {
@@ -230,24 +216,26 @@ Object.assign(pc, function () {
                 }
             }
         });
-    };
+    }
 
     /**
-     * @private
      * @function
      * @name  pc.SceneRegistry#loadScene
-     * @description Load the scene hierarchy and scene settings. This is an internal method used by the pc.Application
-     * @param  {String}   url      The URL of the scene file
-     * @param  {Function} callback The function called after the settings are applied. Passed (err, scene) where err is null if no error occurred and scene is the pc.Scene
+     * @description Load the scene hierarchy and scene settings. This is an internal method used
+     * by the pc.Application.
+     * @param {string} url - The URL of the scene file.
+     * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
+     * applied. Passed (err, scene) where err is null if no error occurred and scene is the
+     * {@link pc.Scene}.
      */
-    SceneRegistry.prototype.loadScene =  function (url, callback) {
+    loadScene(url, callback) {
         var self = this;
 
         var handler = this._app.loader.getHandler("scene");
 
         // include asset prefix if present
-        if (this._app.assets && this._app.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-            url = pc.path.join(this._app.assets.prefix, url);
+        if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+            url = path.join(this._app.assets.prefix, url);
         }
 
         handler.load(url, function (err, data) {
@@ -271,7 +259,7 @@ Object.assign(pc, function () {
 
                     // Initialise pack settings
                     if (self._app.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        self._app.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                        self._app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
 
                     if (callback) {
@@ -287,11 +275,7 @@ Object.assign(pc, function () {
                 }
             }
         });
-    };
+    }
+}
 
-    return {
-        SceneRegistry: SceneRegistry,
-        SceneRegistryItem: SceneRegistryItem
-    };
-
-}());
+export { SceneRegistry };

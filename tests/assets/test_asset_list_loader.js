@@ -6,20 +6,20 @@ describe('pc.AssetListLoader', function () {
         app = new pc.Application(document.createElement('canvas'));
 
         assetList = [
-            new pc.Asset('Statue_1.json', 'model', {
-                url: 'base/examples/assets/statue/Statue_1.json'
+            new pc.Asset('box.json', 'model', {
+                url: 'base/tests/test-assets/box/box.json'
             }),
-            new pc.Asset('Statue_Material', 'material', {
-                url: 'base/examples/assets/statue/11268/phong9.json'
+            new pc.Asset('Box Material.json', 'material', {
+                url: 'base/tests/test-assets/box/1/Box Material.json'
             }),
-            new pc.Asset('Statue_Diffuse', 'texture', {
-                url: 'base/examples/assets/statue/11270/Statue_1_C.jpg'
+            new pc.Asset('clouds.jpg', 'texture', {
+                url: 'base/examples/assets/textures/clouds.jpg'
             }),
-            new pc.Asset('Statue_Normal', 'texture', {
-                url: 'base/examples/assets/statue/11273/Statue_1_N.jpg'
+            new pc.Asset('heart.png', 'texture', {
+                url: 'base/examples/assets/textures/heart.png'
             }),
-            new pc.Asset('Statue_Spec', 'texture', {
-                url: 'base/examples/assets/statue/11274/Statue_1_S.jpg'
+            new pc.Asset('snowflake.png', 'texture', {
+                url: 'base/examples/assets/textures/snowflake.png'
             })
         ];
 

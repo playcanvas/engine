@@ -1,10 +1,8 @@
-Object.assign(pc, function () {
-    var AudioListenerComponentData = function () {
+class AudioListenerComponentData {
+    constructor() {
         // Serialized
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        AudioListenerComponentData: AudioListenerComponentData
-    };
-}());
+export { AudioListenerComponentData };

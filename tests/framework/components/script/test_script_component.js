@@ -2,6 +2,8 @@ describe("pc.ScriptComponent", function () {
     var app;
 
     beforeEach(function (done) {
+        this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
         app = new pc.Application(document.createElement("canvas"));
 
         window.initializeCalls = [];
@@ -142,7 +144,7 @@ describe("pc.ScriptComponent", function () {
                 "data": {
                     "scripts": {
                         "scriptWithAttributes": {
-                            "attributesOrder": ["attribute1", "attribute2"],
+                            "attributesOrder": ["attribute1", "attribute2", "attribute3", "attribute4"],
                             "attributes": {
                                 "attribute1": {
                                     "type": "entity"
@@ -150,6 +152,21 @@ describe("pc.ScriptComponent", function () {
                                 "attribute2": {
                                     "type": "number",
                                     "default": 2
+                                },
+                                "attribute3": {
+                                    "type": "json",
+                                    "schema": [{
+                                        "name": 'fieldNumber',
+                                        "type": 'number'
+                                    }]
+                                },
+                                "attribute4": {
+                                    "type": "json",
+                                    "array": true,
+                                    "schema": [{
+                                        "name": 'fieldNumber',
+                                        "type": 'number'
+                                    }]
                                 }
                             }
                       }
@@ -215,6 +232,56 @@ describe("pc.ScriptComponent", function () {
                 },
                 "region": "eu-west-1",
                 "id": "8"
+            },
+            "9": {
+                "tags": [],
+                "name": "postCloner.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postCloner": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postCloner.js",
+                    "size": 1,
+                    "hash": "postCloner hash",
+                    "url": "base/tests/framework/components/script/postCloner.js"
+                },
+                "region": "eu-west-1",
+                "id": "9"
+            },
+            "10": {
+                "tags": [],
+                "name": "postInitializeReporter.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postInitializeReporter": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postInitializeReporter.js",
+                    "size": 1,
+                    "hash": "postInitializeReporter hash",
+                    "url": "base/tests/framework/components/script/postInitializeReporter.js"
+                },
+                "region": "eu-west-1",
+                "id": "10"
             }
         });
 
@@ -223,7 +290,7 @@ describe("pc.ScriptComponent", function () {
                 console.error(err);
             }
 
-            app.loadScene('base/tests/framework/components/script/scene1.json', function () {
+            app.scenes.loadScene('base/tests/framework/components/script/scene1.json', function () {
                 app.start();
                 done();
             });
@@ -711,6 +778,46 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(c2, ++idx, 'postInitialize scriptB');
     });
 
+    it("postInitialize is called for entities that are cloned in another postInitialize", function () {
+        var src = new pc.Entity();
+        src.enabled = false;
+        src.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postInitializeReporter"
+            ],
+            "scripts": {
+                "postInitializeReporter": {
+                    "enabled": true,
+                    "attributes": {
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(src);
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postCloner"
+            ],
+            "scripts": {
+                "postCloner": {
+                    "enabled": true,
+                    "attributes": {
+                        "entityToClone": src.getGuid()
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        expect(window.initializeCalls.length).to.equal(1);
+    });
+
     it("script attributes are initialized for enabled entity", function () {
         var e2 = new pc.Entity();
         app.root.addChild(e2);
@@ -734,9 +841,11 @@ describe("pc.ScriptComponent", function () {
         });
 
         app.root.addChild(e);
+
         expect(e.script.scriptWithAttributes.attribute1).to.equal(e2);
         expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
     });
+
 
     it("script attributes are initialized with disabled entity", function () {
         var e2 = new pc.Entity();
@@ -1016,6 +1125,150 @@ describe("pc.ScriptComponent", function () {
 
             done();
         });
+    });
+
+    it('json script attributes are initialized correctly', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "scriptWithAttributes"
+            ],
+            "scripts": {
+                "scriptWithAttributes": {
+                    "enabled": true,
+                    "attributes": {
+                        "attribute3": {
+                            fieldNumber: 1
+                        },
+                        "attribute4": [{
+                            fieldNumber: 2
+                        }, {
+                            fieldNumber: 'shouldBeNull'
+                        }, {
+                            missing: true,
+                            fieldNumberArray: ['shouldBecomeNull']
+                        }, {
+                            fieldNumberArray: [1,2,3]
+                        }]
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(e);
+        expect(e.script.scriptWithAttributes.attribute3).to.be.an('object');
+        expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+        expect(e.script.scriptWithAttributes.attribute4).to.be.an.instanceof(Array);
+
+        expect(e.script.scriptWithAttributes.attribute4[0]).to.be.an('object');
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
+
+        expect(e.script.scriptWithAttributes.attribute4[1].fieldNumber).to.equal(null);
+
+        expect(e.script.scriptWithAttributes.attribute4[2].fieldNumber).to.equal(1);
+        expect(e.script.scriptWithAttributes.attribute4[2].missing).to.equal(undefined);
+        expect(e.script.scriptWithAttributes.attribute4[2].fieldNumberArray).to.deep.equal([null]);
+
+        expect(e.script.scriptWithAttributes.attribute4[3].fieldNumberArray).to.deep.equal([1, 2, 3]);
+    });
+
+    it('json script attributes are cloned correctly', function () {
+        var e = new pc.Entity();
+        var child = new pc.Entity('child');
+        e.addChild(child);
+
+        e.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "scriptWithAttributes"
+            ],
+            "scripts": {
+                "scriptWithAttributes": {
+                    "enabled": true,
+                    "attributes": {
+                        "attribute3": {
+                            fieldNumber: 1,
+                            fieldEntity: child.getGuid()
+                        },
+                        "attribute4": [{
+                            fieldNumber: 2,
+                            fieldEntity: child.getGuid()
+                        }]
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        var e2 = e.clone();
+        app.root.addChild(e2);
+
+        expect(e2.script.scriptWithAttributes.attribute3).to.be.an('object');
+        expect(e2.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+        expect(e2.script.scriptWithAttributes.attribute4).to.be.an.instanceof(Array);
+
+        expect(e2.script.scriptWithAttributes.attribute4[0]).to.be.an('object');
+        expect(e2.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
+        expect(e2.script.scriptWithAttributes.attribute4).to.not.equal(e.script.scriptWithAttributes.attribute4);
+
+        var clonedChild = e2.findByName('child');
+        expect(clonedChild).to.not.equal(null);
+
+        // check for 'true' instead of perform actual equals test because when it's false it's terribly slow
+        expect(e2.script.scriptWithAttributes.attribute3.fieldEntity === clonedChild).to.equal(true);
+        expect(e2.script.scriptWithAttributes.attribute4[0].fieldEntity === clonedChild).to.equal(true);
+
+        e2.script.scriptWithAttributes.attribute3.fieldNumber = 4;
+        expect(e2.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(4);
+        expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+
+
+        e2.script.scriptWithAttributes.attribute4 = [{
+            fieldNumber: 3
+        }, {
+            fieldNumber: 4
+        }];
+
+        expect(e2.script.scriptWithAttributes.attribute4.length).to.equal(2);
+        expect(e2.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(3);
+        expect(e2.script.scriptWithAttributes.attribute4[1].fieldNumber).to.equal(4);
+
+        expect(e.script.scriptWithAttributes.attribute4.length).to.equal(1);
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(2);
+    });
+
+    it('default values work for script attributes', function () {
+        var e = new pc.Entity();
+        e.addComponent('script');
+        e.script.create('scriptWithAttributes');
+
+        app.root.addChild(e);
+
+
+        expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
+        expect(e.script.scriptWithAttributes.attribute3).to.exist;
+        expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
+    });
+
+    it('default values work for partially initialized script attributes', function () {
+        var e = new pc.Entity();
+        e.addComponent('script');
+        e.script.create('scriptWithAttributes', {
+            attributes: {
+                attribute2: 3,
+                attribute4: [{
+                    fieldEntity: null
+                }]
+            }
+        });
+
+        app.root.addChild(e);
+
+        expect(e.script.scriptWithAttributes.attribute2).to.equal(3);
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(1);
+        expect(e.script.scriptWithAttributes.attribute4[0].fieldNumberArray).to.deep.equal([]);
     });
 
     it('enable is fired when entity becomes enabled', function () {
@@ -1786,7 +2039,7 @@ describe("pc.ScriptComponent", function () {
         app.root.children[0].destroy();
 
         window.initializeCalls.length = 0;
-        app.loadScene('base/tests/framework/components/script/scene2.json', function () {
+        app.scenes.loadScene('base/tests/framework/components/script/scene2.json', function () {
             var e = app.root.findByName('A');
             var other = app.root.findByName('B');
 
@@ -3025,9 +3278,30 @@ describe("pc.ScriptComponent", function () {
 
                 done();
             });
-
         });
+    });
 
+    it('pc.ScriptComponent#has', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
 
+        expect(e.script.has('scriptA')).to.equal(true);
+        expect(e.script.has('scriptB')).to.equal(true);
+        expect(e.script.has('scriptC')).to.equal(false);
+        expect(e.script.has('')).to.equal(false);
+        expect(e.script.has(undefined)).to.equal(false);
+        expect(e.script.has(null)).to.equal(false);
     });
 });

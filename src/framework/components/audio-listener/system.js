@@ -1,55 +1,56 @@
-Object.assign(pc, function () {
-    var _schema = ['enabled'];
+import { Component } from '../component.js';
+import { ComponentSystem } from '../system.js';
 
-    /**
-     * @constructor
-     * @name pc.AudioListenerComponentSystem
-     * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
-     * @description Create a new AudioListenerComponentSystem
-     * @param {pc.Application} app The application managing this system.
-     * @param {pc.SoundManager} manager A sound manager instance.
-     * @extends pc.ComponentSystem
-     */
-    var AudioListenerComponentSystem = function (app, manager) {
-        pc.ComponentSystem.call(this, app);
+import { AudioListenerComponent } from './component.js';
+import { AudioListenerComponentData } from './data.js';
 
-        this.id = "audiolistener";
-        this.description = "Specifies the location of the listener for 3D audio playback.";
+var _schema = ['enabled'];
 
-        this.ComponentType = pc.AudioListenerComponent;
-        this.DataType = pc.AudioListenerComponentData;
+/**
+ * @class
+ * @name pc.AudioListenerComponentSystem
+ * @augments pc.ComponentSystem
+ * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
+ * @description Create a new AudioListenerComponentSystem.
+ * @param {pc.Application} app - The application managing this system.
+ * @param {pc.SoundManager} manager - A sound manager instance.
+ */
+function AudioListenerComponentSystem(app, manager) {
+    ComponentSystem.call(this, app);
 
-        this.schema = _schema;
+    this.id = "audiolistener";
 
-        this.manager = manager;
-        this.current = null;
+    this.ComponentType = AudioListenerComponent;
+    this.DataType = AudioListenerComponentData;
 
-        pc.ComponentSystem.bind('update', this.onUpdate, this);
-    };
-    AudioListenerComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
-    AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;
+    this.schema = _schema;
 
-    pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);
+    this.manager = manager;
+    this.current = null;
 
-    Object.assign(AudioListenerComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            properties = ['enabled'];
+    ComponentSystem.bind('update', this.onUpdate, this);
+}
+AudioListenerComponentSystem.prototype = Object.create(ComponentSystem.prototype);
+AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;
 
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-        },
+Component._buildAccessors(AudioListenerComponent.prototype, _schema);
 
-        onUpdate: function (dt) {
-            if (this.current) {
-                var position = this.current.getPosition();
-                this.manager.listener.setPosition(position);
+Object.assign(AudioListenerComponentSystem.prototype, {
+    initializeComponentData: function (component, data, properties) {
+        properties = ['enabled'];
 
-                var wtm = this.current.getWorldTransform();
-                this.manager.listener.setOrientation(wtm);
-            }
+        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+    },
+
+    onUpdate: function (dt) {
+        if (this.current) {
+            var position = this.current.getPosition();
+            this.manager.listener.setPosition(position);
+
+            var wtm = this.current.getWorldTransform();
+            this.manager.listener.setOrientation(wtm);
         }
-    });
+    }
+});
 
-    return {
-        AudioListenerComponentSystem: AudioListenerComponentSystem
-    };
-}());
+export { AudioListenerComponentSystem };

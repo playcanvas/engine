@@ -1,4 +1,5 @@
 varying vec2 vUv0;
+
 uniform sampler2D source;
 uniform vec4 params;
 

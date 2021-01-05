@@ -7,4 +7,3 @@
     float interpolation = dot(-velocityV, centerToVertexV) * 0.5 + 0.5;
 
     particlePos = mix(particlePos, posPrev, interpolation);
-

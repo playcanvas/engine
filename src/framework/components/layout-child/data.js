@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var LayoutChildComponentData = function () {
+class LayoutChildComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        LayoutChildComponentData: LayoutChildComponentData
-    };
-}());
+export { LayoutChildComponentData };

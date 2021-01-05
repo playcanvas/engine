@@ -1,75 +1,107 @@
-Object.assign(pc, function () {
+/**
+ * @namespace
+ * @name pc.platform
+ * @description Global namespace that stores flags regarding platform environment and features support.
+ * @example
+ * if (pc.platform.touch) {
+ *     // touch is supported
+ * }
+ */
+var platform = {
     /**
-     * @name pc.platform
-     * @namespace
-     * @description global namespace that stores flags regarding platform environment and features support
-     * @example
-     * if (pc.platform.touch) {
-     *     // touch is supported
-     * }
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.desktop
+     * @description Is it a desktop or laptop device.
      */
-    var platform = {
-        /**
-         * @name pc.platform.desktop
-         * @description is it a desktop or laptop device
-         */
-        desktop: false,
+    desktop: false,
 
-        /**
-         * @name pc.platform.mobile
-         * @description is it a mobile or tablet device
-         */
-        mobile: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.mobile
+     * @description Is it a mobile or tablet device.
+     */
+    mobile: false,
 
-        /**
-         * @name pc.platform.ios
-         * @description if it is iOS
-         */
-        ios: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.ios
+     * @description If it is iOS.
+     */
+    ios: false,
 
-        /**
-         * @name pc.platform.android
-         * @description if it is Android
-         */
-        android: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.android
+     * @description If it is Android.
+     */
+    android: false,
 
-        /**
-         * @name pc.platform.windows
-         * @description if it is Windows
-         */
-        windows: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.windows
+     * @description If it is Windows.
+     */
+    windows: false,
 
-        /**
-         * @name pc.platform.cocoonjs
-         * @description if it is CocoonJS
-         */
-        cocoonjs: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.xbox
+     * @description If it is Xbox.
+     */
+    xbox: false,
 
-        /**
-         * @name pc.platform.xbox
-         * @description if it is Xbox
-         */
-        xbox: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.gamepads
+     * @description If platform supports gamepads.
+     */
+    gamepads: false,
 
-        /**
-         * @name pc.platform.gamepads
-         * @description if platform supports gamepads
-         */
-        gamepads: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.touch
+     * @description If platform supports touch input.
+     */
+    touch: false,
 
-        /**
-         * @name pc.platform.touch
-         * @description if platform supports touch input
-         */
-        touch: false,
+    /**
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.workers
+     * @description If the platform supports Web Workers.
+     */
+    workers: false,
 
-        /**
-         * @name pc.platform.workers
-         * @description if the platform supports Web Workers
-         */
-        workers: false
-    };
+    /**
+     * @private
+     * @static
+     * @readonly
+     * @type {boolean}
+     * @name pc.platform.passiveEvents
+     * @description If the platform supports an options object as the third parameter
+     * to `EventTarget.addEventListener()` and the passive property is supported.
+     */
+    passiveEvents: false
+};
 
+if (typeof navigator !== 'undefined') {
     var ua = navigator.userAgent;
 
     if (/(windows|mac os|linux|cros)/i.test(ua))
@@ -92,16 +124,24 @@ Object.assign(pc, function () {
         platform.ios = true;
     }
 
-    if (navigator.isCocoonJS)
-        platform.cocoonjs = true;
-
-    platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+    if (typeof window !== 'undefined') {
+        platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+    }
 
     platform.gamepads = 'getGamepads' in navigator;
 
     platform.workers = (typeof(Worker) !== 'undefined');
 
-    return {
-        platform: platform
-    };
-}());
+    try {
+        var opts = Object.defineProperty({}, 'passive', {
+            get: function () {
+                platform.passiveEvents = true;
+                return false;
+            }
+        });
+        window.addEventListener("testpassive", null, opts);
+        window.removeEventListener("testpassive", null, opts);
+    } catch (e) {}
+}
+
+export { platform };

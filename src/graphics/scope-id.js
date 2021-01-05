@@ -1,7 +1,14 @@
-Object.assign(pc, function () {
-    'use strict';
+import { VersionedObject } from './versioned-object.js';
 
-    var ScopeId = function (name) {
+/**
+ * @class
+ * @name pc.ScopeId
+ * @classdesc The scope for a variable.
+ * @param {string} name - The variable name.
+ * @property {string} name The variable name.
+ */
+class ScopeId {
+    constructor(name) {
         // Set the name
         this.name = name;
 
@@ -9,24 +16,32 @@ Object.assign(pc, function () {
         this.value = null;
 
         // Create the version object
-        this.versionObject = new pc.VersionedObject();
-    };
+        this.versionObject = new VersionedObject();
+    }
 
-    Object.assign(ScopeId.prototype, {
-        setValue: function (value) {
-            // Set the new value
-            this.value = value;
+    /**
+     * @function
+     * @name pc.ScopeId#setValue
+     * @description Set variable value.
+     * @param {*} value - The value.
+     */
+    setValue(value) {
+        // Set the new value
+        this.value = value;
 
-            // Increment the revision
-            this.versionObject.increment();
-        },
+        // Increment the revision
+        this.versionObject.increment();
+    }
 
-        getValue: function () {
-            return this.value;
-        }
-    });
+    /**
+     * @function
+     * @name pc.ScopeId#getValue
+     * @description Get variable value.
+     * @returns {*} The value.
+     */
+    getValue() {
+        return this.value;
+    }
+}
 
-    return {
-        ScopeId: ScopeId
-    };
-}());
+export { ScopeId };

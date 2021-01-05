@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Render To Texture</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // helper function to create a primitive with shape type, position, scale, color and layer
+        function createPrimitive(primitiveType, position, scale, color, layer) {
+            // create material of specified color
+            var material = new pc.StandardMaterial();
+            material.diffuse = color;
+            material.update();
+
+            // create primitive
+            var primitive = new pc.Entity();
+            primitive.addComponent('model', {
+                type: primitiveType,
+                layers: layer
+            });
+            primitive.model.material = material;
+
+            // set position and scale and add it to scene
+            primitive.setLocalPosition(position);
+            primitive.setLocalScale(scale);
+            app.root.addChild(primitive);
+
+            return primitive;
+        }
+
+        // create texture and render target for rendering into, including depth buffer
+        var texture = new pc.Texture(this.app.graphicsDevice, {
+            width: 512,
+            height: 256,
+            format: pc.PIXELFORMAT_R8_G8_B8,
+            autoMipmap: true,
+            minFilter: pc.FILTER_LINEAR,
+            magFilter: pc.FILTER_LINEAR
+        });
+        var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, texture, { depth: true });
+
+        // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
+        var tvLayer = new pc.Layer({ name: "TVLayer" });
+        app.scene.layers.insert(tvLayer, 0);
+
+        // set up layer to render to the render targer
+        tvLayer.renderTarget = renderTarget;
+
+        // get world layer
+        var worldLayer = app.scene.layers.getLayerByName("World");
+
+        // create ground plane and 3 primitives, visible in both layers
+        createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [worldLayer.id, tvLayer.id]);
+        createPrimitive("sphere", new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 0, 0), [worldLayer.id, tvLayer.id]);
+        createPrimitive("box", new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 1, 0), [worldLayer.id, tvLayer.id]);
+        createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id, tvLayer.id]);
+
+        // Create main camera, which renders entities in world layer
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.2, 0.2, 0.4),
+            layers: [worldLayer.id]
+        });
+        camera.translate(0, 20, 25);
+        camera.lookAt(pc.Vec3.ZERO);
+        app.root.addChild(camera);
+
+        // Create tv camera, which renders entities in tv layer
+        var tvCamera = new pc.Entity();
+        tvCamera.addComponent("camera", {
+            clearColor: new pc.Color(0.2, 0.2, 0.4),
+            layers: [tvLayer.id]
+        });
+        // add sphere at the position of tv camera to see it in the world
+        tvCamera.addComponent("model", {
+            type: "sphere"
+        });
+        app.root.addChild(tvCamera);
+
+        // Create an Entity with a point light component and add it to both layers
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 200,
+            castShadows: true,
+            layers: [worldLayer.id, tvLayer.id]
+        });
+        light.translate(0, 2, 5);
+        app.root.addChild(light);
+
+        // create a plane called tv which we use to display rendered texture
+        var tv = createPrimitive("plane", new pc.Vec3(4, 4, -5), new pc.Vec3(10, 5, 5), new pc.Color(1, 1, 1), [worldLayer.id]);
+        tv.setLocalEulerAngles(90, 0, 0);
+        tv.model.castShadows = false;
+        tv.model.receiveShadows = false;
+        tv.model.material.diffuseMap = texture;     // assign our rendered texture as a diffuse texture
+        tv.model.material.update();
+
+        // update things each frame
+        var time = 0;
+        var switchTime = 0;
+        app.on("update", function (dt) {
+            // rotate tv camera around the objects
+            time += dt;
+            tvCamera.setLocalPosition(12 * Math.sin(time), 5, 12 * Math.cos(time));
+            tvCamera.lookAt(pc.Vec3.ZERO);
+
+            // every 5 seconds switch tv camera between perspective and orthographic projection
+            switchTime += dt;
+            if (switchTime > 5) {
+                switchTime = 0;
+                if (tvCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
+                    tvCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
+                } else {
+                    tvCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
+                    tvCamera.camera.orthoHeight = 5;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

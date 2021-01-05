@@ -56,112 +56,112 @@ describe('pc.keyboard', function () {
   });
 
   it("Keydown A", function () {
-      k.on(pc.input.EVENT_KEYDOWN, function (event) {
-          equal(event.key, pc.input.KEY_A);
+      k.on(pc.EVENT_KEYDOWN, function (event) {
+          equal(event.key, pc.KEY_A);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keydown', {
-        keyCode: pc.input.KEY_A
+        keyCode: pc.KEY_A
       });
   });
 
   it("Keydown Left arrow", function () {
-      k.on(pc.input.EVENT_KEYDOWN, function (event) {
-          equal(event.key, pc.input.KEY_LEFT);
+      k.on(pc.EVENT_KEYDOWN, function (event) {
+          equal(event.key, pc.KEY_LEFT);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keydown', {
-        keyCode: pc.input.KEY_LEFT
+        keyCode: pc.KEY_LEFT
       });
   });
 
   it("Keydown F1", function () {
-      k.on(pc.input.EVENT_KEYDOWN, function (event) {
-          equal(event.key, pc.input.KEY_F1);
+      k.on(pc.EVENT_KEYDOWN, function (event) {
+          equal(event.key, pc.KEY_F1);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keydown', {
-        keyCode: pc.input.KEY_F1
+        keyCode: pc.KEY_F1
       });
   });
 
   it("Keyup A", function () {
-      k.on(pc.input.EVENT_KEYUP, function (event) {
-          equal(event.key, pc.input.KEY_A);
+      k.on(pc.EVENT_KEYUP, function (event) {
+          equal(event.key, pc.KEY_A);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keyup', {
-        keyCode: pc.input.KEY_A
+        keyCode: pc.KEY_A
       });
   });
 
   it("Keyup Left arrow", function () {
-      k.on(pc.input.EVENT_KEYUP, function (event) {
-          equal(event.key, pc.input.KEY_LEFT);
+      k.on(pc.EVENT_KEYUP, function (event) {
+          equal(event.key, pc.KEY_LEFT);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keyup', {
-        keyCode: pc.input.KEY_LEFT
+        keyCode: pc.KEY_LEFT
       });
   });
 
   it("Keyup F1", function () {
-      k.on(pc.input.EVENT_KEYUP, function (event) {
-          equal(event.key, pc.input.KEY_F1);
+      k.on(pc.EVENT_KEYUP, function (event) {
+          equal(event.key, pc.KEY_F1);
           equal(event.element, document.body);
           ok(event.event);
       });
 
       simulate(document.body, 'keyup', {
-        keyCode: pc.input.KEY_F1
+        keyCode: pc.KEY_F1
       });
   });
 
   it("isPressed", function () {
-    press(pc.input.KEY_A);
-    ok(k.isPressed(pc.input.KEY_A));
+    press(pc.KEY_A);
+    ok(k.isPressed(pc.KEY_A));
     k.update();
-    ok(k.isPressed(pc.input.KEY_A));
+    ok(k.isPressed(pc.KEY_A));
   });
 
   it("isPressed: released", function () {
-    pressAndRelease(pc.input.KEY_A);
-    equal(k.isPressed(pc.input.KEY_A), false);
+    pressAndRelease(pc.KEY_A);
+    equal(k.isPressed(pc.KEY_A), false);
   });
 
   it("isPressed: hold", function () {
-    pressAndHold(pc.input.KEY_A);
-    equal(k.isPressed(pc.input.KEY_A), true);
+    pressAndHold(pc.KEY_A);
+    equal(k.isPressed(pc.KEY_A), true);
   });
 
   it("wasPressed", function () {
-    press(pc.input.KEY_A);
-    equal(k.wasPressed(pc.input.KEY_A), true);
+    press(pc.KEY_A);
+    equal(k.wasPressed(pc.KEY_A), true);
     k.update();
-    equal(k.wasPressed(pc.input.KEY_A), false);
+    equal(k.wasPressed(pc.KEY_A), false);
   });
 
   it("wasReleased", function () {
-    press(pc.input.KEY_A);
-    equal(k.wasReleased(pc.input.KEY_A), false);
+    press(pc.KEY_A);
+    equal(k.wasReleased(pc.KEY_A), false);
     k.update();
-    release(pc.input.KEY_A);
-    equal(k.wasReleased(pc.input.KEY_A), true);
+    release(pc.KEY_A);
+    equal(k.wasReleased(pc.KEY_A), true);
   });
 
   // it("toKeyIdentifier: output is uppercase", function () {
   //     var k = new pc.Keyboard(document.body);
-  //     var id = k.toKeyIdentifier(pc.input.KEY_N);
+  //     var id = k.toKeyIdentifier(pc.KEY_N);
   //     equal(id, "U+004E");
   // });
 

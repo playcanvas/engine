@@ -1,4 +1,3 @@
-
 vec3 unpack3NFloats(float src) {
     float r = fract(src);
     float g = fract(src * 256.0);
@@ -10,11 +9,11 @@ float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc) {
+vec4 tex1Dlod_lerp(highp sampler2D tex, vec2 tc) {
     return mix( texture2D(tex,tc), texture2D(tex,tc + graphSampleSize), fract(tc.x*graphNumSamples) );
 }
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
+vec4 tex1Dlod_lerp(highp sampler2D tex, vec2 tc, out vec3 w) {
     vec4 a = texture2D(tex,tc);
     vec4 b = texture2D(tex,tc + graphSampleSize);
     float c = fract(tc.x*graphNumSamples);
@@ -25,7 +24,6 @@ vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
 
     return mix(a, b, c);
 }
-
 
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
     float c = cos(pRotation);
@@ -38,13 +36,23 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 }
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY) {
-   vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
-   return pos;
+    #ifdef SCREEN_SPACE
+        vec3 pos = vec3(-1, 0, 0) * quadXY.x + vec3(0, -1, 0) * quadXY.y;
+    #else
+        vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+    #endif
+
+    return pos;
 }
 
 vec3 customFace(vec3 InstanceCoords, vec2 quadXY) {
     vec3 pos = faceTangent * quadXY.x + faceBinorm * quadXY.y;
     return pos;
+}
+
+vec2 safeNormalize(vec2 v) {
+    float l = length(v);
+    return (l > 1e-06) ? v / l : v;
 }
 
 void main(void) {
@@ -60,7 +68,8 @@ void main(void) {
 #ifdef LOCAL_SPACE
     inVel = mat3(matrix_model) * inVel;
 #endif
-    vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
+    vec2 velocityV = safeNormalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
+
     float particleLifetime = lifetime;
 
     if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);

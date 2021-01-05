@@ -1,39 +1,36 @@
-Object.assign(pc, function () {
-    'use strict';
+import { http } from '../net/http.js';
 
-    var HtmlHandler = function () {
-        this.retryRequests = false;
-    };
+class HtmlHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-    Object.assign(HtmlHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
-
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback(pc.string.format("Error loading html resource: {0} [{1}]", url.original, err));
-                }
-            });
-        },
-
-        open: function (url, data) {
-            return data;
-        },
-
-        patch: function (asset, assets) {
+    load(url, callback) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
+            };
         }
-    });
 
-    return {
-        HtmlHandler: HtmlHandler
-    };
-}());
+        http.get(url.load, {
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
+        }, function (err, response) {
+            if (!err) {
+                callback(null, response);
+            } else {
+                callback("Error loading html resource: " + url.original + " [" + err + "]");
+            }
+        });
+    }
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) {
+    }
+}
+
+export { HtmlHandler };

@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var LayoutGroupComponentData = function () {
+class LayoutGroupComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        LayoutGroupComponentData: LayoutGroupComponentData
-    };
-}());
+export { LayoutGroupComponentData };

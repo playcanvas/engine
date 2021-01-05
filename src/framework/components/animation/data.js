@@ -1,5 +1,5 @@
-Object.assign(pc, function () {
-    var AnimationComponentData = function () {
+class AnimationComponentData {
+    constructor() {
         // Serialized
         this.assets = [];
         this.speed = 1.0;
@@ -9,19 +9,22 @@ Object.assign(pc, function () {
 
         // Non-serialized
         this.animations = { };
-        this.skeleton = null;
         this.model = null;
         this.prevAnim = null;
         this.currAnim = null;
+        this.blending = false;
+        this.blend = 0;
+        this.blendSpeed = 0;
+        this.playing = false;
+
+        // json animation skeleton
+        this.skeleton = null;
         this.fromSkel = null;
         this.toSkel = null;
-        this.blending = false;
-        this.blendTime = 0;
-        this.blendTimeRemaining = 0;
-        this.playing = false;
-    };
 
-    return {
-        AnimationComponentData: AnimationComponentData
-    };
-}());
+        // glb animation controller
+        this.animEvaluator = null;
+    }
+}
+
+export { AnimationComponentData };

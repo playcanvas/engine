@@ -1,35 +1,24 @@
-Object.assign(pc, function () {
-    'use strict';
-
-    var Version = function () {
+class Version {
+    constructor() {
         // Set the variables
         this.globalId = 0;
         this.revision = 0;
-    };
+    }
 
-    Object.assign(Version.prototype, {
-        equals: function (other) {
-            return this.globalId === other.globalId &&
-                   this.revision === other.revision;
-        },
+    equals(other) {
+        return this.globalId === other.globalId &&
+               this.revision === other.revision;
+    }
 
-        notequals: function (other) {
-            return this.globalId !== other.globalId ||
-                   this.revision !== other.revision;
-        },
+    copy(other) {
+        this.globalId = other.globalId;
+        this.revision = other.revision;
+    }
 
-        copy: function (other) {
-            this.globalId = other.globalId;
-            this.revision = other.revision;
-        },
+    reset() {
+        this.globalId = 0;
+        this.revision = 0;
+    }
+}
 
-        reset: function () {
-            this.globalId = 0;
-            this.revision = 0;
-        }
-    });
-
-    return {
-        Version: Version
-    };
-}());
+export { Version };

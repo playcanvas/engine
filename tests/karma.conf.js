@@ -6,7 +6,7 @@ var sourceFiles;
 
 if (release) {
     console.log('Testing release build');
-    sourceFiles = [path.resolve('build/output/playcanvas-latest.js')];
+    sourceFiles = [path.resolve('build/playcanvas.js')];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {
@@ -18,6 +18,10 @@ module.exports = function (config) {
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '..',
+
+        client: {
+            args: process.argv
+        },
 
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([

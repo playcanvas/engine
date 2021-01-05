@@ -1,47 +1,44 @@
-Object.assign(pc, function () {
-    'use strict';
+import { http } from '../net/http.js';
 
-    var SceneSettingsHandler = function (app) {
+class SceneSettingsHandler {
+    constructor(app) {
         this._app = app;
-        this.retryRequests = false;
-    };
+        this.maxRetries = 0;
+    }
 
-    Object.assign(SceneSettingsHandler.prototype, {
-        load: function (url, callback) {
-            if (typeof url === 'string') {
-                url = {
-                    load: url,
-                    original: url
-                };
-            }
-
-            pc.http.get(url.load, {
-                retry: this.retryRequests
-            }, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    var errMsg = 'Error while loading scene settings ' + url.original;
-                    if (err.message) {
-                        errMsg += ': ' + err.message;
-                        if (err.stack) {
-                            errMsg += '\n' + err.stack;
-                        }
-                    } else {
-                        errMsg += ': ' + err;
-                    }
-
-                    callback(errMsg);
-                }
-            });
-        },
-
-        open: function (url, data) {
-            return data.settings;
+    load(url, callback) {
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
+            };
         }
-    });
 
-    return {
-        SceneSettingsHandler: SceneSettingsHandler
-    };
-}());
+        http.get(url.load, {
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
+        }, function (err, response) {
+            if (!err) {
+                callback(null, response);
+            } else {
+                var errMsg = 'Error while loading scene settings ' + url.original;
+                if (err.message) {
+                    errMsg += ': ' + err.message;
+                    if (err.stack) {
+                        errMsg += '\n' + err.stack;
+                    }
+                } else {
+                    errMsg += ': ' + err;
+                }
+
+                callback(errMsg);
+            }
+        });
+    }
+
+    open(url, data) {
+        return data.settings;
+    }
+}
+
+export { SceneSettingsHandler };

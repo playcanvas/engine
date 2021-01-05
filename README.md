@@ -1,58 +1,50 @@
-![PlayCanvas](http://static.playcanvas.com/images/logo/Playcanvas_LOGOSET_SMALL-06.png)
+<div align="center">
+
+<img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL Game Engine
 
-PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in all modern browsers without the need for a plugin.
+PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
+
+[![NPM version][npm-badge]][npm-url]
+[![Minzipped size][minzip-badge]][minzip-url]
+[![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
+[![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
+[![Twitter][twitter-badge]][twitter-url]
+
+[English](https://github.com/playcanvas/engine/blob/master/README.md)
+[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
 
 ## Project Showcase
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
-[![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Disney: Hour of Code](https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/disney_moana_hourofcode.jpg)](http://partners.disney.com/hour-of-code/wayfinding-with-code) [![WebVR Lab](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/446331/CAAA6B-image-25.jpg)](https://playcanv.as/p/sAsiDvtC/)
-<br />
-[![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/45093/ESR5DQ-image-25.jpg)](https://tanx.io/) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://chrome.google.com/webstore/detail/swooop/jblimahfbhdcengjfbdpdngcfcghladf) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](http://www.miniclip.com/games/flappy-bird/en/) [![Virtual Voodoo](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/422705/E23A1E-image-25.jpg)](http://www.miniclip.com/games/virtual-voodoo/en/)
-<br />
-[![Space Base](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/411394/I2C48B-image-25.jpg)](https://playcanv.as/p/yipplmVO/) [![Sponza Runtime Lightmaps](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/391368/221DFF-image-25.jpg)](https://playcanv.as/p/txPePQvy/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt) [![Orange Room VR](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/434546/BKST60-image-25.jpg)](https://playcanv.as/p/zi09Xvld/)
-<br />
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](https://playcanv.as/p/nL1dYbMv) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/)
+[![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](http://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )  
+
+
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
+</div>
+
 ## Users
 
-PlayCanvas Engine and Tools been used by leading companies in game development, automotive, digital agencies and more. Some of them are:  
-**Disney, King, Zynga, Miniclip, Nickelodeon, Leapfrog, IGT, ARM, Samsung, Mozilla, Facebook**
+PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
+**Animech, Arm, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
 
 ## Features
 
-The PlayCanvas Engine is a fully featured game engine.
+PlayCanvas is a fully featured game engine.
 
-* **Graphics**
-    * WebGL 2.0 based renderer (with fallback to WebGL 1.0)
-    * Physically based rendering (PBR)
-    * Directional, point and spot lights
-    * Shadow mapping (PCF and VSM implementations)
-    * Runtime lightmap baking
-    * Static, skinned and morphed meshes
-    * GPU Particle engine with editor
-    * PostFX library: bloom, edge detect, FXAA, vignette, etc
-    * Seamless default material support from Maya, 3DS Max, Blender, etc.
-    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](http://developer.playcanvas.com/en/user-manual/assets/)
-* **Collision & Physics**
-    * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
-* **Audio**
-    * 3D Positional audio via Web Audio API
-* **Resource Loading**
-    * Simple and powerful resource loading
-    * Streaming of individual assets
-    * Asset Variants - loads compressed textures (DXT, PVR, ETC1, ETC2) based on platform support
-* **Entity / Component System**
-    * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
-* **Scripting system**
-    * Write game behaviors by attaching JavaScript to game entities
-    * Live code hot-swap enables rapid iteration
-* **Input**
-    * Mouse, Keyboard, Touch, Gamepad, VR
+* 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL 1 & 2.
+* 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
+* ⚛️ **Physics** - Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
+* 🎮 **Input** - Mouse, keyboard, touch, gamepad and VR controller APIs
+* 🔊 **Sound** - 3D positional sounds built on the Web Audio API
+* 📦 **Assets** - Asynchronous streaming system built on [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) and [Basis](https://github.com/BinomialLLC/basis_universal) compression
+* 📜 **Scripts** - Write game behaviors in Typescript or JavaScript
 
 ## Usage
 
@@ -77,94 +69,66 @@ Here's a super-simple Hello World example - a spinning cube!
     <canvas id='application'></canvas>
     <script>
         // create a PlayCanvas application
-        var canvas = document.getElementById('application');
-        var app = new pc.Application(canvas, { });
-        app.start();
+        const canvas = document.getElementById('application');
+        const app = new pc.Application(canvas);
 
         // fill the available space at full resolution
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // ensure canvas is resized when window changes size
-        window.addEventListener('resize', function() {
-            app.resizeCanvas();
-        });
+        window.addEventListener('resize', () => app.resizeCanvas());
 
         // create box entity
-        var cube = new pc.Entity('cube');
-        cube.addComponent('model', {
+        const box = new pc.Entity('cube');
+        box.addComponent('model', {
             type: 'box'
         });
+        app.root.addChild(box);
 
         // create camera entity
-        var camera = new pc.Entity('camera');
+        const camera = new pc.Entity('camera');
         camera.addComponent('camera', {
             clearColor: new pc.Color(0.1, 0.1, 0.1)
         });
+        app.root.addChild(camera);
+        camera.setPosition(0, 0, 3);
 
         // create directional light entity
-        var light = new pc.Entity('light');
+        const light = new pc.Entity('light');
         light.addComponent('light');
-
-        // add to hierarchy
-        app.root.addChild(cube);
-        app.root.addChild(camera);
         app.root.addChild(light);
-
-        // set up initial positions and orientations
-        camera.setPosition(0, 0, 3);
         light.setEulerAngles(45, 0, 0);
 
-        // register a global update event
-        app.on('update', function (deltaTime) {
-            cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
-        });
+        // rotate the box according to the delta time since the last frame
+        app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+
+        app.start();
     </script>
 </body>
 </html>
 ```
 
-Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/playcanvas/pen/NPbxMj).
-
-## Tutorials & Examples
-
-See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
-
-## Documentation
-
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
-
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
-## How to get models?
-
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
+Want to play with the code yourself? Edit it on [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
 
 ## How to build
 
-* Ensure you have [nodejs](https://nodejs.org) installed
-* Ensure you have [Java](https://java.com/en/download/) installed.
+Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
 
-The first time you build you will be asked to install dependencies using `npm`. e.g.
+    npm install
 
-    npm install fs-extra
-    npm install google-closure-compiler
-    npm install preprocessor
+Now you can run various build options:
 
-Then, to execute a build of the engine to the build/output folder, do:
-
-    cd build
-    node build.js
-
-See the built in help for more build instructions
-
-    node build.js -h
+| Command                | Description                               | Outputs                          |
+|------------------------|-------------------------------------------|----------------------------------|
+| `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
+| `npm run closure`      | Build minified release engine             | `build\playcanvas.min.js`        |
+| `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
+| `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
 
 Pre-built versions of the engine are also available.
 
-Latest development release:
+Latest development release (head revision of master branch):
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
@@ -179,30 +143,34 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
+### Generate Source Maps
+
+To build the source map to allow for easier engine debugging, you can add `-- -m` to any engine build command. For example:
+
+    npm run build -- -m
+
+This will output to `build/output/playcanvas.js.map`
+
+Note: The preprocessor is ignored when when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
+
 ## How to run tests
 
-PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
+PlayCanvas uses of Karma for unit testing. There are two ways of running the tests:
 
-    # Runs the tests once over the unbuilt source files - useful if you just want a quick 'all-clear'
-    npm run test
+| Command                | Description                                                                           |
+|------------------------|---------------------------------------------------------------------------------------|
+| `npm run test`         | Runs unit tests on a built `playcanvas.js`                                            |
+| `npm run test:watch`   | Re-runs unit tests when changes are detected - open http://localhost:9876/debug.html  |
 
-    # Watches all source and test files for changes, and automatically re-runs the tests when they change.
-    # Open http://localhost:9876/debug.html in your browser to debug the tests in real time.
-    #
-    # You can also edit the `tests/**/test_*.js` glob in tests/karma.conf.js to run a subset of the tests,
-    # during development.
-    npm run test:watch
+## How to get models?
 
-    # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
-    # to test the engine after building it. Make sure to do `npm run build` first to make sure you have
-    # an up-to-date build.
-    npm run test:release
+To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/engine/) in the developer documentation.
 
-## Getting Help
+## Useful Links
 
-[**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
-
-[**Discord**](https://discord.gg/N67tQuU) - Real-time text, voice and video chat for the PlayCanvas developer community.
+* [Forum](https://forum.playcanvas.com)
+* [Developer Site](https://developer.playcanvas.com)
+* [Blog](https://blog.playcanvas.com)
 
 ## Contributing
 
@@ -210,24 +178,21 @@ Want to help us make the best 3D engine on the web? Great!
 Check out [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) that will get you started.
 And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
 
-### Github Issues
-
-Please use [Github Issues](https://github.com/playcanvas/engine/issues) to report bugs or request features.
-
-### Reporting bugs
-
-Please follow these steps to report a bug
-
-1. **Search for related issues** - search the existing issues so that you don't create duplicates
-
-2. **Create a testcase** - Please create the smallest isolated testcase that you can that reproduces your bug
-
-3. **Share as much information as possible** - everything little helps, OS, browser version, all that stuff.
-
 ## PlayCanvas Platform
 
 The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, code editing, hosting and publishing services.
 
 ## License
 
-The PlayCanvas Engine is released under the [MIT](http://opensource.org/licenses/MIT) license. See LICENSE file.
+The PlayCanvas Engine is released under the [MIT](https://opensource.org/licenses/MIT) license. See LICENSE file.
+
+[npm-badge]: https://img.shields.io/npm/v/playcanvas
+[npm-url]: https://www.npmjs.com/package/playcanvas
+[minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
+[minzip-url]: https://bundlephobia.com/result?p=playcanvas
+[resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
+[open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
+[isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine
+[twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
+[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
+[docs]: https://developer.playcanvas.com/en/api/

@@ -1,9 +1,7 @@
-Object.assign(pc, function () {
-    var ScrollViewComponentData = function () {
+class ScrollViewComponentData {
+    constructor() {
         this.enabled = true;
-    };
+    }
+}
 
-    return {
-        ScrollViewComponentData: ScrollViewComponentData
-    };
-}());
+export { ScrollViewComponentData };
