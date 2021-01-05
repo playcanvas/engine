@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <style>
-        body { 
+        body {
             margin: 0;
             overflow-y: hidden;
         }
@@ -66,13 +66,11 @@
 
             function createScollbar(horizontal) {
                 var handle = new pc.Entity('Handle');
-                if (!horizontal) {
-                    handle.setLocalPosition(20, 0, 0);
-                }
                 var handleOptions = {
                     type: pc.ELEMENTTYPE_IMAGE,
                     color: new pc.Color(1, 1, 1),
                     opacity: 1,
+                    margin: new pc.Vec4(0, 0, 0, 0),
                     rect: new pc.Vec4(0, 0, 1, 1),
                     mask: false,
                     useInput: true
@@ -80,13 +78,9 @@
                 if (horizontal) {
                     handleOptions.anchor = new pc.Vec4(0, 0, 0, 1);  // Split in Y
                     handleOptions.pivot = new pc.Vec2(0, 0);         // Bottom left
-                    handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
-                    handleOptions.width = 32;
                 } else {
                     handleOptions.anchor = new pc.Vec4(0, 1, 1, 1);  // Split in X
                     handleOptions.pivot = new pc.Vec2(1, 1);         // Top right
-                    handleOptions.margin = new pc.Vec4(0, 0, 0, 0);
-                    handleOptions.height = 32;
                 }
                 handle.addComponent('element', handleOptions);
                 handle.addComponent('button', {
@@ -101,9 +95,9 @@
                 });
 
                 var scrollbar = new pc.Entity(horizontal ? 'HorizontalScrollbar' : 'VerticalScrollbar');
-                if (!horizontal) {
-                    scrollbar.setLocalPosition(0, 200, 0);
-                }
+
+                scrollbar.addChild(handle);
+
                 var scrollbarOptions = {
                     type: pc.ELEMENTTYPE_IMAGE,
                     color: new pc.Color(0.5, 0.5, 0.5),
@@ -112,32 +106,28 @@
                     mask: false,
                     useInput: false
                 };
+
+                var scrollbarSize = 20;
+
                 if (horizontal) {
                     scrollbarOptions.anchor = new pc.Vec4(0, 0, 1, 0);
                     scrollbarOptions.pivot = new pc.Vec2(0, 0);
-                    scrollbarOptions.margin = new pc.Vec4(0, 0, 20, -20);
-                    scrollbarOptions.height = 20;
+                    scrollbarOptions.margin = new pc.Vec4(0, 0, scrollbarSize, -scrollbarSize);
                 } else {
                     scrollbarOptions.anchor = new pc.Vec4(1, 0, 1, 1);
                     scrollbarOptions.pivot = new pc.Vec2(1, 1);
-                    scrollbarOptions.margin = new pc.Vec4(-20, 20, 0, 0);
-                    scrollbarOptions.width = 20;
+                    scrollbarOptions.margin = new pc.Vec4(-scrollbarSize, scrollbarSize, 0, 0);
                 }
                 scrollbar.addComponent('element', scrollbarOptions);
                 scrollbar.addComponent('scrollbar', {
                     orientation: horizontal ? pc.ORIENTATION_HORIZONTAL : pc.ORIENTATION_VERTICAL,
                     value: 0,
-                    handleEntity: handle,
-                    handleSize: 0.5
+                    handleSize: 0.5,
+                    handleEntity: handle
                 });
-
-                scrollbar.addChild(handle);
 
                 return scrollbar;
             }
-
-            var horizontalScrollbar = createScollbar(true);
-            var verticalScrollbar = createScollbar(false);
 
             // Scroll view viewport
             var viewport = new pc.Entity('Viewport');
@@ -152,7 +142,6 @@
                 type: pc.ELEMENTTYPE_IMAGE,
                 useInput: false
             });
-            viewport.setLocalPosition(0, 200, 0);
 
             // Group to hold the content inside the scroll view's viewport
             var content = new pc.Entity('Content');
@@ -182,8 +171,21 @@
             });
             content.addChild(text);
 
+            viewport.addChild(content);
+
             // Create a scroll view
             var scrollview = new pc.Entity('ScrollView');
+
+            screen.addChild(scrollview);
+
+            scrollview.addChild(viewport);
+
+            var horizontalScrollbar = createScollbar(true);
+            scrollview.addChild(horizontalScrollbar);
+
+            var verticalScrollbar = createScollbar(false);
+            scrollview.addChild(verticalScrollbar);
+
             scrollview.addComponent('element', {
                 anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
                 height: 200,
@@ -192,6 +194,7 @@
                 useInput: false,
                 width: 200
             });
+
             scrollview.addComponent('scrollview', {
                 bounceAmount: 0.1,
                 contentEntity: content,
@@ -205,12 +208,6 @@
                 verticalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,
                 viewportEntity: viewport
             });
-
-            screen.addChild(scrollview);
-            scrollview.addChild(viewport);
-            scrollview.addChild(horizontalScrollbar);
-            scrollview.addChild(verticalScrollbar);
-            viewport.addChild(content);
         }
     </script>
 </body>
