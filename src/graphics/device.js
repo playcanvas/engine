@@ -3267,11 +3267,11 @@ Object.assign(GraphicsDevice.prototype, {
                 var semantic = attrs[attr];
                 var loc = semanticToLocation[semantic];
 
+                // #ifdef DEBUG
                 if (locations.hasOwnProperty(loc)) {
-                    // #ifdef DEBUG
                     console.warn("WARNING: Two attribues are mapped to the same location in a shader: " + locations[loc] + " and " + attr);
-                    // #endif
                 }
+                // #endif
 
                 locations[loc] = attr;
                 gl.bindAttribLocation(glProgram, loc, attr);

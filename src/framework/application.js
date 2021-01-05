@@ -1547,9 +1547,8 @@ Object.assign(Application.prototype, {
         } else if (this._fillMode === FILLMODE_FILL_WINDOW) {
             width = windowWidth;
             height = windowHeight;
-        } else {
-            // FILLMODE_NONE use width and height that are provided
         }
+        // OTHERWISE: FILLMODE_NONE use width and height that are provided
 
         this.graphicsDevice.canvas.style.width = width + 'px';
         this.graphicsDevice.canvas.style.height = height + 'px';
@@ -1637,7 +1636,7 @@ Object.assign(Application.prototype, {
      *         fog_start: 1,
      *         global_ambient: [0, 0, 0],
      *         skyboxIntensity: 1,
-     *         skyboxRotation: [0, 0, 0, 1],
+     *         skyboxRotation: [0, 0, 0],
      *         fog_color: [0, 0, 0],
      *         lightmapMode: 1,
      *         fog: 'none',

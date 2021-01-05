@@ -1126,6 +1126,9 @@ var standard = {
                     tbn = tbn.replace(/\$UV/g, normalMapUv);
                 }
                 code += tbn;
+            } else if (options.enableGGXSpecular && !options.heightMap) {
+                code += chunks.normalVertexPS;
+                code += chunks.TBNObjectSpacePS;
             }
         }
 
@@ -1141,12 +1144,8 @@ var standard = {
                 } else {
                     code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-            } else {
+            } else if (!(options.enableGGXSpecular && !options.heightMap)) {
                 code += chunks.normalVertexPS;
-
-                if (options.enableGGXSpecular) {
-                    code += chunks.TBNObjectSpacePS;
-                }
             }
         }
 
@@ -1185,7 +1184,7 @@ var standard = {
         }
         code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
-        if (options.useSpecular && (lighting || reflections)) {
+        if ((lighting && options.useSpecular) || reflections) {
             if (options.specularAntialias && options.normalMap) {
                 if (options.normalizeNormalMap && needsNormal) {
                     code += chunks.specularAaToksvigPS;
@@ -1254,7 +1253,7 @@ var standard = {
         }
 
         if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-            if (options.clearCoat > 0){
+            if (options.clearCoat > 0) {
                 code += chunks.reflectionCCPS;
             }
             if (options.refraction){
@@ -1282,11 +1281,11 @@ var standard = {
                 }
             }
 
-            if (device.webgl2 || device.extStandardDerivatives) {
-                // bias is applied on render
-            } else {
+            if (!(device.webgl2 || device.extStandardDerivatives)) {
                 code += chunks.biasConstPS;
             }
+            // otherwise bias is applied on render
+
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
 
@@ -1343,7 +1342,7 @@ var standard = {
             code += chunks.combineDiffusePS;
         }
 
-        if (options.clearCoat > 0 ) {
+        if (options.clearCoat > 0) {
             code += chunks.combineClearCoatPS;
         }
 
@@ -1510,7 +1509,7 @@ var standard = {
 
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-                if (options.clearCoat > 0){
+                if (options.clearCoat > 0) {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
@@ -1679,7 +1678,7 @@ var standard = {
                 }
 
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                    if (options.clearCoat > 0 ) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.clearCoat > 0) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                 } else {
                     if (hasAreaLights) {

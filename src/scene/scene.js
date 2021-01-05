@@ -373,7 +373,7 @@ Scene.prototype.applySettings = function (settings) {
     this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
     if (settings.render.skyboxRotation !== undefined) {
-        this._skyboxRotation.set(settings.render.skyboxRotation);
+        this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
     }
 
     this._resetSkyboxModel();
