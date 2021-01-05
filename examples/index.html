@@ -11,7 +11,21 @@
         <div class="sidenav-toggle">
             <svg fill="white" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
         </div>
-        <div class="sidenav closed"></div>
+        <div class="sidenav closed">
+            <div id="flexbar">
+                <div id="flexbuttons">
+                    <button id="build_normal"   onclick="build_normal()  ">NORMAL</button>
+                    <button id="build_debug"    onclick="build_debug()   ">DEBUG</button>
+                    <button id="build_profiler" onclick="build_profiler()">PROFILER</button>
+                </div>
+                <div id="flexbuttons">
+                    <button id="mode_js"   onclick="mode_js()  ">JS</button>
+                    <button id="mode_as32" onclick="mode_as32()">AS32</button>
+                    <button id="mode_as64" onclick="mode_as64()">AS64</button>
+                    <button id="mode_asjs" onclick="mode_asjs()">ASJS</button>
+                </div>
+            </div>
+        </div>
         <iframe id="example"></iframe>
 
         <div class="sourcenav">
@@ -20,6 +34,57 @@
 
         <script src="examples.js"></script>
         <script>
+            var lastExample = "";
+            // Initially use normal JS build... neither Debug/Profiler nor anything AS related
+            var mode = "js";
+            var build = "normal";
+            let iframe = document.getElementById('example');
+
+            function mode_js() {
+                mode = "js";
+                loadExample(lastExample);
+            }
+
+            function mode_as32() {
+                mode = "as32";
+                loadExample(lastExample);
+            }
+
+            function mode_as64() {
+                mode = "as64";
+                loadExample(lastExample);
+            }
+
+            function mode_asjs() {
+                mode = "asjs";
+                loadExample(lastExample);
+            }
+
+            function build_normal() {
+                build = "normal";
+                loadExample(lastExample);
+            }
+
+            function build_debug() {
+                build = "debug";
+                loadExample(lastExample);
+            }
+
+            function build_profiler() {
+                build = "profiler";
+                loadExample(lastExample);
+            }
+
+            function update_background_color_for_build_and_mode() {
+                document.getElementById("mode_js"  ).style.backgroundColor = mode == "js" ? "#f60" : "white";
+                document.getElementById("mode_as32").style.backgroundColor = mode == "as32" ? "#f60" : "white";
+                document.getElementById("mode_as64").style.backgroundColor = mode == "as64" ? "#f60" : "white";
+                document.getElementById("mode_asjs").style.backgroundColor = mode == "asjs" ? "#f60" : "white";
+                document.getElementById("build_normal"  ).style.backgroundColor = build == "normal" ? "#f60" : "white";
+                document.getElementById("build_debug"   ).style.backgroundColor = build == "debug" ? "#f60" : "white";
+                document.getElementById("build_profiler").style.backgroundColor = build == "profiler" ? "#f60" : "white";
+            }
+
             let currentExampleRelativeUrl;
 
             function titleCase(string) {
@@ -31,14 +96,18 @@
             }
 
             function loadExample(example) {
-                let iframe = document.getElementById('example');
-                iframe.src = example;
+                update_background_color_for_build_and_mode();
+                if (build == "normal" && mode == "js") {
+                    iframe.src = example;
+                } else {
+                    iframe.src = "assemblyscript/example-loader.html?build=" + build + "&mode=" + mode + "&example=" + example;
+                }
+                lastExample = example;
                 location.href = location.protocol + '//' +
                                 location.host +
                                 location.pathname +
                                 '#' +
                                 example;
-
                 currentExampleRelativeUrl = example;
             }
 
@@ -46,10 +115,12 @@
             let url = location.href;
             let hashIndex = url.indexOf('#');
             if (hashIndex === -1) {
-                loadExample(categories[0].name + '/' + categories[0].examples[0] + '.html');
+                lastExample = categories[0].name + '/' + categories[0].examples[0] + '.html';
             } else {
-                loadExample(url.substring(hashIndex + 1));
+                lastExample = url.substring(hashIndex + 1);
             }
+
+            loadExample(lastExample);
 
             // Procedurally build the navigation sidebar
             let sidenav = document.querySelector(".sidenav");

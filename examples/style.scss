@@ -35,7 +35,7 @@ body {
   top: 0;
   left: 0;
   overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 0px;
+  padding-top: 40px;
   display: flex;
   flex-direction: column;
   background: $bcg-primary;
@@ -131,3 +131,29 @@ iframe {
     width: 100%;
   }
 }
+
+#flexbar {
+    position: fixed;
+    top: 0;
+    width: 223px;
+    background-color: #ccc;
+}
+
+#flexbuttons {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 5px 0;
+    border-bottom: 1px solid white;
+}
+
+button {
+    border: none;
+    outline: none;
+}
+
+button:focus {
+    border: none;
+    outline: none;
+}
+
+

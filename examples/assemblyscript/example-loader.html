@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas AS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+
+        // From: ?build=js&mode=js
+        // To:   {build: "js", mode: "js"}
+        var query = location.href.split("?").pop();
+        var parts = query.split("&");
+        var _GET = {};
+        for (var i=0; i<parts.length; i++) {
+            var part = parts[i];
+            var tmp = part.split("=");
+            _GET[tmp[0]] = tmp[1];
+        }
+
+        var build   = _GET["build"];
+        var mode    = _GET["mode"];
+        var example = _GET["example"];
+
+        console.log(_GET);
+
+        // Little polyfill for the extended AssemblyScript standard object Math
+        // Only required for ASJS testing mode, otherwise this is done in the .wasm's
+        Math.sincos_sin = 0;
+        Math.sincos_cos = 0;
+        Math.sincos = function (x) {
+            Math.sincos_sin = Math.sin(x);
+            Math.sincos_cos = Math.cos(x);
+        }
+
+        function fetch_script(url) {
+            return new Promise(function(resolve, reject) {
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.onload = function () {
+                    resolve(script);
+                };
+                script.onerror = function(err) {
+                    reject(err);
+                }
+                script.src = url /* + "?now=" + Date.now()*/;
+                document.head.appendChild(script);
+            });
+        }
+
+        var response;
+        var imports;
+        var module;
+
+        async function load_wasm() {
+            //response = fetch("../../build/untouched.wasm");
+            if (mode == "as32") {
+                response = fetch("../../build/optimized_32.wasm");
+            } else if (mode == "as64") {
+                response = fetch("../../build/optimized_64.wasm");
+            } else {
+                throw Error("Mode not supported: " + mode);
+            }
+            //buffer = await response.arrayBuffer();
+            imports = {};
+            //module = Loader.instantiateBuffer(buffer, imports);
+            module = await Loader.instantiateStreaming(response, imports);
+            window.assemblyscript = {
+                module,
+                instance
+            };
+            //console.log(module.I8.length);
+            // next three lines just test the auto-generated demangled class, which isn't so useful currently
+            // this PR might change it: https://github.com/AssemblyScript/assemblyscript/pull/437
+            // a = new module.Vec3(1,2,3)
+            // b = new module.Vec3(11,22,33)
+            // console.log("a.add(b)", a.add(b)); // returns no class but a raw pointer
+        }
+
+        async function main() {
+            if (mode == "as32" || mode == "as64") {
+                await fetch_script("./Loader.js");
+                await load_wasm();
+                // Can use up to 20 MB without regrowth
+                // If the memory exceeds, dataviews need to be updated for every Vec/Mat/Quat
+                // (otherwise their dataviews are invalid)
+                module.exports.memory.grow((20 * 1024 * 1024 ) / 65536);
+                //module.updateDataViews();
+            }
+
+            if (mode == "js") {
+                if (build == "normal") {
+                    await fetch_script("../../build/playcanvas.js");
+                } else if (build == "debug") {
+                    await fetch_script("../../build/playcanvas.dbg.js");
+                } else if (build == "profiler") {
+                    await fetch_script("../../build/playcanvas.prf.js");
+                } else {
+                    throw Error("Build not supported: " + build);
+                }
+            } else if (mode == "as32") {
+                await fetch_script("../../build/playcanvas.assemblyscript_32.js");
+            } else if (mode == "as64") {
+                await fetch_script("../../build/playcanvas.assemblyscript_64.js");
+            } else if (mode == "asjs") {
+                await fetch_script("../../build/playcanvas.assemblyscriptjs.js");
+            } else {                
+                throw Error("Mode not supported: " + mode);
+            }
+
+            //await fetch_script("../../build/playcanvas-extras.js");
+            //await fetch_script("animation_blend.js");
+            var response = await fetch("../" + example);
+
+            var text = await response.text();
+            window.text = text;
+            // [\s\S]* matches everything between script tags and ? makes it non-greedy
+            var matches = text.matchAll(/<script(.*?)>([\s\S]*?)<\/script>/g);
+            var scripts = [];
+            for (var match of matches) {
+                var attributes = match[1];
+                var textContent = match[2];
+                var src  = null;
+                var id   = null;
+                var type = null;
+                // Extract the actual data
+                var match_src  = attributes.match(/src=\"(.*?)\"/ );
+                var match_id   = attributes.match(/id=\"(.*?)\"/  );
+                var match_type = attributes.match(/type=\"(.*?)\"/);
+                if (match_src) {
+                    src = match_src[1];
+                }
+                if (match_id) {
+                    id = match_id[1];
+                }
+                if (match_type) {
+                    type = match_type[1];
+                } else {
+                    type = "text/javascript";
+                }
+                scripts.push({src, id, type, textContent})
+            }
+
+            console.log("scripts", scripts);
+
+            for (var script of scripts) {
+                switch (script.type) {
+                    case "text/javascript": {
+                        if (script.src) {
+                            // Every example loads this by default, but we load whatever version required beforehand
+                            if (script.src == "../../build/playcanvas.js") {
+                                continue;
+                            }
+                            await fetch_script(script.src);
+                        }
+                        if (script.text) {
+                            try {
+                                // I don't know why, but `app` is undefined in eval
+                                // Adding a <script> to <head> works though
+                                //eval(script.text);
+                                var scriptdom = document.createElement("script");
+                                scriptdom.text = script.text;
+                                document.head.appendChild(scriptdom);
+                            } catch (e) {
+                                window.e = e;
+                                console.error(e);
+                            }
+                        }
+                    }
+                    case "x-shader/x-vertex":
+                    case "x-shader/x-fragment": {
+                        // Reattach shader script to our document, so the script can find it later
+                        var dom = document.createElement("script");
+                        dom.id = script.id;
+                        dom.type = script.type;
+                        dom.textContent = script.textContent;
+                        document.head.appendChild(dom);
+                    }
+
+                }
+
+            }
+
+            Object.assign(window, {
+                scripts,
+                text
+            });
+        }
+        
+        main().then(function() {
+            console.log("main()");
+        }).catch(function(err) {
+            var msg = "Please run: npm run build:as";
+            alert(msg);
+            alert(err);
+            console.error(msg);
+            console.log("err", err);
+        });
+    </script>
+</body>
+</html>
