@@ -58,10 +58,9 @@ Object.assign(StandardNodeMaterial.prototype, {
 
     overrideGraphSwitch: function (name, value) {
         if (this.shaderGraphChunk) {
-            var currentValue = this._graphSwitchOverrides[name];// this.shaderGraphChunk.getSwitchValue(name);
+            var currentValue = this._graphSwitchOverrides[name];
             if (currentValue !== value) {
                 this._graphSwitchOverrides[name] = value;
-                // this.shaderGraphChunk.setSwitchValue(name, value);
                 this.dirtyShader = true;
             }
         }

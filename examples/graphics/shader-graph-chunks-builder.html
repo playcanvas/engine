@@ -96,9 +96,9 @@
                     var emisCalcNode = builder.addNode('mul', [ colConst, {node: texSampNodeA, swizzle: 'rgb'} ], { precision: 'highp' } );
 
                     // create a static switch to choose alpha source
-                    var switchValue = 1;
+                    var switchValue = 'B';
                     var switchName = 'switchAlpha';
-                    var staticSwitchAlpha = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'gb' }, { node: texSampNodeB, swizzle: 'ar' } ], switchValue);                
+                    var staticSwitchAlpha = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'gb', switchLabel: 'A' }, { node: texSampNodeB, swizzle: 'ar', switchLabel: 'B' } ], switchValue);                
 
                     // hook up outputs
                     builder.addOutput( staticSwitchAlpha, 'float', 'sgAlpha' );
@@ -148,7 +148,7 @@
                         {
                             flipTime += 4.0;
                             flipSwitch = true;
-                            switchValue = 1-switchValue;
+                            switchValue = switchValue === 'A' ? 'B' : 'A';
                         } 
 
                         shaderGraphMaterials.forEach(function (material) {

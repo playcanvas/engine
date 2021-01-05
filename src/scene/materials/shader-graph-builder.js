@@ -222,12 +222,12 @@ Object.assign(ShaderGraphBuilder.prototype, {
         var texNode = this.addNode('texSample', texArgs, options);
 
         var switchName = 'switch_' + texNode;
-        var switchValue = 0;
+        var switchValue = 'linear';
         if (texParam.valueTex.type === TEXTURETYPE_RGBM) {
-            switchValue = 2;
+            switchValue = 'RGBM';
         }
 
-        var switchArgs = [{ node: texNode, port: 'rgba' }, { node: texNode, port: 'srgba' }, { node: texNode, port: 'rgbm' }];
+        var switchArgs = [{ node: texNode, port: 'rgba', switchLabel: 'linear' }, { node: texNode, port: 'srgba', switchLabel: 'sRGB' }, { node: texNode, port: 'rgbm', switchLabel: 'RGBM' }];
         var switchNodeId = this.addStaticSwitch(switchName, switchArgs, switchValue);
 
         return switchNodeId;
@@ -248,7 +248,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
             console.error("pc.ShaderGraphBuilder#addStaticSwitch: failed to add static switch:" + name);
             return undefined;
         }
-        this._graph.addStaticSwitch(name, switchNodeId, args.length - 1, value);
+        this._graph.addStaticSwitch(name, switchNodeId, args, value);
 
         return switchNodeId;
     },

@@ -458,11 +458,23 @@ Object.assign(ShaderGraphNode.prototype, {
         return callString;
     },
 
-    addStaticSwitch: function (name, id, maxValue, value) {
+    addStaticSwitch: function (name, id, args, value) {
         if (this._switchMap[name]) {
             console.error('switch ' + name + ' already added!');
         } else {
-            this._switchMap[name] = { id: id, maxValue: maxValue, value: value };
+            var value2Index = {};
+            for (var i = 0; i < args.length; i++) {
+                var labelValue = args[i].switchLabel || `${i}`;
+
+                if (value2Index[labelValue] !== undefined) {
+                    console.error(`switch label ${labelValue} already used in switch: ${name}!`);
+                }
+
+                value2Index[labelValue] = i;
+            }
+
+            this._switchMap[name] = { id: id, maxValue: args.length - 1, value: value, index: value2Index[value], value2Index: value2Index };
+
             this._switchId2Name[id] = name;
         }
     },
@@ -471,17 +483,34 @@ Object.assign(ShaderGraphNode.prototype, {
         if (this._switchMap[name]) {
             return ((this._switchOverrides && this._switchOverrides[name] !== undefined) ? this._switchOverrides[name] : this._switchMap[name].value);
         }
+        console.error(`switch ${name} is invalid!`);
+    },
+
+    getSwitchIndex: function (name) {
+        var value = this.getSwitchValue(name);
+        if (value !== undefined) {
+            var index = this._switchMap[name].value2Index[value];
+            if (index !== undefined) {
+                return index;
+            }
+        }
+        console.error(`switch ${name} value or index is invalid!`);
     },
 
     setSwitchValue: function (name, value) {
-        if (this._switchMap[name]) {
-            if (value !== undefined && value >= 0 && value <= this._switchMap[name].maxValue) {
-                if (this._switchMap[name].value != value) {
-                    this._switchMap[name].value = value;
+        var mappedSwitch = this._switchMap[name];
+        if (mappedSwitch) {
+            var index = mappedSwitch.value2Index[value];
+            if (index !== undefined) {
+                if (mappedSwitch.index != index) {
+                    mappedSwitch.index = index;
+                    mappedSwitch.value = value;
                     this._defaultParamsDirty = true;
                     this._defaultSwitchesDirty = true;
                 }
             }
+        } else {
+            console.error(`switch ${name} is invalid!`);
         }
     },
 
@@ -554,7 +583,7 @@ Object.assign(ShaderGraphNode.prototype, {
                             }
                             if (ioPort.ptype === PORT_TYPE_SWITCH) {
                                  // assume it is a dynamic switch in sub graph (if a static is passed as a param, then compiler can still optimize)
-                                depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + subGraph.getSwitchValue(ioPort.name) + ');\n';
+                                depIoPort = 'uniform ' + subGraph._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + subGraph.getSwitchIndex(ioPort.name) + ');\n';
                                 depIoPortList.push(depIoPort);
                             }
                         }
@@ -583,7 +612,7 @@ Object.assign(ShaderGraphNode.prototype, {
             }
             if (ioPort.ptype === PORT_TYPE_SWITCH) {
                 // assume it is a static switch in root
-                generatedCodeString += 'const ' + this._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + this.getSwitchValue(ioPort.name) + ');\n';
+                generatedCodeString += 'const ' + this._precision + ' ' + ioPort.type + ' ' + ioPortCached.nameId + ' = float(' + this.getSwitchIndex(ioPort.name) + ');\n';
             }
         }
 
@@ -819,7 +848,7 @@ Object.assign(ShaderGraphNode.prototype, {
 
                     // if (this._switchId2Name[subGraphIndex]) {
                         // static switch
-                    //     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateStaticSwitch(this.getSwitchValue(this._switchId2Name[subGraphIndex]), dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
+                    //     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateStaticSwitch(this.getSwitchIndex(this._switchId2Name[subGraphIndex]), dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
                     // } else {
                     //     generatedCodeString += this.graphData.subGraphs[subGraphIndex]._generateSubGraphCall(dstTmpVarMap[subGraphIndex], srcTmpVarMap[subGraphIndex]);
                     // }

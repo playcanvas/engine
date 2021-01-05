@@ -125,9 +125,9 @@
                         var texSampNodeB = builder.addTextureSample( texParamB, builder.addNode('mul', [scrollNodeB, tileParamB]) );
 
                         // create a static switch to choose alpha source
-                        var switchValue = 0;
+                        var switchValue = 'A';
                         var switchName = 'switchAlpha';
-                        var staticSwitch = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'rgbg' }, { node: texSampNodeB, swizzle: 'rgbg' } ], switchValue);                
+                        var staticSwitch = builder.addStaticSwitch(switchName, [ { node: texSampNodeA, swizzle: 'rgbg', switchLabel: 'A' }, { node: texSampNodeB, swizzle: 'rgbg', switchLabel: 'B' } ], switchValue);                
 
                         var calcNodeA = builder.addNode('mul', [{ node: usefulConsts, swizzle: 'g' }, { node: usefulConsts, swizzle: 'g' }, { node: staticSwitch, swizzle: 'g' }]);
 
@@ -179,9 +179,9 @@
 
                             var t4=time%4.0;
                             if (t4>=2.0) {
-                                shaderGraphChunk.setSwitchValue(switchName, 0);
+                                shaderGraphChunk.setSwitchValue(switchName, 'A');
                             } else {
-                                shaderGraphChunk.setSwitchValue(switchName, 1);
+                                shaderGraphChunk.setSwitchValue(switchName, 'B');
                             }
                             
                             shaderGraphChunk.update(app.graphicsDevice);
@@ -189,9 +189,9 @@
                             if (entityB && matB) {
                                 var tB=time%1.0;
                                 if (tB>=0.5) {
-                                     matB.overrideGraphSwitch(switchName, 1);
+                                     matB.overrideGraphSwitch(switchName, 'B');
                                 } else {
-                                     matB.overrideGraphSwitch(switchName, 0);
+                                     matB.overrideGraphSwitch(switchName, 'A');
                                 }
                                 matB.update();
                             }             
