@@ -120,19 +120,17 @@ Object.defineProperty(SoundComponent.prototype, "positional", {
             var slot = slots[key];
             // recreate non overlapping sounds
             if (!slot.overlap) {
-                var oldInstances = slot.instances;
-                var newInstances = [];
+                var instances = slot.instances;
+                var oldLength = instances.length;
 
                 // When the instance is stopped, it gets removed from the slot.instances array
                 // so we are going backwards to compenstate for that
 
-                // We are also going to create a new array to hold the new instances created
-                // and assign to slot at the end
-                for (var i = oldInstances.length - 1; i >= 0; i--) {
-                    var isPlaying = oldInstances[i].isPlaying || oldInstances[i].isSuspended;
-                    var currentTime = oldInstances[i].currentTime;
+                for (var i = oldLength - 1; i >= 0; i--) {
+                    var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
+                    var currentTime = instances[i].currentTime;
                     if (isPlaying)
-                        oldInstances[i].stop();
+                        instances[i].stop();
 
                     var instance = slot._createInstance();
                     if (isPlaying) {
@@ -140,10 +138,8 @@ Object.defineProperty(SoundComponent.prototype, "positional", {
                         instance.currentTime = currentTime;
                     }
 
-                    newInstances.push(instance);
+                    instances.push(instance);
                 }
-
-                slot.instances = newInstances;
             }
         }
     }
