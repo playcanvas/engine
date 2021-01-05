@@ -126,13 +126,17 @@ Object.assign(GamePads.prototype, {
      * @function
      * @name pc.GamePads#poll
      * @description Poll for the latest data from the gamepad API.
-     * @param {object[]} [pads] - An optional array used to save the gamepads mapping instead of returning a new one
+     * @param {object[]} [pads] - An optional array used to receive the gamepads mapping. This array will be
+     * returned by this function.
      * @returns {object[]} An array of gamepads and mappings for the model of gamepad that is attached.
      * @example
      * var gamepads = new pc.GamePads();
      * var pads = gamepads.poll();
      */
-    poll: function (pads = []) {
+    poll: function (pads) {
+        if (pads === undefined) {
+            pads = [];
+        }
         if (pads.length > 0) {
             pads.length = 0;
         }
