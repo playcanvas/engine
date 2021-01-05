@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
     <style>
         body {
             margin: 0;
@@ -38,6 +39,8 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
+        var miniStats = new pcx.MiniStats(app);
+
         // Load a font
         var fontAsset = new pc.Asset('arial.json', "font", {
             url: "../assets/fonts/arial.json"
@@ -49,20 +52,22 @@
         function run() {
             // Create a camera
             var camera = new pc.Entity();
+            app.root.addChild(camera);
+
             camera.addComponent("camera", {
                 clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
             });
-            app.root.addChild(camera);
 
             // Create a 2D screen
             var screen = new pc.Entity();
+            app.root.addChild(screen);
+
             screen.addComponent("screen", {
                 screenSpace: true,
                 referenceResolution: new pc.Vec2(1280, 720),
                 scaleMode: pc.SCALEMODE_BLEND,
                 scaleBlend: 0.5
             });
-            app.root.addChild(screen);
 
             function createScollbar(horizontal) {
                 var handle = new pc.Entity('Handle');
@@ -87,7 +92,7 @@
                     active: true,
                     imageEntity: handle,
                     hitPadding: new pc.Vec4(0, 0, 0, 0),
-                    transitionMode: pc.BUTTON_TRANSITION_MODE_TINT, // This is undocumented
+                    transitionMode: pc.BUTTON_TRANSITION_MODE_TINT,
                     hoverTint: new pc.Color(1, 1, 1),
                     pressedTint: new pc.Color(1, 1, 1),
                     inactiveTint: new pc.Color(1, 1, 1),
@@ -129,8 +134,42 @@
                 return scrollbar;
             }
 
+            // Create some text content
+            var text = new pc.Entity("Text");
+            text.addComponent("element", {
+                alignment: new pc.Vec2(0, 0),
+                anchor: new pc.Vec4(0, 1, 0, 1),
+                autoHeight: true,
+                autoWidth: false,
+                fontAsset: fontAsset,
+                fontSize: 32,
+                lineHeight: 36,
+                pivot: new pc.Vec2(0, 1),
+                text: "This is a scroll view control. You can scroll the content by dragging the vertical " +
+                      "or horizontal scroll bars or by dragging the content itself. Notice the elastic " +
+                      "bounce if you drag the content beyond the limits of the scroll view.",
+                type: pc.ELEMENTTYPE_TEXT,
+                width: 400,
+                wrapLines: true
+            });
+
+            // Group to hold the content inside the scroll view's viewport
+            var content = new pc.Entity('Content');
+            content.addChild(text);
+
+            content.addComponent('element', {
+                anchor: new pc.Vec4(0, 1, 0, 1),
+                height: 400,
+                pivot: new pc.Vec2(0, 1),
+                type: pc.ELEMENTTYPE_GROUP,
+                useInput: true,
+                width: 400
+            });
+
             // Scroll view viewport
             var viewport = new pc.Entity('Viewport');
+            viewport.addChild(content);
+
             viewport.addComponent('element', {
                 anchor: new pc.Vec4(0, 0, 1, 1),
                 color: new pc.Color(0.2, 0.2, 0.2),
@@ -143,55 +182,22 @@
                 useInput: false
             });
 
-            // Group to hold the content inside the scroll view's viewport
-            var content = new pc.Entity('Content');
-            content.addComponent('element', {
-                anchor: new pc.Vec4(0, 1, 0, 1),
-                height: 400,
-                pivot: new pc.Vec2(0, 1),
-                type: pc.ELEMENTTYPE_GROUP,
-                useInput: true,
-                width: 400
-            });
-
-            // Create some text content
-            var text = new pc.Entity("Text");
-            text.addComponent("element", {
-                alignment: [0, 0],
-                anchor: [0, 1, 0, 1],
-                autoHeight: true,
-                autoWidth: false,
-                fontAsset: fontAsset,
-                fontSize: 32,
-                pivot: [0, 1],
-                text: "This is a scroll view control. You can scroll the content by dragging the vertical " +
-                      "or horizontal scroll bars or by dragging the content itself. Notice the elastic " +
-                      "bounce if you drag the content beyond the limits of the scroll view.",
-                type: pc.ELEMENTTYPE_TEXT,
-                width: 400,
-                wrapLines: true
-            });
-            content.addChild(text);
-
-            viewport.addChild(content);
+            var horizontalScrollbar = createScollbar(true);
+            var verticalScrollbar = createScollbar(false);
 
             // Create a scroll view
             var scrollview = new pc.Entity('ScrollView');
-
-            screen.addChild(scrollview);
-
             scrollview.addChild(viewport);
-
-            var horizontalScrollbar = createScollbar(true);
             scrollview.addChild(horizontalScrollbar);
-
-            var verticalScrollbar = createScollbar(false);
             scrollview.addChild(verticalScrollbar);
+
+            // You must add the scrollview entity to the hierarchy BEFORE adding the scrollview component
+            screen.addChild(scrollview);
 
             scrollview.addComponent('element', {
                 anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
                 height: 200,
-                pivot: new pc.Vec2(0, 1),
+                pivot: new pc.Vec2(0.5, 0.5),
                 type: pc.ELEMENTTYPE_GROUP,
                 useInput: false,
                 width: 200
@@ -203,7 +209,7 @@
                 friction: 0.05,
                 horizontal: true,
                 horizontalScrollbarEntity: horizontalScrollbar,
-                horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED, // Not documented
+                horizontalScrollbarVisibility: pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,
                 scrollMode: pc.SCROLL_MODE_BOUNCE,
                 vertical: true,
                 verticalScrollbarEntity: verticalScrollbar,
