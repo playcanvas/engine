@@ -134,7 +134,6 @@ var basic = {
         }
 
         if (options.pass !== SHADER_PICK) {
-            // ##### PICK PASS #####
             if (options.pass === SHADER_DEPTH) {
                 // ##### SCREEN DEPTH PASS #####
                 code += "    gl_FragColor = packFloat(vDepth);\n";
