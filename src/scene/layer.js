@@ -125,7 +125,7 @@ InstanceList.prototype.clearVisibleLists = function (cameraPass) {
  * @property {boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
  *
  * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
- * Both layers must share cameras. Frustum culling is only performed for one layer.
+ * Both layers must share cameras. Frustum culling is only performed for one layer. Useful for rendering multiple passes using different shaders.
  * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
  * @property {Function} onEnable Custom function that is called after the layer has been enabled.
  * This happens when:
@@ -189,6 +189,8 @@ function Layer(options) {
     this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
     this.renderTarget = options.renderTarget;
     this.shaderPass = options.shaderPass === undefined ? SHADER_FORWARD : options.shaderPass;
+
+    // true if the layer is just pass-through meshInstance drawing - used for UI and Gizmo layers. The layers doesn't have lights, shadows, culling ..
     this.passThrough = options.passThrough === undefined ? false : options.passThrough;
 
     this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
@@ -226,6 +228,9 @@ function Layer(options) {
 
     this.layerReference = options.layerReference; // should use the same camera
     this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
+
+    // a bit mask that interacts with meshInstance.mask. Especially useful combined with layerReference,
+    // allowing to filter some objects, while sharing their list and culling.
     this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
     this.opaqueMeshInstances = this.instances.opaqueMeshInstances;

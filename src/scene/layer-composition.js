@@ -6,6 +6,8 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from './constants.js';
 
+import { RenderAction } from './render-action.js';
+
 /**
  * @class
  * @name pc.LayerComposition
@@ -17,7 +19,7 @@ import {
  * True means only semi-transparent objects are rendered, and false means opaque.
  * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
  * True means the layer is rendered, false means it's skipped.
- * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. Inside
+ * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering. e.g. Inside
  * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
  */
 // Composition can hold only 2 sublayers of each layer
@@ -55,20 +57,21 @@ function LayerComposition() {
     // for each directional light (in _splitLights[LIGHTTYPE_DIRECTIONAL]), this stores array of unique cameras that are on the same layer as the light
     this._globalLightCameras = [];
 
-    // array of unique cameras from all layers
+    // array of unique cameras from all layers (CameraComponent type)
     this.cameras = [];
 
 
     this._globalLightCameraIds = []; // array mapping _globalLights to camera ids in composition
+
+    // working array of render targets already cleared within a frame, to avoid clearing an array multiple times by the same camera
     this._renderedRt = [];
+
+    // working arrays of cameras and layers already used during the rendering, written to in sync to allow single execution per camera / layer
     this._renderedByCam = [];
     this._renderedLayer = [];
 
-    // generated automatically - actual rendering sequence
-    // can differ from layerList/subLayer list in case of multiple cameras on one layer
-    // identical otherwise
-    this._renderList = []; // index to layerList/subLayerList
-    this._renderListCamera = []; // index to layer.cameras
+    // the actual rendering sequence, generated based on layers and cameras
+    this._renderActions = [];
 }
 LayerComposition.prototype = Object.create(EventHandler.prototype);
 LayerComposition.prototype.constructor = LayerComposition;
@@ -322,66 +325,103 @@ LayerComposition.prototype._update = function () {
         }
     }
 
-    var camera, index;
+    // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
+    var renderActionCount = 0;
+    var renderActions = this._renderActions;
+    function addRenderAction(layer, layerIndex, cameraIndex) {
+
+        // try and reuse object, otherwise allocate new
+        var renderAction = renderActions[renderActionCount];
+        if (!renderAction) {
+            renderAction = renderActions[renderActionCount] = new RenderAction();
+        }
+
+        // store the properties
+        renderAction.layerIndex = layerIndex;
+        renderAction.cameraIndex = cameraIndex;
+
+        // render target for rendering - target from the camera overrrides target from the layer
+        var camera = layer.cameras[cameraIndex];
+        var cameraTarget = camera ? camera.renderTarget : undefined;
+        renderAction.renderTarget = cameraTarget ? cameraTarget : layer.renderTarget;
+
+        renderActionCount++;
+    }
+
+    var camera, index, cameraIndex;
     if (this._dirtyCameras) {
+
+        this._dirtyCameras = false;
         result |= COMPUPDATED_CAMERAS;
 
-        // build array of unique cameras from all layers
         this.cameras.length = 0;
+
+        // walk the layers
         for (i = 0; i < len; i++) {
             layer = this.layerList[i];
+            layer._dirtyCameras = false;
+
+            // build array of unique cameras from all layers
             for (j = 0; j < layer.cameras.length; j++) {
                 camera = layer.cameras[j];
                 index = this.cameras.indexOf(camera);
                 if (index < 0) {
-                    index = this.cameras.length;
                     this.cameras.push(camera);
                 }
             }
         }
 
-        this._renderList.length = 0;
-        this._renderListCamera.length = 0;
-        var hash, hash2, groupLength, cam;
+        var hash, groupLength;
         var skipCount = 0;
 
+        // build render actions array which is the actual rendering sequence based on layers and cameras attached to them
         for (i = 0; i < len; i++) {
+
             if (skipCount) {
                 skipCount--;
                 continue;
             }
 
             layer = this.layerList[i];
-            if (layer.cameras.length === 0 && !layer.isPostEffect) continue;
+            if (layer.cameras.length === 0 && !layer.isPostEffect) {
+                continue;
+            }
+
             hash = layer._cameraHash;
-            if (hash === 0) { // single camera in layer
-                this._renderList.push(i);
-                this._renderListCamera.push(0);
+
+            // single camera in layer
+            if (hash === 0) {
+                addRenderAction(layer, i, 0);
 
             } else { // multiple cameras in a layer
-                groupLength = 1; // check if there is a sequence of sublayers with same cameras
+
+                // count a sequence of following sublayers with the same cameras
+                groupLength = 1;
                 for (j = i + 1; j < len; j++) {
-                    hash2 = this.layerList[j]._cameraHash;
-                    if (hash !== hash2) {
+                    if (hash !== this.layerList[j]._cameraHash) {
                         groupLength = (j - i) - 1;
                         break;
                     } else if (j === len - 1) {
                         groupLength = j - i;
                     }
                 }
-                if (groupLength === 1) { // not a sequence, but multiple cameras
-                    for (cam = 0; cam < layer.cameras.length; cam++) {
-                        this._renderList.push(i);
-                        this._renderListCamera.push(cam);
+
+                if (groupLength === 1) {
+
+                    // no sequence - render all cameras for this layer
+                    for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
+                        addRenderAction(layer, i, cameraIndex);
                     }
 
-                } else { // sequence of groupLength
-                    // add a whole sequence for each camera
-                    cam = 0;
-                    for (cam = 0; cam < layer.cameras.length; cam++) {
+                } else {
+
+                    // sequence of groupLength - add a whole sequence for each camera
+                    // sequence is added by camera to minimize number of times directional shadows gets re-rendered, which is done per camera
+                    // this changes sequence: Layer1 (Camera1, Camera2), Layer2 (Camera1, Camera2) to sequence:
+                    // Camera1(Layer1, Layer2), Camera2 (Layer1, Layer2) to group layer rendering into the same camera.
+                    for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
                         for (j = 0; j <= groupLength; j++) {
-                            this._renderList.push(i + j);
-                            this._renderListCamera.push(cam);
+                            addRenderAction(layer, i + j, cameraIndex);
                         }
                     }
                     // skip the sequence sublayers (can't just modify i in JS)
@@ -390,10 +430,7 @@ LayerComposition.prototype._update = function () {
             }
         }
 
-        this._dirtyCameras = false;
-        for (i = 0; i < len; i++) {
-            this.layerList[i]._dirtyCameras = false;
-        }
+        this._renderActions.length = renderActionCount;
     }
 
     var arr;
@@ -778,6 +815,7 @@ LayerComposition.prototype._sortLayersDescending = function (layersA, layersB, o
 };
 
 /**
+ * @private
  * @function
  * @name pc.LayerComposition#sortTransparentLayers
  * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
@@ -791,6 +829,7 @@ LayerComposition.prototype.sortTransparentLayers = function (layersA, layersB) {
 };
 
 /**
+ * @private
  * @function
  * @name pc.LayerComposition#sortOpaqueLayers
  * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
