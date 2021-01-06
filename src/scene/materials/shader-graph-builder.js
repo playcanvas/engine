@@ -25,9 +25,7 @@ var ShaderGraphBuilder = function (app) {
     this._graph.name = 'graphRoot_' + id;
 
     // for validation
-    this._addedNamedInputs = {};
-    this._addedNodes = [];
-    this._addedOutputs = {};
+    this._validationData = { _namedInputs: {}, _opNodes: [], _outputs: {} };
 
     if (!_placeholderTex) {
         // create texture
@@ -38,32 +36,26 @@ var ShaderGraphBuilder = function (app) {
         });
         _placeholderTex.name = 'placeholder';
 
-        // fill pixels with grey
+        // fill pixels with 128
         var pixels = _placeholderTex.lock();
-        for (var i = 0; i < 4; i++) {
-            for (var c = 0; c < 4; c++) {
-                pixels[i * 4 + c] = [128, 128, 128, 255];
-            }
-        }
+
+        pixels.fill(128);
+
         _placeholderTex.unlock();
     }
-
-    this._placeholderTex = _placeholderTex;
 };
-
-ShaderGraphBuilder.prototype.constructor = ShaderGraphBuilder;
 
 Object.assign(ShaderGraphBuilder.prototype, {
 
     _addParam: function (type, name, value, isSwitch) {
-        if (this._addedNamedInputs[name]) {
+        if (this._validationData._namedInputs[name]) {
             console.error('pc.ShaderGraphBuilder#addOutput: param ' + name + ' already added!');
             return null;
         }
 
         var ioPort = isSwitch ? this._graph.addSwitch(type, name, value) : this._graph.addInput(type, name, value);
 
-        this._addedNamedInputs[name] = ioPort;
+        this._validationData._namedInputs[name] = ioPort;
 
         return ioPort;
     },
@@ -84,7 +76,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
             return null;
         }
 
-        return this._addParam(type, name, value || this._placeholderTex, false);
+        return this._addParam(type, name, value || _placeholderTex, false);
     },
 
     /**
@@ -113,7 +105,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      */
     addConst: function (type, userId, value) {
         var name = userId ? 'const_' + type + '_' + userId : '';
-        if (userId && this._addedNamedInputs[name]) {
+        if (userId && this._validationData._namedInputs[name]) {
             console.error('pc.ShaderGraphBuilder#addConst: userId ' + userId + ' already used!');
             return null;
         }
@@ -124,7 +116,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
 
         var ioPort = this._graph.addConstant(type, userId, value);
 
-        if (userId) this._addedNamedInputs[name] = ioPort;
+        if (userId) this._validationData._namedInputs[name] = ioPort;
 
         return ioPort;
     },
@@ -135,7 +127,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         }
         if ((arg.node && arg.node.type)) {
             // port node
-            if (!this._addedNamedInputs[arg.node.name] && !arg.node.name.startsWith('const_') ) {
+            if (!this._validationData._namedInputs[arg.node.name] && !arg.node.name.startsWith('const_') ) {
                 console.error(err + ": invalid input param: " + arg.node.name);
                 return false;
             }
@@ -148,7 +140,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 arg = { node: arg.node, port: 'ret' };
             }
 
-            var core = this._addedNodes[arg.node];
+            var core = this._validationData._opNodes[arg.node];
             if (!core) {
                 console.error(err + ": invalid node index: " + arg.node);
                 return false;
@@ -187,7 +179,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
                 }
 
                 // node and port - maybe with swizzle
-                var core = this._addedNodes[arg.node];
+                var core = this._validationData._opNodes[arg.node];
                 if (!core) {
                     console.error(err + ": invalid node index: " + arg.node);
                     return null;
@@ -306,7 +298,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
 
         // add valid node
         var sgIndex = this._graph.addSubGraph(coreNode);
-        this._addedNodes[sgIndex] = coreNode;
+        this._validationData._opNodes[sgIndex] = coreNode;
 
         for (argIndex = 0; argIndex < args.length; argIndex++) {
             var arg = args[argIndex];
@@ -346,7 +338,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
      */
     addOutput: function (arg, type, name) {
         // validate before adding output
-        if (this._addedOutputs[name]) {
+        if (this._validationData._outputs[name]) {
             console.error('pc.ShaderGraphBuilder#addOutput: output ' + name + ' already added!');
             return;
         }
@@ -358,7 +350,7 @@ Object.assign(ShaderGraphBuilder.prototype, {
         // add valid output
         var ioPort = this._graph.addOutput(type, name);
 
-        this._addedOutputs[name] = ioPort;
+        this._validationData._outputs[name] = ioPort;
 
         if (typeof(arg) === 'number') {
             // ret port of a node - no swizzle
