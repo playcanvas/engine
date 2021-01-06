@@ -1235,15 +1235,15 @@ Object.assign(ForwardRenderer.prototype, {
     },
 
     cullLights: function (camera, lights) {
-        var i, light, type;
+        var i, light;
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
-            type = light._type;
             if (light.castShadows && light.enabled && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                if (type !== LIGHTTYPE_DIRECTIONAL) {
+                if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
-                    if (!camera.frustum.containsSphere(tempSphere)) continue;
-                    light.visibleThisFrame = true;
+                    if (camera.frustum.containsSphere(tempSphere)) {
+                        light.visibleThisFrame = true;
+                    }
                 }
             }
         }
@@ -2740,13 +2740,44 @@ Object.assign(ForwardRenderer.prototype, {
         this.screenSizeId.setValue(this._screenSize);
     },
 
+    updateLightStats: function (comp, compUpdatedFlags) {
+
+        // #ifdef PROFILER
+        if (compUpdatedFlags & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
+            var stats = this.scene._stats;
+            stats.lights = comp._lights.length;
+            stats.dynamicLights = 0;
+            stats.bakedLights = 0;
+            var l;
+            for (var i = 0; i < stats.lights; i++) {
+                l = comp._lights[i];
+                if (l.enabled) {
+                    if ((l.mask & MASK_DYNAMIC) || (l.mask & MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                        stats.dynamicLights++;
+                    }
+                    if (l.mask & MASK_LIGHTMAP) { // if baked into lightmaps
+                        stats.bakedLights++;
+                    }
+                }
+            }
+        }
+
+        if (compUpdatedFlags & COMPUPDATED_INSTANCES || !this.scene._statsUpdated) {
+            this.scene._stats.meshInstances = comp._meshInstances.length;
+        }
+
+        this.scene._statsUpdated = true;
+        // #endif
+    },
+
     renderComposition: function (comp) {
         var device = this.device;
         var camera;
         var renderedRt = comp._renderedRt;
         var renderedByCam = comp._renderedByCam;
         var renderedLayer = comp._renderedLayer;
-        var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+        var renderAction, renderActions = comp._renderActions;
+        var i, layer, layerIndex, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
@@ -2770,30 +2801,7 @@ Object.assign(ForwardRenderer.prototype, {
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
         // #endif
 
-        // #ifdef PROFILER
-        if (updated & COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
-            var stats = this.scene._stats;
-            stats.lights = comp._lights.length;
-            stats.dynamicLights = 0;
-            stats.bakedLights = 0;
-            var l;
-            for (i = 0; i < stats.lights; i++) {
-                l = comp._lights[i];
-                if (l.enabled) {
-                    if ((l.mask & MASK_DYNAMIC) || (l.mask & MASK_BAKED)) { // if affects dynamic or baked objects in real-time
-                        stats.dynamicLights++;
-                    }
-                    if (l.mask & MASK_LIGHTMAP) { // if baked into lightmaps
-                        stats.bakedLights++;
-                    }
-                }
-            }
-        }
-        if (updated & COMPUPDATED_INSTANCES || !this.scene._statsUpdated) {
-            this.scene._stats.meshInstances = comp._meshInstances.length;
-        }
-        this.scene._statsUpdated = true;
-        // #endif
+        this.updateLightStats(comp, updated);
 
         // Single per-frame calculations
         this.beginFrame(comp);
@@ -2802,66 +2810,79 @@ Object.assign(ForwardRenderer.prototype, {
         // Camera culling (once for each camera + layer)
         // Also applies meshInstance.visible and camera.cullingMask
         var renderedLength = 0;
+        var cameraPass;
         var objects, drawCalls, visible;
-        for (i = 0; i < comp.layerList.length; i++) {
-            layer = comp.layerList[i];
-            if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
-            transparent = comp.subLayerList[i];
+
+        for (i = 0; i < renderActions.length; i++) {
+            renderAction = renderActions[i];
+
+            // layer
+            layerIndex = renderAction.layerIndex;
+            layer = comp.layerList[layerIndex];
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
+            transparent = comp.subLayerList[layerIndex];
+
+            // camera
+            cameraPass = renderAction.cameraIndex;
+            camera = layer.cameras[cameraPass];
+            if (!camera) continue;
+            camera.frameBegin(renderAction.renderTarget);
+
+            // find out if this is first time the camera is used, and first time camera-layer combination is used
+            processedThisCamera = false;
+            processedThisCameraAndLayer = false;
+            for (k = 0; k < renderedLength; k++) {
+                if (renderedByCam[k] === camera) {
+                    processedThisCamera = true;
+                    if (renderedLayer[k] === layer) {
+                        processedThisCameraAndLayer = true;
+                        break;
+                    }
+                }
+            }
+
+            // update camera frustum once
+            if (!processedThisCamera) {
+                this.updateCameraFrustum(camera.camera);
+                this._camerasRendered++;
+            }
+
+            // cull each layer's non-directional lights once with each camera
+            // lights aren't collected anywhere, but marked as visible
+            if (!processedThisCameraAndLayer) {
+                this.cullLights(camera.camera, layer._lights);
+            }
+
+            // record camera / layer used
+            if (!processedThisCamera || !processedThisCameraAndLayer) {
+                renderedByCam[renderedLength] = camera;
+                renderedLayer[renderedLength] = layer;
+                renderedLength++;
+            }
+
+            // cull mesh instances
             objects = layer.instances;
 
-            cameras = layer.cameras;
-            for (j = 0; j < cameras.length; j++) {
-                camera = cameras[j];
-                if (!camera) continue;
-                camera.frameBegin(layer.renderTarget);
+            // collect them into layer arrays
+            visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+
+            // shared objects are only culled once
+            if (!visible.done) {
+
+                if (layer.onPreCull) {
+                    layer.onPreCull(j);
+                }
+
                 drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                visible.length = this.cull(camera.camera, drawCalls, visible.list);
+                visible.done = true;
 
-                processedThisCamera = false;
-                processedThisCameraAndLayer = false;
-                for (k = 0; k < renderedLength; k++) {
-                    if (renderedByCam[k] === camera) {
-                        processedThisCamera = true;
-                        if (renderedLayer[k] === layer) {
-                            processedThisCameraAndLayer = true;
-                            break;
-                        }
-                    }
+                if (layer.onPostCull) {
+                    layer.onPostCull(j);
                 }
-                if (!processedThisCamera) {
-                    this.updateCameraFrustum(camera.camera); // update camera frustum once
-                    this._camerasRendered++;
-                }
-                if (!processedThisCameraAndLayer) {
-                    // cull each layer's lights once with each camera
-                    // lights aren't collected anywhere, but marked as visible
-                    this.cullLights(camera.camera, layer._lights);
-                }
-                if (!processedThisCamera || !processedThisCameraAndLayer) {
-                    renderedByCam[renderedLength] = camera;
-                    renderedLayer[renderedLength] = layer;
-                    renderedLength++;
-                }
-
-                // cull mesh instances
-                // collected into layer arrays
-                // shared objects are only culled once
-                visible = transparent ? objects.visibleTransparent[j] : objects.visibleOpaque[j];
-                if (!visible.done) {
-                    if (layer.onPreCull) {
-                        layer.onPreCull(j);
-                    }
-
-                    visible.length = this.cull(camera.camera, drawCalls, visible.list);
-                    visible.done = true;
-
-                    if (layer.onPostCull) {
-                        layer.onPostCull(j);
-                    }
-
-                }
-
-                camera.frameEnd();
             }
+
+            camera.frameEnd();
         }
 
         // Shadowmap culling for directional and visible local lights
@@ -2870,13 +2891,11 @@ Object.assign(ForwardRenderer.prototype, {
         // Also sets up local shadow camera matrices
         var light, casters;
 
-        // Local lights
-        // culled once for the whole frame
-
         // #ifdef PROFILER
         var cullTime = now();
         // #endif
 
+        // Local light casters - culled once for the whole frame
         for (i = 0; i < comp._lights.length; i++) {
             light = comp._lights[i];
             if (!light.visibleThisFrame) continue;
@@ -2886,9 +2905,7 @@ Object.assign(ForwardRenderer.prototype, {
             this.cullLocalShadowmap(light, casters);
         }
 
-        // Directional lights
-        // culled once for each camera
-        renderedLength = 0;
+        // Directional light casters - culled once for each camera
         var globalLightCounter = -1;
         for (i = 0; i < comp._lights.length; i++) {
             light = comp._lights[i];
@@ -2917,14 +2934,17 @@ Object.assign(ForwardRenderer.prototype, {
 
         // Rendering
         renderedLength = 0;
-        var cameraPass;
         var sortTime, draws, drawTime;
-        for (i = 0; i < comp._renderList.length; i++) {
-            layer = comp.layerList[comp._renderList[i]];
-            if (!layer.enabled || !comp.subLayerEnabled[comp._renderList[i]]) continue;
-            objects = layer.instances;
-            transparent = comp.subLayerList[comp._renderList[i]];
-            cameraPass = comp._renderListCamera[i];
+        for (i = 0; i < renderActions.length; i++) {
+            renderAction = renderActions[i];
+
+            // layer
+            layerIndex = renderAction.layerIndex;
+            layer = comp.layerList[layerIndex];
+            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
+            transparent = comp.subLayerList[layerIndex];
+
+            cameraPass = renderAction.cameraIndex;
             camera = layer.cameras[cameraPass];
 
             // #ifdef DEBUG
@@ -2936,7 +2956,7 @@ Object.assign(ForwardRenderer.prototype, {
             drawTime = now();
             // #endif
 
-            if (camera) camera.frameBegin(layer.renderTarget);
+            if (camera) camera.frameBegin(renderAction.renderTarget);
 
             // Call prerender callback if there's one
             if (!transparent && layer.onPreRenderOpaque) {
@@ -2950,13 +2970,13 @@ Object.assign(ForwardRenderer.prototype, {
                 if (layer.onPreRender) layer.onPreRender(cameraPass);
                 layer._preRenderCalledForCameras |= 1 << cameraPass;
                 if (layer.overrideClear) {
-                    this.clearView(camera.camera, layer.renderTarget, true, true, layer._clearOptions);
+                    this.clearView(camera.camera, renderAction.renderTarget, true, true, layer._clearOptions);
                 }
             }
 
             if (camera) {
                 // Each camera must only clear each render target once
-                rt = layer.renderTarget;
+                rt = renderAction.renderTarget;
                 processedThisCameraAndRt = false;
                 for (k = 0; k < renderedLength; k++) {
                     if (renderedRt[k] === rt && renderedByCam[k] === camera) {
@@ -2967,18 +2987,22 @@ Object.assign(ForwardRenderer.prototype, {
 
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
-                    if (!layer.overrideClear) this.clearView(camera.camera, layer.renderTarget, true, true); // TODO: deprecate camera.renderTarget?
+                    if (!layer.overrideClear) {
+                        this.clearView(camera.camera, renderAction.renderTarget, true, true);
+                    }
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
                 }
 
-                // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
 
                 // #ifdef PROFILER
                 draws = this._shadowDrawCalls;
                 // #endif
+
+                // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
                 this.renderShadows(layer._splitLights[LIGHTTYPE_DIRECTIONAL], cameraPass);
+
                 // #ifdef PROFILER
                 layer._shadowDrawCalls += this._shadowDrawCalls - draws;
                 // #endif
@@ -2993,13 +3017,14 @@ Object.assign(ForwardRenderer.prototype, {
                 this._sortTime += now() - sortTime;
                  // #endif
 
+                objects = layer.instances;
                 visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
 
                 // Set camera shader constants, viewport, scissor, render target
-                this.setCamera(camera.camera, layer.renderTarget);
+                this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // #ifdef PROFILER
                 draws = this._forwardDrawCalls;
@@ -3045,7 +3070,7 @@ Object.assign(ForwardRenderer.prototype, {
             this.device.popMarker();
             // #endif
 
-           // #ifdef PROFILER
+            // #ifdef PROFILER
             layer._renderTime += now() - drawTime;
             // #endif
         }
