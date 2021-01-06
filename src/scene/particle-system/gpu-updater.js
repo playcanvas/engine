@@ -130,7 +130,7 @@ class ParticleGPUUpdater {
         var emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
         var emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
         if (emitter.emitterShape === EMITTERSHAPE_BOX) {
-            spawnMatrix.toMat3(spawnMatrix3);
+            spawnMatrix3.setFromMat4(spawnMatrix);
             this.constantSpawnBounds.setValue(spawnMatrix3.data);
             this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
         } else {
@@ -139,7 +139,7 @@ class ParticleGPUUpdater {
         }
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
-        emitterMatrix.toMat3(emitterMatrix3);
+        emitterMatrix3.setFromMat4(emitterMatrix);
         emitterMatrix.invertTo3x3(emitterMatrix3Inv);
         this.emitterPosUniform[0] = emitterPos.x;
         this.emitterPosUniform[1] = emitterPos.y;

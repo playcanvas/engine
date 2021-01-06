@@ -671,8 +671,8 @@ class ForwardRenderer {
             }
 
             // View 3x3 LR
-            viewL.toMat3(viewMat3L);
-            viewR.toMat3(viewMat3R);
+            viewMat3L.setFromMat4(viewL);
+            viewMat3R.setFromMat4(viewR);
 
             // ViewProjection LR
             viewProjMatL.mul2(projL, viewL);
@@ -706,7 +706,7 @@ class ForwardRenderer {
                     view.viewOffMat.copy(view.viewMat);
                 }
 
-                view.viewOffMat.toMat3(view.viewMat3);
+                view.viewMat3.setFromMat4(view.viewOffMat);
                 view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
 
                 view.position[0] = view.viewInvOffMat.data[12];
@@ -741,7 +741,7 @@ class ForwardRenderer {
             this.viewId.setValue(viewMat.data);
 
             // View 3x3
-            viewMat.toMat3(viewMat3);
+            viewMat3.setFromMat4(viewMat);
             this.viewId3.setValue(viewMat3.data);
 
             // ViewProjection Matrix
