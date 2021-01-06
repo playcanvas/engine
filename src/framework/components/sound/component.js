@@ -121,17 +121,24 @@ Object.defineProperty(SoundComponent.prototype, "positional", {
             // recreate non overlapping sounds
             if (!slot.overlap) {
                 var instances = slot.instances;
-                for (var i = 0, len = instances.length; i < len; i++) {
+                var oldLength = instances.length;
+
+                // When the instance is stopped, it gets removed from the slot.instances array
+                // so we are going backwards to compenstate for that
+
+                for (var i = oldLength - 1; i >= 0; i--) {
                     var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
                     var currentTime = instances[i].currentTime;
                     if (isPlaying)
                         instances[i].stop();
 
-                    instances[i] = slot._createInstance();
+                    var instance = slot._createInstance();
                     if (isPlaying) {
-                        instances[i].play();
-                        instances[i].currentTime = currentTime;
+                        instance.play();
+                        instance.currentTime = currentTime;
                     }
+
+                    instances.push(instance);
                 }
             }
         }
