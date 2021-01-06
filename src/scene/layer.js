@@ -48,33 +48,37 @@ function sortLights(lightA, lightB) {
 // Layers
 var layerCounter = 0;
 
-function VisibleInstanceList() {
-    this.list = [];
-    this.length = 0;
-    this.done = false;
+class VisibleInstanceList {
+    constructor() {
+        this.list = [];
+        this.length = 0;
+        this.done = false;
+    }
 }
 
-function InstanceList() {
-    this.opaqueMeshInstances = [];
-    this.transparentMeshInstances = [];
-    this.shadowCasters = [];
+class InstanceList {
+    constructor() {
+        this.opaqueMeshInstances = [];
+        this.transparentMeshInstances = [];
+        this.shadowCasters = [];
 
-    // arrays of VisibleInstanceList for each camera
-    this.visibleOpaque = [];
-    this.visibleTransparent = [];
+        // arrays of VisibleInstanceList for each camera
+        this.visibleOpaque = [];
+        this.visibleTransparent = [];
+    }
+
+    clearVisibleLists(cameraPass) {
+        if (this.visibleOpaque[cameraPass]) {
+            this.visibleOpaque[cameraPass].length = 0;
+            this.visibleOpaque[cameraPass].list.length = 0;
+        }
+
+        if (this.visibleTransparent[cameraPass]) {
+            this.visibleTransparent[cameraPass].length = 0;
+            this.visibleTransparent[cameraPass].list.length = 0;
+        }
+    }
 }
-
-InstanceList.prototype.clearVisibleLists = function (cameraPass) {
-    if (this.visibleOpaque[cameraPass]) {
-        this.visibleOpaque[cameraPass].length = 0;
-        this.visibleOpaque[cameraPass].list.length = 0;
-    }
-
-    if (this.visibleTransparent[cameraPass]) {
-        this.visibleTransparent[cameraPass].length = 0;
-        this.visibleTransparent[cameraPass].list.length = 0;
-    }
-};
 
 /**
  * @class
@@ -170,111 +174,111 @@ InstanceList.prototype.clearVisibleLists = function (cameraPass) {
  * Layer IDs are stored inside {@link pc.ModelComponent#layers}, {@link pc.CameraComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.ElementComponent#layers} instead of names.
  * Can be used in {@link pc.LayerComposition#getLayerById}.
  */
-function Layer(options) {
-    options = options || {};
+class Layer {
+    constructor(options = {}) {
 
-    if (options.id !== undefined) {
-        this.id = options.id;
-        layerCounter = Math.max(this.id + 1, layerCounter);
-    } else {
-        this.id = layerCounter++;
+        if (options.id !== undefined) {
+            this.id = options.id;
+            layerCounter = Math.max(this.id + 1, layerCounter);
+        } else {
+            this.id = layerCounter++;
+        }
+
+        this.name = options.name;
+
+        this._enabled = options.enabled === undefined ? true : options.enabled;
+        this._refCounter = this._enabled ? 1 : 0;
+
+        this.opaqueSortMode = options.opaqueSortMode === undefined ? SORTMODE_MATERIALMESH : options.opaqueSortMode;
+        this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
+        this.renderTarget = options.renderTarget;
+        this.shaderPass = options.shaderPass === undefined ? SHADER_FORWARD : options.shaderPass;
+
+        // true if the layer is just pass-through meshInstance drawing - used for UI and Gizmo layers. The layers doesn't have lights, shadows, culling ..
+        this.passThrough = options.passThrough === undefined ? false : options.passThrough;
+
+        this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
+        this._clearColor = new Color(0, 0, 0, 1);
+        if (options.clearColor) {
+            this._clearColor.copy(options.clearColor);
+        }
+        this._clearColorBuffer = options.clearColorBuffer === undefined ? false : options.clearColorBuffer;
+        this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
+        this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
+        this._clearOptions = {
+            color: [this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a],
+            depth: 1,
+            stencil: 0,
+            flags: (this._clearColorBuffer ? CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? CLEARFLAG_STENCIL : 0)
+        };
+
+        this.onPreCull = options.onPreCull;
+        this.onPreRender = options.onPreRender;
+        this.onPreRenderOpaque = options.onPreRenderOpaque;
+        this.onPreRenderTransparent = options.onPreRenderTransparent;
+
+        this.onPostCull = options.onPostCull;
+        this.onPostRender = options.onPostRender;
+        this.onPostRenderOpaque = options.onPostRenderOpaque;
+        this.onPostRenderTransparent = options.onPostRenderTransparent;
+
+        this.onDrawCall = options.onDrawCall;
+        this.onEnable = options.onEnable;
+        this.onDisable = options.onDisable;
+
+        if (this._enabled && this.onEnable) {
+            this.onEnable();
+        }
+
+        this.layerReference = options.layerReference; // should use the same camera
+        this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
+
+        // a bit mask that interacts with meshInstance.mask. Especially useful combined with layerReference,
+        // allowing to filter some objects, while sharing their list and culling.
+        this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
+
+        this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
+        this.transparentMeshInstances = this.instances.transparentMeshInstances;
+        this.shadowCasters = this.instances.shadowCasters;
+
+        this.customSortCallback = null;
+        this.customCalculateSortValues = null;
+
+        this._lightComponents = [];
+        this._lights = [];
+        this._splitLights = [[], [], []];
+        this.cameras = [];
+        this._dirty = false;
+        this._dirtyLights = false;
+        this._dirtyCameras = false;
+
+        // if there is single camera in a layer, this is 0, otherwise unique ID of the combination of the cameras
+        this._cameraHash = 0;
+
+        this._lightHash = 0;
+        this._staticLightHash = 0;
+        this._needsStaticPrepare = true;
+        this._staticPrepareDone = false;
+
+        // #ifdef PROFILER
+        this.skipRenderAfter = Number.MAX_VALUE;
+        this._skipRenderCounter = 0;
+
+        this._renderTime = 0;
+        this._forwardDrawCalls = 0;
+        this._shadowDrawCalls = 0;
+        // #endif
+
+        this._shaderVersion = -1;
+        this._version = 0;
+        this._lightCube = null;
     }
 
-    this.name = options.name;
-
-    this._enabled = options.enabled === undefined ? true : options.enabled;
-    this._refCounter = this._enabled ? 1 : 0;
-
-    this.opaqueSortMode = options.opaqueSortMode === undefined ? SORTMODE_MATERIALMESH : options.opaqueSortMode;
-    this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
-    this.renderTarget = options.renderTarget;
-    this.shaderPass = options.shaderPass === undefined ? SHADER_FORWARD : options.shaderPass;
-
-    // true if the layer is just pass-through meshInstance drawing - used for UI and Gizmo layers. The layers doesn't have lights, shadows, culling ..
-    this.passThrough = options.passThrough === undefined ? false : options.passThrough;
-
-    this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
-    this._clearColor = new Color(0, 0, 0, 1);
-    if (options.clearColor) {
-        this._clearColor.copy(options.clearColor);
-    }
-    this._clearColorBuffer = options.clearColorBuffer === undefined ? false : options.clearColorBuffer;
-    this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
-    this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
-    this._clearOptions = {
-        color: [this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a],
-        depth: 1,
-        stencil: 0,
-        flags: (this._clearColorBuffer ? CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? CLEARFLAG_STENCIL : 0)
-    };
-
-    this.onPreCull = options.onPreCull;
-    this.onPreRender = options.onPreRender;
-    this.onPreRenderOpaque = options.onPreRenderOpaque;
-    this.onPreRenderTransparent = options.onPreRenderTransparent;
-
-    this.onPostCull = options.onPostCull;
-    this.onPostRender = options.onPostRender;
-    this.onPostRenderOpaque = options.onPostRenderOpaque;
-    this.onPostRenderTransparent = options.onPostRenderTransparent;
-
-    this.onDrawCall = options.onDrawCall;
-    this.onEnable = options.onEnable;
-    this.onDisable = options.onDisable;
-
-    if (this._enabled && this.onEnable) {
-        this.onEnable();
-    }
-
-    this.layerReference = options.layerReference; // should use the same camera
-    this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
-
-    // a bit mask that interacts with meshInstance.mask. Especially useful combined with layerReference,
-    // allowing to filter some objects, while sharing their list and culling.
-    this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
-
-    this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
-    this.transparentMeshInstances = this.instances.transparentMeshInstances;
-    this.shadowCasters = this.instances.shadowCasters;
-
-    this.customSortCallback = null;
-    this.customCalculateSortValues = null;
-
-    this._lightComponents = [];
-    this._lights = [];
-    this._splitLights = [[], [], []];
-    this.cameras = [];
-    this._dirty = false;
-    this._dirtyLights = false;
-    this._dirtyCameras = false;
-
-    // if there is single camera in a layer, this is 0, otherwise unique ID of the combination of the cameras
-    this._cameraHash = 0;
-
-    this._lightHash = 0;
-    this._staticLightHash = 0;
-    this._needsStaticPrepare = true;
-    this._staticPrepareDone = false;
-
-    // #ifdef PROFILER
-    this.skipRenderAfter = Number.MAX_VALUE;
-    this._skipRenderCounter = 0;
-
-    this._renderTime = 0;
-    this._forwardDrawCalls = 0;
-    this._shadowDrawCalls = 0;
-    // #endif
-
-    this._shaderVersion = -1;
-    this._version = 0;
-    this._lightCube = null;
-}
-
-Object.defineProperty(Layer.prototype, "enabled", {
-    get: function () {
+    get enabled() {
         return this._enabled;
-    },
-    set: function (val) {
+    }
+
+    set enabled(val) {
         if (val !== this._enabled) {
             this._enabled = val;
             if (val) {
@@ -286,452 +290,448 @@ Object.defineProperty(Layer.prototype, "enabled", {
             }
         }
     }
-});
 
-Object.defineProperty(Layer.prototype, "clearColor", {
-    get: function () {
+    get clearColor() {
         return this._clearColor;
-    },
-    set: function (val) {
+    }
+
+    set clearColor(val) {
         this._clearColor.copy(val);
     }
-});
 
-Layer.prototype._updateClearFlags = function () {
-    var flags = 0;
+    _updateClearFlags() {
+        var flags = 0;
 
-    if (this._clearColorBuffer)
-        flags |= CLEARFLAG_COLOR;
+        if (this._clearColorBuffer)
+            flags |= CLEARFLAG_COLOR;
 
-    if (this._clearDepthBuffer)
-        flags |= CLEARFLAG_DEPTH;
+        if (this._clearDepthBuffer)
+            flags |= CLEARFLAG_DEPTH;
 
-    if (this._clearStencilBuffer)
-        flags |= CLEARFLAG_STENCIL;
+        if (this._clearStencilBuffer)
+            flags |= CLEARFLAG_STENCIL;
 
-    this._clearOptions.flags = flags;
-};
+        this._clearOptions.flags = flags;
+    }
 
-Object.defineProperty(Layer.prototype, "clearColorBuffer", {
-    get: function () {
+    get clearColorBuffer() {
         return this._clearColorBuffer;
-    },
-    set: function (val) {
+    }
+
+    set clearColorBuffer(val) {
         this._clearColorBuffer = val;
         this._updateClearFlags();
     }
-});
 
-Object.defineProperty(Layer.prototype, "clearDepthBuffer", {
-    get: function () {
+    get clearDepthBuffer() {
         return this._clearDepthBuffer;
-    },
-    set: function (val) {
+    }
+
+    set clearDepthBuffer(val) {
         this._clearDepthBuffer = val;
         this._updateClearFlags();
     }
-});
 
-Object.defineProperty(Layer.prototype, "clearStencilBuffer", {
-    get: function () {
+    get clearStencilBuffer() {
         return this._clearStencilBuffer;
-    },
-    set: function (val) {
+    }
+
+    set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
         this._updateClearFlags();
     }
-});
 
-/**
- * @private
- * @function
- * @name pc.Layer#incrementCounter
- * @description Increments the usage counter of this layer.
- * By default, layers are created with counter set to 1 (if {@link pc.Layer.enabled} is true) or 0 (if it was false).
- * Incrementing the counter from 0 to 1 will enable the layer and call {@link pc.Layer.onEnable}.
- * Use this function to "subscribe" multiple effects to the same layer. For example, if the layer is used to render a reflection texture which is used by 2 mirrors,
- * then each mirror can call this function when visible and {@link pc.Layer.decrementCounter} if invisible.
- * In such case the reflection texture won't be updated, when there is nothing to use it, saving performance.
- */
-Layer.prototype.incrementCounter = function () {
-    if (this._refCounter === 0) {
-        this._enabled = true;
-        if (this.onEnable) this.onEnable();
-    }
-    this._refCounter++;
-};
-
-/**
- * @private
- * @function
- * @name pc.Layer#decrementCounter
- * @description Decrements the usage counter of this layer.
- * Decrementing the counter from 1 to 0 will disable the layer and call {@link pc.Layer.onDisable}.
- * See {@link pc.Layer#incrementCounter} for more details.
- */
-Layer.prototype.decrementCounter = function () {
-    if (this._refCounter === 1) {
-        this._enabled = false;
-        if (this.onDisable) this.onDisable();
-
-    } else if (this._refCounter === 0) {
-        // #ifdef DEBUG
-        console.warn("Trying to decrement layer counter below 0");
-        // #endif
-        return;
-    }
-    this._refCounter--;
-};
-
-// SUBLAYER GROUPS
-// If there are multiple sublayer with identical _cameraHash without anything in between, these
-// are called a SUBLAYER GROUP instead of:
-//     for each sublayer
-//         for each camera
-// we go:
-//     for each sublayerGroup
-
-/**
- * @function
- * @name pc.Layer#addMeshInstances
- * @description Adds an array of mesh instances to this layer.
- * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
- * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
- */
-Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
-    var sceneShaderVer = this._shaderVersion;
-
-    var m, arr, mat;
-    var casters = this.shadowCasters;
-    for (var i = 0; i < meshInstances.length; i++) {
-        m = meshInstances[i];
-
-        mat = m.material;
-        if (mat.blendType === BLEND_NONE) {
-            arr = this.opaqueMeshInstances;
-        } else {
-            arr = this.transparentMeshInstances;
+    /**
+     * @private
+     * @function
+     * @name pc.Layer#incrementCounter
+     * @description Increments the usage counter of this layer.
+     * By default, layers are created with counter set to 1 (if {@link pc.Layer.enabled} is true) or 0 (if it was false).
+     * Incrementing the counter from 0 to 1 will enable the layer and call {@link pc.Layer.onEnable}.
+     * Use this function to "subscribe" multiple effects to the same layer. For example, if the layer is used to render a reflection texture which is used by 2 mirrors,
+     * then each mirror can call this function when visible and {@link pc.Layer.decrementCounter} if invisible.
+     * In such case the reflection texture won't be updated, when there is nothing to use it, saving performance.
+     */
+    incrementCounter() {
+        if (this._refCounter === 0) {
+            this._enabled = true;
+            if (this.onEnable) this.onEnable();
         }
+        this._refCounter++;
+    }
 
-        // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
-        // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
-        if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m) < 0) {
-            arr.push(m);
+    /**
+     * @private
+     * @function
+     * @name pc.Layer#decrementCounter
+     * @description Decrements the usage counter of this layer.
+     * Decrementing the counter from 1 to 0 will disable the layer and call {@link pc.Layer.onDisable}.
+     * See {@link pc.Layer#incrementCounter} for more details.
+     */
+    decrementCounter() {
+        if (this._refCounter === 1) {
+            this._enabled = false;
+            if (this.onDisable) this.onDisable();
+
+        } else if (this._refCounter === 0) {
+            // #ifdef DEBUG
+            console.warn("Trying to decrement layer counter below 0");
+            // #endif
+            return;
         }
-
-        if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
-
-        if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
-            if (mat.updateShader !== Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
-            }
-            mat._shaderVersion = sceneShaderVer;
-        }
-    }
-    if (!this.passThrough) this._dirty = true;
-};
-
-// internal function to remove meshInstance from an array
-Layer.prototype.removeMeshInstanceFromArray = function (m, arr) {
-
-    var drawCall;
-    var spliceOffset = -1;
-    var spliceCount = 0;
-    var len = arr.length;
-    for (var j = 0; j < len; j++) {
-        drawCall = arr[j];
-        if (drawCall === m) {
-            spliceOffset = j;
-            spliceCount = 1;
-            break;
-        }
-        if (drawCall._staticSource === m) {
-            if (spliceOffset < 0) spliceOffset = j;
-            spliceCount++;
-        } else if (spliceOffset >= 0) {
-            break;
-        }
+        this._refCounter--;
     }
 
-    if (spliceOffset >= 0) {
-        arr.splice(spliceOffset, spliceCount);
-    }
-};
+    // SUBLAYER GROUPS
+    // If there are multiple sublayer with identical _cameraHash without anything in between, these
+    // are called a SUBLAYER GROUP instead of:
+    //     for each sublayer
+    //         for each camera
+    // we go:
+    //     for each sublayerGroup
 
-/**
- * @function
- * @name pc.Layer#removeMeshInstances
- * @description Removes multiple mesh instances from this layer.
- * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
- * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
- */
-Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
+    /**
+     * @function
+     * @name pc.Layer#addMeshInstances
+     * @description Adds an array of mesh instances to this layer.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
+     */
+    addMeshInstances(meshInstances, skipShadowCasters) {
+        var sceneShaderVer = this._shaderVersion;
 
-    var j, m;
-    var opaque = this.opaqueMeshInstances;
-    var transparent = this.transparentMeshInstances;
-    var casters = this.shadowCasters;
+        var m, arr, mat;
+        var casters = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
 
-    for (var i = 0; i < meshInstances.length; i++) {
-        m = meshInstances[i];
-
-        // remove from opaque
-        this.removeMeshInstanceFromArray(m, opaque);
-
-        // remove from transparent
-        this.removeMeshInstanceFromArray(m, transparent);
-
-        // remove from casters
-        if (!skipShadowCasters) {
-            j = casters.indexOf(m);
-            if (j >= 0)
-                casters.splice(j, 1);
-        }
-    }
-
-    this._dirty = true;
-};
-
-/**
- * @function
- * @name pc.Layer#clearMeshInstances
- * @description Removes all mesh instances from this layer.
- * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
- */
-Layer.prototype.clearMeshInstances = function (skipShadowCasters) {
-    if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
-        if (skipShadowCasters || this.shadowCasters.length === 0) return;
-    }
-    this.opaqueMeshInstances.length = 0;
-    this.transparentMeshInstances.length = 0;
-    if (!skipShadowCasters) this.shadowCasters.length = 0;
-    if (!this.passThrough) this._dirty = true;
-};
-
-/**
- * @function
- * @name pc.Layer#addLight
- * @description Adds a light to this layer.
- * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
- */
-Layer.prototype.addLight = function (light) {
-    if (this._lightComponents.indexOf(light) >= 0) return;
-    this._lightComponents.push(light);
-    this._lights.push(light.light);
-    this._dirtyLights = true;
-    this._generateLightHash();
-};
-
-/**
- * @function
- * @name pc.Layer#removeLight
- * @description Removes a light from this layer.
- * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
- */
-Layer.prototype.removeLight = function (light) {
-    var id = this._lightComponents.indexOf(light);
-    if (id < 0) return;
-    this._lightComponents.splice(id, 1);
-
-    id = this._lights.indexOf(light.light);
-    this._lights.splice(id, 1);
-
-    this._dirtyLights = true;
-    this._generateLightHash();
-};
-
-/**
- * @function
- * @name pc.Layer#clearLights
- * @description Removes all lights from this layer.
- */
-Layer.prototype.clearLights = function () {
-    this._lightComponents.length = 0;
-    this._lights.length = 0;
-    this._dirtyLights = true;
-};
-
-/**
- * @function
- * @name pc.Layer#addShadowCasters
- * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
- * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
- */
-Layer.prototype.addShadowCasters = function (meshInstances) {
-    var m;
-    var arr = this.shadowCasters;
-    for (var i = 0; i < meshInstances.length; i++) {
-        m = meshInstances[i];
-        if (!m.castShadow) continue;
-        if (arr.indexOf(m) < 0) arr.push(m);
-    }
-    this._dirtyLights = true;
-};
-
-/**
- * @function
- * @name pc.Layer#removeShadowCasters
- * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
- * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
- */
-Layer.prototype.removeShadowCasters = function (meshInstances) {
-    var id;
-    var arr = this.shadowCasters;
-    for (var i = 0; i < meshInstances.length; i++) {
-        id = arr.indexOf(meshInstances[i]);
-        if (id >= 0) arr.splice(id, 1);
-    }
-    this._dirtyLights = true;
-};
-
-Layer.prototype._generateLightHash = function () {
-    // generate hash to check if layers have the same set of static lights
-    // order of lights shouldn't matter
-    if (this._lights.length > 0) {
-        this._lights.sort(sortLights);
-        var str = "";
-        var strStatic = "";
-
-        for (var i = 0; i < this._lights.length; i++) {
-            if (this._lights[i].isStatic) {
-                strStatic += this._lights[i].key;
+            mat = m.material;
+            if (mat.blendType === BLEND_NONE) {
+                arr = this.opaqueMeshInstances;
             } else {
-                str += this._lights[i].key;
+                arr = this.transparentMeshInstances;
+            }
+
+            // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
+            // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
+            if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m) < 0) {
+                arr.push(m);
+            }
+
+            if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
+
+            if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+                if (mat.updateShader !== Material.prototype.updateShader) {
+                    mat.clearVariants();
+                    mat.shader = null;
+                }
+                mat._shaderVersion = sceneShaderVer;
+            }
+        }
+        if (!this.passThrough) this._dirty = true;
+    }
+
+    // internal function to remove meshInstance from an array
+    removeMeshInstanceFromArray(m, arr) {
+
+        var drawCall;
+        var spliceOffset = -1;
+        var spliceCount = 0;
+        var len = arr.length;
+        for (var j = 0; j < len; j++) {
+            drawCall = arr[j];
+            if (drawCall === m) {
+                spliceOffset = j;
+                spliceCount = 1;
+                break;
+            }
+            if (drawCall._staticSource === m) {
+                if (spliceOffset < 0) spliceOffset = j;
+                spliceCount++;
+            } else if (spliceOffset >= 0) {
+                break;
             }
         }
 
-        if (str.length === 0) {
+        if (spliceOffset >= 0) {
+            arr.splice(spliceOffset, spliceCount);
+        }
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#removeMeshInstances
+     * @description Removes multiple mesh instances from this layer.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     */
+    removeMeshInstances(meshInstances, skipShadowCasters) {
+
+        var j, m;
+        var opaque = this.opaqueMeshInstances;
+        var transparent = this.transparentMeshInstances;
+        var casters = this.shadowCasters;
+
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
+
+            // remove from opaque
+            this.removeMeshInstanceFromArray(m, opaque);
+
+            // remove from transparent
+            this.removeMeshInstanceFromArray(m, transparent);
+
+            // remove from casters
+            if (!skipShadowCasters) {
+                j = casters.indexOf(m);
+                if (j >= 0)
+                    casters.splice(j, 1);
+            }
+        }
+
+        this._dirty = true;
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#clearMeshInstances
+     * @description Removes all mesh instances from this layer.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     */
+    clearMeshInstances(skipShadowCasters) {
+        if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
+            if (skipShadowCasters || this.shadowCasters.length === 0) return;
+        }
+        this.opaqueMeshInstances.length = 0;
+        this.transparentMeshInstances.length = 0;
+        if (!skipShadowCasters) this.shadowCasters.length = 0;
+        if (!this.passThrough) this._dirty = true;
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#addLight
+     * @description Adds a light to this layer.
+     * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
+     */
+    addLight(light) {
+        if (this._lightComponents.indexOf(light) >= 0) return;
+        this._lightComponents.push(light);
+        this._lights.push(light.light);
+        this._dirtyLights = true;
+        this._generateLightHash();
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#removeLight
+     * @description Removes a light from this layer.
+     * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
+     */
+    removeLight(light) {
+        var id = this._lightComponents.indexOf(light);
+        if (id < 0) return;
+        this._lightComponents.splice(id, 1);
+
+        id = this._lights.indexOf(light.light);
+        this._lights.splice(id, 1);
+
+        this._dirtyLights = true;
+        this._generateLightHash();
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#clearLights
+     * @description Removes all lights from this layer.
+     */
+    clearLights() {
+        this._lightComponents.length = 0;
+        this._lights.length = 0;
+        this._dirtyLights = true;
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#addShadowCasters
+     * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
+     */
+    addShadowCasters(meshInstances) {
+        var m;
+        var arr = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            m = meshInstances[i];
+            if (!m.castShadow) continue;
+            if (arr.indexOf(m) < 0) arr.push(m);
+        }
+        this._dirtyLights = true;
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#removeShadowCasters
+     * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     */
+    removeShadowCasters(meshInstances) {
+        var id;
+        var arr = this.shadowCasters;
+        for (var i = 0; i < meshInstances.length; i++) {
+            id = arr.indexOf(meshInstances[i]);
+            if (id >= 0) arr.splice(id, 1);
+        }
+        this._dirtyLights = true;
+    }
+
+    _generateLightHash() {
+        // generate hash to check if layers have the same set of static lights
+        // order of lights shouldn't matter
+        if (this._lights.length > 0) {
+            this._lights.sort(sortLights);
+            var str = "";
+            var strStatic = "";
+
+            for (var i = 0; i < this._lights.length; i++) {
+                if (this._lights[i].isStatic) {
+                    strStatic += this._lights[i].key;
+                } else {
+                    str += this._lights[i].key;
+                }
+            }
+
+            if (str.length === 0) {
+                this._lightHash = 0;
+            } else {
+                this._lightHash = hashCode(str);
+            }
+
+            if (strStatic.length === 0) {
+                this._staticLightHash = 0;
+            } else {
+                this._staticLightHash = hashCode(strStatic);
+            }
+
+        } else {
             this._lightHash = 0;
-        } else {
-            this._lightHash = hashCode(str);
-        }
-
-        if (strStatic.length === 0) {
             this._staticLightHash = 0;
+        }
+    }
+
+    _generateCameraHash() {
+        // generate hash to check if cameras in layers are identical
+        // order of cameras shouldn't matter
+        if (this.cameras.length > 1) {
+            this.cameras.sort(sortCameras);
+            var str = "";
+            for (var i = 0; i < this.cameras.length; i++) {
+                str += this.cameras[i].entity.getGuid();
+            }
+            this._cameraHash = hashCode(str);
         } else {
-            this._staticLightHash = hashCode(strStatic);
+            this._cameraHash = 0;
         }
-
-    } else {
-        this._lightHash = 0;
-        this._staticLightHash = 0;
+        this._dirtyCameras = true;
     }
-};
 
-Layer.prototype._generateCameraHash = function () {
-    // generate hash to check if cameras in layers are identical
-    // order of cameras shouldn't matter
-    if (this.cameras.length > 1) {
-        this.cameras.sort(sortCameras);
-        var str = "";
-        for (var i = 0; i < this.cameras.length; i++) {
-            str += this.cameras[i].entity.getGuid();
-        }
-        this._cameraHash = hashCode(str);
-    } else {
+    /**
+     * @function
+     * @name pc.Layer#addCamera
+     * @description Adds a camera to this layer.
+     * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
+     */
+    addCamera(camera) {
+        if (this.cameras.indexOf(camera) >= 0) return;
+        this.cameras.push(camera);
+        this._generateCameraHash();
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#removeCamera
+     * @description Removes a camera from this layer.
+     * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
+     */
+    removeCamera(camera) {
+        var id = this.cameras.indexOf(camera);
+        if (id < 0) return;
+        this.cameras.splice(id, 1);
+        this._generateCameraHash();
+
+        // visible lists in layer are not updated after camera is removed
+        // so clear out any remaining mesh instances
+        this.instances.clearVisibleLists(id);
+    }
+
+    /**
+     * @function
+     * @name pc.Layer#clearCameras
+     * @description Removes all cameras from this layer.
+     */
+    clearCameras() {
+        this.cameras.length = 0;
         this._cameraHash = 0;
+        this._dirtyCameras = true;
     }
-    this._dirtyCameras = true;
-};
 
-/**
- * @function
- * @name pc.Layer#addCamera
- * @description Adds a camera to this layer.
- * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
- */
-Layer.prototype.addCamera = function (camera) {
-    if (this.cameras.indexOf(camera) >= 0) return;
-    this.cameras.push(camera);
-    this._generateCameraHash();
-};
-
-/**
- * @function
- * @name pc.Layer#removeCamera
- * @description Removes a camera from this layer.
- * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
- */
-Layer.prototype.removeCamera = function (camera) {
-    var id = this.cameras.indexOf(camera);
-    if (id < 0) return;
-    this.cameras.splice(id, 1);
-    this._generateCameraHash();
-
-    // visible lists in layer are not updated after camera is removed
-    // so clear out any remaining mesh instances
-    this.instances.clearVisibleLists(id);
-};
-
-/**
- * @function
- * @name pc.Layer#clearCameras
- * @description Removes all cameras from this layer.
- */
-Layer.prototype.clearCameras = function () {
-    this.cameras.length = 0;
-    this._cameraHash = 0;
-    this._dirtyCameras = true;
-};
-
-Layer.prototype._sortCameras = function () {
-    this._generateCameraHash();
-};
-
-Layer.prototype._calculateSortDistances = function (drawCalls, drawCallsCount, camPos, camFwd) {
-    var i, drawCall, meshPos;
-    var tempx, tempy, tempz;
-    for (i = 0; i < drawCallsCount; i++) {
-        drawCall = drawCalls[i];
-        if (drawCall.command) continue;
-        if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
-        if (drawCall.calculateSortDistance) {
-            drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
-            continue;
-        }
-        meshPos = drawCall.aabb.center;
-        tempx = meshPos.x - camPos.x;
-        tempy = meshPos.y - camPos.y;
-        tempz = meshPos.z - camPos.z;
-        drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
+    _sortCameras() {
+        this._generateCameraHash();
     }
-};
 
-Layer.prototype._sortVisible = function (transparent, cameraNode, cameraPass) {
-    var objects = this.instances;
-    var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
-    if (sortMode === SORTMODE_NONE) return;
-
-    var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
-
-    if (sortMode === SORTMODE_CUSTOM) {
-        sortPos = cameraNode.getPosition();
-        sortDir = cameraNode.forward;
-        if (this.customCalculateSortValues) {
-            this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
+    _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
+        var i, drawCall, meshPos;
+        var tempx, tempy, tempz;
+        for (i = 0; i < drawCallsCount; i++) {
+            drawCall = drawCalls[i];
+            if (drawCall.command) continue;
+            if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
+            if (drawCall.calculateSortDistance) {
+                drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
+                continue;
+            }
+            meshPos = drawCall.aabb.center;
+            tempx = meshPos.x - camPos.x;
+            tempy = meshPos.y - camPos.y;
+            tempz = meshPos.z - camPos.z;
+            drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
         }
+    }
 
-        if (visible.list.length !== visible.length) {
-            visible.list.length = visible.length;
-        }
+    _sortVisible(transparent, cameraNode, cameraPass) {
+        var objects = this.instances;
+        var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
+        if (sortMode === SORTMODE_NONE) return;
 
-        if (this.customSortCallback) {
-            visible.list.sort(this.customSortCallback);
-        }
-    } else {
-        if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
+        var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+
+        if (sortMode === SORTMODE_CUSTOM) {
             sortPos = cameraNode.getPosition();
             sortDir = cameraNode.forward;
-            this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
-        }
+            if (this.customCalculateSortValues) {
+                this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
+            }
 
-        if (visible.list.length !== visible.length) {
-            visible.list.length = visible.length;
-        }
+            if (visible.list.length !== visible.length) {
+                visible.list.length = visible.length;
+            }
 
-        visible.list.sort(sortCallbacks[sortMode]);
+            if (this.customSortCallback) {
+                visible.list.sort(this.customSortCallback);
+            }
+        } else {
+            if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
+                sortPos = cameraNode.getPosition();
+                sortDir = cameraNode.forward;
+                this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
+            }
+
+            if (visible.list.length !== visible.length) {
+                visible.list.length = visible.length;
+            }
+
+            visible.list.sort(sortCallbacks[sortMode]);
+        }
     }
-};
+}
 
 export { Layer, VisibleInstanceList };

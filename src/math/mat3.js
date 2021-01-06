@@ -201,6 +201,32 @@ class Mat3 {
     }
 
     /**
+     * @function
+     * @name pc.Mat3#setFromMat4
+     * @description Converts the specified 4x4 matrix to a Mat3.
+     * @param {pc.Mat4} m - The 4x4 matrix to convert.
+     * @returns {pc.Mat3} Self for chaining.
+     */
+    setFromMat4(m) {
+        var src = m.data;
+        var dst = this.data;
+
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
+
+        dst[3] = src[4];
+        dst[4] = src[5];
+        dst[5] = src[6];
+
+        dst[6] = src[8];
+        dst[7] = src[9];
+        dst[8] = src[10];
+
+        return this;
+    }
+
+    /**
      * @field
      * @static
      * @readonly
