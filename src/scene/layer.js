@@ -456,7 +456,7 @@ class Layer {
         if (spliceOffset >= 0) {
             arr.splice(spliceOffset, spliceCount);
         }
-    };
+    }
 
     /**
      * @function
@@ -506,7 +506,7 @@ class Layer {
         this.transparentMeshInstances.length = 0;
         if (!skipShadowCasters) this.shadowCasters.length = 0;
         if (!this.passThrough) this._dirty = true;
-    };
+    }
 
     /**
      * @function
@@ -676,7 +676,7 @@ class Layer {
 
     _sortCameras() {
         this._generateCameraHash();
-    };
+    }
 
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
         var i, drawCall, meshPos;
