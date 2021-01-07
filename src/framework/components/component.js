@@ -82,7 +82,9 @@ class Component extends EventHandler{
 
     /**
      * @private
-     * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
+     * @name pc.Component#data
+     * @type {pc.ComponentData}
+     * @description {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
      * Usually you should access the data properties via the individual properties as
      * modifying this data directly will not fire 'set' events.
      */
