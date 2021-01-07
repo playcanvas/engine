@@ -233,7 +233,7 @@ class I18n extends EventHandler {
      * @param {object} availableLocales - A dictionary where each key is an available locale.
      * @returns {string} The locale found or if no locale is available returns the default en-US locale.
      */
-     static findAvailableLocale(desiredLocale, availableLocales) {
+    static findAvailableLocale(desiredLocale, availableLocales) {
         if (availableLocales[desiredLocale]) {
             return desiredLocale;
         }
