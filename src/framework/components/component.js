@@ -31,7 +31,7 @@ class Component extends EventHandler{
         this.on('set_enabled', this.onSetEnabled, this);
     }
 
-    _buildAccessors(obj, schema) {
+    static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (descriptor) {
             // If the property descriptor is an object, it should have a `name`
