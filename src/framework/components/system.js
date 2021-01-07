@@ -219,9 +219,7 @@ class ComponentSystem extends EventHandler {
      * @param {object} data - The data block used to initialize the component.
      * @param {string[]|object[]} properties - The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
      */
-    initializeComponentData(component, data, properties) {
-        data = data || {};
-
+    initializeComponentData(component, data = {}, properties) {
         var descriptor;
         var name, type, value;
 

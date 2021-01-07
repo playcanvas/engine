@@ -13,7 +13,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @property {pc.Entity} entity The Entity that this Component is attached to.
  * @property {boolean} enabled Enables or disables the component.
  */
-class Component extends EventHandler{
+class Component extends EventHandler {
     constructor(system, entity) {
         super();
 

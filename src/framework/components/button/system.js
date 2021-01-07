@@ -30,31 +30,27 @@ const _schema = [
  * @description Create a new ButtonComponentSystem.
  * @param {pc.Application} app - The application.
  */
-function ButtonComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ButtonComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'button';
+        this.id = 'button';
 
-    this.ComponentType = ButtonComponent;
-    this.DataType = ButtonComponentData;
+        this.ComponentType = ButtonComponent;
+        this.DataType = ButtonComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this._onRemoveComponent, this);
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-}
-ButtonComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(ButtonComponent.prototype, _schema);
+    initializeComponentData(component, data, properties) {
+        super.initializeComponentData(component, data, _schema);
+    }
 
-Object.assign(ButtonComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
-    },
-
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -64,11 +60,13 @@ Object.assign(ButtonComponentSystem.prototype, {
                 component.onUpdate();
             }
         }
-    },
+    }
 
-    _onRemoveComponent: function (entity, component) {
+    _onRemoveComponent(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(ButtonComponent.prototype, _schema);
 
 export { ButtonComponentSystem };
