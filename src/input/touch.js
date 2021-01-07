@@ -12,17 +12,19 @@ import { EventHandler } from '../core/event-handler.js';
  * @property {Element} target The target element of the touch event.
  * @property {Touch} touch The original browser Touch object.
  */
-function Touch(touch) {
-    var coords = getTouchTargetCoords(touch);
+class Touch {
+    constructor(touch) {
+        var coords = getTouchTargetCoords(touch);
 
-    this.id = touch.identifier;
+        this.id = touch.identifier;
 
-    this.x = coords.x;
-    this.y = coords.y;
+        this.x = coords.x;
+        this.y = coords.y;
 
-    this.target = touch.target;
+        this.target = touch.target;
 
-    this.touch = touch;
+        this.touch = touch;
+    }
 }
 
 /**
@@ -38,27 +40,27 @@ function Touch(touch) {
  * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event.
  * @property {TouchEvent} event - The original browser TouchEvent.
  */
-function TouchEvent(device, event) {
-    this.element = event.target;
-    this.event = event;
+class TouchEvent {
+    constructor(device, event) {
+        this.element = event.target;
+        this.event = event;
 
-    this.touches = [];
-    this.changedTouches = [];
+        this.touches = [];
+        this.changedTouches = [];
 
-    if (event) {
-        var i, l = event.touches.length;
-        for (i = 0; i < l; i++) {
-            this.touches.push(new Touch(event.touches[i]));
-        }
+        if (event) {
+            var i, l = event.touches.length;
+            for (i = 0; i < l; i++) {
+                this.touches.push(new Touch(event.touches[i]));
+            }
 
-        l = event.changedTouches.length;
-        for (i = 0; i < l; i++) {
-            this.changedTouches.push(new Touch(event.changedTouches[i]));
+            l = event.changedTouches.length;
+            for (i = 0; i < l; i++) {
+                this.changedTouches.push(new Touch(event.changedTouches[i]));
+            }
         }
     }
-}
 
-Object.assign(TouchEvent.prototype, {
     /**
      * @function
      * @name pc.TouchEvent#getTouchById
@@ -68,7 +70,7 @@ Object.assign(TouchEvent.prototype, {
      * @param {pc.Touch[]} list - An array of touches to search.
      * @returns {pc.Touch} The {@link pc.Touch} object or null.
      */
-    getTouchById: function (id, list) {
+    getTouchById(id, list) {
         var i, l = list.length;
         for (i = 0; i < l; i++) {
             if (list[i].id === id) {
@@ -78,7 +80,7 @@ Object.assign(TouchEvent.prototype, {
 
         return null;
     }
-});
+}
 
 /**
  * @class
@@ -89,22 +91,20 @@ Object.assign(TouchEvent.prototype, {
  * @description Create a new touch device and attach it to an element.
  * @param {Element} element - The element to attach listen for events on.
  */
-function TouchDevice(element) {
-    EventHandler.call(this);
+class TouchDevice extends EventHandler {
+    constructor(element) {
+        super();
 
-    this._element = null;
+        this._element = null;
 
-    this._startHandler = this._handleTouchStart.bind(this);
-    this._endHandler = this._handleTouchEnd.bind(this);
-    this._moveHandler = this._handleTouchMove.bind(this);
-    this._cancelHandler = this._handleTouchCancel.bind(this);
+        this._startHandler = this._handleTouchStart.bind(this);
+        this._endHandler = this._handleTouchEnd.bind(this);
+        this._moveHandler = this._handleTouchMove.bind(this);
+        this._cancelHandler = this._handleTouchCancel.bind(this);
 
-    this.attach(element);
-}
-TouchDevice.prototype = Object.create(EventHandler.prototype);
-TouchDevice.prototype.constructor = TouchDevice;
+        this.attach(element);
+    }
 
-Object.assign(TouchDevice.prototype, {
     /**
      * @function
      * @name pc.TouchDevice#attach
@@ -112,7 +112,7 @@ Object.assign(TouchDevice.prototype, {
      * If the device is already attached to an element this method will detach it first.
      * @param {Element} element - The element to attach to.
      */
-    attach: function (element) {
+    attach(element) {
         if (this._element) {
             this.detach();
         }
@@ -123,14 +123,14 @@ Object.assign(TouchDevice.prototype, {
         this._element.addEventListener('touchend', this._endHandler, false);
         this._element.addEventListener('touchmove', this._moveHandler, false);
         this._element.addEventListener('touchcancel', this._cancelHandler, false);
-    },
+    }
 
     /**
      * @function
      * @name pc.TouchDevice#detach
      * @description Detach a device from the element it is attached to.
      */
-    detach: function () {
+    detach() {
         if (this._element) {
             this._element.removeEventListener('touchstart', this._startHandler, false);
             this._element.removeEventListener('touchend', this._endHandler, false);
@@ -138,27 +138,27 @@ Object.assign(TouchDevice.prototype, {
             this._element.removeEventListener('touchcancel', this._cancelHandler, false);
         }
         this._element = null;
-    },
+    }
 
-    _handleTouchStart: function (e) {
+    _handleTouchStart(e) {
         this.fire('touchstart', new TouchEvent(this, e));
-    },
+    }
 
-    _handleTouchEnd: function (e) {
+    _handleTouchEnd(e) {
         this.fire('touchend', new TouchEvent(this, e));
-    },
+    }
 
-    _handleTouchMove: function (e) {
+    _handleTouchMove(e) {
         // call preventDefault to avoid issues in Chrome Android:
         // http://wilsonpage.co.uk/touch-events-in-chrome-android/
         e.preventDefault();
         this.fire('touchmove', new TouchEvent(this, e));
-    },
+    }
 
-    _handleTouchCancel: function (e) {
+    _handleTouchCancel(e) {
         this.fire('touchcancel', new TouchEvent(this, e));
     }
-});
+}
 
 /**
  * @function

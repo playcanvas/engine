@@ -15,7 +15,7 @@
  * obj.fire('hello', 'world');
  */
 class EventHandler {
-    constructor () {
+    constructor() {
         this._callbacks = { };
         this._callbackActive = { };
     }

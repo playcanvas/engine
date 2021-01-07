@@ -594,7 +594,7 @@ class LayerComposition extends EventHandler {
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire("add", layer);
-    };
+    }
 
     /**
      * @function
@@ -663,7 +663,7 @@ class LayerComposition extends EventHandler {
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire("add", layer);
-    };
+    }
 
     /**
      * @function
@@ -772,7 +772,7 @@ class LayerComposition extends EventHandler {
                 this._transparentOrder[this.layerList[i].id] = i;
             }
         }
-    };
+    }
 
     // Used to determine which array of layers has any sublayer that is
     // on top of all the sublayers in the other array. The order is a dictionary

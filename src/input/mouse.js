@@ -6,6 +6,10 @@ import {
     MOUSEBUTTON_NONE
 } from './constants.js';
 
+function isMousePointerLocked() {
+    return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
+}
+
 /**
  * @class
  * @name pc.MouseEvent
@@ -51,7 +55,7 @@ class MouseEvent {
         if (coords) {
             this.x = coords.x;
             this.y = coords.y;
-        } else if (Mouse.isPointerLocked()) {
+        } else if (isMousePointerLocked()) {
             this.x = 0;
             this.y = 0;
         } else {
@@ -70,7 +74,7 @@ class MouseEvent {
         }
 
         // Get the movement delta in this event
-        if (Mouse.isPointerLocked()) {
+        if (isMousePointerLocked()) {
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
@@ -166,7 +170,7 @@ class Mouse extends EventHandler {
      * @returns {boolean} True if locked.
      */
     static isPointerLocked() {
-        return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
+        return isMousePointerLocked();
     }
 
     /**
