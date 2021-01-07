@@ -21,7 +21,7 @@ class ScriptRegistry extends EventHandler {
     destroy() {
         this.app = null;
         this.off();
-    };
+    }
 
     /* eslint-disable jsdoc/no-undefined-types */
     /**

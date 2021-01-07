@@ -221,7 +221,7 @@ class XrHitTest extends EventHandler {
                 self.fire('error', ex);
             });
         }
-    };
+    }
 
     _onHitTestSource(xrHitTestSource, transient, callback) {
         if (! this._session) {
@@ -243,7 +243,7 @@ class XrHitTest extends EventHandler {
         for (var i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);
         }
-    };
+    }
 
     get supported() {
         return this._supported;

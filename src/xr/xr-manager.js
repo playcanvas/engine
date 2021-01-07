@@ -252,7 +252,7 @@ class XrManager extends EventHandler {
         } else {
             self._onStartOptionsReady(type, spaceType, opts, callback);
         }
-    };
+    }
 
     _onStartOptionsReady(type, spaceType, options, callback) {
         var self = this;
@@ -406,7 +406,7 @@ class XrManager extends EventHandler {
             if (callback) callback(ex);
             self.fire('error', ex);
         });
-    };
+    }
 
     _setClipPlanes(near, far) {
         if (this._depthNear === near && this._depthFar === far)

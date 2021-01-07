@@ -62,11 +62,17 @@ class ComponentSystem extends EventHandler {
     }
 
     static _init = [];
+
     static _postInit = [];
+
     static _toolsUpdate = [];
+
     static _update = [];
+
     static _animationUpdate = [];
+
     static _fixedUpdate =[];
+
     static _postUpdate = [];
 
     static bind(event, func, scope) {
@@ -275,7 +281,7 @@ class ComponentSystem extends EventHandler {
         return matchingProperties;
     }
 
-    destroyfunction () {
+    destroyfunction() {
         this.off();
     }
 }

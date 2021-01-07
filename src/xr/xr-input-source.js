@@ -319,7 +319,7 @@ class XrInputSource extends EventHandler {
     getDirection() {
         this._updateRayTransforms();
         return this._ray.direction;
-    };
+    }
 
     /**
      * @function
@@ -365,7 +365,7 @@ class XrInputSource extends EventHandler {
         };
 
         this._manager.hitTest.start(options);
-    };
+    }
 
     onHitTestSourceAdd(hitTestSource) {
         this._hitTestSources.push(hitTestSource);

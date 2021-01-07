@@ -445,7 +445,7 @@ class Scene extends EventHandler {
                 this.fire("set:skybox", usedTex);
             }
         }
-    };
+    }
 
     _resetSkyboxModel() {
         if (this.skyboxModel) {
