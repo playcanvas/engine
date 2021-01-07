@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'assets',
     'speed',
@@ -30,33 +30,29 @@ var _schema = [
  * @description Create an AnimationComponentSystem.
  * @param {pc.Application} app - The application managing this system.
  */
-function AnimationComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class AnimationComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'animation';
+        this.id = 'animation';
 
-    this.ComponentType = AnimationComponent;
-    this.DataType = AnimationComponentData;
+        this.ComponentType = AnimationComponent;
+        this.DataType = AnimationComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    this.on('update', this.onUpdate, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
+        this.on('update', this.onUpdate, this);
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-}
-AnimationComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-AnimationComponentSystem.prototype.constructor = AnimationComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(AnimationComponent.prototype, _schema);
-
-Object.assign(AnimationComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var key;
         this.addComponent(clone, {});
 
@@ -83,13 +79,13 @@ Object.assign(AnimationComponentSystem.prototype, {
             }
         }
         clone.animation.animationsIndex = clonedAnimationsIndex;
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         component.onBeforeRemove();
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -164,6 +160,8 @@ Object.assign(AnimationComponentSystem.prototype, {
             }
         }
     }
-});
+}
+
+Component._buildAccessors(AnimationComponent.prototype, _schema);
 
 export { AnimationComponentSystem };

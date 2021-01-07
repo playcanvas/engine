@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'horizontal', type: 'boolean' },
     { name: 'vertical', type: 'boolean' },

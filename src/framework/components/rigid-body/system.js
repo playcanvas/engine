@@ -124,7 +124,7 @@ function ContactResult(other, contacts) {
  * @param {pc.SingleContactResult} result - Details of the contact between the two bodies.
  */
 
-var _schema = [
+const _schema = [
     'enabled',
     'type',
     'mass',

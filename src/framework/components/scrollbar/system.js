@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'orientation', type: 'number' },
     { name: 'value', type: 'number' },

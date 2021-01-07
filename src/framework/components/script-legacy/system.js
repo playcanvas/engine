@@ -16,7 +16,7 @@ import { ComponentSystem } from '../system.js';
 import { ScriptLegacyComponent } from './component.js';
 import { ScriptLegacyComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'scripts',
     'instances',

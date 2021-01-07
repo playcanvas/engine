@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class

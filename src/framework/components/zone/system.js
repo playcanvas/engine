@@ -6,7 +6,7 @@ import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @private

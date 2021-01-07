@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'active',
     { name: 'imageEntity', type: 'entity' },

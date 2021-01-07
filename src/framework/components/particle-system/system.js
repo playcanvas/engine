@@ -12,7 +12,7 @@ import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'autoPlay',
     'numParticles',

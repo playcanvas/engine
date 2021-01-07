@@ -19,7 +19,7 @@ var mat4 = new Mat4();
 var vec3 = new Vec3();
 var quat = new Quat();
 
-var _schema = [
+const _schema = [
     'enabled',
     'type',
     'halfExtents',

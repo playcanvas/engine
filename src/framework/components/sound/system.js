@@ -6,7 +6,7 @@ import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class

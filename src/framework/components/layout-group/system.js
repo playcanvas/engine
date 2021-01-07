@@ -7,7 +7,7 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 var MAX_ITERATIONS = 100;
 

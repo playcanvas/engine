@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
 import { LayoutChildComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class

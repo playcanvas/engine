@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'
 ];
