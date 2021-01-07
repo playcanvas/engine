@@ -58,7 +58,9 @@ class Http {
     static retryDelay = 100;
 
     ContentType = Http.ContentType;
+
     ResponseType = Http.ResponseType;
+
     binaryExtensions = Http.binaryExtensions;
 
     /**

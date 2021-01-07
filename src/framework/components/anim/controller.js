@@ -20,135 +20,59 @@ import {
  * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
  * @param {number} speed - The speed that it's pc.AnimTrack should play at.
  */
-function AnimNode(state, parent, name, point, speed) {
-    this._state = state;
-    this._parent = parent;
-    this._name = name;
-    this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
-    this._speed = speed || 1.0;
-    this._weight = 1.0;
-    this._animTrack = null;
-}
-
-Object.defineProperties(AnimNode.prototype, {
-    parent: {
-        get: function () {
-            return this._parent;
-        }
-    },
-    name: {
-        get: function () {
-            return this._name;
-        }
-    },
-    path: {
-        get: function () {
-            return this._parent ? this._parent.path + '.' + this._name : this._name;
-        }
-    },
-    point: {
-        get: function () {
-            return this._point;
-        }
-    },
-    weight: {
-        get: function () {
-            return this._parent ? this._parent.weight * this._weight : this._weight;
-        },
-        set: function (value) {
-            this._weight = value;
-        }
-    },
-    normalizedWeight: {
-        get: function () {
-            var totalWeight = this._state.totalWeight;
-            if (totalWeight === 0.0) return 0.0;
-            return this.weight / totalWeight;
-        }
-
-    },
-    speed: {
-        get: function () {
-            return this._speed;
-        }
-    },
-    animTrack: {
-        get: function () {
-            return this._animTrack;
-        },
-        set: function (value) {
-            this._animTrack = value;
-        }
+class AnimNode {
+    constructor(state, parent, name, point, speed) {
+        this._state = state;
+        this._parent = parent;
+        this._name = name;
+        this._point = Array.isArray(point) ? new pc.Vec2(point) : point;
+        this._speed = speed || 1.0;
+        this._weight = 1.0;
+        this._animTrack = null;
     }
-});
 
-/**
- * @private
- * @class
- * @name pc.BlendTree
- * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other BlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
- * @description Create a new BlendTree.
- * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.
- * @param {pc.BlendTree|null} parent - The parent of the BlendTree. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
- * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
- * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
- * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
- * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
- * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
- * @param {Function} findParameter - Used at runtime to get the current parameter values.
- */
-function BlendTree(state, parent, name, point, type, parameters, children, findParameter) {
-    AnimNode.call(this, state, parent, name, point);
-    this._type = type;
-    this._parameters = parameters;
-    this._parameterValues = null;
-    this._children = [];
-    this._findParameter = findParameter;
-    for (var i = 0; i < children.length; i++) {
-        var child = children[i];
-        if (child.children) {
-            this._children.push(new BlendTree(state, this, child.name, child.point, child.type, child.parameter ? [child.parameter] : child.parameters, child.children, findParameter));
-        } else {
-            this._children.push(new AnimNode(state, this, child.name, child.point, child.speed));
-        }
+    get parent() {
+        return this._parent;
+    }
+
+    get name() {
+        return this._name;
+    }
+
+    get path() {
+        return this._parent ? this._parent.path + '.' + this._name : this._name;
+    }
+
+    get point() {
+        return this._point;
+    }
+
+    get weight() {
+        return this._parent ? this._parent.weight * this._weight : this._weight;
+    }
+
+    set weight(value) {
+        this._weight = value;
+    }
+
+    get normalizedWeight() {
+        var totalWeight = this._state.totalWeight;
+        if (totalWeight === 0.0) return 0.0;
+        return this.weight / totalWeight;
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    get animTrack() {
+        return this._animTrack;
+    }
+
+    set animTrack(value) {
+        this._animTrack = value;
     }
 }
-
-BlendTree.prototype = Object.create(AnimNode.prototype);
-BlendTree.prototype.constructor = BlendTree;
-
-Object.defineProperties(BlendTree.prototype, {
-    parent: {
-        get: function () {
-            return this._parent;
-        }
-    },
-    name: {
-        get: function () {
-            return this._name;
-        }
-    },
-    point: {
-        get: function () {
-            return this._point;
-        }
-    },
-    weight: {
-        get: function () {
-            this.calculateWeights();
-            return this._parent ? this._parent.weight * this._weight : this._weight;
-        },
-        set: function (value) {
-            this._weight = value;
-        }
-    },
-    speed: {
-        get: function () {
-            return this._speed;
-        }
-    }
-});
-
 
 // Maths helper functions
 function between(num, a, b, inclusive) {
@@ -165,13 +89,71 @@ function clamp(num, min, max) {
     return num <= min ? min : num >= max ? max : num;
 }
 
-Object.assign(BlendTree.prototype, {
-    getChild: function (name) {
+/**
+ * @private
+ * @class
+ * @name pc.BlendTree
+ * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other BlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
+ * @description Create a new BlendTree.
+ * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.
+ * @param {pc.BlendTree|null} parent - The parent of the BlendTree. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
+ * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
+ * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
+ * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
+ * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
+ * @param {Function} findParameter - Used at runtime to get the current parameter values.
+ */
+class BlendTree extends AnimNode {
+    constructor(state, parent, name, point, type, parameters, children, findParameter) {
+        super(state, parent, name, point);
+        this._type = type;
+        this._parameters = parameters;
+        this._parameterValues = null;
+        this._children = [];
+        this._findParameter = findParameter;
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (child.children) {
+                this._children.push(new BlendTree(state, this, child.name, child.point, child.type, child.parameter ? [child.parameter] : child.parameters, child.children, findParameter));
+            } else {
+                this._children.push(new AnimNode(state, this, child.name, child.point, child.speed));
+            }
+        }
+    }
+
+    get parent() {
+        return this._parent;
+    }
+
+    get name() {
+        return this._name;
+    }
+
+    get point() {
+        return this._point;
+    }
+
+    get weight() {
+        this.calculateWeights();
+        return this._parent ? this._parent.weight * this._weight : this._weight;
+    }
+
+    set weight(value) {
+        this._weight = value;
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    getChild(name) {
         for (var i = 0; i < this._children.length; i++) {
             if (this._children[i].name === name) return this._children[i];
         }
-    },
-    calculateWeights: function () {
+    }
+
+    calculateWeights() {
         var i, j, p, pi, pj, pip, pipj, parameterValues, minj, result, weightSum;
         switch (this._type) {
             case ANIM_BLEND_1D: {
@@ -277,8 +259,9 @@ Object.assign(BlendTree.prototype, {
                 break;
             }
         }
-    },
-    getNodeCount: function () {
+    }
+
+    getNodeCount() {
         var count = 0;
         for (var i = 0; i < this._children.length; i++) {
             var child = this._children[i];
@@ -290,7 +273,7 @@ Object.assign(BlendTree.prototype, {
         }
         return count;
     }
-});
+}
 
 /**
  * @private
@@ -304,30 +287,31 @@ Object.assign(BlendTree.prototype, {
  * @param {boolean} loop - Determines whether animations in this state should loop.
  * @param {object|null} blendTree - If supplied, the AnimState will recursively build a pc.BlendTree hierarchy, used to store, blend and play multiple animations.
  */
-function AnimState(controller, name, speed, loop, blendTree) {
-    this._controller = controller;
-    this._name = name;
-    this._animations = {};
-    this._animationList = [];
-    this._speed = speed || 1.0;
-    this._loop = loop === undefined ? true : loop;
-    var findParameter = this._controller.findParameter.bind(this._controller);
-    if (blendTree) {
-        this._blendTree = new BlendTree(this, null, name, 1.0, blendTree.type, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, findParameter);
-    } else {
-        this._blendTree = new AnimNode(this, null, name, 1.0, speed);
+class AnimState {
+    constructor(controller, name, speed, loop, blendTree) {
+        this._controller = controller;
+        this._name = name;
+        this._animations = {};
+        this._animationList = [];
+        this._speed = speed || 1.0;
+        this._loop = loop === undefined ? true : loop;
+        var findParameter = this._controller.findParameter.bind(this._controller);
+        if (blendTree) {
+            this._blendTree = new BlendTree(this, null, name, 1.0, blendTree.type, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, findParameter);
+        } else {
+            this._blendTree = new AnimNode(this, null, name, 1.0, speed);
+        }
     }
-}
 
-Object.assign(AnimState.prototype, {
-    _getNodeFromPath: function (path) {
+    _getNodeFromPath(path) {
         var currNode = this._blendTree;
         for (var i = 1; i < path.length; i++) {
             currNode = currNode.getChild(path[i]);
         }
         return currNode;
-    },
-    addAnimation: function (path, animTrack) {
+    }
+
+    addAnimation(path, animTrack) {
         var indexOfAnimation = this._animationList.findIndex(function (animation) {
             return animation.path === path;
         });
@@ -339,79 +323,68 @@ Object.assign(AnimState.prototype, {
             this._animationList.push(node);
         }
     }
-});
 
-Object.defineProperties(AnimState.prototype, {
-    name: {
-        get: function () {
-            return this._name;
-        }
-    },
-    animations: {
-        get: function () {
-            return this._animationList;
-        },
-        set: function (value) {
-            this._animationList = value;
-        }
-    },
-    speed: {
-        get: function () {
-            return this._speed;
-        }
-    },
-    loop: {
-        get: function () {
-            return this._loop;
-        }
-    },
-    nodeCount: {
-        get: function () {
-            if (!this._blendTree || !(this._blendTree.constructor === BlendTree)) return 1;
-            return this._blendTree.getNodeCount();
-        }
-    },
-    playable: {
-        get: function () {
-            return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.name === ANIM_STATE_ANY || this.animations.length === this.nodeCount);
-        }
-    },
-    looping: {
-        get: function () {
-            if (this.animations.length > 0) {
-                var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
-                var trackClip = this._controller.animEvaluator.findClip(trackClipName);
-                if (trackClip) {
-                    return trackClip.loop;
-                }
-            }
-            return false;
-        }
-    },
-    totalWeight: {
-        get: function () {
-            var sum = 0;
-            var i;
-            for (i = 0; i < this.animations.length; i++) {
-                sum += this.animations[i].weight;
-            }
-            return sum;
-        }
-    },
-    timelineDuration: {
-        get: function () {
-            var duration = 0;
-            var i;
-            for (i = 0; i < this.animations.length; i++) {
-                var animation = this.animations[i];
-                if (animation.animTrack.duration > duration) {
-                    duration = animation.animTrack.duration;
-                }
-            }
-            return duration;
-        }
+    get name() {
+        return this._name;
     }
-});
+
+    get animations() {
+        return this._animationList;
+    }
+
+    set animations(value) {
+        this._animationList = value;
+    }
+
+    get speed() {
+        return this._speed;
+    }
+
+    get loop() {
+        return this._loop;
+    }
+
+    get nodeCount() {
+        if (!this._blendTree || !(this._blendTree.constructor === BlendTree)) return 1;
+        return this._blendTree.getNodeCount();
+    }
+
+    get playable() {
+        return (this.name === ANIM_STATE_START || this.name === ANIM_STATE_END || this.name === ANIM_STATE_ANY || this.animations.length === this.nodeCount);
+    }
+
+    get looping() {
+        if (this.animations.length > 0) {
+            var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+            var trackClip = this._controller.animEvaluator.findClip(trackClipName);
+            if (trackClip) {
+                return trackClip.loop;
+            }
+        }
+        return false;
+    }
+
+    get totalWeight() {
+        var sum = 0;
+        var i;
+        for (i = 0; i < this.animations.length; i++) {
+            sum += this.animations[i].weight;
+        }
+        return sum;
+    }
+
+    get timelineDuration() {
+        var duration = 0;
+        var i;
+        for (i = 0; i < this.animations.length; i++) {
+            var animation = this.animations[i];
+            if (animation.animTrack.duration > duration) {
+                duration = animation.animTrack.duration;
+            }
+        }
+        return duration;
+    }
+}
 
 /**
  * @private
@@ -429,98 +402,87 @@ Object.defineProperties(AnimState.prototype, {
  * @param {number} transitionOffset - If provided, the destination state will begin playing its animation at this time. Given in normalised time, based on the states duration & must be between 0 and 1.
  * @param {string} interruptionSource - Defines whether another transition can interrupt this one and which of the current or previous states transitions can do so. One of pc.ANIM_INTERRUPTION_*.
  */
-function AnimTransition(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource) {
-    this._controller = controller;
-    this._from = from;
-    this._to = to;
-    this._time = time;
-    this._priority = priority;
-    this._conditions = conditions || [];
-    this._exitTime = exitTime || null;
-    this._transitionOffset = transitionOffset || null;
-    this._interruptionSource = interruptionSource || ANIM_INTERRUPTION_NONE;
-}
-
-Object.defineProperties(AnimTransition.prototype, {
-    from: {
-        get: function () {
-            return this._from;
-        }
-    },
-    to: {
-        get: function () {
-            return this._to;
-        }
-    },
-    time: {
-        get: function () {
-            return this._time;
-        }
-    },
-    priority: {
-        get: function () {
-            return this._priority;
-        }
-    },
-    conditions: {
-        get: function () {
-            return this._conditions;
-        }
-    },
-    exitTime: {
-        get: function () {
-            return this._exitTime;
-        }
-    },
-    transitionOffset: {
-        get: function () {
-            return this._transitionOffset;
-        }
-    },
-    interruptionSource: {
-        get: function () {
-            return this._interruptionSource;
-        }
-    },
-    hasExitTime: {
-        get: function () {
-            return !!this.exitTime;
-        }
-    },
-    hasConditionsMet: {
-        get: function () {
-            var conditionsMet = true;
-            var i;
-            for (i = 0; i < this.conditions.length; i++) {
-                var condition = this.conditions[i];
-                var parameter = this._controller.findParameter(condition.parameterName);
-                switch (condition.predicate) {
-                    case ANIM_GREATER_THAN:
-                        conditionsMet = conditionsMet && parameter.value > condition.value;
-                        break;
-                    case ANIM_LESS_THAN:
-                        conditionsMet = conditionsMet && parameter.value < condition.value;
-                        break;
-                    case ANIM_GREATER_THAN_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value >= condition.value;
-                        break;
-                    case ANIM_LESS_THAN_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value <= condition.value;
-                        break;
-                    case ANIM_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value === condition.value;
-                        break;
-                    case ANIM_NOT_EQUAL_TO:
-                        conditionsMet = conditionsMet && parameter.value !== condition.value;
-                        break;
-                }
-                if (!conditionsMet)
-                    return conditionsMet;
-            }
-            return conditionsMet;
-        }
+class AnimTransition {
+    constructor(controller, from, to, time, priority, conditions, exitTime, transitionOffset, interruptionSource = ANIM_INTERRUPTION_NONE) {
+        this._controller = controller;
+        this._from = from;
+        this._to = to;
+        this._time = time;
+        this._priority = priority;
+        this._conditions = conditions || [];
+        this._exitTime = exitTime || null;
+        this._transitionOffset = transitionOffset || null;
+        this._interruptionSource = interruptionSource;
     }
-});
+
+    get from() {
+        return this._from;
+    }
+
+    get to() {
+        return this._to;
+    }
+
+    get time() {
+        return this._time;
+    }
+
+    get priority() {
+        return this._priority;
+    }
+
+    get conditions() {
+        return this._conditions;
+    }
+
+    get exitTime() {
+        return this._exitTime;
+    }
+
+    get transitionOffset() {
+        return this._transitionOffset;
+    }
+
+    get interruptionSource() {
+        return this._interruptionSource;
+    }
+
+    get hasExitTime() {
+        return !!this.exitTime;
+    }
+
+    get hasConditionsMet() {
+        var conditionsMet = true;
+        var i;
+        for (i = 0; i < this.conditions.length; i++) {
+            var condition = this.conditions[i];
+            var parameter = this._controller.findParameter(condition.parameterName);
+            switch (condition.predicate) {
+                case ANIM_GREATER_THAN:
+                    conditionsMet = conditionsMet && parameter.value > condition.value;
+                    break;
+                case ANIM_LESS_THAN:
+                    conditionsMet = conditionsMet && parameter.value < condition.value;
+                    break;
+                case ANIM_GREATER_THAN_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value >= condition.value;
+                    break;
+                case ANIM_LESS_THAN_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value <= condition.value;
+                    break;
+                case ANIM_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value === condition.value;
+                    break;
+                case ANIM_NOT_EQUAL_TO:
+                    conditionsMet = conditionsMet && parameter.value !== condition.value;
+                    break;
+            }
+            if (!conditionsMet)
+                return conditionsMet;
+        }
+        return conditionsMet;
+    }
+}
 
 /**
  * @private
@@ -534,166 +496,152 @@ Object.defineProperties(AnimTransition.prototype, {
  * @param {object[]} parameters - The anim components parameters.
  * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
  */
-function AnimController(animEvaluator, states, transitions, parameters, activate) {
-    this._animEvaluator = animEvaluator;
-    this._states = {};
-    this._stateNames = [];
-    var i;
-    for (i = 0; i < states.length; i++) {
-        this._states[states[i].name] = new AnimState(
-            this,
-            states[i].name,
-            states[i].speed,
-            states[i].loop,
-            states[i].blendTree
-        );
-        this._stateNames.push(states[i].name);
+class AnimController {
+    constructor(animEvaluator, states, transitions, parameters, activate) {
+        this._animEvaluator = animEvaluator;
+        this._states = {};
+        this._stateNames = [];
+        var i;
+        for (i = 0; i < states.length; i++) {
+            this._states[states[i].name] = new AnimState(
+                this,
+                states[i].name,
+                states[i].speed,
+                states[i].loop,
+                states[i].blendTree
+            );
+            this._stateNames.push(states[i].name);
+        }
+        this._transitions = transitions.map(function (transition) {
+            return new AnimTransition(
+                this,
+                transition.from,
+                transition.to,
+                transition.time,
+                transition.priority,
+                transition.conditions,
+                transition.exitTime,
+                transition.transitionOffset,
+                transition.interruptionSource
+            );
+        }.bind(this));
+        this._findTransitionsFromStateCache = {};
+        this._findTransitionsBetweenStatesCache = {};
+        this._parameters = parameters;
+        this._previousStateName = null;
+        this._activeStateName = ANIM_STATE_START;
+        this._playing = false;
+        this._activate = activate;
+
+        this._currTransitionTime = 1.0;
+        this._totalTransitionTime = 1.0;
+        this._isTransitioning = false;
+        this._transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
+        this._transitionPreviousStates = [];
+
+        this._timeInState = 0;
+        this._timeInStateBefore = 0;
     }
-    this._transitions = transitions.map(function (transition) {
-        return new AnimTransition(
-            this,
-            transition.from,
-            transition.to,
-            transition.time,
-            transition.priority,
-            transition.conditions,
-            transition.exitTime,
-            transition.transitionOffset,
-            transition.interruptionSource
-        );
-    }.bind(this));
-    this._findTransitionsFromStateCache = {};
-    this._findTransitionsBetweenStatesCache = {};
-    this._parameters = parameters;
-    this._previousStateName = null;
-    this._activeStateName = ANIM_STATE_START;
-    this._playing = false;
-    this._activate = activate;
 
-    this._currTransitionTime = 1.0;
-    this._totalTransitionTime = 1.0;
-    this._isTransitioning = false;
-    this._transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
-    this._transitionPreviousStates = [];
+    get animEvaluator() {
+        return this._animEvaluator;
+    }
 
-    this._timeInState = 0;
-    this._timeInStateBefore = 0;
-}
+    get activeState() {
+        return this._findState(this._activeStateName);
+    }
 
-Object.defineProperties(AnimController.prototype, {
-    animEvaluator: {
-        get: function () {
-            return this._animEvaluator;
-        }
-    },
-    activeState: {
-        get: function () {
-            return this._findState(this._activeStateName);
-        },
-        set: function (stateName) {
-            this._activeStateName = stateName;
-        }
-    },
-    activeStateName: {
-        get: function () {
-            return this._activeStateName;
-        }
-    },
-    activeStateAnimations: {
-        get: function () {
-            return this.activeState.animations;
-        }
-    },
-    previousState: {
-        get: function () {
-            return this._findState(this._previousStateName);
-        },
-        set: function (stateName) {
-            this._previousStateName = stateName;
-        }
-    },
-    previousStateName: {
-        get: function () {
-            return this._previousStateName;
-        }
-    },
-    playable: {
-        get: function () {
-            var playable = true;
-            var i;
-            for (i = 0; i < this._stateNames.length; i++) {
-                if (!this._states[this._stateNames[i]].playable) {
-                    playable = false;
-                }
-            }
-            return playable;
-        }
-    },
-    playing: {
-        get: function () {
-            return this._playing;
-        },
-        set: function (value) {
-            this._playing = value;
-        }
-    },
-    activeStateProgress: {
-        get: function () {
-            return this._getActiveStateProgressForTime(this._timeInState);
-        }
-    },
-    activeStateDuration: {
-        get: function () {
-            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
-                return 0.0;
+    set activeState(stateName) {
+        this._activeStateName = stateName;
+    }
 
-            var maxDuration = 0.0;
-            for (var i = 0; i < this.activeStateAnimations.length; i++) {
-                var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
-                maxDuration = Math.max(maxDuration, activeClip.track.duration);
-            }
-            return maxDuration;
-        }
-    },
-    activeStateCurrentTime: {
-        get: function () {
-            return this._timeInState;
-        },
-        set: function (time) {
-            this._timeInStateBefore = time;
-            this._timeInState = time;
-            for (var i = 0; i < this.activeStateAnimations.length; i++) {
-                var clip = this.animEvaluator.findClip(this.activeStateAnimations[i].name);
-                if (clip) {
-                    clip.time = time;
-                }
+    get activeStateName() {
+        return this._activeStateName;
+    }
+
+    get activeStateAnimations() {
+        return this.activeState.animations;
+    }
+
+    get previousState() {
+        return this._findState(this._previousStateName);
+    }
+
+    set previousState(stateName) {
+        this._previousStateName = stateName;
+    }
+
+    get previousStateName() {
+        return this._previousStateName;
+    }
+
+    get playable() {
+        var playable = true;
+        var i;
+        for (i = 0; i < this._stateNames.length; i++) {
+            if (!this._states[this._stateNames[i]].playable) {
+                playable = false;
             }
         }
-    },
-    transitioning: {
-        get: function () {
-            return this._isTransitioning;
+        return playable;
+    }
+
+    get playing() {
+        return this._playing;
+    }
+
+    set playing(value) {
+        this._playing = value;
+    }
+
+    get activeStateProgress() {
+        return this._getActiveStateProgressForTime(this._timeInState);
+    }
+
+    get activeStateDuration() {
+        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+            return 0.0;
+
+        var maxDuration = 0.0;
+        for (var i = 0; i < this.activeStateAnimations.length; i++) {
+            var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+            maxDuration = Math.max(maxDuration, activeClip.track.duration);
         }
-    },
-    transitionProgress: {
-        get: function () {
-            return this._currTransitionTime / this._totalTransitionTime;
-        }
-    },
-    states: {
-        get: function () {
-            return this._stateNames;
+        return maxDuration;
+    }
+
+    get activeStateCurrentTime() {
+        return this._timeInState;
+    }
+
+    set activeStateCurrentTime(time) {
+        this._timeInStateBefore = time;
+        this._timeInState = time;
+        for (var i = 0; i < this.activeStateAnimations.length; i++) {
+            var clip = this.animEvaluator.findClip(this.activeStateAnimations[i].name);
+            if (clip) {
+                clip.time = time;
+            }
         }
     }
-});
 
-Object.assign(AnimController.prototype, {
+    get transitioning() {
+        return this._isTransitioning;
+    }
 
-    _findState: function (stateName) {
+    get transitionProgress() {
+        return this._currTransitionTime / this._totalTransitionTime;
+    }
+
+    get states() {
+        return this._stateNames;
+    }
+
+    _findState(stateName) {
         return this._states[stateName];
-    },
+    }
 
-    _getActiveStateProgressForTime: function (time) {
+    _getActiveStateProgressForTime(time) {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY)
             return 1.0;
 
@@ -703,10 +651,10 @@ Object.assign(AnimController.prototype, {
         }
 
         return null;
-    },
+    }
 
     // return all the transitions that have the given stateName as their source state
-    _findTransitionsFromState: function (stateName) {
+    _findTransitionsFromState(stateName) {
         var transitions = this._findTransitionsFromStateCache[stateName];
         if (!transitions) {
             transitions = this._transitions.filter(function (transition) {
@@ -721,10 +669,10 @@ Object.assign(AnimController.prototype, {
             this._findTransitionsFromStateCache[stateName] = transitions;
         }
         return transitions;
-    },
+    }
 
     // return all the transitions that contain the given source and destination states
-    _findTransitionsBetweenStates: function (sourceStateName, destinationStateName) {
+    _findTransitionsBetweenStates(sourceStateName, destinationStateName) {
         var transitions = this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
         if (!transitions) {
             transitions = this._transitions.filter(function (transition) {
@@ -739,9 +687,9 @@ Object.assign(AnimController.prototype, {
             this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName] = transitions;
         }
         return transitions;
-    },
+    }
 
-    _findTransition: function (from, to) {
+    _findTransition(from, to) {
         var transitions = [];
 
         // If from and to is supplied, find transitions that include the required source and destination states
@@ -809,10 +757,9 @@ Object.assign(AnimController.prototype, {
             return transitions[0];
         }
         return null;
+    }
 
-    },
-
-    _updateStateFromTransition: function (transition) {
+    _updateStateFromTransition(transition) {
         var i;
         var j;
         var state;
@@ -913,9 +860,9 @@ Object.assign(AnimController.prototype, {
         }
         this._timeInState = timeInState;
         this._timeInStateBefore = timeInStateBefore;
-    },
+    }
 
-    _transitionToState: function (newStateName) {
+    _transitionToState(newStateName) {
         if (newStateName === this._activeStateName) {
             return;
         }
@@ -931,9 +878,9 @@ Object.assign(AnimController.prototype, {
             transition = new AnimTransition(this, null, newStateName, 0, 0);
         }
         this._updateStateFromTransition(transition);
-    },
+    }
 
-    assignAnimation: function (pathString, animTrack) {
+    assignAnimation(pathString, animTrack) {
         var path = pathString.split('.');
         var state = this._findState(path[0]);
         if (!state) {
@@ -947,9 +894,9 @@ Object.assign(AnimController.prototype, {
         if (!this._playing && this._activate && this.playable) {
             this.play();
         }
-    },
+    }
 
-    removeNodeAnimations: function (nodeName) {
+    removeNodeAnimations(nodeName) {
         var state = this._findState(nodeName);
         if (!state) {
             // #ifdef DEBUG
@@ -959,20 +906,20 @@ Object.assign(AnimController.prototype, {
         }
 
         state.animations = [];
-    },
+    }
 
-    play: function (stateName) {
+    play(stateName) {
         if (stateName) {
             this._transitionToState(stateName);
         }
         this._playing = true;
-    },
+    }
 
-    pause: function () {
+    pause() {
         this._playing = false;
-    },
+    }
 
-    reset: function () {
+    reset() {
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
         this._playing = false;
@@ -982,9 +929,9 @@ Object.assign(AnimController.prototype, {
         this._timeInState = 0;
         this._timeInStateBefore = 0;
         this._animEvaluator.removeClips();
-    },
+    }
 
-    update: function (dt) {
+    update(dt) {
         if (!this._playing) {
             return;
         }
@@ -1055,11 +1002,11 @@ Object.assign(AnimController.prototype, {
             }
         }
         this._animEvaluator.update(dt);
-    },
+    }
 
-    findParameter: function (name) {
+    findParameter(name) {
         return this._parameters[name];
     }
-});
+}
 
 export { AnimController };
