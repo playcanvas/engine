@@ -38,13 +38,13 @@ var replaceLang = function (locale, desiredLang) {
     return desiredLang;
 };
 
-var DEFAULT_LOCALE = 'en-US';
+const DEFAULT_LOCALE = 'en-US';
 
 // default locale fallbacks if a specific locale
 // was not found. E.g. if the desired locale is en-AS but we
 // have en-US and en-GB then pick en-US. If a fallback does not exist either
 // then pick the first that satisfies the language.
-var DEFAULT_LOCALE_FALLBACKS = {
+const DEFAULT_LOCALE_FALLBACKS = {
     'en': 'en-US',
     'es': 'en-ES',
     'zh': 'zh-CN',
@@ -211,274 +211,274 @@ var getPluralFn = function (lang) {
  * @property {number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
  * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
  */
-function I18n(app) {
-    EventHandler.call(this);
+class I18n extends EventHandler {
+    constructor(app) {
+        super();
 
-    this.locale = DEFAULT_LOCALE;
-    this._translations = {};
-    this._availableLangs = {};
-    this._app = app;
-    this._assets = [];
-    this._parser = new I18nParser();
-}
-I18n.prototype = Object.create(EventHandler.prototype);
-I18n.prototype.constructor = I18n;
-
-/**
- * @function
- * @name pc.I18n#findAvailableLocale
- * @description Returns the first available locale based on the desired locale specified. First
- * tries to find the desired locale and then tries to find an alternative locale based on the language.
- * @param {string} desiredLocale - The desired locale e.g. En-US.
- * @param {object} availableLocales - A dictionary where each key is an available locale.
- * @returns {string} The locale found or if no locale is available returns the default en-US locale.
- */
-I18n.findAvailableLocale = function (desiredLocale, availableLocales) {
-    if (availableLocales[desiredLocale]) {
-        return desiredLocale;
+        this.locale = DEFAULT_LOCALE;
+        this._translations = {};
+        this._availableLangs = {};
+        this._app = app;
+        this._assets = [];
+        this._parser = new I18nParser();
     }
 
-    var fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
-    if (fallback && availableLocales[fallback]) {
-        return fallback;
-    }
-
-    var lang = getLang(desiredLocale);
-
-    fallback = DEFAULT_LOCALE_FALLBACKS[lang];
-    if (availableLocales[fallback]) {
-        return fallback;
-    }
-
-    if (availableLocales[lang]) {
-        return lang;
-    }
-
-    return DEFAULT_LOCALE;
-};
-
-/**
- * @function
- * @name pc.I18n#getText
- * @description Returns the translation for the specified key and locale. If the locale is not specified
- * it will use the current locale.
- * @param {string} key - The localization key.
- * @param {string} [locale] - The desired locale.
- * @returns {string} The translated text. If no translations are found at all for the locale then it will return
- * the en-US translation. If no translation exists for that key then it will return the localization key.
- * @example
- * var localized = this.app.i18n.getText('localization-key');
- * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
- */
-I18n.prototype.getText = function (key, locale) {
-    // default translation is the key
-    var result = key;
-
-    var lang;
-    if (!locale) {
-        locale = this._locale;
-        lang = this._lang;
-    }
-
-    var translations = this._translations[locale];
-    if (!translations) {
-        if (!lang) {
-            lang = getLang(locale);
+    /**
+     * @static
+     * @function
+     * @name pc.I18n#findAvailableLocale
+     * @description Returns the first available locale based on the desired locale specified. First
+     * tries to find the desired locale and then tries to find an alternative locale based on the language.
+     * @param {string} desiredLocale - The desired locale e.g. En-US.
+     * @param {object} availableLocales - A dictionary where each key is an available locale.
+     * @returns {string} The locale found or if no locale is available returns the default en-US locale.
+     */
+     static findAvailableLocale(desiredLocale, availableLocales) {
+        if (availableLocales[desiredLocale]) {
+            return desiredLocale;
         }
 
-        locale = this._findFallbackLocale(locale, lang);
-        translations = this._translations[locale];
-    }
-
-    if (translations && translations.hasOwnProperty(key)) {
-        result = translations[key];
-
-        // if this is a plural key then return the first entry in the array
-        if (Array.isArray(result)) {
-            result = result[0];
+        var fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
+        if (fallback && availableLocales[fallback]) {
+            return fallback;
         }
 
-        // if null or undefined switch back to the key (empty string is allowed)
-        if (result === null || result === undefined) {
-            result = key;
+        var lang = getLang(desiredLocale);
+
+        fallback = DEFAULT_LOCALE_FALLBACKS[lang];
+        if (availableLocales[fallback]) {
+            return fallback;
         }
-    }
 
-    return result;
-};
-
-/**
- * @function
- * @name pc.I18n#getPluralText
- * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
- * it will use the current locale.
- * @param {string} key - The localization key.
- * @param {number} n - The number used to determine which plural form to use. E.g. For the phrase "5 Apples" n equals 5.
- * @param {string} [locale] - The desired locale.
- * @returns {string} The translated text. If no translations are found at all for the locale then it will return
- * the en-US translation. If no translation exists for that key then it will return the localization key.
- * @example
- * // manually replace {number} in the resulting translation with our number
- * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
- */
-I18n.prototype.getPluralText = function (key, n, locale) {
-    // default translation is the key
-    var result = key;
-
-    var pluralFn;
-    var lang;
-
-    if (!locale) {
-        locale = this._locale;
-        lang = this._lang;
-        pluralFn = this._pluralFn;
-    } else {
-        lang = getLang(locale);
-        pluralFn = getPluralFn(lang);
-    }
-
-    var translations = this._translations[locale];
-    if (!translations) {
-        locale = this._findFallbackLocale(locale, lang);
-        lang = getLang(locale);
-        pluralFn = getPluralFn(lang);
-        translations = this._translations[locale];
-    }
-
-    if (translations && translations[key] && pluralFn) {
-        var index = pluralFn(n);
-        result = translations[key][index];
-
-        // if null or undefined switch back to the key (empty string is allowed)
-        if (result === null || result === undefined) {
-            result = key;
+        if (availableLocales[lang]) {
+            return lang;
         }
+
+        return DEFAULT_LOCALE;
     }
 
-    return result;
-};
+    /**
+     * @function
+     * @name pc.I18n#getText
+     * @description Returns the translation for the specified key and locale. If the locale is not specified
+     * it will use the current locale.
+     * @param {string} key - The localization key.
+     * @param {string} [locale] - The desired locale.
+     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
+     * the en-US translation. If no translation exists for that key then it will return the localization key.
+     * @example
+     * var localized = this.app.i18n.getText('localization-key');
+     * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
+     */
+    getText(key, locale) {
+        // default translation is the key
+        var result = key;
 
-/**
- * @function
- * @name pc.I18n#addData
- * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
- * @param {object} data - The localization data. See example for the expected format of the data.
- * @example
- * this.app.i18n.addData({
- *     header: {
- *         version: 1
- *     },
- *     data: [{
- *         info: {
- *             locale: 'en-US'
- *         },
- *         messages: {
- *             "key": "translation",
- *             // The number of plural forms depends on the locale. See the manual for more information.
- *             "plural_key": ["one item", "more than one items"]
- *         }
- *     }, {
- *         info: {
- *             locale: 'fr-FR'
- *         },
- *         messages: {
- *             // ...
- *         }
- *     }]
- * });
- */
-I18n.prototype.addData = function (data) {
-    var parsed;
-    try {
-        parsed = this._parser.parse(data);
-    } catch (err) {
-        console.error(err);
-        return;
-    }
+        var lang;
+        if (!locale) {
+            locale = this._locale;
+            lang = this._lang;
+        }
 
-    for (var i = 0, len = parsed.length; i < len; i++) {
-        var entry = parsed[i];
-        var locale = entry.info.locale;
-        var messages = entry.messages;
-        if (!this._translations[locale]) {
-            this._translations[locale] = {};
-            var lang = getLang(locale);
+        var translations = this._translations[locale];
+        if (!translations) {
+            if (!lang) {
+                lang = getLang(locale);
+            }
 
-            // remember the first locale we've found for that language
-            // in case we need to fall back to it
-            if (!this._availableLangs[lang]) {
-                this._availableLangs[lang] = locale;
+            locale = this._findFallbackLocale(locale, lang);
+            translations = this._translations[locale];
+        }
+
+        if (translations && translations.hasOwnProperty(key)) {
+            result = translations[key];
+
+            // if this is a plural key then return the first entry in the array
+            if (Array.isArray(result)) {
+                result = result[0];
+            }
+
+            // if null or undefined switch back to the key (empty string is allowed)
+            if (result === null || result === undefined) {
+                result = key;
             }
         }
 
-        Object.assign(this._translations[locale], messages);
-
-        this.fire('data:add', locale, messages);
-    }
-};
-
-/**
- * @function
- * @name pc.I18n#removeData
- * @description Removes localization data.
- * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
- */
-I18n.prototype.removeData = function (data) {
-    var parsed;
-    var key;
-    try {
-        parsed = this._parser.parse(data);
-    } catch (err) {
-        console.error(err);
-        return;
+        return result;
     }
 
-    for (var i = 0, len = parsed.length; i < len; i++) {
-        var entry = parsed[i];
-        var locale = entry.info.locale;
+    /**
+     * @function
+     * @name pc.I18n#getPluralText
+     * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
+     * it will use the current locale.
+     * @param {string} key - The localization key.
+     * @param {number} n - The number used to determine which plural form to use. E.g. For the phrase "5 Apples" n equals 5.
+     * @param {string} [locale] - The desired locale.
+     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
+     * the en-US translation. If no translation exists for that key then it will return the localization key.
+     * @example
+     * // manually replace {number} in the resulting translation with our number
+     * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
+     */
+    getPluralText(key, n, locale) {
+        // default translation is the key
+        var result = key;
+
+        var pluralFn;
+        var lang;
+
+        if (!locale) {
+            locale = this._locale;
+            lang = this._lang;
+            pluralFn = this._pluralFn;
+        } else {
+            lang = getLang(locale);
+            pluralFn = getPluralFn(lang);
+        }
+
         var translations = this._translations[locale];
-        if (!translations) continue;
-
-        var messages = entry.messages;
-        for (key in messages) {
-            delete translations[key];
+        if (!translations) {
+            locale = this._findFallbackLocale(locale, lang);
+            lang = getLang(locale);
+            pluralFn = getPluralFn(lang);
+            translations = this._translations[locale];
         }
 
-        // if no more entries for that locale then
-        // delete the locale
-        var hasAny = false;
-        for (key in translations) {
-            hasAny = true;
-            break;
+        if (translations && translations[key] && pluralFn) {
+            var index = pluralFn(n);
+            result = translations[key][index];
+
+            // if null or undefined switch back to the key (empty string is allowed)
+            if (result === null || result === undefined) {
+                result = key;
+            }
         }
 
-        if (!hasAny) {
-            delete this._translations[locale];
-            delete this._availableLangs[getLang(locale)];
-        }
-
-        this.fire('data:remove', locale, messages);
+        return result;
     }
-};
 
-/**
- * @function
- * @name pc.I18n#destroy
- * @description Frees up memory.
- */
-I18n.prototype.destroy = function () {
-    this._translations = null;
-    this._availableLangs = null;
-    this._assets = null;
-    this._parser = null;
-    this.off();
-};
+    /**
+     * @function
+     * @name pc.I18n#addData
+     * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
+     * @param {object} data - The localization data. See example for the expected format of the data.
+     * @example
+     * this.app.i18n.addData({
+     *     header: {
+     *         version: 1
+     *     },
+     *     data: [{
+     *         info: {
+     *             locale: 'en-US'
+     *         },
+     *         messages: {
+     *             "key": "translation",
+     *             // The number of plural forms depends on the locale. See the manual for more information.
+     *             "plural_key": ["one item", "more than one items"]
+     *         }
+     *     }, {
+     *         info: {
+     *             locale: 'fr-FR'
+     *         },
+     *         messages: {
+     *             // ...
+     *         }
+     *     }]
+     * });
+     */
+    addData(data) {
+        var parsed;
+        try {
+            parsed = this._parser.parse(data);
+        } catch (err) {
+            console.error(err);
+            return;
+        }
 
-Object.defineProperty(I18n.prototype, 'locale', {
-    get: function () {
+        for (var i = 0, len = parsed.length; i < len; i++) {
+            var entry = parsed[i];
+            var locale = entry.info.locale;
+            var messages = entry.messages;
+            if (!this._translations[locale]) {
+                this._translations[locale] = {};
+                var lang = getLang(locale);
+
+                // remember the first locale we've found for that language
+                // in case we need to fall back to it
+                if (!this._availableLangs[lang]) {
+                    this._availableLangs[lang] = locale;
+                }
+            }
+
+            Object.assign(this._translations[locale], messages);
+
+            this.fire('data:add', locale, messages);
+        }
+    }
+
+    /**
+     * @function
+     * @name pc.I18n#removeData
+     * @description Removes localization data.
+     * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
+     */
+    removeData(data) {
+        var parsed;
+        var key;
+        try {
+            parsed = this._parser.parse(data);
+        } catch (err) {
+            console.error(err);
+            return;
+        }
+
+        for (var i = 0, len = parsed.length; i < len; i++) {
+            var entry = parsed[i];
+            var locale = entry.info.locale;
+            var translations = this._translations[locale];
+            if (!translations) continue;
+
+            var messages = entry.messages;
+            for (key in messages) {
+                delete translations[key];
+            }
+
+            // if no more entries for that locale then
+            // delete the locale
+            var hasAny = false;
+            for (key in translations) {
+                hasAny = true;
+                break;
+            }
+
+            if (!hasAny) {
+                delete this._translations[locale];
+                delete this._availableLangs[getLang(locale)];
+            }
+
+            this.fire('data:remove', locale, messages);
+        }
+    }
+
+    /**
+     * @function
+     * @name pc.I18n#destroy
+     * @description Frees up memory.
+     */
+    destroy = function () {
+        this._translations = null;
+        this._availableLangs = null;
+        this._assets = null;
+        this._parser = null;
+        this.off();
+    }
+
+    get locale() {
         return this._locale;
-    },
-    set: function (value) {
+    }
+
+    set locale(value) {
         if (this._locale === value) {
             return;
         }
@@ -504,13 +504,12 @@ Object.defineProperty(I18n.prototype, 'locale', {
         // raise event
         this.fire('set:locale', value, old);
     }
-});
 
-Object.defineProperty(I18n.prototype, 'assets', {
-    get: function () {
+    get assets() {
         return this._assets;
-    },
-    set: function (value) {
+    }
+
+    set assets(value) {
         var i;
         var len;
         var id;
@@ -552,69 +551,69 @@ Object.defineProperty(I18n.prototype, 'assets', {
             }
         }
     }
-});
 
-// Finds a fallback locale for the specified locale and language.
-// 1) First tries DEFAULT_LOCALE_FALLBACKS
-// 2) If no translation exists for that locale return the first locale available for that language.
-// 3) If no translation exists for that either then return the DEFAULT_LOCALE
-I18n.prototype._findFallbackLocale = function (locale, lang) {
-    var result = DEFAULT_LOCALE_FALLBACKS[locale];
-    if (result && this._translations[result]) {
-        return result;
+    // Finds a fallback locale for the specified locale and language.
+    // 1) First tries DEFAULT_LOCALE_FALLBACKS
+    // 2) If no translation exists for that locale return the first locale available for that language.
+    // 3) If no translation exists for that either then return the DEFAULT_LOCALE
+    _findFallbackLocale(locale, lang) {
+        var result = DEFAULT_LOCALE_FALLBACKS[locale];
+        if (result && this._translations[result]) {
+            return result;
+        }
+
+        result = DEFAULT_LOCALE_FALLBACKS[lang];
+        if (result && this._translations[result]) {
+            return result;
+        }
+
+        result = this._availableLangs[lang];
+        if (result && this._translations[result]) {
+            return result;
+        }
+
+        return DEFAULT_LOCALE;
     }
 
-    result = DEFAULT_LOCALE_FALLBACKS[lang];
-    if (result && this._translations[result]) {
-        return result;
+    _onAssetAdd(asset) {
+        asset.on('load', this._onAssetLoad, this);
+        asset.on('change', this._onAssetChange, this);
+        asset.on('remove', this._onAssetRemove, this);
+        asset.on('unload', this._onAssetUnload, this);
+
+        if (asset.resource) {
+            this._onAssetLoad(asset);
+        }
     }
 
-    result = this._availableLangs[lang];
-    if (result && this._translations[result]) {
-        return result;
-    }
-
-    return DEFAULT_LOCALE;
-};
-
-I18n.prototype._onAssetAdd = function (asset) {
-    asset.on('load', this._onAssetLoad, this);
-    asset.on('change', this._onAssetChange, this);
-    asset.on('remove', this._onAssetRemove, this);
-    asset.on('unload', this._onAssetUnload, this);
-
-    if (asset.resource) {
-        this._onAssetLoad(asset);
-    }
-};
-
-I18n.prototype._onAssetLoad = function (asset) {
-    this.addData(asset.resource);
-};
-
-I18n.prototype._onAssetChange = function (asset) {
-    if (asset.resource) {
+    _onAssetLoad(asset) {
         this.addData(asset.resource);
     }
-};
 
-I18n.prototype._onAssetRemove = function (asset) {
-    asset.off('load', this._onAssetLoad, this);
-    asset.off('change', this._onAssetChange, this);
-    asset.off('remove', this._onAssetRemove, this);
-    asset.off('unload', this._onAssetUnload, this);
-
-    if (asset.resource) {
-        this.removeData(asset.resource);
+    _onAssetChange(asset) {
+        if (asset.resource) {
+            this.addData(asset.resource);
+        }
     }
 
-    this._app.assets.once('add:' + asset.id, this._onAssetAdd, this);
-};
+    _onAssetRemove(asset) {
+        asset.off('load', this._onAssetLoad, this);
+        asset.off('change', this._onAssetChange, this);
+        asset.off('remove', this._onAssetRemove, this);
+        asset.off('unload', this._onAssetUnload, this);
 
-I18n.prototype._onAssetUnload = function (asset) {
-    if (asset.resource) {
-        this.removeData(asset.resource);
+        if (asset.resource) {
+            this.removeData(asset.resource);
+        }
+
+        this._app.assets.once('add:' + asset.id, this._onAssetAdd, this);
     }
-};
+
+    _onAssetUnload(asset) {
+        if (asset.resource) {
+            this.removeData(asset.resource);
+        }
+    }
+}
 
 export { I18n };
