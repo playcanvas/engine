@@ -1,26 +1,26 @@
 import { EventHandler } from './event-handler.js';
 
-function TagsCache(key) {
-    this._index = { };
-    this._key = key || null;
-}
+class TagsCache {
+    constructor(key) {
+        this._index = { };
+        this._key = key || null;
+    }
 
-Object.assign(TagsCache.prototype, {
-    addItem: function (item) {
+    addItem(item) {
         var tags = item.tags._list;
 
         for (var i = 0; i < tags.length; i++)
             this.add(tags[i], item);
-    },
+    }
 
-    removeItem: function (item) {
+    removeItem(item) {
         var tags = item.tags._list;
 
         for (var i = 0; i < tags.length; i++)
             this.remove(tags[i], item);
-    },
+    }
 
-    add: function (tag, item) {
+    add(tag, item) {
         // already in cache
         if (this._index[tag] && this._index[tag].list.indexOf(item) !== -1)
             return;
@@ -41,9 +41,9 @@ Object.assign(TagsCache.prototype, {
         // add to index keys
         if (this._key)
             this._index[tag].keys[item[this._key]] = item;
-    },
+    }
 
-    remove: function (tag, item) {
+    remove(tag, item) {
         // no index created for that tag
         if (!this._index[tag])
             return;
@@ -70,9 +70,9 @@ Object.assign(TagsCache.prototype, {
         // if index empty, remove it
         if (this._index[tag].list.length === 0)
             delete this._index[tag];
-    },
+    }
 
-    find: function (args) {
+    find(args) {
         var self = this;
         var index = { };
         var items = [];
@@ -143,7 +143,7 @@ Object.assign(TagsCache.prototype, {
 
         return items;
     }
-});
+}
 
 
 /**
@@ -178,17 +178,15 @@ Object.assign(TagsCache.prototype, {
  * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation.
  */
 
-function Tags(parent) {
-    EventHandler.call(this);
+class Tags extends EventHandler {
+    constructor(parent) {
+        super();
 
-    this._index = { };
-    this._list = [];
-    this._parent = parent;
-}
-Tags.prototype = Object.create(EventHandler.prototype);
-Tags.prototype.constructor = Tags;
+        this._index = { };
+        this._list = [];
+        this._parent = parent;
+    }
 
-Object.assign(Tags.prototype, {
     /**
      * @function
      * @name pc.Tags#add
@@ -202,7 +200,7 @@ Object.assign(Tags.prototype, {
      * @example
      * tags.add(['level-2', 'mob']);
      */
-    add: function () {
+    add() {
         var changed = false;
         var tags = this._processArguments(arguments, true);
 
@@ -225,7 +223,7 @@ Object.assign(Tags.prototype, {
             this.fire('change', this._parent);
 
         return changed;
-    },
+    }
 
     /**
      * @function
@@ -240,7 +238,7 @@ Object.assign(Tags.prototype, {
      * @example
      * tags.remove(['level-2', 'mob']);
      */
-    remove: function () {
+    remove() {
         var changed = false;
 
         if (!this._list.length)
@@ -267,7 +265,7 @@ Object.assign(Tags.prototype, {
             this.fire('change', this._parent);
 
         return changed;
-    },
+    }
 
     /**
      * @function
@@ -276,7 +274,7 @@ Object.assign(Tags.prototype, {
      * @example
      * tags.clear();
      */
-    clear: function () {
+    clear() {
         if (!this._list.length)
             return;
 
@@ -288,7 +286,7 @@ Object.assign(Tags.prototype, {
             this.fire('remove', tags[i], this._parent);
 
         this.fire('change', this._parent);
-    },
+    }
 
     /**
      * @function
@@ -309,15 +307,15 @@ Object.assign(Tags.prototype, {
      * @example
      * tags.has(['ui', 'settings'], ['ui', 'levels']); // (ui AND settings) OR (ui AND levels)
      */
-    has: function () {
+    has() {
         if (!this._list.length)
             return false;
 
         return this._has(this._processArguments(arguments));
-    },
+    }
 
 
-    _has: function (tags) {
+    _has(tags) {
         if (!this._list.length || !tags.length)
             return false;
 
@@ -344,7 +342,7 @@ Object.assign(Tags.prototype, {
         }
 
         return false;
-    },
+    }
 
     /**
      * @function
@@ -352,11 +350,11 @@ Object.assign(Tags.prototype, {
      * @description Returns immutable array of tags.
      * @returns {string[]} Copy of tags array.
      */
-    list: function () {
+    list() {
         return this._list.slice(0);
-    },
+    }
 
-    _processArguments: function (args, flat) {
+    _processArguments(args, flat) {
         var tags = [];
         var tmp = [];
 
@@ -392,19 +390,17 @@ Object.assign(Tags.prototype, {
 
         return tags;
     }
-});
 
-/**
- * @field
- * @readonly
- * @name pc.Tags#size
- * @type {number}
- * @description Number of tags in set.
- */
-Object.defineProperty(Tags.prototype, 'size', {
-    get: function () {
+    /**
+     * @field
+     * @readonly
+     * @name pc.Tags#size
+     * @type {number}
+     * @description Number of tags in set.
+     */
+    get size() {
         return this._list.length;
     }
-});
+}
 
 export { Tags, TagsCache };

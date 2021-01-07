@@ -11,7 +11,7 @@ import { AssetVariants } from './asset-variants.js';
 // auto incrementing number for asset ids
 var assetIdCounter = -1;
 
-var VARIANT_SUPPORT = {
+const VARIANT_SUPPORT = {
     pvr: 'extCompressedTexturePVRTC',
     dxt: 'extCompressedTextureS3TC',
     etc2: 'extCompressedTextureETC',
@@ -19,7 +19,7 @@ var VARIANT_SUPPORT = {
     basis: 'canvas' // dummy, basis is always supported
 };
 
-var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
+const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
  * @class
@@ -70,89 +70,87 @@ var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {boolean} loading True if the resource is currently being loaded
  * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
  */
-function Asset(name, type, file, data, options) {
-    EventHandler.call(this);
+class Asset extends EventHandler {
+    constructor(name, type, file, data, options) {
+        super();
 
-    this._id = assetIdCounter--;
+        this._id = assetIdCounter--;
 
-    this.name = name || '';
-    this.type = type;
-    this.tags = new Tags(this);
-    this._preload = false;
+        this.name = name || '';
+        this.type = type;
+        this.tags = new Tags(this);
+        this._preload = false;
 
-    this.variants = new AssetVariants(this);
+        this.variants = new AssetVariants(this);
 
-    this._file = null;
-    this._data = data || { };
-    this.options = options || { };
+        this._file = null;
+        this._data = data || { };
+        this.options = options || { };
 
-    // This is where the loaded resource(s) will be
-    this._resources = [];
+        // This is where the loaded resource(s) will be
+        this._resources = [];
 
-    // a string-assetId dictionary that maps
-    // locale to asset id
-    this._i18n = {};
+        // a string-assetId dictionary that maps
+        // locale to asset id
+        this._i18n = {};
 
-    // Is resource loaded
-    this.loaded = false;
-    this.loading = false;
+        // Is resource loaded
+        this.loaded = false;
+        this.loading = false;
 
-    this.registry = null;
+        this.registry = null;
 
-    if (file) this.file = file;
-}
-Asset.prototype = Object.create(EventHandler.prototype);
-Asset.prototype.constructor = Asset;
+        if (file) this.file = file;
+    }
 
-/**
- * @event
- * @name pc.Asset#load
- * @description Fired when the asset has completed loading.
- * @param {pc.Asset} asset - The asset that was loaded.
- */
+    /**
+     * @event
+     * @name pc.Asset#load
+     * @description Fired when the asset has completed loading.
+     * @param {pc.Asset} asset - The asset that was loaded.
+     */
 
-/**
- * @event
- * @name pc.Asset#remove
- * @description Fired when the asset is removed from the asset registry.
- * @param {pc.Asset} asset - The asset that was removed.
- */
+    /**
+     * @event
+     * @name pc.Asset#remove
+     * @description Fired when the asset is removed from the asset registry.
+     * @param {pc.Asset} asset - The asset that was removed.
+     */
 
-/**
- * @event
- * @name pc.Asset#error
- * @description Fired if the asset encounters an error while loading.
- * @param {string} err - The error message.
- * @param {pc.Asset} asset - The asset that generated the error.
- */
+    /**
+     * @event
+     * @name pc.Asset#error
+     * @description Fired if the asset encounters an error while loading.
+     * @param {string} err - The error message.
+     * @param {pc.Asset} asset - The asset that generated the error.
+     */
 
-/**
- * @event
- * @name pc.Asset#change
- * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
- * @param {pc.Asset} asset - The asset that was loaded.
- * @param {string} property - The name of the property that changed.
- * @param {*} value - The new property value.
- * @param {*} oldValue - The old property value.
- */
+    /**
+     * @event
+     * @name pc.Asset#change
+     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
+     * @param {pc.Asset} asset - The asset that was loaded.
+     * @param {string} property - The name of the property that changed.
+     * @param {*} value - The new property value.
+     * @param {*} oldValue - The old property value.
+     */
 
-/**
- * @event
- * @name pc.Asset#add:localized
- * @description Fired when we add a new localized asset id to the asset.
- * @param {string} locale - The locale.
- * @param {number} assetId - The asset id we added.
- */
+    /**
+     * @event
+     * @name pc.Asset#add:localized
+     * @description Fired when we add a new localized asset id to the asset.
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we added.
+     */
 
-/**
- * @event
- * @name pc.Asset#remove:localized
- * @description Fired when we remove a localized asset id from the asset.
- * @param {string} locale - The locale.
- * @param {number} assetId - The asset id we removed.
- */
+    /**
+     * @event
+     * @name pc.Asset#remove:localized
+     * @description Fired when we remove a localized asset id from the asset.
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we removed.
+     */
 
-Object.assign(Asset.prototype, {
     /**
      * @name pc.Asset#getFileUrl
      * @function
@@ -162,7 +160,7 @@ Object.assign(Asset.prototype, {
      * var assets = app.assets.find("My Image", "texture");
      * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
      */
-    getFileUrl: function () {
+    getFileUrl() {
         var file = this.getPreferredFile();
 
         if (!file || !file.url)
@@ -180,9 +178,9 @@ Object.assign(Asset.prototype, {
         }
 
         return url;
-    },
+    }
 
-    getPreferredFile: function () {
+    getPreferredFile() {
         if (!this.file)
             return null;
 
@@ -217,7 +215,7 @@ Object.assign(Asset.prototype, {
         }
 
         return this.file;
-    },
+    }
 
     /**
      * @private
@@ -227,10 +225,10 @@ Object.assign(Asset.prototype, {
      * @param {string} relativePath - The relative path to be concatenated to this asset's base url
      * @returns {string} Resulting URL of the asset
      */
-    getAbsoluteUrl: function (relativePath) {
+    getAbsoluteUrl(relativePath) {
         var base = path.getDirectory(this.file.url);
         return path.join(base, relativePath);
-    },
+    }
 
     /**
      * @private
@@ -240,11 +238,11 @@ Object.assign(Asset.prototype, {
      * @description Returns the asset id of the asset that corresponds to the specified locale.
      * @returns {number} An asset id or null if there is no asset specified for the desired locale.
      */
-    getLocalizedAssetId: function (locale) {
+    getLocalizedAssetId(locale) {
         // tries to find either the desired locale or a fallback locale
         locale = I18n.findAvailableLocale(locale, this._i18n);
         return this._i18n[locale] || null;
-    },
+    }
 
     /**
      * @private
@@ -255,10 +253,10 @@ Object.assign(Asset.prototype, {
      * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
      * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
      */
-    addLocalizedAssetId: function (locale, assetId) {
+    addLocalizedAssetId(locale, assetId) {
         this._i18n[locale] = assetId;
         this.fire('add:localized', locale, assetId);
-    },
+    }
 
     /**
      * @private
@@ -267,13 +265,13 @@ Object.assign(Asset.prototype, {
      * @param {string} locale - The locale e.g. Ar-AR.
      * @description Removes a localized asset.
      */
-    removeLocalizedAssetId: function (locale) {
+    removeLocalizedAssetId(locale) {
         var assetId = this._i18n[locale];
         if (assetId) {
             delete this._i18n[locale];
             this.fire('remove:localized', locale, assetId);
         }
-    },
+    }
 
     /**
      * @function
@@ -288,7 +286,7 @@ Object.assign(Asset.prototype, {
      * });
      * app.assets.load(asset);
      */
-    ready: function (callback, scope) {
+    ready(callback, scope) {
         scope = scope || this;
 
         if (this.resource) {
@@ -298,15 +296,15 @@ Object.assign(Asset.prototype, {
                 callback.call(scope, asset);
             });
         }
-    },
+    }
 
-    reload: function () {
+    reload() {
         // no need to be reloaded
         if (this.loaded) {
             this.loaded = false;
             this.registry.load(this);
         }
-    },
+    }
 
     /**
      * @function
@@ -317,7 +315,7 @@ Object.assign(Asset.prototype, {
      * asset.unload();
      * // asset.resource is null
      */
-    unload: function () {
+    unload() {
         if (!this.loaded && this._resources.length === 0)
             return;
 
@@ -343,24 +341,20 @@ Object.assign(Asset.prototype, {
             }
         }
     }
-});
 
-Object.defineProperty(Asset.prototype, 'id', {
-    get: function () {
+    get id() {
         return this._id;
-    },
+    }
 
-    set: function (value) {
+    set id(value) {
         this._id = value;
     }
-});
 
-Object.defineProperty(Asset.prototype, 'file', {
-    get: function () {
+    get file() {
         return this._file;
-    },
+    }
 
-    set: function (value) {
+    set file(value) {
         // fire change event when the file changes
         // so that we reload it if necessary
         // set/unset file property of file hash been changed
@@ -411,14 +405,12 @@ Object.defineProperty(Asset.prototype, 'file', {
             }
         }
     }
-});
 
-Object.defineProperty(Asset.prototype, 'data', {
-    get: function () {
+    get data() {
         return this._data;
-    },
+    }
 
-    set: function (value) {
+    set data(value) {
         // fire change event when data changes
         // because the asset might need reloading if that happens
         var old = this._data;
@@ -430,37 +422,32 @@ Object.defineProperty(Asset.prototype, 'data', {
                 this.registry._loader.patch(this, this.registry);
         }
     }
-});
 
-Object.defineProperty(Asset.prototype, 'resource', {
-    get: function () {
+    get resource() {
         return this._resources[0];
-    },
+    }
 
-    set: function (value) {
+    set resource(value) {
         var _old = this._resources[0];
         this._resources[0] = value;
         this.fire('change', this, 'resource', value, _old);
     }
-});
 
-Object.defineProperty(Asset.prototype, 'resources', {
-    get: function () {
+    get resources() {
         return this._resources;
-    },
+    }
 
-    set: function (value) {
+    set resources(value) {
         var _old = this._resources;
         this._resources = value;
         this.fire('change', this, 'resources', value, _old);
     }
-});
 
-Object.defineProperty(Asset.prototype, 'preload', {
-    get: function () {
+    get preload() {
         return this._preload;
-    },
-    set: function (value) {
+    }
+
+    set preload(value) {
         value = !!value;
         if (this._preload === value)
             return;
@@ -469,13 +456,12 @@ Object.defineProperty(Asset.prototype, 'preload', {
         if (this._preload && !this.loaded && !this.loading && this.registry)
             this.registry.load(this);
     }
-});
 
-Object.defineProperty(Asset.prototype, 'loadFaces', {
-    get: function () {
+    get loadFaces() {
         return this._loadFaces;
-    },
-    set: function (value) {
+    }
+
+    set loadFaces(value) {
         value = !!value;
         if (!this.hasOwnProperty('_loadFaces') || value !== this._loadFaces) {
             this._loadFaces = value;
@@ -487,6 +473,6 @@ Object.defineProperty(Asset.prototype, 'loadFaces', {
                 this.registry._loader.patch(this, this.registry);
         }
     }
-});
+}
 
 export { Asset };
