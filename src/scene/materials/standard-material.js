@@ -310,19 +310,18 @@ import { Quat } from '../../math/quat.js';
  * // Notify the material that it has been modified
  * material.update();
  */
-function StandardMaterial() {
-    Material.call(this);
+class StandardMaterial extends Material {
+    constructor() {
+        super();
 
-    // storage for texture and cubemap asset references
-    this._assetReferences = {};
-    this._validator = null;
+        // storage for texture and cubemap asset references
+        this._assetReferences = {};
+        this._validator = null;
 
-    this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
+        this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
-    this.reset();
-}
-StandardMaterial.prototype = Object.create(Material.prototype);
-StandardMaterial.prototype.constructor = StandardMaterial;
+        this.reset();
+    }
 
 StandardMaterial.TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 StandardMaterial.CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
