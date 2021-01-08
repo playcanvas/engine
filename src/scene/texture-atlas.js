@@ -89,7 +89,7 @@ class TextureAtlas extends EventHandler {
      * @name pc.TextureAtlas#destroy
      * @description Free up the underlying texture owned by the atlas.
      */
-    destroy = function () {
+    destroy() {
         if (this._texture) {
             this._texture.destroy();
         }
