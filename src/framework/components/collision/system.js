@@ -782,7 +782,7 @@ class CollisionComponentSystem extends ComponentSystem {
 
         this._triMeshCache = null;
 
-        ComponentSystem.prototype.destroy.call(this);
+        super.destroy();
     }
 }
 
