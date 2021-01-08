@@ -218,6 +218,7 @@ class ParticleSystemComponent extends Component {
     get drawOrder() {
         return this._drawOrder;
     }
+
     set drawOrder(drawOrder) {
         this._drawOrder = drawOrder;
         if (this.emitter) {

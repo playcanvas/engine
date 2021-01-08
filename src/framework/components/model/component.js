@@ -657,6 +657,7 @@ class ModelComponent extends Component {
     get lightmapped() {
         return this._lightmapped;
     }
+
     set lightmapped(value) {
         if (value !== this._lightmapped) {
 

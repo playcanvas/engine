@@ -112,7 +112,7 @@ class SpriteComponent extends Component {
         this._currentClip = this._defaultClip;
     }
 
-    onEnable () {
+    onEnable() {
         var app = this.system.app;
         var scene = app.scene;
 
