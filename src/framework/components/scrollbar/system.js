@@ -35,7 +35,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        super.initializeComponentData(component, data, _schema);
     }
 
     _onRemoveComponent(entity, component) {

@@ -51,7 +51,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
             data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        super.initializeComponentData(component, data, _schema);
     }
 
     onUpdate(dt) {

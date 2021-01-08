@@ -66,7 +66,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         // queue up a draw order sync
         component.syncDrawOrder();
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
     }
 
     destroy() {

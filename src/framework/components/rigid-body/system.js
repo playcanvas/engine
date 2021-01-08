@@ -248,7 +248,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             data.angularFactor = new Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
     }
 
     cloneComponent(entity, clone) {

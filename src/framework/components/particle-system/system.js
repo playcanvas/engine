@@ -167,7 +167,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
     }
 
     cloneComponent(entity, clone) {

@@ -49,7 +49,7 @@ class AnimationComponentSystem extends ComponentSystem {
 
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
     }
 
     cloneComponent(entity, clone) {

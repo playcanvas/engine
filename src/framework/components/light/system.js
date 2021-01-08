@@ -77,7 +77,7 @@ class LightComponentSystem extends ComponentSystem {
         light._scene = this.app.scene;
         component.data.light = light;
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
     }
 
     _onRemoveComponent(entity, component) {

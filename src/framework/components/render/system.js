@@ -65,7 +65,7 @@ class RenderComponentSystem extends ComponentSystem {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, _data, _schema);
+        super.initializeComponentData(component, _data, _schema);
     }
 
     cloneComponent(entity, clone) {

@@ -67,7 +67,7 @@ class ModelComponentSystem extends ComponentSystem {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, _data, ['enabled']);
+        super.initializeComponentData(component, _data, ['enabled']);
     }
 
     cloneComponent(entity, clone) {

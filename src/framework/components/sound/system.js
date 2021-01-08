@@ -57,7 +57,7 @@ class SoundComponentSystem extends ComponentSystem  {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, ['enabled']);
+        super.initializeComponentData(component, data, ['enabled']);
     }
 
     cloneComponent(entity, clone) {

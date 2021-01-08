@@ -37,7 +37,7 @@ class AnimComponentSystem extends ComponentSystem {
 
     initializeComponentData(component, data, properties) {
         properties = ['activate', 'enabled', 'speed', 'playing'];
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
         if (data.stateGraphAsset) {
             component.stateGraphAsset = data.stateGraphAsset;
         }
