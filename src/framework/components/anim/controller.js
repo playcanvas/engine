@@ -18,7 +18,7 @@ import {
  * @param {pc.BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
  * @param {string} name - The name of the AnimNode. Used when assigning a pc.AnimTrack to it.
  * @param {number[]|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
- * @param {number} [speed] - The speed that it's pc.AnimTrack should play at. Defaults to 1.
+ * @param {number} [speed] - The speed that its pc.AnimTrack should play at. Defaults to 1.
  */
 class AnimNode {
     constructor(state, parent, name, point, speed = 1) {
