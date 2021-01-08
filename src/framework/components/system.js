@@ -279,7 +279,7 @@ class ComponentSystem extends EventHandler {
         return matchingProperties;
     }
 
-    destroyfunction() {
+    destroy() {
         this.off();
     }
 }
