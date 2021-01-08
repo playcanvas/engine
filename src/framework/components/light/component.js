@@ -473,7 +473,7 @@ function _defineProps() {
             }
         }
     });
-};
+}
 
 _defineProps();
 
