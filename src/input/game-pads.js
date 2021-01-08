@@ -211,7 +211,7 @@ Object.assign(GamePads.prototype, {
      */
     getAxis: function (index, axes) {
         if (!this.current[index]) {
-            return false;
+            return 0;
         }
 
         var key = this.current[index].map.axes[axes];
