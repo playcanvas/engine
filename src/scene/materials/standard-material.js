@@ -322,6 +322,7 @@ class StandardMaterial extends Material {
 
         this.reset();
     }
+}
 
 StandardMaterial.TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 StandardMaterial.CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
