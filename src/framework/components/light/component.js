@@ -17,6 +17,9 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+var _lightProps = [];
+var _lightPropsDefault = [];
+
 /**
  * @component
  * @class
@@ -109,24 +112,173 @@ import { Component } from '../component.js';
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
-function LightComponent(system, entity) {
-    Component.call(this, system, entity);
+class LightComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._cookieAsset = null;
-    this._cookieAssetId = null;
-    this._cookieAssetAdd = false;
-    this._cookieMatrix = null;
+        this._cookieAsset = null;
+        this._cookieAssetId = null;
+        this._cookieAssetAdd = false;
+        this._cookieMatrix = null;
+    }
+
+    addLightToLayers() {
+        var layer;
+        for (var i = 0; i < this.layers.length; i++) {
+            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+            if (!layer) continue;
+            layer.addLight(this);
+        }
+    }
+
+    removeLightFromLayers() {
+        var layer;
+        for (var i = 0; i < this.layers.length; i++) {
+            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+            if (!layer) continue;
+            layer.removeLight(this);
+        }
+    }
+
+    onLayersChanged(oldComp, newComp) {
+        if (this.enabled && this.entity.enabled) {
+            this.addLightToLayers();
+        }
+        oldComp.off("add", this.onLayerAdded, this);
+        oldComp.off("remove", this.onLayerRemoved, this);
+        newComp.on("add", this.onLayerAdded, this);
+        newComp.on("remove", this.onLayerRemoved, this);
+    }
+
+    onLayerAdded(layer) {
+        var index = this.layers.indexOf(layer.id);
+        if (index < 0) return;
+        if (this.enabled && this.entity.enabled) {
+            layer.addLight(this);
+        }
+    }
+
+    onLayerRemoved(layer) {
+        var index = this.layers.indexOf(layer.id);
+        if (index < 0) return;
+        layer.removeLight(this);
+    }
+
+    refreshProperties() {
+        var name;
+        for (var i = 0; i < _lightProps.length; i++) {
+            name = _lightProps[i];
+
+            /* eslint-disable no-self-assign */
+            this[name] = this[name];
+            /* eslint-enable no-self-assign */
+        }
+        if (this.enabled && this.entity.enabled)
+            this.onEnable();
+    }
+
+    updateShadow() {
+        this.light.updateShadow();
+    }
+
+    onCookieAssetSet() {
+        var forceLoad = false;
+
+        if (this._cookieAsset.type === 'cubemap' && !this._cookieAsset.loadFaces) {
+            this._cookieAsset.loadFaces = true;
+            forceLoad = true;
+        }
+
+        if (!this._cookieAsset.resource || forceLoad)
+            this.system.app.assets.load(this._cookieAsset);
+
+        if (this._cookieAsset.resource)
+            this.onCookieAssetLoad();
+    }
+
+    onCookieAssetAdd(asset) {
+        if (this._cookieAssetId !== asset.id)
+            return;
+
+        this._cookieAsset = asset;
+
+        if (this.light.enabled)
+            this.onCookieAssetSet();
+
+        this._cookieAsset.on('load', this.onCookieAssetLoad, this);
+        this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
+    }
+
+    onCookieAssetLoad() {
+        if (!this._cookieAsset || !this._cookieAsset.resource)
+            return;
+
+        this.cookie = this._cookieAsset.resource;
+    }
+
+    onCookieAssetRemove() {
+        if (!this._cookieAssetId)
+            return;
+
+        if (this._cookieAssetAdd) {
+            this.system.app.assets.off('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+            this._cookieAssetAdd = false;
+        }
+
+        if (this._cookieAsset) {
+            this._cookieAsset.off('load', this.onCookieAssetLoad, this);
+            this._cookieAsset.off('remove', this.onCookieAssetRemove, this);
+            this._cookieAsset = null;
+        }
+
+        this.cookie = null;
+    }
+
+    onEnable() {
+        this.light.enabled = true;
+
+        this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+        if (this.system.app.scene.layers) {
+            this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+            this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+        }
+
+        if (this.enabled && this.entity.enabled) {
+            this.addLightToLayers();
+        }
+
+        if (this._cookieAsset && !this.cookie)
+            this.onCookieAssetSet();
+    }
+
+    onDisable() {
+        this.light.enabled = false;
+
+        this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+        if (this.system.app.scene.layers) {
+            this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+            this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+        }
+
+        this.removeLightFromLayers();
+    }
+
+    onRemove() {
+        // remove from layers
+        this.onDisable();
+
+        // destroy light node
+        this.light.destroy();
+
+        // remove cookie asset events
+        this.cookieAsset = null;
+    }
 }
-LightComponent.prototype = Object.create(Component.prototype);
-LightComponent.prototype.constructor = LightComponent;
 
-var _props = [];
-var _propsDefault = [];
-
-var _defineProperty = function (name, defaultValue, setFunc, skipEqualsCheck) {
+function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
     var c = LightComponent.prototype;
-    _props.push(name);
-    _propsDefault.push(defaultValue);
+    _lightProps.push(name);
+    _lightPropsDefault.push(defaultValue);
 
     Object.defineProperty(c, name, {
         get: function () {
@@ -141,9 +293,9 @@ var _defineProperty = function (name, defaultValue, setFunc, skipEqualsCheck) {
         },
         configurable: true
     });
-};
+}
 
-var _defineProps = function () {
+function _defineProps() {
     _defineProperty("enabled", true, function (newValue, oldValue) {
         this.onSetEnabled(null, oldValue, newValue);
     });
@@ -322,166 +474,7 @@ var _defineProps = function () {
         }
     });
 };
+
 _defineProps();
-
-
-Object.assign(LightComponent.prototype, {
-
-    addLightToLayers: function () {
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.addLight(this);
-        }
-    },
-
-    removeLightFromLayers: function () {
-        var layer;
-        for (var i = 0; i < this.layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.removeLight(this);
-        }
-    },
-
-    onLayersChanged: function (oldComp, newComp) {
-        if (this.enabled && this.entity.enabled) {
-            this.addLightToLayers();
-        }
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
-    },
-
-    onLayerAdded: function (layer) {
-        var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        if (this.enabled && this.entity.enabled) {
-            layer.addLight(this);
-        }
-    },
-
-    onLayerRemoved: function (layer) {
-        var index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        layer.removeLight(this);
-    },
-
-    refreshProperties: function () {
-        var name;
-        for (var i = 0; i < _props.length; i++) {
-            name = _props[i];
-
-            /* eslint-disable no-self-assign */
-            this[name] = this[name];
-            /* eslint-enable no-self-assign */
-        }
-        if (this.enabled && this.entity.enabled)
-            this.onEnable();
-    },
-
-    updateShadow: function () {
-        this.light.updateShadow();
-    },
-
-    onCookieAssetSet: function () {
-        var forceLoad = false;
-
-        if (this._cookieAsset.type === 'cubemap' && !this._cookieAsset.loadFaces) {
-            this._cookieAsset.loadFaces = true;
-            forceLoad = true;
-        }
-
-        if (!this._cookieAsset.resource || forceLoad)
-            this.system.app.assets.load(this._cookieAsset);
-
-        if (this._cookieAsset.resource)
-            this.onCookieAssetLoad();
-    },
-
-    onCookieAssetAdd: function (asset) {
-        if (this._cookieAssetId !== asset.id)
-            return;
-
-        this._cookieAsset = asset;
-
-        if (this.light.enabled)
-            this.onCookieAssetSet();
-
-        this._cookieAsset.on('load', this.onCookieAssetLoad, this);
-        this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
-    },
-
-    onCookieAssetLoad: function () {
-        if (!this._cookieAsset || !this._cookieAsset.resource)
-            return;
-
-        this.cookie = this._cookieAsset.resource;
-    },
-
-    onCookieAssetRemove: function () {
-        if (!this._cookieAssetId)
-            return;
-
-        if (this._cookieAssetAdd) {
-            this.system.app.assets.off('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
-            this._cookieAssetAdd = false;
-        }
-
-        if (this._cookieAsset) {
-            this._cookieAsset.off('load', this.onCookieAssetLoad, this);
-            this._cookieAsset.off('remove', this.onCookieAssetRemove, this);
-            this._cookieAsset = null;
-        }
-
-        this.cookie = null;
-    },
-
-    onEnable: function () {
-        this.light.enabled = true;
-
-        this.system.app.scene.on("set:layers", this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
-        }
-
-        if (this.enabled && this.entity.enabled) {
-            this.addLightToLayers();
-        }
-
-        if (this._cookieAsset && !this.cookie)
-            this.onCookieAssetSet();
-    },
-
-    onDisable: function () {
-        this.light.enabled = false;
-
-        this.system.app.scene.off("set:layers", this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
-        }
-
-        this.removeLightFromLayers();
-    },
-
-    onRemove: function () {
-
-        // remove from layers
-        this.onDisable();
-
-        // destroy light node
-        this.light.destroy();
-
-        // remove cookie asset events
-        this.cookieAsset = null;
-    }
-});
-
-var _lightProps = _props;
-var _lightPropsDefault = _propsDefault;
 
 export { _lightProps, _lightPropsDefault, LightComponent };
