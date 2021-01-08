@@ -19,30 +19,26 @@ var MAX_ITERATIONS = 100;
  * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.
  * @param {pc.Application} app - The application.
  */
-function LayoutGroupComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class LayoutGroupComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'layoutgroup';
+        this.id = 'layoutgroup';
 
-    this.ComponentType = LayoutGroupComponent;
-    this.DataType = LayoutGroupComponentData;
+        this.ComponentType = LayoutGroupComponent;
+        this.DataType = LayoutGroupComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this._reflowQueue = [];
+        this._reflowQueue = [];
 
-    this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this._onRemoveComponent, this);
 
-    // Perform reflow when running in the engine
-    ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
-}
-LayoutGroupComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-LayoutGroupComponentSystem.prototype.constructor = LayoutGroupComponentSystem;
+        // Perform reflow when running in the engine
+        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+    }
 
-Component._buildAccessors(LayoutGroupComponent.prototype, _schema);
-
-Object.assign(LayoutGroupComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         if (data.enabled !== undefined) component.enabled = data.enabled;
         if (data.orientation !== undefined) component.orientation = data.orientation;
         if (data.reverseX !== undefined) component.reverseX = data.reverseX;
@@ -87,10 +83,10 @@ Object.assign(LayoutGroupComponentSystem.prototype, {
         if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
         if (data.wrap !== undefined) component.wrap = data.wrap;
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+        super.initializeComponentData(component, data, properties);
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var layoutGroup = entity.layoutgroup;
 
         return this.addComponent(clone, {
@@ -105,19 +101,19 @@ Object.assign(LayoutGroupComponentSystem.prototype, {
             heightFitting: layoutGroup.heightFitting,
             wrap: layoutGroup.wrap
         });
-    },
+    }
 
-    scheduleReflow: function (component) {
+    scheduleReflow(component) {
         if (this._reflowQueue.indexOf(component) === -1) {
             this._reflowQueue.push(component);
         }
-    },
+    }
 
-    _onPostUpdate: function () {
+    _onPostUpdate() {
         this._processReflowQueue();
-    },
+    }
 
-    _processReflowQueue: function () {
+    _processReflowQueue() {
         if (this._reflowQueue.length === 0) {
             return;
         }
@@ -147,11 +143,13 @@ Object.assign(LayoutGroupComponentSystem.prototype, {
                 break;
             }
         }
-    },
+    }
 
-    _onRemoveComponent: function (entity, component) {
+    _onRemoveComponent(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(LayoutGroupComponent.prototype, _schema);
 
 export { LayoutGroupComponentSystem };

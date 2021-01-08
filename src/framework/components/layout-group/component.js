@@ -7,6 +7,14 @@ import { FITTING_NONE } from './constants.js';
 import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
 
+function getElement(entity) {
+    return entity.element;
+}
+
+function isEnabledAndHasEnabledElement(entity) {
+    return entity.enabled && entity.element && entity.element.enabled;
+}
+
 /**
  * @component
  * @class
@@ -73,49 +81,47 @@ import { LayoutCalculator } from './layout-calculator.js';
  * {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting}
  * mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.
  */
-function LayoutGroupComponent(system, entity) {
-    Component.call(this, system, entity);
+class LayoutGroupComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._orientation = ORIENTATION_HORIZONTAL;
-    this._reverseX = false;
-    this._reverseY = true;
-    this._alignment = new Vec2(0, 1);
-    this._padding = new Vec4();
-    this._spacing = new Vec2();
-    this._widthFitting = FITTING_NONE;
-    this._heightFitting = FITTING_NONE;
-    this._wrap = false;
-    this._layoutCalculator = new LayoutCalculator();
+        this._orientation = ORIENTATION_HORIZONTAL;
+        this._reverseX = false;
+        this._reverseY = true;
+        this._alignment = new Vec2(0, 1);
+        this._padding = new Vec4();
+        this._spacing = new Vec2();
+        this._widthFitting = FITTING_NONE;
+        this._heightFitting = FITTING_NONE;
+        this._wrap = false;
+        this._layoutCalculator = new LayoutCalculator();
 
-    // Listen for the group container being resized
-    this._listenForReflowEvents(this.entity, 'on');
+        // Listen for the group container being resized
+        this._listenForReflowEvents(this.entity, 'on');
 
-    // Listen to existing children being resized
-    this.entity.children.forEach(function (child) {
-        this._listenForReflowEvents(child, 'on');
-    }.bind(this));
+        // Listen to existing children being resized
+        this.entity.children.forEach(function (child) {
+            this._listenForReflowEvents(child, 'on');
+        }.bind(this));
 
-    // Listen to newly added children being resized
-    this.entity.on('childinsert', this._onChildInsert, this);
-    this.entity.on('childremove', this._onChildRemove, this);
+        // Listen to newly added children being resized
+        this.entity.on('childinsert', this._onChildInsert, this);
+        this.entity.on('childremove', this._onChildRemove, this);
 
-    // Listen for ElementComponents and LayoutChildComponents being added
-    // to self or to children - covers cases where they are not already
-    // present at the point when this component is constructed.
-    system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
-    system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
-    system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
-    system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
-}
-LayoutGroupComponent.prototype = Object.create(Component.prototype);
-LayoutGroupComponent.prototype.constructor = LayoutGroupComponent;
+        // Listen for ElementComponents and LayoutChildComponents being added
+        // to self or to children - covers cases where they are not already
+        // present at the point when this component is constructed.
+        system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
+        system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
+        system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
+        system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
+    }
 
-Object.assign(LayoutGroupComponent.prototype, {
-    _isSelfOrChild: function (entity) {
+    _isSelfOrChild(entity) {
         return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
-    },
+    }
 
-    _listenForReflowEvents: function (target, onOff) {
+    _listenForReflowEvents(target, onOff) {
         if (target.element) {
             target.element[onOff]('enableelement', this._scheduleReflow, this);
             target.element[onOff]('disableelement', this._scheduleReflow, this);
@@ -127,39 +133,39 @@ Object.assign(LayoutGroupComponent.prototype, {
             target.layoutchild[onOff]('set_enabled', this._scheduleReflow, this);
             target.layoutchild[onOff]('resize', this._scheduleReflow, this);
         }
-    },
+    }
 
-    _onElementOrLayoutComponentAdd: function (entity) {
+    _onElementOrLayoutComponentAdd(entity) {
         if (this._isSelfOrChild(entity)) {
             this._listenForReflowEvents(entity, 'on');
             this._scheduleReflow();
         }
-    },
+    }
 
-    _onElementOrLayoutComponentRemove: function (entity) {
+    _onElementOrLayoutComponentRemove(entity) {
         if (this._isSelfOrChild(entity)) {
             this._listenForReflowEvents(entity, 'off');
             this._scheduleReflow();
         }
-    },
+    }
 
-    _onChildInsert: function (child) {
+    _onChildInsert(child) {
         this._listenForReflowEvents(child, 'on');
         this._scheduleReflow();
-    },
+    }
 
-    _onChildRemove: function (child) {
+    _onChildRemove(child) {
         this._listenForReflowEvents(child, 'off');
         this._scheduleReflow();
-    },
+    }
 
-    _scheduleReflow: function () {
+    _scheduleReflow() {
         if (this.enabled && this.entity && this.entity.enabled && !this._isPerformingReflow) {
             this.system.scheduleReflow(this);
         }
-    },
+    }
 
-    reflow: function () {
+    reflow() {
         var container = getElement(this.entity);
         var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
@@ -191,13 +197,13 @@ Object.assign(LayoutGroupComponent.prototype, {
         this._isPerformingReflow = false;
 
         this.fire('reflow', layoutInfo);
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         this._scheduleReflow();
-    },
+    }
 
-    onRemove: function () {
+    onRemove() {
         this.entity.off('childinsert', this._onChildInsert, this);
         this.entity.off('childremove', this._onChildRemove, this);
 
@@ -212,14 +218,6 @@ Object.assign(LayoutGroupComponent.prototype, {
         this.system.app.systems.layoutchild.off('add', this._onElementOrLayoutComponentAdd, this);
         this.system.app.systems.layoutchild.off('beforeremove', this._onElementOrLayoutComponentRemove, this);
     }
-});
-
-function getElement(entity) {
-    return entity.element;
-}
-
-function isEnabledAndHasEnabledElement(entity) {
-    return entity.enabled && entity.element && entity.element.enabled;
 }
 
 function defineReflowSchedulingProperty(name) {
