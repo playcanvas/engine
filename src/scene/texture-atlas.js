@@ -76,7 +76,7 @@ class TextureAtlas extends EventHandler {
      * @example
      * atlas.removeFrame('1');
      */
-    removeFrame = function (key) {
+    removeFrame(key) {
         var frame = this._frames[key];
         if (frame) {
             delete this._frames[key];
