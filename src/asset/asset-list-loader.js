@@ -97,7 +97,7 @@ class AssetListLoader extends EventHandler {
      * @param {Function} done - Callback called when all assets in the list are loaded.
      * @param {object} [scope] - Scope to use when calling callback.
      */
-    ready = function (done, scope) {
+    ready(done, scope) {
         scope = scope || this;
 
         if (this._loaded) {
