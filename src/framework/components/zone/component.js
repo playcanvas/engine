@@ -16,78 +16,76 @@ import { Component } from '../component.js';
  * @param {pc.Vec3} size - The Size of Box of a Zone.
  */
 
-function ZoneComponent(system, entity) {
-    Component.call(this, system, entity);
+class ZoneComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._oldState = true;
-    this._size = new Vec3();
-    this.on('set_enabled', this._onSetEnabled, this);
-}
-ZoneComponent.prototype = Object.create(Component.prototype);
-ZoneComponent.prototype.constructor = ZoneComponent;
+        this._oldState = true;
+        this._size = new Vec3();
+        this.on('set_enabled', this._onSetEnabled, this);
+    }
 
-/**
- * @private
- * @event
- * @name pc.ZoneComponent#enable
- * @description Fired when Component becomes enabled
- * Note: this event does not take in account entity or any of its parent enabled state.
- * @example
- * entity.zone.on('enable', function () {
- *     // component is enabled
- * });
- */
+    /**
+     * @private
+     * @event
+     * @name pc.ZoneComponent#enable
+     * @description Fired when Component becomes enabled
+     * Note: this event does not take in account entity or any of its parent enabled state.
+     * @example
+     * entity.zone.on('enable', function () {
+     *     // component is enabled
+     * });
+     */
 
-/**
- * @private
- * @event
- * @name pc.ZoneComponent#disable
- * @description Fired when Component becomes disabled
- * Note: this event does not take in account entity or any of its parent enabled state.
- * @example
- * entity.zone.on('disable', function () {
- *     // component is disabled
- * });
- */
+    /**
+     * @private
+     * @event
+     * @name pc.ZoneComponent#disable
+     * @description Fired when Component becomes disabled
+     * Note: this event does not take in account entity or any of its parent enabled state.
+     * @example
+     * entity.zone.on('disable', function () {
+     *     // component is disabled
+     * });
+     */
 
-/**
- * @private
- * @event
- * @name pc.ZoneComponent#state
- * @description Fired when Component changes state to enabled or disabled
- * Note: this event does not take in account entity or any of its parent enabled state.
- * @param {boolean} enabled - True if now enabled, False if disabled.
- * @example
- * entity.zone.on('state', function (enabled) {
- *     // component changed state
- * });
- */
+    /**
+     * @private
+     * @event
+     * @name pc.ZoneComponent#state
+     * @description Fired when Component changes state to enabled or disabled
+     * Note: this event does not take in account entity or any of its parent enabled state.
+     * @param {boolean} enabled - True if now enabled, False if disabled.
+     * @example
+     * entity.zone.on('state', function (enabled) {
+     *     // component changed state
+     * });
+     */
 
-/**
- * @private
- * @event
- * @name pc.ZoneComponent#remove
- * @description Fired when a zone is removed from an entity.
- * @example
- * entity.zone.on('remove', function () {
- *     // zone has been removed from an entity
- * });
- */
+    /**
+     * @private
+     * @event
+     * @name pc.ZoneComponent#remove
+     * @description Fired when a zone is removed from an entity.
+     * @example
+     * entity.zone.on('remove', function () {
+     *     // zone has been removed from an entity
+     * });
+     */
 
-Object.assign(ZoneComponent.prototype, {
-    onEnable: function () {
+    onEnable() {
         this._checkState();
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this._checkState();
-    },
+    }
 
-    _onSetEnabled: function (prop, old, value) {
+    _onSetEnabled(prop, old, value) {
         this._checkState();
-    },
+    }
 
-    _checkState: function () {
+    _checkState() {
         var state = this.enabled && this.entity.enabled;
         if (state === this._oldState)
             return;
@@ -96,24 +94,23 @@ Object.assign(ZoneComponent.prototype, {
 
         this.fire('enable');
         this.fire('state', this.enabled);
-    },
+    }
 
-    _onBeforeRemove: function () {
+    _onBeforeRemove() {
         this.fire('remove');
     }
-});
 
-Object.defineProperty(ZoneComponent.prototype, 'size', {
-    set: function (data) {
+    set size(data) {
         if (data instanceof Vec3) {
             this._size.copy(data);
         } else if (data instanceof Array && data.length >= 3) {
             this.size.set(data[0], data[1], data[2]);
         }
-    },
-    get: function () {
+    }
+
+    get size() {
         return this._size;
     }
-});
+}
 
 export { ZoneComponent };
