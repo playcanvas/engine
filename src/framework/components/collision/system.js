@@ -599,8 +599,13 @@ var CollisionComponentSystem = function CollisionComponentSystem(app) {
 
     this._triMeshCache = { };
 
+    this._triggers = [];
+    this._compounds = [];
+
     this.on('beforeremove', this.onBeforeRemove, this);
     this.on('remove', this.onRemove, this);
+
+    ComponentSystem.bind('update', this.onUpdate, this);
 };
 CollisionComponentSystem.prototype = Object.create(ComponentSystem.prototype);
 CollisionComponentSystem.prototype.constructor = CollisionComponentSystem;
@@ -791,6 +796,19 @@ Object.assign(CollisionComponentSystem.prototype, {
         Ammo.destroy(origin);
 
         return transform;
+    },
+
+    onUpdate: function (dt) {
+        var i, len;
+        var compounds = this._compounds;
+        for (i = 0, len = compounds.length; i < len; i++) {
+            compounds[i]._updateCompound();
+        }
+
+        var triggers = this._triggers;
+        for (i = 0, len = triggers.length; i < len; i++) {
+            triggers[i].updateTransform();
+        }
     },
 
     destroy: function () {
