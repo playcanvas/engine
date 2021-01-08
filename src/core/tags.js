@@ -1,9 +1,9 @@
 import { EventHandler } from './event-handler.js';
 
 class TagsCache {
-    constructor(key) {
+    constructor(key = null) {
         this._index = { };
-        this._key = key || null;
+        this._key = key;
     }
 
     addItem(item) {

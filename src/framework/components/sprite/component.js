@@ -391,7 +391,7 @@ class SpriteComponent extends Component {
 
     // updates AABB while 9-slicing
     _updateAabb(aabb) {
-            // pivot
+        // pivot
         aabb.center.set(0, 0, 0);
         // size
         aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
