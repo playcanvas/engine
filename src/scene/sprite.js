@@ -250,7 +250,7 @@ class Sprite extends EventHandler {
      * @name pc.Sprite#destroy
      * @description Free up the meshes created by the sprite.
      */
-    destroy = function () {
+    destroy() {
 
         for (const mesh of this._meshes) {
             if (mesh)
