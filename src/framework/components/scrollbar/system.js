@@ -20,31 +20,29 @@ const _schema = [
  * @description Create a new ScrollbarComponentSystem.
  * @param {pc.Application} app - The application.
  */
-function ScrollbarComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ScrollbarComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'scrollbar';
+        this.id = 'scrollbar';
 
-    this.ComponentType = ScrollbarComponent;
-    this.DataType = ScrollbarComponentData;
+        this.ComponentType = ScrollbarComponent;
+        this.DataType = ScrollbarComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this._onRemoveComponent, this);
-}
-ScrollbarComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ScrollbarComponentSystem.prototype.constructor = ScrollbarComponentSystem;
+        this.on('beforeremove', this._onRemoveComponent, this);
+    }
 
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
-
-Object.assign(ScrollbarComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
-    },
+    }
 
-    _onRemoveComponent: function (entity, component) {
+    _onRemoveComponent(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

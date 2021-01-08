@@ -85,48 +85,43 @@ const _schema = [
  * @description Create a new ParticleSystemComponentSystem.
  * @param {pc.Application} app - The Application.
  */
-function ParticleSystemComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ParticleSystemComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'particlesystem';
+        this.id = 'particlesystem';
 
-    this.ComponentType = ParticleSystemComponent;
-    this.DataType = ParticleSystemComponentData;
+        this.ComponentType = ParticleSystemComponent;
+        this.DataType = ParticleSystemComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.propertyTypes = {
-        emitterExtents: 'vec3',
-        emitterExtentsInner: 'vec3',
-        particleNormal: 'vec3',
-        wrapBounds: 'vec3',
-        localVelocityGraph: 'curveset',
-        localVelocityGraph2: 'curveset',
-        velocityGraph: 'curveset',
-        velocityGraph2: 'curveset',
-        colorGraph: 'curveset',
-        colorGraph2: 'curveset',
-        alphaGraph: 'curve',
-        alphaGraph2: 'curve',
-        rotationSpeedGraph: 'curve',
-        rotationSpeedGraph2: 'curve',
-        radialSpeedGraph: 'curve',
-        radialSpeedGraph2: 'curve',
-        scaleGraph: 'curve',
-        scaleGraph2: 'curve'
-    };
+        this.propertyTypes = {
+            emitterExtents: 'vec3',
+            emitterExtentsInner: 'vec3',
+            particleNormal: 'vec3',
+            wrapBounds: 'vec3',
+            localVelocityGraph: 'curveset',
+            localVelocityGraph2: 'curveset',
+            velocityGraph: 'curveset',
+            velocityGraph2: 'curveset',
+            colorGraph: 'curveset',
+            colorGraph2: 'curveset',
+            alphaGraph: 'curve',
+            alphaGraph2: 'curve',
+            rotationSpeedGraph: 'curve',
+            rotationSpeedGraph2: 'curve',
+            radialSpeedGraph: 'curve',
+            radialSpeedGraph2: 'curve',
+            scaleGraph: 'curve',
+            scaleGraph2: 'curve'
+        };
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    ComponentSystem.bind('update', this.onUpdate, this);
-}
-ParticleSystemComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ParticleSystemComponentSystem.prototype.constructor = ParticleSystemComponentSystem;
+        this.on('beforeremove', this.onBeforeRemove, this);
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(ParticleSystemComponent.prototype, _schema);
-
-Object.assign(ParticleSystemComponentSystem.prototype, {
-
-    initializeComponentData: function (component, _data, properties) {
+    initializeComponentData(component, _data, properties) {
         var data = {};
 
         properties = [];
@@ -173,9 +168,9 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var source = entity.particlesystem.data;
         var schema = this.schema;
 
@@ -200,9 +195,9 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
         }
 
         return this.addComponent(clone, data);
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
         var numSteps, i, j, c;
         var stats = this.app.stats.particles;
@@ -269,11 +264,13 @@ Object.assign(ParticleSystemComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         component.onBeforeRemove();
     }
-});
+}
+
+Component._buildAccessors(ParticleSystemComponent.prototype, _schema);
 
 export { ParticleSystemComponentSystem };

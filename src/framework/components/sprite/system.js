@@ -24,119 +24,112 @@ const _schema = ['enabled'];
  * @classdesc Manages creation of {@link pc.SpriteComponent}s.
  * @param {pc.Application} app - The application.
  */
-function SpriteComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class SpriteComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'sprite';
+        this.id = 'sprite';
 
-    this.ComponentType = SpriteComponent;
-    this.DataType = SpriteComponentData;
+        this.ComponentType = SpriteComponent;
+        this.DataType = SpriteComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    // default texture - make white so we can tint it with emissive color
-    this._defaultTexture = null;
+        // default texture - make white so we can tint it with emissive color
+        this._defaultTexture = null;
 
-    // default material used by sprites
-    this._defaultMaterial = null;
+        // default material used by sprites
+        this._defaultMaterial = null;
 
-    // material used for 9-slicing in sliced mode
-    this._default9SlicedMaterialSlicedMode = null;
+        // material used for 9-slicing in sliced mode
+        this._default9SlicedMaterialSlicedMode = null;
 
-    // material used for 9-slicing in tiled mode
-    this._default9SlicedMaterialTiledMode = null;
+        // material used for 9-slicing in tiled mode
+        this._default9SlicedMaterialTiledMode = null;
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-    this.on('beforeremove', this.onBeforeRemove, this);
-}
-SpriteComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-SpriteComponentSystem.prototype.constructor = SpriteComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
+    }
 
-Component._buildAccessors(SpriteComponent.prototype, _schema);
+    get defaultMaterial() {
+        if (!this._defaultMaterial) {
+            var texture = new Texture(this.app.graphicsDevice, {
+                width: 1,
+                height: 1,
+                format: PIXELFORMAT_R8_G8_B8_A8
+            });
+            var pixels = new Uint8Array(texture.lock());
+            pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
+            texture.name = 'sprite';
+            texture.unlock();
 
-Object.defineProperties(SpriteComponentSystem.prototype, {
-    defaultMaterial: {
-        get: function () {
-            if (!this._defaultMaterial) {
-                var texture = new Texture(this.app.graphicsDevice, {
-                    width: 1,
-                    height: 1,
-                    format: PIXELFORMAT_R8_G8_B8_A8
-                });
-                var pixels = new Uint8Array(texture.lock());
-                pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
-                texture.name = 'sprite';
-                texture.unlock();
+            var material = new StandardMaterial();
+            material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+            material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+            material.emissiveMap = texture;
+            material.emissiveMapTint = true;
+            material.opacityMap = texture;
+            material.opacityMapChannel = "a";
+            material.opacityTint = true;
+            material.opacity = 0; // use non-1 opacity to compile shader correctly
+            material.useLighting = false;
+            material.useGammaTonemap = false;
+            material.useFog = false;
+            material.useSkybox = false;
+            material.blendType = BLEND_PREMULTIPLIED;
+            material.depthWrite = false;
+            material.pixelSnap = false;
+            material.cull = CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
+            material.update();
 
-                var material = new StandardMaterial();
-                material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
-                material.emissiveMap = texture;
-                material.emissiveMapTint = true;
-                material.opacityMap = texture;
-                material.opacityMapChannel = "a";
-                material.opacityTint = true;
-                material.opacity = 0; // use non-1 opacity to compile shader correctly
-                material.useLighting = false;
-                material.useGammaTonemap = false;
-                material.useFog = false;
-                material.useSkybox = false;
-                material.blendType = BLEND_PREMULTIPLIED;
-                material.depthWrite = false;
-                material.pixelSnap = false;
-                material.cull = CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
-                material.update();
-
-                this._defaultTexture = texture;
-                this._defaultMaterial = material;
-            }
-            return this._defaultMaterial;
-        },
-        set: function (material) {
+            this._defaultTexture = texture;
             this._defaultMaterial = material;
         }
-    },
-    default9SlicedMaterialSlicedMode: {
-        get: function () {
-            if (!this._default9SlicedMaterialSlicedMode) {
-                var material = this.defaultMaterial.clone();
-                material.nineSlicedMode = SPRITE_RENDERMODE_SLICED;
-                material.update();
+        return this._defaultMaterial;
+    }
 
-                this._default9SlicedMaterialSlicedMode = material;
-            }
-            return this._default9SlicedMaterialSlicedMode;
-        },
-        set: function (material) {
+    set defaultMaterial(material) {
+        this._defaultMaterial = material;
+    }
+
+    get default9SlicedMaterialSlicedMode() {
+        if (!this._default9SlicedMaterialSlicedMode) {
+            var material = this.defaultMaterial.clone();
+            material.nineSlicedMode = SPRITE_RENDERMODE_SLICED;
+            material.update();
+
             this._default9SlicedMaterialSlicedMode = material;
         }
-    },
-    default9SlicedMaterialTiledMode: {
-        get: function () {
-            if (!this._default9SlicedMaterialTiledMode) {
-                var material = this.defaultMaterial.clone();
-                material.nineSlicedMode = SPRITE_RENDERMODE_TILED;
-                material.update();
+        return this._default9SlicedMaterialSlicedMode;
+    }
 
-                this._default9SlicedMaterialTiledMode = material;
-            }
-            return this._default9SlicedMaterialTiledMode;
-        },
-        set: function (material) {
+    set default9SlicedMaterialSlicedMode(material) {
+        this._default9SlicedMaterialSlicedMode = material;
+    }
+
+    get default9SlicedMaterialTiledMode() {
+        if (!this._default9SlicedMaterialTiledMode) {
+            var material = this.defaultMaterial.clone();
+            material.nineSlicedMode = SPRITE_RENDERMODE_TILED;
+            material.update();
+
             this._default9SlicedMaterialTiledMode = material;
         }
+        return this._default9SlicedMaterialTiledMode;
     }
-});
 
-Object.assign(SpriteComponentSystem.prototype, {
-    destroy: function () {
+    set default9SlicedMaterialTiledMode(material) {
+        this._default9SlicedMaterialTiledMode = material;
+    }
+
+    destroy() {
         if (this._defaultTexture) {
             this._defaultTexture.destroy();
             this._defaultTexture = null;
         }
-    },
+    }
 
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         if (data.enabled !== undefined) {
             component.enabled = data.enabled;
         }
@@ -213,9 +206,9 @@ Object.assign(SpriteComponentSystem.prototype, {
         component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var source = entity.sprite;
 
         return this.addComponent(clone, {
@@ -235,9 +228,9 @@ Object.assign(SpriteComponentSystem.prototype, {
             drawOrder: source.drawOrder,
             layers: source.layers.slice(0)
         });
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -252,11 +245,13 @@ Object.assign(SpriteComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         component.onDestroy();
     }
-});
+}
+
+Component._buildAccessors(SpriteComponent.prototype, _schema);
 
 export { SpriteComponentSystem };

@@ -18,34 +18,30 @@ const _schema = ['enabled'];
  * @description Create a new ScreenComponentSystem.
  * @param {pc.Application} app - The application.
  */
-function ScreenComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ScreenComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'screen';
+        this.id = 'screen';
 
-    this.ComponentType = ScreenComponent;
-    this.DataType = ScreenComponentData;
+        this.ComponentType = ScreenComponent;
+        this.DataType = ScreenComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.windowResolution = new Vec2();
+        this.windowResolution = new Vec2();
 
-    // queue of callbacks
-    this._drawOrderSyncQueue = new IndexedList();
+        // queue of callbacks
+        this._drawOrderSyncQueue = new IndexedList();
 
-    this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
-    ComponentSystem.bind('update', this._onUpdate, this);
+        ComponentSystem.bind('update', this._onUpdate, this);
 
-    this.on('beforeremove', this.onRemoveComponent, this);
-}
-ScreenComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ScreenComponentSystem.prototype.constructor = ScreenComponentSystem;
+        this.on('beforeremove', this.onRemoveComponent, this);
+    }
 
-Component._buildAccessors(ScreenComponent.prototype, _schema);
-
-Object.assign(ScreenComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         if (data.priority !== undefined) component.priority = data.priority;
         if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
         component.cull = component.screenSpace;
@@ -71,27 +67,27 @@ Object.assign(ScreenComponentSystem.prototype, {
         // queue up a draw order sync
         component.syncDrawOrder();
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         this.off();
         this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
-    },
+    }
 
-    _onUpdate: function (dt) {
+    _onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
             if (components[id].entity.screen.update) components[id].entity.screen.update(dt);
         }
-    },
+    }
 
-    _onResize: function (width, height) {
+    _onResize(width, height) {
         this.windowResolution.x = width;
         this.windowResolution.y = height;
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var screen = entity.screen;
 
         return this.addComponent(clone, {
@@ -101,13 +97,13 @@ Object.assign(ScreenComponentSystem.prototype, {
             resolution: screen.resolution.clone(),
             referenceResolution: screen.referenceResolution.clone()
         });
-    },
+    }
 
-    onRemoveComponent: function (entity, component) {
+    onRemoveComponent(entity, component) {
         component.onRemove();
-    },
+    }
 
-    processDrawOrderSyncQueue: function () {
+    processDrawOrderSyncQueue() {
         var list = this._drawOrderSyncQueue.list();
 
         for (var i = 0; i < list.length; i++) {
@@ -115,9 +111,9 @@ Object.assign(ScreenComponentSystem.prototype, {
             item.callback.call(item.scope);
         }
         this._drawOrderSyncQueue.clear();
-    },
+    }
 
-    queueDrawOrderSync: function (id, fn, scope) {
+    queueDrawOrderSync(id, fn, scope) {
         // first queued sync this frame
         // attach an event listener
         if (!this._drawOrderSyncQueue.list().length) {
@@ -131,6 +127,8 @@ Object.assign(ScreenComponentSystem.prototype, {
             });
         }
     }
-});
+}
+
+Component._buildAccessors(ScreenComponent.prototype, _schema);
 
 export { ScreenComponentSystem };

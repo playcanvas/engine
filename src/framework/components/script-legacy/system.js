@@ -23,49 +23,45 @@ const _schema = [
     'runInTools'
 ];
 
-var INITIALIZE = "initialize";
-var POST_INITIALIZE = "postInitialize";
-var UPDATE = "update";
-var POST_UPDATE = "postUpdate";
-var FIXED_UPDATE = "fixedUpdate";
-var TOOLS_UPDATE = "toolsUpdate";
-var ON_ENABLE = 'onEnable';
-var ON_DISABLE = 'onDisable';
+const INITIALIZE = "initialize";
+const POST_INITIALIZE = "postInitialize";
+const UPDATE = "update";
+const POST_UPDATE = "postUpdate";
+const FIXED_UPDATE = "fixedUpdate";
+const TOOLS_UPDATE = "toolsUpdate";
+const ON_ENABLE = 'onEnable';
+const ON_DISABLE = 'onDisable';
 
-var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ScriptLegacyComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'script';
+        this.id = 'script';
 
-    this.ComponentType = ScriptLegacyComponent;
-    this.DataType = ScriptLegacyComponentData;
-    this.schema = _schema;
+        this.ComponentType = ScriptLegacyComponent;
+        this.DataType = ScriptLegacyComponentData;
+        this.schema = _schema;
 
-    // used by application during preloading phase to ensure scripts aren't
-    // initialized until everything is loaded
-    this.preloading = false;
+        // used by application during preloading phase to ensure scripts aren't
+        // initialized until everything is loaded
+        this.preloading = false;
 
-    // arrays to cache script instances for fast iteration
-    this.instancesWithUpdate = [];
-    this.instancesWithFixedUpdate = [];
-    this.instancesWithPostUpdate = [];
-    this.instancesWithToolsUpdate = [];
+        // arrays to cache script instances for fast iteration
+        this.instancesWithUpdate = [];
+        this.instancesWithFixedUpdate = [];
+        this.instancesWithPostUpdate = [];
+        this.instancesWithToolsUpdate = [];
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    ComponentSystem.bind(INITIALIZE, this.onInitialize, this);
-    ComponentSystem.bind(POST_INITIALIZE, this.onPostInitialize, this);
-    ComponentSystem.bind(UPDATE, this.onUpdate, this);
-    ComponentSystem.bind(FIXED_UPDATE, this.onFixedUpdate, this);
-    ComponentSystem.bind(POST_UPDATE, this.onPostUpdate, this);
-    ComponentSystem.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
-};
-ScriptLegacyComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ScriptLegacyComponentSystem.prototype.constructor = ScriptLegacyComponentSystem;
+        this.on('beforeremove', this.onBeforeRemove, this);
+        ComponentSystem.bind(INITIALIZE, this.onInitialize, this);
+        ComponentSystem.bind(POST_INITIALIZE, this.onPostInitialize, this);
+        ComponentSystem.bind(UPDATE, this.onUpdate, this);
+        ComponentSystem.bind(FIXED_UPDATE, this.onFixedUpdate, this);
+        ComponentSystem.bind(POST_UPDATE, this.onPostUpdate, this);
+        ComponentSystem.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
+    }
 
-Component._buildAccessors(ScriptLegacyComponent.prototype, _schema);
-
-Object.assign(ScriptLegacyComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = ['runInTools', 'enabled', 'scripts'];
 
         // convert attributes array to dictionary
@@ -83,9 +79,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         // overridden to make sure urls list is duplicated
         var src = this.store[entity.getGuid()];
         var data = {
@@ -112,9 +108,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
         }
 
         return this.addComponent(clone, data);
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         // if the script component is enabled
         // call onDisable on all its instances first
         if (component.enabled) {
@@ -123,9 +119,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
 
         // then call destroy on all the script instances
         this._destroyScriptComponent(component);
-    },
+    }
 
-    onInitialize: function (root) {
+    onInitialize(root) {
         this._registerInstances(root);
 
         if (root.enabled) {
@@ -141,9 +137,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onPostInitialize: function (root) {
+    onPostInitialize(root) {
         if (root.enabled) {
             if (root.script && root.script.enabled) {
                 this._postInitializeScriptComponent(root.script);
@@ -157,9 +153,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _callInstancesMethod: function (script, method) {
+    _callInstancesMethod(script, method) {
         var instances = script.data.instances;
         for (var name in instances) {
             if (instances.hasOwnProperty(name)) {
@@ -169,9 +165,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _initializeScriptComponent: function (script) {
+    _initializeScriptComponent(script) {
         this._callInstancesMethod(script, INITIALIZE);
         script.data.initialized = true;
 
@@ -180,17 +176,17 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
         if (script.enabled && script.entity.enabled) {
             this._enableScriptComponent(script);
         }
-    },
+    }
 
-    _enableScriptComponent: function (script) {
+    _enableScriptComponent(script) {
         this._callInstancesMethod(script, ON_ENABLE);
-    },
+    }
 
-    _disableScriptComponent: function (script) {
+    _disableScriptComponent(script) {
         this._callInstancesMethod(script, ON_DISABLE);
-    },
+    }
 
-    _destroyScriptComponent: function (script) {
+    _destroyScriptComponent(script) {
         var index;
         var instances = script.data.instances;
         for (var name in instances) {
@@ -234,14 +230,14 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 delete script.instances[name];
             }
         }
-    },
+    }
 
-    _postInitializeScriptComponent: function (script) {
+    _postInitializeScriptComponent(script) {
         this._callInstancesMethod(script, POST_INITIALIZE);
         script.data.postInitialized = true;
-    },
+    }
 
-    _updateInstances: function (method, updateList, dt) {
+    _updateInstances(method, updateList, dt) {
         var item;
         for (var i = 0, len = updateList.length; i < len; i++) {
             item = updateList[i];
@@ -249,25 +245,25 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 item[method](dt);
             }
         }
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         this._updateInstances(UPDATE, this.instancesWithUpdate, dt);
-    },
+    }
 
-    onFixedUpdate: function (dt) {
+    onFixedUpdate(dt) {
         this._updateInstances(FIXED_UPDATE, this.instancesWithFixedUpdate, dt);
-    },
+    }
 
-    onPostUpdate: function (dt) {
+    onPostUpdate(dt) {
         this._updateInstances(POST_UPDATE, this.instancesWithPostUpdate, dt);
-    },
+    }
 
-    onToolsUpdate: function (dt) {
+    onToolsUpdate(dt) {
         this._updateInstances(TOOLS_UPDATE, this.instancesWithToolsUpdate, dt);
-    },
+    }
 
-    broadcast: function (name, functionName) {
+    broadcast(name, functionName) {
         // #ifdef DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
         // #endif
@@ -287,9 +283,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _preRegisterInstance: function (entity, url, name, instance) {
+    _preRegisterInstance(entity, url, name, instance) {
         if (entity.script) {
             entity.script.data._instances = entity.script.data._instances || {};
             if (entity.script.data._instances[name]) {
@@ -301,9 +297,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 instance: instance
             };
         }
-    },
+    }
 
-    _registerInstances: function (entity) {
+    _registerInstances(entity) {
         var preRegistered, instance, instanceName;
 
         if (entity.script) {
@@ -357,9 +353,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 this._registerInstances(children[i]);
             }
         }
-    },
+    }
 
-    _cloneAttributes: function (attributes) {
+    _cloneAttributes(attributes) {
         var result = {};
 
         for (var key in attributes) {
@@ -381,9 +377,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
         }
 
         return result;
-    },
+    }
 
-    _createAccessors: function (entity, instance) {
+    _createAccessors(entity, instance) {
         var self = this;
         var i;
         var len = entity.script.scripts.length;
@@ -405,9 +401,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 break;
             }
         }
-    },
+    }
 
-    _createAccessor: function (attribute, instance) {
+    _createAccessor(attribute, instance) {
         var self = this;
 
         // create copy of attribute data
@@ -433,9 +429,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
             },
             configurable: true
         });
-    },
+    }
 
-    _updateAccessors: function (entity, instance) {
+    _updateAccessors(entity, instance) {
         var self = this;
         var i;
         var len = entity.script.scripts.length;
@@ -489,9 +485,9 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
                 break;
             }
         }
-    },
+    }
 
-    _convertAttributeValue: function (attribute) {
+    _convertAttributeValue(attribute) {
         if (attribute.type === 'rgb' || attribute.type === 'rgba') {
             if (Array.isArray(attribute.value)) {
                 attribute.value = attribute.value.length === 3 ?
@@ -523,6 +519,8 @@ Object.assign(ScriptLegacyComponentSystem.prototype, {
             /* eslint-enable no-self-assign */
         }
     }
-});
+}
+
+Component._buildAccessors(ScriptLegacyComponent.prototype, _schema);
 
 export { ScriptLegacyComponentSystem };

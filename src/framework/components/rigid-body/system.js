@@ -27,10 +27,12 @@ var frameCollisions = {};
  * @property {pc.Vec3} point The point at which the ray hit the entity in world space.
  * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
  */
-function RaycastResult(entity, point, normal) {
-    this.entity = entity;
-    this.point = point;
-    this.normal = normal;
+class RaycastResult {
+    constructor(entity, point, normal) {
+        this.entity = entity;
+        this.point = point;
+        this.normal = normal;
+    }
 }
 
 /**
@@ -49,23 +51,25 @@ function RaycastResult(entity, point, normal) {
  * @property {pc.Vec3} pointB The point on Entity B where the contact occurred, in world space.
  * @property {pc.Vec3} normal The normal vector of the contact on Entity B, in world space.
  */
-function SingleContactResult(a, b, contactPoint) {
-    if (arguments.length === 0) {
-        this.a = null;
-        this.b = null;
-        this.localPointA = new Vec3();
-        this.localPointB = new Vec3();
-        this.pointA = new Vec3();
-        this.pointB = new Vec3();
-        this.normal = new Vec3();
-    } else {
-        this.a = a;
-        this.b = b;
-        this.localPointA = contactPoint.localPoint;
-        this.localPointB = contactPoint.localPointOther;
-        this.pointA = contactPoint.point;
-        this.pointB = contactPoint.pointOther;
-        this.normal = contactPoint.normal;
+class SingleContactResult {
+    constructor(a, b, contactPoint) {
+        if (arguments.length === 0) {
+            this.a = null;
+            this.b = null;
+            this.localPointA = new Vec3();
+            this.localPointB = new Vec3();
+            this.pointA = new Vec3();
+            this.pointB = new Vec3();
+            this.normal = new Vec3();
+        } else {
+            this.a = a;
+            this.b = b;
+            this.localPointA = contactPoint.localPoint;
+            this.localPointB = contactPoint.localPointOther;
+            this.pointA = contactPoint.point;
+            this.pointB = contactPoint.pointOther;
+            this.normal = contactPoint.normal;
+        }
     }
 }
 
@@ -85,19 +89,21 @@ function SingleContactResult(a, b, contactPoint) {
  * @property {pc.Vec3} pointOther The point on the other entity where the contact occurred, in world space.
  * @property {pc.Vec3} normal The normal vector of the contact on the other entity, in world space.
  */
-function ContactPoint(localPoint, localPointOther, point, pointOther, normal) {
-    if (arguments.length === 0) {
-        this.localPoint = new Vec3();
-        this.localPointOther = new Vec3();
-        this.point = new Vec3();
-        this.pointOther = new Vec3();
-        this.normal = new Vec3();
-    } else {
-        this.localPoint = localPoint;
-        this.localPointOther = localPointOther;
-        this.point = point;
-        this.pointOther = pointOther;
-        this.normal = normal;
+class ContactPoint {
+    constructor(localPoint, localPointOther, point, pointOther, normal) {
+        if (arguments.length === 0) {
+            this.localPoint = new Vec3();
+            this.localPointOther = new Vec3();
+            this.point = new Vec3();
+            this.pointOther = new Vec3();
+            this.normal = new Vec3();
+        } else {
+            this.localPoint = localPoint;
+            this.localPointOther = localPointOther;
+            this.point = point;
+            this.pointOther = pointOther;
+            this.normal = normal;
+        }
     }
 }
 
@@ -111,9 +117,11 @@ function ContactPoint(localPoint, localPointOther, point, pointOther, normal) {
  * @property {pc.Entity} other The entity that was involved in the contact with this entity.
  * @property {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity.
  */
-function ContactResult(other, contacts) {
-    this.other = other;
-    this.contacts = contacts;
+class ContactResult {
+    constructor(other, contacts) {
+        this.other = other;
+        this.contacts = contacts;
+    }
 }
 
 // Events Documentation
@@ -152,41 +160,37 @@ const _schema = [
  * @property {pc.Vec3} gravity The world space vector representing global gravity in the physics simulation.
  * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
  */
-function RigidBodyComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class RigidBodyComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'rigidbody';
-    this._stats = app.stats.frame;
+        this.id = 'rigidbody';
+        this._stats = app.stats.frame;
 
-    this.ComponentType = RigidBodyComponent;
-    this.DataType = RigidBodyComponentData;
+        this.ComponentType = RigidBodyComponent;
+        this.DataType = RigidBodyComponentData;
 
-    this.contactPointPool = null;
-    this.contactResultPool = null;
-    this.singleContactResultPool = null;
+        this.contactPointPool = null;
+        this.contactResultPool = null;
+        this.singleContactResultPool = null;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.maxSubSteps = 10;
-    this.fixedTimeStep = 1 / 60;
-    this.gravity = new Vec3(0, -9.81, 0);
+        this.maxSubSteps = 10;
+        this.fixedTimeStep = 1 / 60;
+        this.gravity = new Vec3(0, -9.81, 0);
 
-    // Arrays of pc.RigidBodyComponents filtered on body type
-    this._dynamic = [];
-    this._kinematic = [];
-    this._triggers = [];
-    this._compounds = [];
+        // Arrays of pc.RigidBodyComponents filtered on body type
+        this._dynamic = [];
+        this._kinematic = [];
+        this._triggers = [];
+        this._compounds = [];
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    this.on('remove', this.onRemove, this);
-}
-RigidBodyComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-RigidBodyComponentSystem.prototype.constructor = RigidBodyComponentSystem;
+        this.on('beforeremove', this.onBeforeRemove, this);
+        this.on('remove', this.onRemove, this);
+    }
 
-Component._buildAccessors(RigidBodyComponent.prototype, _schema);
-
-Object.assign(RigidBodyComponentSystem.prototype, {
-    onLibraryLoaded: function () {
+    onLibraryLoaded() {
         // Create the Ammo physics world
         if (typeof Ammo !== 'undefined') {
             this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -217,9 +221,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
             // Unbind the update function if we haven't loaded Ammo by now
             ComponentSystem.unbind('update', this.onUpdate, this);
         }
-    },
+    }
 
-    initializeComponentData: function (component, _data, properties) {
+    initializeComponentData(component, _data, properties) {
         properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
 
         // duplicate the input data because we are modifying it
@@ -245,9 +249,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         // create new data block for clone
         var data = {
             enabled: entity.rigidbody.enabled,
@@ -264,15 +268,15 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         };
 
         this.addComponent(clone, data);
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         if (component.enabled) {
             component.enabled = false;
         }
-    },
+    }
 
-    onRemove: function (entity, data) {
+    onRemove(entity, data) {
         var body = data.body;
         if (body) {
             this.removeBody(body);
@@ -280,21 +284,21 @@ Object.assign(RigidBodyComponentSystem.prototype, {
 
             data.body = null;
         }
-    },
+    }
 
-    addBody: function (body, group, mask) {
+    addBody(body, group, mask) {
         if (group !== undefined && mask !== undefined) {
             this.dynamicsWorld.addRigidBody(body, group, mask);
         } else {
             this.dynamicsWorld.addRigidBody(body);
         }
-    },
+    }
 
-    removeBody: function (body) {
+    removeBody(body) {
         this.dynamicsWorld.removeRigidBody(body);
-    },
+    }
 
-    createBody: function (mass, shape, transform) {
+    createBody(mass, shape, transform) {
         var localInertia = new Ammo.btVector3(0, 0, 0);
         if (mass !== 0) {
             shape.calculateLocalInertia(mass, localInertia);
@@ -307,16 +311,16 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         Ammo.destroy(localInertia);
 
         return body;
-    },
+    }
 
-    destroyBody: function (body) {
+    destroyBody(body) {
         // The motion state needs to be destroyed explicitly (if present)
         var motionState = body.getMotionState();
         if (motionState) {
             Ammo.destroy(motionState);
         }
         Ammo.destroy(body);
-    },
+    }
 
     /**
      * @function
@@ -327,7 +331,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @param {pc.Vec3} end - The world space point where the ray ends.
      * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
      */
-    raycastFirst: function (start, end) {
+    raycastFirst(start, end) {
         var result = null;
 
         ammoRayStart.setValue(start.x, start.y, start.z);
@@ -363,7 +367,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         Ammo.destroy(rayCallback);
 
         return result;
-    },
+    }
 
     /**
      * @function
@@ -375,7 +379,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @param {pc.Vec3} end - The world space point where the ray ends.
      * @returns {pc.RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
-    raycastAll: function (start, end) {
+    raycastAll(start, end) {
         // #ifdef DEBUG
         if (!Ammo.AllHitsRayResultCallback) {
             console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
@@ -413,7 +417,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         Ammo.destroy(rayCallback);
 
         return results;
-    },
+    }
 
     /**
      * @private
@@ -424,7 +428,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @param {pc.Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
      */
-    _storeCollision: function (entity, other) {
+    _storeCollision(entity, other) {
         var isNewCollision = false;
         var guid = entity.getGuid();
 
@@ -439,9 +443,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         frameCollisions[guid].others.push(other);
 
         return isNewCollision;
-    },
+    }
 
-    _createContactPointFromAmmo: function (contactPoint) {
+    _createContactPointFromAmmo(contactPoint) {
         var localPointA = contactPoint.get_m_localPointA();
         var localPointB = contactPoint.get_m_localPointB();
         var positionWorldOnA = contactPoint.getPositionWorldOnA();
@@ -455,9 +459,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
         return contact;
-    },
+    }
 
-    _createReverseContactPointFromAmmo: function (contactPoint) {
+    _createReverseContactPointFromAmmo(contactPoint) {
         var localPointA = contactPoint.get_m_localPointA();
         var localPointB = contactPoint.get_m_localPointB();
         var positionWorldOnA = contactPoint.getPositionWorldOnA();
@@ -471,9 +475,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
         return contact;
-    },
+    }
 
-    _createSingleContactResult: function (a, b, contactPoint) {
+    _createSingleContactResult(a, b, contactPoint) {
         var result = this.singleContactResultPool.allocate();
 
         result.a = a;
@@ -485,14 +489,14 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         result.normal = contactPoint.normal;
 
         return result;
-    },
+    }
 
-    _createContactResult: function (other, contacts) {
+    _createContactResult(other, contacts) {
         var result = this.contactResultPool.allocate();
         result.other = other;
         result.contacts = contacts;
         return result;
-    },
+    }
 
     /**
      * @private
@@ -501,7 +505,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
      * related entities.
      */
-    _cleanOldCollisions: function () {
+    _cleanOldCollisions() {
         for (var guid in collisions) {
             if (collisions.hasOwnProperty(guid)) {
                 var frameCollision = frameCollisions[guid];
@@ -544,7 +548,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -554,7 +558,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @param {object} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
      */
-    _hasContactEvent: function (entity) {
+    _hasContactEvent(entity) {
         var c = entity.collision;
         if (c && (c.hasEvent("collisionstart") || c.hasEvent("collisionend") || c.hasEvent("contact"))) {
             return true;
@@ -562,7 +566,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
 
         var r = entity.rigidbody;
         return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
-    },
+    }
 
     /**
      * @private
@@ -572,7 +576,7 @@ Object.assign(RigidBodyComponentSystem.prototype, {
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
      */
-    _checkForCollisions: function (world, timeStep) {
+    _checkForCollisions(world, timeStep) {
         var dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);
 
         // Check for collisions and fire callbacks
@@ -725,9 +729,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         this.contactPointPool.freeAll();
         this.contactResultPool.freeAll();
         this.singleContactResultPool.freeAll();
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var i, len;
 
         // #ifdef PROFILER
@@ -772,9 +776,9 @@ Object.assign(RigidBodyComponentSystem.prototype, {
         // #ifdef PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
         // #endif
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);
@@ -788,6 +792,8 @@ Object.assign(RigidBodyComponentSystem.prototype, {
             this.collisionConfiguration = null;
         }
     }
-});
+}
+
+Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
 export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };

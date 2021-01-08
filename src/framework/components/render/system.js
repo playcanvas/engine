@@ -10,7 +10,7 @@ const _schema = [
 ];
 
 // order matters here
-var _properties = [
+const _properties = [
     'material',
     'asset',
     'materialAssets',
@@ -34,27 +34,22 @@ var _properties = [
  * @description Create a new RenderComponentSystem.
  * @param {pc.Application} app - The Application.
  */
-function RenderComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class RenderComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'render';
+        this.id = 'render';
 
-    this.ComponentType = RenderComponent;
-    this.DataType = RenderComponentData;
+        this.ComponentType = RenderComponent;
+        this.DataType = RenderComponentData;
 
-    this.schema = _schema;
-    this.defaultMaterial = app.scene.defaultMaterial;
+        this.schema = _schema;
+        this.defaultMaterial = app.scene.defaultMaterial;
 
-    this.on('beforeremove', this.onRemove, this);
-}
+        this.on('beforeremove', this.onRemove, this);
+    }
 
-RenderComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-RenderComponentSystem.prototype.constructor = RenderComponentSystem;
-
-Component._buildAccessors(RenderComponent.prototype, _schema);
-
-Object.assign(RenderComponentSystem.prototype, {
-    initializeComponentData: function (component, _data, properties) {
+    initializeComponentData(component, _data, properties) {
         if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
             _data.batchGroupId = -1;
         }
@@ -71,9 +66,9 @@ Object.assign(RenderComponentSystem.prototype, {
         }
 
         ComponentSystem.prototype.initializeComponentData.call(this, component, _data, _schema);
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var i;
         var data = {};
 
@@ -94,11 +89,13 @@ Object.assign(RenderComponentSystem.prototype, {
                 meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
             }
         }
-    },
+    }
 
-    onRemove: function (entity, component) {
+    onRemove(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(RenderComponent.prototype, _schema);
 
 export { RenderComponentSystem };
