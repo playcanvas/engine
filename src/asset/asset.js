@@ -71,7 +71,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
  */
 class Asset extends EventHandler {
-    constructor(name, type, file, data, options) {
+    constructor(name, type, file, data = {}, options = {}) {
         super();
 
         this._id = assetIdCounter--;
@@ -84,8 +84,8 @@ class Asset extends EventHandler {
         this.variants = new AssetVariants(this);
 
         this._file = null;
-        this._data = data || { };
-        this.options = options || { };
+        this._data = data;
+        this.options = options;
 
         // This is where the loaded resource(s) will be
         this._resources = [];
