@@ -8,16 +8,16 @@
  * @property {HTMLAudioElement} audio If the Web Audio API is not supported this contains the audio data.
  * @property {number} duration Returns the duration of the sound. If the sound is not loaded it returns 0.
  */
-function Sound(resource) {
-    if (resource instanceof Audio) {
-        this.audio = resource;
-    } else {
-        this.buffer = resource;
+class Sound {
+    constructor(resource) {
+        if (resource instanceof Audio) {
+            this.audio = resource;
+        } else {
+            this.buffer = resource;
+        }
     }
-}
 
-Object.defineProperty(Sound.prototype, 'duration', {
-    get: function () {
+    get duration() {
         var duration = 0;
         if (this.buffer) {
             duration = this.buffer.duration;
@@ -27,6 +27,6 @@ Object.defineProperty(Sound.prototype, 'duration', {
 
         return duration || 0;
     }
-});
+}
 
 export { Sound };
