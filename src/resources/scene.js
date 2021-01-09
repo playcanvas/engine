@@ -11,13 +11,13 @@ import { TemplateUtils } from '../templates/template-utils.js';
  * @classdesc Resource handler used for loading {@link pc.Scene} resources.
  * @param {pc.Application} app - The running {@link pc.Application}.
  */
-function SceneHandler(app) {
-    this._app = app;
-    this.maxRetries = 0;
-}
+class SceneHandler {
+    constructor(app) {
+        this._app = app;
+        this.maxRetries = 0;
+    }
 
-Object.assign(SceneHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -50,9 +50,9 @@ Object.assign(SceneHandler.prototype, {
                 callback(errMsg);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         // prevent script initialization until entire scene is open
         this._app.systems.script.preloading = true;
 
@@ -69,10 +69,10 @@ Object.assign(SceneHandler.prototype, {
         this._app.systems.script.preloading = false;
 
         return scene;
-    },
-
-    patch: function (asset, assets) {
     }
-});
+
+    patch(asset, assets) {
+    }
+}
 
 export { SceneHandler };

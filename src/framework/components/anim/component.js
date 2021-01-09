@@ -1,6 +1,6 @@
 import { Asset } from '../../../asset/asset.js';
 
-import { AnimEvaluator } from '../../../anim/anim.js';
+import { AnimEvaluator } from '../../../anim/anim-evaluator.js';
 
 import { Component } from '../component.js';
 
@@ -14,7 +14,7 @@ import { AnimStateGraph } from './state-graph.js';
 
 /**
  * @private
- * @component Anim
+ * @component
  * @class
  * @name pc.AnimComponent
  * @augments pc.Component
@@ -25,13 +25,11 @@ import { AnimStateGraph } from './state-graph.js';
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
  */
-function AnimComponent(system, entity) {
-    Component.call(this, system, entity);
-}
-AnimComponent.prototype = Object.create(Component.prototype);
-AnimComponent.prototype.constructor = AnimComponent;
+class AnimComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
+    }
 
-Object.assign(AnimComponent.prototype, {
     /**
      * @private
      * @function
@@ -39,7 +37,7 @@ Object.assign(AnimComponent.prototype, {
      * @description Initialises component animation controllers using the provided state graph.
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the states, transitions and parameters used to define a complete animation controller.
      */
-    loadStateGraph: function (stateGraph) {
+    loadStateGraph(stateGraph) {
         var i;
         var data = this.data;
         data.stateGraph = stateGraph;
@@ -84,9 +82,9 @@ Object.assign(AnimComponent.prototype, {
             addLayer.bind(this)(layer.name, layer.states, layer.transitions, i);
         }
         this.setupAnimationAssets();
-    },
+    }
 
-    setupAnimationAssets: function () {
+    setupAnimationAssets() {
         for (var i = 0; i < this.data.layers.length; i++) {
             var layer = this.data.layers[i];
             var layerName = layer.name;
@@ -103,9 +101,9 @@ Object.assign(AnimComponent.prototype, {
             }
         }
         this.loadAnimationAssets();
-    },
+    }
 
-    loadAnimationAssets: function () {
+    loadAnimationAssets() {
         for (var i = 0; i < this.data.layers.length; i++) {
             var layer = this.data.layers[i];
             for (var j = 0; j < layer.states.length; j++) {
@@ -129,7 +127,7 @@ Object.assign(AnimComponent.prototype, {
                 }
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -137,7 +135,7 @@ Object.assign(AnimComponent.prototype, {
      * @name pc.AnimComponent#removeStateGraph
      * @description Removes all layers from the anim component.
      */
-    removeStateGraph: function () {
+    removeStateGraph() {
         this.data.stateGraph = null;
         this.data.stateGraphAsset = null;
         this.data.animationAssets = {};
@@ -145,16 +143,16 @@ Object.assign(AnimComponent.prototype, {
         this.data.layerIndices = {};
         this.data.parameters = {};
         this.data.playing = false;
-    },
+    }
 
-    resetStateGraph: function () {
+    resetStateGraph() {
         if (this.stateGraphAsset) {
             var stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
             this.loadStateGraph(stateGraph);
         } else {
             this.removeStateGraph();
         }
-    },
+    }
 
     /**
      * @private
@@ -162,14 +160,14 @@ Object.assign(AnimComponent.prototype, {
      * @name pc.AnimComponent#reset
      * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
      */
-    reset: function () {
+    reset() {
         this.data.parameters = Object.assign({}, this.data.stateGraph.parameters);
         for (var i = 0; i < this.data.layers.length; i++) {
             var layerPlaying = this.data.layers[i].playing;
             this.data.layers[i].reset();
             this.data.layers[i].playing = layerPlaying;
         }
-    },
+    }
 
     /**
      * @private
@@ -179,10 +177,10 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} layerName - The name of the anim component layer to find
      * @returns {pc.AnimComponentLayer} layer
      */
-    findAnimationLayer: function (layerName) {
+    findAnimationLayer(layerName) {
         var layerIndex = this.data.layerIndices[layerName];
         return this.data.layers[layerIndex] || null;
-    },
+    }
 
     /**
      * @private
@@ -193,7 +191,7 @@ Object.assign(AnimComponent.prototype, {
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
-    assignAnimation: function (nodeName, animTrack, layerName) {
+    assignAnimation(nodeName, animTrack, layerName) {
         if (!this.data.stateGraph) {
             // #ifdef DEBUG
             console.error('assignAnimation: Trying to assign an anim track before the state graph has been loaded. Have you called loadStateGraph?');
@@ -208,7 +206,7 @@ Object.assign(AnimComponent.prototype, {
             return;
         }
         layer.assignAnimation(nodeName, animTrack);
-    },
+    }
 
     /**
      * @private
@@ -218,7 +216,7 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} nodeName - The name of the state node that should have its animation tracks removed.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
-    removeNodeAnimations: function (nodeName, layerName) {
+    removeNodeAnimations(nodeName, layerName) {
         var layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
             // #ifdef DEBUG
@@ -227,9 +225,9 @@ Object.assign(AnimComponent.prototype, {
             return;
         }
         layer.removeNodeAnimations(nodeName);
-    },
+    }
 
-    getParameterValue: function (name, type) {
+    getParameterValue(name, type) {
         var param = this.data.parameters[name];
         if (param && param.type === type) {
             return param.value;
@@ -237,9 +235,9 @@ Object.assign(AnimComponent.prototype, {
         // #ifdef DEBUG
         console.log('Cannot get parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
-    },
+    }
 
-    setParameterValue: function (name, type, value) {
+    setParameterValue(name, type, value) {
         var param = this.data.parameters[name];
         if (param && param.type === type) {
             param.value = value;
@@ -248,7 +246,7 @@ Object.assign(AnimComponent.prototype, {
         // #ifdef DEBUG
         console.log('Cannot set parameter value. No parameter found in anim controller named "' + name + '" of type "' + type + '"');
         // #endif
-    },
+    }
 
     /**
      * @private
@@ -258,9 +256,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the float to return the value of.
      * @returns {number} A float
      */
-    getFloat: function (name) {
+    getFloat(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_FLOAT);
-    },
+    }
 
     /**
      * @private
@@ -270,9 +268,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new float value to set this parameter to.
      */
-    setFloat: function (name, value) {
+    setFloat(name, value) {
         this.setParameterValue(name, ANIM_PARAMETER_FLOAT, value);
-    },
+    }
 
     /**
      * @private
@@ -282,9 +280,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the integer to return the value of.
      * @returns {number} An integer
      */
-    getInteger: function (name) {
+    getInteger(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_INTEGER);
-    },
+    }
 
     /**
      * @private
@@ -294,7 +292,7 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The new integer value to set this parameter to.
      */
-    setInteger: function (name, value) {
+    setInteger(name, value) {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
@@ -302,7 +300,7 @@ Object.assign(AnimComponent.prototype, {
             console.error('Attempting to assign non integer value to integer parameter');
             // #endif
         }
-    },
+    }
 
     /**
      * @private
@@ -312,9 +310,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the boolean to return the value of.
      * @returns {boolean} A boolean
      */
-    getBoolean: function (name) {
+    getBoolean(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_BOOLEAN);
-    },
+    }
 
     /**
      * @private
@@ -324,9 +322,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the parameter to set.
      * @param {boolean} value - The new boolean value to set this parameter to.
      */
-    setBoolean: function (name, value) {
+    setBoolean(name, value) {
         this.setParameterValue(name, ANIM_PARAMETER_BOOLEAN, !!value);
-    },
+    }
 
     /**
      * @private
@@ -336,9 +334,9 @@ Object.assign(AnimComponent.prototype, {
      * @param {string} name - The name of the trigger to return the value of.
      * @returns {boolean} A boolean
      */
-    getTrigger: function (name) {
+    getTrigger(name) {
         return this.getParameterValue(name, ANIM_PARAMETER_TRIGGER);
-    },
+    }
 
     /**
      * @private
@@ -347,9 +345,9 @@ Object.assign(AnimComponent.prototype, {
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
      * @param {string} name - The name of the parameter to set.
      */
-    setTrigger: function (name) {
+    setTrigger(name) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, true);
-    },
+    }
 
     /**
      * @private
@@ -358,82 +356,80 @@ Object.assign(AnimComponent.prototype, {
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
      * @param {string} name - The name of the parameter to set.
      */
-    resetTrigger: function (name) {
+    resetTrigger(name) {
         this.setParameterValue(name, ANIM_PARAMETER_TRIGGER, false);
     }
-});
 
-Object.defineProperties(AnimComponent.prototype, {
     /**
      * @private
      * @name pc.AnimComponent#stateGraphAsset
      * @type {number}
      * @description The state graph asset this component should use to generate it's animation state graph
      */
-    stateGraphAsset: {
-        get: function () {
-            return this.data.stateGraphAsset;
-        },
-        set: function (value) {
-            if (value === null) {
-                this.removeStateGraph();
-                return;
-            }
+    get stateGraphAsset() {
+        return this.data.stateGraphAsset;
+    }
 
-            var _id;
-            var _asset;
-
-            if (value instanceof Asset) {
-                _id = value.id;
-                _asset = this.system.app.assets.get(_id);
-                if (!_asset) {
-                    this.system.app.assets.add(value);
-                    _asset = this.system.app.assets.get(_id);
-                }
-            } else {
-                _id = value;
-                _asset = this.system.app.assets.get(_id);
-            }
-            if (!_asset || this.data.stateGraphAsset === _id) {
-                return;
-            }
-
-            if (_asset.resource) {
-                this.data.stateGraph = _asset.resource;
-                this.loadStateGraph(this.data.stateGraph);
-                _asset.on('change', function (asset) {
-                    this.data.stateGraph = new AnimStateGraph(asset._data);
-                    this.loadStateGraph(this.data.stateGraph);
-                }.bind(this));
-            } else {
-                _asset.once('load', function (asset) {
-                    this.data.stateGraph = asset.resource;
-                    this.loadStateGraph(this.data.stateGraph);
-                }.bind(this));
-                _asset.on('change', function (asset) {
-                    this.data.stateGraph = new AnimStateGraph(asset._data);
-                    this.loadStateGraph(this.data.stateGraph);
-                }.bind(this));
-                this.system.app.assets.load(_asset);
-            }
-            this.data.stateGraphAsset = _id;
+    set stateGraphAsset(value) {
+        if (value === null) {
+            this.removeStateGraph();
+            return;
         }
-    },
+
+        var _id;
+        var _asset;
+
+        if (value instanceof Asset) {
+            _id = value.id;
+            _asset = this.system.app.assets.get(_id);
+            if (!_asset) {
+                this.system.app.assets.add(value);
+                _asset = this.system.app.assets.get(_id);
+            }
+        } else {
+            _id = value;
+            _asset = this.system.app.assets.get(_id);
+        }
+        if (!_asset || this.data.stateGraphAsset === _id) {
+            return;
+        }
+
+        if (_asset.resource) {
+            this.data.stateGraph = _asset.resource;
+            this.loadStateGraph(this.data.stateGraph);
+            _asset.on('change', function (asset) {
+                this.data.stateGraph = new AnimStateGraph(asset._data);
+                this.loadStateGraph(this.data.stateGraph);
+            }.bind(this));
+        } else {
+            _asset.once('load', function (asset) {
+                this.data.stateGraph = asset.resource;
+                this.loadStateGraph(this.data.stateGraph);
+            }.bind(this));
+            _asset.on('change', function (asset) {
+                this.data.stateGraph = new AnimStateGraph(asset._data);
+                this.loadStateGraph(this.data.stateGraph);
+            }.bind(this));
+            this.system.app.assets.load(_asset);
+        }
+        this.data.stateGraphAsset = _id;
+    }
+
     /**
      * @private
      * @name pc.AnimComponent#animationAssets
      * @type {object}
      * @description The animation assets used to load each states animation tracks
      */
-    animationAssets: {
-        get: function () {
-            return this.data.animationAssets;
-        },
-        set: function (value) {
-            this.data.animationAssets = value;
-            this.loadAnimationAssets();
-        }
-    },
+    get animationAssets() {
+        return this.data.animationAssets;
+    }
+
+    set animationAssets(value) {
+        this.data.animationAssets = value;
+        this.loadAnimationAssets();
+    }
+
     /**
      * @private
      * @name pc.AnimComponent#playable
@@ -441,16 +437,15 @@ Object.defineProperties(AnimComponent.prototype, {
      * @readonly
      * @description Returns whether all component layers are currently playable
      */
-    playable: {
-        get: function () {
-            for (var i = 0; i < this.data.layers.length; i++) {
-                if (!this.data.layers[i].playable) {
-                    return false;
-                }
+    get playable() {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            if (!this.data.layers[i].playable) {
+                return false;
             }
-            return true;
         }
-    },
+        return true;
+    }
+
     /**
      * @private
      * @name pc.AnimComponent#baseLayer
@@ -458,14 +453,12 @@ Object.defineProperties(AnimComponent.prototype, {
      * @readonly
      * @description Returns the base layer of the state graph
      */
-    baseLayer: {
-        get: function () {
-            if (this.data.layers.length > 0) {
-                return this.data.layers[0];
-            }
-            return null;
+    get baseLayer() {
+        if (this.data.layers.length > 0) {
+            return this.data.layers[0];
         }
+        return null;
     }
-});
+}
 
 export { AnimComponent };

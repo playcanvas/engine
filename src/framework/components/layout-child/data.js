@@ -1,5 +1,7 @@
-function LayoutChildComponentData() {
-    this.enabled = true;
+class LayoutChildComponentData {
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { LayoutChildComponentData };

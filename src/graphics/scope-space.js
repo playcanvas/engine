@@ -7,16 +7,16 @@ import { ScopeId } from './scope-id.js';
  * @param {string} name - The scope name.
  * @property {string} name The scope name.
  */
-function ScopeSpace(name) {
-    // Store the name
-    this.name = name;
+class ScopeSpace {
+    constructor(name) {
+        // Store the name
+        this.name = name;
 
-    // Create the empty tables
-    this.variables = {};
-    this.namespaces = {};
-}
+        // Create the empty tables
+        this.variables = {};
+        this.namespaces = {};
+    }
 
-Object.assign(ScopeSpace.prototype, {
     /**
      * @function
      * @name pc.ScopeSpace#resolve
@@ -24,7 +24,7 @@ Object.assign(ScopeSpace.prototype, {
      * @param {string} name - The variable name.
      * @returns {pc.ScopeId} The variable instance.
      */
-    resolve: function (name) {
+    resolve(name) {
         // Check if the ScopeId already exists
         if (!this.variables.hasOwnProperty(name)) {
             // Create and add to the table
@@ -33,7 +33,7 @@ Object.assign(ScopeSpace.prototype, {
 
         // Now return the ScopeId instance
         return this.variables[name];
-    },
+    }
 
     /**
      * @function
@@ -42,7 +42,7 @@ Object.assign(ScopeSpace.prototype, {
      * @param {string} name - The subspace name.
      * @returns {pc.ScopeSpace} The subspace instance.
      */
-    getSubSpace: function (name) {
+    getSubSpace(name) {
         // Check if the nested namespace already exists
         if (!this.namespaces.hasOwnProperty(name)) {
             // Create and add to the table
@@ -52,6 +52,6 @@ Object.assign(ScopeSpace.prototype, {
         // Now return the ScopeNamespace instance
         return this.namespaces[name];
     }
-});
+}
 
 export { ScopeSpace };

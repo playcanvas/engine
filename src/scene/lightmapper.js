@@ -22,7 +22,7 @@ import { Texture } from '../graphics/texture.js';
 import {
     BAKE_COLORDIR,
     FOG_NONE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM,
@@ -130,37 +130,37 @@ function collectModels(node, nodes, nodesMeshInstances, allNodes) {
  * @param {pc.ForwardRenderer} renderer - The renderer.
  * @param {pc.AssetRegistry} assets - Registry of assets to lightmap.
  */
-function Lightmapper(device, root, scene, renderer, assets) {
-    this.device = device;
-    this.root = root;
-    this.scene = scene;
-    this.renderer = renderer;
-    this.assets = assets;
+class Lightmapper {
+    constructor(device, root, scene, renderer, assets) {
+        this.device = device;
+        this.root = root;
+        this.scene = scene;
+        this.renderer = renderer;
+        this.assets = assets;
 
-    // #ifdef PROFILER
-    this._stats = {
-        renderPasses: 0,
-        lightmapCount: 0,
-        totalRenderTime: 0,
-        forwardTime: 0,
-        fboTime: 0,
-        shadowMapTime: 0,
-        compileTime: 0,
-        shadersLinked: 0
-    };
-    // #endif
-}
+        // #ifdef PROFILER
+        this._stats = {
+            renderPasses: 0,
+            lightmapCount: 0,
+            totalRenderTime: 0,
+            forwardTime: 0,
+            fboTime: 0,
+            shadowMapTime: 0,
+            compileTime: 0,
+            shadersLinked: 0
+        };
+        // #endif
+    }
 
-Object.assign(Lightmapper.prototype, {
-    destroy: function () {
+    destroy() {
         this.device = null;
         this.root = null;
         this.scene = null;
         this.renderer = null;
         this.assets = null;
-    },
+    }
 
-    calculateLightmapSize: function (node) {
+    calculateLightmapSize(node) {
         var data, parent;
         var sizeMult = this.scene.lightmapSizeMultiplier || 16;
         var scale = tempVec;
@@ -182,15 +182,17 @@ Object.assign(Lightmapper.prototype, {
             }
         } else if (node.render) {
             lightmapSizeMultiplier = node.render.lightmapSizeMultiplier;
-            if (node.render.type === 'asset') {
-                // TODO: render asset type should provide the area data - which describe size of mesh to allow
-                // auto-scaling of assigned lightmap resolution
-            } else if (node.render._area) {
-                data = node.render;
-                if (data._area) {
-                    srcArea = data._area;
+            if (node.render.type !== 'asset') {
+                if (node.render._area) {
+                    data = node.render;
+                    if (data._area) {
+                        srcArea = data._area;
+                    }
                 }
             }
+            // OTHERWISE: TODO: render asset type should provide the area data - which describe size of mesh to allow
+            // auto-scaling of assigned lightmap resolution
+
         }
 
         // copy area
@@ -226,7 +228,7 @@ Object.assign(Lightmapper.prototype, {
         totalArea = Math.sqrt(totalArea);
 
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
-    },
+    }
 
     /**
      * @function
@@ -242,7 +244,7 @@ Object.assign(Lightmapper.prototype, {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      */
-    bake: function (nodes, mode) {
+    bake(nodes, mode) {
 
         // #ifdef PROFILER
         var startTime = now();
@@ -671,7 +673,7 @@ Object.assign(Lightmapper.prototype, {
 
                 if (lights[i]._type === LIGHTTYPE_DIRECTIONAL) {
                     lightArray[LIGHTTYPE_DIRECTIONAL][0] = lights[i];
-                    lightArray[LIGHTTYPE_POINT].length = 0;
+                    lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
                     if (!shadowMapRendered && lights[i].castShadows) {
                         this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
@@ -680,16 +682,16 @@ Object.assign(Lightmapper.prototype, {
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (lights[i]._type === LIGHTTYPE_POINT) {
-                        lightArray[LIGHTTYPE_POINT][0] = lights[i];
+                    if (lights[i]._type === LIGHTTYPE_OMNI) {
+                        lightArray[LIGHTTYPE_OMNI][0] = lights[i];
                         lightArray[LIGHTTYPE_SPOT].length = 0;
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
-                            this.renderer.renderShadows(lightArray[LIGHTTYPE_POINT]);
+                            this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
                             shadowMapRendered = true;
                         }
                     } else {
-                        lightArray[LIGHTTYPE_POINT].length = 0;
+                        lightArray[LIGHTTYPE_OMNI].length = 0;
                         lightArray[LIGHTTYPE_SPOT][0] = lights[i];
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
@@ -878,6 +880,6 @@ Object.assign(Lightmapper.prototype, {
         stats.fboTime = device._renderTargetCreationTime - startFboTime;
         // #endif
     }
-});
+}
 
 export { Lightmapper };

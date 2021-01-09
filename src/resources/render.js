@@ -1,17 +1,5 @@
 import { Render } from '../scene/render.js';
 
-/**
- * @class
- * @name pc.RenderHandler
- * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Render} resources.
- * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
- * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
- */
-function RenderHandler(assets) {
-    this._registry = assets;
-}
-
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {
     var renderAsset = this;
@@ -51,15 +39,27 @@ function onContainerAssetRemoved(containerAsset) {
     }
 }
 
-Object.assign(RenderHandler.prototype, {
-    load: function (url, callback, asset) {
-    },
+/**
+ * @class
+ * @name pc.RenderHandler
+ * @implements {pc.ResourceHandler}
+ * @classdesc Resource handler used for loading {@link pc.Render} resources.
+ * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ */
+class RenderHandler {
+    constructor(assets) {
+        this._registry = assets;
+    }
 
-    open: function (url, data) {
+    load(url, callback, asset) {
+    }
+
+    open(url, data) {
         return new Render();
-    },
+    }
 
-    patch: function (asset, registry) {
+    patch(asset, registry) {
         if (!asset.data.containerAsset)
             return;
 
@@ -71,6 +71,6 @@ Object.assign(RenderHandler.prototype, {
 
         onContainerAssetAdded.call(asset, containerAsset);
     }
-});
+}
 
 export { RenderHandler };

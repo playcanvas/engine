@@ -38,7 +38,9 @@ import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
-import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';
+import { AnimCurve } from '../../anim/anim-curve.js';
+import { AnimData } from '../../anim/anim-data.js';
+import { AnimTrack } from '../../anim/anim-track.js';
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
 import { Asset } from '../../asset/asset.js';

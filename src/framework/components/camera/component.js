@@ -106,91 +106,46 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
  * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
  */
-var CameraComponent = function CameraComponent(system, entity) {
-    Component.call(this, system, entity);
+class CameraComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._camera = new Camera();
-    this._camera.node = entity;
+        this._camera = new Camera();
+        this._camera.node = entity;
 
-    this._priority = 0;
+        this._priority = 0;
 
-    this._postEffects = new PostEffectQueue(system.app, this);
-};
-CameraComponent.prototype = Object.create(Component.prototype);
-CameraComponent.prototype.constructor = CameraComponent;
-
-/**
- * @readonly
- * @name pc.CameraComponent#frustum
- * @type {pc.Frustum}
- * @description Queries the camera's frustum shape.
- */
-/**
- * @readonly
- * @name pc.CameraComponent#projectionMatrix
- * @type {pc.Mat4}
- * @description Queries the camera's projection matrix.
- */
-/**
- * @readonly
- * @name pc.CameraComponent#viewMatrix
- * @type {pc.Mat4}
- * @description Queries the camera's view matrix.
- */
-
-[
-    { name: 'aspectRatio', readonly: false },
-    { name: 'aspectRatioMode', readonly: false },
-    { name: 'calculateProjection', readonly: false },
-    { name: 'calculateTransform', readonly: false },
-    { name: 'clearColor', readonly: false },
-    { name: 'clearColorBuffer', readonly: false },
-    { name: 'clearDepthBuffer', readonly: false },
-    { name: 'clearStencilBuffer', readonly: false },
-    { name: 'cullFaces', readonly: false },
-    { name: 'farClip', readonly: false },
-    { name: 'flipFaces', readonly: false },
-    { name: 'fov', readonly: false },
-    { name: 'frustum', readonly: true },
-    { name: 'frustumCulling', readonly: false },
-    { name: 'horizontalFov', readonly: false },
-    { name: 'nearClip', readonly: false },
-    { name: 'orthoHeight', readonly: false },
-    { name: 'projection', readonly: false },
-    { name: 'projectionMatrix', readonly: true },
-    { name: 'rect', readonly: false },
-    { name: 'renderTarget', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'viewMatrix', readonly: true },
-    { name: 'vrDisplay', readonly: false }
-].forEach(function (property) {
-    var name = property.name;
-    var options = {};
-
-    options.get = function () {
-        return this._camera[name];
-    };
-
-    if (!property.readonly) {
-        options.set = function (newValue) {
-            this._camera[name] = newValue;
-        };
+        this._postEffects = new PostEffectQueue(system.app, this);
     }
 
-    Object.defineProperty(CameraComponent.prototype, name, options);
-});
+    /**
+     * @readonly
+     * @name pc.CameraComponent#frustum
+     * @type {pc.Frustum}
+     * @description Queries the camera's frustum shape.
+     */
+    /**
+     * @readonly
+     * @name pc.CameraComponent#projectionMatrix
+     * @type {pc.Mat4}
+     * @description Queries the camera's projection matrix.
+     */
+    /**
+     * @readonly
+     * @name pc.CameraComponent#viewMatrix
+     * @type {pc.Mat4}
+     * @description Queries the camera's view matrix.
+     */
 
-Object.defineProperty(CameraComponent.prototype, "camera", {
-    get: function () {
+    get camera() {
         return this._camera;
     }
-});
 
-Object.defineProperty(CameraComponent.prototype, "layers", {
-    get: function () {
+    get layers() {
         return this._camera.layers;
-    },
-    set: function (newValue) {
+    }
+
+    set layers(newValue) {
         var i, layer;
         var layers = this._camera.layers;
         for (i = 0; i < layers.length; i++) {
@@ -209,19 +164,16 @@ Object.defineProperty(CameraComponent.prototype, "layers", {
             layer.addCamera(this);
         }
     }
-});
 
-Object.defineProperty(CameraComponent.prototype, "postEffects", {
-    get: function () {
+    get postEffects() {
         return this._postEffects;
     }
-});
 
-Object.defineProperty(CameraComponent.prototype, "priority", {
-    get: function () {
+    get priority() {
         return this._priority;
-    },
-    set: function (newValue) {
+    }
+
+    set priority(newValue) {
         this._priority = newValue;
 
         var layers = this.layers;
@@ -231,9 +183,7 @@ Object.defineProperty(CameraComponent.prototype, "priority", {
             layer._sortCameras();
         }
     }
-});
 
-Object.assign(CameraComponent.prototype, {
     /**
      * @function
      * @name pc.CameraComponent#screenToWorld
@@ -254,12 +204,12 @@ Object.assign(CameraComponent.prototype, {
      * });
      * @returns {pc.Vec3} The world space coordinate.
      */
-    screenToWorld: function (screenx, screeny, cameraz, worldCoord) {
+    screenToWorld(screenx, screeny, cameraz, worldCoord) {
         var device = this.system.app.graphicsDevice;
         var w = device.clientRect.width;
         var h = device.clientRect.height;
         return this._camera.screenToWorld(screenx, screeny, cameraz, w, h, worldCoord);
-    },
+    }
 
     /**
      * @function
@@ -269,57 +219,57 @@ Object.assign(CameraComponent.prototype, {
      * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {pc.Vec3} The screen space coordinate.
      */
-    worldToScreen: function (worldCoord, screenCoord) {
+    worldToScreen(worldCoord, screenCoord) {
         var device = this.system.app.graphicsDevice;
         var w = device.clientRect.width;
         var h = device.clientRect.height;
         return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
-    },
+    }
 
-    onPrerender: function () {
+    onPrerender() {
         this._camera._viewMatDirty = true;
         this._camera._viewProjMatDirty = true;
-    },
+    }
 
-    addCameraToLayers: function () {
+    addCameraToLayers() {
         var layers = this.layers;
         for (var i = 0; i < layers.length; i++) {
             var layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (!layer) continue;
             layer.addCamera(this);
         }
-    },
+    }
 
-    removeCameraFromLayers: function () {
+    removeCameraFromLayers() {
         var layers = this.layers;
         for (var i = 0; i < layers.length; i++) {
             var layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (!layer) continue;
             layer.removeCamera(this);
         }
-    },
+    }
 
-    onLayersChanged: function (oldComp, newComp) {
+    onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
         newComp.on("remove", this.onLayerRemoved, this);
-    },
+    }
 
-    onLayerAdded: function (layer) {
+    onLayerAdded(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addCamera(this);
-    },
+    }
 
-    onLayerRemoved: function (layer) {
+    onLayerRemoved(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeCamera(this);
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         var system = this.system;
         var scene = system.app.scene;
         var layers = scene.layers;
@@ -337,9 +287,9 @@ Object.assign(CameraComponent.prototype, {
         }
 
         this.postEffects.enable();
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         var system = this.system;
         var scene = system.app.scene;
         var layers = scene.layers;
@@ -355,12 +305,12 @@ Object.assign(CameraComponent.prototype, {
         }
 
         system.removeCamera(this);
-    },
+    }
 
-    onRemove: function () {
+    onRemove() {
         this.onDisable();
         this.off();
-    },
+    }
 
     /**
      * @function
@@ -370,11 +320,11 @@ Object.assign(CameraComponent.prototype, {
      * backbuffer is assumed.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
-    calculateAspectRatio: function (rt) {
+    calculateAspectRatio(rt) {
         var src = rt ? rt : this.system.app.graphicsDevice;
         var rect = this.rect;
         return (src.width * rect.z) / (src.height * rect.w);
-    },
+    }
 
     /**
      * @function
@@ -384,11 +334,11 @@ Object.assign(CameraComponent.prototype, {
      * @param {pc.RenderTarget} rt - Render target to which rendering will be performed.
      * Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
      */
-    frameBegin: function (rt) {
+    frameBegin(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
             this.aspectRatio = this.calculateAspectRatio(rt);
         }
-    },
+    }
 
     /**
      * @private
@@ -396,7 +346,7 @@ Object.assign(CameraComponent.prototype, {
      * @name pc.CameraComponent#frameEnd
      * @description End rendering the frame for this camera.
      */
-    frameEnd: function () {},
+    frameEnd() {}
 
     /**
      * @private
@@ -439,7 +389,7 @@ Object.assign(CameraComponent.prototype, {
      *     }
      * });
      */
-    enterVr: function (display, callback) {
+    enterVr(display, callback) {
         if ((display instanceof Function) && !callback) {
             callback = display;
             display = null;
@@ -480,7 +430,7 @@ Object.assign(CameraComponent.prototype, {
         } else {
             callback("No pc.VrDisplay to present");
         }
-    },
+    }
 
     /**
      * @private
@@ -500,7 +450,7 @@ Object.assign(CameraComponent.prototype, {
      *     }
      * });
      */
-    exitVr: function (callback) {
+    exitVr(callback) {
         if (this.vrDisplay) {
             if (this.vrDisplay.capabilities.canPresent) {
                 var display = this.vrDisplay;
@@ -513,7 +463,7 @@ Object.assign(CameraComponent.prototype, {
         } else {
             callback("Not presenting VR");
         }
-    },
+    }
 
     /**
      * @function
@@ -563,9 +513,9 @@ Object.assign(CameraComponent.prototype, {
      *     }
      * });
      */
-    startXr: function (type, spaceType, options) {
+    startXr(type, spaceType, options) {
         this.system.app.xr.start(this, type, spaceType, options);
-    },
+    }
 
     /**
      * @function
@@ -580,7 +530,7 @@ Object.assign(CameraComponent.prototype, {
      *     // not anymore in XR
      * });
      */
-    endXr: function (callback) {
+    endXr(callback) {
         if (!this._camera.xr) {
             if (callback) callback(new Error("Camera is not in XR"));
             return;
@@ -588,6 +538,48 @@ Object.assign(CameraComponent.prototype, {
 
         this._camera.xr.end(callback);
     }
+}
+
+[
+    { name: 'aspectRatio', readonly: false },
+    { name: 'aspectRatioMode', readonly: false },
+    { name: 'calculateProjection', readonly: false },
+    { name: 'calculateTransform', readonly: false },
+    { name: 'clearColor', readonly: false },
+    { name: 'clearColorBuffer', readonly: false },
+    { name: 'clearDepthBuffer', readonly: false },
+    { name: 'clearStencilBuffer', readonly: false },
+    { name: 'cullFaces', readonly: false },
+    { name: 'farClip', readonly: false },
+    { name: 'flipFaces', readonly: false },
+    { name: 'fov', readonly: false },
+    { name: 'frustum', readonly: true },
+    { name: 'frustumCulling', readonly: false },
+    { name: 'horizontalFov', readonly: false },
+    { name: 'nearClip', readonly: false },
+    { name: 'orthoHeight', readonly: false },
+    { name: 'projection', readonly: false },
+    { name: 'projectionMatrix', readonly: true },
+    { name: 'rect', readonly: false },
+    { name: 'renderTarget', readonly: false },
+    { name: 'scissorRect', readonly: false },
+    { name: 'viewMatrix', readonly: true },
+    { name: 'vrDisplay', readonly: false }
+].forEach(function (property) {
+    var name = property.name;
+    var options = {};
+
+    options.get = function () {
+        return this._camera[name];
+    };
+
+    if (!property.readonly) {
+        options.set = function (newValue) {
+            this._camera[name] = newValue;
+        };
+    }
+
+    Object.defineProperty(CameraComponent.prototype, name, options);
 });
 
 export { CameraComponent };

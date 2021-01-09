@@ -23,7 +23,7 @@ var _postEffectQuadDraw = {
  * @param {pc.Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend) {
+function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
     if (_postEffectQuadVB === null) {
         var vertexFormat = new VertexFormat(device, [{
             semantic: SEMANTIC_POSITION,
@@ -135,7 +135,7 @@ function destroyPostEffectQuad() {
  * @param {pc.Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend) {
+function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend = false) {
     shader = shader || device.getCopyShader();
     device.constantTexSource.setValue(texture);
     drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);

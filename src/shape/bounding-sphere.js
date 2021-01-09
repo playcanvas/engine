@@ -16,19 +16,19 @@ var tmpVecD = new Vec3();
  * @param {pc.Vec3} [center] - The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
  * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
  */
-function BoundingSphere(center, radius) {
-    this.center = center || new Vec3(0, 0, 0);
-    this.radius = radius === undefined ? 0.5 : radius;
-}
+class BoundingSphere {
+    constructor(center = new Vec3(), radius = 0.5) {
+        this.center = center;
+        this.radius = radius;
+    }
 
-Object.assign(BoundingSphere.prototype, {
-    containsPoint: function (point) {
+    containsPoint(point) {
         var lenSq = tmpVecA.sub2(point, this.center).lengthSq();
         var r = this.radius;
         return lenSq < r * r;
-    },
+    }
 
-    compute: function (vertices) {
+    compute(vertices) {
         var i;
         var numVerts = vertices.length / 3;
 
@@ -69,7 +69,7 @@ Object.assign(BoundingSphere.prototype, {
         }
 
         this.radius = Math.sqrt(maxDistSq);
-    },
+    }
 
     /**
      * @function
@@ -79,7 +79,7 @@ Object.assign(BoundingSphere.prototype, {
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
      */
-    intersectsRay: function (ray, point) {
+    intersectsRay(ray, point) {
         var m = tmpVecA.copy(ray.origin).sub(this.center);
         var b = m.dot(tmpVecB.copy(ray.direction).normalize());
         var c = m.dot(m) - this.radius * this.radius;
@@ -101,7 +101,7 @@ Object.assign(BoundingSphere.prototype, {
             point.copy(ray.direction).scale(t).add(ray.origin);
 
         return true;
-    },
+    }
 
     /**
      * @function
@@ -110,7 +110,7 @@ Object.assign(BoundingSphere.prototype, {
      * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
      */
-    intersectsBoundingSphere: function (sphere) {
+    intersectsBoundingSphere(sphere) {
         tmpVecA.sub2(sphere.center, this.center);
         var totalRadius = sphere.radius + this.radius;
         if (tmpVecA.lengthSq() <= totalRadius * totalRadius) {
@@ -119,6 +119,6 @@ Object.assign(BoundingSphere.prototype, {
 
         return false;
     }
-});
+}
 
 export { BoundingSphere };

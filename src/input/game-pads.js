@@ -119,23 +119,28 @@ Object.assign(GamePads.prototype, {
         }
 
         // update current
-        var pads = this.poll();
-        for (i = 0, l = pads.length; i < l; i++) {
-            this.current[i] = pads[i];
-        }
+        this.poll(this.current);
     },
 
     /**
      * @function
      * @name pc.GamePads#poll
      * @description Poll for the latest data from the gamepad API.
+     * @param {object[]} [pads] - An optional array used to receive the gamepads mapping. This array will be
+     * returned by this function.
      * @returns {object[]} An array of gamepads and mappings for the model of gamepad that is attached.
      * @example
      * var gamepads = new pc.GamePads();
      * var pads = gamepads.poll();
      */
-    poll: function () {
-        var pads = [];
+    poll: function (pads) {
+        if (pads === undefined) {
+            pads = [];
+        }
+        if (pads.length > 0) {
+            pads.length = 0;
+        }
+
         if (this.gamepadsSupported) {
             var padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
             var i, len = padDevices.length;

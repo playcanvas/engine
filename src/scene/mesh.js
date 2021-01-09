@@ -1,3 +1,4 @@
+import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
@@ -21,12 +22,12 @@ import { Application } from '../framework/application.js';
 var id = 0;
 
 // Helper class used to store vertex / index data streams and related properties, when mesh is programatically modified
-function GeometryData() {
-    this.initDefaults();
-}
+class GeometryData {
+    constructor() {
+        this.initDefaults();
+    }
 
-Object.assign(GeometryData.prototype, {
-    initDefaults: function () {
+    initDefaults() {
 
         // by default, existing mesh is updated but not recreated, until .clear function is called
         this.recreate = false;
@@ -52,19 +53,19 @@ Object.assign(GeometryData.prototype, {
 
         // index stream data that needs to be updated
         this.indices = null;
-    },
+    }
 
-    _validateVertexCount: function (count, semantic) {
+    _validateVertexCount(count, semantic) {
 
         // #ifdef DEBUG
         if (this.vertexCount !== count) {
             console.error("Vertex stream " + semantic + " has " + count + " vertices, which does not match already set streams with " + this.vertexCount + " vertices.");
         }
         // #endif
-    },
+    }
 
     // function called when vertex stream is requested to be updated, and validates / updates currently used vertex count
-    _changeVertexCount: function (count, semantic) {
+    _changeVertexCount(count, semantic) {
 
         // update vertex count and validate it with existing streams
         if (!this.vertexCount) {
@@ -73,22 +74,25 @@ Object.assign(GeometryData.prototype, {
             this._validateVertexCount(count, semantic);
         }
     }
-});
 
-// default counts for vertex components
-Object.defineProperties(GeometryData, {
-    DEFAULT_COMPONENTS_POSITION: { value: 3 },
-    DEFAULT_COMPONENTS_NORMAL: { value: 3 },
-    DEFAULT_COMPONENTS_UV: { value: 2 },
-    DEFAULT_COMPONENTS_COLORS: { value: 4 }
-});
+    // default counts for vertex components
+    static DEFAULT_COMPONENTS_POSITION = 3;
+
+    static DEFAULT_COMPONENTS_NORMAL = 3;
+
+    static DEFAULT_COMPONENTS_UV = 2;
+
+    static DEFAULT_COMPONENTS_COLORS = 4;
+}
 
 // class storing information about single vertex data stream
-function GeometryVertexStream(data, componentCount, dataType, dataTypeNormalize) {
-    this.data = data;                           // array of data
-    this.componentCount = componentCount;       // number of components
-    this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
-    this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+class GeometryVertexStream {
+    constructor(data, componentCount, dataType, dataTypeNormalize) {
+        this.data = data;                           // array of data
+        this.componentCount = componentCount;       // number of components
+        this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
+        this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+    }
 }
 
 /**
@@ -172,54 +176,36 @@ function GeometryVertexStream(data, componentCount, dataType, dataTypeNormalize)
  * @property {pc.Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
  * @property {pc.Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
  */
-function Mesh(graphicsDevice) {
-    this._refCount = 0;
-    this.id = id++;
-    this.device = graphicsDevice || Application.getApplication().graphicsDevice;
-    this.vertexBuffer = null;
-    this.indexBuffer = [null];
-    this.primitive = [{
-        type: 0,
-        base: 0,
-        count: 0
-    }];
-    this.skin = null;
-    this.morph = null;
-    this._geometryData = null;
+class Mesh extends RefCountedObject {
+    constructor(graphicsDevice) {
+        super();
+        this.id = id++;
+        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this.vertexBuffer = null;
+        this.indexBuffer = [null];
+        this.primitive = [{
+            type: 0,
+            base: 0,
+            count: 0
+        }];
+        this.skin = null;
+        this.morph = null;
+        this._geometryData = null;
 
-    // AABB for object space mesh vertices
-    this._aabb = new BoundingBox();
+        // AABB for object space mesh vertices
+        this._aabb = new BoundingBox();
 
-    // Array of object space AABBs of vertices affected by each bone
-    this.boneAabb = null;
-}
-
-Object.defineProperties(Mesh.prototype, {
-    'aabb': {
-        get: function () {
-            return this._aabb;
-        },
-        set: function (aabb) {
-            this._aabb = aabb;
-        }
-    },
-
-    'refCount': {
-        get: function () {
-            return this._refCount;
-        }
+        // Array of object space AABBs of vertices affected by each bone
+        this.boneAabb = null;
     }
-});
 
-Object.assign(Mesh.prototype, {
+    get aabb() {
+        return this._aabb;
+    }
 
-    incReference: function () {
-        this._refCount++;
-    },
-
-    decReference: function () {
-        this._refCount--;
-    },
+    set aabb(aabb) {
+        this._aabb = aabb;
+    }
 
     /**
      * @function
@@ -227,7 +213,7 @@ Object.assign(Mesh.prototype, {
      * @description Destroys {@link pc.VertexBuffer} and {@link pc.IndexBuffer} associate with the mesh.
      * This is normally called by {@link pc.Model#destroy} and does not need to be called manually.
      */
-    destroy: function () {
+    destroy() {
 
         if (this.vertexBuffer) {
             this.vertexBuffer.destroy();
@@ -243,11 +229,11 @@ Object.assign(Mesh.prototype, {
 
         this.indexBuffer.length = 0;
         this._geometryData = null;
-    },
+    }
 
     // initializes local bounding boxes for each bone based on vertices affected by the bone
     // if morph targets are provided, it also adjusts local bone bounding boxes by maximum morph displacement
-    _initBoneAabbs: function (morphTargets) {
+    _initBoneAabbs(morphTargets) {
 
         this.boneAabb = [];
         this.boneUsed = [];
@@ -356,10 +342,10 @@ Object.assign(Mesh.prototype, {
             aabb.setMinMax(boneMin[i], boneMax[i]);
             this.boneAabb.push(aabb);
         }
-    },
+    }
 
     // when mesh API to modify vertex / index data are used, this allocates structure to store the data
-    _initGeometryData: function () {
+    _initGeometryData() {
         if (!this._geometryData) {
             this._geometryData = new GeometryData();
 
@@ -375,7 +361,7 @@ Object.assign(Mesh.prototype, {
                 this._geometryData.maxIndices = this.indexBuffer[0].numIndices;
             }
         }
-    },
+    }
 
     /**
      * @function
@@ -391,16 +377,16 @@ Object.assign(Mesh.prototype, {
      * @param {number} [maxIndices] - {@link pc.IndexBuffer} will be allocated with at least maxIndices, allowing additional indices to be added to it without the allocation. If
      * no value is provided, a size to fit the provided indices will be allocated.
      */
-    clear: function (verticesDynamic, indicesDynamic, maxVertices, maxIndices) {
+    clear(verticesDynamic, indicesDynamic, maxVertices = 0, maxIndices = 0) {
         this._initGeometryData();
         this._geometryData.initDefaults();
 
         this._geometryData.recreate = true;
-        this._geometryData.maxVertices = maxVertices || 0;
-        this._geometryData.maxIndices = maxIndices || 0;
+        this._geometryData.maxVertices = maxVertices;
+        this._geometryData.maxIndices = maxIndices;
         this._geometryData.verticesUsage = verticesDynamic ? BUFFER_STATIC : BUFFER_DYNAMIC;
         this._geometryData.indicesUsage = indicesDynamic ? BUFFER_STATIC : BUFFER_DYNAMIC;
-    },
+    }
 
     /**
      * @function
@@ -415,7 +401,7 @@ Object.assign(Mesh.prototype, {
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a 0 to 255 range down to 0 to 1 when fed to a shader.
      * If false, vertex attribute data is left unchanged. If this property is unspecified, false is assumed.
      */
-    setVertexStream: function (semantic, data, componentCount, numVertices, dataType, dataTypeNormalize) {
+    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
         this._initGeometryData();
         var vertexCount = numVertices || data.length / componentCount;
         this._geometryData._changeVertexCount(vertexCount, semantic);
@@ -424,10 +410,10 @@ Object.assign(Mesh.prototype, {
         this._geometryData.vertexStreamDictionary[semantic] = new GeometryVertexStream(
             data,
             componentCount,
-            dataType || TYPE_FLOAT32,
-            dataTypeNormalize || false
+            dataType,
+            dataTypeNormalize
         );
-    },
+    }
 
     /**
      * @function
@@ -438,7 +424,7 @@ Object.assign(Mesh.prototype, {
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-    getVertexStream: function (semantic, data) {
+    getVertexStream(semantic, data) {
         var count = 0;
         var done = false;
 
@@ -470,7 +456,7 @@ Object.assign(Mesh.prototype, {
         }
 
         return count;
-    },
+    }
 
     /**
      * @function
@@ -480,9 +466,9 @@ Object.assign(Mesh.prototype, {
      * @param {number} [componentCount] - The number of values that form a single position element. Defaults to 3 if not specified, corresponding to x, y and z coordinates.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setPositions: function (positions, componentCount, numVertices) {
-        this.setVertexStream(SEMANTIC_POSITION, positions, componentCount || GeometryData.DEFAULT_COMPONENTS_POSITION, numVertices, TYPE_FLOAT32, false);
-    },
+    setPositions(positions, componentCount = GeometryData.DEFAULT_COMPONENTS_POSITION, numVertices) {
+        this.setVertexStream(SEMANTIC_POSITION, positions, componentCount, numVertices, TYPE_FLOAT32, false);
+    }
 
     /**
      * @function
@@ -492,9 +478,9 @@ Object.assign(Mesh.prototype, {
      * @param {number} [componentCount] - The number of values that form a single normal element. Defaults to 3 if not specified, corresponding to x, y and z direction.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setNormals: function (normals, componentCount, numVertices) {
-        this.setVertexStream(SEMANTIC_NORMAL, normals, componentCount || GeometryData.DEFAULT_COMPONENTS_NORMAL, numVertices, TYPE_FLOAT32, false);
-    },
+    setNormals(normals, componentCount = GeometryData.DEFAULT_COMPONENTS_NORMAL, numVertices) {
+        this.setVertexStream(SEMANTIC_NORMAL, normals, componentCount, numVertices, TYPE_FLOAT32, false);
+    }
 
     /**
      * @function
@@ -505,9 +491,9 @@ Object.assign(Mesh.prototype, {
      * @param {number} [componentCount] - The number of values that form a single uv element. Defaults to 2 if not specified, corresponding to u and v coordinates.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setUvs: function (channel, uvs, componentCount, numVertices) {
-        this.setVertexStream(SEMANTIC_TEXCOORD + channel, uvs, componentCount || GeometryData.DEFAULT_COMPONENTS_UV, numVertices, TYPE_FLOAT32, false);
-    },
+    setUvs(channel, uvs, componentCount = GeometryData.DEFAULT_COMPONENTS_UV, numVertices) {
+        this.setVertexStream(SEMANTIC_TEXCOORD + channel, uvs, componentCount, numVertices, TYPE_FLOAT32, false);
+    }
 
     /**
      * @function
@@ -517,9 +503,9 @@ Object.assign(Mesh.prototype, {
      * @param {number} [componentCount] - The number of values that form a single color element. Defaults to 4 if not specified, corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setColors: function (colors, componentCount, numVertices) {
-        this.setVertexStream(SEMANTIC_COLOR, colors, componentCount || GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices, TYPE_FLOAT32, false);
-    },
+    setColors(colors, componentCount = GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices) {
+        this.setVertexStream(SEMANTIC_COLOR, colors, componentCount, numVertices, TYPE_FLOAT32, false);
+    }
 
     /**
      * @function
@@ -530,9 +516,9 @@ Object.assign(Mesh.prototype, {
      * expected to contain 4 components per vertex, corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setColors32: function (colors, numVertices) {
+    setColors32(colors, numVertices) {
         this.setVertexStream(SEMANTIC_COLOR, colors, GeometryData.DEFAULT_COMPONENTS_COLORS, numVertices, TYPE_UINT8, true);
-    },
+    }
 
     /**
      * @function
@@ -541,12 +527,12 @@ Object.assign(Mesh.prototype, {
      * @param {number[]|Uint8Array|Uint16Array|Uint32Array} indices - The array of indicies that define primitives (lines, triangles, etc.).
      * @param {number} [numIndices] - The number of indices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
      */
-    setIndices: function (indices, numIndices) {
+    setIndices(indices, numIndices) {
         this._initGeometryData();
         this._geometryData.indexStreamUpdated = true;
         this._geometryData.indices = indices;
         this._geometryData.indexCount = numIndices || indices.length;
-    },
+    }
 
     /**
      * @function
@@ -556,9 +542,9 @@ Object.assign(Mesh.prototype, {
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-    getPositions: function (positions) {
+    getPositions(positions) {
         return this.getVertexStream(SEMANTIC_POSITION, positions);
-    },
+    }
 
     /**
      * @function
@@ -568,9 +554,9 @@ Object.assign(Mesh.prototype, {
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-    getNormals: function (normals) {
+    getNormals(normals) {
         return this.getVertexStream(SEMANTIC_NORMAL, normals);
-    },
+    }
 
     /**
      * @function
@@ -581,9 +567,9 @@ Object.assign(Mesh.prototype, {
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-    getUvs: function (channel, uvs) {
+    getUvs(channel, uvs) {
         return this.getVertexStream(SEMANTIC_TEXCOORD + channel, uvs);
-    },
+    }
 
     /**
      * @function
@@ -593,9 +579,9 @@ Object.assign(Mesh.prototype, {
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-    getColors: function (colors) {
+    getColors(colors) {
         return this.getVertexStream(SEMANTIC_COLOR, colors);
-    },
+    }
 
     /**
      * @function
@@ -605,7 +591,7 @@ Object.assign(Mesh.prototype, {
      * When a typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of indices populated.
      */
-    getIndices: function (indices) {
+    getIndices(indices) {
         var count = 0;
 
         // see if we have un-applied indices
@@ -630,7 +616,7 @@ Object.assign(Mesh.prototype, {
         }
 
         return count;
-    },
+    }
 
     /**
      * @function
@@ -643,12 +629,12 @@ Object.assign(Mesh.prototype, {
      * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link pc.Mesh#setPositions}. Defaults to true if unspecified.
      * Set this to false to avoid update of the bounding box and use aabb property to set it instead.
      */
-    update: function (primitiveType, updateBoundingBox) {
+    update(primitiveType = PRIMITIVE_TRIANGLES, updateBoundingBox = true) {
 
         if (this._geometryData) {
 
             // update bounding box if needed
-            if (updateBoundingBox || updateBoundingBox === undefined) {
+            if (updateBoundingBox) {
 
                 // find vec3 position stream
                 var stream = this._geometryData.vertexStreamDictionary[SEMANTIC_POSITION];
@@ -698,7 +684,7 @@ Object.assign(Mesh.prototype, {
             }
 
             // set up primitive parameters
-            this.primitive[0].type = (primitiveType === undefined ? PRIMITIVE_TRIANGLES : primitiveType);
+            this.primitive[0].type = primitiveType;
 
             if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {      // indexed
                 if (this._geometryData.indexStreamUpdated) {
@@ -720,10 +706,10 @@ Object.assign(Mesh.prototype, {
             this._geometryData.indexStreamUpdated = false;
             this._geometryData.recreate = false;
         }
-    },
+    }
 
     // builds vertex format based on attached vertex streams
-    _buildVertexFormat: function (vertexCount) {
+    _buildVertexFormat(vertexCount) {
 
         var vertexDesc = [];
 
@@ -738,10 +724,10 @@ Object.assign(Mesh.prototype, {
         }
 
         return new VertexFormat(this.device, vertexDesc, vertexCount);
-    },
+    }
 
     // copy attached data into vertex buffer
-    _updateVertexBuffer: function () {
+    _updateVertexBuffer() {
 
         // if we don't have vertex buffer, create new one, otherwise update existing one
         if (!this.vertexBuffer) {
@@ -764,10 +750,10 @@ Object.assign(Mesh.prototype, {
         }
 
         iterator.end();
-    },
+    }
 
     // copy attached data into index buffer
-    _updateIndexBuffer: function () {
+    _updateIndexBuffer() {
 
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
@@ -784,9 +770,9 @@ Object.assign(Mesh.prototype, {
             // remove data
             this._geometryData.indices = null;
         }
-    },
+    }
 
-    generateWireframe: function () {
+    generateWireframe() {
         var typedArray = function (indexBuffer) {
             switch (indexBuffer.format) {
                 case INDEXFORMAT_UINT8:
@@ -844,6 +830,6 @@ Object.assign(Mesh.prototype, {
         };
         this.indexBuffer[RENDERSTYLE_WIREFRAME] = wireBuffer;
     }
-});
+}
 
 export { Mesh };

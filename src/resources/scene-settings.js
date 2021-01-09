@@ -1,12 +1,12 @@
 import { http } from '../net/http.js';
 
-function SceneSettingsHandler(app) {
-    this._app = app;
-    this.maxRetries = 0;
-}
+class SceneSettingsHandler {
+    constructor(app) {
+        this._app = app;
+        this.maxRetries = 0;
+    }
 
-Object.assign(SceneSettingsHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -34,11 +34,11 @@ Object.assign(SceneSettingsHandler.prototype, {
                 callback(errMsg);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         return data.settings;
     }
-});
+}
 
 export { SceneSettingsHandler };

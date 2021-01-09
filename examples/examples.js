@@ -92,6 +92,7 @@ var categories = [
             "button-basic",
             "button-particle",
             "button-sprite",
+            "scroll-view",
             "text-basic",
             "text-canvas-font",
             "text-drop-shadow",

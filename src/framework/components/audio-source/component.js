@@ -42,23 +42,21 @@ import { Component } from '../component.js';
  * but just doesn't fall off anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.
  */
-function AudioSourceComponent(system, entity) {
-    Component.call(this, system, entity);
+class AudioSourceComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this.on("set_assets", this.onSetAssets, this);
-    this.on("set_loop", this.onSetLoop, this);
-    this.on("set_volume", this.onSetVolume, this);
-    this.on("set_pitch", this.onSetPitch, this);
-    this.on("set_minDistance", this.onSetMinDistance, this);
-    this.on("set_maxDistance", this.onSetMaxDistance, this);
-    this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
-    this.on("set_distanceModel", this.onSetDistanceModel, this);
-    this.on("set_3d", this.onSet3d, this);
-}
-AudioSourceComponent.prototype = Object.create(Component.prototype);
-AudioSourceComponent.prototype.constructor = AudioSourceComponent;
+        this.on("set_assets", this.onSetAssets, this);
+        this.on("set_loop", this.onSetLoop, this);
+        this.on("set_volume", this.onSetVolume, this);
+        this.on("set_pitch", this.onSetPitch, this);
+        this.on("set_minDistance", this.onSetMinDistance, this);
+        this.on("set_maxDistance", this.onSetMaxDistance, this);
+        this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_distanceModel", this.onSetDistanceModel, this);
+        this.on("set_3d", this.onSet3d, this);
+    }
 
-Object.assign(AudioSourceComponent.prototype, {
     /**
      * @private
      * @function
@@ -66,7 +64,7 @@ Object.assign(AudioSourceComponent.prototype, {
      * @description Begin playback of an audio asset in the component attached to an entity.
      * @param {string} name - The name of the Asset to play.
      */
-    play: function (name) {
+    play(name) {
         if (!this.enabled || !this.entity.enabled) {
             return;
         }
@@ -90,7 +88,7 @@ Object.assign(AudioSourceComponent.prototype, {
                 componentData.channel = channel;
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -98,11 +96,11 @@ Object.assign(AudioSourceComponent.prototype, {
      * @name pc.AudioSourceComponent#pause
      * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}.
      */
-    pause: function () {
+    pause() {
         if (this.channel) {
             this.channel.pause();
         }
-    },
+    }
 
     /**
      * @private
@@ -110,11 +108,11 @@ Object.assign(AudioSourceComponent.prototype, {
      * @name pc.AudioSourceComponent#unpause
      * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
      */
-    unpause: function () {
+    unpause() {
         if (this.channel && this.channel.paused) {
             this.channel.unpause();
         }
-    },
+    }
 
     /**
      * @private
@@ -122,14 +120,14 @@ Object.assign(AudioSourceComponent.prototype, {
      * @name pc.AudioSourceComponent#stop
      * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
      */
-    stop: function () {
+    stop() {
         if (this.channel) {
             this.channel.stop();
             this.channel = null;
         }
-    },
+    }
 
-    onSetAssets: function (name, oldValue, newValue) {
+    onSetAssets(name, oldValue, newValue) {
         var newAssets = [];
         var i, len = newValue.length;
 
@@ -166,9 +164,9 @@ Object.assign(AudioSourceComponent.prototype, {
         if (!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
             this.loadAudioSourceAssets(newAssets);
         }
-    },
+    }
 
-    onAssetChanged: function (asset, attribute, newValue, oldValue) {
+    onAssetChanged(asset, attribute, newValue, oldValue) {
         if (attribute === 'resource') {
             var sources = this.data.sources;
             if (sources) {
@@ -186,9 +184,9 @@ Object.assign(AudioSourceComponent.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onAssetRemoved: function (asset) {
+    onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this.data.sources[asset.name]) {
             delete this.data.sources[asset.name];
@@ -197,65 +195,65 @@ Object.assign(AudioSourceComponent.prototype, {
                 this.data.currentSource = null;
             }
         }
-    },
+    }
 
-    onSetLoop: function (name, oldValue, newValue) {
+    onSetLoop(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel) {
                 this.channel.setLoop(newValue);
             }
         }
-    },
+    }
 
-    onSetVolume: function (name, oldValue, newValue) {
+    onSetVolume(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel) {
                 this.channel.setVolume(newValue);
             }
         }
-    },
+    }
 
-    onSetPitch: function (name, oldValue, newValue) {
+    onSetPitch(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel) {
                 this.channel.setPitch(newValue);
             }
         }
-    },
+    }
 
-    onSetMaxDistance: function (name, oldValue, newValue) {
+    onSetMaxDistance(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setMaxDistance(newValue);
             }
         }
-    },
+    }
 
-    onSetMinDistance: function (name, oldValue, newValue) {
+    onSetMinDistance(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setMinDistance(newValue);
             }
         }
-    },
+    }
 
-    onSetRollOffFactor: function (name, oldValue, newValue) {
+    onSetRollOffFactor(name, oldValue, newValue) {
         if (oldValue != newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setRollOffFactor(newValue);
             }
         }
-    },
+    }
 
-    onSetDistanceModel: function (name, oldValue, newValue) {
+    onSetDistanceModel(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (this.channel instanceof Channel3d) {
                 this.channel.setDistanceModel(newValue);
             }
         }
-    },
+    }
 
-    onSet3d: function (name, oldValue, newValue) {
+    onSet3d(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (this.system.initialized && this.currentSource) {
                 var paused = false;
@@ -273,9 +271,9 @@ Object.assign(AudioSourceComponent.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         // load assets that haven't been loaded yet
         var assets = this.data.assets;
         if (assets) {
@@ -299,13 +297,13 @@ Object.assign(AudioSourceComponent.prototype, {
                 this.unpause();
             }
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this.pause();
-    },
+    }
 
-    loadAudioSourceAssets: function (ids) {
+    loadAudioSourceAssets(ids) {
         var self = this;
 
         var assets = ids.map(function (id) {
@@ -374,6 +372,6 @@ Object.assign(AudioSourceComponent.prototype, {
             }
         }, this);
     }
-});
+}
 
 export { AudioSourceComponent };

@@ -24,15 +24,15 @@ var primitive = {
  * @property {pc.Shader|null} shader The shader definition for the fullscreen quad. Needs to be set by the custom post effect (default is null). Used when calling {@link pc.drawFullscreenQuad}.
  * @property {boolean} needsDepthBuffer The property that should to be set to `true` (by the custom post effect) if a depth map is necessary (default is false).
  */
-function PostEffect(graphicsDevice) {
-    this.device = graphicsDevice;
-    this.shader = null;
-    this.depthMap = null;
-    this.vertexBuffer = createFullscreenQuad(graphicsDevice);
-    this.needsDepthBuffer = false;
-}
+class PostEffect {
+    constructor(graphicsDevice) {
+        this.device = graphicsDevice;
+        this.shader = null;
+        this.depthMap = null;
+        this.vertexBuffer = createFullscreenQuad(graphicsDevice);
+        this.needsDepthBuffer = false;
+    }
 
-Object.assign(PostEffect.prototype, {
     /**
      * @function
      * @name pc.PostEffect#render
@@ -42,9 +42,9 @@ Object.assign(PostEffect.prototype, {
      * @param {pc.RenderTarget} outputTarget - The output render target. If null then this will be the screen.
      * @param {pc.Vec4} rect - (Optional) The rect of the current camera. If not specified then it will default to [0,0,1,1].
      */
-    render: function (inputTarget, outputTarget, rect) {
+    render(inputTarget, outputTarget, rect) {
     }
-});
+}
 
 function createFullscreenQuad(device) {
     // Create the vertex format

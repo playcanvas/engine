@@ -6,7 +6,7 @@ import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @private
@@ -17,25 +17,21 @@ var _schema = ['enabled'];
  * @param {pc.Application} app - The application.
  * @augments pc.ComponentSystem
  */
-var ZoneComponentSystem = function ZoneComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ZoneComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'zone';
+        this.id = 'zone';
 
-    this.ComponentType = ZoneComponent;
-    this.DataType = ZoneComponentData;
+        this.ComponentType = ZoneComponent;
+        this.DataType = ZoneComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this._onBeforeRemove, this);
-};
-ZoneComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ZoneComponentSystem.prototype.constructor = ZoneComponentSystem;
+        this.on('beforeremove', this._onBeforeRemove, this);
+    }
 
-Component._buildAccessors(ZoneComponent.prototype, _schema);
-
-Object.assign(ZoneComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
         if (data.size) {
@@ -45,19 +41,21 @@ Object.assign(ZoneComponentSystem.prototype, {
                 component.size.set(data.size[0], data.size[1], data.size[2]);
             }
         }
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var data = {
             size: entity.zone.size
         };
 
         return this.addComponent(clone, data);
-    },
+    }
 
-    _onBeforeRemove: function (entity, component) {
+    _onBeforeRemove(entity, component) {
         component._onBeforeRemove();
     }
-});
+}
+
+Component._buildAccessors(ZoneComponent.prototype, _schema);
 
 export { ZoneComponentSystem };

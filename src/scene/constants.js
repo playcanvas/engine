@@ -5,7 +5,7 @@
  * @description Subtract the color of the source fragment from the destination fragment
  * and write the result to the frame buffer.
  */
-export var BLEND_SUBTRACTIVE = 0;
+export const BLEND_SUBTRACTIVE = 0;
 /**
  * @constant
  * @name pc.BLEND_ADDITIVE
@@ -13,7 +13,7 @@ export var BLEND_SUBTRACTIVE = 0;
  * @description Add the color of the source fragment to the destination fragment
  * and write the result to the frame buffer.
  */
-export var BLEND_ADDITIVE = 1;
+export const BLEND_ADDITIVE = 1;
 /**
  * @constant
  * @name pc.BLEND_NORMAL
@@ -22,14 +22,14 @@ export var BLEND_ADDITIVE = 1;
  * equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination
  * blend mode of pc.BLENDMODE_ONE_MINUS_SRC_ALPHA.
  */
-export var BLEND_NORMAL = 2;
+export const BLEND_NORMAL = 2;
 /**
  * @constant
  * @name pc.BLEND_NONE
  * @type {number}
  * @description Disable blending.
  */
-export var BLEND_NONE = 3;
+export const BLEND_NONE = 3;
 /**
  * @constant
  * @name pc.BLEND_PREMULTIPLIED
@@ -37,7 +37,7 @@ export var BLEND_NONE = 3;
  * @description Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have
  * already been multiplied by the source alpha value.
  */
-export var BLEND_PREMULTIPLIED = 4;
+export const BLEND_PREMULTIPLIED = 4;
 /**
  * @constant
  * @name pc.BLEND_MULTIPLICATIVE
@@ -45,14 +45,14 @@ export var BLEND_PREMULTIPLIED = 4;
  * @description Multiply the color of the source fragment by the color of the destination
  * fragment and write the result to the frame buffer.
  */
-export var BLEND_MULTIPLICATIVE = 5;
+export const BLEND_MULTIPLICATIVE = 5;
 /**
  * @constant
  * @name pc.BLEND_ADDITIVEALPHA
  * @type {number}
  * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
  */
-export var BLEND_ADDITIVEALPHA = 6;
+export const BLEND_ADDITIVEALPHA = 6;
 
 /**
  * @constant
@@ -60,7 +60,7 @@ export var BLEND_ADDITIVEALPHA = 6;
  * @type {number}
  * @description Multiplies colors and doubles the result.
  */
-export var BLEND_MULTIPLICATIVE2X = 7;
+export const BLEND_MULTIPLICATIVE2X = 7;
 
 /**
  * @constant
@@ -68,7 +68,7 @@ export var BLEND_MULTIPLICATIVE2X = 7;
  * @type {number}
  * @description Softer version of additive.
  */
-export var BLEND_SCREEN = 8;
+export const BLEND_SCREEN = 8;
 
 /**
  * @constant
@@ -76,7 +76,7 @@ export var BLEND_SCREEN = 8;
  * @type {number}
  * @description Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
  */
-export var BLEND_MIN = 9;
+export const BLEND_MIN = 9;
 
 /**
  * @constant
@@ -84,7 +84,7 @@ export var BLEND_MIN = 9;
  * @type {number}
  * @description Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
  */
-export var BLEND_MAX = 10;
+export const BLEND_MAX = 10;
 
 /**
  * @constant
@@ -92,28 +92,28 @@ export var BLEND_MAX = 10;
  * @type {string}
  * @description No fog is applied to the scene.
  */
-export var FOG_NONE = 'none';
+export const FOG_NONE = 'none';
 /**
  * @constant
  * @name pc.FOG_LINEAR
  * @type {string}
  * @description Fog rises linearly from zero to 1 between a start and end depth.
  */
-export var FOG_LINEAR = 'linear';
+export const FOG_LINEAR = 'linear';
 /**
  * @constant
  * @name pc.FOG_EXP
  * @type {string}
  * @description Fog rises according to an exponential curve controlled by a density value.
  */
-export var FOG_EXP = 'exp';
+export const FOG_EXP = 'exp';
 /**
  * @constant
  * @name pc.FOG_EXP2
  * @type {string}
  * @description Fog rises according to an exponential curve controlled by a density value.
  */
-export var FOG_EXP2 = 'exp2';
+export const FOG_EXP2 = 'exp2';
 
 /**
  * @constant
@@ -121,21 +121,21 @@ export var FOG_EXP2 = 'exp2';
  * @type {number}
  * @description No Fresnel.
  */
-export var FRESNEL_NONE = 0;
+export const FRESNEL_NONE = 0;
 /**
  * @constant
  * @name pc.FRESNEL_SCHLICK
  * @type {number}
  * @description Schlick's approximation of Fresnel.
  */
-export var FRESNEL_SCHLICK = 2;
+export const FRESNEL_SCHLICK = 2;
 
 // Legacy
-export var LAYER_HUD = 0;
-export var LAYER_GIZMO = 1;
-export var LAYER_FX = 2;
+export const LAYER_HUD = 0;
+export const LAYER_GIZMO = 1;
+export const LAYER_FX = 2;
 // 3 - 14 are custom user layers
-export var LAYER_WORLD = 15;
+export const LAYER_WORLD = 15;
 
 // New layers
 /**
@@ -144,35 +144,35 @@ export var LAYER_WORLD = 15;
  * @type {number}
  * @description The world layer.
  */
-export var LAYERID_WORLD = 0;
+export const LAYERID_WORLD = 0;
 /**
  * @constant
  * @name pc.LAYERID_DEPTH
  * @type {number}
  * @description The depth layer.
  */
-export var LAYERID_DEPTH = 1;
+export const LAYERID_DEPTH = 1;
 /**
  * @constant
  * @name pc.LAYERID_SKYBOX
  * @type {number}
  * @description The skybox layer.
  */
-export var LAYERID_SKYBOX = 2;
+export const LAYERID_SKYBOX = 2;
 /**
  * @constant
  * @name pc.LAYERID_IMMEDIATE
  * @type {number}
  * @description The immediate layer.
  */
-export var LAYERID_IMMEDIATE = 3;
+export const LAYERID_IMMEDIATE = 3;
 /**
  * @constant
  * @name pc.LAYERID_UI
  * @type {number}
  * @description The UI layer.
  */
-export var LAYERID_UI = 4;
+export const LAYERID_UI = 4;
 
 /**
  * @constant
@@ -180,21 +180,65 @@ export var LAYERID_UI = 4;
  * @type {number}
  * @description Directional (global) light source.
  */
-export var LIGHTTYPE_DIRECTIONAL = 0;
+export const LIGHTTYPE_DIRECTIONAL = 0;
+/**
+ * @constant
+ * @private
+ * @name pc.LIGHTTYPE_OMNI
+ * @type {number}
+ * @description Omni-directional (local) light source.
+ */
+export const LIGHTTYPE_OMNI = 1;
 /**
  * @constant
  * @name pc.LIGHTTYPE_POINT
  * @type {number}
  * @description Point (local) light source.
  */
-export var LIGHTTYPE_POINT = 1;
+export const LIGHTTYPE_POINT = LIGHTTYPE_OMNI;
 /**
  * @constant
  * @name pc.LIGHTTYPE_SPOT
  * @type {number}
  * @description Spot (local) light source.
  */
-export var LIGHTTYPE_SPOT = 2;
+export const LIGHTTYPE_SPOT = 2;
+
+/**
+ * @constant
+ * @private
+ * @name pc.LIGHTSHAPE_PUNCTUAL
+ * @type {number}
+ * @description Infinitesimally small point light source shape.
+ */
+export const LIGHTSHAPE_PUNCTUAL = 0;
+
+/**
+ * @constant
+ * @private
+ * @name pc.LIGHTSHAPE_RECT
+ * @type {number}
+ * @description Rectangle shape of light source.
+ */
+export const LIGHTSHAPE_RECT = 1;
+
+/**
+ * @constant
+ * @private
+ * @name pc.LIGHTSHAPE_DISK
+ * @type {number}
+ * @description Disk shape of light source.
+ */
+export const LIGHTSHAPE_DISK = 2;
+
+/**
+ * @constant
+ * @private
+ * @name pc.LIGHTSHAPE_SPHERE
+ * @type {number}
+ * @description Sphere shape of light source.
+ */
+export const LIGHTSHAPE_SPHERE = 3;
 
 /**
  * @constant
@@ -202,14 +246,14 @@ export var LIGHTTYPE_SPOT = 2;
  * @type {number}
  * @description Linear distance falloff model for light attenuation.
  */
-export var LIGHTFALLOFF_LINEAR = 0;
+export const LIGHTFALLOFF_LINEAR = 0;
 /**
  * @constant
  * @name pc.LIGHTFALLOFF_INVERSESQUARED
  * @type {number}
  * @description Inverse squared distance falloff model for light attenuation.
  */
-export var LIGHTFALLOFF_INVERSESQUARED = 1;
+export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
 /**
  * @constant
@@ -217,36 +261,36 @@ export var LIGHTFALLOFF_INVERSESQUARED = 1;
  * @type {number}
  * @description Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
  */
-export var SHADOW_PCF3 = 0;
-export var SHADOW_DEPTH = 0; // alias for SHADOW_PCF3 for backwards compatibility
+export const SHADOW_PCF3 = 0;
+export const SHADOW_DEPTH = 0; // alias for SHADOW_PCF3 for backwards compatibility
 /**
  * @constant
  * @name pc.SHADOW_VSM8
  * @type {number}
  * @description Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
  */
-export var SHADOW_VSM8 = 1;
+export const SHADOW_VSM8 = 1;
 /**
  * @constant
  * @name pc.SHADOW_VSM16
  * @type {number}
  * @description Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
  */
-export var SHADOW_VSM16 = 2;
+export const SHADOW_VSM16 = 2;
 /**
  * @constant
  * @name pc.SHADOW_VSM32
  * @type {number}
  * @description Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
  */
-export var SHADOW_VSM32 = 3;
+export const SHADOW_VSM32 = 3;
 /**
  * @constant
  * @name pc.SHADOW_PCF5
  * @type {number}
  * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
  */
-export var SHADOW_PCF5 = 4;
+export const SHADOW_PCF5 = 4;
 
 /**
  * @constant
@@ -254,14 +298,14 @@ export var SHADOW_PCF5 = 4;
  * @type {number}
  * @description Box filter.
  */
-export var BLUR_BOX = 0;
+export const BLUR_BOX = 0;
 /**
  * @constant
  * @name pc.BLUR_GAUSSIAN
  * @type {number}
  * @description Gaussian filter. May look smoother than box, but requires more samples.
  */
-export var BLUR_GAUSSIAN = 1;
+export const BLUR_GAUSSIAN = 1;
 
 /**
  * @constant
@@ -269,31 +313,31 @@ export var BLUR_GAUSSIAN = 1;
  * @type {number}
  * @description No sorting, particles are drawn in arbitrary order. Can be simulated on GPU.
  */
-export var PARTICLESORT_NONE = 0;
+export const PARTICLESORT_NONE = 0;
 /**
  * @constant
  * @name pc.PARTICLESORT_DISTANCE
  * @type {number}
  * @description Sorting based on distance to the camera. CPU only.
  */
-export var PARTICLESORT_DISTANCE = 1;
+export const PARTICLESORT_DISTANCE = 1;
 /**
  * @constant
  * @name pc.PARTICLESORT_NEWER_FIRST
  * @type {number}
  * @description Newer particles are drawn first. CPU only.
  */
-export var PARTICLESORT_NEWER_FIRST = 2;
+export const PARTICLESORT_NEWER_FIRST = 2;
 /**
  * @constant
  * @name pc.PARTICLESORT_OLDER_FIRST
  * @type {number}
  * @description Older particles are drawn first. CPU only.
  */
-export var PARTICLESORT_OLDER_FIRST = 3;
+export const PARTICLESORT_OLDER_FIRST = 3;
 
-export var PARTICLEMODE_GPU = 0;
-export var PARTICLEMODE_CPU = 1;
+export const PARTICLEMODE_GPU = 0;
+export const PARTICLEMODE_CPU = 1;
 
 /**
  * @constant
@@ -301,14 +345,14 @@ export var PARTICLEMODE_CPU = 1;
  * @type {number}
  * @description Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
  */
-export var EMITTERSHAPE_BOX = 0;
+export const EMITTERSHAPE_BOX = 0;
 /**
  * @constant
  * @name pc.EMITTERSHAPE_SPHERE
  * @type {number}
  * @description Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.
  */
-export var EMITTERSHAPE_SPHERE = 1;
+export const EMITTERSHAPE_SPHERE = 1;
 
 /**
  * @constant
@@ -316,21 +360,21 @@ export var EMITTERSHAPE_SPHERE = 1;
  * @type {number}
  * @description Particles are facing camera.
  */
-export var PARTICLEORIENTATION_SCREEN = 0;
+export const PARTICLEORIENTATION_SCREEN = 0;
 /**
  * @constant
  * @name pc.PARTICLEORIENTATION_WORLD
  * @type {number}
  * @description User defines world space normal (particleNormal) to set planes orientation.
  */
-export var PARTICLEORIENTATION_WORLD = 1;
+export const PARTICLEORIENTATION_WORLD = 1;
 /**
  * @constant
  * @name pc.PARTICLEORIENTATION_EMITTER
  * @type {number}
  * @description Similar to previous, but the normal is affected by emitter(entity) transformation.
  */
-export var PARTICLEORIENTATION_EMITTER = 2;
+export const PARTICLEORIENTATION_EMITTER = 2;
 
 /**
  * @constant
@@ -338,14 +382,14 @@ export var PARTICLEORIENTATION_EMITTER = 2;
  * @type {number}
  * @description A perspective camera projection where the frustum shape is essentially pyramidal.
  */
-export var PROJECTION_PERSPECTIVE = 0;
+export const PROJECTION_PERSPECTIVE = 0;
 /**
  * @constant
  * @name pc.PROJECTION_ORTHOGRAPHIC
  * @type {number}
  * @description An orthographic camera projection where the frustum shape is essentially a cuboid.
  */
-export var PROJECTION_ORTHOGRAPHIC = 1;
+export const PROJECTION_ORTHOGRAPHIC = 1;
 
 /**
  * @constant
@@ -353,21 +397,21 @@ export var PROJECTION_ORTHOGRAPHIC = 1;
  * @type {number}
  * @description Render mesh instance as solid geometry.
  */
-export var RENDERSTYLE_SOLID = 0;
+export const RENDERSTYLE_SOLID = 0;
 /**
  * @constant
  * @name pc.RENDERSTYLE_WIREFRAME
  * @type {number}
  * @description Render mesh instance as wireframe.
  */
-export var RENDERSTYLE_WIREFRAME = 1;
+export const RENDERSTYLE_WIREFRAME = 1;
 /**
  * @constant
  * @name pc.RENDERSTYLE_POINTS
  * @type {number}
  * @description Render mesh instance as points.
  */
-export var RENDERSTYLE_POINTS = 2;
+export const RENDERSTYLE_POINTS = 2;
 
 /**
  * @constant
@@ -375,14 +419,14 @@ export var RENDERSTYLE_POINTS = 2;
  * @type {number}
  * @description The cube map is treated as if it is infinitely far away.
  */
-export var CUBEPROJ_NONE = 0;
+export const CUBEPROJ_NONE = 0;
 /**
  * @constant
  * @name pc.CUBEPROJ_BOX
  * @type {number}
  * @description The cube map is box-projected based on a world space axis-aligned bounding box.
  */
-export var CUBEPROJ_BOX = 1;
+export const CUBEPROJ_BOX = 1;
 
 /**
  * @constant
@@ -390,14 +434,14 @@ export var CUBEPROJ_BOX = 1;
  * @type {number}
  * @description Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
  */
-export var SPECULAR_PHONG = 0;
+export const SPECULAR_PHONG = 0;
 /**
  * @constant
  * @name pc.SPECULAR_BLINN
  * @type {number}
  * @description Energy-conserving Blinn-Phong.
  */
-export var SPECULAR_BLINN = 1;
+export const SPECULAR_BLINN = 1;
 
 /**
  * @constant
@@ -405,42 +449,42 @@ export var SPECULAR_BLINN = 1;
  * @type {string}
  * @description Multiply together the primary and secondary colors.
  */
-export var DETAILMODE_MUL = 'mul';
+export const DETAILMODE_MUL = 'mul';
 /**
  * @constant
  * @name pc.DETAILMODE_ADD
  * @type {string}
  * @description Add together the primary and secondary colors.
  */
-export var DETAILMODE_ADD = 'add';
+export const DETAILMODE_ADD = 'add';
 /**
  * @constant
  * @name pc.DETAILMODE_SCREEN
  * @type {string}
  * @description Softer version of {@link pc.DETAILMODE_ADD}.
  */
-export var DETAILMODE_SCREEN = 'screen';
+export const DETAILMODE_SCREEN = 'screen';
 /**
  * @constant
  * @name pc.DETAILMODE_OVERLAY
  * @type {string}
  * @description Multiplies or screens the colors, depending on the primary color.
  */
-export var DETAILMODE_OVERLAY = 'overlay';
+export const DETAILMODE_OVERLAY = 'overlay';
 /**
  * @constant
  * @name pc.DETAILMODE_MIN
  * @type {string}
  * @description Select whichever of the primary and secondary colors is darker, component-wise.
  */
-export var DETAILMODE_MIN = 'min';
+export const DETAILMODE_MIN = 'min';
 /**
  * @constant
  * @name pc.DETAILMODE_MAX
  * @type {string}
  * @description Select whichever of the primary and secondary colors is lighter, component-wise.
  */
-export var DETAILMODE_MAX = 'max';
+export const DETAILMODE_MAX = 'max';
 
 /**
  * @constant
@@ -448,14 +492,14 @@ export var DETAILMODE_MAX = 'max';
  * @type {number}
  * @description No gamma correction.
  */
-export var GAMMA_NONE = 0;
+export const GAMMA_NONE = 0;
 /**
  * @constant
  * @name pc.GAMMA_SRGB
  * @type {number}
  * @description Apply sRGB gamma correction.
  */
-export var GAMMA_SRGB = 1;
+export const GAMMA_SRGB = 1;
 /**
  * @deprecated
  * @constant
@@ -463,14 +507,14 @@ export var GAMMA_SRGB = 1;
  * @type {number}
  * @description Apply sRGB (fast) gamma correction.
  */
-export var GAMMA_SRGBFAST = 2; // deprecated
+export const GAMMA_SRGBFAST = 2; // deprecated
 /**
  * @constant
  * @name pc.GAMMA_SRGBHDR
  * @type {number}
  * @description Apply sRGB (HDR) gamma correction.
  */
-export var GAMMA_SRGBHDR = 3;
+export const GAMMA_SRGBHDR = 3;
 
 /**
  * @constant
@@ -478,35 +522,35 @@ export var GAMMA_SRGBHDR = 3;
  * @type {number}
  * @description Linear tonemapping.
  */
-export var TONEMAP_LINEAR = 0;
+export const TONEMAP_LINEAR = 0;
 /**
  * @constant
  * @name pc.TONEMAP_FILMIC
  * @type {number}
  * @description Filmic tonemapping curve.
  */
-export var TONEMAP_FILMIC = 1;
+export const TONEMAP_FILMIC = 1;
 /**
  * @constant
  * @name pc.TONEMAP_HEJL
  * @type {number}
  * @description Hejl filmic tonemapping curve.
  */
-export var TONEMAP_HEJL = 2;
+export const TONEMAP_HEJL = 2;
 /**
  * @constant
  * @name pc.TONEMAP_ACES
  * @type {number}
  * @description ACES filmic tonemapping curve.
  */
-export var TONEMAP_ACES = 3;
+export const TONEMAP_ACES = 3;
 /**
  * @constant
  * @name pc.TONEMAP_ACES2
  * @type {number}
  * @description ACES v2 filmic tonemapping curve.
  */
-export var TONEMAP_ACES2 = 4;
+export const TONEMAP_ACES2 = 4;
 
 /**
  * @constant
@@ -514,40 +558,40 @@ export var TONEMAP_ACES2 = 4;
  * @type {number}
  * @description No specular occlusion.
  */
-export var SPECOCC_NONE = 0;
+export const SPECOCC_NONE = 0;
 /**
  * @constant
  * @name pc.SPECOCC_AO
  * @type {number}
  * @description Use AO directly to occlude specular.
  */
-export var SPECOCC_AO = 1;
+export const SPECOCC_AO = 1;
 /**
  * @constant
  * @name pc.SPECOCC_GLOSSDEPENDENT
  * @type {number}
  * @description Modify AO based on material glossiness/view angle to occlude specular.
  */
-export var SPECOCC_GLOSSDEPENDENT = 2;
+export const SPECOCC_GLOSSDEPENDENT = 2;
 
 // 16 bits for shader defs
-export var SHADERDEF_NOSHADOW = 1;
-export var SHADERDEF_SKIN = 2;
-export var SHADERDEF_UV0 = 4;
-export var SHADERDEF_UV1 = 8;
-export var SHADERDEF_VCOLOR = 16;
-export var SHADERDEF_INSTANCING = 32;
-export var SHADERDEF_LM = 64;
-export var SHADERDEF_DIRLM = 128;
-export var SHADERDEF_SCREENSPACE = 256;
-export var SHADERDEF_TANGENTS = 512;
-export var SHADERDEF_MORPH_POSITION = 1024;
-export var SHADERDEF_MORPH_NORMAL = 2048;
-export var SHADERDEF_MORPH_TEXTURE_BASED = 4096;
+export const SHADERDEF_NOSHADOW = 1;
+export const SHADERDEF_SKIN = 2;
+export const SHADERDEF_UV0 = 4;
+export const SHADERDEF_UV1 = 8;
+export const SHADERDEF_VCOLOR = 16;
+export const SHADERDEF_INSTANCING = 32;
+export const SHADERDEF_LM = 64;
+export const SHADERDEF_DIRLM = 128;
+export const SHADERDEF_SCREENSPACE = 256;
+export const SHADERDEF_TANGENTS = 512;
+export const SHADERDEF_MORPH_POSITION = 1024;
+export const SHADERDEF_MORPH_NORMAL = 2048;
+export const SHADERDEF_MORPH_TEXTURE_BASED = 4096;
 
-export var LINEBATCH_WORLD = 0;
-export var LINEBATCH_OVERLAY = 1;
-export var LINEBATCH_GIZMO = 2;
+export const LINEBATCH_WORLD = 0;
+export const LINEBATCH_OVERLAY = 1;
+export const LINEBATCH_GIZMO = 2;
 
 /**
  * @constant
@@ -555,28 +599,28 @@ export var LINEBATCH_GIZMO = 2;
  * @type {number}
  * @description The shadow map is not to be updated.
  */
-export var SHADOWUPDATE_NONE = 0;
+export const SHADOWUPDATE_NONE = 0;
 /**
  * @constant
  * @name pc.SHADOWUPDATE_THISFRAME
  * @type {number}
  * @description The shadow map is regenerated this frame and not on subsequent frames.
  */
-export var SHADOWUPDATE_THISFRAME = 1;
+export const SHADOWUPDATE_THISFRAME = 1;
 /**
  * @constant
  * @name pc.SHADOWUPDATE_REALTIME
  * @type {number}
  * @description The shadow map is regenerated every frame.
  */
-export var SHADOWUPDATE_REALTIME = 2;
+export const SHADOWUPDATE_REALTIME = 2;
 
-export var SORTKEY_FORWARD = 0;
-export var SORTKEY_DEPTH = 1;
+export const SORTKEY_FORWARD = 0;
+export const SORTKEY_DEPTH = 1;
 
-export var MASK_DYNAMIC = 1;
-export var MASK_BAKED = 2;
-export var MASK_LIGHTMAP = 4;
+export const MASK_DYNAMIC = 1;
+export const MASK_BAKED = 2;
+export const MASK_LIGHTMAP = 4;
 
 /**
  * @constant
@@ -584,7 +628,7 @@ export var MASK_LIGHTMAP = 4;
  * @type {number}
  * @description Render shaded materials with gamma correction and tonemapping.
  */
-export var SHADER_FORWARD = 0;
+export const SHADER_FORWARD = 0;
 
 /**
  * @constant
@@ -592,7 +636,7 @@ export var SHADER_FORWARD = 0;
  * @type {number}
  * @description Render shaded materials without gamma correction and tonemapping.
  */
-export var SHADER_FORWARDHDR = 1;
+export const SHADER_FORWARDHDR = 1;
 
 /**
  * @constant
@@ -600,10 +644,10 @@ export var SHADER_FORWARDHDR = 1;
  * @type {number}
  * @description Render RGBA-encoded depth value.
  */
-export var SHADER_DEPTH = 2;
+export const SHADER_DEPTH = 2;
 
 // next are undocumented
-export var SHADER_SHADOW = 3; // PCF3
+export const SHADER_SHADOW = 3; // PCF3
 // 4 = VSM8,
 // 5 = VSM16,
 // 6 = VSM32,
@@ -618,7 +662,7 @@ export var SHADER_SHADOW = 3; // PCF3
 // 15 = VSM16 SPOT,
 // 16 = VSM32 SPOT,
 // 17 = PCF5 SPOT
-export var SHADER_PICK = 18;
+export const SHADER_PICK = 18;
 
 /**
  * @constant
@@ -626,7 +670,7 @@ export var SHADER_PICK = 18;
  * @name pc.SPRITE_RENDERMODE_SIMPLE
  * @description This mode renders a sprite as a simple quad.
  */
-export var SPRITE_RENDERMODE_SIMPLE = 0;
+export const SPRITE_RENDERMODE_SIMPLE = 0;
 
 /**
  * @constant
@@ -636,7 +680,7 @@ export var SPRITE_RENDERMODE_SIMPLE = 0;
  * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
  * both horizontally and vertically.
  */
-export var SPRITE_RENDERMODE_SLICED = 1;
+export const SPRITE_RENDERMODE_SLICED = 1;
 
 /**
  * @constant
@@ -646,7 +690,7 @@ export var SPRITE_RENDERMODE_SLICED = 1;
  * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
  * both horizontally and vertically.
  */
-export var SPRITE_RENDERMODE_TILED = 2;
+export const SPRITE_RENDERMODE_TILED = 2;
 
 /**
  * @constant
@@ -654,14 +698,14 @@ export var SPRITE_RENDERMODE_TILED = 2;
  * @type {number}
  * @description Single color lightmap.
  */
-export var BAKE_COLOR = 0;
+export const BAKE_COLOR = 0;
 /**
  * @constant
  * @name pc.BAKE_COLORDIR
  * @type {number}
  * @description Single color lightmap + dominant light direction (used for bump/specular).
  */
-export var BAKE_COLORDIR = 1;
+export const BAKE_COLORDIR = 1;
 
 /**
  * @constant
@@ -669,21 +713,21 @@ export var BAKE_COLORDIR = 1;
  * @type {number}
  * @description Center of view.
  */
-export var VIEW_CENTER = 0;
+export const VIEW_CENTER = 0;
 /**
  * @constant
  * @name pc.VIEW_LEFT
  * @type {number}
  * @description Left of view. Only used in stereo rendering.
  */
-export var VIEW_LEFT = 1;
+export const VIEW_LEFT = 1;
 /**
  * @constant
  * @name pc.VIEW_RIGHT
  * @type {number}
  * @description Right of view. Only used in stereo rendering.
  */
-export var VIEW_RIGHT = 2;
+export const VIEW_RIGHT = 2;
 
 /**
  * @constant
@@ -691,7 +735,7 @@ export var VIEW_RIGHT = 2;
  * @type {number}
  * @description No sorting is applied. Mesh instances are rendered in the same order they were added to a layer.
  */
-export var SORTMODE_NONE = 0;
+export const SORTMODE_NONE = 0;
 
 /**
  * @constant
@@ -699,7 +743,7 @@ export var SORTMODE_NONE = 0;
  * @type {number}
  * @description Mesh instances are sorted based on {@link pc.MeshInstance#drawOrder}.
  */
-export var SORTMODE_MANUAL = 1;
+export const SORTMODE_MANUAL = 1;
 
 /**
  * @constant
@@ -707,7 +751,7 @@ export var SORTMODE_MANUAL = 1;
  * @type {number}
  * @description Mesh instances are sorted to minimize switching between materials and meshes to improve rendering performance.
  */
-export var SORTMODE_MATERIALMESH = 2;
+export const SORTMODE_MATERIALMESH = 2;
 
 /**
  * @constant
@@ -715,7 +759,7 @@ export var SORTMODE_MATERIALMESH = 2;
  * @type {number}
  * @description Mesh instances are sorted back to front. This is the way to properly render many semi-transparent objects on different depth, one is blended on top of another.
  */
-export var SORTMODE_BACK2FRONT = 3;
+export const SORTMODE_BACK2FRONT = 3;
 
 /**
  * @constant
@@ -723,7 +767,7 @@ export var SORTMODE_BACK2FRONT = 3;
  * @type {number}
  * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
  */
-export var SORTMODE_FRONT2BACK = 4;
+export const SORTMODE_FRONT2BACK = 4;
 
 /**
  * @private
@@ -732,12 +776,12 @@ export var SORTMODE_FRONT2BACK = 4;
  * @type {number}
  * @description Provide custom functions for sorting drawcalls and calculating distance.
  */
-export var SORTMODE_CUSTOM = 5;
+export const SORTMODE_CUSTOM = 5;
 
-export var COMPUPDATED_INSTANCES = 1;
-export var COMPUPDATED_LIGHTS = 2;
-export var COMPUPDATED_CAMERAS = 4;
-export var COMPUPDATED_BLEND = 8;
+export const COMPUPDATED_INSTANCES = 1;
+export const COMPUPDATED_LIGHTS = 2;
+export const COMPUPDATED_CAMERAS = 4;
+export const COMPUPDATED_BLEND = 8;
 
 /**
  * @constant
@@ -745,14 +789,14 @@ export var COMPUPDATED_BLEND = 8;
  * @type {number}
  * @description Automatically set aspect ratio to current render target's width divided by height.
  */
-export var ASPECT_AUTO = 0;
+export const ASPECT_AUTO = 0;
 /**
  * @constant
  * @name pc.ASPECT_MANUAL
  * @type {number}
  * @description Use the manual aspect ratio value.
  */
-export var ASPECT_MANUAL = 1;
+export const ASPECT_MANUAL = 1;
 
 /**
  * @constant
@@ -760,11 +804,11 @@ export var ASPECT_MANUAL = 1;
  * @type {number}
  * @description Horizontal orientation.
  */
-export var ORIENTATION_HORIZONTAL = 0;
+export const ORIENTATION_HORIZONTAL = 0;
 /**
  * @constant
  * @name pc.ORIENTATION_VERTICAL
  * @type {number}
  * @description Vertical orientation.
  */
-export var ORIENTATION_VERTICAL = 1;
+export const ORIENTATION_VERTICAL = 1;

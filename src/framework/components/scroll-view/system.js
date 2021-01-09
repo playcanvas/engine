@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'horizontal', type: 'boolean' },
     { name: 'vertical', type: 'boolean' },
@@ -20,7 +20,7 @@ var _schema = [
     { name: 'verticalScrollbarEntity', type: 'entity' }
 ];
 
-var DEFAULT_DRAG_THRESHOLD = 10;
+const DEFAULT_DRAG_THRESHOLD = 10;
 
 /**
  * @class
@@ -30,35 +30,31 @@ var DEFAULT_DRAG_THRESHOLD = 10;
  * @description Create a new ScrollViewComponentSystem.
  * @param {pc.Application} app - The application.
  */
-var ScrollViewComponentSystem = function ScrollViewComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ScrollViewComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'scrollview';
+        this.id = 'scrollview';
 
-    this.ComponentType = ScrollViewComponent;
-    this.DataType = ScrollViewComponentData;
+        this.ComponentType = ScrollViewComponent;
+        this.DataType = ScrollViewComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this._onRemoveComponent, this);
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-};
-ScrollViewComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ScrollViewComponentSystem.prototype.constructor = ScrollViewComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(ScrollViewComponent.prototype, _schema);
-
-Object.assign(ScrollViewComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         if (data.dragThreshold === undefined) {
             data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
-    },
+        super.initializeComponentData(component, data, _schema);
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -69,11 +65,13 @@ Object.assign(ScrollViewComponentSystem.prototype, {
             }
 
         }
-    },
+    }
 
-    _onRemoveComponent: function (entity, component) {
+    _onRemoveComponent(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(ScrollViewComponent.prototype, _schema);
 
 export { ScrollViewComponentSystem };

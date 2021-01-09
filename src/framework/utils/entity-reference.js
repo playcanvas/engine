@@ -113,33 +113,30 @@ import { EventHandler } from '../../core/event-handler.js';
  * @param {object<string, Function>} [eventConfig] - A map of event listener configurations.
  * @property {pc.Entity} entity A reference to the entity, if present.
  */
-function EntityReference(parentComponent, entityPropertyName, eventConfig) {
-    EventHandler.call(this);
+class EntityReference extends EventHandler {
+    constructor(parentComponent, entityPropertyName, eventConfig) {
+        super();
 
-    if (!parentComponent || !(parentComponent instanceof Component)) {
-        throw new Error('The parentComponent argument is required and must be a Component');
-    } else if (!entityPropertyName || typeof entityPropertyName !== 'string') {
-        throw new Error('The propertyName argument is required and must be a string');
-    } else if (eventConfig && typeof eventConfig !== 'object') {
-        throw new Error('If provided, the eventConfig argument must be an object');
+        if (!parentComponent || !(parentComponent instanceof Component)) {
+            throw new Error('The parentComponent argument is required and must be a Component');
+        } else if (!entityPropertyName || typeof entityPropertyName !== 'string') {
+            throw new Error('The propertyName argument is required and must be a string');
+        } else if (eventConfig && typeof eventConfig !== 'object') {
+            throw new Error('If provided, the eventConfig argument must be an object');
+        }
+
+        this._parentComponent = parentComponent;
+        this._entityPropertyName = entityPropertyName;
+        this._entity = null;
+        this._app = parentComponent.system.app;
+
+        this._configureEventListeners(eventConfig || {}, {
+            'entity#destroy': this._onEntityDestroy
+        });
+        this._toggleLifecycleListeners('on');
     }
 
-    this._parentComponent = parentComponent;
-    this._entityPropertyName = entityPropertyName;
-    this._entity = null;
-    this._app = parentComponent.system.app;
-
-    this._configureEventListeners(eventConfig || {}, {
-        'entity#destroy': this._onEntityDestroy
-    });
-    this._toggleLifecycleListeners('on');
-}
-
-EntityReference.prototype = Object.create(EventHandler.prototype);
-EntityReference.prototype.constructor = EntityReference;
-
-Object.assign(EntityReference.prototype, {
-    _configureEventListeners: function (externalEventConfig, internalEventConfig) {
+    _configureEventListeners(externalEventConfig, internalEventConfig) {
         var externalEventListenerConfigs = this._parseEventListenerConfig(externalEventConfig, 'external', this._parentComponent);
         var internalEventListenerConfigs = this._parseEventListenerConfig(internalEventConfig, 'internal', this);
 
@@ -147,9 +144,9 @@ Object.assign(EntityReference.prototype, {
         this._listenerStatusFlags = {};
         this._gainListeners = {};
         this._loseListeners = {};
-    },
+    }
 
-    _parseEventListenerConfig: function (eventConfig, prefix, scope) {
+    _parseEventListenerConfig(eventConfig, prefix, scope) {
         return Object.keys(eventConfig).map(function (listenerDescription, index) {
             var listenerDescriptionParts = listenerDescription.split('#');
             var sourceName = listenerDescriptionParts[0];
@@ -174,9 +171,9 @@ Object.assign(EntityReference.prototype, {
                 scope: scope
             };
         }, this);
-    },
+    }
 
-    _toggleLifecycleListeners: function (onOrOff) {
+    _toggleLifecycleListeners(onOrOff) {
         this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntity, this);
         this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
@@ -210,9 +207,9 @@ Object.assign(EntityReference.prototype, {
             allComponentSystems[j][onOrOff]('add', this._onComponentAdd, this);
             allComponentSystems[j][onOrOff]('beforeremove', this._onComponentRemove, this);
         }
-    },
+    }
 
-    _onSetEntity: function (name, oldValue, newValue) {
+    _onSetEntity(name, oldValue, newValue) {
         if (newValue instanceof Entity) {
             this._updateEntityReference();
         } else  {
@@ -225,11 +222,11 @@ Object.assign(EntityReference.prototype, {
                 this._updateEntityReference();
             }
         }
-    },
+    }
 
-    _onPostInitialize: function () {
+    _onPostInitialize() {
         this._updateEntityReference();
-    },
+    }
 
     /**
      * @private
@@ -239,7 +236,7 @@ Object.assign(EntityReference.prototype, {
      * order for entity references to be correctly resolved when {@link pc.Entity#clone}
      * is called.
      */
-    onParentComponentEnable: function () {
+    onParentComponentEnable() {
         // When an entity is cloned via the JS API, we won't be able to resolve the
         // entity reference until the cloned entity has been added to the scene graph.
         // We can detect this by waiting for the parent component to be enabled, in the
@@ -247,16 +244,16 @@ Object.assign(EntityReference.prototype, {
         if (!this._entity) {
             this._updateEntityReference();
         }
-    },
+    }
 
     // When running within the editor, postInitialize is fired before the scene graph
     // has been fully constructed. As such we use the special tools:sceneloaded event
     // in order to know when the graph is ready to traverse.
-    _onSceneLoaded: function () {
+    _onSceneLoaded() {
         this._updateEntityReference();
-    },
+    }
 
-    _updateEntityReference: function () {
+    _updateEntityReference() {
         var nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
         var nextEntity;
 
@@ -287,58 +284,58 @@ Object.assign(EntityReference.prototype, {
 
             this.fire('set:entity', this._entity);
         }
-    },
+    }
 
-    _onBeforeEntityChange: function () {
+    _onBeforeEntityChange() {
         this._toggleEntityListeners('off');
         this._callAllGainOrLoseListeners(this._loseListeners);
-    },
+    }
 
-    _onAfterEntityChange: function () {
+    _onAfterEntityChange() {
         this._toggleEntityListeners('on');
         this._callAllGainOrLoseListeners(this._gainListeners);
-    },
+    }
 
-    _onComponentAdd: function (entity, component) {
+    _onComponentAdd(entity, component) {
         var componentName = component.system.id;
 
         if (entity === this._entity) {
             this._callGainOrLoseListener(componentName, this._gainListeners);
             this._toggleComponentListeners('on', componentName);
         }
-    },
+    }
 
-    _onComponentRemove: function (entity, component) {
+    _onComponentRemove(entity, component) {
         var componentName = component.system.id;
 
         if (entity === this._entity) {
             this._callGainOrLoseListener(componentName, this._loseListeners);
             this._toggleComponentListeners('off', componentName, true);
         }
-    },
+    }
 
-    _callAllGainOrLoseListeners: function (listenerMap) {
+    _callAllGainOrLoseListeners(listenerMap) {
         for (var componentName in this._entity.c) {
             this._callGainOrLoseListener(componentName, listenerMap);
         }
-    },
+    }
 
-    _callGainOrLoseListener: function (componentName, listenerMap) {
+    _callGainOrLoseListener(componentName, listenerMap) {
         if (this._entity.c.hasOwnProperty(componentName) && listenerMap[componentName]) {
             var config = listenerMap[componentName];
             config.callback.call(config.scope);
         }
-    },
+    }
 
-    _toggleEntityListeners: function (onOrOff, isDestroying) {
+    _toggleEntityListeners(onOrOff, isDestroying) {
         if (this._entity) {
             for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
                 this._safeToggleListener(onOrOff, this._eventListenerConfigs[i], isDestroying);
             }
         }
-    },
+    }
 
-    _toggleComponentListeners: function (onOrOff, componentName, isDestroying) {
+    _toggleComponentListeners(onOrOff, componentName, isDestroying) {
         for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
             var config = this._eventListenerConfigs[i];
 
@@ -346,9 +343,9 @@ Object.assign(EntityReference.prototype, {
                 this._safeToggleListener(onOrOff, config, isDestroying);
             }
         }
-    },
+    }
 
-    _safeToggleListener: function (onOrOff, config, isDestroying) {
+    _safeToggleListener(onOrOff, config, isDestroying) {
         var isAdding = (onOrOff === 'on');
 
         // Prevent duplicate listeners
@@ -362,9 +359,9 @@ Object.assign(EntityReference.prototype, {
             source[onOrOff](config.eventName, config.callback, config.scope);
             this._listenerStatusFlags[config.id] = isAdding;
         }
-    },
+    }
 
-    _getEventSource: function (sourceName, isDestroying) {
+    _getEventSource(sourceName, isDestroying) {
         // The 'entity' source name is a special case - we just want to return
         // a reference to the entity itself. For all other cases the source name
         // should refer to a component.
@@ -383,21 +380,21 @@ Object.assign(EntityReference.prototype, {
         }
 
         return null;
-    },
+    }
 
-    _onEntityDestroy: function (entity) {
+    _onEntityDestroy(entity) {
         if (this._entity === entity) {
             this._toggleEntityListeners('off', true);
             this._entity = null;
         }
-    },
+    }
 
-    _onParentComponentRemove: function (entity, component) {
+    _onParentComponentRemove(entity, component) {
         if (component === this._parentComponent) {
             this._toggleLifecycleListeners('off');
             this._toggleEntityListeners('off', true);
         }
-    },
+    }
 
     /**
      * @private
@@ -408,15 +405,13 @@ Object.assign(EntityReference.prototype, {
      * @param {string} componentName - Name of the component.
      * @returns {boolean} True if the entity exists and has a component of the provided type.
      */
-    hasComponent: function (componentName) {
+    hasComponent(componentName) {
         return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;
     }
-});
 
-Object.defineProperty(EntityReference.prototype, 'entity', {
-    get: function () {
+    get entity() {
         return this._entity;
     }
-});
+}
 
 export { EntityReference };

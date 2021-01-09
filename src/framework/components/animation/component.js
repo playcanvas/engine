@@ -1,5 +1,9 @@
-import { AnimClip, AnimEvaluator, AnimTrack, DefaultAnimBinder } from '../../../anim/anim.js';
-import { Skeleton } from '../../../anim/skeleton.js';
+import { AnimClip } from '../../../anim/anim-clip.js';
+import { AnimEvaluator } from '../../../anim/anim-evaluator.js';
+import { AnimTrack } from '../../../anim/anim-track.js';
+import { DefaultAnimBinder } from '../../../anim/default-anim-binder.js';
+
+import { Skeleton } from '../../../animation/skeleton.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -23,22 +27,20 @@ import { Component } from '../component.js';
  * @property {pc.Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
  */
-function AnimationComponent(system, entity) {
-    Component.call(this, system, entity);
+class AnimationComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this.animationsIndex = { };
+        this.animationsIndex = { };
 
-    // Handle changes to the 'animations' value
-    this.on('set_animations', this.onSetAnimations, this);
-    // Handle changes to the 'assets' value
-    this.on('set_assets', this.onSetAssets, this);
-    // Handle changes to the 'loop' value
-    this.on('set_loop', this.onSetLoop, this);
-}
-AnimationComponent.prototype = Object.create(Component.prototype);
-AnimationComponent.prototype.constructor = AnimationComponent;
+        // Handle changes to the 'animations' value
+        this.on('set_animations', this.onSetAnimations, this);
+        // Handle changes to the 'assets' value
+        this.on('set_assets', this.onSetAssets, this);
+        // Handle changes to the 'loop' value
+        this.on('set_loop', this.onSetLoop, this);
+    }
 
-Object.assign(AnimationComponent.prototype, {
     /**
      * @function
      * @name pc.AnimationComponent#play
@@ -47,8 +49,7 @@ Object.assign(AnimationComponent.prototype, {
      * @param {number} [blendTime] - The time in seconds to blend from the current
      * animation state to the start of the animation being set.
      */
-    play: function (name, blendTime) {
-
+    play(name, blendTime) {
         if (!this.enabled || !this.entity.enabled) {
             return;
         }
@@ -115,7 +116,7 @@ Object.assign(AnimationComponent.prototype, {
         }
 
         data.playing = true;
-    },
+    }
 
     /**
      * @function
@@ -124,11 +125,11 @@ Object.assign(AnimationComponent.prototype, {
      * @param {string} name - The name of the animation asset.
      * @returns {pc.Animation} An Animation.
      */
-    getAnimation: function (name) {
+    getAnimation(name) {
         return this.data.animations[name];
-    },
+    }
 
-    setModel: function (model) {
+    setModel(model) {
         var data = this.data;
 
         if (model !== data.model) {
@@ -143,17 +144,17 @@ Object.assign(AnimationComponent.prototype, {
                 this.play(data.currAnim);
             }
         }
-    },
+    }
 
-    _resetAnimationController: function () {
+    _resetAnimationController() {
         var data = this.data;
         data.skeleton = null;
         data.fromSkel = null;
         data.toSkel = null;
         data.animEvaluator = null;
-    },
+    }
 
-    _createAnimationController: function () {
+    _createAnimationController() {
         var data = this.data;
         var model = data.model;
         var animations = data.animations;
@@ -182,9 +183,9 @@ Object.assign(AnimationComponent.prototype, {
         } else if (hasGlb) {
             data.animEvaluator = new AnimEvaluator(new DefaultAnimBinder(graph));
         }
-    },
+    }
 
-    loadAnimationAssets: function (ids) {
+    loadAnimationAssets(ids) {
         if (!ids || !ids.length)
             return;
 
@@ -231,9 +232,9 @@ Object.assign(AnimationComponent.prototype, {
                 assets.on('add:' + ids[i], onAssetAdd);
             }
         }
-    },
+    }
 
-    onAssetChanged: function (asset, attribute, newValue, oldValue) {
+    onAssetChanged(asset, attribute, newValue, oldValue) {
         var i;
         if (attribute === 'resource' || attribute === 'resources') {
             // If the attribute is 'resources', newValue can be an empty array when the
@@ -308,9 +309,9 @@ Object.assign(AnimationComponent.prototype, {
                 delete this.animationsIndex[asset.id];
             }
         }
-    },
+    }
 
-    onAssetRemoved: function (asset) {
+    onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
 
         if (this.animations) {
@@ -327,9 +328,9 @@ Object.assign(AnimationComponent.prototype, {
             }
             delete this.animationsIndex[asset.id];
         }
-    },
+    }
 
-    _stopCurrentAnimation: function () {
+    _stopCurrentAnimation() {
         var data = this.data;
         data.currAnim = null;
         data.playing = false;
@@ -344,9 +345,9 @@ Object.assign(AnimationComponent.prototype, {
             data.animEvaluator.update(0);
             data.animEvaluator.removeClips();
         }
-    },
+    }
 
-    onSetAnimations: function (name, oldValue, newValue) {
+    onSetAnimations(name, oldValue, newValue) {
         var data = this.data;
 
         // If we have animations _and_ a model, we can create the skeletons
@@ -365,9 +366,9 @@ Object.assign(AnimationComponent.prototype, {
                 break;
             }
         }
-    },
+    }
 
-    onSetAssets: function (name, oldValue, newValue) {
+    onSetAssets(name, oldValue, newValue) {
         if (oldValue && oldValue.length) {
             for (var i = 0; i < oldValue.length; i++) {
                 // unsubscribe from change event for old assets
@@ -394,9 +395,9 @@ Object.assign(AnimationComponent.prototype, {
         });
 
         this.loadAnimationAssets(ids);
-    },
+    }
 
-    onSetLoop: function (name, oldValue, newValue) {
+    onSetLoop(name, oldValue, newValue) {
         var data = this.data;
 
         if (data.skeleton) {
@@ -408,9 +409,9 @@ Object.assign(AnimationComponent.prototype, {
                 data.animEvaluator.clips[i].loop = data.loop;
             }
         }
-    },
+    }
 
-    onSetCurrentTime: function (name, oldValue, newValue) {
+    onSetCurrentTime(name, oldValue, newValue) {
         var data = this.data;
 
         if (data.skeleton) {
@@ -426,10 +427,10 @@ Object.assign(AnimationComponent.prototype, {
                 animEvaluator.clips[i].time = newValue;
             }
         }
-    },
+    }
 
-    onEnable: function () {
-        Component.prototype.onEnable.call(this);
+    onEnable() {
+        super.onEnable();
 
         var data = this.data;
 
@@ -453,9 +454,9 @@ Object.assign(AnimationComponent.prototype, {
                 break;
             }
         }
-    },
+    }
 
-    onBeforeRemove: function () {
+    onBeforeRemove() {
         for (var i = 0; i < this.assets.length; i++) {
             var asset = this.system.app.assets.get(this.assets[i]);
             if (!asset) continue;
@@ -473,51 +474,46 @@ Object.assign(AnimationComponent.prototype, {
 
         delete data.animEvaluator;
     }
-});
 
-Object.defineProperties(AnimationComponent.prototype, {
-    currentTime: {
-        get: function () {
-            var data = this.data;
+    get currentTime() {
+        var data = this.data;
 
-            if (data.skeleton) {
-                return this.data.skeleton._time;
-            }
+        if (data.skeleton) {
+            return this.data.skeleton._time;
+        }
 
-            if (data.animEvaluator) {
-                // Get the last clip's current time which will be the one
-                // that is currently being blended
-                var clips = data.animEvaluator.clips;
-                if (clips.length > 0) {
-                    return clips[clips.length - 1].time;
-                }
-            }
-
-            return 0;
-        },
-        set: function (currentTime) {
-            var data = this.data;
-            if (data.skeleton) {
-                var skeleton = data.skeleton;
-                skeleton.currentTime = currentTime;
-                skeleton.addTime(0);
-                skeleton.updateGraph();
-            }
-
-            if (data.animEvaluator) {
-                var animEvaluator = data.animEvaluator;
-                for (var i = 0; i < animEvaluator.clips.length; ++i) {
-                    animEvaluator.clips[i].time = currentTime;
-                }
+        if (data.animEvaluator) {
+            // Get the last clip's current time which will be the one
+            // that is currently being blended
+            var clips = data.animEvaluator.clips;
+            if (clips.length > 0) {
+                return clips[clips.length - 1].time;
             }
         }
-    },
 
-    duration: {
-        get: function () {
-            return this.data.animations[this.data.currAnim].duration;
+        return 0;
+    }
+
+    set(currentTime) {
+        var data = this.data;
+        if (data.skeleton) {
+            var skeleton = data.skeleton;
+            skeleton.currentTime = currentTime;
+            skeleton.addTime(0);
+            skeleton.updateGraph();
+        }
+
+        if (data.animEvaluator) {
+            var animEvaluator = data.animEvaluator;
+            for (var i = 0; i < animEvaluator.clips.length; ++i) {
+                animEvaluator.clips[i].time = currentTime;
+            }
         }
     }
-});
+
+    get duration() {
+        return this.data.animations[this.data.currAnim].duration;
+    }
+}
 
 export { AnimationComponent };

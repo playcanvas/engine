@@ -1,5 +1,3 @@
-import { Vec4 } from '../math/vec4.js';
-
 import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
@@ -10,7 +8,7 @@ import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 
 // get a coding string for texture based on its type and pixel format.
-var getCoding = function (texture) {
+function getCoding(texture) {
     switch (texture.type) {
         case TEXTURETYPE_RGBM:
             return "RGBM";
@@ -27,7 +25,7 @@ var getCoding = function (texture) {
                     return "Gamma";
             }
     }
-};
+}
 
 /**
  * @static
@@ -45,7 +43,7 @@ var getCoding = function (texture) {
  * the function performs a standard resample.
  * @param {number} [numSamples] - optional number of samples (default is 1024).
  */
-var reprojectTexture = function (device, source, target, specularPower, numSamples) {
+function reprojectTexture(device, source, target, specularPower, numSamples = 1024) {
     var processFunc = (specularPower !== undefined) ? 'prefilter' : 'reproject';
     var decodeFunc = "decode" + getCoding(source);
     var encodeFunc = "encode" + getCoding(target);
@@ -60,7 +58,7 @@ var reprojectTexture = function (device, source, target, specularPower, numSampl
         "#define ENCODE_FUNC " + encodeFunc + "\n" +
         "#define SOURCE_FUNC " + sourceFunc + "\n" +
         "#define TARGET_FUNC " + targetFunc + "\n" +
-        "#define NUM_SAMPLES " + (numSamples || 1024) + "\n\n" +
+        "#define NUM_SAMPLES " + numSamples + "\n\n" +
         shaderChunks.reprojectPS,
         processFunc + decodeFunc + encodeFunc + sourceFunc + targetFunc,
         null,
@@ -71,21 +69,21 @@ var reprojectTexture = function (device, source, target, specularPower, numSampl
     constantSource.setValue(source);
 
     var constantParams = device.scope.resolve("params");
-    var params = new Vec4();
-    params.y = (specularPower !== undefined) ? specularPower : 1;
-    params.z = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
-    params.w = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
+    var params = new Float32Array(4);
+    params[1] = (specularPower !== undefined) ? specularPower : 1;
+    params[2] = 1.0 - (source.fixCubemapSeams ? 1.0 / source.width : 0.0);       // source seam scale
+    params[3] = 1.0 - (target.fixCubemapSeams ? 1.0 / target.width : 0.0);       // target seam scale
 
     for (var face = 0; face < (target.cubemap ? 6 : 1); face++) {
         var targ = new RenderTarget(device, target, {
             face: face,
             depth: false
         });
-        params.x = face;
-        constantParams.setValue(params.data);
+        params[0] = face;
+        constantParams.setValue(params);
 
         drawQuadWithShader(device, targ, shader);
     }
-};
+}
 
 export { reprojectTexture };
