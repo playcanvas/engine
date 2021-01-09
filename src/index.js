@@ -192,9 +192,12 @@ export * from './input/constants.js';
 export { Controller } from './input/controller.js';
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './input/element-input.js';
 export { GamePads } from './input/game-pads.js';
-export { Keyboard, KeyboardEvent } from './input/keyboard.js';
-export { Mouse, MouseEvent } from './input/mouse.js';
-export { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
+export { Keyboard } from './input/keyboard.js';
+export { KeyboardEvent } from './input/keyboard-event.js';
+export { Mouse } from './input/mouse.js';
+export { MouseEvent } from './input/mouse-event.js';
+export { TouchDevice } from './input/touch-device.js';
+export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';

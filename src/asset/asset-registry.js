@@ -1,6 +1,6 @@
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
-import { TagsCache } from '../core/tags.js';
+import { TagsCache } from '../core/tags-cache.js';
 
 import { standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
 
