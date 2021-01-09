@@ -114,7 +114,6 @@ class VertexFormat {
         this.hasUv1 = false;
         this.hasColor = false;
         this.hasTangents = false;
-        this._defaultInstancingFormat = null;
         this.verticesByteSize = 0;
         this.vertexCount = vertexCount;
         this.interleaved = vertexCount === undefined;
@@ -176,6 +175,8 @@ class VertexFormat {
         this.update();
     }
 
+    static _defaultInstancingFormat = null;
+
     static init(graphicsDevice) {
         var formatDesc = [
             { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
@@ -184,7 +185,7 @@ class VertexFormat {
             { semantic: SEMANTIC_TEXCOORD5, components: 4, type: TYPE_FLOAT32 }
         ];
 
-        this._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
+        VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
     }
 
     /**
@@ -196,7 +197,7 @@ class VertexFormat {
      * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
      */
     static get defaultInstancingFormat() {
-        return this._defaultInstancingFormat;
+        return VertexFormat._defaultInstancingFormat;
     }
 
     /**
