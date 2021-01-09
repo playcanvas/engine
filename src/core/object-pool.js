@@ -1,4 +1,4 @@
-class AllocatePool {
+class ObjectPool {
     constructor(constructorFunc, size) {
         this._constructor = constructorFunc;
         this._pool = [];
@@ -27,4 +27,4 @@ class AllocatePool {
     }
 }
 
-export { AllocatePool };
+export { ObjectPool };

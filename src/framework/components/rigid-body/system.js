@@ -1,5 +1,5 @@
 import { now } from '../../../core/time.js';
-import { AllocatePool } from '../../../core/object-pool.js';
+import { ObjectPool } from '../../../core/object-pool.js';
 
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -212,9 +212,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
 
-            this.contactPointPool = new AllocatePool(ContactPoint, 1);
-            this.contactResultPool = new AllocatePool(ContactResult, 1);
-            this.singleContactResultPool = new AllocatePool(SingleContactResult, 1);
+            this.contactPointPool = new ObjectPool(ContactPoint, 1);
+            this.contactResultPool = new ObjectPool(ContactResult, 1);
+            this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
             ComponentSystem.bind('update', this.onUpdate, this);
         } else {
