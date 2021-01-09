@@ -89,7 +89,7 @@ import { KeyboardEvent } from './input/keyboard-event.js';
 import { Mouse } from './input/mouse.js';
 import { MouseEvent } from './input/mouse-event.js';
 import { TouchDevice } from './input/touch-device.js';
-import { getTouchTargetCoords, Touch,TouchEvent } from './input/touch-event.js';
+import { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js';
 
 import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from './framework/constants.js';
 import { Application } from './framework/application.js';

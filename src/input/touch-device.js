@@ -1,6 +1,6 @@
 import { EventHandler } from '../core/event-handler.js';
 
-import { TouchEvent } from './touch-event.js'
+import { TouchEvent } from './touch-event.js';
 
 /**
  * @class
