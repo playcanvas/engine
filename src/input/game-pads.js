@@ -1,18 +1,4 @@
-/**
- * @class
- * @name pc.GamePads
- * @classdesc Input handler for accessing GamePad input.
- */
-function GamePads() {
-    this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
-
-    this.current = [];
-    this.previous = [];
-
-    this.deadZone = 0.25;
-}
-
-var MAPS = {
+const MAPS = {
     DEFAULT: {
         buttons: [
             // Face buttons
@@ -91,18 +77,32 @@ var MAPS = {
     }
 };
 
-var PRODUCT_CODES = {
+const PRODUCT_CODES = {
     'Product: 0268': 'PS3'
 };
 
-Object.assign(GamePads.prototype, {
+/**
+ * @class
+ * @name pc.GamePads
+ * @classdesc Input handler for accessing GamePad input.
+ */
+class GamePads {
+    constructor() {
+        this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
+
+        this.current = [];
+        this.previous = [];
+
+        this.deadZone = 0.25;
+    }
+
     /**
      * @function
      * @name pc.GamePads#update
      * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
      * to work.
      */
-    update: function () {
+    update() {
         var i, j, l;
         var buttons, buttonsLen;
 
@@ -120,7 +120,7 @@ Object.assign(GamePads.prototype, {
 
         // update current
         this.poll(this.current);
-    },
+    }
 
     /**
      * @function
@@ -133,10 +133,7 @@ Object.assign(GamePads.prototype, {
      * var gamepads = new pc.GamePads();
      * var pads = gamepads.poll();
      */
-    poll: function (pads) {
-        if (pads === undefined) {
-            pads = [];
-        }
+    poll(pads = []) {
         if (pads.length > 0) {
             pads.length = 0;
         }
@@ -154,9 +151,9 @@ Object.assign(GamePads.prototype, {
             }
         }
         return pads;
-    },
+    }
 
-    getMap: function (pad) {
+    getMap(pad) {
         for (var code in PRODUCT_CODES) {
             if (pad.id.indexOf(code) >= 0) {
                 return MAPS[PRODUCT_CODES[code]];
@@ -164,7 +161,7 @@ Object.assign(GamePads.prototype, {
         }
 
         return MAPS.DEFAULT;
-    },
+    }
 
     /**
      * @function
@@ -174,14 +171,14 @@ Object.assign(GamePads.prototype, {
      * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
      * @returns {boolean} True if the button is pressed.
      */
-    isPressed: function (index, button) {
+    isPressed(index, button) {
         if (!this.current[index]) {
             return false;
         }
 
         var key = this.current[index].map.buttons[button];
         return this.current[index].pad.buttons[pc[key]].pressed;
-    },
+    }
 
     /**
      * @function
@@ -191,7 +188,7 @@ Object.assign(GamePads.prototype, {
      * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
      * @returns {boolean} True if the button was pressed since the last frame.
      */
-    wasPressed: function (index, button) {
+    wasPressed(index, button) {
         if (!this.current[index]) {
             return false;
         }
@@ -199,7 +196,7 @@ Object.assign(GamePads.prototype, {
         var key = this.current[index].map.buttons[button];
         var i = pc[key];
         return this.current[index].pad.buttons[i].pressed && !this.previous[index][i];
-    },
+    }
 
     /**
      * @function
@@ -209,7 +206,7 @@ Object.assign(GamePads.prototype, {
      * @param {number} axes - The axes to get the value of, use constants pc.PAD_L_STICK_X, etc.
      * @returns {number} The value of the axis between -1 and 1.
      */
-    getAxis: function (index, axes) {
+    getAxis(index, axes) {
         if (!this.current[index]) {
             return 0;
         }
@@ -222,6 +219,6 @@ Object.assign(GamePads.prototype, {
         }
         return value;
     }
-});
+}
 
 export { GamePads };

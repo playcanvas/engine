@@ -1,11 +1,18 @@
-var properties = [];
+const properties = [];
 
-function AssetVariants(asset) {
-    this.asset = asset;
+class AssetVariants {
+    constructor(asset) {
+        this.asset = asset;
+    }
+
+    clear() {
+        for (let i = 0; i < properties.length; i++)
+            this[properties[i]] = null;
+    }
 }
 
-var defineVariantProperty = function (name) {
-    var field = '_' + name;
+function defineVariantProperty(name) {
+    const field = '_' + name;
     properties.push(field);
 
     Object.defineProperty(AssetVariants.prototype, name, {
@@ -13,8 +20,8 @@ var defineVariantProperty = function (name) {
             return this[field] || null;
         },
         set: function (value) {
-            var fieldAsBool = !!this[field];
-            var valueAsBool = !!value;
+            const fieldAsBool = !!this[field];
+            const valueAsBool = !!value;
             if (fieldAsBool !== valueAsBool || (this[field] && value && this[field].hash !== value.hash)) {
                 if (value) {
                     this[field] = {
@@ -35,8 +42,7 @@ var defineVariantProperty = function (name) {
             }
         }
     });
-};
-
+}
 
 // texture
 defineVariantProperty('dxt');
@@ -44,10 +50,5 @@ defineVariantProperty('pvr');
 defineVariantProperty('etc1');
 defineVariantProperty('etc2');
 defineVariantProperty('basis');
-
-AssetVariants.prototype.clear = function () {
-    for (var i = 0; i < properties.length; i++)
-        this[properties[i]] = null;
-};
 
 export { AssetVariants };

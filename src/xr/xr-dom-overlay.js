@@ -22,51 +22,45 @@
  *     evt.preventDefault();
  * });
  */
-function XrDomOverlay(manager) {
-    this._manager = manager;
-    this._supported = !! window.XRDOMOverlayState;
-    this._root = null;
-}
+class XrDomOverlay {
+    constructor(manager) {
+        this._manager = manager;
+        this._supported = !! window.XRDOMOverlayState;
+        this._root = null;
+    }
 
-Object.defineProperty(XrDomOverlay.prototype, 'supported', {
-    get: function () {
+    get supported() {
         return this._supported;
     }
-});
 
-Object.defineProperty(XrDomOverlay.prototype, 'available', {
-    get: function () {
+    get available() {
         return this._supported && this._manager.active && this._manager._session.domOverlayState !== null;
     }
-});
 
-Object.defineProperty(XrDomOverlay.prototype, 'state', {
-    get: function () {
+    get state() {
         if (! this._supported || ! this._manager.active || ! this._manager._session.domOverlayState)
             return null;
 
         return this._manager._session.domOverlayState.type;
     }
-});
 
-/**
- * @name pc.XrDomOverlay#root
- * @type {object|null}
- * @description The DOM element to be used as the root for DOM Overlay. Can be changed only outside of an active WebXR session.
- * @example
- * app.xr.domOverlay.root = element;
- * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
- */
-Object.defineProperty(XrDomOverlay.prototype, 'root', {
-    set: function (value) {
+    /**
+     * @name pc.XrDomOverlay#root
+     * @type {object|null}
+     * @description The DOM element to be used as the root for DOM Overlay. Can be changed only outside of an active WebXR session.
+     * @example
+     * app.xr.domOverlay.root = element;
+     * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
+     */
+    set root(value) {
         if (! this._supported || this._manager.active)
             return;
 
         this._root = value;
-    },
-    get: function () {
+    }
+    get root() {
         return this._root;
     }
-});
+}
 
 export { XrDomOverlay };
