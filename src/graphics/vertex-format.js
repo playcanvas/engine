@@ -105,117 +105,111 @@ import {
  *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
  * ]);
  */
-function VertexFormat(graphicsDevice, description, vertexCount) {
-    var i, len, element;
+class VertexFormat {
+    constructor(graphicsDevice, description, vertexCount) {
+        var i, len, element;
 
-    this.elements = [];
-    this.hasUv0 = false;
-    this.hasUv1 = false;
-    this.hasColor = false;
-    this.hasTangents = false;
-    this._defaultInstancingFormat = null;
-    this.verticesByteSize = 0;
-    this.vertexCount = vertexCount;
-    this.interleaved = !vertexCount;
+        this.elements = [];
+        this.hasUv0 = false;
+        this.hasUv1 = false;
+        this.hasColor = false;
+        this.hasTangents = false;
+        this._defaultInstancingFormat = null;
+        this.verticesByteSize = 0;
+        this.vertexCount = vertexCount;
+        this.interleaved = vertexCount === undefined;
 
-    // calculate total size of the vertex
-    this.size = description.reduce(function (total, desc) {
-        return total + Math.ceil(desc.components * typedArrayTypesByteSize[desc.type] / 4) * 4;
-    }, 0);
+        // calculate total size of the vertex
+        this.size = description.reduce((total, desc) => {
+            return total + Math.ceil(desc.components * typedArrayTypesByteSize[desc.type] / 4) * 4;
+        }, 0);
 
-    var offset = 0, elementSize;
-    for (i = 0, len = description.length; i < len; i++) {
-        var elementDesc = description[i];
+        var offset = 0, elementSize;
+        for (i = 0, len = description.length; i < len; i++) {
+            var elementDesc = description[i];
 
-        // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
-        elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
+            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
+            elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
+            if (vertexCount) {
+                offset = math.roundUp(offset, elementSize);
+
+                // #ifdef DEBUG
+                // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
+                // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
+                if ( (elementSize % 4) !== 0)
+                    console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
+                // #endif
+            }
+
+            element = {
+                name: elementDesc.semantic,
+                offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
+                stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
+                dataType: elementDesc.type,
+                numComponents: elementDesc.components,
+                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
+                size: elementSize
+            };
+            this.elements.push(element);
+
+            if (vertexCount) {
+                offset += elementSize * vertexCount;
+            } else {
+                offset += Math.ceil(elementSize / 4) * 4;
+            }
+
+            if (elementDesc.semantic === SEMANTIC_TEXCOORD0) {
+                this.hasUv0 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD1) {
+                this.hasUv1 = true;
+            } else if (elementDesc.semantic === SEMANTIC_COLOR) {
+                this.hasColor = true;
+            } else if (elementDesc.semantic === SEMANTIC_TANGENT) {
+                this.hasTangents = true;
+            }
+        }
+
         if (vertexCount) {
-            offset = math.roundUp(offset, elementSize);
-
-            // #ifdef DEBUG
-            // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
-            // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
-            if ( (elementSize % 4) !== 0)
-                console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
-            // #endif
+            this.verticesByteSize = offset;
         }
 
-        element = {
-            name: elementDesc.semantic,
-            offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
-            stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
-            dataType: elementDesc.type,
-            numComponents: elementDesc.components,
-            normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
-            size: elementSize
-        };
-        this.elements.push(element);
-
-        if (vertexCount) {
-            offset += elementSize * vertexCount;
-        } else {
-            offset += Math.ceil(elementSize / 4) * 4;
-        }
-
-        if (elementDesc.semantic === SEMANTIC_TEXCOORD0) {
-            this.hasUv0 = true;
-        } else if (elementDesc.semantic === SEMANTIC_TEXCOORD1) {
-            this.hasUv1 = true;
-        } else if (elementDesc.semantic === SEMANTIC_COLOR) {
-            this.hasColor = true;
-        } else if (elementDesc.semantic === SEMANTIC_TANGENT) {
-            this.hasTangents = true;
-        }
+        this.update();
     }
 
-    if (vertexCount) {
-        this.verticesByteSize = offset;
+    static init(graphicsDevice) {
+        var formatDesc = [
+            { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD3, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD4, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD5, components: 4, type: TYPE_FLOAT32 }
+        ];
+
+        this._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
     }
 
-    this.update();
-}
-
-VertexFormat.init = function (graphicsDevice) {
-    var formatDesc = [
-        { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
-        { semantic: SEMANTIC_TEXCOORD3, components: 4, type: TYPE_FLOAT32 },
-        { semantic: SEMANTIC_TEXCOORD4, components: 4, type: TYPE_FLOAT32 },
-        { semantic: SEMANTIC_TEXCOORD5, components: 4, type: TYPE_FLOAT32 }
-    ];
-
-    this._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
-};
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.VertexFormat.defaultInstancingFormat
- * @type {pc.VertexFormat}
- * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
- */
-Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
-    get: (function () {
-        return function () {
-            return this._defaultInstancingFormat;
-        };
-    }())
-});
-
-Object.assign(VertexFormat.prototype, {
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.VertexFormat.defaultInstancingFormat
+     * @type {pc.VertexFormat}
+     * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
+     */
+    static get defaultInstancingFormat() {
+        return this._defaultInstancingFormat;
+    }
 
     /**
      * @function
      * @name pc.VertexFormat#update
      * @description Applies any changes made to the VertexFormat's properties.
      */
-    update: function () {
+    update() {
         this._evaluateHash();
-    },
+    }
 
     // evaluates hash valuees for the format allowing fast compare of batching / rendering compatibility
-    _evaluateHash: function () {
-
+    _evaluateHash() {
         var stringElementBatch, stringElementsBatch = [];
         var stringElementRender, stringElementsRender = [];
         var i, len = this.elements.length, element;
@@ -244,6 +238,6 @@ Object.assign(VertexFormat.prototype, {
         // rendering hash
         this.renderingingHash = hashCode(stringElementsRender.join());
     }
-});
+}
 
 export { VertexFormat };
