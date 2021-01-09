@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'assets',
     'volume',
@@ -34,39 +34,35 @@ var _schema = [
  * @param {pc.Application} app - The application managing this system.
  * @param {pc.SoundManager} manager - A sound manager instance.
  */
-function AudioSourceComponentSystem(app, manager) {
-    ComponentSystem.call(this, app);
+class AudioSourceComponentSystem extends ComponentSystem {
+    constructor(app, manager) {
+        super(app);
 
-    this.id = "audiosource";
+        this.id = "audiosource";
 
-    this.ComponentType = AudioSourceComponent;
-    this.DataType = AudioSourceComponentData;
+        this.ComponentType = AudioSourceComponent;
+        this.DataType = AudioSourceComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.manager = manager;
+        this.manager = manager;
 
-    this.initialized = false;
+        this.initialized = false;
 
-    ComponentSystem.bind('initialize', this.onInitialize, this);
-    ComponentSystem.bind('update', this.onUpdate, this);
+        ComponentSystem.bind('initialize', this.onInitialize, this);
+        ComponentSystem.bind('update', this.onUpdate, this);
 
-    this.on('remove', this.onRemove, this);
-}
-AudioSourceComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-AudioSourceComponentSystem.prototype.constructor = AudioSourceComponentSystem;
+        this.on('remove', this.onRemove, this);
+    }
 
-Component._buildAccessors(AudioSourceComponent.prototype, _schema);
-
-Object.assign(AudioSourceComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
 
         component.paused = !(component.enabled && component.activate);
-    },
+    }
 
-    onInitialize: function (root) {
+    onInitialize(root) {
         if (root.audiosource &&
             root.enabled &&
             root.audiosource.enabled &&
@@ -84,9 +80,9 @@ Object.assign(AudioSourceComponentSystem.prototype, {
         }
 
         this.initialized = true;
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -102,14 +98,14 @@ Object.assign(AudioSourceComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onRemove: function (entity, data) {
+    onRemove(entity, data) {
         if (data.channel) {
             data.channel.stop();
             data.channel = null;
         }
-    },
+    }
 
     /**
      * @private
@@ -119,9 +115,11 @@ Object.assign(AudioSourceComponentSystem.prototype, {
      * have their volume multiplied by this value.
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
      */
-    setVolume: function (volume) {
+    setVolume(volume) {
         this.manager.setVolume(volume);
     }
-});
+}
+
+Component._buildAccessors(AudioSourceComponent.prototype, _schema);
 
 export { AudioSourceComponentSystem };

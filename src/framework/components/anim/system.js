@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     'enabled',
     'speed',
     'activate',
@@ -20,38 +20,33 @@ var _schema = [
  * @description Create an AnimComponentSystem.
  * @param {pc.Application} app - The application managing this system.
  */
-function AnimComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class AnimComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'anim';
+        this.id = 'anim';
 
-    this.ComponentType = AnimComponent;
-    this.DataType = AnimComponentData;
+        this.ComponentType = AnimComponent;
+        this.DataType = AnimComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
-}
+        this.on('beforeremove', this.onBeforeRemove, this);
+        ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
+    }
 
-AnimComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-AnimComponentSystem.prototype.constructor = AnimComponentSystem;
-
-Component._buildAccessors(AnimComponent.prototype, _schema);
-
-Object.assign(AnimComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = ['activate', 'enabled', 'speed', 'playing'];
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
         if (data.stateGraphAsset) {
             component.stateGraphAsset = data.stateGraphAsset;
         }
         if (data.animationAssets) {
             component.animationAssets = Object.assign(component.data.animationAssets, data.animationAssets);
         }
-    },
+    }
 
-    onAnimationUpdate: function (dt) {
+    onAnimationUpdate(dt) {
         var components = this.store;
 
         for (var id in components) {
@@ -67,6 +62,8 @@ Object.assign(AnimComponentSystem.prototype, {
             }
         }
     }
-});
+}
+
+Component._buildAccessors(AnimComponent.prototype, _schema);
 
 export { AnimComponentSystem };

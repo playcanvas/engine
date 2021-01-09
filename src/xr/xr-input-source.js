@@ -43,419 +43,397 @@ var ids = 0;
  * @property {pc.Entity} elementEntity If {@link pc.XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
  * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
  */
-function XrInputSource(manager, xrInputSource) {
-    EventHandler.call(this);
+class XrInputSource extends EventHandler {
+    constructor(manager, xrInputSource) {
+        super();
 
-    this._id = ++ids;
+        this._id = ++ids;
 
-    this._manager = manager;
-    this._xrInputSource = xrInputSource;
+        this._manager = manager;
+        this._xrInputSource = xrInputSource;
 
-    this._ray = new Ray();
-    this._rayLocal = new Ray();
-    this._grip = false;
-    this._hand = null;
+        this._ray = new Ray();
+        this._rayLocal = new Ray();
+        this._grip = false;
+        this._hand = null;
 
-    if (xrInputSource.hand)
-        this._hand = new XrHand(this);
+        if (xrInputSource.hand)
+            this._hand = new XrHand(this);
 
-    this._localTransform = null;
-    this._worldTransform = null;
-    this._position = new Vec3();
-    this._rotation = new Quat();
-    this._localPosition = null;
-    this._localRotation = null;
-    this._dirtyLocal = true;
+        this._localTransform = null;
+        this._worldTransform = null;
+        this._position = new Vec3();
+        this._rotation = new Quat();
+        this._localPosition = null;
+        this._localRotation = null;
+        this._dirtyLocal = true;
 
-    this._selecting = false;
-    this._squeezing = false;
+        this._selecting = false;
+        this._squeezing = false;
 
-    this._elementInput = true;
-    this._elementEntity = null;
+        this._elementInput = true;
+        this._elementEntity = null;
 
-    this._hitTestSources = [];
-}
-XrInputSource.prototype = Object.create(EventHandler.prototype);
-XrInputSource.prototype.constructor = XrInputSource;
+        this._hitTestSources = [];
+    }
 
-/**
- * @event
- * @name pc.XrInputSource#remove
- * @description Fired when {@link pc.XrInputSource} is removed.
- * @example
- * inputSource.once('remove', function () {
- *     // input source is not available anymore
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#remove
+     * @description Fired when {@link pc.XrInputSource} is removed.
+     * @example
+     * inputSource.once('remove', function () {
+     *     // input source is not available anymore
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#select
- * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- * @example
- * var ray = new pc.Ray();
- * inputSource.on('select', function (evt) {
- *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
- *     if (obj.intersectsRay(ray)) {
- *         // selected an object with input source
- *     }
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#select
+     * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @example
+     * var ray = new pc.Ray();
+     * inputSource.on('select', function (evt) {
+     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
+     *     if (obj.intersectsRay(ray)) {
+     *         // selected an object with input source
+     *     }
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#selectstart
- * @description Fired when input source has started to trigger primary action.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#selectstart
+     * @description Fired when input source has started to trigger primary action.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#selectend
- * @description Fired when input source has ended triggerring primary action.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#selectend
+     * @description Fired when input source has ended triggerring primary action.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#squeeze
- * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#squeeze
+     * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#squeezestart
- * @description Fired when input source has started to trigger sqeeze action.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- * @example
- * inputSource.on('squeezestart', function (evt) {
- *     if (obj.containsPoint(inputSource.getPosition())) {
- *         // grabbed an object
- *     }
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#squeezestart
+     * @description Fired when input source has started to trigger sqeeze action.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     * @example
+     * inputSource.on('squeezestart', function (evt) {
+     *     if (obj.containsPoint(inputSource.getPosition())) {
+     *         // grabbed an object
+     *     }
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#squeezeend
- * @description Fired when input source has ended triggerring sqeeze action.
- * @param {object} evt - XRInputSourceEvent event data from WebXR API
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#squeezeend
+     * @description Fired when input source has ended triggerring sqeeze action.
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#hittest:add
- * @description Fired when new {@link pc.XrHitTestSource} is added to the input source.
- * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
- * @example
- * inputSource.on('hittest:add', function (hitTestSource) {
- *     // new hit test source is added
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#hittest:add
+     * @description Fired when new {@link pc.XrHitTestSource} is added to the input source.
+     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @example
+     * inputSource.on('hittest:add', function (hitTestSource) {
+     *     // new hit test source is added
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#hittest:remove
- * @description Fired when {@link pc.XrHitTestSource} is removed to the the input source.
- * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
- * @example
- * inputSource.on('remove', function (hitTestSource) {
- *     // hit test source is removed
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#hittest:remove
+     * @description Fired when {@link pc.XrHitTestSource} is removed to the the input source.
+     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @example
+     * inputSource.on('remove', function (hitTestSource) {
+     *     // hit test source is removed
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrInputSource#hittest:result
- * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
- * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
- * @param {pc.Vec3} position - Position of hit test
- * @param {pc.Quat} rotation - Rotation of hit test
- * @example
- * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
- *     target.setPosition(position);
- *     target.setRotation(rotation);
- * });
- */
+    /**
+     * @event
+     * @name pc.XrInputSource#hittest:result
+     * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
+     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
+     * @param {pc.Vec3} position - Position of hit test
+     * @param {pc.Quat} rotation - Rotation of hit test
+     * @example
+     * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
 
-XrInputSource.prototype.update = function (frame) {
-    // hand
-    if (this._hand) {
-        this._hand.update(frame);
-    } else {
-        // grip
-        if (this._xrInputSource.gripSpace) {
-            var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
-            if (gripPose) {
-                if (! this._grip) {
-                    this._grip = true;
+    update(frame) {
+        // hand
+        if (this._hand) {
+            this._hand.update(frame);
+        } else {
+            // grip
+            if (this._xrInputSource.gripSpace) {
+                var gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+                if (gripPose) {
+                    if (! this._grip) {
+                        this._grip = true;
 
-                    this._localTransform = new Mat4();
-                    this._worldTransform = new Mat4();
+                        this._localTransform = new Mat4();
+                        this._worldTransform = new Mat4();
 
-                    this._localPosition = new Vec3();
-                    this._localRotation = new Quat();
+                        this._localPosition = new Vec3();
+                        this._localRotation = new Quat();
+                    }
+                    this._dirtyLocal = true;
+                    this._localPosition.copy(gripPose.transform.position);
+                    this._localRotation.copy(gripPose.transform.orientation);
                 }
-                this._dirtyLocal = true;
-                this._localPosition.copy(gripPose.transform.position);
-                this._localRotation.copy(gripPose.transform.orientation);
+            }
+
+            // ray
+            var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
+            if (targetRayPose) {
+                this._dirtyRay = true;
+                this._rayLocal.origin.copy(targetRayPose.transform.position);
+                this._rayLocal.direction.set(0, 0, -1);
+                quat.copy(targetRayPose.transform.orientation);
+                quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
             }
         }
+    }
 
-        // ray
-        var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
-        if (targetRayPose) {
-            this._dirtyRay = true;
-            this._rayLocal.origin.copy(targetRayPose.transform.position);
-            this._rayLocal.direction.set(0, 0, -1);
-            quat.copy(targetRayPose.transform.orientation);
-            quat.transformVector(this._rayLocal.direction, this._rayLocal.direction);
+    _updateTransforms() {
+        if (this._dirtyLocal) {
+            this._dirtyLocal = false;
+            this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
+        }
+
+        var parent = this._manager.camera.parent;
+        if (parent) {
+            this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        } else {
+            this._worldTransform.copy(this._localTransform);
         }
     }
-};
 
-XrInputSource.prototype._updateTransforms = function () {
-    if (this._dirtyLocal) {
-        this._dirtyLocal = false;
-        this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
+    _updateRayTransforms = function () {
+        var dirty = this._dirtyRay;
+        this._dirtyRay = false;
+
+        var parent = this._manager.camera.parent;
+        if (parent) {
+            var parentTransform = this._manager.camera.parent.getWorldTransform();
+
+            parentTransform.getTranslation(this._position);
+            this._rotation.setFromMat4(parentTransform);
+
+            this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
+            this._ray.origin.add(this._position);
+            this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
+        } else if (dirty) {
+            this._ray.origin.copy(this._rayLocal.origin);
+            this._ray.direction.copy(this._rayLocal.direction);
+        }
     }
 
-    var parent = this._manager.camera.parent;
-    if (parent) {
-        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
-    } else {
-        this._worldTransform.copy(this._localTransform);
+    /**
+     * @function
+     * @name pc.XrInputSource#getPosition
+     * @description Get the world space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
+     * @returns {pc.Vec3|null} The world space position of handheld input source.
+     */
+    getPosition() {
+        if (! this._position) return null;
+
+        this._updateTransforms();
+        this._worldTransform.getTranslation(this._position);
+
+        return this._position;
     }
-};
 
-XrInputSource.prototype._updateRayTransforms = function () {
-    var dirty = this._dirtyRay;
-    this._dirtyRay = false;
-
-    var parent = this._manager.camera.parent;
-    if (parent) {
-        var parentTransform = this._manager.camera.parent.getWorldTransform();
-
-        parentTransform.getTranslation(this._position);
-        this._rotation.setFromMat4(parentTransform);
-
-        this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
-        this._ray.origin.add(this._position);
-        this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
-    } else if (dirty) {
-        this._ray.origin.copy(this._rayLocal.origin);
-        this._ray.direction.copy(this._rayLocal.direction);
+    /**
+     * @function
+     * @name pc.XrInputSource#getLocalPosition
+     * @description Get the local space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * @returns {pc.Vec3|null} The world space position of handheld input source.
+     */
+    getLocalPosition() {
+        return this._localPosition;
     }
-};
 
-/**
- * @function
- * @name pc.XrInputSource#getPosition
- * @description Get the world space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
- * @returns {pc.Vec3|null} The world space position of handheld input source.
- */
-XrInputSource.prototype.getPosition = function () {
-    if (! this._position) return null;
+    /**
+     * @function
+     * @name pc.XrInputSource#getRotation
+     * @description Get the world space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
+     * @returns {pc.Vec3|null} The world space rotation of handheld input source.
+     */
+    getRotation() {
+        if (! this._rotation) return null;
 
-    this._updateTransforms();
-    this._worldTransform.getTranslation(this._position);
+        this._updateTransforms();
+        this._rotation.setFromMat4(this._worldTransform);
 
-    return this._position;
-};
+        return this._rotation;
+    }
 
-/**
- * @function
- * @name pc.XrInputSource#getLocalPosition
- * @description Get the local space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
- * @returns {pc.Vec3|null} The world space position of handheld input source.
- */
-XrInputSource.prototype.getLocalPosition = function () {
-    return this._localPosition;
-};
+    /**
+     * @function
+     * @name pc.XrInputSource#getLocalRotation
+     * @description Get the local space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * @returns {pc.Vec3|null} The world space rotation of handheld input source.
+     */
+    getLocalRotation = function () {
+        return this._localRotation;
+    }
 
-/**
- * @function
- * @name pc.XrInputSource#getRotation
- * @description Get the world space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
- * @returns {pc.Vec3|null} The world space rotation of handheld input source.
- */
-XrInputSource.prototype.getRotation = function () {
-    if (! this._rotation) return null;
+    /**
+     * @function
+     * @name pc.XrInputSource#getOrigin
+     * @description Get the world space origin of input source ray.
+     * @returns {pc.Vec3} The world space origin of input source ray.
+     */
+    getOrigin = function () {
+        this._updateRayTransforms();
+        return this._ray.origin;
+    }
 
-    this._updateTransforms();
-    this._rotation.setFromMat4(this._worldTransform);
+    /**
+     * @function
+     * @name pc.XrInputSource#getDirection
+     * @description Get the world space direction of input source ray.
+     * @returns {pc.Vec3} The world space direction of input source ray.
+     */
+    getDirection() {
+        this._updateRayTransforms();
+        return this._ray.direction;
+    }
 
-    return this._rotation;
-};
+    /**
+     * @function
+     * @name pc.XrInputSource#hitTestStart
+     * @description Attempts to start hit test source based on this input source.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
+     * against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ].
+     * Can be any combination of the following:
+     *
+     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
+     * computed based on the feature points detected by the underlying Augmented Reality system.
+     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
+     * computed based on the planes detected by the underlying Augmented Reality system.
+     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
+     * computed based on the meshes detected by the underlying Augmented Reality system.
+     *
+     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function
+     * called once hit test source is created or failed.
+     * @example
+     * app.xr.input.on('add', function (inputSource) {
+     *     inputSource.hitTestStart({
+     *         callback: function (err, hitTestSource) {
+     *             if (err) return;
+     *             hitTestSource.on('result', function (position, rotation) {
+     *                 // position and rotation of hit test result
+     *                 // that will be created from touch on mobile devices
+     *             });
+     *         }
+     *     });
+     * });
+     */
+    hitTestStart(options = {}) {
+        var self = this;
 
-/**
- * @function
- * @name pc.XrInputSource#getLocalRotation
- * @description Get the local space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
- * @returns {pc.Vec3|null} The world space rotation of handheld input source.
- */
-XrInputSource.prototype.getLocalRotation = function () {
-    return this._localRotation;
-};
+        options.profile = this._xrInputSource.profiles[0];
 
-/**
- * @function
- * @name pc.XrInputSource#getOrigin
- * @description Get the world space origin of input source ray.
- * @returns {pc.Vec3} The world space origin of input source ray.
- */
-XrInputSource.prototype.getOrigin = function () {
-    this._updateRayTransforms();
-    return this._ray.origin;
-};
+        var callback = options.callback;
+        options.callback = function (err, hitTestSource) {
+            if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
+            if (callback) callback(err, hitTestSource);
+        };
 
-/**
- * @function
- * @name pc.XrInputSource#getDirection
- * @description Get the world space direction of input source ray.
- * @returns {pc.Vec3} The world space direction of input source ray.
- */
-XrInputSource.prototype.getDirection = function () {
-    this._updateRayTransforms();
-    return this._ray.direction;
-};
+        this._manager.hitTest.start(options);
+    }
 
-/**
- * @function
- * @name pc.XrInputSource#hitTestStart
- * @description Attempts to start hit test source based on this input source.
- * @param {object} [options] - Object for passing optional arguments.
- * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
- * against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ].
- * Can be any combination of the following:
- *
- * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
- * computed based on the feature points detected by the underlying Augmented Reality system.
- * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
- * computed based on the planes detected by the underlying Augmented Reality system.
- * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
- * computed based on the meshes detected by the underlying Augmented Reality system.
- *
- * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
- * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function
- * called once hit test source is created or failed.
- * @example
- * app.xr.input.on('add', function (inputSource) {
- *     inputSource.hitTestStart({
- *         callback: function (err, hitTestSource) {
- *             if (err) return;
- *             hitTestSource.on('result', function (position, rotation) {
- *                 // position and rotation of hit test result
- *                 // that will be created from touch on mobile devices
- *             });
- *         }
- *     });
- * });
- */
-XrInputSource.prototype.hitTestStart = function (options) {
-    var self = this;
+    onHitTestSourceAdd(hitTestSource) {
+        this._hitTestSources.push(hitTestSource);
 
-    options = options || { };
-    options.profile = this._xrInputSource.profiles[0];
+        this.fire('hittest:add', hitTestSource);
 
-    var callback = options.callback;
-    options.callback = function (err, hitTestSource) {
-        if (hitTestSource) self.onHitTestSourceAdd(hitTestSource);
-        if (callback) callback(err, hitTestSource);
-    };
+        hitTestSource.on('result', function (position, rotation, inputSource) {
+            if (inputSource !== this)
+                return;
 
-    this._manager.hitTest.start(options);
-};
+            this.fire('hittest:result', hitTestSource, position, rotation);
+        }, this);
+        hitTestSource.once('remove', function () {
+            this.onHitTestSourceRemove(hitTestSource);
+            this.fire('hittest:remove', hitTestSource);
+        }, this);
+    }
 
-XrInputSource.prototype.onHitTestSourceAdd = function (hitTestSource) {
-    this._hitTestSources.push(hitTestSource);
+    onHitTestSourceRemove(hitTestSource) {
+        var ind = this._hitTestSources.indexOf(hitTestSource);
+        if (ind !== -1) this._hitTestSources.splice(ind, 1);
+    }
 
-    this.fire('hittest:add', hitTestSource);
-
-    hitTestSource.on('result', function (position, rotation, inputSource) {
-        if (inputSource !== this)
-            return;
-
-        this.fire('hittest:result', hitTestSource, position, rotation);
-    }, this);
-    hitTestSource.once('remove', function () {
-        this.onHitTestSourceRemove(hitTestSource);
-        this.fire('hittest:remove', hitTestSource);
-    }, this);
-};
-
-XrInputSource.prototype.onHitTestSourceRemove = function (hitTestSource) {
-    var ind = this._hitTestSources.indexOf(hitTestSource);
-    if (ind !== -1) this._hitTestSources.splice(ind, 1);
-};
-
-Object.defineProperty(XrInputSource.prototype, 'id', {
-    get: function () {
+    get id() {
         return this._id;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'inputSource', {
-    get: function () {
+    get inputSource() {
         return this._xrInputSource;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'targetRayMode', {
-    get: function () {
+    get targetRayMode() {
         return this._xrInputSource.targetRayMode;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'handedness', {
-    get: function () {
+    get handedness() {
         return this._xrInputSource.handedness;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'profiles', {
-    get: function () {
+    get profiles() {
         return this._xrInputSource.profiles;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'grip', {
-    get: function () {
+    get grip() {
         return this._grip;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'hand', {
-    get: function () {
+    get hand() {
         return this._hand;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'gamepad', {
-    get: function () {
+    get gamepad() {
         return this._xrInputSource.gamepad || null;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'selecting', {
-    get: function () {
+    get selecting() {
         return this._selecting;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'squeezing', {
-    get: function () {
+    get squeezing() {
         return this._squeezing;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'elementInput', {
-    get: function () {
+    get elementInput() {
         return this._elementInput;
-    },
-    set: function (value) {
+    }
+
+    set elementInput(value) {
         if (this._elementInput === value)
             return;
 
@@ -464,18 +442,14 @@ Object.defineProperty(XrInputSource.prototype, 'elementInput', {
         if (! this._elementInput)
             this._elementEntity = null;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'elementEntity', {
-    get: function () {
+    get elementEntity() {
         return this._elementEntity;
     }
-});
 
-Object.defineProperty(XrInputSource.prototype, 'hitTestSources', {
-    get: function () {
+    get hitTestSources() {
         return this._hitTestSources;
     }
-});
+}
 
 export { XrInputSource };

@@ -90,496 +90,485 @@ import { Mat4 } from '../math/mat4.js';
  * @property {pc.Entity} root The root entity of the scene, which is usually the only
  * child to the Application root entity.
  */
-function Scene() {
-    EventHandler.call(this);
+class Scene extends EventHandler {
+    constructor() {
+        super();
 
-    this.root = null;
+        this.root = null;
 
-    this._gravity = new Vec3(0, -9.8, 0);
+        this._gravity = new Vec3(0, -9.8, 0);
 
-    this._layers = null;
+        this._layers = null;
 
-    this._fog = FOG_NONE;
-    this.fogColor = new Color(0, 0, 0);
-    this.fogStart = 1;
-    this.fogEnd = 1000;
-    this.fogDensity = 0;
+        this._fog = FOG_NONE;
+        this.fogColor = new Color(0, 0, 0);
+        this.fogStart = 1;
+        this.fogEnd = 1000;
+        this.fogDensity = 0;
 
-    this.ambientLight = new Color(0, 0, 0);
+        this.ambientLight = new Color(0, 0, 0);
 
-    this._gammaCorrection = GAMMA_NONE;
-    this._toneMapping = 0;
-    this.exposure = 1.0;
+        this._gammaCorrection = GAMMA_NONE;
+        this._toneMapping = 0;
+        this.exposure = 1.0;
 
-    this._skyboxPrefiltered = [null, null, null, null, null, null];
+        this._skyboxPrefiltered = [null, null, null, null, null, null];
 
-    this._firstUpdateSkybox = true;
-    this._skyboxCubeMap = null;
-    this.skyboxModel = null;
+        this._firstUpdateSkybox = true;
+        this._skyboxCubeMap = null;
+        this.skyboxModel = null;
 
-    this._skyboxIntensity = 1;
-    this._skyboxMip = 0;
+        this._skyboxIntensity = 1;
+        this._skyboxMip = 0;
 
-    this._skyboxRotation = new Quat();
-    this._skyboxRotationMat3 = null;
-    this._skyboxRotationMat4 = null;
+        this._skyboxRotation = new Quat();
+        this._skyboxRotationMat3 = null;
+        this._skyboxRotationMat4 = null;
 
-    this._skyboxIsRenderTarget = false;
+        this._skyboxIsRenderTarget = false;
 
-    this.lightmapSizeMultiplier = 1;
-    this.lightmapMaxResolution = 2048;
-    this.lightmapMode = BAKE_COLORDIR;
+        this.lightmapSizeMultiplier = 1;
+        this.lightmapMaxResolution = 2048;
+        this.lightmapMode = BAKE_COLORDIR;
 
-    this._stats = {
-        meshInstances: 0,
-        lights: 0,
-        dynamicLights: 0,
-        bakedLights: 0,
-        lastStaticPrepareFullTime: 0,
-        lastStaticPrepareSearchTime: 0,
-        lastStaticPrepareWriteTime: 0,
-        lastStaticPrepareTriAabbTime: 0,
-        lastStaticPrepareCombineTime: 0,
-        updateShadersTime: 0 // deprecated
-    };
+        this._stats = {
+            meshInstances: 0,
+            lights: 0,
+            dynamicLights: 0,
+            bakedLights: 0,
+            lastStaticPrepareFullTime: 0,
+            lastStaticPrepareSearchTime: 0,
+            lastStaticPrepareWriteTime: 0,
+            lastStaticPrepareTriAabbTime: 0,
+            lastStaticPrepareCombineTime: 0,
+            updateShadersTime: 0 // deprecated
+        };
 
-    this.updateShaders = true;
-    this.updateSkybox = true;
+        this.updateShaders = true;
+        this.updateSkybox = true;
 
-    this._shaderVersion = 0;
-    this._statsUpdated = false;
+        this._shaderVersion = 0;
+        this._statsUpdated = false;
 
-    // backwards compatibility only
-    this._models = [];
+        // backwards compatibility only
+        this._models = [];
 
-    // default material used in case no other material is available
-    this.defaultMaterial = new StandardMaterial();
-    this.defaultMaterial.name = "Default Material";
-    this.defaultMaterial.shadingModel = SPECULAR_BLINN;
-}
-Scene.prototype = Object.create(EventHandler.prototype);
-Scene.prototype.constructor = Scene;
+        // default material used in case no other material is available
+        this.defaultMaterial = new StandardMaterial();
+        this.defaultMaterial.name = "Default Material";
+        this.defaultMaterial.shadingModel = SPECULAR_BLINN;
+    }
 
-Scene.prototype.destroy = function () {
-    this.root = null;
-    this.defaultMaterial.destroy();
-    this.defaultMaterial = null;
-    this.off();
-};
+    destroy() {
+        this.root = null;
+        this.defaultMaterial.destroy();
+        this.defaultMaterial = null;
+        this.off();
+    }
 
-Object.defineProperty(Scene.prototype, 'fog', {
-    get: function () {
+    get fog() {
         return this._fog;
-    },
-    set: function (type) {
+    }
+
+    set fog(type) {
         if (type !== this._fog) {
             this._fog = type;
             this.updateShaders = true;
         }
     }
-});
 
-Object.defineProperty(Scene.prototype, 'gammaCorrection', {
-    get: function () {
+    get gammaCorrection() {
         return this._gammaCorrection;
-    },
-    set: function (value) {
+    }
+
+    set gammaCorrection(value) {
         if (value !== this._gammaCorrection) {
             this._gammaCorrection = value;
             this.updateShaders = true;
         }
     }
-});
 
-Object.defineProperty(Scene.prototype, 'toneMapping', {
-    get: function () {
+    get toneMapping() {
         return this._toneMapping;
-    },
-    set: function (value) {
+    }
+
+    set toneMapping(value) {
         if (value !== this._toneMapping) {
             this._toneMapping = value;
             this.updateShaders = true;
         }
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skybox', {
-    get: function () {
+    get skybox() {
         return this._skyboxCubeMap;
-    },
-    set: function (value) {
+    }
+
+    set skybox(value) {
         this._skyboxCubeMap = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxIntensity', {
-    get: function () {
+    get skyboxIntensity() {
         return this._skyboxIntensity;
-    },
-    set: function (value) {
+    }
+
+    set skyboxIntensity(value) {
         this._skyboxIntensity = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxRotation', {
-    get: function () {
+    get skyboxRotation() {
         return this._skyboxRotation;
-    },
-    set: function (value) {
+    }
+
+    set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
             this._resetSkyboxModel();
             this.updateShaders = true;
         }
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxMip', {
-    get: function () {
+    get skyboxMip() {
         return this._skyboxMip;
-    },
-    set: function (value) {
+    }
+
+    set skyboxMip(value) {
         this._skyboxMip = value;
         this._resetSkyboxModel();
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered128', {
-    get: function () {
+    get skyboxPrefiltered128() {
         return this._skyboxPrefiltered[0];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered128(value) {
         if (this._skyboxPrefiltered[0] === value)
             return;
 
         this._skyboxPrefiltered[0] = value;
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered64', {
-    get: function () {
+    get skyboxPrefiltered64() {
         return this._skyboxPrefiltered[1];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered64(value) {
         if (this._skyboxPrefiltered[1] === value)
             return;
 
         this._skyboxPrefiltered[1] = value;
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered32', {
-    get: function () {
+    get skyboxPrefiltered32() {
         return this._skyboxPrefiltered[2];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered32(value) {
         if (this._skyboxPrefiltered[2] === value)
             return;
 
         this._skyboxPrefiltered[2] = value;
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered16', {
-    get: function () {
+    get skyboxPrefiltered16() {
         return this._skyboxPrefiltered[3];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered16(value) {
         if (this._skyboxPrefiltered[3] === value)
             return;
 
         this._skyboxPrefiltered[3] = value;
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered8', {
-    get: function () {
+    get skyboxPrefiltered8() {
         return this._skyboxPrefiltered[4];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered8(value) {
         if (this._skyboxPrefiltered[4] === value)
             return;
 
         this._skyboxPrefiltered[4] = value;
         this.updateShaders = true;
     }
-});
 
-Object.defineProperty(Scene.prototype, 'skyboxPrefiltered4', {
-    get: function () {
+    get skyboxPrefiltered4() {
         return this._skyboxPrefiltered[5];
-    },
-    set: function (value) {
+    }
+
+    set skyboxPrefiltered4(value) {
         if (this._skyboxPrefiltered[5] === value)
             return;
 
         this._skyboxPrefiltered[5] = value;
         this.updateShaders = true;
     }
-});
 
-// some backwards compatibility
-// drawCalls will now return list of all active composition mesh instances
-Object.defineProperty(Scene.prototype, 'drawCalls', {
-    get: function () {
+    // some backwards compatibility
+    // drawCalls will now return list of all active composition mesh instances
+    get drawCalls() {
         var drawCalls = this.layers._meshInstances;
         if (!drawCalls.length) {
             this.layers._update();
             drawCalls = this.layers._meshInstances;
         }
         return drawCalls;
-    },
-    set: function (value) {
-
     }
-});
 
-Object.defineProperty(Scene.prototype, 'layers', {
-    get: function () {
+    set drawCalls(value) {
+    }
+
+    get layers() {
         return this._layers;
-    },
-    set: function (layers) {
+    }
+
+    set layers(layers) {
         var prev = this._layers;
         this._layers = layers;
         this.fire("set:layers", prev, layers);
     }
-});
 
-Scene.prototype.applySettings = function (settings) {
-    // settings
-    this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
-    this.ambientLight.set(settings.render.global_ambient[0], settings.render.global_ambient[1], settings.render.global_ambient[2]);
-    this._fog = settings.render.fog;
-    this.fogColor.set(settings.render.fog_color[0], settings.render.fog_color[1], settings.render.fog_color[2]);
-    this.fogStart = settings.render.fog_start;
-    this.fogEnd = settings.render.fog_end;
-    this.fogDensity = settings.render.fog_density;
-    this._gammaCorrection = settings.render.gamma_correction;
-    this._toneMapping = settings.render.tonemapping;
-    this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
-    this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
-    this.lightmapMode = settings.render.lightmapMode;
-    this.exposure = settings.render.exposure;
-    this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
-    this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
+    applySettings(settings) {
+        // settings
+        this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
+        this.ambientLight.set(settings.render.global_ambient[0], settings.render.global_ambient[1], settings.render.global_ambient[2]);
+        this._fog = settings.render.fog;
+        this.fogColor.set(settings.render.fog_color[0], settings.render.fog_color[1], settings.render.fog_color[2]);
+        this.fogStart = settings.render.fog_start;
+        this.fogEnd = settings.render.fog_end;
+        this.fogDensity = settings.render.fog_density;
+        this._gammaCorrection = settings.render.gamma_correction;
+        this._toneMapping = settings.render.tonemapping;
+        this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
+        this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
+        this.lightmapMode = settings.render.lightmapMode;
+        this.exposure = settings.render.exposure;
+        this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
+        this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
-    if (settings.render.skyboxRotation !== undefined) {
-        this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
+        if (settings.render.skyboxRotation !== undefined) {
+            this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
+        }
+
+        this._resetSkyboxModel();
+        this.updateShaders = true;
     }
 
-    this._resetSkyboxModel();
-    this.updateShaders = true;
-};
+    _updateSkybox(device) {
+        // Create skybox
+        if (!this.skyboxModel) {
 
-Scene.prototype._updateSkybox = function (device) {
-    // Create skybox
-    if (!this.skyboxModel) {
+            // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
+            // we can't simply fix this and map 3 to the correct level, since doing so has the potential
+            // to change the look of existing scenes dramatically.
+            // NOTE: the table skips the 32x32 mipmap
+            var skyboxMapping = [0, 1, 3, 4, 5, 6];
 
-        // skybox selection for some reason has always skipped the 32x32 mipmap, presumably a bug.
-        // we can't simply fix this and map 3 to the correct level, since doing so has the potential
-        // to change the look of existing scenes dramatically.
-        // NOTE: the table skips the 32x32 mipmap
-        var skyboxMapping = [0, 1, 3, 4, 5, 6];
-
-        // select which texture to use for the backdrop
-        var usedTex =
-            this._skyboxMip ?
-                this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
-                this._skyboxCubeMap || this._skyboxPrefiltered[0];
-        if (!usedTex) {
-            return;
-        }
-
-        if (usedTex._isRenderTarget) {
-            this._skyboxIsRenderTarget = true;
-        } else {
-            this._skyboxIsRenderTarget = false;
-        }
-
-        var material = new Material();
-        var scene = this;
-        material.updateShader = function (dev, sc, defs, staticLightList, pass) {
-            var library = device.getProgramLibrary();
-            var shader = library.getProgram('skybox', {
-                rgbm: usedTex.type === TEXTURETYPE_RGBM,
-                hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
-                useIntensity: scene.skyboxIntensity !== 1,
-                useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
-                useRightHandedCubeMap: scene._skyboxIsRenderTarget,
-                mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
-                fixSeams: usedTex.fixCubemapSeams,
-                gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-            });
-            this.shader = shader;
-        };
-
-        material.updateShader();
-        material.setParameter("texture_cubeMap", usedTex);
-
-        if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
-            if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
-            if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
-            this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
-            this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
-            material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
-        }
-
-        material.cull = CULLFACE_FRONT;
-        material.depthWrite = false;
-
-        var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
-        if (skyLayer) {
-            var node = new GraphNode();
-            var mesh = createBox(device);
-            var meshInstance = new MeshInstance(node, mesh, material);
-            meshInstance.cull = false;
-            meshInstance._noDepthDrawGl1 = true;
-
-            var model = new Model();
-            model.graph = node;
-            model.meshInstances = [meshInstance];
-            this.skyboxModel = model;
-
-            skyLayer.addMeshInstances(model.meshInstances);
-            this.skyLayer = skyLayer;
-
-            // enable the layer on first skybox update (the skybox layer is created disabled)
-            if (this._firstUpdateSkybox) {
-                skyLayer.enabled = true;
-                this._firstUpdateSkybox = false;
+            // select which texture to use for the backdrop
+            var usedTex =
+                this._skyboxMip ?
+                    this._skyboxPrefiltered[skyboxMapping[this._skyboxMip]] || this._skyboxPrefiltered[0] || this._skyboxCubeMap :
+                    this._skyboxCubeMap || this._skyboxPrefiltered[0];
+            if (!usedTex) {
+                return;
             }
 
-            this.fire("set:skybox", usedTex);
+            if (usedTex._isRenderTarget) {
+                this._skyboxIsRenderTarget = true;
+            } else {
+                this._skyboxIsRenderTarget = false;
+            }
+
+            var material = new Material();
+            var scene = this;
+            material.updateShader = function (dev, sc, defs, staticLightList, pass) {
+                var library = device.getProgramLibrary();
+                var shader = library.getProgram('skybox', {
+                    rgbm: usedTex.type === TEXTURETYPE_RGBM,
+                    hdr: (usedTex.type === TEXTURETYPE_RGBM || usedTex.format === PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    useCubeMapRotation: !scene.skyboxRotation.equals(Quat.IDENTITY),
+                    useRightHandedCubeMap: scene._skyboxIsRenderTarget,
+                    mip: usedTex.fixCubemapSeams ? scene.skyboxMip : 0,
+                    fixSeams: usedTex.fixCubemapSeams,
+                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
+                });
+                this.shader = shader;
+            };
+
+            material.updateShader();
+            material.setParameter("texture_cubeMap", usedTex);
+
+            if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
+                if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
+                if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
+                this._skyboxRotationMat4.setTRS(pc.Vec3.ZERO, this._skyboxRotation, pc.Vec3.ONE);
+                this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+                material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
+            }
+
+            material.cull = CULLFACE_FRONT;
+            material.depthWrite = false;
+
+            var skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
+            if (skyLayer) {
+                var node = new GraphNode();
+                var mesh = createBox(device);
+                var meshInstance = new MeshInstance(node, mesh, material);
+                meshInstance.cull = false;
+                meshInstance._noDepthDrawGl1 = true;
+
+                var model = new Model();
+                model.graph = node;
+                model.meshInstances = [meshInstance];
+                this.skyboxModel = model;
+
+                skyLayer.addMeshInstances(model.meshInstances);
+                this.skyLayer = skyLayer;
+
+                // enable the layer on first skybox update (the skybox layer is created disabled)
+                if (this._firstUpdateSkybox) {
+                    skyLayer.enabled = true;
+                    this._firstUpdateSkybox = false;
+                }
+
+                this.fire("set:skybox", usedTex);
+            }
         }
     }
-};
 
-Scene.prototype._resetSkyboxModel = function () {
-    if (this.skyboxModel) {
-        this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
-        this.skyboxModel.destroy();
-    }
-    this.skyboxModel = null;
-    this.updateSkybox = true;
-};
-
-/**
- * @function
- * @name pc.Scene#setSkybox
- * @description Sets the cubemap for the scene skybox.
- * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
- * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
- * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
- */
-Scene.prototype.setSkybox = function (cubemaps) {
-    var i;
-    if (!cubemaps)
-        cubemaps = [null, null, null, null, null, null, null];
-
-    // check if any values actually changed
-    // to prevent unnecessary recompilations
-
-    var different = false;
-
-    if (this._skyboxCubeMap !== cubemaps[0])
-        different = true;
-
-    if (!different) {
-        for (i = 0; i < 6 && !different; i++) {
-            if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
-                different = true;
+    _resetSkyboxModel() {
+        if (this.skyboxModel) {
+            this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
+            this.skyboxModel.destroy();
         }
+        this.skyboxModel = null;
+        this.updateSkybox = true;
     }
 
-    if (!different)
-        return;
+    /**
+     * @function
+     * @name pc.Scene#setSkybox
+     * @description Sets the cubemap for the scene skybox.
+     * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
+     * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
+     * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
+     */
+    setSkybox(cubemaps) {
+        var i;
+        if (!cubemaps)
+            cubemaps = [null, null, null, null, null, null, null];
 
-    // set skybox
+        // check if any values actually changed
+        // to prevent unnecessary recompilations
 
-    for (i = 0; i < 6; i++)
-        this._skyboxPrefiltered[i] = cubemaps[i + 1];
+        var different = false;
 
-    this.skybox = cubemaps[0];
-};
+        if (this._skyboxCubeMap !== cubemaps[0])
+            different = true;
 
-Scene.prototype.destroy = function () {
-    this.skybox = null;
-};
+        if (!different) {
+            for (i = 0; i < 6 && !different; i++) {
+                if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
+                    different = true;
+            }
+        }
 
-// Backwards compatibility
-Scene.prototype.addModel = function (model) {
-    if (this.containsModel(model)) return;
-    var layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.addMeshInstances(model.meshInstances);
-    this._models.push(model);
-};
-Scene.prototype.addShadowCaster = function (model) {
-    var layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.addShadowCasters(model.meshInstances);
-};
-Scene.prototype.removeModel = function (model) {
-    var index = this._models.indexOf(model);
-    if (index !== -1) {
+        if (!different)
+            return;
+
+        // set skybox
+
+        for (i = 0; i < 6; i++)
+            this._skyboxPrefiltered[i] = cubemaps[i + 1];
+
+        this.skybox = cubemaps[0];
+    }
+
+    destroy = function () {
+        this.skybox = null;
+    }
+
+    // Backwards compatibility
+    addModel(model) {
+        if (this.containsModel(model)) return;
         var layer = this.layers.getLayerById(LAYERID_WORLD);
         if (!layer) return;
-        layer.removeMeshInstances(model.meshInstances);
-        this._models.splice(index, 1);
+        layer.addMeshInstances(model.meshInstances);
+        this._models.push(model);
     }
-};
-Scene.prototype.removeShadowCasters = function (model) {
-    var layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.removeShadowCasters(model.meshInstances);
-};
-Scene.prototype.containsModel = function (model) {
-    return this._models.indexOf(model) >= 0;
-};
-Scene.prototype.getModels = function (model) {
-    return this._models;
-};
 
-/**
- * @event
- * @name pc.Scene#set:skybox
- * @description Fired when the skybox is set.
- * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
- */
+    addShadowCaster(model) {
+        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        if (!layer) return;
+        layer.addShadowCasters(model.meshInstances);
+    }
 
-/**
- * @event
- * @name pc.Scene#set:layers
- * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
- * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
- * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
- * @example
- * this.app.scene.on('set:layers', function (oldComp, newComp) {
- *     var list = newComp.layerList;
- *     var layer;
- *     for (var i = 0; i < list.length; i++) {
- *         layer = list[i];
- *         switch (layer.name) {
- *             case 'MyLayer':
- *                 layer.onEnable = myOnEnableFunction;
- *                 layer.onDisable = myOnDisableFunction;
- *                 break;
- *             case 'MyOtherLayer':
- *                 layer.shaderPass = myShaderPass;
- *                 break;
- *         }
- *     }
- * });
- */
+    removeModel(model) {
+        var index = this._models.indexOf(model);
+        if (index !== -1) {
+            var layer = this.layers.getLayerById(LAYERID_WORLD);
+            if (!layer) return;
+            layer.removeMeshInstances(model.meshInstances);
+            this._models.splice(index, 1);
+        }
+    }
+
+    removeShadowCasters(model) {
+        var layer = this.layers.getLayerById(LAYERID_WORLD);
+        if (!layer) return;
+        layer.removeShadowCasters(model.meshInstances);
+    }
+
+    containsModel(model) {
+        return this._models.indexOf(model) >= 0;
+    }
+
+    getModels(model) {
+        return this._models;
+    }
+
+    /**
+     * @event
+     * @name pc.Scene#set:skybox
+     * @description Fired when the skybox is set.
+     * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+     */
+
+    /**
+     * @event
+     * @name pc.Scene#set:layers
+     * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
+     * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
+     * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
+     * @example
+     * this.app.scene.on('set:layers', function (oldComp, newComp) {
+     *     var list = newComp.layerList;
+     *     var layer;
+     *     for (var i = 0; i < list.length; i++) {
+     *         layer = list[i];
+     *         switch (layer.name) {
+     *             case 'MyLayer':
+     *                 layer.onEnable = myOnEnableFunction;
+     *                 layer.onDisable = myOnDisableFunction;
+     *                 break;
+     *             case 'MyOtherLayer':
+     *                 layer.shaderPass = myShaderPass;
+     *                 break;
+     *         }
+     *     }
+     * });
+     */
+}
 
 export { Scene };

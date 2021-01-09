@@ -2,16 +2,13 @@ import { path } from '../../../core/path.js';
 
 import { Component } from '../component.js';
 
-function ScriptLegacyComponent(system, entity) {
-    Component.call(this, system, entity);
+class ScriptLegacyComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
+        this.on("set_scripts", this.onSetScripts, this);
+    }
 
-    this.on("set_scripts", this.onSetScripts, this);
-}
-ScriptLegacyComponent.prototype = Object.create(Component.prototype);
-ScriptLegacyComponent.prototype.constructor = ScriptLegacyComponent;
-
-Object.assign(ScriptLegacyComponent.prototype, {
-    send: function (name, functionName) {
+    send(name, functionName) {
         // #ifdef DEBUG
         console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
         // #endif
@@ -26,9 +23,9 @@ Object.assign(ScriptLegacyComponent.prototype, {
             }
 
         }
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         // if the scripts of the component have been loaded
         // then call the appropriate methods on the component
         if (this.data.areScriptsLoaded && !this.system.preloading) {
@@ -42,13 +39,13 @@ Object.assign(ScriptLegacyComponent.prototype, {
                 this.system._postInitializeScriptComponent(this);
             }
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this.system._disableScriptComponent(this);
-    },
+    }
 
-    onSetScripts: function (name, oldValue, newValue) {
+    onSetScripts(name, oldValue, newValue) {
         if (!this.system._inTools || this.runInTools) {
             // if we only need to update script attributes then update them and return
             if (this._updateScriptAttributes(oldValue, newValue)) {
@@ -78,11 +75,11 @@ Object.assign(ScriptLegacyComponent.prototype, {
             // not all scripts are in the cache so load them asynchronously
             this._loadScripts(urls);
         }
-    },
+    }
 
     // Check if only script attributes need updating in which
     // case just update the attributes and return otherwise return false
-    _updateScriptAttributes: function (oldValue, newValue) {
+    _updateScriptAttributes(oldValue, newValue) {
         var onlyUpdateAttributes = true;
 
         if (oldValue.length !== newValue.length) {
@@ -106,11 +103,11 @@ Object.assign(ScriptLegacyComponent.prototype, {
         }
 
         return onlyUpdateAttributes;
-    },
+    }
 
     // Load each url from the cache synchronously. If one of the urls is not in the cache
     // then stop and return false.
-    _loadFromCache: function (urls) {
+    _loadFromCache(urls) {
         var i, len;
         var cached = [];
 
@@ -166,9 +163,9 @@ Object.assign(ScriptLegacyComponent.prototype, {
         }
 
         return true;
-    },
+    }
 
-    _loadScripts: function (urls) {
+    _loadScripts(urls) {
         var count = urls.length;
 
         var prefix = this.system.app._scriptPrefix || "";
@@ -210,6 +207,6 @@ Object.assign(ScriptLegacyComponent.prototype, {
             }.bind(this));
         }.bind(this));
     }
-});
+}
 
 export { ScriptLegacyComponent };

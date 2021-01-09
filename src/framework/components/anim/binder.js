@@ -10,80 +10,69 @@ import { Vec4 } from '../../../math/vec4.js';
 
 import { AnimPropertyLocator } from './property-locator.js';
 
-function AnimComponentBinder(animComponent, graph) {
-    this.animComponent = animComponent;
+const v2 = new Vec2();
+const v3 = new Vec3();
+const v4 = new Vec4();
+const c  = new Color();
+const q  = new Quat();
 
-    if (graph) {
-        DefaultAnimBinder.call(this, graph);
-    } else {
-        this.propertyLocator = new AnimPropertyLocator();
+class AnimComponentBinder extends DefaultAnimBinder {
+    constructor(animComponent, graph) {
+        this.animComponent = animComponent;
+
+        if (graph) {
+            super(graph);
+        } else {
+            this.propertyLocator = new AnimPropertyLocator();
+        }
     }
-}
-AnimComponentBinder.prototype = Object.create(DefaultAnimBinder.prototype);
-AnimComponentBinder.prototype.constructor = AnimComponentBinder;
 
-AnimComponentBinder._packFloat = function (values) {
-    return values[0];
-};
+    static _packFloat(values) {
+        return values[0];
+    }
 
-AnimComponentBinder._packBoolean = function (values) {
-    return !!values[0];
-};
+    static _packBoolean(values) {
+        return !!values[0];
+    }
 
-AnimComponentBinder._packVec2 = function () {
-    var v = new Vec2();
-    return function (values) {
-        v.x = values[0];
-        v.y = values[1];
-        return v;
-    };
-}();
+    static _packVec2(values) {
+        v2.x = values[0];
+        v2.y = values[1];
+        return v2;
+    }
 
-AnimComponentBinder._packVec3 = function () {
-    var v = new Vec3();
-    return function (values) {
-        v.x = values[0];
-        v.y = values[1];
-        v.z = values[2];
-        return v;
-    };
-}();
+    static _packVec3(values) {
+        v3.x = values[0];
+        v3.y = values[1];
+        v3.z = values[2];
+        return v3;
+    }
 
-AnimComponentBinder._packVec4 = function () {
-    var v = new Vec4();
-    return function (values) {
-        v.x = values[0];
-        v.y = values[1];
-        v.z = values[2];
-        v.w = values[3];
-        return v;
-    };
-}();
+    static _packVec4(values) {
+        v4.x = values[0];
+        v4.y = values[1];
+        v4.z = values[2];
+        v4.w = values[3];
+        return v4;
+    }
 
-AnimComponentBinder._packColor = function () {
-    var v = new Color();
-    return function (values) {
-        v.r = values[0];
-        v.g = values[1];
-        v.b = values[2];
-        v.a = values[3];
-        return v;
-    };
-}();
+    static _packColor(values) {
+        c.r = values[0];
+        c.g = values[1];
+        c.b = values[2];
+        c.a = values[3];
+        return c;
+    }
 
-AnimComponentBinder._packQuat = function () {
-    var v = new Quat();
-    return function (values) {
-        v.x = values[0];
-        v.y = values[1];
-        v.z = values[2];
-        v.w = values[3];
-        return v;
-    };
-}();
+    static _packQuat(values) {
+        q.x = values[0];
+        q.y = values[1];
+        q.z = values[2];
+        q.w = values[3];
+        return q;
+    }
 
-Object.assign(AnimComponentBinder.prototype, {
-    resolve: function (path) {
+    resolve(path) {
         var pathSections = this.propertyLocator.decode(path);
 
         var entityHierarchy = pathSections[0];
@@ -114,9 +103,9 @@ Object.assign(AnimComponentBinder.prototype, {
         }
 
         return this._createAnimTargetForProperty(propertyComponent, propertyHierarchy);
-    },
+    }
 
-    update: function (deltaTime) {
+    update(deltaTime) {
         // flag active nodes as dirty
         var activeNodes = this.activeNodes;
         if (activeNodes) {
@@ -124,9 +113,9 @@ Object.assign(AnimComponentBinder.prototype, {
                 activeNodes[i]._dirtifyLocal();
             }
         }
-    },
+    }
 
-    _getEntityFromHierarchy: function (entityHierarchy) {
+    _getEntityFromHierarchy(entityHierarchy) {
         if (!this.animComponent.entity.name === entityHierarchy[0]) {
             return null;
         }
@@ -137,21 +126,21 @@ Object.assign(AnimComponentBinder.prototype, {
             return currEntity;
         }
         return currEntity._parent.findByPath(entityHierarchy.join('/'));
-    },
+    }
 
     // resolve an object path
-    _resolvePath: function (object, path, resolveLeaf) {
+    _resolvePath(object, path, resolveLeaf) {
         var steps = path.length - (resolveLeaf ? 0 : 1);
         for (var i = 0; i < steps; i++) {
             object = object[path[i]];
         }
         return object;
-    },
+    }
 
     // construct a setter function for the property located at 'path' from the base object. packFunc
     // is a function which takes the animation values array and packages them for the target property
     // in the correct format (i.e. vec2, quat, color etc).
-    _setter: function (object, path, packFunc) {
+    _setter(object, path, packFunc) {
         var obj = this._resolvePath(object, path);
         var key = path[path.length - 1];
 
@@ -189,9 +178,9 @@ Object.assign(AnimComponentBinder.prototype, {
         return function (values) {
             obj[key] = packFunc(values);
         };
-    },
+    }
 
-    _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
+    _createAnimTargetForProperty(propertyComponent, propertyHierarchy) {
 
         if (this.handlers && propertyHierarchy[0] === 'weights') {
             return this.handlers.weights(propertyComponent);
@@ -262,6 +251,6 @@ Object.assign(AnimComponentBinder.prototype, {
 
         return new AnimTarget(setter, animDataType, animDataComponents);
     }
-});
+}
 
 export { AnimComponentBinder };
