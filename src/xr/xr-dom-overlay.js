@@ -58,6 +58,7 @@ class XrDomOverlay {
 
         this._root = value;
     }
+
     get root() {
         return this._root;
     }

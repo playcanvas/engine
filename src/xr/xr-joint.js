@@ -117,6 +117,7 @@ class XrJoint {
     get index() {
         return this._index;
     }
+
     get hand() {
         return this._hand;
     }
