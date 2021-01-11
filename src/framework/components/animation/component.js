@@ -494,7 +494,7 @@ class AnimationComponent extends Component {
         return 0;
     }
 
-    set(currentTime) {
+    set currentTime(currentTime) {
         var data = this.data;
         if (data.skeleton) {
             var skeleton = data.skeleton;
