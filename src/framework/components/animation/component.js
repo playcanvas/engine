@@ -458,7 +458,12 @@ class AnimationComponent extends Component {
 
     onBeforeRemove() {
         for (var i = 0; i < this.assets.length; i++) {
-            var asset = this.system.app.assets.get(this.assets[i]);
+            var assetId = this.assets[i];
+            if (typeof assetId !== 'number') {
+                assetId = assetId.id;
+            }
+
+            var asset = this.system.app.assets.get(assetId);
             if (!asset) continue;
 
             asset.off('change', this.onAssetChanged, this);
