@@ -8,8 +8,6 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 import { Vec4 } from '../../../math/vec4.js';
 
-import { AnimPropertyLocator } from './property-locator.js';
-
 const v2 = new Vec2();
 const v3 = new Vec3();
 const v4 = new Vec4();
@@ -18,13 +16,8 @@ const q  = new Quat();
 
 class AnimComponentBinder extends DefaultAnimBinder {
     constructor(animComponent, graph) {
+        super(graph);
         this.animComponent = animComponent;
-
-        if (graph) {
-            super(graph);
-        } else {
-            this.propertyLocator = new AnimPropertyLocator();
-        }
     }
 
     static _packFloat(values) {

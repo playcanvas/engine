@@ -115,15 +115,18 @@ class AnimComponent extends Component {
                 }
                 var assetId = animationAsset.asset;
                 var asset = this.system.app.assets.get(assetId);
-                if (asset.resource) {
-                    this.assignAnimation(stateName, asset.resource, layer.name);
-                } else {
-                    asset.once('load', function (layerName, stateName) {
-                        return function (asset) {
-                            this.assignAnimation(stateName, asset.resource, layerName);
-                        }.bind(this);
-                    }.bind(this)(layer.name, stateName));
-                    this.system.app.assets.load(asset);
+                // check whether assigned animation asset still exists
+                if (asset) {
+                    if (asset.resource) {
+                        this.assignAnimation(stateName, asset.resource, layer.name);
+                    } else {
+                        asset.once('load', function (layerName, stateName) {
+                            return function (asset) {
+                                this.assignAnimation(stateName, asset.resource, layerName);
+                            }.bind(this);
+                        }.bind(this)(layer.name, stateName));
+                        this.system.app.assets.load(asset);
+                    }
                 }
             }
         }
