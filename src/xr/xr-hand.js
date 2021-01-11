@@ -35,186 +35,176 @@ if (window.XRHand) {
  * @property {pc.XrJoint|null} wrist Wrist of a hand, or null if it is not available by WebXR underlying system
  * @property {boolean} tracking True if tracking is available, otherwise tracking might be lost
  */
-function XrHand(inputSource) {
-    EventHandler.call(this);
+class XrHand extends EventHandler {
+    constructor(inputSource) {
+        super();
 
-    var xrHand = inputSource._xrInputSource.hand;
+        var xrHand = inputSource._xrInputSource.hand;
 
-    this._manager = inputSource._manager;
-    this._inputSource = inputSource;
+        this._manager = inputSource._manager;
+        this._inputSource = inputSource;
 
-    this._tracking = false;
+        this._tracking = false;
 
-    this._fingers = [];
-    this._joints = [];
-    this._jointsById = {};
-    this._tips = [];
+        this._fingers = [];
+        this._joints = [];
+        this._jointsById = {};
+        this._tips = [];
 
-    this._wrist = null;
+        this._wrist = null;
 
-    if (xrHand[XRHand.WRIST])
-        this._wrist = new XrJoint(0, XRHand.WRIST, this, null);
+        if (xrHand[XRHand.WRIST])
+            this._wrist = new XrJoint(0, XRHand.WRIST, this, null);
 
-    for (var f = 0; f < fingerJointIds.length; f++) {
-        var finger = new XrFinger(f, this);
+        for (var f = 0; f < fingerJointIds.length; f++) {
+            var finger = new XrFinger(f, this);
 
-        for (var j = 0; j < fingerJointIds[f].length; j++) {
-            var jointId = fingerJointIds[f][j];
-            if (! xrHand[jointId]) continue;
-            new XrJoint(j, jointId, this, finger);
-        }
-    }
-}
-XrHand.prototype = Object.create(EventHandler.prototype);
-XrHand.prototype.constructor = XrHand;
-
-/**
- * @event
- * @name pc.XrHand#tracking
- * @description Fired when tracking becomes available.
- */
-
- /**
-  * @event
-  * @name pc.XrHand#trackinglost
-  * @description Fired when tracking is lost.
-  */
-
-XrHand.prototype.update = function (frame) {
-    var xrInputSource = this._inputSource._xrInputSource;
-
-    // joints
-    for (var j = 0; j < this._joints.length; j++) {
-        var joint = this._joints[j];
-        var jointSpace = xrInputSource.hand[joint._id];
-        if (jointSpace) {
-            var pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
-            if (pose) {
-                joint.update(pose);
-
-                if (joint.wrist && ! this._tracking) {
-                    this._tracking = true;
-                    this.fire('tracking');
-                }
-            } else if (joint.wrist) {
-                // lost tracking
-
-                if (this._tracking) {
-                    this._tracking = false;
-                    this.fire('trackinglost');
-                }
-                break;
+            for (var j = 0; j < fingerJointIds[f].length; j++) {
+                var jointId = fingerJointIds[f][j];
+                if (! xrHand[jointId]) continue;
+                new XrJoint(j, jointId, this, finger);
             }
         }
     }
 
-    var j1 = this._jointsById[XRHand.THUMB_METACARPAL];
-    var j4 = this._jointsById[XRHand.THUMB_PHALANX_TIP];
-    var j6 = this._jointsById[XRHand.INDEX_PHALANX_PROXIMAL];
-    var j9 = this._jointsById[XRHand.INDEX_PHALANX_TIP];
-    var j16 = this._jointsById[XRHand.RING_PHALANX_PROXIMAL];
-    var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];
+    /**
+     * @event
+     * @name pc.XrHand#tracking
+     * @description Fired when tracking becomes available.
+     */
 
-    // ray
-    if (j1 && j4 && j6 && j9 && j16 && j21) {
-        this._inputSource._dirtyRay = true;
+    /**
+     * @event
+     * @name pc.XrHand#trackinglost
+     * @description Fired when tracking is lost.
+     */
 
-        // ray origin
-        // get point between thumb tip and index tip
-        this._inputSource._rayLocal.origin.lerp(j4._localPosition, j9._localPosition, 0.5);
+    update = function (frame) {
+        var xrInputSource = this._inputSource._xrInputSource;
 
-        // ray direction
-        var jointL = j1;
-        var jointR = j21;
+        // joints
+        for (var j = 0; j < this._joints.length; j++) {
+            var joint = this._joints[j];
+            var jointSpace = xrInputSource.hand[joint._id];
+            if (jointSpace) {
+                var pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+                if (pose) {
+                    joint.update(pose);
 
-        if (this._inputSource.handedness === XRHAND_LEFT) {
-            var t = jointL;
-            jointL = jointR;
-            jointR = t;
+                    if (joint.wrist && ! this._tracking) {
+                        this._tracking = true;
+                        this.fire('tracking');
+                    }
+                } else if (joint.wrist) {
+                    // lost tracking
+
+                    if (this._tracking) {
+                        this._tracking = false;
+                        this.fire('trackinglost');
+                    }
+                    break;
+                }
+            }
         }
 
-        // (A) calculate normal vector between 3 joints: wrist, thumb metacarpal, little phalanx proximal
-        vecA.sub2(jointL._localPosition, this._wrist._localPosition);
-        vecB.sub2(jointR._localPosition, this._wrist._localPosition);
-        vecC.cross(vecA, vecB).normalize();
+        var j1 = this._jointsById[XRHand.THUMB_METACARPAL];
+        var j4 = this._jointsById[XRHand.THUMB_PHALANX_TIP];
+        var j6 = this._jointsById[XRHand.INDEX_PHALANX_PROXIMAL];
+        var j9 = this._jointsById[XRHand.INDEX_PHALANX_TIP];
+        var j16 = this._jointsById[XRHand.RING_PHALANX_PROXIMAL];
+        var j21 = this._jointsById[XRHand.LITTLE_PHALANX_PROXIMAL];
 
-        // get point between: index phalanx proximal and right phalanx proximal
-        vecA.lerp(j6._localPosition, j16._localPosition, 0.5);
-        // (B) get vector between that point and a wrist
-        vecA.sub(this._wrist._localPosition).normalize();
+        // ray
+        if (j1 && j4 && j6 && j9 && j16 && j21) {
+            this._inputSource._dirtyRay = true;
 
-        // mix normal vector (A) with hand directional vector (B)
-        this._inputSource._rayLocal.direction.lerp(vecC, vecA, 0.5).normalize();
+            // ray origin
+            // get point between thumb tip and index tip
+            this._inputSource._rayLocal.origin.lerp(j4._localPosition, j9._localPosition, 0.5);
+
+            // ray direction
+            var jointL = j1;
+            var jointR = j21;
+
+            if (this._inputSource.handedness === XRHAND_LEFT) {
+                var t = jointL;
+                jointL = jointR;
+                jointR = t;
+            }
+
+            // (A) calculate normal vector between 3 joints: wrist, thumb metacarpal, little phalanx proximal
+            vecA.sub2(jointL._localPosition, this._wrist._localPosition);
+            vecB.sub2(jointR._localPosition, this._wrist._localPosition);
+            vecC.cross(vecA, vecB).normalize();
+
+            // get point between: index phalanx proximal and right phalanx proximal
+            vecA.lerp(j6._localPosition, j16._localPosition, 0.5);
+            // (B) get vector between that point and a wrist
+            vecA.sub(this._wrist._localPosition).normalize();
+
+            // mix normal vector (A) with hand directional vector (B)
+            this._inputSource._rayLocal.direction.lerp(vecC, vecA, 0.5).normalize();
+        }
+
+        // emulate squeeze events by folding all 4 fingers
+        var squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
+
+        if (squeezing) {
+            if (! this._inputSource._squeezing) {
+                this._inputSource._squeezing = true;
+                this._inputSource.fire('squeezestart');
+                this._manager.input.fire('squeezestart', this._inputSource);
+            }
+        } else {
+            if (this._inputSource._squeezing) {
+                this._inputSource._squeezing = false;
+
+                this._inputSource.fire('squeeze');
+                this._manager.input.fire('squeeze', this._inputSource);
+
+                this._inputSource.fire('squeezeend');
+                this._manager.input.fire('squeezeend', this._inputSource);
+            }
+        }
     }
 
-    // emulate squeeze events by folding all 4 fingers
-    var squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
-
-    if (squeezing) {
-        if (! this._inputSource._squeezing) {
-            this._inputSource._squeezing = true;
-            this._inputSource.fire('squeezestart');
-            this._manager.input.fire('squeezestart', this._inputSource);
-        }
-    } else {
-        if (this._inputSource._squeezing) {
-            this._inputSource._squeezing = false;
-
-            this._inputSource.fire('squeeze');
-            this._manager.input.fire('squeeze', this._inputSource);
-
-            this._inputSource.fire('squeezeend');
-            this._manager.input.fire('squeezeend', this._inputSource);
-        }
+    _fingerIsClosed(index) {
+        var finger = this._fingers[index];
+        vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
+        vecB.sub2(finger.joints[2]._localPosition, finger.joints[3]._localPosition).normalize();
+        return vecA.dot(vecB) < -0.8;
     }
-};
 
-XrHand.prototype._fingerIsClosed = function (index) {
-    var finger = this._fingers[index];
-    vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
-    vecB.sub2(finger.joints[2]._localPosition, finger.joints[3]._localPosition).normalize();
-    return vecA.dot(vecB) < -0.8;
-};
+    /**
+     * @function
+     * @name pc.XrHand#getJointById
+     * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
+     * @param {number} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
+     * @returns {pc.XrJoint|null} Joint or null if not available
+     */
+    getJointById(id) {
+        return this._jointsById[id] || null;
+    }
 
-/**
- * @function
- * @name pc.XrHand#getJointById
- * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
- * @param {number} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
- * @returns {pc.XrJoint|null} Joint or null if not available
- */
-XrHand.prototype.getJointById = function (id) {
-    return this._jointsById[id] || null;
-};
-
-Object.defineProperty(XrHand.prototype, 'fingers', {
-    get: function () {
+    get fingers() {
         return this._fingers;
     }
-});
 
-Object.defineProperty(XrHand.prototype, 'joints', {
-    get: function () {
+    get joints() {
         return this._joints;
     }
-});
 
-Object.defineProperty(XrHand.prototype, 'tips', {
-    get: function () {
+    get tips() {
         return this._tips;
     }
-});
 
-Object.defineProperty(XrHand.prototype, 'wrist', {
-    get: function () {
+    get wrist() {
         return this._wrist;
     }
-});
 
-Object.defineProperty(XrHand.prototype, 'tracking', {
-    get: function () {
+    get tracking() {
         return this._tracking;
     }
-});
+}
 
 export { XrHand };

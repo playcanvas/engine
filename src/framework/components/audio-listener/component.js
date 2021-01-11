@@ -10,31 +10,28 @@ import { Component } from '../component.js';
  * @param {pc.AudioListenerComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
  */
-function AudioListenerComponent(system, entity) {
-    Component.call(this, system, entity);
-}
-AudioListenerComponent.prototype = Object.create(Component.prototype);
-AudioListenerComponent.prototype.constructor = AudioListenerComponent;
+class AudioListenerComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
+    }
 
-Object.assign(AudioListenerComponent.prototype, {
-    setCurrentListener: function () {
+    setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
             this.system.current = this.entity;
             var position = this.system.current.getPosition();
             this.system.manager.listener.setPosition(position);
         }
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         this.setCurrentListener();
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         if (this.system.current === this.entity) {
             this.system.current = null;
         }
     }
-
-});
+}
 
 export { AudioListenerComponent };

@@ -18,28 +18,26 @@ import { LightComponentData } from './data.js';
  * @description Create a new LightComponentSystem.
  * @param {pc.Application} app - The application.
  */
-var lightTypes = {
+const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
     'omni': LIGHTTYPE_OMNI,
     'point': LIGHTTYPE_OMNI,
     'spot': LIGHTTYPE_SPOT
 };
 
-function LightComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class LightComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'light';
+        this.id = 'light';
 
-    this.ComponentType = LightComponent;
-    this.DataType = LightComponentData;
+        this.ComponentType = LightComponent;
+        this.DataType = LightComponentData;
 
-    this.on('beforeremove', this._onRemoveComponent, this);
-}
-LightComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-LightComponentSystem.prototype.constructor = LightComponentSystem;
+        this.on('beforeremove', this._onRemoveComponent, this);
+    }
 
-Object.assign(LightComponentSystem.prototype, {
-    initializeComponentData: function (component, _data) {
+    initializeComponentData(component, _data) {
         var properties = _lightProps;
 
         // duplicate because we're modifying the data
@@ -79,14 +77,14 @@ Object.assign(LightComponentSystem.prototype, {
         light._scene = this.app.scene;
         component.data.light = light;
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+        super.initializeComponentData(component, data, properties);
+    }
 
-    _onRemoveComponent: function (entity, component) {
+    _onRemoveComponent(entity, component) {
         component.onRemove();
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var light = entity.light;
 
         var data = [];
@@ -103,13 +101,13 @@ Object.assign(LightComponentSystem.prototype, {
         }
 
         this.addComponent(clone, data);
-    },
+    }
 
-    changeType: function (component, oldValue, newValue) {
+    changeType(component, oldValue, newValue) {
         if (oldValue !== newValue) {
             component.light.type = lightTypes[newValue];
         }
     }
-});
+}
 
 export { LightComponentSystem };

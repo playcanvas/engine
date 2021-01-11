@@ -16,37 +16,37 @@ var depthLayer;
  * @param {pc.Application} app - The application.
  * @param {pc.CameraComponent} camera - The camera component.
  */
-function PostEffectQueue(app, camera) {
-    var self = this;
+class PostEffectQueue {
+    constructor(app, camera) {
+        var self = this;
 
-    this.app = app;
-    this.camera = camera;
-    // stores all of the post effects
-    this.effects = [];
-    // if the queue is enabled it will render all of its effects
-    // otherwise it will not render anything
-    this.enabled = false;
+        this.app = app;
+        this.camera = camera;
+        // stores all of the post effects
+        this.effects = [];
+        // if the queue is enabled it will render all of its effects
+        // otherwise it will not render anything
+        this.enabled = false;
 
-    // legacy
-    this.depthTarget = null;
+        // legacy
+        this.depthTarget = null;
 
-    this.renderTargetScale = 1;
-    this.resizeTimeout = null;
-    this.resizeLast = 0;
+        this.renderTargetScale = 1;
+        this.resizeTimeout = null;
+        this.resizeLast = 0;
 
-    this._resizeTimeoutCallback = function () {
-        self.resizeRenderTargets();
-    };
+        this._resizeTimeoutCallback = function () {
+            self.resizeRenderTargets();
+        };
 
-    camera.on('set_rect', this.onCameraRectChanged, this);
+        camera.on('set_rect', this.onCameraRectChanged, this);
 
-    this._origOverrideClear = false;
-    this._origClearColorBuffer = false;
-    this._origDepthColorBuffer = false;
-    this._origStencilColorBuffer = false;
-}
+        this._origOverrideClear = false;
+        this._origClearColorBuffer = false;
+        this._origDepthColorBuffer = false;
+        this._origStencilColorBuffer = false;
+    }
 
-Object.assign(PostEffectQueue.prototype, {
     /**
      * @private
      * @function
@@ -57,7 +57,7 @@ Object.assign(PostEffectQueue.prototype, {
      * @returns {pc.RenderTarget} The render target.
      */
 
-    _createOffscreenTarget: function (useDepth, hdr) {
+    _createOffscreenTarget(useDepth, hdr) {
         var rect = this.camera.rect;
 
         var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
@@ -81,9 +81,9 @@ Object.assign(PostEffectQueue.prototype, {
         colorBuffer.addressV = ADDRESS_CLAMP_TO_EDGE;
 
         return new RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
-    },
+    }
 
-    _resizeOffscreenTarget: function (rt) {
+    _resizeOffscreenTarget(rt) {
         var rect = this.camera.rect;
 
         var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
@@ -108,21 +108,21 @@ Object.assign(PostEffectQueue.prototype, {
 
         rt._colorBuffer = colorBuffer;
         rt.destroy();
-    },
+    }
 
-    _destroyOffscreenTarget: function (rt) {
+    _destroyOffscreenTarget(rt) {
         if (rt._colorBuffer)
             rt._colorBuffer.destroy();
         if (rt._depthBuffer)
             rt._depthBuffer.destroy();
 
         rt.destroy();
-    },
+    }
 
-    setRenderTargetScale: function (scale) {
+    setRenderTargetScale(scale) {
         this.renderTargetScale = scale;
         this.resizeRenderTargets();
-    },
+    }
 
     /**
      * @function
@@ -131,7 +131,7 @@ Object.assign(PostEffectQueue.prototype, {
      * automatically enable the queue.
      * @param {pc.PostEffect} effect - The post effect to add to the queue.
      */
-    addEffect: function (effect) {
+    addEffect(effect) {
         // first rendering of the scene requires depth buffer
         var isFirstEffect = this.effects.length === 0;
 
@@ -219,7 +219,7 @@ Object.assign(PostEffectQueue.prototype, {
 
         this.enable();
         this._newPostEffect = undefined;
-    },
+    }
 
     /**
      * @function
@@ -227,7 +227,7 @@ Object.assign(PostEffectQueue.prototype, {
      * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
      * @param {pc.PostEffect} effect - The post effect to remove.
      */
-    removeEffect: function (effect) {
+    removeEffect(effect) {
         // find index of effect
         var i, len, index = -1;
         for (i = 0, len = this.effects.length; i < len; i++) {
@@ -276,9 +276,9 @@ Object.assign(PostEffectQueue.prototype, {
         if (this.effects.length === 0) {
             this.disable();
         }
-    },
+    }
 
-    _requestDepthMaps: function () {
+    _requestDepthMaps() {
         for (var i = 0, len = this.effects.length; i < len; i++) {
             var effect = this.effects[i].effect;
             if (this._newPostEffect === effect)
@@ -288,32 +288,32 @@ Object.assign(PostEffectQueue.prototype, {
                 this._requestDepthMap();
             }
         }
-    },
+    }
 
-    _releaseDepthMaps: function () {
+    _releaseDepthMaps() {
         for (var i = 0, len = this.effects.length; i < len; i++) {
             var effect = this.effects[i].effect;
             if (effect.needsDepthBuffer) {
                 this._releaseDepthMap();
             }
         }
-    },
+    }
 
-    _requestDepthMap: function () {
+    _requestDepthMap() {
         if (!depthLayer) depthLayer = this.app.scene.layers.getLayerById(LAYERID_DEPTH);
         if (depthLayer) depthLayer.incrementCounter();
-    },
+    }
 
-    _releaseDepthMap: function () {
+    _releaseDepthMap() {
         if (depthLayer) depthLayer.decrementCounter();
-    },
+    }
 
     /**
      * @function
      * @name pc.PostEffectQueue#destroy
      * @description Removes all the effects from the queue and disables it.
      */
-    destroy: function () {
+    destroy() {
         // release memory for all effects
         for (var i = 0, len = this.effects.length; i < len; i++) {
             this.effects[i].inputTarget.destroy();
@@ -322,14 +322,14 @@ Object.assign(PostEffectQueue.prototype, {
         this.effects.length = 0;
 
         this.disable();
-    },
+    }
 
     /**
      * @function
      * @name pc.PostEffectQueue#enable
      * @description Enables the queue and all of its effects. If there are no effects then the queue will not be enabled.
      */
-    enable: function () {
+    enable() {
         if (!this.enabled && this.effects.length) {
             this.enabled = true;
 
@@ -366,14 +366,14 @@ Object.assign(PostEffectQueue.prototype, {
 
             this.layer._commandList.push(this.command);
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.PostEffectQueue#disable
      * @description Disables the queue and all of its effects.
      */
-    disable: function () {
+    disable() {
         if (this.enabled) {
             this.enabled = false;
 
@@ -410,9 +410,9 @@ Object.assign(PostEffectQueue.prototype, {
             this.app.scene.layers.removeOpaque(this.layer);
             this.layer = null;
         }
-    },
+    }
 
-    _onCanvasResized: function (width, height) {
+    _onCanvasResized(width, height) {
         var rect = this.camera.rect;
         var device = this.app.graphicsDevice;
         this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
@@ -428,9 +428,9 @@ Object.assign(PostEffectQueue.prototype, {
             // target to maximum at 10 resizes a second
             this.resizeTimeout = setTimeout(this._resizeTimeoutCallback, 100);
         }
-    },
+    }
 
-    resizeRenderTargets: function () {
+    resizeRenderTargets() {
         if (this.resizeTimeout) {
             clearTimeout(this.resizeTimeout);
             this.resizeTimeout = null;
@@ -451,9 +451,9 @@ Object.assign(PostEffectQueue.prototype, {
                 this._resizeOffscreenTarget(fx.inputTarget);
             }
         }
-    },
+    }
 
-    onCameraRectChanged: function (name, oldValue, newValue) {
+    onCameraRectChanged(name, oldValue, newValue) {
         if (this.enabled) {
             // reset the camera node's rect to full screen otherwise
             // post effect will not work correctly
@@ -461,6 +461,6 @@ Object.assign(PostEffectQueue.prototype, {
             this.resizeRenderTargets();
         }
     }
-});
+}
 
 export { PostEffectQueue };

@@ -48,73 +48,69 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  * @property {pc.Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
  */
-function RenderComponent(system, entity)   {
-    Component.call(this, system, entity);
+class RenderComponent extends Component {
+    constructor(system, entity)   {
+        super(system, entity);
 
-    this._type = 'asset';
-    this._castShadows = true;
-    this._receiveShadows = true;
-    this._castShadowsLightmap = true;
-    this._lightmapped = false;
-    this._lightmapSizeMultiplier = 1;
-    this._isStatic = false;
-    this._batchGroupId = -1;
+        this._type = 'asset';
+        this._castShadows = true;
+        this._receiveShadows = true;
+        this._castShadowsLightmap = true;
+        this._lightmapped = false;
+        this._lightmapSizeMultiplier = 1;
+        this._isStatic = false;
+        this._batchGroupId = -1;
 
-    this._meshInstances = [];
-    this._layers = [LAYERID_WORLD]; // assign to the default world layer
+        this._meshInstances = [];
+        this._layers = [LAYERID_WORLD]; // assign to the default world layer
 
-    // bounding box which can be set to override bounding box based on mesh
-    this._aabb = null;
+        // bounding box which can be set to override bounding box based on mesh
+        this._aabb = null;
 
-    // area - used by lightmapper
-    this._area = null;
+        // area - used by lightmapper
+        this._area = null;
 
-    // the entity that represents the root bone if this render component has skinned meshes
-    this._rootBone = new EntityReference(this, 'rootBone');
-    this._rootBone.on('set:entity', this._onSetRootBone, this);
+        // the entity that represents the root bone if this render component has skinned meshes
+        this._rootBone = new EntityReference(this, 'rootBone');
+        this._rootBone.on('set:entity', this._onSetRootBone, this);
 
-    // render asset reference
-    this._assetReference = new AssetReference(
-        'asset',
-        this,
-        system.app.assets, {
-            add: this._onRenderAssetAdded,
-            load: this._onRenderAssetLoad,
-            remove: this._onRenderAssetRemove,
-            unload: this._onRenderAssetUnload
-        },
-        this
-    );
+        // render asset reference
+        this._assetReference = new AssetReference(
+            'asset',
+            this,
+            system.app.assets, {
+                add: this._onRenderAssetAdded,
+                load: this._onRenderAssetLoad,
+                remove: this._onRenderAssetRemove,
+                unload: this._onRenderAssetUnload
+            },
+            this
+        );
 
-    // material used to render meshes other than asset type
-    // it gets priority when set to something else than defaultMaterial, otherwise materialASsets[0] is used
-    this._material = system.defaultMaterial;
+        // material used to render meshes other than asset type
+        // it gets priority when set to something else than defaultMaterial, otherwise materialASsets[0] is used
+        this._material = system.defaultMaterial;
 
-    // material asset references
-    this._materialReferences = [];
+        // material asset references
+        this._materialReferences = [];
 
-    entity.on('remove', this.onRemoveChild, this);
-    entity.on('insert', this.onInsertChild, this);
-}
+        entity.on('remove', this.onRemoveChild, this);
+        entity.on('insert', this.onInsertChild, this);
+    }
 
-RenderComponent.prototype = Object.create(Component.prototype);
-RenderComponent.prototype.constructor = RenderComponent;
-
-Object.assign(RenderComponent.prototype, {
-
-    _onSetRootBone: function (entity) {
+    _onSetRootBone(entity) {
         if (entity) {
             this._onRootBoneChanged();
         }
-    },
+    }
 
-    _onRootBoneChanged: function () {
+    _onRootBoneChanged() {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
         this._cloneSkinInstances();
-    },
+    }
 
-    destroyMeshInstances: function () {
+    destroyMeshInstances() {
 
         var meshInstances = this._meshInstances;
         if (meshInstances) {
@@ -125,9 +121,9 @@ Object.assign(RenderComponent.prototype, {
             }
             this._meshInstances.length = 0;
         }
-    },
+    }
 
-    addToLayers: function () {
+    addToLayers() {
         var layer, layers = this.system.app.scene.layers;
         for (var i = 0; i < this._layers.length; i++) {
             layer = layers.getLayerById(this._layers[i]);
@@ -135,9 +131,9 @@ Object.assign(RenderComponent.prototype, {
                 layer.addMeshInstances(this._meshInstances);
             }
         }
-    },
+    }
 
-    removeFromLayers: function () {
+    removeFromLayers() {
 
         if (this._meshInstances && this._meshInstances.length) {
 
@@ -149,19 +145,19 @@ Object.assign(RenderComponent.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onRemoveChild: function () {
+    onRemoveChild() {
         this.removeFromLayers();
-    },
+    }
 
-    onInsertChild: function () {
+    onInsertChild() {
         if (this._meshInstances && this.enabled && this.entity.enabled) {
             this.addToLayers();
         }
-    },
+    }
 
-    onRemove: function () {
+    onRemove() {
         this.destroyMeshInstances();
 
         this.asset = null;
@@ -169,29 +165,29 @@ Object.assign(RenderComponent.prototype, {
 
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
-    },
+    }
 
-    onLayersChanged: function (oldComp, newComp) {
+    onLayersChanged(oldComp, newComp) {
         this.addToLayers();
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
         newComp.on("remove", this.onLayerRemoved, this);
-    },
+    }
 
-    onLayerAdded: function (layer) {
+    onLayerAdded(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this._meshInstances);
-    },
+    }
 
-    onLayerRemoved: function (layer) {
+    onLayerRemoved(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this._meshInstances);
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         var app = this.system.app;
         var scene = app.scene;
 
@@ -220,9 +216,9 @@ Object.assign(RenderComponent.prototype, {
         if (this._batchGroupId >= 0) {
             app.batcher.insert(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         var app = this.system.app;
         var scene = app.scene;
 
@@ -237,7 +233,7 @@ Object.assign(RenderComponent.prototype, {
         }
 
         this.removeFromLayers();
-    },
+    }
 
     /**
      * @private
@@ -248,13 +244,13 @@ Object.assign(RenderComponent.prototype, {
      * Note, this does not remove the mesh instances from the scene hierarchy or draw call list.
      * So the render component still incurs some CPU overhead.
      */
-    hide: function () {
+    hide() {
         if (this._meshInstances) {
             for (var i = 0; i < this._meshInstances.length; i++) {
                 this._meshInstances[i].visible = false;
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -263,15 +259,15 @@ Object.assign(RenderComponent.prototype, {
      * @description Enable rendering of the render {@link pc.MeshInstance}s if hidden using {@link pc.RenderComponent#hide}.
      * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
      */
-    show: function () {
+    show() {
         if (this._meshInstances) {
             for (var i = 0; i < this._meshInstances.length; i++) {
                 this._meshInstances[i].visible = true;
             }
         }
-    },
+    }
 
-    _onRenderAssetAdded: function () {
+    _onRenderAssetAdded() {
         if (!this._assetReference.asset) return;
 
         if (this._assetReference.asset.resource) {
@@ -279,9 +275,9 @@ Object.assign(RenderComponent.prototype, {
         } else if (this.enabled && this.entity.enabled) {
             this.system.app.assets.load(this._assetReference.asset);
         }
-    },
+    }
 
-    _onRenderAssetLoad: function () {
+    _onRenderAssetLoad() {
 
         // remove existing instances
         this.destroyMeshInstances();
@@ -294,20 +290,20 @@ Object.assign(RenderComponent.prototype, {
                 this._onSetMeshes(render.meshes);
             }
         }
-    },
+    }
 
-    _onSetMeshes: function (meshes) {
+    _onSetMeshes(meshes) {
         this._cloneMeshes(meshes);
-    },
+    }
 
-    _clearSkinInstances: function () {
+    _clearSkinInstances() {
 
         for (var i = 0; i < this._meshInstances.length; i++) {
             this._meshInstances[i].skinInstance = null;
         }
-    },
+    }
 
-    _cloneSkinInstances: function () {
+    _cloneSkinInstances() {
 
         if (this._meshInstances.length && this._rootBone.entity instanceof GraphNode) {
 
@@ -352,9 +348,9 @@ Object.assign(RenderComponent.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _cloneMeshes: function (meshes) {
+    _cloneMeshes(meshes) {
 
         if (meshes && meshes.length) {
 
@@ -380,25 +376,25 @@ Object.assign(RenderComponent.prototype, {
             // try to create skin instances if rootBone has been set, otherwise this executes when rootBone is set later
             this._cloneSkinInstances();
         }
-    },
+    }
 
-    _onRenderAssetUnload: function () {
+    _onRenderAssetUnload() {
 
         // when unloading asset, only remove asset mesh instances (type could have been already changed to 'box' or similar)
         if (this._type === 'asset') {
             this.destroyMeshInstances();
         }
-    },
+    }
 
-    _onRenderAssetRemove: function () {
+    _onRenderAssetRemove() {
         if (this._assetReference.asset && this._assetReference.asset.resource) {
             this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
         }
 
         this._onRenderAssetUnload();
-    },
+    }
 
-    _onMaterialAdded: function (index, component, asset) {
+    _onMaterialAdded(index, component, asset) {
         if (asset.resource) {
             this._onMaterialLoad(index, component, asset);
         } else {
@@ -406,25 +402,25 @@ Object.assign(RenderComponent.prototype, {
                 this.system.app.assets.load(asset);
             }
         }
-    },
+    }
 
-    _onMaterialLoad: function (index, component, asset) {
+    _onMaterialLoad(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = asset.resource;
         }
-    },
+    }
 
-    _onMaterialRemove: function (index, component, asset) {
+    _onMaterialRemove(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
-    },
+    }
 
-    _onMaterialUnload: function (index, component, asset) {
+    _onMaterialUnload(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
-    },
+    }
 
     /**
      * @private
@@ -439,7 +435,7 @@ Object.assign(RenderComponent.prototype, {
      *     render.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */
-    generateWireframe: function () {
+    generateWireframe() {
 
         // Build an array of unique meshes
         var i, mesh, meshes = [];
@@ -457,361 +453,333 @@ Object.assign(RenderComponent.prototype, {
             }
         }
     }
-});
 
-Object.defineProperties(RenderComponent.prototype, {
+    get aabb() {
+        return this._aabb;
+    }
 
-    "aabb": {
-        get: function () {
-            return this._aabb;
-        },
-        set: function (value) {
-            this._aabb = value;
+    set aabb(value) {
+        this._aabb = value;
 
-            // set it on meshInstances
-            var mi = this._meshInstances;
-            if (mi) {
-                for (var i = 0; i < mi.length; i++) {
-                    mi[i].setOverrideAabb(this._aabb);
-                }
-            }
-        }
-    },
-
-    "type": {
-        get: function () {
-            return this._type;
-        },
-
-        set: function (value) {
-
-            if (this._type !== value) {
-                this._area = null;
-                this._type = value;
-
-                this.destroyMeshInstances();
-
-                if (value !== 'asset') {
-                    var material = this._material;
-                    if (!material || material === this.system.defaultMaterial) {
-                        material = this._materialReferences[0] &&
-                                   this._materialReferences[0].asset &&
-                                   this._materialReferences[0].asset.resource;
-                    }
-
-                    var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
-                    this._area = primData.area;
-                    this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
-
-                    if (this.system._inTools)
-                        this.generateWireframe();
-                }
-            }
-        }
-    },
-
-    "meshInstances": {
-        get: function () {
-            return this._meshInstances;
-        },
-
-        set: function (value) {
-
-            this.destroyMeshInstances();
-
-            this._meshInstances = value;
-
-            if (this._meshInstances) {
-
-                var mi = this._meshInstances;
-                for (var i = 0; i < mi.length; i++) {
-                    mi[i].castShadow = this._castShadows;
-                    mi[i].receiveShadow = this._receiveShadows;
-                    mi[i].isStatic = this._isStatic;
-                    mi[i].setLightmapped(this._lightmapped);
-                    mi[i].setOverrideAabb(this._aabb);
-                }
-
-                if (this.enabled && this.entity.enabled) {
-                    this.addToLayers();
-                }
-            }
-        }
-    },
-
-    "lightmapped": {
-        get: function () {
-            return this._lightmapped;
-        },
-        set: function (value) {
-            if (value !== this._lightmapped) {
-                this._lightmapped = value;
-
-                var mi = this._meshInstances;
-                if (mi) {
-                    for (var i = 0; i < mi.length; i++) {
-                        mi[i].setLightmapped(value);
-                    }
-                }
-            }
-        }
-    },
-
-    "castShadows": {
-        get: function () {
-            return this._castShadows;
-        },
-
-        set: function (value) {
-            if (this._castShadows !== value) {
-
-                var i, layer, mi = this._meshInstances;
-
-                if (mi) {
-                    var layers = this.layers;
-                    var scene = this.system.app.scene;
-                    if (this._castShadows && !value) {
-                        for (i = 0; i < layers.length; i++) {
-                            layer = scene.layers.getLayerById(this.layers[i]);
-                            if (layer) {
-                                layer.removeShadowCasters(mi);
-                            }
-                        }
-                    }
-
-                    for (i = 0; i < mi.length; i++) {
-                        mi[i].castShadow = value;
-                    }
-
-                    if (!this._castShadows && value) {
-                        for (i = 0; i < layers.length; i++) {
-                            layer = scene.layers.getLayerById(layers[i]);
-                            if (layer) {
-                                layer.addShadowCasters(mi);
-                            }
-                        }
-                    }
-                }
-
-                this._castShadows = value;
-            }
-        }
-    },
-
-    "receiveShadows": {
-        get: function () {
-            return this._receiveShadows;
-        },
-
-        set: function (value) {
-            if (this._receiveShadows !== value) {
-
-                this._receiveShadows = value;
-
-                var mi = this._meshInstances;
-                if (mi) {
-                    for (var i = 0; i < mi.length; i++) {
-                        mi[i].receiveShadow = value;
-                    }
-                }
-            }
-        }
-    },
-
-    "castShadowsLightmap": {
-        get: function () {
-            return this._castShadowsLightmap;
-        },
-
-        set: function (value) {
-            this._castShadowsLightmap = value;
-        }
-    },
-
-    "lightmapSizeMultiplier": {
-        get: function () {
-            return this._lightmapSizeMultiplier;
-        },
-
-        set: function (value) {
-            this._lightmapSizeMultiplier = value;
-        }
-    },
-
-    "isStatic": {
-        get: function () {
-            return this._isStatic;
-        },
-
-        set: function (value) {
-            if (this._isStatic !== value) {
-                this._isStatic = value;
-
-                var mi = this._meshInstances;
-                if (mi) {
-                    for (var i = 0; i < mi.length; i++) {
-                        mi[i].isStatic = value;
-                    }
-                }
-            }
-        }
-    },
-
-    "layers": {
-        get: function () {
-            return this._layers;
-        },
-
-        set: function (value) {
-
-            var i, layer, layers = this.system.app.scene.layers;
-
-            if (this._meshInstances) {
-                // remove all meshinstances from old layers
-                for (i = 0; i < this._layers.length; i++) {
-                    layer = layers.getLayerById(this._layers[i]);
-                    if (layer) {
-                        layer.removeMeshInstances(this._meshInstances);
-                    }
-                }
-            }
-
-            // set the layer list
-            this._layers.length = 0;
-            for (i = 0; i < value.length; i++) {
-                this._layers[i] = value[i];
-            }
-
-            // don't add into layers until we're enabled
-            if (!this.enabled || !this.entity.enabled || !this._meshInstances) return;
-
-            // add all mesh instances to new layers
-            for (i = 0; i < this._layers.length; i++) {
-                layer = layers.getLayerById(this._layers[i]);
-                if (layer) {
-                    layer.addMeshInstances(this._meshInstances);
-                }
-            }
-        }
-    },
-
-    "batchGroupId": {
-        get: function () {
-            return this._batchGroupId;
-        },
-
-        set: function (value) {
-            if (this._batchGroupId !== value) {
-
-                var batcher = this.system.app.batcher;
-                if (this.entity.enabled && this._batchGroupId >= 0) {
-                    batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
-                }
-                if (this.entity.enabled && value >= 0) {
-                    batcher.insert(BatchGroup.RENDER, value, this.entity);
-                }
-
-                if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
-                    // re-add render to scene, in case it was removed by batching
-                    this.addToLayers();
-                }
-
-                this._batchGroupId = value;
-            }
-        }
-    },
-
-    "material": {
-        get: function () {
-            return this._material;
-        },
-        set: function (value) {
-            if (this._material !== value) {
-                this._material = value;
-
-                if (this._meshInstances && this._type !== 'asset') {
-                    for (var i = 0; i < this._meshInstances.length; i++) {
-                        this._meshInstances[i].material = value;
-                    }
-                }
-            }
-        }
-    },
-
-    "materialAssets": {
-        get: function () {
-            return this._materialReferences.map(function (ref) {
-                return ref.id;
-            });
-        },
-
-        set: function (value) {
-            var i;
-            value = value || [];
-            if (this._materialReferences.length > value.length) {
-                for (i = value.length; i < this._materialReferences.length; i++) {
-                    this._materialReferences[i].id = null;
-                }
-                this._materialReferences.length = value.length;
-            }
-
-            for (i = 0; i < value.length; i++) {
-                if (!this._materialReferences[i]) {
-                    this._materialReferences.push(
-                        new AssetReference(
-                            i,
-                            this,
-                            this.system.app.assets, {
-                                add: this._onMaterialAdded,
-                                load: this._onMaterialLoad,
-                                remove: this._onMaterialRemove,
-                                unload: this._onMaterialUnload
-                            },
-                            this
-                        )
-                    );
-                }
-
-                if (value[i]) {
-                    var id = value[i] instanceof Asset ? value[i].id : value[i];
-                    if (this._materialReferences[i].id !== id) {
-                        this._materialReferences[i].id = id;
-                    }
-
-                    if (this._materialReferences[i].asset) {
-                        this._onMaterialAdded(i, this, this._materialReferences[i].asset);
-                    }
-                } else {
-                    this._materialReferences[i].id = null;
-
-                    if (this._meshInstances[i]) {
-                        this._meshInstances[i].material = this.system.defaultMaterial;
-                    }
-                }
-            }
-        }
-    },
-
-    "asset": {
-        get: function () {
-            return this._assetReference.id;
-        },
-
-        set: function (value) {
-            var id = (value instanceof Asset ? value.id : value);
-            if (this._assetReference.id === id) return;
-
-            if (this._assetReference.asset && this._assetReference.asset.resource) {
-                this._onRenderAssetRemove();
-            }
-
-            this._assetReference.id = id;
-
-            if (this._assetReference.asset) {
-                this._onRenderAssetAdded();
+        // set it on meshInstances
+        var mi = this._meshInstances;
+        if (mi) {
+            for (var i = 0; i < mi.length; i++) {
+                mi[i].setOverrideAabb(this._aabb);
             }
         }
     }
-});
+
+    get type() {
+        return this._type;
+    }
+
+    set type(value) {
+
+        if (this._type !== value) {
+            this._area = null;
+            this._type = value;
+
+            this.destroyMeshInstances();
+
+            if (value !== 'asset') {
+                var material = this._material;
+                if (!material || material === this.system.defaultMaterial) {
+                    material = this._materialReferences[0] &&
+                                this._materialReferences[0].asset &&
+                                this._materialReferences[0].asset.resource;
+                }
+
+                var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
+                this._area = primData.area;
+                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
+
+                if (this.system._inTools)
+                    this.generateWireframe();
+            }
+        }
+    }
+
+    get meshInstances() {
+        return this._meshInstances;
+    }
+
+    set meshInstances(value) {
+
+        this.destroyMeshInstances();
+
+        this._meshInstances = value;
+
+        if (this._meshInstances) {
+
+            var mi = this._meshInstances;
+            for (var i = 0; i < mi.length; i++) {
+                mi[i].castShadow = this._castShadows;
+                mi[i].receiveShadow = this._receiveShadows;
+                mi[i].isStatic = this._isStatic;
+                mi[i].setLightmapped(this._lightmapped);
+                mi[i].setOverrideAabb(this._aabb);
+            }
+
+            if (this.enabled && this.entity.enabled) {
+                this.addToLayers();
+            }
+        }
+    }
+
+    get lightmapped() {
+        return this._lightmapped;
+    }
+
+    set lightmapped(value) {
+        if (value !== this._lightmapped) {
+            this._lightmapped = value;
+
+            var mi = this._meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].setLightmapped(value);
+                }
+            }
+        }
+    }
+
+    get castShadows() {
+        return this._castShadows;
+    }
+
+    set castShadows(value) {
+        if (this._castShadows !== value) {
+
+            var i, layer, mi = this._meshInstances;
+
+            if (mi) {
+                var layers = this.layers;
+                var scene = this.system.app.scene;
+                if (this._castShadows && !value) {
+                    for (i = 0; i < layers.length; i++) {
+                        layer = scene.layers.getLayerById(this.layers[i]);
+                        if (layer) {
+                            layer.removeShadowCasters(mi);
+                        }
+                    }
+                }
+
+                for (i = 0; i < mi.length; i++) {
+                    mi[i].castShadow = value;
+                }
+
+                if (!this._castShadows && value) {
+                    for (i = 0; i < layers.length; i++) {
+                        layer = scene.layers.getLayerById(layers[i]);
+                        if (layer) {
+                            layer.addShadowCasters(mi);
+                        }
+                    }
+                }
+            }
+
+            this._castShadows = value;
+        }
+    }
+
+    get receiveShadows() {
+        return this._receiveShadows;
+    }
+
+    set receiveShadows(value) {
+        if (this._receiveShadows !== value) {
+
+            this._receiveShadows = value;
+
+            var mi = this._meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].receiveShadow = value;
+                }
+            }
+        }
+    }
+
+    get castShadowsLightmap() {
+        return this._castShadowsLightmap;
+    }
+
+    set castShadowsLightmap(value) {
+        this._castShadowsLightmap = value;
+    }
+
+    get lightmapSizeMultiplier() {
+        return this._lightmapSizeMultiplier;
+    }
+
+    set lightmapSizeMultiplier(value) {
+        this._lightmapSizeMultiplier = value;
+    }
+
+    get isStatic() {
+        return this._isStatic;
+    }
+
+    set isStatic(value) {
+        if (this._isStatic !== value) {
+            this._isStatic = value;
+
+            var mi = this._meshInstances;
+            if (mi) {
+                for (var i = 0; i < mi.length; i++) {
+                    mi[i].isStatic = value;
+                }
+            }
+        }
+    }
+
+    get layers() {
+        return this._layers;
+    }
+
+    set layers(value) {
+
+        var i, layer, layers = this.system.app.scene.layers;
+
+        if (this._meshInstances) {
+            // remove all meshinstances from old layers
+            for (i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeMeshInstances(this._meshInstances);
+                }
+            }
+        }
+
+        // set the layer list
+        this._layers.length = 0;
+        for (i = 0; i < value.length; i++) {
+            this._layers[i] = value[i];
+        }
+
+        // don't add into layers until we're enabled
+        if (!this.enabled || !this.entity.enabled || !this._meshInstances) return;
+
+        // add all mesh instances to new layers
+        for (i = 0; i < this._layers.length; i++) {
+            layer = layers.getLayerById(this._layers[i]);
+            if (layer) {
+                layer.addMeshInstances(this._meshInstances);
+            }
+        }
+    }
+
+    get batchGroupId() {
+        return this._batchGroupId;
+    }
+
+    set batchGroupId(value) {
+        if (this._batchGroupId !== value) {
+
+            var batcher = this.system.app.batcher;
+            if (this.entity.enabled && this._batchGroupId >= 0) {
+                batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            }
+            if (this.entity.enabled && value >= 0) {
+                batcher.insert(BatchGroup.RENDER, value, this.entity);
+            }
+
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add render to scene, in case it was removed by batching
+                this.addToLayers();
+            }
+
+            this._batchGroupId = value;
+        }
+    }
+
+    get material() {
+        return this._material;
+    }
+
+    set material(value) {
+        if (this._material !== value) {
+            this._material = value;
+
+            if (this._meshInstances && this._type !== 'asset') {
+                for (var i = 0; i < this._meshInstances.length; i++) {
+                    this._meshInstances[i].material = value;
+                }
+            }
+        }
+    }
+
+    get materialAssets() {
+        return this._materialReferences.map(function (ref) {
+            return ref.id;
+        });
+    }
+
+    set materialAssets(value) {
+        var i;
+        value = value || [];
+        if (this._materialReferences.length > value.length) {
+            for (i = value.length; i < this._materialReferences.length; i++) {
+                this._materialReferences[i].id = null;
+            }
+            this._materialReferences.length = value.length;
+        }
+
+        for (i = 0; i < value.length; i++) {
+            if (!this._materialReferences[i]) {
+                this._materialReferences.push(
+                    new AssetReference(
+                        i,
+                        this,
+                        this.system.app.assets, {
+                            add: this._onMaterialAdded,
+                            load: this._onMaterialLoad,
+                            remove: this._onMaterialRemove,
+                            unload: this._onMaterialUnload
+                        },
+                        this
+                    )
+                );
+            }
+
+            if (value[i]) {
+                var id = value[i] instanceof Asset ? value[i].id : value[i];
+                if (this._materialReferences[i].id !== id) {
+                    this._materialReferences[i].id = id;
+                }
+
+                if (this._materialReferences[i].asset) {
+                    this._onMaterialAdded(i, this, this._materialReferences[i].asset);
+                }
+            } else {
+                this._materialReferences[i].id = null;
+
+                if (this._meshInstances[i]) {
+                    this._meshInstances[i].material = this.system.defaultMaterial;
+                }
+            }
+        }
+    }
+
+    get asset() {
+        return this._assetReference.id;
+    }
+
+    set asset(value) {
+        var id = (value instanceof Asset ? value.id : value);
+        if (this._assetReference.id === id) return;
+
+        if (this._assetReference.asset && this._assetReference.asset.resource) {
+            this._onRenderAssetRemove();
+        }
+
+        this._assetReference.id = id;
+
+        if (this._assetReference.asset) {
+            this._onRenderAssetAdded();
+        }
+    }
+}
 
 export { RenderComponent };

@@ -57,83 +57,82 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  *
  * Defaults to pc.BODYTYPE_STATIC.
  */
-function RigidBodyComponent(system, entity) {
-    Component.call(this, system, entity);
+class RigidBodyComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    // Lazily create shared variable
-    if (typeof Ammo !== 'undefined' && !ammoTransform) {
-        ammoTransform = new Ammo.btTransform();
-        ammoVec1 = new Ammo.btVector3();
-        ammoVec2 = new Ammo.btVector3();
-        ammoQuat = new Ammo.btQuaternion();
-        ammoOrigin = new Ammo.btVector3(0, 0, 0);
+        // Lazily create shared variable
+        if (typeof Ammo !== 'undefined' && !ammoTransform) {
+            ammoTransform = new Ammo.btTransform();
+            ammoVec1 = new Ammo.btVector3();
+            ammoVec2 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
+            ammoOrigin = new Ammo.btVector3(0, 0, 0);
+        }
+
+        this.on('set_mass', this.onSetMass, this);
+        this.on('set_linearDamping', this.onSetLinearDamping, this);
+        this.on('set_angularDamping', this.onSetAngularDamping, this);
+        this.on('set_linearFactor', this.onSetLinearFactor, this);
+        this.on('set_angularFactor', this.onSetAngularFactor, this);
+        this.on('set_friction', this.onSetFriction, this);
+        this.on('set_restitution', this.onSetRestitution, this);
+        this.on('set_type', this.onSetType, this);
+        this.on('set_group', this.onSetGroupOrMask, this);
+        this.on('set_mask', this.onSetGroupOrMask, this);
+
+        this.on('set_body', this.onSetBody, this);
+
+        this._linearVelocity = new Vec3(0, 0, 0);
+        this._angularVelocity = new Vec3(0, 0, 0);
     }
 
-    this.on('set_mass', this.onSetMass, this);
-    this.on('set_linearDamping', this.onSetLinearDamping, this);
-    this.on('set_angularDamping', this.onSetAngularDamping, this);
-    this.on('set_linearFactor', this.onSetLinearFactor, this);
-    this.on('set_angularFactor', this.onSetAngularFactor, this);
-    this.on('set_friction', this.onSetFriction, this);
-    this.on('set_restitution', this.onSetRestitution, this);
-    this.on('set_type', this.onSetType, this);
-    this.on('set_group', this.onSetGroupOrMask, this);
-    this.on('set_mask', this.onSetGroupOrMask, this);
+    // Events Documentation
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#contact
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     */
 
-    this.on('set_body', this.onSetBody, this);
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionstart
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     */
 
-    this._linearVelocity = new Vec3(0, 0, 0);
-    this._angularVelocity = new Vec3(0, 0, 0);
-}
-RigidBodyComponent.prototype = Object.create(Component.prototype);
-RigidBodyComponent.prototype.constructor = RigidBodyComponent;
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionend
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
+     */
 
-// Events Documentation
-/**
- * @event
- * @name pc.RigidBodyComponent#contact
- * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
- * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
- */
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     */
 
-/**
- * @event
- * @name pc.RigidBodyComponent#collisionstart
- * @description The 'collisionstart' event is fired when two rigid bodies start touching.
- * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
- */
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     */
 
-/**
- * @event
- * @name pc.RigidBodyComponent#collisionend
- * @description The 'collisionend' event is fired two rigid-bodies stop touching.
- * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
- */
-
-/**
- * @event
- * @name pc.RigidBodyComponent#triggerenter
- * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
- * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
- */
-
-/**
- * @event
- * @name pc.RigidBodyComponent#triggerleave
- * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
- * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
- */
-
-Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
-    get: function () {
+    get linearVelocity() {
         var body = this.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             var vel = body.getLinearVelocity();
             this._linearVelocity.set(vel.x(), vel.y(), vel.z());
         }
         return this._linearVelocity;
-    },
-    set: function (lv) {
+    }
+
+    set linearVelocity(lv) {
         var body = this.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             body.activate();
@@ -144,18 +143,17 @@ Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
             this._linearVelocity.copy(lv);
         }
     }
-});
 
-Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
-    get: function () {
+    get angularVelocity() {
         var body = this.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             var vel = body.getAngularVelocity();
             this._angularVelocity.set(vel.x(), vel.y(), vel.z());
         }
         return this._angularVelocity;
-    },
-    set: function (av) {
+    }
+
+    set angularVelocity(av) {
         var body = this.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             body.activate();
@@ -166,16 +164,14 @@ Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
             this._angularVelocity.copy(av);
         }
     }
-});
 
-Object.assign(RigidBodyComponent.prototype, {
     /**
      * @private
      * @function
      * @name pc.RigidBodyComponent#createBody
      * @description If the Entity has a Collision shape attached then create a rigid body using this shape. This method destroys the existing body.
      */
-    createBody: function () {
+    createBody() {
         var entity = this.entity;
         var shape;
 
@@ -225,7 +221,7 @@ Object.assign(RigidBodyComponent.prototype, {
                 this.enableSimulation();
             }
         }
-    },
+    }
 
     /**
      * @function
@@ -233,10 +229,10 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
      * @returns {boolean} True if the body is active.
      */
-    isActive: function () {
+    isActive() {
         var body = this.body;
         return body ? body.isActive() : false;
-    },
+    }
 
     /**
      * @function
@@ -244,14 +240,14 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
      * type pc.BODYTYPE_DYNAMIC.
      */
-    activate: function () {
+    activate() {
         var body = this.body;
         if (body) {
             body.activate();
         }
-    },
+    }
 
-    enableSimulation: function () {
+    enableSimulation() {
         if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
             var body = this.body;
             if (body) {
@@ -282,9 +278,9 @@ Object.assign(RigidBodyComponent.prototype, {
                 this.data.simulationEnabled = true;
             }
         }
-    },
+    }
 
-    disableSimulation: function () {
+    disableSimulation() {
         var body = this.body;
         if (body && this.data.simulationEnabled) {
             var idx;
@@ -312,7 +308,7 @@ Object.assign(RigidBodyComponent.prototype, {
 
             this.data.simulationEnabled = false;
         }
-    },
+    }
 
     /**
      * @function
@@ -355,7 +351,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * // Apply the force
      * this.entity.rigidbody.applyForce(force, relativePos);
      */
-    applyForce: function () {
+    applyForce() {
         var x, y, z;
         var px, py, pz;
         switch (arguments.length) {
@@ -398,7 +394,7 @@ Object.assign(RigidBodyComponent.prototype, {
             }
 
         }
-    },
+    }
 
     /**
      * @function
@@ -417,7 +413,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * // Apply via numbers
      * entity.rigidbody.applyTorque(0, 10, 0);
      */
-    applyTorque: function () {
+    applyTorque() {
         var x, y, z;
         switch (arguments.length) {
             case 1:
@@ -442,7 +438,7 @@ Object.assign(RigidBodyComponent.prototype, {
             ammoVec1.setValue(x, y, z);
             body.applyTorque(ammoVec1);
         }
-    },
+    }
 
     /**
      * @function
@@ -477,7 +473,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * // z-axis of the entity's local-space.
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
-    applyImpulse: function () {
+    applyImpulse() {
         var x, y, z;
         var px, py, pz;
         switch (arguments.length) {
@@ -524,7 +520,7 @@ Object.assign(RigidBodyComponent.prototype, {
                 body.applyImpulse(ammoVec1, ammoOrigin);
             }
         }
-    },
+    }
 
     /**
      * @function
@@ -544,7 +540,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * // Apply via numbers
      * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
      */
-    applyTorqueImpulse: function () {
+    applyTorqueImpulse() {
         var x, y, z;
         switch (arguments.length) {
             case 1:
@@ -569,7 +565,7 @@ Object.assign(RigidBodyComponent.prototype, {
             ammoVec1.setValue(x, y, z);
             body.applyTorqueImpulse(ammoVec1);
         }
-    },
+    }
 
     /**
      * @function
@@ -577,9 +573,9 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}.
      * @returns {boolean} True if static.
      */
-    isStatic: function () {
+    isStatic() {
         return (this.type === BODYTYPE_STATIC);
-    },
+    }
 
     /**
      * @function
@@ -587,9 +583,9 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if static or kinematic.
      */
-    isStaticOrKinematic: function () {
+    isStaticOrKinematic() {
         return (this.type === BODYTYPE_STATIC || this.type === BODYTYPE_KINEMATIC);
-    },
+    }
 
     /**
      * @function
@@ -597,9 +593,9 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}.
      * @returns {boolean} True if kinematic.
      */
-    isKinematic: function () {
+    isKinematic() {
         return (this.type === BODYTYPE_KINEMATIC);
-    },
+    }
 
     /**
      * @private
@@ -608,7 +604,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Writes an entity transform into an Ammo.btTransform but ignoring scale.
      * @param {object} transform - The ammo transform to write the entity transform to.
      */
-    _getEntityTransform: function (transform) {
+    _getEntityTransform(transform) {
         var pos = this.entity.getPosition();
         var rot = this.entity.getRotation();
 
@@ -617,7 +613,7 @@ Object.assign(RigidBodyComponent.prototype, {
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
-    },
+    }
 
     /**
      * @private
@@ -627,7 +623,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * This must be called after any Entity transformation functions (e.g. {@link pc.Entity#setPosition}) are called
      * in order to update the rigid body to match the Entity.
      */
-    syncEntityToBody: function () {
+    syncEntityToBody() {
         var body = this.data.body;
         if (body) {
             this._getEntityTransform(ammoTransform);
@@ -642,7 +638,7 @@ Object.assign(RigidBodyComponent.prototype, {
             }
             body.activate();
         }
-    },
+    }
 
     /**
      * @private
@@ -651,7 +647,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Sets an entity's transform to match that of the world transformation
      * matrix of a dynamic rigid body's motion state.
      */
-    _updateDynamic: function () {
+    _updateDynamic() {
         var body = this.data.body;
 
         // If a dynamic body is frozen, we can assume its motion state transform is
@@ -669,7 +665,7 @@ Object.assign(RigidBodyComponent.prototype, {
                 this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -678,14 +674,14 @@ Object.assign(RigidBodyComponent.prototype, {
      * @description Writes the entity's world transformation matrix into the motion state
      * of a kinematic body.
      */
-    _updateKinematic: function () {
+    _updateKinematic() {
         var body = this.data.body;
         var motionState = body.getMotionState();
         if (motionState) {
             this._getEntityTransform(ammoTransform);
             motionState.setWorldTransform(ammoTransform);
         }
-    },
+    }
 
     /**
      * @function
@@ -716,7 +712,7 @@ Object.assign(RigidBodyComponent.prototype, {
      * // Teleport the entity to world-space coordinate [1, 2, 3] and reset orientation
      * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
      */
-    teleport: function () {
+    teleport() {
         if (arguments.length < 3) {
             if (arguments[0]) {
                 this.entity.setPosition(arguments[0]);
@@ -736,21 +732,21 @@ Object.assign(RigidBodyComponent.prototype, {
             this.entity.setPosition(arguments[0], arguments[1], arguments[2]);
         }
         this.syncEntityToBody();
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         if (!this.body) {
             this.createBody();
         }
 
         this.enableSimulation();
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this.disableSimulation();
-    },
+    }
 
-    onSetMass: function (name, oldValue, newValue) {
+    onSetMass(name, oldValue, newValue) {
         var body = this.data.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             var enabled = this.enabled && this.entity.enabled;
@@ -768,53 +764,53 @@ Object.assign(RigidBodyComponent.prototype, {
                 this.enableSimulation();
             }
         }
-    },
+    }
 
-    onSetLinearDamping: function (name, oldValue, newValue) {
+    onSetLinearDamping(name, oldValue, newValue) {
         var body = this.data.body;
         if (body) {
             body.setDamping(newValue, this.data.angularDamping);
         }
-    },
+    }
 
-    onSetAngularDamping: function (name, oldValue, newValue) {
+    onSetAngularDamping(name, oldValue, newValue) {
         var body = this.data.body;
         if (body) {
             body.setDamping(this.data.linearDamping, newValue);
         }
-    },
+    }
 
-    onSetLinearFactor: function (name, oldValue, newValue) {
+    onSetLinearFactor(name, oldValue, newValue) {
         var body = this.data.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
             body.setLinearFactor(ammoVec1);
         }
-    },
+    }
 
-    onSetAngularFactor: function (name, oldValue, newValue) {
+    onSetAngularFactor(name, oldValue, newValue) {
         var body = this.data.body;
         if (body && this.type === BODYTYPE_DYNAMIC) {
             ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
             body.setAngularFactor(ammoVec1);
         }
-    },
+    }
 
-    onSetFriction: function (name, oldValue, newValue) {
+    onSetFriction(name, oldValue, newValue) {
         var body = this.data.body;
         if (body) {
             body.setFriction(newValue);
         }
-    },
+    }
 
-    onSetRestitution: function (name, oldValue, newValue) {
+    onSetRestitution(name, oldValue, newValue) {
         var body = this.data.body;
         if (body) {
             body.setRestitution(newValue);
         }
-    },
+    }
 
-    onSetType: function (name, oldValue, newValue) {
+    onSetType(name, oldValue, newValue) {
         if (newValue !== oldValue) {
             this.disableSimulation();
 
@@ -833,9 +829,9 @@ Object.assign(RigidBodyComponent.prototype, {
             // Create a new body
             this.createBody();
         }
-    },
+    }
 
-    onSetGroupOrMask: function (name, oldValue, newValue) {
+    onSetGroupOrMask(name, oldValue, newValue) {
         if (newValue !== oldValue) {
             // re-enabling simulation adds rigidbody back into world with new masks
             var isEnabled = this.enabled && this.entity.enabled;
@@ -844,13 +840,13 @@ Object.assign(RigidBodyComponent.prototype, {
                 this.enableSimulation();
             }
         }
-    },
+    }
 
-    onSetBody: function (name, oldValue, newValue) {
+    onSetBody(name, oldValue, newValue) {
         if (this.body && this.data.simulationEnabled) {
             this.body.activate();
         }
     }
-});
+}
 
 export { RigidBodyComponent };

@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class
@@ -15,34 +15,30 @@ var _schema = ['enabled'];
  * @param {pc.Application} app - The application managing this system.
  * @param {pc.SoundManager} manager - A sound manager instance.
  */
-function AudioListenerComponentSystem(app, manager) {
-    ComponentSystem.call(this, app);
+class AudioListenerComponentSystem extends ComponentSystem {
+    constructor(app, manager) {
+        super(app);
 
-    this.id = "audiolistener";
+        this.id = "audiolistener";
 
-    this.ComponentType = AudioListenerComponent;
-    this.DataType = AudioListenerComponentData;
+        this.ComponentType = AudioListenerComponent;
+        this.DataType = AudioListenerComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    this.manager = manager;
-    this.current = null;
+        this.manager = manager;
+        this.current = null;
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-}
-AudioListenerComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(AudioListenerComponent.prototype, _schema);
-
-Object.assign(AudioListenerComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = ['enabled'];
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+        super.initializeComponentData(component, data, properties);
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         if (this.current) {
             var position = this.current.getPosition();
             this.manager.listener.setPosition(position);
@@ -51,6 +47,8 @@ Object.assign(AudioListenerComponentSystem.prototype, {
             this.manager.listener.setOrientation(wtm);
         }
     }
-});
+}
+
+Component._buildAccessors(AudioListenerComponent.prototype, _schema);
 
 export { AudioListenerComponentSystem };

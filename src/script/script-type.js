@@ -45,272 +45,267 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * @param {pc.Entity} args.entity - The {@link pc.Entity} that the script is attached to
  *
  */
-function ScriptType(args) {
-    EventHandler.call(this);
+class ScriptType extends EventHandler {
+    constructor(args) {
+        super();
 
-    var script = this.constructor; // get script type, i.e. function (class)
+        var script = this.constructor; // get script type, i.e. function (class)
 
-    // #ifdef DEBUG
-    if (!args || !args.app || !args.entity) {
-        console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
+        // #ifdef DEBUG
+        if (!args || !args.app || !args.entity) {
+            console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
+        }
+        // #endif
+
+        this.app = args.app;
+        this.entity = args.entity;
+        this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
+        this._enabledOld = this.enabled;
+        this.__destroyed = false;
+        this.__attributes = { };
+        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
+        this.__scriptType = script;
+
+        // the order in the script component that the
+        // methods of this script instance will run relative to
+        // other script instances in the component
+        this.__executionOrder = -1;
     }
-    // #endif
 
-    this.app = args.app;
-    this.entity = args.entity;
-    this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
-    this._enabledOld = this.enabled;
-    this.__destroyed = false;
-    this.__attributes = { };
-    this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
-    this.__scriptType = script;
+    /**
+     * @private
+     * @readonly
+     * @static
+     * @name pc.ScriptType.__name
+     * @type {string}
+     * @description Name of a Script Type.
+     */
+    static __name = null; // Will be assigned when calling createScript or registerScript.
 
-    // the order in the script component that the
-    // methods of this script instance will run relative to
-    // other script instances in the component
-    this.__executionOrder = -1;
-}
-ScriptType.prototype = Object.create(EventHandler.prototype);
-ScriptType.prototype.constructor = ScriptType;
+    static __getScriptName(constructorFn) {
+        if (typeof constructorFn !== 'function') return undefined;
+        if ('name' in Function.prototype) return constructorFn.name;
+        if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
+        var match = ("" + constructorFn).match(funcNameRegex);
+        return match ? match[1] : undefined;
+    }
 
-/**
- * @private
- * @readonly
- * @static
- * @name pc.ScriptType.__name
- * @type {string}
- * @description Name of a Script Type.
- */
-ScriptType.__name = null; // Will be assigned when calling createScript or registerScript.
-
-ScriptType.__getScriptName = function (constructorFn) {
-    if (typeof constructorFn !== 'function') return undefined;
-    if ('name' in Function.prototype) return constructorFn.name;
-    if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-    var match = ("" + constructorFn).match(funcNameRegex);
-    return match ? match[1] : undefined;
-};
-
-/**
- * @field
- * @static
- * @readonly
- * @name pc.ScriptType.scriptName
- * @type {string|null}
- * @description Name of a Script Type
- */
-Object.defineProperty(ScriptType, 'scriptName', {
-    get: function () {
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.ScriptType.scriptName
+     * @type {string|null}
+     * @description Name of a Script Type
+     */
+    static get scriptName() {
         return this.__name;
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.ScriptType.attributes
- * @type {pc.ScriptAttributes}
- * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
- * @example
- * var PlayerController = pc.createScript('playerController');
- *
- * PlayerController.attributes.add('speed', {
- *     type: 'number',
- *     title: 'Speed',
- *     placeholder: 'km/h',
- *     default: 22.2
- * });
- */
-Object.defineProperty(ScriptType, 'attributes', {
-    get: function () {
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.ScriptType.attributes
+     * @type {pc.ScriptAttributes}
+     * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
+     * @example
+     * var PlayerController = pc.createScript('playerController');
+     *
+     * PlayerController.attributes.add('speed', {
+     *     type: 'number',
+     *     title: 'Speed',
+     *     placeholder: 'km/h',
+     *     default: 22.2
+     * });
+     */
+    static get attributes() {
         if (!this.hasOwnProperty('__attributes')) this.__attributes = new ScriptAttributes(this);
         return this.__attributes;
     }
-});
 
-// initialize attributes
-ScriptType.prototype.__initializeAttributes = function (force) {
-    if (!force && !this.__attributesRaw)
-        return;
+    // initialize attributes
+    __initializeAttributes(force) {
+        if (!force && !this.__attributesRaw)
+            return;
 
-    // set attributes values
-    for (var key in this.__scriptType.attributes.index) {
-        if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
-            this[key] = this.__attributesRaw[key];
-        } else if (!this.__attributes.hasOwnProperty(key)) {
-            if (this.__scriptType.attributes.index[key].hasOwnProperty('default')) {
-                this[key] = this.__scriptType.attributes.index[key].default;
-            } else {
-                this[key] = null;
+        // set attributes values
+        for (var key in this.__scriptType.attributes.index) {
+            if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
+                this[key] = this.__attributesRaw[key];
+            } else if (!this.__attributes.hasOwnProperty(key)) {
+                if (this.__scriptType.attributes.index[key].hasOwnProperty('default')) {
+                    this[key] = this.__scriptType.attributes.index[key].default;
+                } else {
+                    this[key] = null;
+                }
             }
+        }
+
+        this.__attributesRaw = null;
+    }
+
+    /**
+     * @readonly
+     * @static
+     * @function
+     * @name pc.ScriptType.extend
+     * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
+     * @description Shorthand function to extend Script Type prototype with list of methods.
+     * @example
+     * var PlayerController = pc.createScript('playerController');
+     *
+     * PlayerController.extend({
+     *     initialize: function () {
+     *         // called once on initialize
+     *     },
+     *     update: function (dt) {
+     *         // called each tick
+     *     }
+     * });
+     */
+    static extend(methods) {
+        for (var key in methods) {
+            if (!methods.hasOwnProperty(key))
+                continue;
+
+            this.prototype[key] = methods[key];
         }
     }
 
-    this.__attributesRaw = null;
-};
+    /**
+     * @function
+     * @name pc.ScriptType#[initialize]
+     * @description Called when script is about to run for the first time.
+     */
 
-/**
- * @readonly
- * @static
- * @function
- * @name pc.ScriptType.extend
- * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
- * @description Shorthand function to extend Script Type prototype with list of methods.
- * @example
- * var PlayerController = pc.createScript('playerController');
- *
- * PlayerController.extend({
- *     initialize: function () {
- *         // called once on initialize
- *     },
- *     update: function (dt) {
- *         // called each tick
- *     }
- * });
- */
-ScriptType.extend = function (methods) {
-    for (var key in methods) {
-        if (!methods.hasOwnProperty(key))
-            continue;
+    /**
+     * @function
+     * @name pc.ScriptType#[postInitialize]
+     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
 
-        this.prototype[key] = methods[key];
-    }
-};
+    /**
+     * @function
+     * @name pc.ScriptType#[update]
+     * @description Called for enabled (running state) scripts on each tick.
+     * @param {number} dt - The delta time in seconds since the last frame.
+     */
 
-/**
- * @function
- * @name pc.ScriptType#[initialize]
- * @description Called when script is about to run for the first time.
- */
+    /**
+     * @function
+     * @name pc.ScriptType#[postUpdate]
+     * @description Called for enabled (running state) scripts on each tick, after update.
+     * @param {number} dt - The delta time in seconds since the last frame.
+     */
 
-/**
- * @function
- * @name pc.ScriptType#[postInitialize]
- * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
- */
+    /**
+     * @function
+     * @name pc.ScriptType#[swap]
+     * @description Called when a ScriptType that already exists in the registry
+     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+     * then it will be executed to perform hot-reload at runtime.
+     */
 
-/**
- * @function
- * @name pc.ScriptType#[update]
- * @description Called for enabled (running state) scripts on each tick.
- * @param {number} dt - The delta time in seconds since the last frame.
- */
+    /**
+     * @event
+     * @name pc.ScriptType#enable
+     * @description Fired when a script instance becomes enabled.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('enable', function () {
+     *         // Script Instance is now enabled
+     *     });
+     * };
+     */
 
-/**
- * @function
- * @name pc.ScriptType#[postUpdate]
- * @description Called for enabled (running state) scripts on each tick, after update.
- * @param {number} dt - The delta time in seconds since the last frame.
- */
+    /**
+     * @event
+     * @name pc.ScriptType#disable
+     * @description Fired when a script instance becomes disabled.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('disable', function () {
+     *         // Script Instance is now disabled
+     *     });
+     * };
+     */
 
-/**
- * @function
- * @name pc.ScriptType#[swap]
- * @description Called when a ScriptType that already exists in the registry
- * gets redefined. If the new ScriptType has a `swap` method in its prototype,
- * then it will be executed to perform hot-reload at runtime.
- */
+    /**
+     * @event
+     * @name pc.ScriptType#state
+     * @description Fired when a script instance changes state to enabled or disabled.
+     * @param {boolean} enabled - True if now enabled, False if disabled.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('state', function (enabled) {
+     *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
+     *     });
+     * };
+     */
 
-/**
- * @event
- * @name pc.ScriptType#enable
- * @description Fired when a script instance becomes enabled.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('enable', function () {
- *         // Script Instance is now enabled
- *     });
- * };
- */
+    /**
+     * @event
+     * @name pc.ScriptType#destroy
+     * @description Fired when a script instance is destroyed and removed from component.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('destroy', function () {
+     *         // no more part of an entity
+     *         // good place to cleanup entity from destroyed script
+     *     });
+     * };
+     */
 
-/**
- * @event
- * @name pc.ScriptType#disable
- * @description Fired when a script instance becomes disabled.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('disable', function () {
- *         // Script Instance is now disabled
- *     });
- * };
- */
+    /**
+     * @event
+     * @name pc.ScriptType#attr
+     * @description Fired when any script attribute has been changed.
+     * @param {string} name - Name of attribute.
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr', function (name, value, valueOld) {
+     *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
+     *     });
+     * };
+     */
 
-/**
- * @event
- * @name pc.ScriptType#state
- * @description Fired when a script instance changes state to enabled or disabled.
- * @param {boolean} enabled - True if now enabled, False if disabled.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('state', function (enabled) {
- *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
- *     });
- * };
- */
+    /**
+     * @event
+     * @name pc.ScriptType#attr:[name]
+     * @description Fired when a specific script attribute has been changed.
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr:speed', function (value, valueOld) {
+     *         console.log('speed been changed from ' + valueOld + ' to ' + value);
+     *     });
+     * };
+     */
 
-/**
- * @event
- * @name pc.ScriptType#destroy
- * @description Fired when a script instance is destroyed and removed from component.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('destroy', function () {
- *         // no more part of an entity
- *         // good place to cleanup entity from destroyed script
- *     });
- * };
- */
+    /**
+     * @event
+     * @name pc.ScriptType#error
+     * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
+     * @param {Error} err - Native JavaScript Error object with details of error.
+     * @param {string} method - The method of the script instance that the exception originated from.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('error', function (err, method) {
+     *         // caught an exception
+     *         console.log(err.stack);
+     *     });
+     * };
+     */
 
-/**
- * @event
- * @name pc.ScriptType#attr
- * @description Fired when any script attribute has been changed.
- * @param {string} name - Name of attribute.
- * @param {object} value - New value.
- * @param {object} valueOld - Old value.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('attr', function (name, value, valueOld) {
- *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
- *     });
- * };
- */
-
-/**
- * @event
- * @name pc.ScriptType#attr:[name]
- * @description Fired when a specific script attribute has been changed.
- * @param {object} value - New value.
- * @param {object} valueOld - Old value.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('attr:speed', function (value, valueOld) {
- *         console.log('speed been changed from ' + valueOld + ' to ' + value);
- *     });
- * };
- */
-
-/**
- * @event
- * @name pc.ScriptType#error
- * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
- * @param {Error} err - Native JavaScript Error object with details of error.
- * @param {string} method - The method of the script instance that the exception originated from.
- * @example
- * PlayerController.prototype.initialize = function () {
- *     this.on('error', function (err, method) {
- *         // caught an exception
- *         console.log(err.stack);
- *     });
- * };
- */
-
-Object.defineProperty(ScriptType.prototype, 'enabled', {
-    get: function () {
+    get enabled() {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
-    },
-    set: function (value) {
+    }
+
+    set enabled(value) {
         this._enabled = !!value;
 
         if (this.enabled === this._enabledOld) return;
@@ -341,6 +336,6 @@ Object.defineProperty(ScriptType.prototype, 'enabled', {
                 this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
         }
     }
-});
+}
 
 export { ScriptType };

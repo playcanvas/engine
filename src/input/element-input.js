@@ -95,27 +95,27 @@ function intersectLineQuad(p, q, corners) {
  * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
  * @property {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
  */
-function ElementInputEvent(event, element, camera) {
-    this.event = event;
-    this.element = element;
-    this.camera = camera;
-    this._stopPropagation = false;
-}
+class ElementInputEvent {
+    constructor(event, element, camera) {
+        this.event = event;
+        this.element = element;
+        this.camera = camera;
+        this._stopPropagation = false;
+    }
 
-Object.assign(ElementInputEvent.prototype, {
     /**
      * @function
      * @name pc.ElementInputEvent#stopPropagation
      * @description Stop propagation of the event to parent {@link pc.ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
      */
-    stopPropagation: function () {
+    stopPropagation() {
         this._stopPropagation = true;
         if (this.event) {
             this.event.stopImmediatePropagation();
             this.event.stopPropagation();
         }
     }
-});
+}
 
 /**
  * @class
@@ -139,40 +139,40 @@ Object.assign(ElementInputEvent.prototype, {
  * @property {number} dy The amount of vertical movement of the cursor.
  * @property {number} wheelDelta The amount of the wheel movement.
  */
-function ElementMouseEvent(event, element, camera, x, y, lastX, lastY) {
-    ElementInputEvent.call(this, event, element, camera);
+class ElementMouseEvent extends ElementInputEvent {
+    constructor(event, element, camera, x, y, lastX, lastY) {
+        super(event, element, camera);
 
-    this.x = x;
-    this.y = y;
+        this.x = x;
+        this.y = y;
 
-    this.ctrlKey = event.ctrlKey || false;
-    this.altKey = event.altKey || false;
-    this.shiftKey = event.shiftKey || false;
-    this.metaKey = event.metaKey || false;
+        this.ctrlKey = event.ctrlKey || false;
+        this.altKey = event.altKey || false;
+        this.shiftKey = event.shiftKey || false;
+        this.metaKey = event.metaKey || false;
 
-    this.button = event.button;
+        this.button = event.button;
 
-    if (Mouse.isPointerLocked()) {
-        this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
-        this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
-    } else {
-        this.dx = x - lastX;
-        this.dy = y - lastY;
-    }
+        if (Mouse.isPointerLocked()) {
+            this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+            this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+        } else {
+            this.dx = x - lastX;
+            this.dy = y - lastY;
+        }
 
-    // deltaY is in a different range across different browsers. The only thing
-    // that is consistent is the sign of the value so snap to -1/+1.
-    this.wheelDelta = 0;
-    if (event.type === 'wheel') {
-        if (event.deltaY > 0) {
-            this.wheelDelta = 1;
-        } else if (event.deltaY < 0) {
-            this.wheelDelta = -1;
+        // deltaY is in a different range across different browsers. The only thing
+        // that is consistent is the sign of the value so snap to -1/+1.
+        this.wheelDelta = 0;
+        if (event.type === 'wheel') {
+            if (event.deltaY > 0) {
+                this.wheelDelta = 1;
+            } else if (event.deltaY < 0) {
+                this.wheelDelta = -1;
+            }
         }
     }
 }
-ElementMouseEvent.prototype = Object.create(ElementInputEvent.prototype);
-ElementMouseEvent.prototype.constructor = ElementMouseEvent;
 
 /**
  * @class
@@ -190,17 +190,17 @@ ElementMouseEvent.prototype.constructor = ElementMouseEvent;
  * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
  * @property {Touch} touch The touch object that triggered the event.
  */
-function ElementTouchEvent(event, element, camera, x, y, touch) {
-    ElementInputEvent.call(this, event, element, camera);
+class ElementTouchEvent extends ElementInputEvent {
+    constructor(event, element, camera, x, y, touch) {
+        super(event, element, camera);
 
-    this.touches = event.touches;
-    this.changedTouches = event.changedTouches;
-    this.x = x;
-    this.y = y;
-    this.touch = touch;
+        this.touches = event.touches;
+        this.changedTouches = event.changedTouches;
+        this.x = x;
+        this.y = y;
+        this.touch = touch;
+    }
 }
-ElementTouchEvent.prototype = Object.create(ElementInputEvent.prototype);
-ElementTouchEvent.prototype.constructor = ElementTouchEvent;
 
 /**
  * @class
@@ -214,12 +214,12 @@ ElementTouchEvent.prototype.constructor = ElementTouchEvent;
  * @param {pc.XrInputSource} inputSource - The XR input source that this event was originally raised from.
  * @property {pc.XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
-function ElementSelectEvent(event, element, camera, inputSource) {
-    ElementInputEvent.call(this, event, element, camera);
-    this.inputSource = inputSource;
+class ElementSelectEvent extends ElementInputEvent {
+    constructor(event, element, camera, inputSource) {
+        super(event, element, camera);
+        this.inputSource = inputSource;
+    }
 }
-ElementSelectEvent.prototype = Object.create(ElementInputEvent.prototype);
-ElementSelectEvent.prototype.constructor = ElementSelectEvent;
 
 /**
  * @class
@@ -233,54 +233,54 @@ ElementSelectEvent.prototype.constructor = ElementSelectEvent;
  * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
  * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
  */
-function ElementInput(domElement, options) {
-    this._app = null;
-    this._attached = false;
-    this._target = null;
+class ElementInput {
+    constructor(domElement, options) {
+        this._app = null;
+        this._attached = false;
+        this._target = null;
 
-    // force disable all element input events
-    this._enabled = true;
+        // force disable all element input events
+        this._enabled = true;
 
-    this._lastX = 0;
-    this._lastY = 0;
+        this._lastX = 0;
+        this._lastY = 0;
 
-    this._upHandler = this._handleUp.bind(this);
-    this._downHandler = this._handleDown.bind(this);
-    this._moveHandler = this._handleMove.bind(this);
-    this._wheelHandler = this._handleWheel.bind(this);
-    this._touchstartHandler = this._handleTouchStart.bind(this);
-    this._touchendHandler = this._handleTouchEnd.bind(this);
-    this._touchcancelHandler = this._touchendHandler;
-    this._touchmoveHandler = this._handleTouchMove.bind(this);
-    this._sortHandler = this._sortElements.bind(this);
+        this._upHandler = this._handleUp.bind(this);
+        this._downHandler = this._handleDown.bind(this);
+        this._moveHandler = this._handleMove.bind(this);
+        this._wheelHandler = this._handleWheel.bind(this);
+        this._touchstartHandler = this._handleTouchStart.bind(this);
+        this._touchendHandler = this._handleTouchEnd.bind(this);
+        this._touchcancelHandler = this._touchendHandler;
+        this._touchmoveHandler = this._handleTouchMove.bind(this);
+        this._sortHandler = this._sortElements.bind(this);
 
-    this._elements = [];
-    this._hoveredElement = null;
-    this._pressedElement = null;
-    this._touchedElements = {};
-    this._touchesForWhichTouchLeaveHasFired = {};
-    this._selectedElements = {};
-    this._selectedPressedElements = {};
+        this._elements = [];
+        this._hoveredElement = null;
+        this._pressedElement = null;
+        this._touchedElements = {};
+        this._touchesForWhichTouchLeaveHasFired = {};
+        this._selectedElements = {};
+        this._selectedPressedElements = {};
 
-    this._useMouse = !options || options.useMouse !== false;
-    this._useTouch = !options || options.useTouch !== false;
-    this._useXr = !options || options.useXr !== false;
-    this._selectEventsAttached = false;
+        this._useMouse = !options || options.useMouse !== false;
+        this._useTouch = !options || options.useTouch !== false;
+        this._useXr = !options || options.useXr !== false;
+        this._selectEventsAttached = false;
 
-    if (platform.touch)
-        this._clickedEntities = {};
+        if (platform.touch)
+            this._clickedEntities = {};
 
-    this.attach(domElement);
-}
+        this.attach(domElement);
+    }
 
-Object.assign(ElementInput.prototype, {
     /**
      * @function
      * @name pc.ElementInput#attach
      * @description Attach mouse and touch events to a DOM element.
      * @param {Element} domElement - The DOM element.
      */
-    attach: function (domElement) {
+    attach(domElement) {
         if (this._attached) {
             this._attached = false;
             this.detach();
@@ -307,9 +307,9 @@ Object.assign(ElementInput.prototype, {
         }
 
         this.attachSelectEvents();
-    },
+    }
 
-    attachSelectEvents: function () {
+    attachSelectEvents() {
         if (! this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
             if (! this._clickedEntities)
                 this._clickedEntities = {};
@@ -317,14 +317,14 @@ Object.assign(ElementInput.prototype, {
             this._selectEventsAttached = true;
             this.app.xr.on('start', this._onXrStart, this);
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.ElementInput#detach
      * @description Remove mouse and touch events from the DOM element that it is attached to.
      */
-    detach: function () {
+    detach() {
         if (!this._attached) return;
         this._attached = false;
 
@@ -354,7 +354,7 @@ Object.assign(ElementInput.prototype, {
         }
 
         this._target = null;
-    },
+    }
 
     /**
      * @function
@@ -362,10 +362,10 @@ Object.assign(ElementInput.prototype, {
      * @description Add a {@link pc.ElementComponent} to the internal list of ElementComponents that are being checked for input.
      * @param {pc.ElementComponent} element - The ElementComponent.
      */
-    addElement: function (element) {
+    addElement(element) {
         if (this._elements.indexOf(element) === -1)
             this._elements.push(element);
-    },
+    }
 
     /**
      * @function
@@ -373,13 +373,13 @@ Object.assign(ElementInput.prototype, {
      * @description Remove a {@link pc.ElementComponent} from the internal list of ElementComponents that are being checked for input.
      * @param {pc.ElementComponent} element - The ElementComponent.
      */
-    removeElement: function (element) {
+    removeElement(element) {
         var idx = this._elements.indexOf(element);
         if (idx !== -1)
             this._elements.splice(idx, 1);
-    },
+    }
 
-    _handleUp: function (event) {
+    _handleUp(event) {
         if (!this._enabled) return;
 
         if (Mouse.isPointerLocked())
@@ -390,9 +390,9 @@ Object.assign(ElementInput.prototype, {
             return;
 
         this._onElementMouseEvent('mouseup', event);
-    },
+    }
 
-    _handleDown: function (event) {
+    _handleDown(event) {
         if (!this._enabled) return;
 
         if (Mouse.isPointerLocked())
@@ -403,9 +403,9 @@ Object.assign(ElementInput.prototype, {
             return;
 
         this._onElementMouseEvent('mousedown', event);
-    },
+    }
 
-    _handleMove: function (event) {
+    _handleMove(event) {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
@@ -416,9 +416,9 @@ Object.assign(ElementInput.prototype, {
 
         this._lastX = targetX;
         this._lastY = targetY;
-    },
+    }
 
-    _handleWheel: function (event) {
+    _handleWheel(event) {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
@@ -426,9 +426,9 @@ Object.assign(ElementInput.prototype, {
             return;
 
         this._onElementMouseEvent('mousewheel', event);
-    },
+    }
 
-    _determineTouchedElements: function (event) {
+    _determineTouchedElements(event) {
         var touchedElements = {};
         var cameras = this.app.systems.camera.cameras;
         var i, j, len;
@@ -466,9 +466,9 @@ Object.assign(ElementInput.prototype, {
         }
 
         return touchedElements;
-    },
+    }
 
-    _handleTouchStart: function (event) {
+    _handleTouchStart(event) {
         if (!this._enabled) return;
 
         var newTouchedElements = this._determineTouchedElements(event);
@@ -487,9 +487,9 @@ Object.assign(ElementInput.prototype, {
         for (var touchId in newTouchedElements) {
             this._touchedElements[touchId] = newTouchedElements[touchId];
         }
-    },
+    }
 
-    _handleTouchEnd: function (event) {
+    _handleTouchEnd(event) {
         if (!this._enabled) return;
 
         var cameras = this.app.systems.camera.cameras;
@@ -536,9 +536,9 @@ Object.assign(ElementInput.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _handleTouchMove: function (event) {
+    _handleTouchMove(event) {
         // call preventDefault to avoid issues in Chrome Android:
         // http://wilsonpage.co.uk/touch-events-in-chrome-android/
         event.preventDefault();
@@ -571,9 +571,9 @@ Object.assign(ElementInput.prototype, {
                 this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
             }
         }
-    },
+    }
 
-    _onElementMouseEvent: function (eventType, event) {
+    _onElementMouseEvent(eventType, event) {
         var element;
 
         var hovered = this._hoveredElement;
@@ -629,33 +629,33 @@ Object.assign(ElementInput.prototype, {
                 this._pressedElement = null;
             }
         }
-    },
+    }
 
-    _onXrStart: function () {
+    _onXrStart() {
         this.app.xr.on('end', this._onXrEnd, this);
         this.app.xr.on('update', this._onXrUpdate, this);
         this.app.xr.input.on('selectstart', this._onSelectStart, this);
         this.app.xr.input.on('selectend', this._onSelectEnd, this);
         this.app.xr.input.on('remove', this._onXrInputRemove, this);
-    },
+    }
 
-    _onXrEnd: function () {
+    _onXrEnd() {
         this.app.xr.off('update', this._onXrUpdate, this);
         this.app.xr.input.off('selectstart', this._onSelectStart, this);
         this.app.xr.input.off('selectend', this._onSelectEnd, this);
         this.app.xr.input.off('remove', this._onXrInputRemove, this);
-    },
+    }
 
-    _onXrUpdate: function () {
+    _onXrUpdate() {
         if (!this._enabled) return;
 
         var inputSources = this.app.xr.input.inputSources;
         for (var i = 0; i < inputSources.length; i++) {
             this._onElementSelectEvent('selectmove', inputSources[i], null);
         }
-    },
+    }
 
-    _onXrInputRemove: function (inputSource) {
+    _onXrInputRemove(inputSource) {
         var hovered = this._selectedElements[inputSource.id];
         if (hovered) {
             inputSource._elementEntity = null;
@@ -664,19 +664,19 @@ Object.assign(ElementInput.prototype, {
 
         delete this._selectedElements[inputSource.id];
         delete this._selectedPressedElements[inputSource.id];
-    },
+    }
 
-    _onSelectStart: function (inputSource, event) {
+    _onSelectStart(inputSource, event) {
         if (! this._enabled) return;
         this._onElementSelectEvent('selectstart', inputSource, event);
-    },
+    }
 
-    _onSelectEnd: function (inputSource, event) {
+    _onSelectEnd(inputSource, event) {
         if (! this._enabled) return;
         this._onElementSelectEvent('selectend', inputSource, event);
-    },
+    }
 
-    _onElementSelectEvent: function (eventType, inputSource, event) {
+    _onElementSelectEvent(eventType, inputSource, event) {
         var element;
 
         var hoveredBefore = this._selectedElements[inputSource.id];
@@ -731,9 +731,9 @@ Object.assign(ElementInput.prototype, {
                 this._fireEvent('click', new ElementSelectEvent(event, pressed, camera, inputSource));
             }
         }
-    },
+    }
 
-    _fireEvent: function (name, evt) {
+    _fireEvent(name, evt) {
         var element = evt.element;
         while (true) {
             element.fire(name, evt);
@@ -747,10 +747,9 @@ Object.assign(ElementInput.prototype, {
             if (!element)
                 break;
         }
+    }
 
-    },
-
-    _calcMouseCoords: function (event) {
+    _calcMouseCoords(event) {
         var rect = this._target.getBoundingClientRect();
         var left = Math.floor(rect.left);
         var top = Math.floor(rect.top);
@@ -768,9 +767,9 @@ Object.assign(ElementInput.prototype, {
             targetX = (event.clientX - left);
             targetY = (event.clientY - top);
         }
-    },
+    }
 
-    _calcTouchCoords: function (touch) {
+    _calcTouchCoords(touch) {
         var totalOffsetX = 0;
         var totalOffsetY = 0;
         var target = touch.target;
@@ -790,9 +789,9 @@ Object.assign(ElementInput.prototype, {
             x: (touch.pageX - totalOffsetX),
             y: (touch.pageY - totalOffsetY)
         };
-    },
+    }
 
-    _sortElements: function (a, b) {
+    _sortElements(a, b) {
         var layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
 
@@ -808,9 +807,9 @@ Object.assign(ElementInput.prototype, {
         if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace)
             return 1;
         return b.drawOrder - a.drawOrder;
-    },
+    }
 
-    _getTargetElement: function (camera, x, y) {
+    _getTargetElement(camera, x, y) {
         var result = null;
 
         // sort elements
@@ -852,9 +851,9 @@ Object.assign(ElementInput.prototype, {
         }
 
         return result;
-    },
+    }
 
-    _getTargetElementByRay: function (ray, camera) {
+    _getTargetElementByRay(ray, camera) {
         var result = null;
 
         rayA.origin.copy(ray.origin);
@@ -876,13 +875,13 @@ Object.assign(ElementInput.prototype, {
         }
 
         return result;
-    },
+    }
 
     // In most cases the corners used for hit testing will just be the element's
     // screen corners. However, in cases where the element has additional hit
     // padding specified, we need to expand the screenCorners to incorporate the
     // padding.
-    _buildHitCorners: function (element, screenOrWorldCorners, scaleX, scaleY) {
+    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY) {
         var hitCorners = screenOrWorldCorners;
         var button = element.entity && element.entity.button;
 
@@ -908,9 +907,9 @@ Object.assign(ElementInput.prototype, {
         }
 
         return hitCorners;
-    },
+    }
 
-    _calculateScaleToScreen: function (element) {
+    _calculateScaleToScreen(element) {
         var current = element.entity;
         var screenScale = element.screen.screen.scale;
 
@@ -922,9 +921,9 @@ Object.assign(ElementInput.prototype, {
         }
 
         return _accumulatedScale;
-    },
+    }
 
-    _calculateRayScreen: function (x, y, camera, ray) {
+    _calculateRayScreen(x, y, camera, ray) {
         var sw = this.app.graphicsDevice.width;
         var sh = this.app.graphicsDevice.height;
 
@@ -956,9 +955,9 @@ Object.assign(ElementInput.prototype, {
             return true;
         }
         return false;
-    },
+    }
 
-    _calculateRay3d: function (x, y, camera, ray) {
+    _calculateRay3d(x, y, camera, ray) {
         var sw = this._target.clientWidth;
         var sh = this._target.clientHeight;
 
@@ -992,9 +991,9 @@ Object.assign(ElementInput.prototype, {
             return true;
         }
         return false;
-    },
+    }
 
-    _checkElement: function (ray, element, screen) {
+    _checkElement(ray, element, screen) {
         // ensure click is contained by any mask first
         if (element.maskedBy) {
             var result = this._checkElement(ray, element.maskedBy.element, screen);
@@ -1016,24 +1015,22 @@ Object.assign(ElementInput.prototype, {
 
         return false;
     }
-});
 
-Object.defineProperty(ElementInput.prototype, 'enabled', {
-    get: function () {
+    get enabled() {
         return this._enabled;
-    },
-    set: function (value) {
+    }
+
+    set enabled(value) {
         this._enabled = value;
     }
-});
 
-Object.defineProperty(ElementInput.prototype, 'app', {
-    get: function () {
+    get app() {
         return this._app || Application.getApplication();
-    },
-    set: function (value) {
+    }
+
+    set app(value) {
         this._app = value;
     }
-});
+}
 
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent };
