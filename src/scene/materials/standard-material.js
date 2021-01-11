@@ -327,6 +327,9 @@ class Chunks {
  * material.update();
  */
 class StandardMaterial extends Material {
+    static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
+    static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
+
     constructor() {
         super();
 
@@ -1168,8 +1171,5 @@ function _defineMaterialProps(obj) {
 }
 
 _defineMaterialProps(StandardMaterial.prototype);
-
-StandardMaterial.TEXTURE_PARAMETERS = standardMaterialTextureParameters;
-StandardMaterial.CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
 export { StandardMaterial };
