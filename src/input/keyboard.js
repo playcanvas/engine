@@ -1,40 +1,9 @@
 import { EventHandler } from '../core/event-handler.js';
 
-/**
- * @class
- * @name pc.KeyboardEvent
- * @classdesc The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
- * @description Create a new KeyboardEvent.
- * @param {pc.Keyboard} keyboard - The keyboard object which is firing the event.
- * @param {KeyboardEvent} event - The original browser event that was fired.
- * @property {number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
- * @property {Element} element The element that fired the keyboard event.
- * @property {KeyboardEvent} event The original browser event which was fired.
- * @example
- * var onKeyDown = function (e) {
- *     if (e.key === pc.KEY_SPACE) {
- *         // space key pressed
- *     }
- *     e.event.preventDefault(); // Use original browser event to prevent browser action.
- * };
- * app.keyboard.on("keydown", onKeyDown, this);
- */
-class KeyboardEvent {
-    constructor(keyboard, event) {
-        if (event) {
-            this.key = event.keyCode;
-            this.element = event.target;
-            this.event = event;
-        } else {
-            this.key = null;
-            this.element = null;
-            this.event = null;
-        }
-    }
-}
+import { KeyboardEvent } from './keyboard-event.js';
 
 // internal global keyboard events
-var _keyboardEvent = new KeyboardEvent();
+const _keyboardEvent = new KeyboardEvent();
 
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
@@ -122,10 +91,9 @@ const _keyCodeToKeyIdentifier = {
  * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
  */
 class Keyboard extends EventHandler {
-    constructor(element, options) {
+    constructor(element, options = {}) {
         super();
 
-        options = options || {};
         this._element = null;
 
         this._keyDownHandler = this._handleKeyDown.bind(this);
@@ -322,4 +290,4 @@ class Keyboard extends EventHandler {
     }
 }
 
-export { Keyboard, KeyboardEvent };
+export { Keyboard };

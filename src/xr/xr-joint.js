@@ -32,121 +32,111 @@ for (var i = 0; i < tipJointIds.length; i++) {
  * @property {boolean} tip True if joint is a tip of a finger
  * @property {number} radius The radius of a joint, which is a distance from joint to the edge of a skin
  */
-function XrJoint(index, id, hand, finger) {
-    this._index = index;
-    this._id = id;
+class XrJoint {
+    constructor(index, id, hand, finger = null) {
+        this._index = index;
+        this._id = id;
 
-    this._hand = hand;
-    this._hand._joints.push(this);
-    this._hand._jointsById[id] = this;
+        this._hand = hand;
+        this._hand._joints.push(this);
+        this._hand._jointsById[id] = this;
 
-    this._finger = finger || null;
-    if (this._finger) this._finger._joints.push(this);
+        this._finger = finger;
+        if (this._finger) this._finger._joints.push(this);
 
-    this._wrist = id === XRHand.WRIST;
-    if (this._wrist) this._hand._wrist = this;
+        this._wrist = id === XRHand.WRIST;
+        if (this._wrist) this._hand._wrist = this;
 
-    this._tip = this._finger && !! tipJointIdsIndex[id];
-    if (this._tip) {
-        this._hand._tips.push(this);
-        if (this._finger) this._finger._tip = this;
+        this._tip = this._finger && !! tipJointIdsIndex[id];
+        if (this._tip) {
+            this._hand._tips.push(this);
+            if (this._finger) this._finger._tip = this;
+        }
+
+        this._radius = null;
+
+        this._localTransform = new Mat4();
+        this._worldTransform = new Mat4();
+
+        this._localPosition = new Vec3();
+        this._localRotation = new Quat();
+
+        this._position = new Vec3();
+        this._rotation = new Quat();
+
+        this._dirtyLocal = true;
     }
 
-    this._radius = null;
-
-    this._localTransform = new Mat4();
-    this._worldTransform = new Mat4();
-
-    this._localPosition = new Vec3();
-    this._localRotation = new Quat();
-
-    this._position = new Vec3();
-    this._rotation = new Quat();
-
-    this._dirtyLocal = true;
-}
-
-XrJoint.prototype.update = function (pose) {
-    this._dirtyLocal = true;
-    this._radius = pose.radius;
-    this._localPosition.copy(pose.transform.position);
-    this._localRotation.copy(pose.transform.orientation);
-};
-
-XrJoint.prototype._updateTransforms = function () {
-    if (this._dirtyLocal) {
-        this._dirtyLocal = false;
-        this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
+    update(pose) {
+        this._dirtyLocal = true;
+        this._radius = pose.radius;
+        this._localPosition.copy(pose.transform.position);
+        this._localRotation.copy(pose.transform.orientation);
     }
 
-    var manager = this._hand._manager;
-    var parent = manager.camera.parent;
+    _updateTransforms() {
+        if (this._dirtyLocal) {
+            this._dirtyLocal = false;
+            this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
+        }
 
-    if (parent) {
-        this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
-    } else {
-        this._worldTransform.copy(this._localTransform);
+        var manager = this._hand._manager;
+        var parent = manager.camera.parent;
+
+        if (parent) {
+            this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
+        } else {
+            this._worldTransform.copy(this._localTransform);
+        }
     }
-};
 
-/**
- * @function
- * @name pc.XrJoint#getPosition
- * @description Get the world space position of a joint
- * @returns {pc.Vec3} The world space position of a joint
- */
-XrJoint.prototype.getPosition = function () {
-    this._updateTransforms();
-    this._worldTransform.getTranslation(this._position);
-    return this._position;
-};
+    /**
+     * @function
+     * @name pc.XrJoint#getPosition
+     * @description Get the world space position of a joint
+     * @returns {pc.Vec3} The world space position of a joint
+     */
+    getPosition() {
+        this._updateTransforms();
+        this._worldTransform.getTranslation(this._position);
+        return this._position;
+    }
 
-/**
- * @function
- * @name pc.XrJoint#getRotation
- * @description Get the world space rotation of a joint
- * @returns {pc.Quat} The world space rotation of a joint
- */
-XrJoint.prototype.getRotation = function () {
-    this._updateTransforms();
-    this._rotation.setFromMat4(this._worldTransform);
-    return this._rotation;
-};
+    /**
+     * @function
+     * @name pc.XrJoint#getRotation
+     * @description Get the world space rotation of a joint
+     * @returns {pc.Quat} The world space rotation of a joint
+     */
+    getRotation() {
+        this._updateTransforms();
+        this._rotation.setFromMat4(this._worldTransform);
+        return this._rotation;
+    }
 
-Object.defineProperty(XrJoint.prototype, 'index', {
-    get: function () {
+    get index() {
         return this._index;
     }
-});
 
-Object.defineProperty(XrJoint.prototype, 'hand', {
-    get: function () {
+    get hand() {
         return this._hand;
     }
-});
 
-Object.defineProperty(XrJoint.prototype, 'finger', {
-    get: function () {
+    get finger() {
         return this._finger;
     }
-});
 
-Object.defineProperty(XrJoint.prototype, 'wrist', {
-    get: function () {
+    get wrist() {
         return this._wrist;
     }
-});
 
-Object.defineProperty(XrJoint.prototype, 'tip', {
-    get: function () {
+    get tip() {
         return this._tip;
     }
-});
 
-Object.defineProperty(XrJoint.prototype, 'radius', {
-    get: function () {
+    get radius() {
         return this._radius || 0.005;
     }
-});
+}
 
 export { XrJoint };
