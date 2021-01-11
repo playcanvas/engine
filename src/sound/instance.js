@@ -2,103 +2,78 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 
-var SoundInstance;
-
-var STATE_PLAYING = 0;
-var STATE_PAUSED = 1;
-var STATE_STOPPED = 2;
+const STATE_PLAYING = 0;
+const STATE_PAUSED = 1;
+const STATE_STOPPED = 2;
 
 // Return time % duration but always return a number
 // instead of NaN when duration is 0
-var capTime = function (time, duration) {
+function capTime(time, duration) {
     return (time % duration) || 0;
-};
+}
 
-if (hasAudioContext()) {
-    /**
-     * @class
-     * @name pc.SoundInstance
-     * @augments pc.EventHandler
-     * @classdesc A pc.SoundInstance plays a {@link pc.Sound}.
-     * @param {pc.SoundManager} manager - The sound manager.
-     * @param {pc.Sound} sound - The sound to play.
-     * @param {object} options - Options for the instance.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
-     * @param {number} [options.startTime=0] - The time from which the playback will start in seconds. Default is 0 to start at the beginning.
-     * @param {number} [options.duration=null] - The total time after the startTime in seconds when playback will stop or restart if loop is true.
-     * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
-     * @param {Function} [options.onPause=null] - Function called when the instance is paused.
-     * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
-     * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
-     * @param {Function} [options.onEnd=null] - Function called when the instance ends.
-     * @property {number} volume The volume modifier to play the sound with. In range 0-1.
-     * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
-     * @property {number} startTime The start time from which the sound will start playing.
-     * @property {number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
-     * @property {number} duration The duration of the sound that the instance will play starting from startTime.
-     * @property {boolean} loop If true the instance will restart when it finishes playing.
-     * @property {boolean} isPlaying Returns true if the instance is currently playing.
-     * @property {boolean} isPaused Returns true if the instance is currently paused.
-     * @property {boolean} isStopped Returns true if the instance is currently stopped.
-     * @property {boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
-     * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>. Source is only available after calling play.
-     * @property {pc.Sound} sound The sound resource that the instance will play.
-     */
-    SoundInstance = function (manager, sound, options) {
-        EventHandler.call(this);
+/**
+ * @class
+ * @name pc.SoundInstance
+ * @augments pc.EventHandler
+ * @classdesc A pc.SoundInstance plays a {@link pc.Sound}.
+ * @param {pc.SoundManager} manager - The sound manager.
+ * @param {pc.Sound} sound - The sound to play.
+ * @param {object} options - Options for the instance.
+ * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+ * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+ * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
+ * @param {number} [options.startTime=0] - The time from which the playback will start in seconds. Default is 0 to start at the beginning.
+ * @param {number} [options.duration=null] - The total time after the startTime in seconds when playback will stop or restart if loop is true.
+ * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
+ * @param {Function} [options.onPause=null] - Function called when the instance is paused.
+ * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
+ * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
+ * @param {Function} [options.onEnd=null] - Function called when the instance ends.
+ * @property {number} volume The volume modifier to play the sound with. In range 0-1.
+ * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
+ * @property {number} startTime The start time from which the sound will start playing.
+ * @property {number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
+ * @property {number} duration The duration of the sound that the instance will play starting from startTime.
+ * @property {boolean} loop If true the instance will restart when it finishes playing.
+ * @property {boolean} isPlaying Returns true if the instance is currently playing.
+ * @property {boolean} isPaused Returns true if the instance is currently paused.
+ * @property {boolean} isStopped Returns true if the instance is currently stopped.
+ * @property {boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
+ * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>. Source is only available after calling play.
+ * @property {pc.Sound} sound The sound resource that the instance will play.
+ */
+class SoundInstance extends EventHandler {
+    constructor(manager, sound, options) {
+        super();
 
-        options = options || {};
+        this._manager = manager;
 
         this._volume = options.volume !== undefined ? math.clamp(Number(options.volume) || 0, 0, 1) : 1;
         this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
         this._loop = !!(options.loop !== undefined ? options.loop : false);
-
         this._sound = sound;
 
         // start at 'stopped'
         this._state = STATE_STOPPED;
-
         // true if the manager was suspended
         this._suspended = false;
         // true if we want to suspend the event handled to the 'onended' event
         this._suspendEndEvent = false;
         // true if we want to suspend firing instance events
         this._suspendInstanceEvents = false;
-
-        this._startTime = Math.max(0, Number(options.startTime) || 0);
-        this._duration = Math.max(0, Number(options.duration) || 0);
-
-        this._startedAt = 0;
-        this._startOffset = null;
-
-        // manually keep track of the playback position
-        // because the Web Audio API does not provide a way to do this
-        // accurately if the playbackRate is not 1
-        this._currentTime = 0;
-        this._currentOffset = 0;
-
         // if true then the instance will start playing its source
         // when its created
         this._playWhenLoaded = true;
 
-        this._manager = manager;
+        this._startTime = Math.max(0, Number(options.startTime) || 0);
+        this._duration = Math.max(0, Number(options.duration) || 0);
+        this._startOffset = null;
 
-        // The input node is the one that is connected to the source.
-        this._inputNode = null;
-        // the connected node is the one that is connected to the destination (speakers). Any
-        // external nodes will be connected to this node.
-        this._connectorNode = null;
-
-        // The first external node set by a user
-        this._firstNode = null;
-        // The last external node set by a user
-        this._lastNode = null;
-
-        this._initializeNodes();
+        // source is initialized when play() is called
+        this.source = null;
 
         // external event handlers
         this._onPlayCallback = options.onPlay;
@@ -107,15 +82,189 @@ if (hasAudioContext()) {
         this._onStopCallback = options.onStop;
         this._onEndCallback = options.onEnd;
 
-        // bind internal event handlers to 'this'
-        this._endedHandler = this._onEnded.bind(this);
+        if (hasAudioContext()) {
+            this._startedAt = 0;
 
-        // source is initialized when play() is called
-        this.source = null;
-    };
-    SoundInstance.prototype = Object.create(EventHandler.prototype);
-    SoundInstance.prototype.constructor = SoundInstance;
+            // manually keep track of the playback position
+            // because the Web Audio API does not provide a way to do this
+            // accurately if the playbackRate is not 1
+            this._currentTime = 0;
+            this._currentOffset = 0;
 
+            // The input node is the one that is connected to the source.
+            this._inputNode = null;
+            // the connected node is the one that is connected to the destination (speakers). Any
+            // external nodes will be connected to this node.
+            this._connectorNode = null;
+
+            // The first external node set by a user
+            this._firstNode = null;
+            // The last external node set by a user
+            this._lastNode = null;
+
+            this._initializeNodes();
+
+            // bind internal event handlers to 'this'
+            this._endedHandler = this._onEnded.bind(this);
+
+        } else {
+
+            this._isReady = false;
+
+            this._loadedMetadataHandler = this._onLoadedMetadata.bind(this);
+            this._timeUpdateHandler = this._onTimeUpdate.bind(this);
+            this._endedHandler = this._onEnded.bind(this);
+
+            this._createSource();
+        }
+    }
+
+    _onPlay() {
+        this.fire('play');
+
+        if (this._onPlayCallback)
+            this._onPlayCallback(this);
+    }
+
+    _onPause() {
+        this.fire('pause');
+
+        if (this._onPauseCallback)
+            this._onPauseCallback(this);
+    }
+
+    _onResume() {
+        this.fire('resume');
+
+        if (this._onResumeCallback)
+            this._onResumeCallback(this);
+    }
+
+    _onStop() {
+        this.fire('stop');
+
+        if (this._onStopCallback)
+            this._onStopCallback(this);
+    }
+
+    _onEnded() {
+        // the callback is not fired synchronously
+        // so only reset _suspendEndEvent to false when the
+        // callback is fired
+        if (this._suspendEndEvent) {
+            this._suspendEndEvent = false;
+            return;
+        }
+
+        this.fire('end');
+
+        if (this._onEndCallback)
+            this._onEndCallback(this);
+
+        this.stop();
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.SoundInstance#_onManagerVolumeChange
+     * @description Handle the manager's 'volumechange' event.
+     */
+    _onManagerVolumeChange() {
+        this.volume = this._volume;
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.SoundInstance#_onManagerSuspend
+     * @description Handle the manager's 'suspend' event.
+     */
+    _onManagerSuspend() {
+        if (this._state === STATE_PLAYING && !this._suspended) {
+            this._suspended = true;
+            this.pause();
+        }
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.SoundInstance#_onManagerResume
+     * @description Handle the manager's 'resume' event.
+     */
+    _onManagerResume() {
+        if (this._suspended) {
+            this._suspended = false;
+            this.resume();
+        }
+    }
+
+    get loop() {
+        return this._loop;
+    }
+
+    set loop(value) {
+        this._loop = !!value;
+        if (this.source) {
+            this.source.loop = this._loop;
+        }
+    }
+
+    get startTime() {
+        return this._startTime;
+    }
+
+    set startTime(value) {
+        this._startTime = Math.max(0, Number(value) || 0);
+
+        // restart
+        var isPlaying = this._state === STATE_PLAYING;
+        this.stop();
+        if (isPlaying) {
+            this.play();
+        }
+    }
+
+    get duration() {
+        if (!this._sound) {
+            return 0;
+        }
+        if (this._duration) {
+            return capTime(this._duration, this._sound.duration);
+        }
+        return this._sound.duration;
+    }
+
+    set duration(value) {
+        this._duration = Math.max(0, Number(value) || 0);
+
+        // restart
+        var isPlaying = this._state === STATE_PLAYING;
+        this.stop();
+        if (isPlaying) {
+            this.play();
+        }
+    }
+
+    get isPlaying() {
+        return this._state === STATE_PLAYING;
+    }
+
+    get isPaused() {
+        return this._state === STATE_PAUSED;
+    }
+
+    get isStopped() {
+        return this._state === STATE_STOPPED;
+    }
+
+    get isSuspended() {
+        return this._suspended;
+    }
+}
+
+if (hasAudioContext()) {
     Object.assign(SoundInstance.prototype, {
         /**
          * @function
@@ -505,19 +654,6 @@ if (hasAudioContext()) {
         }
     });
 
-    Object.defineProperty(SoundInstance.prototype, 'loop', {
-        get: function () {
-            return this._loop;
-        },
-
-        set: function (loop) {
-            this._loop = !!loop;
-            if (this.source) {
-                this.source.loop = this._loop;
-            }
-        }
-    });
-
     Object.defineProperty(SoundInstance.prototype, 'sound', {
         get: function () {
             return this._sound;
@@ -580,48 +716,7 @@ if (hasAudioContext()) {
         }
     });
 
-} else if (hasAudio()) {
-    SoundInstance = function (manager, resource, options) {
-        EventHandler.call(this);
-
-        options = options || {};
-
-        this._volume = options.volume !== undefined ? math.clamp(Number(options.volume) || 0, 0, 1) : 1;
-        this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
-        this._loop = !!(options.loop !== undefined ? options.loop : false);
-
-        this._sound = resource;
-        this._state = STATE_STOPPED;
-        this._suspended = false;
-        this._suspendEndEvent = false;
-        this._suspendInstanceEvents = false;
-        this._playWhenLoaded = true;
-
-        this._startTime = Math.max(0, Number(options.startTime) || 0);
-        this._duration = Math.max(0, Number(options.duration) || 0);
-        this._startOffset = null;
-
-        this._isReady = false;
-
-        this._manager = manager;
-
-        this._loadedMetadataHandler = this._onLoadedMetadata.bind(this);
-        this._timeUpdateHandler = this._onTimeUpdate.bind(this);
-        this._endedHandler = this._onEnded.bind(this);
-
-        // external event handlers
-        this._onPlayCallback = options.onPlay;
-        this._onPauseCallback = options.onPause;
-        this._onResumeCallback = options.onResume;
-        this._onStopCallback = options.onStop;
-        this._onEndCallback = options.onEnd;
-
-        this.source = null;
-        this._createSource();
-    };
-    SoundInstance.prototype = Object.create(EventHandler.prototype);
-    SoundInstance.prototype.constructor = SoundInstance;
-
+} else {
     Object.assign(SoundInstance.prototype, {
         play: function () {
             if (this._state !== STATE_STOPPED) {
@@ -816,19 +911,6 @@ if (hasAudioContext()) {
         }
     });
 
-    Object.defineProperty(SoundInstance.prototype, 'loop', {
-        get: function () {
-            return this._loop;
-        },
-
-        set: function (loop) {
-            this._loop = !!loop;
-            if (this.source) {
-                this.source.loop = this._loop;
-            }
-        }
-    });
-
     Object.defineProperty(SoundInstance.prototype, 'sound', {
         get: function () {
             return this._sound;
@@ -863,158 +945,7 @@ if (hasAudioContext()) {
             }
         }
     });
-
-} else {
-    SoundInstance = function () { };
 }
-
-// Add functions which don't depend on source type
-Object.assign(SoundInstance.prototype, {
-
-    _onPlay: function () {
-        this.fire('play');
-
-        if (this._onPlayCallback)
-            this._onPlayCallback(this);
-    },
-
-    _onPause: function () {
-        this.fire('pause');
-
-        if (this._onPauseCallback)
-            this._onPauseCallback(this);
-    },
-
-    _onResume: function () {
-        this.fire('resume');
-
-        if (this._onResumeCallback)
-            this._onResumeCallback(this);
-    },
-
-    _onStop: function () {
-        this.fire('stop');
-
-        if (this._onStopCallback)
-            this._onStopCallback(this);
-    },
-
-    _onEnded: function () {
-        // the callback is not fired synchronously
-        // so only reset _suspendEndEvent to false when the
-        // callback is fired
-        if (this._suspendEndEvent) {
-            this._suspendEndEvent = false;
-            return;
-        }
-
-        this.fire('end');
-
-        if (this._onEndCallback)
-            this._onEndCallback(this);
-
-        this.stop();
-    },
-
-    /**
-     * @private
-     * @function
-     * @name pc.SoundInstance#_onManagerVolumeChange
-     * @description Handle the manager's 'volumechange' event.
-     */
-    _onManagerVolumeChange: function () {
-        this.volume = this._volume;
-    },
-
-    /**
-     * @private
-     * @function
-     * @name pc.SoundInstance#_onManagerSuspend
-     * @description Handle the manager's 'suspend' event.
-     */
-    _onManagerSuspend: function () {
-        if (this._state === STATE_PLAYING && !this._suspended) {
-            this._suspended = true;
-            this.pause();
-        }
-    },
-
-    /**
-     * @private
-     * @function
-     * @name pc.SoundInstance#_onManagerResume
-     * @description Handle the manager's 'resume' event.
-     */
-    _onManagerResume: function () {
-        if (this._suspended) {
-            this._suspended = false;
-            this.resume();
-        }
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'startTime', {
-    get: function () {
-        return this._startTime;
-    },
-
-    set: function (value) {
-        this._startTime = Math.max(0, Number(value) || 0);
-
-        // restart
-        var isPlaying = this._state === STATE_PLAYING;
-        this.stop();
-        if (isPlaying) {
-            this.play();
-        }
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'duration', {
-    get: function () {
-        if (!this._sound) {
-            return 0;
-        }
-        if (this._duration) {
-            return capTime(this._duration, this._sound.duration);
-        }
-        return this._sound.duration;
-    },
-    set: function (value) {
-        this._duration = Math.max(0, Number(value) || 0);
-
-        // restart
-        var isPlaying = this._state === STATE_PLAYING;
-        this.stop();
-        if (isPlaying) {
-            this.play();
-        }
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'isPlaying', {
-    get: function () {
-        return this._state === STATE_PLAYING;
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'isPaused', {
-    get: function () {
-        return this._state === STATE_PAUSED;
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'isStopped', {
-    get: function () {
-        return this._state === STATE_STOPPED;
-    }
-});
-
-Object.defineProperty(SoundInstance.prototype, 'isSuspended', {
-    get: function () {
-        return this._suspended;
-    }
-});
 
 // Events Documentation
 

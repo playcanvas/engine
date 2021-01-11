@@ -107,7 +107,7 @@ if (hasAudioContext()) {
 
     // Fall off function which should be the same as the one in the Web Audio API
     // Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
-    function fallOff(posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
+    const fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
         offset = offset.sub2(posOne, posTwo);
         let distance = offset.length();
 
@@ -126,7 +126,7 @@ if (hasAudioContext()) {
             result = Math.pow(distance / refDistance, -rolloffFactor);
         }
         return math.clamp(result, 0, 1);
-    }
+    };
 
     Object.assign(Channel3d.prototype, {
         setPosition: function (position) {
