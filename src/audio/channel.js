@@ -15,37 +15,36 @@ import { hasAudio, hasAudioContext } from './capabilities.js';
  * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
  * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
  */
-function Channel(manager, sound, options = {}) {
-    this.volume = (options.volume === undefined) ? 1 : options.volume;
-    this.loop = (options.loop === undefined) ? false : options.loop;
-    this.pitch = (options.pitch === undefined ? 1 : options.pitch);
+class Channel {
+    constructor(manager, sound, options = {}) {
+        this.volume = (options.volume === undefined) ? 1 : options.volume;
+        this.loop = (options.loop === undefined) ? false : options.loop;
+        this.pitch = (options.pitch === undefined ? 1 : options.pitch);
 
-    this.sound = sound;
+        this.sound = sound;
 
-    this.paused = false;
-    this.suspended = false;
+        this.paused = false;
+        this.suspended = false;
 
-    this.manager = manager;
+        this.manager = manager;
 
-    this.source = null;
+        this.source = null;
 
-    if (hasAudioContext()) {
-        this.startTime = 0;
-        this.startOffset = 0;
+        if (hasAudioContext()) {
+            this.startTime = 0;
+            this.startOffset = 0;
 
-        var context = manager.context;
-        this.gain = context.createGain();
-    } else if (hasAudio()) {
-        // handle the case where sound was
-        if (sound.audio) {
-            this.source = sound.audio.cloneNode(false);
-            this.source.pause(); // not initially playing
+            const context = manager.context;
+            this.gain = context.createGain();
+        } else if (hasAudio()) {
+            // handle the case where sound was
+            if (sound.audio) {
+                this.source = sound.audio.cloneNode(false);
+                this.source.pause(); // not initially playing
+            }
         }
     }
-}
 
-// Add functions which don't depend on source type
-Object.assign(Channel.prototype, {
     /**
      * @private
      * @function
@@ -53,9 +52,9 @@ Object.assign(Channel.prototype, {
      * @description Get the current value for the volume. Between 0 and 1.
      * @returns {number} The volume of the channel.
      */
-    getVolume: function () {
+    getVolume() {
         return this.volume;
-    },
+    }
 
     /**
      * @private
@@ -64,9 +63,9 @@ Object.assign(Channel.prototype, {
      * @description Get the current looping state of the Channel.
      * @returns {boolean} The loop property for the channel.
      */
-    getLoop: function () {
+    getLoop() {
         return this.loop;
-    },
+    }
 
     /**
      * @private
@@ -75,12 +74,12 @@ Object.assign(Channel.prototype, {
      * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
      * @param {boolean} loop - True to loop the sound, false otherwise.
      */
-    setLoop: function (loop) {
+    setLoop(loop) {
         this.loop = loop;
         if (this.source) {
             this.source.loop = loop;
         }
-    },
+    }
 
     /**
      * @private
@@ -89,9 +88,9 @@ Object.assign(Channel.prototype, {
      * @description Get the current pitch of the Channel.
      * @returns {number} The pitch of the channel.
      */
-    getPitch: function () {
+    getPitch() {
         return this.pitch;
-    },
+    }
 
     /**
      * @private
@@ -99,9 +98,9 @@ Object.assign(Channel.prototype, {
      * @name pc.Channel#onManagerVolumeChange
      * @description Handle the manager's 'volumechange' event.
      */
-    onManagerVolumeChange: function () {
+    onManagerVolumeChange() {
         this.setVolume(this.getVolume());
-    },
+    }
 
     /**
      * @private
@@ -109,12 +108,12 @@ Object.assign(Channel.prototype, {
      * @name pc.Channel#onManagerSuspend
      * @description Handle the manager's 'suspend' event.
      */
-    onManagerSuspend: function () {
+    onManagerSuspend() {
         if (this.isPlaying() && !this.suspended) {
             this.suspended = true;
             this.pause();
         }
-    },
+    }
 
     /**
      * @private
@@ -122,13 +121,13 @@ Object.assign(Channel.prototype, {
      * @name pc.Channel#onManagerResume
      * @description Handle the manager's 'resume' event.
      */
-    onManagerResume: function () {
+    onManagerResume() {
         if (this.suspended) {
             this.suspended = false;
             this.unpause();
         }
     }
-});
+}
 
 if (hasAudioContext()) {
     Object.assign(Channel.prototype, {
@@ -258,7 +257,7 @@ if (hasAudioContext()) {
         },
 
         _createSource: function () {
-            var context = this.manager.context;
+            const context = this.manager.context;
 
             if (this.sound.buffer) {
                 this.source = context.createBufferSource();
