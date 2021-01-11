@@ -338,7 +338,7 @@ class StandardMaterial extends Material {
 
         this.reset();
     }
-    
+
     reset() {
         for (let i = 0; i < _propsSerial.length; i++) {
             const defVal = _propsSerialDefaultVal[i];
@@ -358,13 +358,13 @@ class StandardMaterial extends Material {
     }
 
     /**
-    * @function
-    * @name pc.StandardMaterial#clone
-    * @description Duplicates a Standard material. All properties are duplicated except textures
-    * where only the references are copied.
-    * @returns {pc.StandardMaterial} A cloned Standard material.
-    */
-   clone() {
+     * @function
+     * @name pc.StandardMaterial#clone
+     * @description Duplicates a Standard material. All properties are duplicated except textures
+     * where only the references are copied.
+     * @returns {pc.StandardMaterial} A cloned Standard material.
+     */
+    clone() {
         const clone = new StandardMaterial();
         this._cloneInternal(clone);
 
@@ -862,7 +862,7 @@ function _defineTex2D(obj, name, uv, channels, defChannel, vertexColor, detailMo
         _propsSerial.push(privMapDetailMode.substring(1));
     }
     _propsInternalNull.push(mapTransform);
-};
+}
 
 function _defineColor(obj, name, defaultValue, hasMultiplier) {
     var priv = "_" + name;

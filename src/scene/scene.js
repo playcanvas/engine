@@ -340,7 +340,7 @@ class Scene extends EventHandler {
     get defaultMaterial() {
         return Material.defaultMaterial;
     }
-    
+
     set defaultMaterial(value) {
         Material.defaultMaterial = value;
     }
