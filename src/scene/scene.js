@@ -354,6 +354,15 @@ Object.defineProperty(Scene.prototype, 'layers', {
     }
 });
 
+Object.defineProperty(Scene.prototype, 'defaultMaterial', {
+    get: function () {
+        return Material.defaultMaterial;
+    },
+    set: function (value) {
+        Material.defaultMaterial = value;
+    }
+})
+
 Scene.prototype.applySettings = function (settings) {
     // settings
     this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);

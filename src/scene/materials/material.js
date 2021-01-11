@@ -7,7 +7,6 @@ import {
     CULLFACE_BACK
 } from '../../graphics/graphics.js';
 
-import { getDefaultMaterial } from './default-material.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
@@ -71,6 +70,8 @@ var id = 0;
  * @property {number} slopeDepthBias Same as {@link pc.Material#depthBias}, but also depends on the slope of the triangle relative to the camera.
  */
 class Material {
+    static defaultMaterial = null;
+
     constructor() {
         this.name = "Untitled";
         this.id = id++;
@@ -431,7 +432,7 @@ class Material {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            var defaultMaterial = getDefaultMaterial();
+            var defaultMaterial = Material.defaultMaterial;
             if (this !== defaultMaterial) {
                 meshInstance.material = defaultMaterial;
             }
