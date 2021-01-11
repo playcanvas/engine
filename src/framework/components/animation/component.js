@@ -460,12 +460,11 @@ class AnimationComponent extends Component {
         for (var i = 0; i < this.assets.length; i++) {
 
             // this.assets can be an array of pc.Assets or an array of numbers (assetIds)
-            var assetId = this.assets[i];
-            if (typeof assetId !== 'number') {
-                assetId = assetId.id;
+            var asset = this.assets[i];
+            if (typeof asset ===  'number') {
+                asset = this.system.app.assets.get(asset);
             }
 
-            var asset = this.system.app.assets.get(assetId);
             if (!asset) continue;
 
             asset.off('change', this.onAssetChanged, this);
