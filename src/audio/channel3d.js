@@ -2,39 +2,43 @@ import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from './constants.js';
-import { hasAudio, hasAudioContext } from './capabilities.js';
+import { hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
 
 // default maxDistance, same as Web Audio API
-var MAX_DISTANCE = 10000;
+const MAX_DISTANCE = 10000;
 
-var Channel3d;
-
-if (hasAudioContext()) {
-    Channel3d = function (manager, sound, options) {
-        Channel.call(this, manager, sound, options);
+class Channel3d extends Channel {
+    constructor(manager, sound, options) {
+        super(manager, sound, options);
 
         this.position = new Vec3();
         this.velocity = new Vec3();
 
-        var context = manager.context;
-        this.panner = context.createPanner();
-    };
-    Channel3d.prototype = Object.create(Channel.prototype);
-    Channel3d.prototype.constructor = Channel3d;
+        if (this.hasAudioContext()) {
+            this.panner = manager.context.createPanner();
+        } else {
+            this.maxDistance = MAX_DISTANCE;
+            this.minDistance = 1;
+            this.rollOffFactor = 1;
+            this.distanceModel = DISTANCE_INVERSE;
+        }
+    }
 
+    getPosition() {
+        return this.position;
+    }
+
+    getVelocity() {
+        return this.velocity;
+    }
+}
+
+if (hasAudioContext()) {
     Object.assign(Channel3d.prototype, {
-        getPosition: function () {
-            return this.position;
-        },
-
         setPosition: function (position) {
             this.position.copy(position);
             this.panner.setPosition(position.x, position.y, position.z);
-        },
-
-        getVelocity: function () {
-            return this.velocity;
         },
 
         setVelocity: function (velocity) {
@@ -97,16 +101,15 @@ if (hasAudioContext()) {
             }
         }
     });
-} else if (hasAudio()) {
+} else {
     // temp vector storage
-    var offset = new Vec3();
-
+    let offset = new Vec3();
 
     // Fall off function which should be the same as the one in the Web Audio API
     // Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
-    var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
+    function fallOff(posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
         offset = offset.sub2(posOne, posTwo);
-        var distance = offset.length();
+        let distance = offset.length();
 
         if (distance < refDistance) {
             return 1;
@@ -114,7 +117,7 @@ if (hasAudioContext()) {
             return 0;
         }
 
-        var result = 0;
+        let result = 0;
         if (distanceModel === DISTANCE_LINEAR) {
             result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
         } else if (distanceModel === DISTANCE_INVERSE) {
@@ -123,44 +126,22 @@ if (hasAudioContext()) {
             result = Math.pow(distance / refDistance, -rolloffFactor);
         }
         return math.clamp(result, 0, 1);
-    };
-
-    Channel3d = function (manager, sound) {
-        Channel.call(this, manager, sound);
-
-        this.position = new Vec3();
-        this.velocity = new Vec3();
-
-        this.maxDistance = MAX_DISTANCE;
-        this.minDistance = 1;
-        this.rollOffFactor = 1;
-        this.distanceModel = DISTANCE_INVERSE;
-    };
-    Channel3d.prototype = Object.create(Channel.prototype);
-    Channel3d.prototype.constructor = Channel3d;
+    }
 
     Object.assign(Channel3d.prototype, {
-        getPosition: function () {
-            return this.position;
-        },
-
         setPosition: function (position) {
             this.position.copy(position);
 
             if (this.source) {
-                var listener = this.manager.listener;
+                const listener = this.manager.listener;
 
-                var lpos = listener.getPosition();
+                const lpos = listener.getPosition();
 
-                var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor, this.distanceModel);
+                const factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor, this.distanceModel);
 
-                var v = this.getVolume();
+                const v = this.getVolume();
                 this.source.volume = v * factor;
             }
-        },
-
-        getVelocity: function () {
-            return this.velocity;
         },
 
         setVelocity: function (velocity) {
@@ -199,8 +180,6 @@ if (hasAudioContext()) {
             this.distanceModel = distanceModel;
         }
     });
-} else {
-    Channel3d = function () { };
 }
 
 export { Channel3d };
