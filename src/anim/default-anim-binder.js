@@ -13,6 +13,10 @@ import { AnimTarget } from './anim-target.js';
  */
 class DefaultAnimBinder {
     constructor(graph) {
+        this.propertyLocator = new AnimPropertyLocator();
+
+        if (!graph) return;
+
         var nodes = { };
 
         // cache node names so we can quickly resolve animation paths
@@ -121,8 +125,6 @@ class DefaultAnimBinder {
                 return null;
             }.bind(this)
         };
-
-        this.propertyLocator = new AnimPropertyLocator();
     }
 
     resolve(path) {

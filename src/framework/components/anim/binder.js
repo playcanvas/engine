@@ -18,13 +18,8 @@ const q  = new Quat();
 
 class AnimComponentBinder extends DefaultAnimBinder {
     constructor(animComponent, graph) {
+        super(graph);
         this.animComponent = animComponent;
-
-        if (graph) {
-            super(graph);
-        } else {
-            this.propertyLocator = new AnimPropertyLocator();
-        }
     }
 
     static _packFloat(values) {
