@@ -157,6 +157,9 @@ class MeshInstance {
 
     set mesh(mesh) {
 
+        if (mesh === this._mesh)
+            return;
+
         if (this._mesh) {
             this._mesh.decRefCount();
         }
