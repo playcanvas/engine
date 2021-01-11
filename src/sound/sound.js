@@ -18,7 +18,7 @@ class Sound {
     }
 
     get duration() {
-        var duration = 0;
+        let duration = 0;
         if (this.buffer) {
             duration = this.buffer.duration;
         } else if (this.audio) {

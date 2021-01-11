@@ -85,7 +85,7 @@ if (hasAudioContext()) {
          * @description Create the buffer source and connect it up to the correct audio nodes.
          */
         _createSource: function () {
-            var context = this.manager.context;
+            const context = this.manager.context;
 
             this.source = context.createBufferSource();
             this.source.buffer = this.sound.buffer;

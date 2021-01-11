@@ -34,7 +34,7 @@ class Channel {
             this.startTime = 0;
             this.startOffset = 0;
 
-            var context = manager.context;
+            const context = manager.context;
             this.gain = context.createGain();
         } else if (hasAudio()) {
             // handle the case where sound was
@@ -257,7 +257,7 @@ if (hasAudioContext()) {
         },
 
         _createSource: function () {
-            var context = this.manager.context;
+            const context = this.manager.context;
 
             if (this.sound.buffer) {
                 this.source = context.createBufferSource();

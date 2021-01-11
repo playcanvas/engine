@@ -219,7 +219,7 @@ class SoundInstance extends EventHandler {
         this._startTime = Math.max(0, Number(value) || 0);
 
         // restart
-        var isPlaying = this._state === STATE_PLAYING;
+        const isPlaying = this._state === STATE_PLAYING;
         this.stop();
         if (isPlaying) {
             this.play();
@@ -240,7 +240,7 @@ class SoundInstance extends EventHandler {
         this._duration = Math.max(0, Number(value) || 0);
 
         // restart
-        var isPlaying = this._state === STATE_PLAYING;
+        const isPlaying = this._state === STATE_PLAYING;
         this.stop();
         if (isPlaying) {
             this.play();
@@ -298,7 +298,7 @@ if (hasAudioContext()) {
             }
 
             // calculate start offset
-            var offset = capTime(this._startOffset, this.duration);
+            let offset = capTime(this._startOffset, this.duration);
             offset = capTime(this._startTime + offset, this._sound.duration);
             // reset start offset now that we started the sound
             this._startOffset = null;
@@ -391,7 +391,7 @@ if (hasAudioContext()) {
             }
 
             // start at point where sound was paused
-            var offset = this.currentTime;
+            let offset = this.currentTime;
 
             // if the user set the 'currentTime' property while the sound
             // was paused then use that as the offset instead
@@ -499,7 +499,7 @@ if (hasAudioContext()) {
             // connections are:
             // source -> inputNode -> connectorNode -> [firstNode -> ... -> lastNode] -> speakers
 
-            var speakers = this._manager.context.destination;
+            const speakers = this._manager.context.destination;
 
             if (this._firstNode !== firstNode) {
                 if (this._firstNode) {
@@ -535,7 +535,7 @@ if (hasAudioContext()) {
          * @description Clears any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
          */
         clearExternalNodes: function () {
-            var speakers = this._manager.context.destination;
+            const speakers = this._manager.context.destination;
 
             // break existing connections
             if (this._firstNode) {
@@ -574,7 +574,7 @@ if (hasAudioContext()) {
                 return null;
             }
 
-            var context = this._manager.context;
+            const context = this._manager.context;
 
             if (this._sound.buffer) {
                 this.source = context.createBufferSource();
@@ -701,7 +701,7 @@ if (hasAudioContext()) {
                 // stop first which will set _startOffset to null
                 this.stop();
 
-                var suspend = this._suspendInstanceEvents;
+                const suspend = this._suspendInstanceEvents;
                 this._suspendInstanceEvents = true;
                 // set _startOffset and play
                 this._startOffset = value;
@@ -826,7 +826,7 @@ if (hasAudioContext()) {
             this._isReady = true;
 
             // calculate start time for source
-            var offset = capTime(this._startOffset, this.duration);
+            let offset = capTime(this._startOffset, this.duration);
             offset = capTime(this._startTime + offset, this._sound.duration);
             // reset currentTime
             this._startOffset = null;
