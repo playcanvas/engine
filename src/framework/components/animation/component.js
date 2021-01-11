@@ -458,6 +458,8 @@ class AnimationComponent extends Component {
 
     onBeforeRemove() {
         for (var i = 0; i < this.assets.length; i++) {
+
+            // this.assets can be an array of pc.Assets or an array of numbers (assetIds)
             var assetId = this.assets[i];
             if (typeof assetId !== 'number') {
                 assetId = assetId.id;
