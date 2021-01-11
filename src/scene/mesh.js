@@ -178,7 +178,7 @@ class GeometryVertexStream {
  */
 class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
-        super();
+        super(false);   // meshes do not automatically destroy when refCount reaches zero
         this.id = id++;
         this.device = graphicsDevice || Application.getApplication().graphicsDevice;
         this.vertexBuffer = null;
