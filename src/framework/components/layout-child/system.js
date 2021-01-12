@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
 import { LayoutChildComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class
@@ -14,23 +14,19 @@ var _schema = ['enabled'];
  * @classdesc Manages creation of {@link pc.LayoutChildComponent}s.
  * @param {pc.Application} app - The application.
  */
-var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class LayoutChildComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'layoutchild';
+        this.id = 'layoutchild';
 
-    this.ComponentType = LayoutChildComponent;
-    this.DataType = LayoutChildComponentData;
+        this.ComponentType = LayoutChildComponent;
+        this.DataType = LayoutChildComponentData;
 
-    this.schema = _schema;
-};
-LayoutChildComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-LayoutChildComponentSystem.prototype.constructor = LayoutChildComponentSystem;
+        this.schema = _schema;
+    }
 
-Component._buildAccessors(LayoutChildComponent.prototype, _schema);
-
-Object.assign(LayoutChildComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         if (data.enabled !== undefined) component.enabled = data.enabled;
         if (data.minWidth !== undefined) component.minWidth = data.minWidth;
         if (data.minHeight !== undefined) component.minHeight = data.minHeight;
@@ -40,10 +36,10 @@ Object.assign(LayoutChildComponentSystem.prototype, {
         if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
         if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-    },
+        super.initializeComponentData(component, data, properties);
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var layoutChild = entity.layoutchild;
 
         return this.addComponent(clone, {
@@ -57,6 +53,8 @@ Object.assign(LayoutChildComponentSystem.prototype, {
             excludeFromLayout: layoutChild.excludeFromLayout
         });
     }
-});
+}
+
+Component._buildAccessors(LayoutChildComponent.prototype, _schema);
 
 export { LayoutChildComponentSystem };

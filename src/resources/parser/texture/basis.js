@@ -11,16 +11,17 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for basis files.
  */
-function BasisParser(registry, retryRequests) {
-    this.retryRequests = !!retryRequests;
-}
+class BasisParser {
+    constructor(registry) {
+        this.maxRetries = 0;
+    }
 
-Object.assign(BasisParser.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var options = {
             cache: true,
             responseType: "arraybuffer",
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
         http.get(
             url.load,
@@ -45,10 +46,10 @@ Object.assign(BasisParser.prototype, {
                 }
             }
         );
-    },
+    }
 
     // our async transcode call provides the neat structure we need to create the texture instance
-    open: function (url, data, device) {
+    open(url, data, device) {
         var texture = new Texture(device, {
             name: url,
             // #ifdef PROFILER
@@ -67,6 +68,6 @@ Object.assign(BasisParser.prototype, {
 
         return texture;
     }
-});
+}
 
 export { BasisParser };

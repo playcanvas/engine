@@ -19,6 +19,7 @@ export { string } from './core/string.js';
 export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
+export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
@@ -71,7 +72,10 @@ export { VertexIterator } from './graphics/vertex-iterator.js';
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
-export { Batch, BatchGroup, BatchManager } from './scene/batching.js';
+export { Batch } from './scene/batching/batch.js';
+export { BatchGroup } from './scene/batching/batch-group.js';
+export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
+export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/forward-renderer.js';
@@ -98,10 +102,25 @@ export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // ANIMATION
+export { Animation, Key, Node } from './animation/animation.js';
+export { Skeleton } from './animation/skeleton.js';
+
+// ANIM
 export * from './anim/constants.js';
-export { Animation, Key, Node } from './anim/animation.js';
-export { Skeleton } from './anim/skeleton.js';
-export { AnimBinder, AnimClip, AnimCurve, AnimData, AnimEvaluator, AnimSnapshot, AnimTarget, AnimTrack, DefaultAnimBinder } from './anim/anim.js';
+export { AnimBinder } from './anim/anim-binder.js';
+export { AnimClip } from './anim/anim-clip.js';
+export { AnimCurve } from './anim/anim-curve.js';
+export { AnimData } from './anim/anim-data.js';
+export { AnimEvaluator } from './anim/anim-evaluator.js';
+export { AnimSnapshot } from './anim/anim-snapshot.js';
+export { AnimTarget } from './anim/anim-target.js';
+export { AnimTrack } from './anim/anim-track.js';
+export { DefaultAnimBinder } from './anim/default-anim-binder.js';
+
+// FONT
+export * from './font/constants.js';
+export { Font } from './font/font.js';
+export { CanvasFont } from './font/canvas-font.js';
 
 // SOUND
 export * from './audio/constants.js';
@@ -138,6 +157,7 @@ export { KtxParser } from './resources/parser/texture/ktx.js';
 export { LegacyDdsParser } from './resources/parser/texture/legacy-dds.js';
 export { MaterialHandler } from './resources/material.js';
 export { ModelHandler } from './resources/model.js';
+export { RenderHandler } from './resources/render.js';
 export { ResourceHandler } from './resources/handler.js';
 export { ResourceLoader } from './resources/loader.js';
 export { ScriptHandler } from './resources/script.js';
@@ -172,9 +192,12 @@ export * from './input/constants.js';
 export { Controller } from './input/controller.js';
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './input/element-input.js';
 export { GamePads } from './input/game-pads.js';
-export { Keyboard, KeyboardEvent } from './input/keyboard.js';
-export { Mouse, MouseEvent } from './input/mouse.js';
-export { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
+export { Keyboard } from './input/keyboard.js';
+export { KeyboardEvent } from './input/keyboard-event.js';
+export { Mouse } from './input/mouse.js';
+export { MouseEvent } from './input/mouse-event.js';
+export { TouchDevice } from './input/touch-device.js';
+export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -198,7 +221,6 @@ export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';
 export { CameraComponent } from './framework/components/camera/component.js';
 export { CameraComponentSystem } from './framework/components/camera/system.js';
-export { CanvasFont } from './framework/components/text/canvas-font.js';
 export { CollisionComponent } from './framework/components/collision/component.js';
 export { CollisionComponentSystem } from './framework/components/collision/system.js';
 export { Component } from './framework/components/component.js';
@@ -211,7 +233,6 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
-export { Font, FONT_BITMAP, FONT_MSDF } from './framework/components/text/font.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
@@ -230,7 +251,8 @@ export { PostEffectQueue } from './framework/components/camera/post-effect-queue
 export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
-export { SceneRegistry, SceneRegistryItem } from './framework/scene-registry.js';
+export { SceneRegistry } from './framework/scene-registry.js';
+export { SceneRegistryItem } from './framework/scene-registry-item.js';
 export * from './framework/components/screen/constants.js';
 export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
@@ -243,7 +265,6 @@ export { ScrollbarComponentSystem } from './framework/components/scrollbar/syste
 export * from './framework/components/scroll-view/constants.js';
 export { ScrollViewComponent } from './framework/components/scroll-view/component.js';
 export { ScrollViewComponentSystem } from './framework/components/scroll-view/system.js';
-export { SortedLoopArray } from './framework/utils/sorted-loop-array.js';
 export { SoundSlot } from './framework/components/sound/slot.js';
 export { SoundComponent } from './framework/components/sound/component.js';
 export { SoundComponentSystem } from './framework/components/sound/system.js';
@@ -268,9 +289,13 @@ export * from './xr/constants.js';
 export { XrInput } from './xr/xr-input.js';
 export { XrInputSource } from './xr/xr-input-source.js';
 export { XrLightEstimation } from './xr/xr-light-estimation.js';
+export { XrDepthSensing } from './xr/xr-depth-sensing.js';
 export { XrManager } from './xr/xr-manager.js';
 export { XrHitTest } from './xr/xr-hit-test.js';
 export { XrHitTestSource } from './xr/xr-hit-test-source.js';
+export { XrImageTracking } from './xr/xr-image-tracking.js';
+export { XrTrackedImage } from './xr/xr-tracked-image.js';
+export { XrDomOverlay } from './xr/xr-dom-overlay.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated.js';

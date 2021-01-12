@@ -5,14 +5,6 @@ import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../scene/con
 
 import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from './constants.js';
 
-/**
- * @private
- * @class
- * @name pc.LayoutCalculator
- * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s.
- */
-function LayoutCalculator() {}
-
 var AXIS_MAPPINGS = {};
 
 AXIS_MAPPINGS[ORIENTATION_HORIZONTAL] = {
@@ -656,8 +648,16 @@ var CALCULATE_FNS = {};
 CALCULATE_FNS[ORIENTATION_HORIZONTAL] = createCalculator(ORIENTATION_HORIZONTAL);
 CALCULATE_FNS[ORIENTATION_VERTICAL] = createCalculator(ORIENTATION_VERTICAL);
 
-Object.assign(LayoutCalculator.prototype, {
-    calculateLayout: function (elements, options) {
+/**
+ * @private
+ * @class
+ * @name pc.LayoutCalculator
+ * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s.
+ */
+class LayoutCalculator {
+    constructor() {}
+
+    calculateLayout(elements, options) {
         var calculateFn = CALCULATE_FNS[options.orientation];
 
         if (!calculateFn) {
@@ -666,6 +666,6 @@ Object.assign(LayoutCalculator.prototype, {
             return calculateFn(elements, options);
         }
     }
-});
+}
 
 export { LayoutCalculator };

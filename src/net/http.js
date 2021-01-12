@@ -12,55 +12,56 @@ import { math } from '../math/math.js';
  * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
  * object at `pc.http`.
  */
-function Http() {}
+class Http {
+    constructor() {}
 
-Http.ContentType = {
-    FORM_URLENCODED: "application/x-www-form-urlencoded",
-    GIF: "image/gif",
-    JPEG: "image/jpeg",
-    DDS: "image/dds",
-    JSON: "application/json",
-    PNG: "image/png",
-    TEXT: "text/plain",
-    XML: "application/xml",
-    WAV: "audio/x-wav",
-    OGG: "audio/ogg",
-    MP3: "audio/mpeg",
-    MP4: "audio/mp4",
-    AAC: "audio/aac",
-    BIN: "application/octet-stream",
-    BASIS: "image/basis",
-    GLB: "model/gltf-binary"
-};
+    static ContentType = {
+        FORM_URLENCODED: "application/x-www-form-urlencoded",
+        GIF: "image/gif",
+        JPEG: "image/jpeg",
+        DDS: "image/dds",
+        JSON: "application/json",
+        PNG: "image/png",
+        TEXT: "text/plain",
+        XML: "application/xml",
+        WAV: "audio/x-wav",
+        OGG: "audio/ogg",
+        MP3: "audio/mpeg",
+        MP4: "audio/mp4",
+        AAC: "audio/aac",
+        BIN: "application/octet-stream",
+        BASIS: "image/basis",
+        GLB: "model/gltf-binary"
+    };
 
-Http.ResponseType = {
-    TEXT: 'text',
-    ARRAY_BUFFER: 'arraybuffer',
-    BLOB: 'blob',
-    DOCUMENT: 'document',
-    JSON: 'json'
-};
+    static ResponseType = {
+        TEXT: 'text',
+        ARRAY_BUFFER: 'arraybuffer',
+        BLOB: 'blob',
+        DOCUMENT: 'document',
+        JSON: 'json'
+    };
 
-Http.binaryExtensions = [
-    '.model',
-    '.wav',
-    '.ogg',
-    '.mp3',
-    '.mp4',
-    '.m4a',
-    '.aac',
-    '.dds',
-    '.basis',
-    '.glb'
-];
+    static binaryExtensions = [
+        '.model',
+        '.wav',
+        '.ogg',
+        '.mp3',
+        '.mp4',
+        '.m4a',
+        '.aac',
+        '.dds',
+        '.basis',
+        '.glb'
+    ];
 
-Http.retryDelay = 100;
+    static retryDelay = 100;
 
-Object.assign(Http.prototype, {
+    ContentType = Http.ContentType;
 
-    ContentType: Http.ContentType,
-    ResponseType: Http.ResponseType,
-    binaryExtensions: Http.binaryExtensions,
+    ResponseType = Http.ResponseType;
+
+    binaryExtensions = Http.binaryExtensions;
 
     /**
      * @function
@@ -100,13 +101,13 @@ Object.assign(Http.prototype, {
      * err is the error code.
      * @returns {XMLHttpRequest} The request object.
      */
-    get: function (url, options, callback) {
+    get(url, options, callback) {
         if (typeof options === "function") {
             callback = options;
             options = {};
         }
         return this.request("GET", url, options, callback);
-    },
+    }
 
     /**
      * @function
@@ -146,14 +147,14 @@ Object.assign(Http.prototype, {
      * err is the error code.
      * @returns {XMLHttpRequest} The request object.
      */
-    post: function (url, data, options, callback) {
+    post(url, data, options, callback) {
         if (typeof options === "function") {
             callback = options;
             options = {};
         }
         options.postdata = data;
         return this.request("POST", url, options, callback);
-    },
+    }
 
     /**
      * @function
@@ -193,14 +194,14 @@ Object.assign(Http.prototype, {
      * err is the error code.
      * @returns {XMLHttpRequest} The request object.
      */
-    put: function (url, data, options, callback) {
+    put(url, data, options, callback) {
         if (typeof options === "function") {
             callback = options;
             options = {};
         }
         options.postdata = data;
         return this.request("PUT", url, options, callback);
-    },
+    }
 
     /**
      * @function
@@ -236,13 +237,13 @@ Object.assign(Http.prototype, {
      * err is the error code.
      * @returns {XMLHttpRequest} The request object.
      */
-    del: function (url, options, callback) {
+    del(url, options, callback) {
         if (typeof options === "function") {
             callback = options;
             options = {};
         }
         return this.request("DELETE", url, options, callback);
-    },
+    }
 
     /**
      * @function
@@ -280,7 +281,7 @@ Object.assign(Http.prototype, {
      * err is the error code.
      * @returns {XMLHttpRequest} The request object.
      */
-    request: function (method, url, options, callback) {
+    request(method, url, options, callback) {
         var uri, query, timestamp, postdata, xhr;
         var errored = false;
 
@@ -410,9 +411,9 @@ Object.assign(Http.prototype, {
 
         // Return the request object as it can be handy for blocking calls
         return xhr;
-    },
+    }
 
-    _guessResponseType: function (url) {
+    _guessResponseType(url) {
         var uri = new URI(url);
         var ext = path.getExtension(uri.path);
 
@@ -425,9 +426,9 @@ Object.assign(Http.prototype, {
         }
 
         return Http.ResponseType.TEXT;
-    },
+    }
 
-    _isBinaryContentType: function (contentType) {
+    _isBinaryContentType(contentType) {
         var binTypes = [
             Http.ContentType.MP4,
             Http.ContentType.WAV,
@@ -443,21 +444,23 @@ Object.assign(Http.prototype, {
         }
 
         return false;
-    },
+    }
 
-    _onReadyStateChange: function (method, url, options, xhr) {
+    _onReadyStateChange(method, url, options, xhr) {
         if (xhr.readyState === 4) {
             switch (xhr.status) {
                 case 0: {
+                    // If status code 0, it is assumed that the browser has cancelled the request
 
-                    // If this is a local resource then continue (IOS) otherwise the request
-                    // didn't complete, possibly an exception or attempt to do cross-domain request
-                    if (url[0] != '/') {
+                    // Add support for running Chrome browsers in 'allow-file-access-from-file'
+                    // This is to allow for specialised programs and libraries such as CefSharp
+                    // which embed Chromium in the native app.
+                    if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
+                        // Assume that any file loaded from disk is fine
                         this._onSuccess(method, url, options, xhr);
                     } else {
                         this._onError(method, url, options, xhr);
                     }
-
                     break;
                 }
                 case 200:
@@ -473,9 +476,9 @@ Object.assign(Http.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _onSuccess: function (method, url, options, xhr) {
+    _onSuccess(method, url, options, xhr) {
         var response;
         var header;
         var contentType;
@@ -517,9 +520,9 @@ Object.assign(Http.prototype, {
         } catch (err) {
             options.callback(err);
         }
-    },
+    }
 
-    _onError: function (method, url, options, xhr) {
+    _onError(method, url, options, xhr) {
         if (options.retrying) {
             return;
         }
@@ -540,8 +543,8 @@ Object.assign(Http.prototype, {
             options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);
         }
     }
-});
+}
 
-var http = new Http();
+const http = new Http();
 
 export { http, Http };

@@ -1,20 +1,18 @@
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
-
+import { Material } from '../../scene/materials/material.js';
 import { GlbParser } from './glb-parser.js';
 
-function GlbModelParser(device) {
-    this._device = device;
-    this._defaultMaterial = getDefaultMaterial();
-}
+class GlbModelParser {
+    constructor(device) {
+        this._device = device;
+    }
 
-Object.assign(GlbModelParser.prototype, {
-    parse: function (data) {
+    parse(data) {
         var glb = GlbParser.parse("filename.glb", data, this._device);
         if (!glb) {
             return null;
         }
-        return GlbParser.createModel(glb, this._defaultMaterial);
+        return GlbParser.createModel(glb, Material.defaultMaterial);
     }
-});
+}
 
 export { GlbModelParser };

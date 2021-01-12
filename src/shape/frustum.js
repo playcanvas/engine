@@ -8,13 +8,13 @@
  * @example
  * var frustum = new pc.Frustum();
  */
-function Frustum() {
-    this.planes = [];
-    for (var i = 0; i < 6; i++)
-        this.planes[i] = [];
-}
+class Frustum {
+    constructor() {
+        this.planes = [];
+        for (var i = 0; i < 6; i++)
+            this.planes[i] = [];
+    }
 
-Object.assign(Frustum.prototype, {
     /**
      * @function
      * @name pc.Frustum#setFromMat4
@@ -29,7 +29,7 @@ Object.assign(Frustum.prototype, {
      * var frustum = new pc.Frustum();
      * frustum.setFromMat4(projMat);
      */
-    setFromMat4: function (matrix) {
+    setFromMat4(matrix) {
         var vpm = matrix.data;
 
         var plane;
@@ -112,7 +112,7 @@ Object.assign(Frustum.prototype, {
         plane[1] /= t;
         plane[2] /= t;
         plane[3] /= t;
-    },
+    }
 
     /**
      * @function
@@ -122,7 +122,7 @@ Object.assign(Frustum.prototype, {
      * @param {pc.Vec3} point - The point to test.
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
-    containsPoint: function (point) {
+    containsPoint(point) {
         var p, plane;
         for (p = 0; p < 6; p++) {
             plane = this.planes[p];
@@ -131,7 +131,7 @@ Object.assign(Frustum.prototype, {
             }
         }
         return true;
-    },
+    }
 
     /**
      * @function
@@ -144,7 +144,7 @@ Object.assign(Frustum.prototype, {
      * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
      * it is contained by the frustum.
      */
-    containsSphere: function (sphere) {
+    containsSphere(sphere) {
         var c = 0;
         var d;
         var p;
@@ -168,6 +168,6 @@ Object.assign(Frustum.prototype, {
 
         return (c === 6) ? 2 : 1;
     }
-});
+}
 
 export { Frustum };

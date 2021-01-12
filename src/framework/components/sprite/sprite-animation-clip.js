@@ -25,39 +25,37 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
  * @property {boolean} isPlaying Whether the animation is currently playing.
  * @property {boolean} isPaused Whether the animation is currently paused.
  */
-function SpriteAnimationClip(component, data) {
-    EventHandler.call(this);
+class SpriteAnimationClip extends EventHandler {
+    constructor(component, data) {
+        super();
 
-    this._component = component;
+        this._component = component;
 
-    this._frame = 0;
-    this._sprite = null;
-    this._spriteAsset = null;
-    this.spriteAsset = data.spriteAsset;
+        this._frame = 0;
+        this._sprite = null;
+        this._spriteAsset = null;
+        this.spriteAsset = data.spriteAsset;
 
-    this.name = data.name;
-    this.fps = data.fps || 0;
-    this.loop = data.loop || false;
+        this.name = data.name;
+        this.fps = data.fps || 0;
+        this.loop = data.loop || false;
 
-    this._playing = false;
-    this._paused = false;
+        this._playing = false;
+        this._paused = false;
 
-    this._time = 0;
-}
-SpriteAnimationClip.prototype = Object.create(EventHandler.prototype);
-SpriteAnimationClip.prototype.constructor = SpriteAnimationClip;
+        this._time = 0;
+    }
 
-Object.assign(SpriteAnimationClip.prototype, {
     // When sprite asset is added bind it
-    _onSpriteAssetAdded: function (asset) {
+    _onSpriteAssetAdded(asset) {
         this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
         if (this._spriteAsset === asset.id) {
             this._bindSpriteAsset(asset);
         }
-    },
+    }
 
     // Hook up event handlers on sprite asset
-    _bindSpriteAsset: function (asset) {
+    _bindSpriteAsset(asset) {
         asset.on("load", this._onSpriteAssetLoad, this);
         asset.on("remove", this._onSpriteAssetRemove, this);
 
@@ -66,9 +64,9 @@ Object.assign(SpriteAnimationClip.prototype, {
         } else {
             this._component.system.app.assets.load(asset);
         }
-    },
+    }
 
-    _unbindSpriteAsset: function (asset) {
+    _unbindSpriteAsset(asset) {
         asset.off("load", this._onSpriteAssetLoad, this);
         asset.off("remove", this._onSpriteAssetRemove, this);
 
@@ -76,11 +74,11 @@ Object.assign(SpriteAnimationClip.prototype, {
         if (asset.resource && asset.resource.atlas) {
             this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
         }
-    },
+    }
 
     // When sprite asset is loaded make sure the texture atlas asset is loaded too
     // If so then set the sprite, otherwise wait for the atlas to be loaded first
-    _onSpriteAssetLoad: function (asset) {
+    _onSpriteAssetLoad(asset) {
         if (!asset.resource) {
             this.sprite = null;
         } else {
@@ -93,38 +91,38 @@ Object.assign(SpriteAnimationClip.prototype, {
                 this.sprite = asset.resource;
             }
         }
-    },
+    }
 
     // When atlas is loaded try to reset the sprite asset
-    _onTextureAtlasLoad: function (atlasAsset) {
+    _onTextureAtlasLoad(atlasAsset) {
         var spriteAsset = this._spriteAsset;
         if (spriteAsset instanceof Asset) {
             this._onSpriteAssetLoad(spriteAsset);
         } else {
             this._onSpriteAssetLoad(this._component.system.app.assets.get(spriteAsset));
         }
-    },
+    }
 
-    _onSpriteAssetRemove: function (asset) {
+    _onSpriteAssetRemove(asset) {
         this.sprite = null;
-    },
+    }
 
     // If the meshes are re-created make sure
     // we update them in the mesh instance
-    _onSpriteMeshesChange: function () {
+    _onSpriteMeshesChange() {
         if (this._component.currentClip === this) {
             this._component._showFrame(this.frame);
         }
-    },
+    }
 
     // Update frame if ppu changes for 9-sliced sprites
-    _onSpritePpuChanged: function () {
+    _onSpritePpuChanged() {
         if (this._component.currentClip === this) {
             if (this.sprite.renderMode !== SPRITE_RENDERMODE_SIMPLE) {
                 this._component._showFrame(this.frame);
             }
         }
-    },
+    }
 
     /**
      * @private
@@ -133,7 +131,7 @@ Object.assign(SpriteAnimationClip.prototype, {
      * @param {number} dt - The delta time.
      * @description Advances the animation looping if necessary.
      */
-    _update: function (dt) {
+    _update(dt) {
         if (this.fps === 0) return;
         if (!this._playing || this._paused || !this._sprite) return;
 
@@ -166,9 +164,9 @@ Object.assign(SpriteAnimationClip.prototype, {
                 this._component.fire('end', this);
             }
         }
-    },
+    }
 
-    _setTime: function (value) {
+    _setTime(value) {
         this._time = value;
         var duration = this.duration;
         if (this._time < 0) {
@@ -184,9 +182,9 @@ Object.assign(SpriteAnimationClip.prototype, {
                 this._time = duration;
             }
         }
-    },
+    }
 
-    _setFrame: function (value) {
+    _setFrame(value) {
         if (this._sprite) {
             // clamp frame
             this._frame = math.clamp(value, 0, this._sprite.frameKeys.length - 1);
@@ -197,9 +195,9 @@ Object.assign(SpriteAnimationClip.prototype, {
         if (this._component.currentClip === this) {
             this._component._showFrame(this._frame);
         }
-    },
+    }
 
-    _destroy: function () {
+    _destroy() {
         // remove sprite
         if (this._sprite) {
             this.sprite = null;
@@ -209,14 +207,14 @@ Object.assign(SpriteAnimationClip.prototype, {
         if (this._spriteAsset) {
             this.spriteAsset = null;
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.SpriteAnimationClip#play
      * @description Plays the animation. If it's already playing then this does nothing.
      */
-    play: function () {
+    play() {
         if (this._playing)
             return;
 
@@ -226,14 +224,14 @@ Object.assign(SpriteAnimationClip.prototype, {
 
         this.fire('play');
         this._component.fire('play', this);
-    },
+    }
 
     /**
      * @function
      * @name pc.SpriteAnimationClip#pause
      * @description Pauses the animation.
      */
-    pause: function () {
+    pause() {
         if (!this._playing || this._paused)
             return;
 
@@ -241,27 +239,27 @@ Object.assign(SpriteAnimationClip.prototype, {
 
         this.fire('pause');
         this._component.fire('pause', this);
-    },
+    }
 
     /**
      * @function
      * @name pc.SpriteAnimationClip#resume
      * @description Resumes the paused animation.
      */
-    resume: function () {
+    resume() {
         if (!this._paused) return;
 
         this._paused = false;
         this.fire('resume');
         this._component.fire('resume', this);
-    },
+    }
 
     /**
      * @function
      * @name pc.SpriteAnimationClip#stop
      * @description Stops the animation and resets the animation to the first frame.
      */
-    stop: function () {
+    stop() {
         if (!this._playing) return;
 
         this._playing = false;
@@ -272,13 +270,12 @@ Object.assign(SpriteAnimationClip.prototype, {
         this.fire('stop');
         this._component.fire('stop', this);
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "spriteAsset", {
-    get: function () {
+    get spriteAsset() {
         return this._spriteAsset;
-    },
-    set: function (value) {
+    }
+
+    set spriteAsset(value) {
         var assets = this._component.system.app.assets;
         var id = value;
 
@@ -311,13 +308,12 @@ Object.defineProperty(SpriteAnimationClip.prototype, "spriteAsset", {
             }
         }
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "sprite", {
-    get: function () {
+    get sprite() {
         return this._sprite;
-    },
-    set: function (value) {
+    }
+
+    set sprite(value) {
         if (this._sprite) {
             this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
             this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
@@ -382,49 +378,40 @@ Object.defineProperty(SpriteAnimationClip.prototype, "sprite", {
             }
         }
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "frame", {
-    get: function () {
+    get frame() {
         return this._frame;
-    },
+    }
 
-    set: function (value) {
+    set frame(value) {
         this._setFrame(value);
 
         // update time to start of frame
         var fps = this.fps || Number.MIN_VALUE;
         this._setTime(this._frame / fps);
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "isPlaying", {
-    get: function () {
+    get isPlaying() {
         return this._playing;
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "isPaused", {
-    get: function () {
+    get isPaused() {
         return this._paused;
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "duration", {
-    get: function () {
+    get duration() {
         if (this._sprite) {
             var fps = this.fps || Number.MIN_VALUE;
             return this._sprite.frameKeys.length / Math.abs(fps);
         }
         return 0;
     }
-});
 
-Object.defineProperty(SpriteAnimationClip.prototype, "time", {
-    get: function () {
+    get time() {
         return this._time;
-    },
-    set: function (value) {
+    }
+
+    set time(value) {
         this._setTime(value);
 
         if (this._sprite) {
@@ -433,44 +420,44 @@ Object.defineProperty(SpriteAnimationClip.prototype, "time", {
             this.frame = 0;
         }
     }
-});
 
-// Events Documentation
+    // Events Documentation
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#play
- * @description Fired when the clip starts playing.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#play
+     * @description Fired when the clip starts playing.
+     */
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#pause
- * @description Fired when the clip is paused.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#pause
+     * @description Fired when the clip is paused.
+     */
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#resume
- * @description Fired when the clip is resumed.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#resume
+     * @description Fired when the clip is resumed.
+     */
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#stop
- * @description Fired when the clip is stopped.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#stop
+     * @description Fired when the clip is stopped.
+     */
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#end
- * @description Fired when the clip stops playing because it reached its ending.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#end
+     * @description Fired when the clip stops playing because it reached its ending.
+     */
 
-/**
- * @event
- * @name pc.SpriteAnimationClip#loop
- * @description Fired when the clip reached the end of its current loop.
- */
+    /**
+     * @event
+     * @name pc.SpriteAnimationClip#loop
+     * @description Fired when the clip reached the end of its current loop.
+     */
+}
 
 export { SpriteAnimationClip };

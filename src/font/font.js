@@ -1,5 +1,4 @@
-var FONT_MSDF = 'msdf';
-var FONT_BITMAP = 'bitmap';
+import { FONT_MSDF } from './constants.js';
 
 /**
  * @class
@@ -10,28 +9,28 @@ var FONT_BITMAP = 'bitmap';
  * @property {number} intensity The font intensity.
  * @property {pc.Texture[]} textures The font textures.
  */
-function Font(textures, data) {
-    this.type = data ? data.type || FONT_MSDF : FONT_MSDF;
+class Font {
+    constructor(textures, data) {
+        this.type = data ? data.type || FONT_MSDF : FONT_MSDF;
 
-    this.em = 1;
+        this.em = 1;
 
-    // atlas texture
-    this.textures = textures;
+        // atlas texture
+        this.textures = textures;
 
-    // intensity
-    this.intensity = 0.0;
+        // intensity
+        this.intensity = 0.0;
 
-    // json data
-    this._data = null;
-    this.data = data;
-}
+        // json data
+        this._data = null;
+        this.data = data;
+    }
 
-Object.defineProperty(Font.prototype, "data", {
-    get: function () {
+    get data() {
         return this._data;
-    },
+    }
 
-    set: function (value){
+    set data(value){
         this._data = value;
         if (!value)
             return;
@@ -57,6 +56,6 @@ Object.defineProperty(Font.prototype, "data", {
             }
         }
     }
-});
+}
 
-export { FONT_BITMAP, FONT_MSDF, Font };
+export { Font };

@@ -63,373 +63,373 @@ import { Application } from './application.js';
  * // Or use rotateLocal
  * entity.rotateLocal(0, 90, 0);
  */
-function Entity(name, app) {
-    GraphNode.call(this, name);
+class Entity extends GraphNode {
+    constructor(name, app) {
+        super(name);
 
-    if (name instanceof Application) app = name;
-    this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
-    this.c = {}; // Component storage
+        if (name instanceof Application) app = name;
+        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
+        this.c = {}; // Component storage
 
-    this._app = app; // store app
-    if (!app) {
-        this._app = Application.getApplication(); // get the current application
-        if (!this._app) {
-            throw new Error("Couldn't find current application");
+        this._app = app; // store app
+        if (!app) {
+            this._app = Application.getApplication(); // get the current application
+            if (!this._app) {
+                throw new Error("Couldn't find current application");
+            }
+        }
+
+        this._guid = null;
+
+        // used by component systems to speed up destruction
+        this._destroying = false;
+
+        // used to differentiate between the entities of a template root instance,
+        // which have it set to true, and the cloned instance entities (set to false)
+        this._template = false;
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#addComponent
+     * @description Create a new component and add it to the entity.
+     * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
+     * @param {string} type - The name of the component to add. Valid strings are:
+     *
+     * * "animation" - see {@link pc.AnimationComponent}
+     * * "audiolistener" - see {@link pc.AudioListenerComponent}
+     * * "button" - see {@link pc.ButtonComponent}
+     * * "camera" - see {@link pc.CameraComponent}
+     * * "collision" - see {@link pc.CollisionComponent}
+     * * "element" - see {@link pc.ElementComponent}
+     * * "layoutchild" - see {@link pc.LayoutChildComponent}
+     * * "layoutgroup" - see {@link pc.LayoutGroupComponent}
+     * * "light" - see {@link pc.LightComponent}
+     * * "model" - see {@link pc.ModelComponent}
+     * * "particlesystem" - see {@link pc.ParticleSystemComponent}
+     * * "rigidbody" - see {@link pc.RigidBodyComponent}
+     * * "screen" - see {@link pc.ScreenComponent}
+     * * "script" - see {@link pc.ScriptComponent}
+     * * "scrollbar" - see {@link pc.ScrollbarComponent}
+     * * "scrollview" - see {@link pc.ScrollViewComponent}
+     * * "sound" - see {@link pc.SoundComponent}
+     * * "sprite" - see {@link pc.SpriteComponent}
+     *
+     * @param {object} [data] - The initialization data for the specific component type. Refer to each
+     * specific component's API reference page for details on valid values for this parameter.
+     * @returns {pc.Component} The new Component that was attached to the entity or null if there
+     * was an error.
+     * @example
+     * var entity = new pc.Entity();
+     *
+     * // Add a light component with default properties
+     * entity.addComponent("light");
+     *
+     * // Add a camera component with some specified properties
+     * entity.addComponent("camera", {
+     *     fov: 45,
+     *     clearColor: new pc.Color(1, 0, 0)
+     * });
+     */
+    addComponent(type, data) {
+        var system = this._app.systems[type];
+        if (!system) {
+            // #ifdef DEBUG
+            console.error("addComponent: System " + type + " doesn't exist");
+            // #endif
+            return null;
+        }
+        if (this.c[type]) {
+            // #ifdef DEBUG
+            console.warn("addComponent: Entity already has " + type + " component");
+            // #endif
+            return null;
+        }
+        return system.addComponent(this, data);
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#removeComponent
+     * @description Remove a component from the Entity.
+     * @param {string} type - The name of the Component type.
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // add new light component
+     *
+     * entity.removeComponent("light"); // remove light component
+     */
+    removeComponent(type) {
+        var system = this._app.systems[type];
+        if (!system) {
+            // #ifdef DEBUG
+            console.error("removeComponent: System " + type + " doesn't exist");
+            // #endif
+            return;
+        }
+        if (!this.c[type]) {
+            // #ifdef DEBUG
+            console.warn("removeComponent: Entity doesn't have " + type + " component");
+            // #endif
+            return;
+        }
+        system.removeComponent(this);
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#findComponent
+     * @description Search the entity and all of its descendants for the first component of specified type.
+     * @param {string} type - The name of the component type to retrieve.
+     * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
+     * one. Returns undefined otherwise.
+     * @example
+     * // Get the first found light component in the hierarchy tree that starts with this entity
+     * var light = entity.findComponent("light");
+     */
+    findComponent(type) {
+        var entity = this.findOne(function (node) {
+            return node.c && node.c[type];
+        });
+        return entity && entity.c[type];
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#findComponents
+     * @description Search the entity and all of its descendants for all components of specified type.
+     * @param {string} type - The name of the component type to retrieve.
+     * @returns {pc.Component[]} All components of specified type in the entity or any of its descendants.
+     * Returns empty array if none found.
+     * @example
+     * // Get all light components in the hierarchy tree that starts with this entity
+     * var lights = entity.findComponents("light");
+     */
+    findComponents(type) {
+        var entities = this.find(function (node) {
+            return node.c && node.c[type];
+        });
+        return entities.map(function (entity) {
+            return entity.c[type];
+        });
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.Entity#getGuid
+     * @description Get the GUID value for this Entity.
+     * @returns {string} The GUID of the Entity.
+     */
+    getGuid() {
+        // if the guid hasn't been set yet then set it now
+        // before returning it
+        if (! this._guid) {
+            this.setGuid(guid.create());
+        }
+
+        return this._guid;
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.Entity#setGuid
+     * @description Set the GUID value for this Entity.
+     *
+     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
+     * @param {string} guid - The GUID to assign to the Entity.
+     */
+    setGuid(guid) {
+        // remove current guid from entityIndex
+        var index = this._app._entityIndex;
+        if (this._guid) {
+            delete index[this._guid];
+        }
+
+        // add new guid to entityIndex
+        this._guid = guid;
+        index[this._guid] = this;
+    }
+
+    _notifyHierarchyStateChanged(node, enabled) {
+        var enableFirst = false;
+        if (node === this && this._app._enableList.length === 0)
+            enableFirst = true;
+
+        node._beingEnabled = true;
+
+        node._onHierarchyStateChanged(enabled);
+
+        if (node._onHierarchyStatePostChanged)
+            this._app._enableList.push(node);
+
+        var i, len;
+        var c = node._children;
+        for (i = 0, len = c.length; i < len; i++) {
+            if (c[i]._enabled)
+                this._notifyHierarchyStateChanged(c[i], enabled);
+        }
+
+        node._beingEnabled = false;
+
+        if (enableFirst) {
+            // do not cache the length here, as enableList may be added to during loop
+            for (i = 0; i < this._app._enableList.length; i++) {
+                this._app._enableList[i]._onHierarchyStatePostChanged();
+            }
+
+            this._app._enableList.length = 0;
         }
     }
 
-    this._guid = null;
+    _onHierarchyStateChanged(enabled) {
+        super._onHierarchyStateChanged(enabled);
 
-    // used by component systems to speed up destruction
-    this._destroying = false;
-
-    // used to differentiate between the entities of a template root instance,
-    // which have it set to true, and the cloned instance entities (set to false)
-    this._template = false;
-}
-Entity.prototype = Object.create(GraphNode.prototype);
-Entity.prototype.constructor = Entity;
-
-/**
- * @function
- * @name pc.Entity#addComponent
- * @description Create a new component and add it to the entity.
- * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
- * @param {string} type - The name of the component to add. Valid strings are:
- *
- * * "animation" - see {@link pc.AnimationComponent}
- * * "audiolistener" - see {@link pc.AudioListenerComponent}
- * * "button" - see {@link pc.ButtonComponent}
- * * "camera" - see {@link pc.CameraComponent}
- * * "collision" - see {@link pc.CollisionComponent}
- * * "element" - see {@link pc.ElementComponent}
- * * "layoutchild" - see {@link pc.LayoutChildComponent}
- * * "layoutgroup" - see {@link pc.LayoutGroupComponent}
- * * "light" - see {@link pc.LightComponent}
- * * "model" - see {@link pc.ModelComponent}
- * * "particlesystem" - see {@link pc.ParticleSystemComponent}
- * * "rigidbody" - see {@link pc.RigidBodyComponent}
- * * "screen" - see {@link pc.ScreenComponent}
- * * "script" - see {@link pc.ScriptComponent}
- * * "scrollbar" - see {@link pc.ScrollbarComponent}
- * * "scrollview" - see {@link pc.ScrollViewComponent}
- * * "sound" - see {@link pc.SoundComponent}
- * * "sprite" - see {@link pc.SpriteComponent}
- *
- * @param {object} [data] - The initialization data for the specific component type. Refer to each
- * specific component's API reference page for details on valid values for this parameter.
- * @returns {pc.Component} The new Component that was attached to the entity or null if there
- * was an error.
- * @example
- * var entity = new pc.Entity();
- *
- * // Add a light component with default properties
- * entity.addComponent("light");
- *
- * // Add a camera component with some specified properties
- * entity.addComponent("camera", {
- *     fov: 45,
- *     clearColor: new pc.Color(1, 0, 0)
- * });
- */
-Entity.prototype.addComponent = function (type, data) {
-    var system = this._app.systems[type];
-    if (!system) {
-        // #ifdef DEBUG
-        console.error("addComponent: System " + type + " doesn't exist");
-        // #endif
-        return null;
-    }
-    if (this.c[type]) {
-        // #ifdef DEBUG
-        console.warn("addComponent: Entity already has " + type + " component");
-        // #endif
-        return null;
-    }
-    return system.addComponent(this, data);
-};
-
-/**
- * @function
- * @name pc.Entity#removeComponent
- * @description Remove a component from the Entity.
- * @param {string} type - The name of the Component type.
- * @example
- * var entity = new pc.Entity();
- * entity.addComponent("light"); // add new light component
- *
- * entity.removeComponent("light"); // remove light component
- */
-Entity.prototype.removeComponent = function (type) {
-    var system = this._app.systems[type];
-    if (!system) {
-        // #ifdef DEBUG
-        console.error("removeComponent: System " + type + " doesn't exist");
-        // #endif
-        return;
-    }
-    if (!this.c[type]) {
-        // #ifdef DEBUG
-        console.warn("removeComponent: Entity doesn't have " + type + " component");
-        // #endif
-        return;
-    }
-    system.removeComponent(this);
-};
-
-/**
- * @function
- * @name pc.Entity#findComponent
- * @description Search the entity and all of its descendants for the first component of specified type.
- * @param {string} type - The name of the component type to retrieve.
- * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
- * one. Returns undefined otherwise.
- * @example
- * // Get the first found light component in the hierarchy tree that starts with this entity
- * var light = entity.findComponent("light");
- */
-Entity.prototype.findComponent = function (type) {
-    var entity = this.findOne(function (node) {
-        return node.c && node.c[type];
-    });
-    return entity && entity.c[type];
-};
-
-/**
- * @function
- * @name pc.Entity#findComponents
- * @description Search the entity and all of its descendants for all components of specified type.
- * @param {string} type - The name of the component type to retrieve.
- * @returns {pc.Component[]} All components of specified type in the entity or any of its descendants.
- * Returns empty array if none found.
- * @example
- * // Get all light components in the hierarchy tree that starts with this entity
- * var lights = entity.findComponents("light");
- */
-Entity.prototype.findComponents = function (type) {
-    var entities = this.find(function (node) {
-        return node.c && node.c[type];
-    });
-    return entities.map(function (entity) {
-        return entity.c[type];
-    });
-};
-
-/**
- * @private
- * @function
- * @name pc.Entity#getGuid
- * @description Get the GUID value for this Entity.
- * @returns {string} The GUID of the Entity.
- */
-Entity.prototype.getGuid = function () {
-    // if the guid hasn't been set yet then set it now
-    // before returning it
-    if (! this._guid) {
-        this.setGuid(guid.create());
-    }
-
-    return this._guid;
-};
-
-/**
- * @private
- * @function
- * @name pc.Entity#setGuid
- * @description Set the GUID value for this Entity.
- *
- * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
- * @param {string} guid - The GUID to assign to the Entity.
- */
-Entity.prototype.setGuid = function (guid) {
-    // remove current guid from entityIndex
-    var index = this._app._entityIndex;
-    if (this._guid) {
-        delete index[this._guid];
-    }
-
-    // add new guid to entityIndex
-    this._guid = guid;
-    index[this._guid] = this;
-};
-
-Entity.prototype._notifyHierarchyStateChanged = function (node, enabled) {
-    var enableFirst = false;
-    if (node === this && this._app._enableList.length === 0)
-        enableFirst = true;
-
-    node._beingEnabled = true;
-
-    node._onHierarchyStateChanged(enabled);
-
-    if (node._onHierarchyStatePostChanged)
-        this._app._enableList.push(node);
-
-    var i, len;
-    var c = node._children;
-    for (i = 0, len = c.length; i < len; i++) {
-        if (c[i]._enabled)
-            this._notifyHierarchyStateChanged(c[i], enabled);
-    }
-
-    node._beingEnabled = false;
-
-    if (enableFirst) {
-        // do not cache the length here, as enableList may be added to during loop
-        for (i = 0; i < this._app._enableList.length; i++) {
-            this._app._enableList[i]._onHierarchyStatePostChanged();
-        }
-
-        this._app._enableList.length = 0;
-    }
-};
-
-Entity.prototype._onHierarchyStateChanged = function (enabled) {
-    GraphNode.prototype._onHierarchyStateChanged.call(this, enabled);
-
-    // enable / disable all the components
-    var component;
-    var components = this.c;
-    for (var type in components) {
-        if (components.hasOwnProperty(type)) {
-            component = components[type];
-            if (component.enabled) {
-                if (enabled) {
-                    component.onEnable();
-                } else {
-                    component.onDisable();
+        // enable / disable all the components
+        var component;
+        var components = this.c;
+        for (var type in components) {
+            if (components.hasOwnProperty(type)) {
+                component = components[type];
+                if (component.enabled) {
+                    if (enabled) {
+                        component.onEnable();
+                    } else {
+                        component.onDisable();
+                    }
                 }
             }
         }
     }
-};
 
-Entity.prototype._onHierarchyStatePostChanged = function () {
-    // post enable all the components
-    var components = this.c;
-    for (var type in components) {
-        if (components.hasOwnProperty(type))
-            components[type].onPostStateChange();
-    }
-};
-
-/**
- * @function
- * @name pc.Entity#findByGuid
- * @description Find a descendant of this Entity with the GUID.
- * @param {string} guid - The GUID to search for.
- * @returns {pc.Entity} The Entity with the GUID or null.
- */
-Entity.prototype.findByGuid = function (guid) {
-    if (this._guid === guid) return this;
-
-    var e = this._app._entityIndex[guid];
-    if (e && (e === this || e.isDescendantOf(this))) {
-        return e;
-    }
-
-    return null;
-};
-
-/**
- * @function
- * @name pc.Entity#destroy
- * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
- * @example
- * var firstChild = this.entity.children[0];
- * firstChild.destroy(); // delete child, all components and remove from hierarchy
- */
-Entity.prototype.destroy = function () {
-    var name;
-
-    this._destroying = true;
-
-    // Disable all enabled components first
-    for (name in this.c) {
-        this.c[name].enabled = false;
-    }
-
-    // Remove all components
-    for (name in this.c) {
-        this.c[name].system.removeComponent(this);
-    }
-
-    // Detach from parent
-    if (this._parent)
-        this._parent.removeChild(this);
-
-    var children = this._children;
-    var child = children.shift();
-    while (child) {
-        if (child instanceof Entity) {
-            child.destroy();
-        }
-
-        // make sure child._parent is null because
-        // we have removed it from the children array before calling
-        // destroy on it
-        child._parent = null;
-
-        child = children.shift();
-    }
-
-    // fire destroy event
-    this.fire('destroy', this);
-
-    // clear all events
-    this.off();
-
-    // remove from entity index
-    if (this._guid) {
-        delete this._app._entityIndex[this._guid];
-    }
-
-    this._destroying = false;
-};
-
-/**
- * @function
- * @name pc.Entity#clone
- * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
- * Note, this Entity is not in the hierarchy and must be added manually.
- * @returns {pc.Entity} A new Entity which is a deep copy of the original.
- * @example
- * var e = this.entity.clone();
- *
- * // Add clone as a sibling to the original
- * this.entity.parent.addChild(e);
- */
-Entity.prototype.clone = function () {
-    var duplicatedIdsMap = {};
-    var clone = this._cloneRecursively(duplicatedIdsMap);
-    duplicatedIdsMap[this.getGuid()] = clone;
-
-    resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
-
-    return clone;
-};
-
-Entity.prototype._cloneRecursively = function (duplicatedIdsMap) {
-    var clone = new Entity(this._app);
-    GraphNode.prototype._cloneInternal.call(this, clone);
-
-    for (var type in this.c) {
-        var component = this.c[type];
-        component.system.cloneComponent(this, clone);
-    }
-
-    var i;
-    for (i = 0; i < this._children.length; i++) {
-        var oldChild = this._children[i];
-        if (oldChild instanceof Entity) {
-            var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
-            clone.addChild(newChild);
-            duplicatedIdsMap[oldChild.getGuid()] = newChild;
+    _onHierarchyStatePostChanged() {
+        // post enable all the components
+        var components = this.c;
+        for (var type in components) {
+            if (components.hasOwnProperty(type))
+                components[type].onPostStateChange();
         }
     }
 
-    return clone;
-};
+    /**
+     * @function
+     * @name pc.Entity#findByGuid
+     * @description Find a descendant of this Entity with the GUID.
+     * @param {string} guid - The GUID to search for.
+     * @returns {pc.Entity} The Entity with the GUID or null.
+     */
+    findByGuid(guid) {
+        if (this._guid === guid) return this;
+
+        var e = this._app._entityIndex[guid];
+        if (e && (e === this || e.isDescendantOf(this))) {
+            return e;
+        }
+
+        return null;
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#destroy
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
+     * @example
+     * var firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    destroy() {
+        var name;
+
+        this._destroying = true;
+
+        // Disable all enabled components first
+        for (name in this.c) {
+            this.c[name].enabled = false;
+        }
+
+        // Remove all components
+        for (name in this.c) {
+            this.c[name].system.removeComponent(this);
+        }
+
+        // Detach from parent
+        if (this._parent)
+            this._parent.removeChild(this);
+
+        var children = this._children;
+        var child = children.shift();
+        while (child) {
+            if (child instanceof Entity) {
+                child.destroy();
+            }
+
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
+            child._parent = null;
+
+            child = children.shift();
+        }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        this.off();
+
+        // remove from entity index
+        if (this._guid) {
+            delete this._app._entityIndex[this._guid];
+        }
+
+        this._destroying = false;
+    }
+
+    /**
+     * @function
+     * @name pc.Entity#clone
+     * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+     * Note, this Entity is not in the hierarchy and must be added manually.
+     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
+     * @example
+     * var e = this.entity.clone();
+     *
+     * // Add clone as a sibling to the original
+     * this.entity.parent.addChild(e);
+     */
+    clone() {
+        var duplicatedIdsMap = {};
+        var clone = this._cloneRecursively(duplicatedIdsMap);
+        duplicatedIdsMap[this.getGuid()] = clone;
+
+        resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
+
+        return clone;
+    }
+
+    _cloneRecursively(duplicatedIdsMap) {
+        var clone = new Entity(this._app);
+        super._cloneInternal(clone);
+
+        for (var type in this.c) {
+            var component = this.c[type];
+            component.system.cloneComponent(this, clone);
+        }
+
+        var i;
+        for (i = 0; i < this._children.length; i++) {
+            var oldChild = this._children[i];
+            if (oldChild instanceof Entity) {
+                var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
+                clone.addChild(newChild);
+                duplicatedIdsMap[oldChild.getGuid()] = newChild;
+            }
+        }
+
+        return clone;
+    }
+}
 
 // When an entity that has properties that contain references to other
 // entities within its subtree is duplicated, the expectation of the

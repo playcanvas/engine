@@ -10,6 +10,7 @@
  * @param {object} [callbacks.load] - The function called when the asset loads load(propertyName, parent, asset).
  * @param {object} [callbacks.add] - The function called when the asset is added to the registry add(propertyName, parent, asset).
  * @param {object} [callbacks.remove] - The function called when the asset is remove from the registry remove(propertyName, parent, asset).
+ * @param {object} [callbacks.unload] - The function called when the asset is unloaded unload(propertyName, parent, asset).
  * @param {object} [scope] - The scope to call the callbacks in
  * @property {number} id Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference.
  * @property {string} url Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference.
@@ -22,66 +23,76 @@
  * }, this);
  * reference.id = this.textureAsset.id;
  */
-function AssetReference(propertyName, parent, registry, callbacks, scope) {
-    this.propertyName = propertyName;
-    this.parent = parent;
+class AssetReference {
+    constructor(propertyName, parent, registry, callbacks, scope) {
+        this.propertyName = propertyName;
+        this.parent = parent;
 
-    this._scope = scope;
-    this._registry = registry;
+        this._scope = scope;
+        this._registry = registry;
 
-    this.id = null;
-    this.url = null;
-    this.asset = null;
+        this.id = null;
+        this.url = null;
+        this.asset = null;
 
-    this._onAssetLoad = callbacks.load;
-    this._onAssetAdd = callbacks.add;
-    this._onAssetRemove = callbacks.remove;
-}
-
-AssetReference.prototype._bind = function () {
-    if (this.id) {
-        if (this._onAssetLoad) this._registry.on("load:" + this.id, this._onLoad, this);
-        if (this._onAssetAdd) this._registry.once("add:" + this.id, this._onAdd, this);
-        if (this._onAssetRemove) this._registry.on("remove:" + this.id, this._onRemove, this);
+        this._onAssetLoad = callbacks.load;
+        this._onAssetAdd = callbacks.add;
+        this._onAssetRemove = callbacks.remove;
+        this._onAssetUnload = callbacks.unload;
     }
 
-    if (this.url) {
-        if (this._onAssetLoad) this._registry.on("load:url:" + this.url, this._onLoad, this);
-        if (this._onAssetAdd) this._registry.once("add:url:" + this.url, this._onAdd, this);
-        if (this._onAssetRemove) this._registry.on("remove:url:" + this.url, this._onRemove, this);
+    _bind() {
+        if (this.id) {
+            if (this._onAssetLoad) this._registry.on("load:" + this.id, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once("add:" + this.id, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on("remove:" + this.id, this._onRemove, this);
+            if (this._onAssetUnload) this._registry.on("unload:" + this.id, this._onUnload, this);
+        }
+
+        if (this.url) {
+            if (this._onAssetLoad) this._registry.on("load:url:" + this.url, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once("add:url:" + this.url, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on("remove:url:" + this.url, this._onRemove, this);
+        }
     }
-};
 
-AssetReference.prototype._unbind = function () {
-    if (this.id) {
-        if (this._onAssetLoad) this._registry.off('load:' + this.id, this._onLoad, this);
-        if (this._onAssetAdd) this._registry.off('add:' + this.id, this._onAdd, this);
-        if (this._onAssetRemove) this._registry.off('remove:' + this.id, this._onRemove, this);
+    _unbind() {
+        if (this.id) {
+            if (this._onAssetLoad) this._registry.off('load:' + this.id, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off('add:' + this.id, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off('remove:' + this.id, this._onRemove, this);
+            if (this._onAssetUnload) this._registry.off("unload:" + this.id, this._onUnload, this);
+        }
+        if (this.url) {
+            if (this._onAssetLoad) this._registry.off('load:' + this.url, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off('add:' + this.url, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off('remove:' + this.url, this._onRemove, this);
+        }
     }
-    if (this.url) {
-        if (this._onAssetLoad) this._registry.off('load:' + this.url, this._onLoad, this);
-        if (this._onAssetAdd) this._registry.off('add:' + this.url, this._onAdd, this);
-        if (this._onAssetRemove) this._registry.off('remove:' + this.url, this._onRemove, this);
+
+    _onLoad(asset) {
+        this._onAssetLoad.call(this._scope, this.propertyName, this.parent, asset);
     }
-};
 
-AssetReference.prototype._onLoad = function (asset) {
-    this._onAssetLoad.call(this._scope, this.propertyName, this.parent, asset);
-};
+    _onAdd(asset) {
+        this.asset = asset;
+        this._onAssetAdd.call(this._scope, this.propertyName, this.parent, asset);
+    }
 
-AssetReference.prototype._onAdd = function (asset) {
-    this._onAssetAdd.call(this._scope, this.propertyName, this.parent, asset);
-};
+    _onRemove(asset) {
+        this._onAssetRemove.call(this._scope, this.propertyName, this.parent, asset);
+        this.asset = null;
+    }
 
-AssetReference.prototype._onRemove = function (asset) {
-    this._onAssetRemove.call(this._scope, this.propertyName, this.parent, asset);
-};
+    _onUnload(asset) {
+        this._onAssetUnload.call(this._scope, this.propertyName, this.parent, asset);
+    }
 
-Object.defineProperty(AssetReference.prototype, 'id', {
-    get: function () {
+    get id() {
         return this._id;
-    },
-    set: function (value) {
+    }
+
+    set id(value) {
         if (this.url) throw Error("Can't set id and url");
 
         this._unbind();
@@ -91,13 +102,12 @@ Object.defineProperty(AssetReference.prototype, 'id', {
 
         this._bind();
     }
-});
 
-Object.defineProperty(AssetReference.prototype, 'url', {
-    get: function () {
+    get url() {
         return this._url;
-    },
-    set: function (value) {
+    }
+
+    set url(value) {
         if (this.id) throw Error("Can't set id and url");
 
         this._unbind();
@@ -107,6 +117,6 @@ Object.defineProperty(AssetReference.prototype, 'url', {
 
         this._bind();
     }
-});
+}
 
 export { AssetReference };

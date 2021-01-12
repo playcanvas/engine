@@ -15,91 +15,83 @@ import { VrDisplay } from './vr-display.js';
  * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list.
  * @property {boolean} isSupported Reports whether this device supports the WebVR API.
  */
-function VrManager(app) {
-    EventHandler.call(this);
+class VrManager extends EventHandler {
+    constructor(app) {
+        var self = this;
 
-    var self = this;
+        this.isSupported = VrManager.isSupported;
 
-    this.isSupported = VrManager.isSupported;
+        this._index = {};
+        this.displays = [];
+        this.display = null; // primary display (usually the first in list)
 
-    this._index = { };
-    this.displays = [];
-    this.display = null; // primary display (usually the first in list)
+        this._app = app;
 
-    this._app = app;
+        // bind functions for event callbacks
+        this._onDisplayConnect = this._onDisplayConnect.bind(this);
+        this._onDisplayDisconnect = this._onDisplayDisconnect.bind(this);
 
-    // bind functions for event callbacks
-    this._onDisplayConnect = this._onDisplayConnect.bind(this);
-    this._onDisplayDisconnect = this._onDisplayDisconnect.bind(this);
+        self._attach();
 
-    self._attach();
+        this._getDisplays(function (err, displays) {
+            if (err) {
+                // webvr not available
+                self.fire('error', err);
+            } else {
+                for (var i = 0; i < displays.length; i++) {
+                    self._addDisplay(displays[i]);
+                }
 
-    this._getDisplays(function (err, displays) {
-        if (err) {
-            // webvr not available
-            self.fire('error', err);
-        } else {
-            for (var i = 0; i < displays.length; i++) {
-                self._addDisplay(displays[i]);
+                self.fire('ready', self.displays);
             }
+        });
+    }
 
-            self.fire('ready', self.displays);
-        }
-    });
-}
-VrManager.prototype = Object.create(EventHandler.prototype);
-VrManager.prototype.constructor = VrManager;
+    /**
+     * @private
+     * @deprecated
+     * @event
+     * @name pc.VrManager#displayconnect
+     * @description Fired when an VR display is connected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
+     * @example
+     * this.app.vr.on("displayconnect", function (display) {
+     *     // use `display` here
+     * });
+     */
 
-/**
- * @private
- * @deprecated
- * @event
- * @name pc.VrManager#displayconnect
- * @description Fired when an VR display is connected.
- * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
- * @example
- * this.app.vr.on("displayconnect", function (display) {
- *     // use `display` here
- * });
- */
+    /**
+     * @private
+     * @deprecated
+     * @event
+     * @name pc.VrManager#displaydisconnect
+     * @description Fired when an VR display is disconnected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
+     * @example
+     * this.app.vr.on("displaydisconnect", function (display) {
+     *     // `display` is no longer connected
+     * });
+     */
 
-/**
- * @private
- * @deprecated
- * @event
- * @name pc.VrManager#displaydisconnect
- * @description Fired when an VR display is disconnected.
- * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
- * @example
- * this.app.vr.on("displaydisconnect", function (display) {
- *     // `display` is no longer connected
- * });
- */
+    /**
+     * @private
+     * @deprecated
+     * @static
+     * @name pc.VrManager.isSupported
+     * @type {boolean}
+     * @description Reports whether this device supports the WebVR API.
+     */
+    static isSupported = (typeof navigator !== 'undefined') ? !!navigator.getVRDisplays : false;
 
-/**
- * @private
- * @deprecated
- * @static
- * @name pc.VrManager.isSupported
- * @type {boolean}
- * @description Reports whether this device supports the WebVR API.
- */
-if (typeof navigator !== 'undefined') {
-    VrManager.isSupported = !!navigator.getVRDisplays;
-} else {
-    VrManager.isSupported = false;
-}
-
-Object.assign(VrManager.prototype, {
-    _attach: function () {
+    _attach() {
         window.addEventListener('vrdisplayconnect', this._onDisplayConnect);
         window.addEventListener('vrdisplaydisconnect', this._onDisplayDisconnect);
-    },
+    }
 
-    _detach: function () {
+    _detach() {
         window.removeEventListener('vrdisplayconnect', this._onDisplayConnect);
         window.removeEventListener('vrdisplaydisconnect', this._onDisplayDisconnect);
-    },
+    }
 
     /**
      * @private
@@ -108,9 +100,9 @@ Object.assign(VrManager.prototype, {
      * @name pc.VrManager#destroy
      * @description Remove events and clear up manager.
      */
-    destroy: function () {
+    destroy() {
         this._detach();
-    },
+    }
 
     /**
      * @private
@@ -119,15 +111,15 @@ Object.assign(VrManager.prototype, {
      * @name pc.VrManager#poll
      * @description Called once per frame to poll all attached displays.
      */
-    poll: function () {
+    poll() {
         var l = this.displays.length;
         if (!l) return;
         for (var i = 0; i < l; i++) {
             if (this.displays[i]._camera) this.displays[i].poll();
         }
-    },
+    }
 
-    _getDisplays: function (callback) {
+    _getDisplays(callback) {
         if (navigator.getVRDisplays) {
             navigator.getVRDisplays().then(function (displays) {
                 if (callback) callback(null, displays);
@@ -135,9 +127,9 @@ Object.assign(VrManager.prototype, {
         } else {
             if (callback) callback(new Error('WebVR not supported'));
         }
-    },
+    }
 
-    _addDisplay: function (vrDisplay) {
+    _addDisplay(vrDisplay) {
         if (this._index[vrDisplay.displayId])
             return;
 
@@ -149,9 +141,9 @@ Object.assign(VrManager.prototype, {
             this.display = display;
 
         this.fire('displayconnect', display);
-    },
+    }
 
-    _onDisplayConnect: function (e) {
+    _onDisplayConnect(e) {
         if (e.detail && e.detail.display) {
             // polyfill has different event format
             this._addDisplay(e.detail.display);
@@ -159,10 +151,9 @@ Object.assign(VrManager.prototype, {
             // real event API
             this._addDisplay(e.display);
         }
+    }
 
-    },
-
-    _onDisplayDisconnect: function (e) {
+    _onDisplayDisconnect(e) {
         var id;
         if (e.detail && e.detail.display) {
             // polyfill has different event format
@@ -193,6 +184,6 @@ Object.assign(VrManager.prototype, {
 
         this.fire('displaydisconnect', display);
     }
-});
+}
 
 export { VrManager };

@@ -38,7 +38,9 @@ import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
-import { AnimCurve, AnimData, AnimTrack } from '../../anim/anim.js';
+import { AnimCurve } from '../../anim/anim-curve.js';
+import { AnimData } from '../../anim/anim-data.js';
+import { AnimTrack } from '../../anim/anim-track.js';
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
 import { Asset } from '../../asset/asset.js';
@@ -1717,7 +1719,7 @@ var loadTexturesAsync = function (gltf, bufferViews, urlBase, registry, options,
 var loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback) {
     var result = [];
 
-    if (gltf.buffers === null || gltf.buffers.length === 0) {
+    if (!gltf.buffers || gltf.buffers.length === 0) {
         callback(null, result);
         return;
     }
@@ -1897,7 +1899,14 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
     };
     var postprocess = options && options.bufferView && options.bufferView.postprocess;
 
-    var remaining = gltf.bufferViews.length;
+    var remaining = gltf.bufferViews ? gltf.bufferViews.length : 0;
+
+    // handle case of no buffers
+    if (!remaining) {
+        callback(null, null);
+        return;
+    }
+
     var onLoad = function (index, bufferView) {
         var gltfBufferView = gltf.bufferViews[index];
         if (gltfBufferView.hasOwnProperty('byteStride')) {
@@ -1937,162 +1946,163 @@ var parseBufferViewsAsync = function (gltf, buffers, options, callback) {
 };
 
 // -- GlbParser
+class GlbParser {
+    constructor() {}
 
-function GlbParser() {}
-
-// parse the gltf or glb data asynchronously, loading external resources
-GlbParser.parseAsync = function (filename, urlBase, data, device, registry, options, callback) {
-    // parse the data
-    parseChunk(filename, data, function (err, chunks) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
-        // parse gltf
-        parseGltf(chunks.gltfChunk, function (err, gltf) {
+    // parse the gltf or glb data asynchronously, loading external resources
+    static parseAsync(filename, urlBase, data, device, registry, options, callback) {
+        // parse the data
+        parseChunk(filename, data, function (err, chunks) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // async load external buffers
-            loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, function (err, buffers) {
+            // parse gltf
+            parseGltf(chunks.gltfChunk, function (err, gltf) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                // async load buffer views
-                parseBufferViewsAsync(gltf, buffers, options, function (err, bufferViews) {
+                // async load external buffers
+                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, function (err, buffers) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    // async load images
-                    loadTexturesAsync(gltf, bufferViews, urlBase, registry, options, function (err, textureAssets) {
+                    // async load buffer views
+                    parseBufferViewsAsync(gltf, buffers, options, function (err, bufferViews) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        createResources(device, gltf, bufferViews, textureAssets, options, callback);
+                        // async load images
+                        loadTexturesAsync(gltf, bufferViews, urlBase, registry, options, function (err, textureAssets) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+
+                            createResources(device, gltf, bufferViews, textureAssets, options, callback);
+                        });
                     });
                 });
             });
         });
-    });
-};
+    }
 
-// parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-GlbParser.parse = function (filename, data, device, options) {
-    var result = null;
+    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
+    static parse(filename, data, device, options) {
+        var result = null;
 
-    options = options || { };
+        options = options || { };
 
-    // parse the data
-    parseChunk(filename, data, function (err, chunks) {
-        if (err) {
-            console.error(err);
+        // parse the data
+        parseChunk(filename, data, function (err, chunks) {
+            if (err) {
+                console.error(err);
+            } else {
+                // parse gltf
+                parseGltf(chunks.gltfChunk, function (err, gltf) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        // parse buffer views
+                        parseBufferViewsAsync(gltf, [chunks.binaryChunk], options, function (err, bufferViews) {
+                            if (err) {
+                                console.error(err);
+                            } else {
+                                // create resources
+                                createResources(device, gltf, bufferViews, [], options, function (err, result_) {
+                                    if (err) {
+                                        console.error(err);
+                                    } else {
+                                        result = result_;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        return result;
+    }
+
+    // create a pc.Model from the parsed GLB data structures
+    static createModel(glb, defaultMaterial) {
+
+        var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
+            var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            var meshInstance = new MeshInstance(node, mesh, material);
+
+            if (mesh.morph) {
+                var morphInstance = new MorphInstance(mesh.morph);
+                if (mesh.weights) {
+                    for (var wi = 0; wi < mesh.weights.length; wi++) {
+                        morphInstance.setWeight(wi, mesh.weights[wi]);
+                    }
+                }
+
+                meshInstance.morphInstance = morphInstance;
+                model.morphInstances.push(morphInstance);
+            }
+
+            if (gltfNode.hasOwnProperty('skin')) {
+                var skinIndex = gltfNode.skin;
+                var skin = skins[skinIndex];
+                mesh.skin = skin;
+
+                var skinInstance = skinInstances[skinIndex];
+                meshInstance.skinInstance = skinInstance;
+                model.skinInstances.push(skinInstance);
+            }
+
+            model.meshInstances.push(meshInstance);
+        };
+
+        var model = new Model();
+
+        // create skinInstance for each skin
+        var s, skinInstances = [];
+        for (s = 0; s < glb.skins.length; s++) {
+            var skinInstance = new SkinInstance(glb.skins[s]);
+            skinInstance.bones = glb.skins[s].bones;
+            skinInstances.push(skinInstance);
+        }
+
+        // node hierarchy for the model
+        if (glb.scenes.length === 1) {
+            // use scene if only one
+            model.graph = glb.scenes[0];
         } else {
-            // parse gltf
-            parseGltf(chunks.gltfChunk, function (err, gltf) {
-                if (err) {
-                    console.error(err);
-                } else {
-                    // parse buffer views
-                    parseBufferViewsAsync(gltf, [chunks.binaryChunk], options, function (err, bufferViews) {
-                        if (err) {
-                            console.error(err);
-                        } else {
-                            // create resources
-                            createResources(device, gltf, bufferViews, [], options, function (err, result_) {
-                                if (err) {
-                                    console.error(err);
-                                } else {
-                                    result = result_;
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-    });
-
-    return result;
-};
-
-// create a pc.Model from the parsed GLB data structures
-GlbParser.createModel = function (glb, defaultMaterial) {
-
-    var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
-        var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-        var meshInstance = new MeshInstance(node, mesh, material);
-
-        if (mesh.morph) {
-            var morphInstance = new MorphInstance(mesh.morph);
-            if (mesh.weights) {
-                for (var wi = 0; wi < mesh.weights.length; wi++) {
-                    morphInstance.setWeight(wi, mesh.weights[wi]);
-                }
+            // create group node for all scenes
+            model.graph = new GraphNode('SceneGroup');
+            for (s = 0; s < glb.scenes.length; s++) {
+                model.graph.addChild(glb.scenes[s]);
             }
-
-            meshInstance.morphInstance = morphInstance;
-            model.morphInstances.push(morphInstance);
         }
 
-        if (gltfNode.hasOwnProperty('skin')) {
-            var skinIndex = gltfNode.skin;
-            var skin = skins[skinIndex];
-            mesh.skin = skin;
-
-            var skinInstance = skinInstances[skinIndex];
-            meshInstance.skinInstance = skinInstance;
-            model.skinInstances.push(skinInstance);
-        }
-
-        model.meshInstances.push(meshInstance);
-    };
-
-    var model = new Model();
-
-    // create skinInstance for each skin
-    var s, skinInstances = [];
-    for (s = 0; s < glb.skins.length; s++) {
-        var skinInstance = new SkinInstance(glb.skins[s]);
-        skinInstance.bones = glb.skins[s].bones;
-        skinInstances.push(skinInstance);
-    }
-
-    // node hierarchy for the model
-    if (glb.scenes.length === 1) {
-        // use scene if only one
-        model.graph = glb.scenes[0];
-    } else {
-        // create group node for all scenes
-        model.graph = new GraphNode('SceneGroup');
-        for (s = 0; s < glb.scenes.length; s++) {
-            model.graph.addChild(glb.scenes[s]);
-        }
-    }
-
-    // create mesh instance for meshes on nodes that are part of hierarchy
-    for (var i = 0; i < glb.nodes.length; i++) {
-        var node = glb.nodes[i];
-        if (node.root === model.graph) {
-            var gltfNode = glb.gltf.nodes[i];
-            if (gltfNode.hasOwnProperty('mesh')) {
-                var meshGroup = glb.meshes[gltfNode.mesh];
-                for (var mi = 0; mi < meshGroup.length; mi++) {
-                    createMeshInstance(model, meshGroup[mi], glb.skins, skinInstances, glb.materials, node, gltfNode);
+        // create mesh instance for meshes on nodes that are part of hierarchy
+        for (var i = 0; i < glb.nodes.length; i++) {
+            var node = glb.nodes[i];
+            if (node.root === model.graph) {
+                var gltfNode = glb.gltf.nodes[i];
+                if (gltfNode.hasOwnProperty('mesh')) {
+                    var meshGroup = glb.meshes[gltfNode.mesh];
+                    for (var mi = 0; mi < meshGroup.length; mi++) {
+                        createMeshInstance(model, meshGroup[mi], glb.skins, skinInstances, glb.materials, node, gltfNode);
+                    }
                 }
             }
         }
-    }
 
-    return model;
-};
+        return model;
+    }
+}
 
 export { GlbParser };

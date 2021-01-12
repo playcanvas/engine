@@ -60,8 +60,8 @@ function getDpAtlasRect(rect, mip) {
 }
 
 function generateDpAtlas(device, sixCubemaps, dontFlipX) {
-    var dp, rect;
-    rect = new Vec4();
+    var dp;
+    var rect = new Vec4();
     var params = new Vec4();
     var size = sixCubemaps[0].width * 2 * dpMult;
 

@@ -41,50 +41,49 @@ import {
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
  * index buffer will be initialized to zeros.
  */
-function IndexBuffer(graphicsDevice, format, numIndices, usage, initialData) {
-    // By default, index buffers are static (better for performance since buffer
-    // data can be cached in VRAM)
-    this.usage = usage || BUFFER_STATIC;
-    this.format = format;
-    this.numIndices = numIndices;
-    this.device = graphicsDevice;
+class IndexBuffer {
+    constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
+        // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
+        this.device = graphicsDevice;
+        this.format = format;
+        this.numIndices = numIndices;
+        this.usage = usage;
 
-    var gl = this.device.gl;
+        var gl = this.device.gl;
 
-    // Allocate the storage
-    var bytesPerIndex;
-    if (format === INDEXFORMAT_UINT8) {
-        bytesPerIndex = 1;
-        this.glFormat = gl.UNSIGNED_BYTE;
-    } else if (format === INDEXFORMAT_UINT16) {
-        bytesPerIndex = 2;
-        this.glFormat = gl.UNSIGNED_SHORT;
-    } else if (format === INDEXFORMAT_UINT32) {
-        bytesPerIndex = 4;
-        this.glFormat = gl.UNSIGNED_INT;
+        // Allocate the storage
+        var bytesPerIndex;
+        if (format === INDEXFORMAT_UINT8) {
+            bytesPerIndex = 1;
+            this.glFormat = gl.UNSIGNED_BYTE;
+        } else if (format === INDEXFORMAT_UINT16) {
+            bytesPerIndex = 2;
+            this.glFormat = gl.UNSIGNED_SHORT;
+        } else if (format === INDEXFORMAT_UINT32) {
+            bytesPerIndex = 4;
+            this.glFormat = gl.UNSIGNED_INT;
+        }
+        this.bytesPerIndex = bytesPerIndex;
+
+        this.numBytes = this.numIndices * bytesPerIndex;
+
+        if (initialData) {
+            this.setData(initialData);
+        } else {
+            this.storage = new ArrayBuffer(this.numBytes);
+        }
+
+        graphicsDevice._vram.ib += this.numBytes;
+
+        this.device.buffers.push(this);
     }
-    this.bytesPerIndex = bytesPerIndex;
 
-    this.numBytes = this.numIndices * bytesPerIndex;
-
-    if (initialData) {
-        this.setData(initialData);
-    } else {
-        this.storage = new ArrayBuffer(this.numBytes);
-    }
-
-    graphicsDevice._vram.ib += this.numBytes;
-
-    this.device.buffers.push(this);
-}
-
-Object.assign(IndexBuffer.prototype, {
     /**
      * @function
      * @name pc.IndexBuffer#destroy
      * @description Frees resources associated with this index buffer.
      */
-    destroy: function () {
+    destroy() {
         var device = this.device;
         var idx = device.buffers.indexOf(this);
         if (idx !== -1) {
@@ -101,7 +100,12 @@ Object.assign(IndexBuffer.prototype, {
                 this.device.indexBuffer = null;
             }
         }
-    },
+    }
+
+    // called when context was lost, function releases all context related resources
+    loseContext() {
+        this.bufferId = undefined;
+    }
 
     /**
      * @function
@@ -113,9 +117,9 @@ Object.assign(IndexBuffer.prototype, {
      * * {@link pc.INDEXFORMAT_UINT16}
      * * {@link pc.INDEXFORMAT_UINT32}
      */
-    getFormat: function () {
+    getFormat() {
         return this.format;
-    },
+    }
 
     /**
      * @function
@@ -123,9 +127,9 @@ Object.assign(IndexBuffer.prototype, {
      * @description Returns the number of indices stored in the specified index buffer.
      * @returns {number} The number of indices stored in the specified index buffer.
      */
-    getNumIndices: function () {
+    getNumIndices() {
         return this.numIndices;
-    },
+    }
 
     /**
      * @function
@@ -133,9 +137,9 @@ Object.assign(IndexBuffer.prototype, {
      * @description Gives access to the block of memory that stores the buffer's indices.
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
-    lock: function () {
+    lock() {
         return this.storage;
-    },
+    }
 
     /**
      * @function
@@ -144,7 +148,7 @@ Object.assign(IndexBuffer.prototype, {
      * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
      * currently active device.
      */
-    unlock: function () {
+    unlock() {
         // Upload the new index data
         var gl = this.device.gl;
 
@@ -174,9 +178,9 @@ Object.assign(IndexBuffer.prototype, {
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
-    },
+    }
 
-    setData: function (data) {
+    setData(data) {
         if (data.byteLength !== this.numBytes) {
             // #ifdef DEBUG
             console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
@@ -187,20 +191,18 @@ Object.assign(IndexBuffer.prototype, {
         this.storage = data;
         this.unlock();
         return true;
-    },
+    }
 
-    _lockTypedArray: function () {
-
+    _lockTypedArray() {
         var lock = this.lock();
         var indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
             (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock) );
         return indices;
-    },
+    }
 
     // Copies count elements from data into index buffer.
     // optimized for performance from both typed array as well as array
-    writeData: function (data, count) {
-
+    writeData(data, count) {
         var indices = this._lockTypedArray();
 
         // if data contains more indices than needed, copy from its subarray
@@ -222,11 +224,10 @@ Object.assign(IndexBuffer.prototype, {
         }
 
         this.unlock();
-    },
+    }
 
     // copies index data from index buffer into provided data array
-    readData: function (data) {
-
+    readData(data) {
         // note: there is no need to unlock this buffer, as we are only reading from it
         var indices = this._lockTypedArray();
         var count = this.numIndices;
@@ -244,6 +245,6 @@ Object.assign(IndexBuffer.prototype, {
 
         return count;
     }
-});
+}
 
 export { IndexBuffer };

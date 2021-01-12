@@ -13,22 +13,22 @@ import { JsonModelParser } from './parser/json-model.js';
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
-function ModelHandler(device, defaultMaterial) {
-    this._device = device;
-    this._parsers = [];
-    this._defaultMaterial = defaultMaterial;
-    this.retryRequests = false;
+class ModelHandler {
+    constructor(device, defaultMaterial) {
+        this._device = device;
+        this._parsers = [];
+        this._defaultMaterial = defaultMaterial;
+        this.maxRetries = 0;
 
-    this.addParser(new JsonModelParser(this._device), function (url, data) {
-        return (path.getExtension(url) === '.json');
-    });
-    this.addParser(new GlbModelParser(this._device), function (url, data) {
-        return (path.getExtension(url) === '.glb');
-    });
-}
+        this.addParser(new JsonModelParser(this._device), function (url, data) {
+            return (path.getExtension(url) === '.json');
+        });
+        this.addParser(new GlbModelParser(this._device), function (url, data) {
+            return (path.getExtension(url) === '.glb');
+        });
+    }
 
-Object.assign(ModelHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -38,10 +38,11 @@ Object.assign(ModelHandler.prototype, {
 
         // we need to specify JSON for blob URLs
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
-        if (url.load.startsWith('blob:')) {
+        if (url.load.startsWith('blob:') || url.load.startsWith('data:')) {
             if (path.getExtension(url.original).toLowerCase() === '.glb') {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             } else {
@@ -59,9 +60,9 @@ Object.assign(ModelHandler.prototype, {
                 callback("Error loading model: " + url.original + " [" + err + "]");
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         for (var i = 0; i < this._parsers.length; i++) {
             var p = this._parsers[i];
 
@@ -73,9 +74,9 @@ Object.assign(ModelHandler.prototype, {
         console.warn("pc.ModelHandler#open: No model parser found for: " + url);
         // #endif
         return null;
-    },
+    }
 
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         if (!asset.resource)
             return;
 
@@ -132,7 +133,7 @@ Object.assign(ModelHandler.prototype, {
                 }
             }
         });
-    },
+    }
 
     /**
      * @function
@@ -144,12 +145,12 @@ Object.assign(ModelHandler.prototype, {
      * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
      * The first parser to return true is used.
      */
-    addParser: function (parser, decider) {
+    addParser(parser, decider) {
         this._parsers.push({
             parser: parser,
             decider: decider
         });
     }
-});
+}
 
 export { ModelHandler };

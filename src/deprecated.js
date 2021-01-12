@@ -68,8 +68,8 @@ import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';
 import { StandardMaterial } from './scene/materials/standard-material.js';
 
-import { Animation, Key, Node } from './anim/animation.js';
-import { Skeleton } from './anim/skeleton.js';
+import { Animation, Key, Node } from './animation/animation.js';
+import { Skeleton } from './animation/skeleton.js';
 
 import { Channel } from './audio/channel.js';
 import { Channel3d } from './audio/channel3d.js';
@@ -84,9 +84,12 @@ import { XrInputSource } from './xr/xr-input-source.js';
 import { Controller } from './input/controller.js';
 import { ElementInput } from './input/element-input.js';
 import { GamePads } from './input/game-pads.js';
-import { Keyboard, KeyboardEvent } from './input/keyboard.js';
-import { Mouse, MouseEvent } from './input/mouse.js';
-import { getTouchTargetCoords, Touch, TouchDevice, TouchEvent } from './input/touch.js';
+import { Keyboard } from './input/keyboard.js';
+import { KeyboardEvent } from './input/keyboard-event.js';
+import { Mouse } from './input/mouse.js';
+import { MouseEvent } from './input/mouse-event.js';
+import { TouchDevice } from './input/touch-device.js';
+import { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js';
 
 import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from './framework/constants.js';
 import { Application } from './framework/application.js';
@@ -642,6 +645,90 @@ export var anim = {
     Skeleton: Skeleton
 };
 
+Animation.prototype.getDuration = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Animation#getDuration is deprecated. Use pc.Animation#duration instead.');
+    // #endif
+    return this.duration;
+};
+
+Animation.prototype.getName = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Animation#getName is deprecated. Use pc.Animation#name instead.');
+    // #endif
+    return this.name;
+};
+
+Animation.prototype.getNodes = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Animation#getNodes is deprecated. Use pc.Animation#nodes instead.');
+    // #endif
+    return this.nodes;
+};
+
+Animation.prototype.setDuration = function (duration) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Animation#setDuration is deprecated. Use pc.Animation#duration instead.');
+    // #endif
+    this.duration = duration;
+};
+
+Animation.prototype.setName = function (name) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Animation#setName is deprecated. Use pc.Animation#name instead.');
+    // #endif
+    this.name = name;
+};
+
+Skeleton.prototype.getAnimation = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#getAnimation is deprecated. Use pc.Skeleton#animation instead.');
+    // #endif
+    return this.animation;
+};
+
+Skeleton.prototype.getCurrentTime = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#getCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
+    // #endif
+    return this.currentTime;
+};
+
+Skeleton.prototype.getLooping = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#getLooping is deprecated. Use pc.Skeleton#looping instead.');
+    // #endif
+    return this.looping;
+};
+
+Skeleton.prototype.getNumNodes = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#getNumNodes is deprecated. Use pc.Skeleton#numNodes instead.');
+    // #endif
+    return this.numNodes;
+};
+
+Skeleton.prototype.setAnimation = function (animation) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#setAnimation is deprecated. Use pc.Skeleton#animation instead.');
+    // #endif
+    this.animation = animation;
+};
+
+Skeleton.prototype.setCurrentTime = function (time) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#setCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
+    // #endif
+    this.currentTime = time;
+};
+
+Skeleton.prototype.setLooping = function (looping) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Skeleton#setLooping is deprecated. Use pc.Skeleton#looping instead.');
+    // #endif
+    this.looping = looping;
+};
+
 // SOUND
 
 export var audio = {
@@ -840,6 +927,38 @@ Application.prototype.disableFullscreen = function (success) {
     }
 
     document.exitFullscreen();
+};
+
+Application.prototype.getSceneUrl = function (name) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.");
+    // #endif
+    var entry = this.scenes.find(name);
+    if (entry) {
+        return entry.url;
+    }
+    return null;
+};
+
+Application.prototype.loadScene = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.");
+    // #endif
+    this.scenes.loadScene(url, callback);
+};
+
+Application.prototype.loadSceneHierarchy = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.");
+    // #endif
+    this.scenes.loadSceneHierarchy(url, callback);
+};
+
+Application.prototype.loadSceneSettings = function (url, callback) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.");
+    // #endif
+    this.scenes.loadSceneSettings(url, callback);
 };
 
 Object.defineProperty(CameraComponent.prototype, "node", {

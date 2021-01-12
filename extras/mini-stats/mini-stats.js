@@ -4,225 +4,228 @@ import { StatsTimer } from './stats-timer.js';
 import { Graph } from './graph.js';
 import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
-import { Color } from '../../src/core/color.js';
-import { math } from '../../src/math/math.js';
 
 // MiniStats rendering of CPU and GPU timing information
-function MiniStats(app, options) {
+class MiniStats {
+    constructor(app, options) {
 
-    var device = app.graphicsDevice;
-    options = options || MiniStats.getDefaultOptions();
+        var device = app.graphicsDevice;
 
-    // create graphs based on options
-    var graphs = this.initGraphs(app, device, options);
+        // handle context lost
+        this._contextLostHandler = function (event) {
+            event.preventDefault();
 
-    // extract words needed
-    var words = ["", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."];
+            if (this.graphs) {
+                for (var i = 0; i < this.graphs.length; i++) {
+                    this.graphs[i].loseContext();
+                }
+            }
+        }.bind(this);
+        device.canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
 
-    // graph names
-    graphs.forEach(function (graph) {
-        words.push(graph.name);
-    });
+        options = options || MiniStats.getDefaultOptions();
 
-    // stats units
-    if (options.stats) {
-        options.stats.forEach(function (stat) {
-            if (stat.unitsName)
-                words.push(stat.unitsName);
+        // create graphs based on options
+        var graphs = this.initGraphs(app, device, options);
+
+        // extract words needed
+        var words = ["", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."];
+
+        // graph names
+        graphs.forEach(function (graph) {
+            words.push(graph.name);
         });
+
+        // stats units
+        if (options.stats) {
+            options.stats.forEach(function (stat) {
+                if (stat.unitsName)
+                    words.push(stat.unitsName);
+            });
+        }
+
+        // remove duplicates
+        words = words.filter(function (item, index) {
+            return words.indexOf(item) >= index;
+        });
+
+        // create word atlas
+        var maxWidth = options.sizes.reduce(function (max, v) {
+            return v.width > max ? v.width : max;
+        }, 0);
+        var wordAtlasData = this.initWordAtlas(device, words, maxWidth, graphs.length);
+        var texture = wordAtlasData.texture;
+
+        // assign texture to graphs
+        graphs.forEach(function (graph, i) {
+            graph.texture = texture;
+            graph.yOffset = i;
+        });
+
+        this.sizes = options.sizes;
+        this._activeSizeIndex = options.startSizeIndex;
+
+        var self = this;
+
+        // create click region so we can resize
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
+        document.body.appendChild(div);
+
+        div.addEventListener('mouseenter', function (event) {
+            self.opacity = 1.0;
+        });
+
+        div.addEventListener('mouseleave', function (event) {
+            self.opacity = 0.5;
+        });
+
+        div.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (self._enabled) {
+                self.activeSizeIndex = (self.activeSizeIndex + 1) % self.sizes.length;
+                self.resize(self.sizes[self.activeSizeIndex].width, self.sizes[self.activeSizeIndex].height, self.sizes[self.activeSizeIndex].graphs);
+            }
+        });
+
+        device.on("resizecanvas", function () {
+            self.updateDiv();
+        });
+
+        app.on('postrender', function () {
+            if (self._enabled) {
+                self.render();
+            }
+        });
+
+        this.device = device;
+        this.texture = texture;
+        this.wordAtlas = wordAtlasData.atlas;
+        this.render2d = new Render2d(device, options.colors);
+        this.graphs = graphs;
+        this.div = div;
+
+        this.width = 0;
+        this.height = 0;
+        this.gspacing = 2;
+        this.clr = [1, 1, 1, 0.5];
+
+        this._enabled = true;
+
+        // initial resize
+        this.activeSizeIndex = this._activeSizeIndex;
     }
 
-    // remove duplicates
-    words = words.filter(function (item, index) {
-        return words.indexOf(item) >= index;
-    });
+    static getDefaultOptions() {
+        return {
 
-    // create word atlas
-    var maxWidth = options.sizes.reduce(function (max, v) {
-        return v.width > max ? v.width : max;
-    }, 0);
-    var wordAtlasData = this.initWordAtlas(device, words, maxWidth, graphs.length);
-    var texture = wordAtlasData.texture;
+            // sizes of area to render individual graphs in and spacing between indivudual graphs
+            sizes: [
+                { width: 100, height: 16, spacing: 0, graphs: false },
+                { width: 128, height: 32, spacing: 2, graphs: true },
+                { width: 256, height: 64, spacing: 2, graphs: true }
+            ],
 
-    // assign texture to graphs
-    graphs.forEach(function (graph, i) {
-        graph.texture = texture;
-        graph.yOffset = i;
-    });
+            // index into sizes array for initial setting
+            startSizeIndex: 0,
 
-    this.sizes = options.sizes;
-    this._activeSizeIndex = options.startSizeIndex;
+            // refresh rate of text stats in ms
+            textRefreshRate: 500,
 
-    var self = this;
+            // colors used to render graphs
+            colors: {
+                graph0: new pc.Color(0.7, 0.2, 0.2, 1),
+                graph1: new pc.Color(0.2, 0.7, 0.2, 1),
+                graph2: new pc.Color(0.2, 0.2, 0.7, 1),
+                watermark: new pc.Color(0.4, 0.4, 0.2, 1),
+                background: new pc.Color(0, 0, 0, 1.0)
+            },
 
-    // create click region so we can resize
-    var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
-    document.body.appendChild(div);
-
-    div.addEventListener('mouseenter', function (event) {
-        self.opacity = 1.0;
-    });
-
-    div.addEventListener('mouseleave', function (event) {
-        self.opacity = 0.5;
-    });
-
-    div.addEventListener('click', function (event) {
-        event.preventDefault();
-        if (self._enabled) {
-            self.activeSizeIndex = (self.activeSizeIndex + 1) % self.sizes.length;
-            self.resize(self.sizes[self.activeSizeIndex].width, self.sizes[self.activeSizeIndex].height, self.sizes[self.activeSizeIndex].graphs);
-        }
-    });
-
-    device.on("resizecanvas", function () {
-        self.updateDiv();
-    });
-
-    app.on('postrender', function () {
-        if (self._enabled) {
-            self.render();
-        }
-    });
-
-    this.device = device;
-    this.texture = texture;
-    this.wordAtlas = wordAtlasData.atlas;
-    this.render2d = new Render2d(device, options.colors);
-    this.graphs = graphs;
-    this.div = div;
-
-    this.width = 0;
-    this.height = 0;
-    this.gspacing = 2;
-    this.clr = [1, 1, 1, 0.5];
-
-    this._enabled = true;
-
-    // initial resize
-    this.activeSizeIndex = this._activeSizeIndex;
-}
-
-MiniStats.getDefaultOptions = function () {
-    return {
-
-        // sizes of area to render individual graphs in and spacing between indivudual graphs
-        sizes: [
-            { width: 100, height: 16, spacing: 0, graphs: false },
-            { width: 128, height: 32, spacing: 2, graphs: true },
-            { width: 256, height: 64, spacing: 2, graphs: true }
-        ],
-
-        // index into sizes array for initial setting
-        startSizeIndex: 0,
-
-        // refresh rate of text stats in ms
-        textRefreshRate: 500,
-
-        // colors used to render graphs
-        colors: {
-            graph0: new Color(0.7, 0.2, 0.2, 1),
-            graph1: new Color(0.2, 0.7, 0.2, 1),
-            graph2: new Color(0.2, 0.2, 0.7, 1),
-            watermark: new Color(0.4, 0.4, 0.2, 1),
-            background: new Color(0, 0, 0, 1.0)
-        },
-
-        // cpu graph options
-        cpu: {
-            enabled: true,
-            watermark: 33
-        },
-
-        // gpu graph options
-        gpu: {
-            enabled: true,
-            watermark: 33
-        },
-
-        // array of options to render additional graphs based on stats collected into pc.Application.stats
-        stats: [
-            {
-                // display name
-                name: "Frame",
-
-                // path to data inside pc.Application.stats
-                stats: ["frame.ms"],
-
-                // number of decimal places (defaults to none)
-                decimalPlaces: 1,
-
-                // units (defaults to "")
-                unitsName: "ms",
-
-                // watermark - shown as a line on the graph, useful for displaying a budget
+            // cpu graph options
+            cpu: {
+                enabled: true,
                 watermark: 33
             },
 
-            // total number of draw calls
-            {
-                name: "DrawCalls",
-                stats: ["drawCalls.total"],
-                watermark: 1000
-            }
-        ]
-    };
-};
+            // gpu graph options
+            gpu: {
+                enabled: true,
+                watermark: 33
+            },
 
-Object.defineProperties(MiniStats.prototype, {
-    activeSizeIndex: {
-        get: function () {
-            return this._activeSizeIndex;
-        },
-        set: function (value) {
-            this._activeSizeIndex = value;
-            this.gspacing = this.sizes[value].spacing;
-            this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
-        }
-    },
+            // array of options to render additional graphs based on stats collected into pc.Application.stats
+            stats: [
+                {
+                    // display name
+                    name: "Frame",
 
-    opacity: {
-        get: function () {
-            return this.clr[3];
-        },
-        set: function (value) {
-            this.clr[3] = value;
-        }
-    },
+                    // path to data inside pc.Application.stats
+                    stats: ["frame.ms"],
 
-    overallHeight: {
-        get: function () {
-            var graphs = this.graphs;
-            var spacing = this.gspacing;
-            return this.height * graphs.length + spacing * (graphs.length - 1);
-        }
-    },
+                    // number of decimal places (defaults to none)
+                    decimalPlaces: 1,
 
-    enabled: {
-        get: function () {
-            return this._enabled;
-        },
-        set: function (value) {
-            if (value !== this._enabled) {
-                this._enabled = value;
-                for (var i = 0; i < this.graphs.length; ++i) {
-                    this.graphs[i].enabled = value;
-                    this.graphs[i].timer.enabled = value;
+                    // units (defaults to "")
+                    unitsName: "ms",
+
+                    // watermark - shown as a line on the graph, useful for displaying a budget
+                    watermark: 33
+                },
+
+                // total number of draw calls
+                {
+                    name: "DrawCalls",
+                    stats: ["drawCalls.total"],
+                    watermark: 1000
                 }
+            ]
+        };
+    }
+
+    get activeSizeIndex() {
+        return this._activeSizeIndex;
+    }
+
+    set activeSizeIndex(value) {
+        this._activeSizeIndex = value;
+        this.gspacing = this.sizes[value].spacing;
+        this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
+    }
+
+    get opacity() {
+        return this.clr[3];
+    }
+
+    set opacity(value) {
+        this.clr[3] = value;
+    }
+
+    get overallHeight() {
+        var graphs = this.graphs;
+        var spacing = this.gspacing;
+        return this.height * graphs.length + spacing * (graphs.length - 1);
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value) {
+        if (value !== this._enabled) {
+            this._enabled = value;
+            for (var i = 0; i < this.graphs.length; ++i) {
+                this.graphs[i].enabled = value;
+                this.graphs[i].timer.enabled = value;
             }
         }
     }
-});
 
-Object.assign(MiniStats.prototype, {
-
-    initWordAtlas: function (device, words, maxWidth, numGraphs) {
+    initWordAtlas(device, words, maxWidth, numGraphs) {
 
         // create the texture for storing word atlas and graph data
         var texture = new pc.Texture(device, {
             name: 'mini-stats',
-            width: math.nextPowerOfTwo(maxWidth),
+            width: pc.math.nextPowerOfTwo(maxWidth),
             height: 64,
             mipmaps: false,
             minFilter: pc.FILTER_NEAREST,
@@ -241,9 +244,9 @@ Object.assign(MiniStats.prototype, {
         device.setTexture(texture, 0);
 
         return { atlas: wordAtlas, texture: texture };
-    },
+    }
 
-    initGraphs: function (app, device, options) {
+    initGraphs(app, device, options) {
 
         var graphs = [];
         if (options.cpu.enabled) {
@@ -261,9 +264,9 @@ Object.assign(MiniStats.prototype, {
         }
 
         return graphs;
-    },
+    }
 
-    render: function () {
+    render() {
         var graphs = this.graphs;
         var wordAtlas = this.wordAtlas;
         var render2d = this.render2d;
@@ -302,9 +305,9 @@ Object.assign(MiniStats.prototype, {
         }
 
         render2d.render(this.clr, height);
-    },
+    }
 
-    resize: function (width, height, showGraphs) {
+    resize(width, height, showGraphs) {
         var graphs = this.graphs;
         for (var i = 0; i < graphs.length; ++i) {
             graphs[i].enabled = showGraphs;
@@ -314,15 +317,15 @@ Object.assign(MiniStats.prototype, {
         this.height = height;
 
         this.updateDiv();
-    },
+    }
 
-    updateDiv: function () {
+    updateDiv() {
         var rect = this.device.canvas.getBoundingClientRect();
         this.div.style.left = rect.left + "px";
         this.div.style.bottom = (window.innerHeight - rect.bottom) + "px";
         this.div.style.width = this.width + "px";
         this.div.style.height = this.overallHeight + "px";
     }
-});
+}
 
 export { MiniStats };

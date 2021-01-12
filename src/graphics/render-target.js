@@ -47,61 +47,61 @@ var defaultOptions = {
  * // Set the render target on a layer
  * layer.renderTarget = renderTarget;
  */
-var RenderTarget = function (options) {
-    var _arg2 = arguments[1];
-    var _arg3 = arguments[2];
+class RenderTarget {
+    constructor(options) {
+        var _arg2 = arguments[1];
+        var _arg3 = arguments[2];
 
-    if (options instanceof GraphicsDevice) {
-        // old constructor
-        this._colorBuffer = _arg2;
-        options = _arg3;
-    } else {
-        // new constructor
-        this._colorBuffer = options.colorBuffer;
-    }
-
-    this._glFrameBuffer = null;
-    this._glDepthBuffer = null;
-
-    // Process optional arguments
-    options = (options !== undefined) ? options : defaultOptions;
-    this._depthBuffer = options.depthBuffer;
-    this._face = (options.face !== undefined) ? options.face : 0;
-
-    if (this._depthBuffer) {
-        var format = this._depthBuffer._format;
-        if (format === PIXELFORMAT_DEPTH) {
-            this._depth = true;
-            this._stencil = false;
-        } else if (format === PIXELFORMAT_DEPTHSTENCIL) {
-            this._depth = true;
-            this._stencil = true;
+        if (options instanceof GraphicsDevice) {
+            // old constructor
+            this._colorBuffer = _arg2;
+            options = _arg3;
         } else {
-            // #ifdef DEBUG
-            console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
-            // #endif
-            this._depth = false;
-            this._stencil = false;
+            // new constructor
+            this._colorBuffer = options.colorBuffer;
         }
-    } else {
-        this._depth = (options.depth !== undefined) ? options.depth : true;
-        this._stencil = (options.stencil !== undefined) ? options.stencil : false;
+
+        this._glFrameBuffer = null;
+        this._glDepthBuffer = null;
+
+        // Process optional arguments
+        options = (options !== undefined) ? options : defaultOptions;
+        this._depthBuffer = options.depthBuffer;
+        this._face = (options.face !== undefined) ? options.face : 0;
+
+        if (this._depthBuffer) {
+            var format = this._depthBuffer._format;
+            if (format === PIXELFORMAT_DEPTH) {
+                this._depth = true;
+                this._stencil = false;
+            } else if (format === PIXELFORMAT_DEPTHSTENCIL) {
+                this._depth = true;
+                this._stencil = true;
+            } else {
+                // #ifdef DEBUG
+                console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
+                // #endif
+                this._depth = false;
+                this._stencil = false;
+            }
+        } else {
+            this._depth = (options.depth !== undefined) ? options.depth : true;
+            this._stencil = (options.stencil !== undefined) ? options.stencil : false;
+        }
+
+        this._samples = (options.samples !== undefined) ? options.samples : 1;
+        this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
+        this._glResolveFrameBuffer = null;
+        this._glMsaaColorBuffer = null;
+        this._glMsaaDepthBuffer = null;
     }
 
-    this._samples = (options.samples !== undefined) ? options.samples : 1;
-    this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
-    this._glResolveFrameBuffer = null;
-    this._glMsaaColorBuffer = null;
-    this._glMsaaDepthBuffer = null;
-};
-
-Object.assign(RenderTarget.prototype, {
     /**
      * @function
      * @name pc.RenderTarget#destroy
      * @description Frees resources associated with this render target.
      */
-    destroy: function () {
+    destroy() {
         if (!this._device) return;
 
         var device = this._device;
@@ -135,7 +135,16 @@ Object.assign(RenderTarget.prototype, {
             gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
             this._glMsaaDepthBuffer = null;
         }
-    },
+    }
+
+    // called when context was lost, function releases all context related resources
+    loseContext() {
+        this._glFrameBuffer = undefined;
+        this._glDepthBuffer = undefined;
+        this._glResolveFrameBuffer = undefined;
+        this._glMsaaColorBuffer = undefined;
+        this._glMsaaDepthBuffer = undefined;
+    }
 
     /**
      * @function
@@ -147,26 +156,22 @@ Object.assign(RenderTarget.prototype, {
      * This function performs this averaging and updates the colorBuffer and the depthBuffer.
      * If autoResolve is set to true, the resolve will happen after every rendering to this render target, otherwise you can do it manually,
      * during the app update or inside a pc.Command.
-     * @param {boolean} color - Resolve color buffer.
-     * @param {boolean} depth - Resolve depth buffer.
+     * @param {boolean} [color] - Resolve color buffer. Defaults to true.
+     * @param {boolean} [depth] - Resolve depth buffer. Defaults to true if the render target has a depth buffer.
      */
-    resolve: function (color, depth) {
+    resolve(color = true, depth = !!this._depthBuffer) {
         if (!this._device) return;
         if (!this._device.webgl2) return;
+
         var gl = this._device.gl;
-
-        if (color === undefined) color = true;
-        if (depth === undefined && this._depthBuffer) depth = true;
-
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
         gl.blitFramebuffer( 0, 0, this.width, this.height,
                             0, 0, this.width, this.height,
                             (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
                             gl.NEAREST);
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
-    },
+    }
 
     /**
      * @function
@@ -178,7 +183,7 @@ Object.assign(RenderTarget.prototype, {
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
-    copy: function (source, color, depth) {
+    copy(source, color, depth) {
         if (!this._device) {
             if (source._device) {
                 this._device = source._device;
@@ -191,75 +196,65 @@ Object.assign(RenderTarget.prototype, {
         }
         return this._device.copyRenderTarget(source, this, color, depth);
     }
-});
 
-/**
- * @readonly
- * @name pc.RenderTarget#colorBuffer
- * @type {pc.Texture}
- * @description Color buffer set up on the render target.
- */
-Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.RenderTarget#colorBuffer
+     * @type {pc.Texture}
+     * @description Color buffer set up on the render target.
+     */
+    get colorBuffer() {
         return this._colorBuffer;
     }
-});
 
-/**
- * @readonly
- * @name pc.RenderTarget#depthBuffer
- * @type {pc.Texture}
- * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
- * Not available, if depth property was used instead.
- */
-Object.defineProperty(RenderTarget.prototype, 'depthBuffer', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.RenderTarget#depthBuffer
+     * @type {pc.Texture}
+     * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
+     * Not available, if depth property was used instead.
+     */
+    get depthBuffer() {
         return this._depthBuffer;
     }
-});
 
-/**
- * @readonly
- * @name pc.RenderTarget#face
- * @type {number}
- * @description If the render target is bound to a cubemap, this property
- * specifies which face of the cubemap is rendered to. Can be:
- *
- * * {@link pc.CUBEFACE_POSX}
- * * {@link pc.CUBEFACE_NEGX}
- * * {@link pc.CUBEFACE_POSY}
- * * {@link pc.CUBEFACE_NEGY}
- * * {@link pc.CUBEFACE_POSZ}
- * * {@link pc.CUBEFACE_NEGZ}
- */
-Object.defineProperty(RenderTarget.prototype, 'face', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.RenderTarget#face
+     * @type {number}
+     * @description If the render target is bound to a cubemap, this property
+     * specifies which face of the cubemap is rendered to. Can be:
+     *
+     * * {@link pc.CUBEFACE_POSX}
+     * * {@link pc.CUBEFACE_NEGX}
+     * * {@link pc.CUBEFACE_POSY}
+     * * {@link pc.CUBEFACE_NEGY}
+     * * {@link pc.CUBEFACE_POSZ}
+     * * {@link pc.CUBEFACE_NEGZ}
+     */
+    get face() {
         return this._face;
     }
-});
 
-/**
- * @readonly
- * @name pc.RenderTarget#width
- * @type {number}
- * @description Width of the render target in pixels.
- */
-Object.defineProperty(RenderTarget.prototype, 'width', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.RenderTarget#width
+     * @type {number}
+     * @description Width of the render target in pixels.
+     */
+    get width() {
         return this._colorBuffer ? this._colorBuffer.width : this._depthBuffer.width;
     }
-});
 
-/**
- * @readonly
- * @name pc.RenderTarget#height
- * @type {number}
- * @description Height of the render target in pixels.
- */
-Object.defineProperty(RenderTarget.prototype, 'height', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.RenderTarget#height
+     * @type {number}
+     * @description Height of the render target in pixels.
+     */
+    get height() {
         return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
     }
-});
+}
 
 export { RenderTarget };

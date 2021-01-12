@@ -4,14 +4,14 @@ import { TemplateUtils } from '../../templates/template-utils.js';
 import { CompressUtils } from '../../compress/compress-utils';
 import { Decompress } from '../../compress/decompress';
 
-function SceneParser(app, isTemplate) {
-    this._app = app;
+class SceneParser {
+    constructor(app, isTemplate) {
+        this._app = app;
 
-    this._isTemplate = isTemplate;
-}
+        this._isTemplate = isTemplate;
+    }
 
-Object.assign(SceneParser.prototype, {
-    parse: function (data) {
+    parse(data) {
         var entities = {};
         var id, i, curEnt;
         var parent = null;
@@ -53,9 +53,9 @@ Object.assign(SceneParser.prototype, {
         delete data.compressedFormat;
 
         return parent;
-    },
+    }
 
-    _createEntity: function (data, compressed) {
+    _createEntity(data, compressed) {
         var entity = new Entity();
 
         entity.name = data.name;
@@ -84,9 +84,9 @@ Object.assign(SceneParser.prototype, {
         }
 
         return entity;
-    },
+    }
 
-    _setPosRotScale: function (entity, data, compressed) {
+    _setPosRotScale(entity, data, compressed) {
         if (compressed) {
             CompressUtils.setCompressedPRS(entity, data, compressed);
 
@@ -99,9 +99,9 @@ Object.assign(SceneParser.prototype, {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
         }
-    },
+    }
 
-    _openComponentData: function (entity, entities) {
+    _openComponentData(entity, entities) {
         // Create components in order
         var systemsList = this._app.systems.list;
 
@@ -123,9 +123,9 @@ Object.assign(SceneParser.prototype, {
         }
 
         return entity;
-    },
+    }
 
-    _addCollapsedToEntities: function (app, data) {
+    _addCollapsedToEntities(app, data) {
         data.collapsedInstances.forEach(function (h) {
             var expanded = TemplateUtils.expandTemplateEntities(
                 app, h.instanceEntities);
@@ -133,6 +133,6 @@ Object.assign(SceneParser.prototype, {
             Object.assign(data.entities, expanded);
         });
     }
-});
+}
 
 export { SceneParser };

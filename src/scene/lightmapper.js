@@ -22,7 +22,7 @@ import { Texture } from '../graphics/texture.js';
 import {
     BAKE_COLORDIR,
     FOG_NONE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM,
@@ -53,51 +53,68 @@ var passMaterial = [];
 function collectModels(node, nodes, nodesMeshInstances, allNodes) {
     if (!node.enabled) return;
 
-    var i;
+    var i, meshInstances;
+
+    // mesh instances from model component
     if (node.model && node.model.model && node.model.enabled) {
         if (allNodes) allNodes.push(node);
         if (node.model.lightmapped) {
             if (nodes) {
-                var hasUv1 = true;
-                var meshInstances = node.model.model.meshInstances;
-                for (i = 0; i < meshInstances.length; i++) {
-                    if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
-                        hasUv1 = false;
-                        break;
-                    }
-                }
-                if (hasUv1) {
-
-                    var j;
-                    var isInstance;
-                    var notInstancedMeshInstances = [];
-                    for (i = 0; i < meshInstances.length; i++) {
-                        isInstance = false;
-                        for (j = 0; j < meshInstances.length; j++) {
-                            if (i !== j) {
-                                if (meshInstances[i].mesh === meshInstances[j].mesh) {
-                                    isInstance = true;
-                                }
-                            }
-                        }
-                        // collect each instance (object with shared VB) as separate "node"
-                        if (isInstance) {
-                            nodes.push(node);
-                            nodesMeshInstances.push([meshInstances[i]]);
-                        } else {
-                            notInstancedMeshInstances.push(meshInstances[i]);
-                        }
-                    }
-
-                    // collect all non-shared objects as one "node"
-                    if (notInstancedMeshInstances.length > 0) {
-                        nodes.push(node);
-                        nodesMeshInstances.push(notInstancedMeshInstances);
-                    }
-                }
+                meshInstances = node.model.model.meshInstances;
             }
         }
     }
+
+    // mesh instances from render component
+    if (node.render && node.render.enabled) {
+        if (allNodes) allNodes.push(node);
+        if (node.render.lightmapped) {
+            if (nodes) {
+                meshInstances = node.render.meshInstances;
+            }
+        }
+    }
+
+    if (meshInstances) {
+        var hasUv1 = true;
+
+        for (i = 0; i < meshInstances.length; i++) {
+            if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                hasUv1 = false;
+                break;
+            }
+        }
+        if (hasUv1) {
+
+            var j;
+            var isInstance;
+            var notInstancedMeshInstances = [];
+            for (i = 0; i < meshInstances.length; i++) {
+                isInstance = false;
+                for (j = 0; j < meshInstances.length; j++) {
+                    if (i !== j) {
+                        if (meshInstances[i].mesh === meshInstances[j].mesh) {
+                            isInstance = true;
+                        }
+                    }
+                }
+                // collect each instance (object with shared VB) as separate "node"
+                if (isInstance) {
+                    nodes.push(node);
+                    nodesMeshInstances.push([meshInstances[i]]);
+                } else {
+                    notInstancedMeshInstances.push(meshInstances[i]);
+                }
+            }
+
+            // collect all non-shared objects as one "node"
+            if (notInstancedMeshInstances.length > 0) {
+                nodes.push(node);
+                nodesMeshInstances.push(notInstancedMeshInstances);
+            }
+        }
+    }
+
     for (i = 0; i < node._children.length; i++) {
         collectModels(node._children[i], nodes, nodesMeshInstances, allNodes);
     }
@@ -113,60 +130,81 @@ function collectModels(node, nodes, nodesMeshInstances, allNodes) {
  * @param {pc.ForwardRenderer} renderer - The renderer.
  * @param {pc.AssetRegistry} assets - Registry of assets to lightmap.
  */
-function Lightmapper(device, root, scene, renderer, assets) {
-    this.device = device;
-    this.root = root;
-    this.scene = scene;
-    this.renderer = renderer;
-    this.assets = assets;
+class Lightmapper {
+    constructor(device, root, scene, renderer, assets) {
+        this.device = device;
+        this.root = root;
+        this.scene = scene;
+        this.renderer = renderer;
+        this.assets = assets;
 
-    // #ifdef PROFILER
-    this._stats = {
-        renderPasses: 0,
-        lightmapCount: 0,
-        totalRenderTime: 0,
-        forwardTime: 0,
-        fboTime: 0,
-        shadowMapTime: 0,
-        compileTime: 0,
-        shadersLinked: 0
-    };
-    // #endif
-}
+        // #ifdef PROFILER
+        this._stats = {
+            renderPasses: 0,
+            lightmapCount: 0,
+            totalRenderTime: 0,
+            forwardTime: 0,
+            fboTime: 0,
+            shadowMapTime: 0,
+            compileTime: 0,
+            shadersLinked: 0
+        };
+        // #endif
+    }
 
-Object.assign(Lightmapper.prototype, {
-    destroy: function () {
+    destroy() {
         this.device = null;
         this.root = null;
         this.scene = null;
         this.renderer = null;
         this.assets = null;
-    },
+    }
 
-    calculateLightmapSize: function (node) {
+    calculateLightmapSize(node) {
         var data, parent;
         var sizeMult = this.scene.lightmapSizeMultiplier || 16;
         var scale = tempVec;
-        var area = { x: 1, y: 1, z: 1, uv: 1 };
 
-        if (node.model.asset) {
-            data = this.assets.get(node.model.asset).data;
-            if (data.area) {
-                area.x = data.area.x;
-                area.y = data.area.y;
-                area.z = data.area.z;
-                area.uv = data.area.uv;
+        var srcArea, lightmapSizeMultiplier;
+
+        if (node.model) {
+            lightmapSizeMultiplier = node.model.lightmapSizeMultiplier;
+            if (node.model.asset) {
+                data = this.assets.get(node.model.asset).data;
+                if (data.area) {
+                    srcArea = data.area;
+                }
+            } else if (node.model._area) {
+                data = node.model;
+                if (data._area) {
+                    srcArea = data._area;
+                }
             }
-        } else if (node.model._area) {
-            data = node.model;
-            if (data._area) {
-                area.x = data._area.x;
-                area.y = data._area.y;
-                area.z = data._area.z;
-                area.uv = data._area.uv;
+        } else if (node.render) {
+            lightmapSizeMultiplier = node.render.lightmapSizeMultiplier;
+            if (node.render.type !== 'asset') {
+                if (node.render._area) {
+                    data = node.render;
+                    if (data._area) {
+                        srcArea = data._area;
+                    }
+                }
             }
+            // OTHERWISE: TODO: render asset type should provide the area data - which describe size of mesh to allow
+            // auto-scaling of assigned lightmap resolution
+
         }
-        var areaMult = node.model.lightmapSizeMultiplier || 1;
+
+        // copy area
+        var area = { x: 1, y: 1, z: 1, uv: 1 };
+        if (srcArea) {
+            area.x = srcArea.x;
+            area.y = srcArea.y;
+            area.z = srcArea.z;
+            area.uv = srcArea.uv;
+        }
+
+        var areaMult = lightmapSizeMultiplier || 1;
         area.x *= areaMult;
         area.y *= areaMult;
         area.z *= areaMult;
@@ -190,7 +228,7 @@ Object.assign(Lightmapper.prototype, {
         totalArea = Math.sqrt(totalArea);
 
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
-    },
+    }
 
     /**
      * @function
@@ -206,7 +244,7 @@ Object.assign(Lightmapper.prototype, {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      */
-    bake: function (nodes, mode) {
+    bake(nodes, mode) {
 
         // #ifdef PROFILER
         var startTime = now();
@@ -423,12 +461,20 @@ Object.assign(Lightmapper.prototype, {
         var node;
         var lm, rcv, m;
 
+        var renderOrModel = function (node) {
+            return node.render ? node.render : node.model;
+        };
+
+        var renderOrModelMeshInstances = function (node) {
+            return node.render ? node.render.meshInstances : node.model.model.meshInstances;
+        };
+
         // Disable existing scene lightmaps
         var origShaderDefs = [];
         origShaderDefs.length = sceneLightmapsNode.length;
         var shaderDefs;
         for (node = 0; node < allNodes.length; node++) {
-            rcv = allNodes[node].model.model.meshInstances;
+            rcv = renderOrModelMeshInstances(allNodes[node]);
             shaderDefs = [];
             for (i = 0; i < rcv.length; i++) {
                 shaderDefs.push(rcv[i]._shaderDefs);
@@ -446,11 +492,13 @@ Object.assign(Lightmapper.prototype, {
         var origCastShadows = [];
         var casters = [];
         var meshes;
+        var rom;
         for (node = 0; node < allNodes.length; node++) {
-            origCastShadows[node] = allNodes[node].model.castShadows;
-            allNodes[node].model.castShadows = allNodes[node].model.castShadowsLightmap;
-            if (allNodes[node].model.castShadowsLightmap) {
-                meshes = allNodes[node].model.meshInstances;
+            rom = renderOrModel(allNodes[node]);
+            origCastShadows[node] = rom.castShadows;
+            rom.castShadows = rom.castShadowsLightmap;
+            if (rom.castShadowsLightmap) {
+                meshes = renderOrModelMeshInstances(allNodes[node]);
                 for (i = 0; i < meshes.length; i++) {
                     meshes[i].visibleThisFrame = true;
                     casters.push(meshes[i]);
@@ -625,7 +673,7 @@ Object.assign(Lightmapper.prototype, {
 
                 if (lights[i]._type === LIGHTTYPE_DIRECTIONAL) {
                     lightArray[LIGHTTYPE_DIRECTIONAL][0] = lights[i];
-                    lightArray[LIGHTTYPE_POINT].length = 0;
+                    lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
                     if (!shadowMapRendered && lights[i].castShadows) {
                         this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
@@ -634,16 +682,16 @@ Object.assign(Lightmapper.prototype, {
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (lights[i]._type === LIGHTTYPE_POINT) {
-                        lightArray[LIGHTTYPE_POINT][0] = lights[i];
+                    if (lights[i]._type === LIGHTTYPE_OMNI) {
+                        lightArray[LIGHTTYPE_OMNI][0] = lights[i];
                         lightArray[LIGHTTYPE_SPOT].length = 0;
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
-                            this.renderer.renderShadows(lightArray[LIGHTTYPE_POINT]);
+                            this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
                             shadowMapRendered = true;
                         }
                     } else {
-                        lightArray[LIGHTTYPE_POINT].length = 0;
+                        lightArray[LIGHTTYPE_OMNI].length = 0;
                         lightArray[LIGHTTYPE_SPOT][0] = lights[i];
                         if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
@@ -788,13 +836,13 @@ Object.assign(Lightmapper.prototype, {
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {
-            allNodes[node].model.castShadows = origCastShadows[node];
+            renderOrModel(allNodes[node]).castShadows = origCastShadows[node];
         }
 
         // Enable existing scene lightmaps
         for (i = 0; i < origShaderDefs.length; i++) {
             if (origShaderDefs[i]) {
-                rcv = sceneLightmapsNode[i].model.model.meshInstances;
+                rcv = renderOrModelMeshInstances(sceneLightmapsNode[i]);
                 for (j = 0; j < rcv.length; j++) {
                     rcv[j]._shaderDefs |= origShaderDefs[i][j] & (SHADERDEF_LM | SHADERDEF_DIRLM);
                 }
@@ -832,6 +880,6 @@ Object.assign(Lightmapper.prototype, {
         stats.fboTime = device._renderTargetCreationTime - startFboTime;
         // #endif
     }
-});
+}
 
 export { Lightmapper };
