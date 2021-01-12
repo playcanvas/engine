@@ -274,6 +274,15 @@ class Layer {
         this._lightCube = null;
     }
 
+    get renderTarget() {
+        return this._renderTarget;
+    }
+
+    set renderTarget(rt) {
+        this._renderTarget = rt;
+        this._dirtyCameras = true;
+    }
+
     get enabled() {
         return this._enabled;
     }
