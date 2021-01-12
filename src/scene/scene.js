@@ -337,6 +337,14 @@ class Scene extends EventHandler {
         this.fire("set:layers", prev, layers);
     }
 
+    get defaultMaterial() {
+        return Material.defaultMaterial;
+    }
+
+    set defaultMaterial(value) {
+        Material.defaultMaterial = value;
+    }
+
     applySettings(settings) {
         // settings
         this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
