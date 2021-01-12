@@ -433,7 +433,7 @@ class StandardMaterial extends Material {
             const transform = this[tname];
             if (transform) {
                 const uname = mname + "TransformUniform";
-                const uniform = this[uname];
+                let uniform = this[uname];
                 if (!uniform) {
                     uniform = new Float32Array(4);
                     this[uname] = uniform;
