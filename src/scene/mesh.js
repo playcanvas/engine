@@ -176,7 +176,7 @@ class GeometryVertexStream {
  * @property {pc.Skin} [skin] The skin data (if any) that drives skinned mesh animations for this mesh.
  * @property {pc.Morph} [morph] The morph data (if any) that drives morph target animations for this mesh.
  */
-class Mesh  extends RefCountedObject {
+class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
