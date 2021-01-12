@@ -1,4 +1,4 @@
-import { refCount } from '../core/ref-count.js';
+import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
 import { math } from '../math/math.js';
 import { BoundingBox } from '../shape/bounding-box.js';
@@ -17,9 +17,9 @@ import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FI
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target. If it is not provided, a device is obtained
  * from the {@link pc.Application}.
  */
-class Morph {
+class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
-        this.initRefCount();
+        super();
 
         this.device = graphicsDevice || Application.getApplication().graphicsDevice;
         this._targets = targets;
@@ -286,8 +286,5 @@ class Morph {
         return texture;
     }
 }
-
-// mixin for reference counting
-Object.assign(Morph.prototype, refCount);
 
 export { Morph };
