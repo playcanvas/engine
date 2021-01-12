@@ -694,8 +694,8 @@ class StandardMaterial extends Material {
         }
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
-        const options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+        let minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+        let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
