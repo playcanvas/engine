@@ -161,7 +161,6 @@ class MeshInstance {
             return;
 
         if (this._mesh) {
-            // this destroys the mesh if refcount gets to 0
             this._mesh.decRefCount();
         }
 
@@ -397,9 +396,16 @@ class MeshInstance {
 
     destroy() {
 
-        if (this.mesh) {
-            // release previous mesh
+        let mesh = this.mesh;
+        if (mesh) {
+
+            // this decreases ref count on the mesh
             this.mesh = null;
+
+            // destroy mesh
+            if (mesh.getRefCount() < 1) {
+                mesh.destroy();
+            }
         }
 
         if (this._skinInstance) {
