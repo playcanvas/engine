@@ -465,19 +465,11 @@ class ElementComponent extends Component {
     }
 
     _bindScreen(screen) {
-        screen.on('set:resolution', this._onScreenResize, this);
-        screen.on('set:referenceresolution', this._onScreenResize, this);
-        screen.on('set:scaleblend', this._onScreenResize, this);
-        screen.on('set:screenspace', this._onScreenSpaceChange, this);
-        screen.on('remove', this._onScreenRemove, this);
+        screen._bindElement(this);
     }
 
     _unbindScreen(screen) {
-        screen.off('set:resolution', this._onScreenResize, this);
-        screen.off('set:referenceresolution', this._onScreenResize, this);
-        screen.off('set:scaleblend', this._onScreenResize, this);
-        screen.off('set:screenspace', this._onScreenSpaceChange, this);
-        screen.off('remove', this._onScreenRemove, this);
+        screen._unbindElement(this);
     }
 
     _updateScreen(screen) {
