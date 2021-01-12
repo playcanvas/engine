@@ -8,11 +8,14 @@
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../wasm-loader.js"></script>
-    <script src="http://localhost:1340/dist/pcui.js"></script>
+    <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
         body { 
             margin: 0;
             overflow-y: hidden;
+        }
+        .font-regular, .font-bold, .font-thin, .font-light {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
         }
     </style>
 </head>
@@ -295,7 +298,7 @@
             });
             controlPanel.append(jumpButton);
             var jogToggleLabel = new pcui.Label({
-                text: 'Jogging:'
+                text: 'Run:'
             });
             controlPanel.append(jogToggleLabel);
             var jogToggle = new pcui.BooleanInput({

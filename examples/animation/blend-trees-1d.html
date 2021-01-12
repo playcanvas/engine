@@ -7,11 +7,14 @@
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/playcanvas.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
-    <script src="http://localhost:1340/dist/pcui.js"></script>
+    <script src="http://code.playcanvas.com/pcui/pcui-v1.1.5.js"></script>
     <style>
         body { 
             margin: 0;
             overflow-y: hidden;
+        }
+        .font-regular, .font-bold, .font-thin, .font-light {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
         }
     </style>
 </head>
@@ -164,7 +167,7 @@
             document.body.appendChild(controlPanel.dom);
 
             var speedSlider = new pcui.SliderInput({
-                pre: 2, 
+                precision: 2, 
                 min: 0,
                 max: 1,
                 minSlider: 0,
