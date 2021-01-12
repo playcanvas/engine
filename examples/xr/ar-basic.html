@@ -41,7 +41,8 @@
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(canvas),
                 touch: new pc.TouchDevice(canvas),
-                keyboard: new pc.Keyboard(window)
+                keyboard: new pc.Keyboard(window),
+                graphicsDeviceOptions: { alpha: true }
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -58,7 +59,7 @@
             // create camera
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(1, 1, 1, 1),
+                clearColor: new pc.Color(0, 0, 0, 0),
                 farClip: 10000
             });
             app.root.addChild(c);
