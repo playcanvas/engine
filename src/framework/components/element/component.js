@@ -465,6 +465,13 @@ class ElementComponent extends Component {
     }
 
     _bindScreen(screen) {
+        // bind the Element to the Screen
+        // We used to subscribe to Screen events here however
+        // that was very slow when there are thousands of Elements.
+        // When the time comes to unbind the Element from the Screen
+        // finding the event callbacks to remove takes a considerable amount of 
+        // time. So instead the Screen stores the Element component and calls
+        // its functions directly.
         screen._bindElement(this);
     }
 
