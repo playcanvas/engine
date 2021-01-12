@@ -1515,10 +1515,6 @@ var standard = {
                 code += "   addReflection();\n";
             }
 
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
-            }
-
             if (hasAreaLights){
                 // specular has to be accumulated differently if we want area lights to look correct
                 code += "   ccReflection.rgb *= ccSpecularity;\n";
