@@ -66,7 +66,7 @@ class AnimationHandler {
         var animData = data.animation;
 
         var anim = new Animation();
-        anim.setName(animData.name);
+        anim.name = animData.name;
         anim.duration = animData.duration;
 
         for (var i = 0; i < animData.nodes.length; i++) {
@@ -101,7 +101,7 @@ class AnimationHandler {
         var animData = data.animation;
 
         var anim = new Animation();
-        anim.setName(animData.name);
+        anim.name = animData.name;
         anim.duration = animData.duration;
 
         for (var i = 0; i < animData.nodes.length; i++) {
