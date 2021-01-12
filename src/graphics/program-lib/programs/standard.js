@@ -1014,7 +1014,7 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = options.lights.some(function (light){
+        var hasAreaLights = device._hasAreaLightLuts && options.lights.some(function (light){
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
@@ -1701,7 +1701,7 @@ var standard = {
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.clearCoat > 0 ) {
-                    code += "   ccSpecularity = vec3(1);\n";
+                    code += "   ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {
                     code += "   dSpecularity = vec3(1);\n";

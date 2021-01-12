@@ -1674,6 +1674,29 @@ Object.assign(Application.prototype, {
 
     /**
      * @function
+     * @private
+     * @name pc.Application#setAreaLightData
+     * @description Sets the area light LUT asset to current scene.
+     * @param {pc.Asset} asset - Asset of type `binary` to be set to.
+     */
+    setAreaLightData: function (asset) {
+        if (asset) {
+            var self = this;
+            asset.ready(function (asset) {
+                self.areaLightData = asset.resource;
+                self._areaLightLuts = {
+                    data1: new Float32Array(asset.resource, 0, 16384),
+                    data2: new Float32Array(asset.resource, 16384 * 4, 16384),
+                    version: new Float32Array(asset.resource, 32768 * 4, 1)[0]
+                };
+            });
+            this.assets.load(asset);
+        }
+        // TODO: decide what to do in this case
+    },
+
+    /**
+     * @function
      * @name pc.Application#setSkybox
      * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
      * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.

@@ -387,8 +387,11 @@ class Light {
 
         // create texture if not already
         var app = Application.getApplication();
-        var luts = pc._areaLightLutData;
+        var luts = app._areaLightLuts;
         if (luts && !luts.ready) {
+            if (luts.version !== 0) {
+                console.warn(`areaLightData version: ${luts.version} is not yet supported!`);
+            }
 
             luts.ready = true;
             var device = app.graphicsDevice;
@@ -431,6 +434,7 @@ class Light {
             device.scope.resolve('areaLightsLutTex1').setValue(tex1);
             device.scope.resolve('areaLightsLutTex2').setValue(tex2);
 
+            device._hasAreaLightLuts = true;
         }
     }
 

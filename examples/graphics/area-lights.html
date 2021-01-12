@@ -26,13 +26,6 @@
         // Create the app and start the update loop
         var app = new pc.Application(canvas);
 
-    </script>
-
-    <!-- LUT table for area lights, included after the app has been created -->
-    <script src="../assets/scripts/lights/area-light-lut.js"></script>
-
-    <script>
-
         // helper function to create a primitive with shape type, position, scale, color
         function createPrimitive(primitiveType, position, scale, color, assetManifest) {
 
@@ -148,6 +141,10 @@
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
+            {
+                type: "binary",
+                url: "../assets/binary/luts.bin"
+            },            
         ];
 
         // Load all assets and then run the example
@@ -181,6 +178,9 @@
             });
 
             var miniStats = new pcx.MiniStats(app);
+
+            // set the loaded area light LUT data
+            app.setAreaLightData(assetManifest[4].asset);
 
             // set up some general scene rendering properties
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
@@ -252,7 +252,6 @@
             }
 
             if (light3) {
-
                 light3.setLocalEulerAngles(pc.math.lerp(230, 310, factor2), pc.math.lerp(-30, 0, factor3), 90);
 
                 var dir = light3.getWorldTransform().getY();
