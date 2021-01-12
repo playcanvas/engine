@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Animation Blend Trees - 2D Directional</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <script src="../wasm-loader.js"></script>
+    <script src="http://localhost:1340/dist/pcui.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        if (wasmSupported()) {
+            loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
+        } else {
+            loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
+        }
+
+        function demo() {
+            
+        var animStateGraph = {
+            "layers": [
+                {
+                    "name": "locomotion",
+                    "states": [
+                        {
+                            "name": "START"
+                        },
+                        {
+                            "name": "Idle",
+                            "speed": 1.0
+                        },
+                        {
+                            "name": "Walk",
+                            "speed": 1.0
+                        },
+                        {
+                            "name": "Jump",
+                            "speed": 1.35
+                        },
+                        {
+                            "name": "Jog",
+                            "speed": 1.0
+                        },
+                        {
+                            "name": "END"
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "from": "START",
+                            "to": "Idle",
+                            "time": 0,
+                            "priority": 0
+                        },
+                        {
+                            "from": "Idle",
+                            "to": "Walk",
+                            "time": 0.1,
+                            "priority": 0,
+                            "conditions": [
+                                {
+                                    "parameterName": "speed",
+                                    "predicate": "GREATER_THAN",
+                                    "value": 0
+                                }
+                            ]
+                        },
+                        {
+                            "from": "ANY",
+                            "to": "Jump",
+                            "time": 0.1,
+                            "priority": 0,
+                            "conditions": [
+                                {
+                                    "parameterName": "jump",
+                                    "predicate": "EQUAL_TO",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        {
+                            "from": "Jump",
+                            "to": "Idle",
+                            "time": 0.2,
+                            "priority": 0,
+                            "exitTime": 0.6
+                        },
+                        {
+                            "from": "Walk",
+                            "to": "Idle",
+                            "time": 0.1,
+                            "priority": 0,
+                            "conditions": [
+                                {
+                                    "parameterName": "speed",
+                                    "predicate": "LESS_THAN_EQUAL_TO",
+                                    "value": 0
+                                }
+                            ]
+                        },
+                        {
+                            "from": "Walk",
+                            "to": "Jog",
+                            "time": 0.1,
+                            "priority": 0,
+                            "conditions": [
+                                {
+                                    "parameterName": "speed",
+                                    "predicate": "GREATER_THAN",
+                                    "value": 1
+                                }
+                            ]
+                        },
+                        {
+                            "from": "Jog",
+                            "to": "Walk",
+                            "time": 0.1,
+                            "priority": 0,
+                            "conditions": [
+                                {
+                                    "parameterName": "speed",
+                                    "predicate": "LESS_THAN",
+                                    "value": 2
+                                }
+                            ]
+                        },
+                    ]
+                }
+            ],
+            "parameters": {
+                "speed": {
+                    "name": "speed",
+                    "type": pc.ANIM_PARAMETER_INTEGER,
+                    "value": 0
+                },
+                "jump": {
+                    "name": "jump",
+                    "type": pc.ANIM_PARAMETER_TRIGGER,
+                    "value": false
+                }
+            }
+        };
+
+        var canvas = document.getElementById("application-canvas");
+
+        window.parent.pc = pc;
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        var entity;
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity(app);
+        cameraEntity.name = "Camera";
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0, 0, 0)
+        });
+        cameraEntity.translateLocal(0, 5, 15);
+        cameraEntity.rotateLocal(-20, 0, 0);
+        app.root.addChild(cameraEntity);
+
+        // Create an entity with a light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1, 1),
+            castShadows: true,
+            intensity: 1,
+            shadowBias: 0.2,
+            shadowDistance: 5,
+            normalOffsetBias: 0.05,
+            shadowResolution: 2048
+        });
+        light.setLocalEulerAngles(45, 30, 0);
+        app.root.addChild(light);
+
+        // Load model and animation assets
+        var model = null;
+        var idleAnim = null;
+        var walkAnim = null;
+        var strafeLeftAnim = null;
+        var strafeRightAnim = null;
+        var jogAnim = null;
+
+        var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
+        stateGraphAsset.once('load', function (asset) {
+            var stateGraph = asset.resource;
+        app.assets.loadFromUrl("../assets/models/xbot.glb", "container", function (err, asset) {
+            model = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-idle.glb", "container", function (err, asset) {
+            idleAnim = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk.glb", "container", function (err, asset) {
+            walkAnim = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-jog.glb", "container", function (err, asset) {
+            jogAnim = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-jump.glb", "container", function (err, asset) {
+            jumpAnim = asset;
+
+            app.start();
+
+            var modelEntity = new pc.Entity();
+            modelEntity.name = 'modelEntity';
+
+            modelEntity.addComponent("model", {
+                enabled: true,
+                type: "asset",
+                asset: model.resource.model,
+                castShadows: true
+            });
+
+            modelEntity.addComponent('anim', {
+                activate: true,
+            });
+
+            modelEntity.anim.loadStateGraph(stateGraph);
+            var locomotionLayer = modelEntity.anim.baseLayer;
+            locomotionLayer.assignAnimation('Idle', idleAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Walk', walkAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Jog', jogAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Jump', jumpAnim.resource.animations[0].resource);
+
+            app.root.addChild(modelEntity);
+
+            var planeEntity = new pc.Entity();
+            planeEntity.name = 'Plane';
+            planeEntity.addComponent("model", {
+                type: "plane"
+            });
+            planeEntity.addComponent("collision", {
+                type: 'box',
+                halfExtents: new pc.Vec3(7.5, 0, 7.5)
+            });
+            planeEntity.addComponent("rigidbody", {
+                type: 'static',
+            });
+            planeEntity.setLocalScale(15,1,15);
+            planeEntity.setPosition(0, 0, 0);
+            app.root.addChild(planeEntity);
+
+            app.assets.loadFromUrl(
+                "../assets/textures/playcanvas-grey.png",
+                "texture",
+                function (err, asset) {
+                    var material = new pc.StandardMaterial();
+                    material.diffuseMap = asset.resource;
+                    material.update();
+                    planeEntity.model.meshInstances[0].material = material;
+                }
+            );
+
+            // controls
+
+            var width = 201;
+            var controlPanel = new pcui.Panel({
+                headerText: 'Controls',
+                collapsible: true
+            });
+            controlPanel.content.dom.setAttribute('style', 'display: flex; align-items: center; flex-wrap: wrap;')
+            controlPanel.collapsed = false;
+            var jumpButton = new pcui.Button({
+                text: 'Jump'
+            });
+            jumpButton.dom.setAttribute('style', 'width: 100%;')
+            jumpButton.on('click', function() {
+                var isJumping = modelEntity.anim.baseLayer.activeState === 'Jump';
+                if (!isJumping) {
+                    this.jumpTime = 0;
+                    modelEntity.anim.setTrigger('jump');
+                }
+            });
+            controlPanel.append(jumpButton);
+            var jogToggleLabel = new pcui.Label({
+                text: 'Jogging:'
+            });
+            controlPanel.append(jogToggleLabel);
+            var jogToggle = new pcui.BooleanInput({
+                type: 'toggle'
+            });
+            jogToggle.on('change', function(value) {
+                if (value) {
+                    modelEntity.anim.setInteger('speed', 2);
+                } else {
+                    modelEntity.anim.setInteger('speed', 1);
+                }
+            });
+            controlPanel.append(jogToggle);
+
+            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
+
+            document.body.appendChild(controlPanel.dom);
+
+
+            var keyboard = new pc.Keyboard(window);
+
+            var Locomotion = pc.createScript('Locomotion');
+
+            var characterDirection = new pc.Vec3(1, 0, 0);
+            var targetPosition = new pc.Vec3(2,0,1.5);;
+
+            // initialize code called once per entity
+            Locomotion.prototype.initialize = function() {
+                // app.mouse.disableContextMenu();
+                // app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+                document.addEventListener("mousedown", this.onMouseDown);
+            };
+
+            Locomotion.prototype.onMouseDown = function (event) {
+                if (event.button !== 0) return;
+                // Set the character target position to a position on the plane that the user has clicked
+                var cameraEntity = app.root.findByName('Camera');
+                var near = cameraEntity.camera.screenToWorld(event.x, event.y, 0.1);
+                var far = cameraEntity.camera.screenToWorld(event.x, event.y, 1000.0);
+                var result = app.systems.rigidbody.raycastFirst(far, near);
+                if (result) {
+                    targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
+                    modelEntity.anim.setInteger('speed', jogToggle.value ? 2 : 1);
+                }
+            };
+
+            function speedForState(state) {
+                switch (state) {
+                    case 'Walk':
+                        return 2.0;
+                    case 'Jog':
+                        return 4.0;
+                    case 'Jump':
+                    case 'Idle':
+                    default:
+                        return 0.0;
+                }
+            }
+
+            // update code called every frame
+            Locomotion.prototype.postUpdate = function(dt) {
+                
+                // Check for jumping event
+                if(keyboard.wasPressed(pc.KEY_SPACE)) {
+                    var isJumping = modelEntity.anim.baseLayer.activeState === 'Jump';
+                    if (!isJumping) {
+                        this.jumpTime = 0;
+                        modelEntity.anim.setTrigger('jump');
+                    }
+                }
+                
+                // Check for jogging event    
+                if (keyboard.wasPressed(pc.KEY_X)) {
+                    if (modelEntity.anim.baseLayer.activeState === 'Walk') {
+                        modelEntity.anim.setInteger('speed', 2);
+                    }
+                }
+                else if (keyboard.wasReleased(pc.KEY_X)) {
+                    if (modelEntity.anim.baseLayer.activeState === 'Jog') {
+                        modelEntity.anim.setInteger('speed', 1);
+                    }
+                }
+
+                this.isMoving = !modelEntity.position.equals(targetPosition);
+                if (this.isMoving) {
+                    // Update position if target position is not the same as entity position. Base the movement speed on the current state
+                    // Move the character along X & Z axis based on click target position & make character face click direction
+                    var moveSpeed = speedForState(modelEntity.anim.baseLayer.activeState);
+                    if (modelEntity.anim.baseLayer.transitioning) {
+                        var prevMoveSpeed = speedForState(modelEntity.anim.baseLayer.previousState);
+                        var progress = modelEntity.anim.baseLayer.transitionProgress;
+                        moveSpeed = (prevMoveSpeed * (1.0 - progress)) + (moveSpeed * progress);
+                    }
+                    var distance = targetPosition.clone().sub(modelEntity.position);
+                    var direction = distance.clone().normalize();
+                    characterDirection = new pc.Vec3().sub(direction);
+                    var movement = direction.clone().scale(dt * moveSpeed);
+                    if (movement.length() < distance.length()) {
+                        modelEntity.setPosition(modelEntity.position.clone().add(movement));
+                    } else {
+                        modelEntity.position = targetPosition;
+                    }
+                } else {
+                    modelEntity.anim.setInteger('speed', 0);
+                }
+                modelEntity.lookAt(modelEntity.position.clone().add(characterDirection));
+
+            };
+
+            modelEntity.addComponent("script");
+            modelEntity.script.create('Locomotion', {});
+
+            });
+            });
+            });
+            });
+            });
+        }.bind(this));
+        pc.app.assets.add(stateGraphAsset);
+        pc.app.assets.load(stateGraphAsset);
+    };
+    </script>
+</body>
+</html>

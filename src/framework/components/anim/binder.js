@@ -191,7 +191,6 @@ Object.assign(AnimComponentBinder.prototype, {
     },
 
     _createAnimTargetForProperty: function (propertyComponent, propertyHierarchy) {
-
         if (this.handlers && propertyHierarchy[0] === 'weights') {
             return this.handlers.weights(propertyComponent);
         } else if (this.handlers && propertyHierarchy[0] === 'material' && propertyHierarchy.length === 2) {

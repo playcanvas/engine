@@ -4,7 +4,15 @@ var categories = [
         name: "animation",
         examples: [
             "blend",
+<<<<<<< Updated upstream
             "tweening"
+=======
+            "component-properties",
+            "blend-trees-1D",
+            "blend-trees-2D-cartesian",
+            "blend-trees-2D-directional",
+            "locomotion"
+>>>>>>> Stashed changes
         ]
     }, {
         name: "camera",

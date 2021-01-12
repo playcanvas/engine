@@ -1,3 +1,5 @@
+import { ANIM_STATE_START } from './constants';
+
 function AnimStateGraph(data) {
     this._layers = [];
     this._parameters = {};
@@ -41,7 +43,16 @@ function AnimStateGraph(data) {
                 transitions: []
             };
             for (i = 0; i < dataLayer.states.length; i++) {
-                layer.states.push(data.states[dataLayer.states[i]]);
+                var state = data.states[dataLayer.states[i]];
+                layer.states.push(state);
+                if (state.defaultState) {
+                    layer.transitions.push({
+                        from: ANIM_STATE_START,
+                        to: state.name,
+                        priority: Number.MIN_VALUE,
+                        conditions: {}
+                    });
+                }
             }
             for (i = 0; i < dataLayer.transitions.length; i++) {
                 var dataLayerTransition = data.transitions[dataLayer.transitions[i]];

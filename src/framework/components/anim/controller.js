@@ -202,7 +202,7 @@ Object.assign(BlendTree.prototype, {
                 parameterValues = this._parameters.map(function (param) {
                     return this._findParameter(param).value;
                 }.bind(this));
-                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                if (this._parameterValues && (JSON.stringify(this._parameterValues) === JSON.stringify(parameterValues))) {
                     return;
                 }
                 this._parameterValues = parameterValues;
@@ -232,7 +232,7 @@ Object.assign(BlendTree.prototype, {
                 parameterValues = this._parameters.map(function (param) {
                     return this._findParameter(param).value;
                 }.bind(this));
-                if (this._parameterValues && (this._parameterValues.equals(parameterValues))) {
+                if (this._parameterValues && (JSON.stringify(this._parameterValues) === JSON.stringify(parameterValues))) {
                     return;
                 }
                 this._parameterValues = parameterValues;

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Animation Blend Trees - 1D</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/playcanvas.js"></script>
+    <script src="../../build/playcanvas-extras.js"></script>
+    <script src="http://localhost:1340/dist/pcui.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var animStateGraph = {
+            "layers": [
+                {
+                    "name": "locomotion",
+                    "states": [
+                        {
+                            "name": "START"
+                        },
+                        {
+                            "name": "Travel",
+                            "speed": 1.0,
+                            "loop": true,
+                            "blendTree": {
+                                "type": pc.ANIM_BLEND_1D,
+                                "parameter": "speed",
+                                "children": [
+                                    {
+                                        "name": "Idle",
+                                        "point": 0.0
+                                    },
+                                    {
+                                        "name": "Walk",
+                                        "point": 1.0
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "from": "START",
+                            "to": "Travel"
+                        },
+                    ]
+                },
+            ],
+            "parameters": {
+                "speed": {
+                    "name": "speed",
+                    "type": "FLOAT",
+                    "value": 0
+                }
+            }
+        };
+
+        var canvas = document.getElementById("application-canvas");
+
+        window.parent.pc = pc;
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        var miniStats = new pcx.MiniStats(app);
+
+        var entity;
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity(app);
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0, 0, 0)
+        });
+        cameraEntity.translateLocal(0.0, 1.5, 5.0);
+        app.root.addChild(cameraEntity);
+
+        // Create an entity with a light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1, 1),
+            castShadows: true,
+            intensity: 1,
+            shadowBias: 0.2,
+            shadowDistance: 5,
+            normalOffsetBias: 0.05,
+            shadowResolution: 2048
+        });
+        light.setLocalEulerAngles(45, 30, 0);
+        app.root.addChild(light);
+
+        // Load model and animation assets
+        var model = null;
+        var idleAnim = null;
+        var walkAnim = null;
+        var strafeLeftAnim = null;
+        var strafeRightAnim = null;
+        var jogAnim = null;
+
+        var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
+        stateGraphAsset.once('load', function (asset) {
+            var stateGraph = asset.resource;
+        app.assets.loadFromUrl("../assets/models/xbot.glb", "container", function (err, asset) {
+            model = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-idle.glb", "container", function (err, asset) {
+            idleAnim = asset;
+        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk.glb", "container", function (err, asset) {
+            walkAnim = asset;
+
+            var modelEntity = new pc.Entity();
+
+            modelEntity.addComponent("model", {
+                enabled: true,
+                type: "asset",
+                asset: model.resource.model,
+                castShadows: true
+            });
+
+            modelEntity.addComponent('anim', {
+                activate: true,
+            });
+
+            modelEntity.anim.loadStateGraph(stateGraph);
+            var locomotionLayer = modelEntity.anim.baseLayer;
+            locomotionLayer.assignAnimation('Travel.Idle', idleAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Travel.Walk', walkAnim.resource.animations[0].resource);
+
+            app.root.addChild(modelEntity);
+
+            app.start();
+
+            // controls
+
+            var width = 201;
+
+            var controlPanel = new pcui.Panel({
+                headerText: 'Controls',
+                collapsible: true
+            });
+            controlPanel.collapsed = false;
+
+            controlPanel.dom.setAttribute('style', `position: fixed; right: 24px; top: 24px; width: ${width}px; z-index: 9999;`);
+
+            document.body.appendChild(controlPanel.dom);
+
+            var speedSlider = new pcui.SliderInput({
+                pre: 2, 
+                min: 0,
+                max: 1,
+                minSlider: 0,
+                maxSlider: 1
+            });
+            speedSlider.on('change', function (value) {
+                modelEntity.anim.setFloat('speed', value);
+            });
+            controlPanel.content.append(speedSlider);
+
+            });
+            });
+            });
+        }.bind(this));
+        pc.app.assets.add(stateGraphAsset);
+        pc.app.assets.load(stateGraphAsset);
+    </script>
+</body>
+</html>
