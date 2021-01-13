@@ -455,17 +455,15 @@ class Light {
         return this._shape;
     }
 
-    set shape(value) {
-        var sanitizedValue = value ? value : LIGHTSHAPE_PUNCTUAL;
-
-        if (this._shape === sanitizedValue)
+    set shape(value = LIGHTSHAPE_PUNCTUAL) {
+        if (this._shape === value)
             return;
 
-        if (sanitizedValue !== LIGHTSHAPE_PUNCTUAL) {
+        if (value !== LIGHTSHAPE_PUNCTUAL) {
             this.uploadAreaLightLUTs();
         }
 
-        this._shape = sanitizedValue;
+        this._shape = value;
         this._destroyShadowMap();
         this.updateKey();
 
