@@ -74,7 +74,6 @@ Object.assign(LightComponentSystem.prototype, {
 
         var light = new Light();
         light.type = lightTypes[data.type];
-        light.shape = data.shape;
         light._node = component.entity;
         light._scene = this.app.scene;
         component.data.light = light;

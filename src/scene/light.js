@@ -459,7 +459,7 @@ class Light {
         return this._shape;
     }
 
-    set shape(value) {
+    set shape(value = LIGHTSHAPE_PUNCTUAL) {
         if (this._shape === value)
             return;
 
@@ -474,7 +474,6 @@ class Light {
         var stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching shape and back may change it
-
     }
 
     get shadowType() {
