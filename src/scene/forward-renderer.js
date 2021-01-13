@@ -2860,7 +2860,7 @@ class ForwardRenderer {
                 visible.done = true;
 
                 if (layer.onPostCull) {
-                    layer.onPostCull(j);
+                    layer.onPostCull(cameraPass);
                 }
             }
 
