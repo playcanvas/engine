@@ -119,19 +119,11 @@ describe("pc.ElementComponent", function() {
 
         screen.addChild(e);
 
-        expect(screen.screen.hasEvent('set:resolution')).to.be.true;
-        expect(screen.screen.hasEvent('set:referenceresolution')).to.be.true;
-        expect(screen.screen.hasEvent('set:scaleblend')).to.be.true;
-        expect(screen.screen.hasEvent('set:screenspace')).to.be.true;
-        expect(screen.screen.hasEvent('remove')).to.be.true;
+        expect(screen.screen._elements).to.include(e.element);
 
         e.reparent(app.root);
 
-        expect(screen.screen.hasEvent('set:resolution')).to.be.false;
-        expect(screen.screen.hasEvent('set:referenceresolution')).to.be.false;
-        expect(screen.screen.hasEvent('set:scaleblend')).to.be.false;
-        expect(screen.screen.hasEvent('set:screenspace')).to.be.false;
-        expect(screen.screen.hasEvent('remove')).to.be.false;
+        expect(screen.screen._elements).to.not.include(e.element);
     });
 
     it('screen component unbound on destroy', function () {
@@ -144,18 +136,10 @@ describe("pc.ElementComponent", function() {
 
         screen.addChild(e);
 
-        expect(screen.screen.hasEvent('set:resolution')).to.be.true;
-        expect(screen.screen.hasEvent('set:referenceresolution')).to.be.true;
-        expect(screen.screen.hasEvent('set:scaleblend')).to.be.true;
-        expect(screen.screen.hasEvent('set:screenspace')).to.be.true;
-        expect(screen.screen.hasEvent('remove')).to.be.true;
+        expect(screen.screen._elements).to.include(e.element);
 
         e.destroy();
 
-        expect(screen.screen.hasEvent('set:resolution')).to.be.false;
-        expect(screen.screen.hasEvent('set:referenceresolution')).to.be.false;
-        expect(screen.screen.hasEvent('set:scaleblend')).to.be.false;
-        expect(screen.screen.hasEvent('set:screenspace')).to.be.false;
-        expect(screen.screen.hasEvent('remove')).to.be.false;
+        expect(screen.screen._elements).to.not.include(e.element);
     });
 });

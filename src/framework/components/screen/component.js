@@ -42,6 +42,8 @@ class ScreenComponent extends Component {
         this.cull = this._screenSpace;
         this._screenMatrix = new Mat4();
 
+        this._elements = new Set();
+
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
     }
 
@@ -136,12 +138,24 @@ class ScreenComponent extends Component {
         }
     }
 
+    _bindElement(element) {
+        this._elements.add(element);
+    }
+
+    _unbindElement(element) {
+        this._elements.delete(element);
+    }
+
     onRemove() {
         this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         this.fire('remove');
 
-        // remove all events used by elements
+        this._elements.forEach(element => element._onScreenRemove());
+        this._elements.clear();
+
+        // remove all events
         this.off();
+
     }
 
     set resolution(value) {
@@ -160,6 +174,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire("set:resolution", this._resolution);
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
     get resolution() {
@@ -175,6 +190,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire("set:referenceresolution", this._resolution);
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
     get referenceResolution() {
@@ -196,6 +212,8 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire('set:screenspace', this._screenSpace);
+
+        this._elements.forEach(element => element._onScreenSpaceChange());
     }
 
     get screenSpace() {
@@ -230,6 +248,8 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
 
         this.fire("set:scaleblend", this._scaleBlend);
+
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
     get scaleBlend() {
