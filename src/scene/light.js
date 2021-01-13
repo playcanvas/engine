@@ -452,25 +452,26 @@ class Light {
     }
 
     get shape() {
-        return this._shape ? this._shape : LIGHTSHAPE_PUNCTUAL;
+        return this._shape;
     }
 
     set shape(value) {
-        if (this._shape === value)
+        var sanitizedValue = value ? value : LIGHTSHAPE_PUNCTUAL;
+
+        if (this._shape === sanitizedValue)
             return;
 
-        if (value !== LIGHTSHAPE_PUNCTUAL) {
+        if (sanitizedValue !== LIGHTSHAPE_PUNCTUAL) {
             this.uploadAreaLightLUTs();
         }
 
-        this._shape = value ? value : LIGHTSHAPE_PUNCTUAL;
+        this._shape = sanitizedValue;
         this._destroyShadowMap();
         this.updateKey();
 
         var stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching shape and back may change it
-
     }
 
     get shadowType() {
