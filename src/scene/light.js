@@ -452,7 +452,7 @@ class Light {
     }
 
     get shape() {
-        return this._shape;
+        return this._shape ? this._shape : LIGHTSHAPE_PUNCTUAL;
     }
 
     set shape(value) {
@@ -463,7 +463,7 @@ class Light {
             this.uploadAreaLightLUTs();
         }
 
-        this._shape = value;
+        this._shape = value ? value : LIGHTSHAPE_PUNCTUAL;
         this._destroyShadowMap();
         this.updateKey();
 
