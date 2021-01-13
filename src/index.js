@@ -92,7 +92,7 @@ export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
-export { Picker } from './scene/pick.js';
+export { Picker } from './scene/picker.js';
 export { Scene } from './scene/scene.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
