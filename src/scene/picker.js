@@ -43,8 +43,6 @@ class Picker {
         this.device = app.graphicsDevice;
         var device = this.device;
 
-        this.library = device.getProgramLibrary();
-
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
 
