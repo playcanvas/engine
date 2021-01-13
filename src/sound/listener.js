@@ -46,7 +46,7 @@ class Listener {
         const listener = this.listener;
         if (listener) {
             listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10],
-                                     orientation.data[4], orientation.data[5], orientation.data[6]);
+                                    orientation.data[4], orientation.data[5], orientation.data[6]);
         }
     }
 
