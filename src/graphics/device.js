@@ -1764,12 +1764,7 @@ class GraphicsDevice extends EventHandler {
             }
 
             // Remove texture from any uniforms
-            for (var uniformName in this.scope.variables) {
-                var uniform = this.scope.variables[uniformName];
-                if (uniform.value === texture) {
-                    uniform.value = null;
-                }
-            }
+            this.scope.removeValue(texture);
 
             // Update shadowed texture unit state to remove texture from any units
             for (var i = 0; i < this.textureUnits.length; i++) {
