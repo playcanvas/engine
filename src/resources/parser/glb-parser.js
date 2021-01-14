@@ -38,15 +38,14 @@ import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
-import { AnimCurve } from '../../anim/anim-curve.js';
-import { AnimData } from '../../anim/anim-data.js';
-import { AnimTrack } from '../../anim/anim-track.js';
+import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
+import { AnimData } from '../../anim/evaluator/anim-data.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimBinder } from '../../anim/binder/anim-binder.js';
+
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
 import { Asset } from '../../asset/asset.js';
-
-// TODO: this is a nasty dependency. property-locator should be moved to src/anim.
-import { AnimPropertyLocator } from '../../framework/components/anim/property-locator.js';
 
 var isDataURI = function (uri) {
     return /^data:.*,.*$/i.test(uri);
@@ -1241,7 +1240,6 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
 
     var quatArrays = [];
 
-    var propertyLocator = new AnimPropertyLocator();
     var transformSchema = {
         'translation': 'localPosition',
         'rotation': 'localRotation',
@@ -1255,7 +1253,11 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
         var target = channel.target;
         var curve = curves[channel.sampler];
 
-        curve._paths.push(propertyLocator.encode([[nodes[target.node].name], 'graph', [transformSchema[target.path]]]));
+        curve._paths.push(AnimBinder.encode({
+            entityPath: [nodes[target.node].path],
+            component: 'graph',
+            propertyPath: [transformSchema[target.path]]
+        }));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.

@@ -107,15 +107,17 @@ export { Skeleton } from './animation/skeleton.js';
 
 // ANIM
 export * from './anim/constants.js';
-export { AnimBinder } from './anim/anim-binder.js';
-export { AnimClip } from './anim/anim-clip.js';
-export { AnimCurve } from './anim/anim-curve.js';
-export { AnimData } from './anim/anim-data.js';
-export { AnimEvaluator } from './anim/anim-evaluator.js';
-export { AnimSnapshot } from './anim/anim-snapshot.js';
-export { AnimTarget } from './anim/anim-target.js';
-export { AnimTrack } from './anim/anim-track.js';
-export { DefaultAnimBinder } from './anim/default-anim-binder.js';
+export { AnimBinder } from './anim/binder/anim-binder.js';
+export { AnimClip } from './anim/evaluator/anim-clip.js';
+export { AnimCurve } from './anim/evaluator/anim-curve.js';
+export { AnimData } from './anim/evaluator/anim-data.js';
+export { AnimEvaluator } from './anim/evaluator/anim-evaluator.js';
+export { AnimSnapshot } from './anim/evaluator/anim-snapshot.js';
+export { AnimTarget } from './anim/evaluator/anim-target.js';
+export { AnimTrack } from './anim/evaluator/anim-track.js';
+export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
+export * from './anim/controller/constants.js';
+export { AnimController } from './anim/controller/anim-controller.js';
 
 // FONT
 export * from './font/constants.js';
@@ -137,7 +139,7 @@ export { BundleRegistry } from './bundles/bundle-registry.js';
 // RESOURCES
 export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
-export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
+export { AnimStateGraph, AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
 export { AudioHandler } from './resources/audio.js';
 export { BasisParser } from './resources/parser/texture/basis.js';
@@ -205,13 +207,10 @@ export { script } from './framework/script.js';
 export { app, Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
-export * from './framework/components/anim/constants.js';
+export * from './anim/controller/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
-export { AnimComponentLayer } from './framework/components/anim/layer.js';
+export { AnimComponentLayer } from './framework/components/anim/component-layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';
-export { AnimController } from './framework/components/anim/controller.js';
-export { AnimPropertyLocator } from './framework/components/anim/property-locator.js';
-export { AnimStateGraph } from './framework/components/anim/state-graph.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
 export { AudioSourceComponent } from './framework/components/audio-source/component.js';
