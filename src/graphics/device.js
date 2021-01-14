@@ -685,7 +685,6 @@ var GraphicsDevice = function (canvas, options) {
 
     // area light LUT format and flag
     this._areaLightLutFormat = (this.extTextureFloat) ? PIXELFORMAT_RGBA32F : (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : PIXELFORMAT_R8_G8_B8_A8;
-    this._hasAreaLightLuts = false;
 };
 
 GraphicsDevice.prototype = Object.create(EventHandler.prototype);

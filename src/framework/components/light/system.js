@@ -2,7 +2,7 @@ import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
@@ -72,8 +72,13 @@ Object.assign(LightComponentSystem.prototype, {
             data.enabled = data.enable;
         }
 
+        if (!data.shape) {
+            data.shape = LIGHTSHAPE_PUNCTUAL;
+        }
+
         var light = new Light();
         light.type = lightTypes[data.type];
+        light.shape = data.shape;
         light._node = component.entity;
         light._scene = this.app.scene;
         component.data.light = light;

@@ -1014,7 +1014,7 @@ var standard = {
         var usePerspZbufferShadow = false;
         var light;
 
-        var hasAreaLights = device._hasAreaLightLuts && options.lights.some(function (light){
+        var hasAreaLights = options.lights.some(function (light){
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
