@@ -796,10 +796,10 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
                     options.name = targets.length.toString(10);
                 }
 
-                targets.push(new MorphTarget(device, options));
+                targets.push(new MorphTarget(options));
             });
 
-            mesh.morph = new Morph(targets);
+            mesh.morph = new Morph(targets, device);
 
             // set default morph target weights if they're specified
             if (gltfMesh.hasOwnProperty('weights')) {
