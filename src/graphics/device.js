@@ -684,9 +684,13 @@ class GraphicsDevice extends EventHandler {
         this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
         // #endif
 
-        // area light LUT format
-        this._areaLightLutFormat = (this.extTextureFloat) ? PIXELFORMAT_RGBA32F : (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : PIXELFORMAT_R8_G8_B8_A8;
-
+        // area light LUT format - order of preference: half, float, 8bit
+        this._areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) {
+            this._areaLightLutFormat = PIXELFORMAT_RGBA16F;
+        } else if (this.extTextureFloat) {
+            this._areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        }
     }
 
     // #ifdef DEBUG

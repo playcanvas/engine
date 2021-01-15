@@ -99,10 +99,6 @@ class AnimComponentBinder extends DefaultAnimBinder {
         return this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath);
     }
 
-    unresolve(path) {
-
-    }
-
     update(deltaTime) {
         // flag active nodes as dirty
         var activeNodes = this.activeNodes;
