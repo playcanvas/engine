@@ -10,7 +10,7 @@ import {
 } from '../../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
-import { AnimStateGraph } from '../../../resources/anim-state-graph.js';
+import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 
 /**
  * @private

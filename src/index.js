@@ -118,6 +118,7 @@ export { AnimTrack } from './anim/evaluator/anim-track.js';
 export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
 export * from './anim/controller/constants.js';
 export { AnimController } from './anim/controller/anim-controller.js';
+export { AnimStateGraph } from './anim/state-graph/anim-state-graph.js';
 
 // FONT
 export * from './font/constants.js';
@@ -139,7 +140,7 @@ export { BundleRegistry } from './bundles/bundle-registry.js';
 // RESOURCES
 export { basisDownload, basisSetDownloadConfig, basisDownloadFromConfig, basisInitialize, basisTargetFormat, basisTranscode } from './resources/basis.js';
 export { AnimClipHandler } from './resources/anim-clip.js';
-export { AnimStateGraph, AnimStateGraphHandler } from './resources/anim-state-graph.js';
+export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
 export { AnimationHandler } from './resources/animation.js';
 export { AudioHandler } from './resources/audio.js';
 export { BasisParser } from './resources/parser/texture/basis.js';
