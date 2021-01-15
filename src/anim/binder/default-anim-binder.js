@@ -17,6 +17,17 @@ class DefaultAnimBinder {
 
         if (!graph) return;
 
+        var nodes = { };
+        // cache node names so we can quickly resolve animation paths
+        var flatten = function (node) {
+            nodes[node.name] = node;
+            for (var i = 0; i < node.children.length; ++i) {
+                flatten(node.children[i]);
+            }
+        };
+        flatten(graph);
+        this.nodes = nodes;
+
         var findMeshInstances = function (node) {
 
             // walk up to the first parent node of entity type (skips internal nodes of Model)
@@ -118,6 +129,10 @@ class DefaultAnimBinder {
 
         var node = this.graph.root.findByPath(`${this.graph.path}/${propertyLocation.entityPath[0] || ""}`);
         if (!node) {
+            var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
+            node = this.nodes[entityPath[entityPath.length - 1] || ""];
+        }
+        if (!node) {
             return null;
         }
 
@@ -146,7 +161,8 @@ class DefaultAnimBinder {
         if (propertyLocation.component !== 'graph')
             return;
 
-        var node = this.nodes[propertyLocation.entityPath[0]];
+        var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
+        var node = this.nodes[entityPath[entityPath.length - 1] || ""];
 
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {
