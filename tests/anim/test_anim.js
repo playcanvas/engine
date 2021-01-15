@@ -1,23 +1,32 @@
 describe("pc.AnimEvaluator", function () {
 
     it("AnimEvaluator: looping", function () {
+
+        new pc.Application(document.createElement('canvas'));
+        // build the graph to be animated
+        var parent = new pc.GraphNode("parent");
+        var child1 = new pc.GraphNode("child1");
+        var child2 = new pc.GraphNode("child2");
+
+        pc.app.root.addChild(parent);
+        parent.addChild(child1);
+        child1.addChild(child2);
         // create curve
         var keys = new pc.AnimData(1, [0, 1, 2]);
         var translations = new pc.AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curve = new pc.AnimCurve(["child1/graph/localPosition"], 0, 0, pc.INTERPOLATION_LINEAR);
+        var curvePath = pc.AnimBinder.encode({
+            entityPath: 'child1',
+            component: 'graph',
+            propertyPath: 'localPosition'
+        });
+        console.log(curvePath);
+        var curve = new pc.AnimCurve([curvePath], 0, 0, pc.INTERPOLATION_LINEAR);
 
         // construct the animation track
         var track = new pc.AnimTrack("test track", 2, [keys], [translations], [curve]);
 
         // construct an animation clip
         var clip = new pc.AnimClip(track, 0.0, 1.0, true, true);
-
-        // build the graph to be animated
-        var parent = new pc.GraphNode("parent");
-        var child1 = new pc.GraphNode("child1");
-        var child2 = new pc.GraphNode("child2");
-        parent.addChild(child1);
-        child1.addChild(child2);
 
         // construct the animation evaluator
         var animEvaluator = new pc.AnimEvaluator(new pc.DefaultAnimBinder(parent));

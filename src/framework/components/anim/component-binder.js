@@ -1,5 +1,6 @@
-import { AnimTarget } from '../../../anim/anim-target.js';
-import { DefaultAnimBinder } from '../../../anim/default-anim-binder.js';
+import { AnimTarget } from '../../../anim/evaluator/anim-target.js';
+import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
+import { AnimBinder } from '../../../anim/binder/anim-binder.js';
 
 import { Color } from '../../../core/color.js';
 
@@ -66,36 +67,32 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
-        var pathSections = this.propertyLocator.decode(path);
+        var propertyLocation = AnimBinder.decode(path);
 
-        var entityHierarchy = pathSections[0];
-        var component = pathSections[1];
-        var propertyHierarchy = pathSections[2];
-
-        var entity = this._getEntityFromHierarchy(entityHierarchy);
+        var entity = this._getEntityFromHierarchy(propertyLocation.entityPath);
 
         if (!entity)
             return null;
 
         var propertyComponent;
 
-        switch (component) {
+        switch (propertyLocation.component) {
             case 'entity':
                 propertyComponent = entity;
                 break;
             case 'graph':
-                if (!this.nodes || !this.nodes[entityHierarchy[0]]) {
-                    return null;
+                if (entity.model && entity.model.model && entity.model.model.graph) {
+                    propertyComponent = pc.app.root.findByPath(`${entity.model.model.graph.path}/${propertyLocation.entityPath[0]}`);
                 }
-                propertyComponent = this.nodes[entityHierarchy[0]].node;
+                if (!propertyComponent) return null;
                 break;
             default:
-                propertyComponent = entity.findComponent(component);
+                propertyComponent = entity.findComponent(propertyLocation.component);
                 if (!propertyComponent)
                     return null;
         }
 
-        return this._createAnimTargetForProperty(propertyComponent, propertyHierarchy);
+        return this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath);
     }
 
     update(deltaTime) {

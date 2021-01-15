@@ -1,3 +1,9 @@
+/**
+ * @private
+ * @class
+ * @name pc.AnimStateGraph
+ * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
+ */
 class AnimStateGraph {
     constructor(data) {
         this._layers = [];
