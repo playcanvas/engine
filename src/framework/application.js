@@ -17,9 +17,9 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION,
     TYPE_FLOAT32
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
-import { GraphicsDevice } from '../graphics/device.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';

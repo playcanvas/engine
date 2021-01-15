@@ -1,4 +1,4 @@
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './graphics.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 

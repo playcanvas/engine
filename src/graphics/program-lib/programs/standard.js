@@ -6,7 +6,7 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../graphics.js';
+} from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {

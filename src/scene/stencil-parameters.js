@@ -1,4 +1,4 @@
-import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/graphics.js';
+import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/constants.js';
 
 /**
  * @class

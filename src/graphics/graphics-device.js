@@ -28,7 +28,7 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation
-} from './graphics.js';
+} from './constants.js';
 
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';

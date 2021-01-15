@@ -5,7 +5,7 @@ import {
     BLENDEQUATION_ADD,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,

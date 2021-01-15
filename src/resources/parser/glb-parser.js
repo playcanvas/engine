@@ -18,7 +18,7 @@ import {
     PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP, PRIMITIVE_LINES, PRIMITIVE_POINTS, PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
