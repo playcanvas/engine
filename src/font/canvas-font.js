@@ -253,7 +253,7 @@ class CanvasFont extends EventHandler {
             this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
             var xoffset = this.padding + (this.glyphSize - width) / 2;
-            var yoffset = -this.padding + metrics[ch].descent - maxDescent;
+            var yoffset = -this.padding;
             var xadvance = width;
 
             this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
@@ -393,8 +393,7 @@ class CanvasFont extends EventHandler {
         var div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
-        div.style.font = this.fontName;
-        div.style.fontSize = this.fontSize + 'px';
+        div.style.font = this.fontSize + 'px ' + this.fontFamily;
 
         var body = document.body;
         body.appendChild(div);
