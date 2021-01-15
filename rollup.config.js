@@ -295,7 +295,7 @@ if (process.env.target) {
     switch (process.env.target.toLowerCase()) {
         case "es5":      targets = [target_release_es5,    target_extras]; break;
         case "es5min":   targets = [target_release_es5min, target_extras]; break;
-        case "es6":      targets = [target_release_es6 ,   target_extras]; break;
+        case "es6":      targets = [target_release_es6,    target_extras]; break;
         case "debug":    targets = [target_debug,          target_extras]; break;
         case "profiler": targets = [target_profiler,       target_extras]; break;
     }
