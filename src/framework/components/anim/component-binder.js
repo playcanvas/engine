@@ -84,6 +84,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 if (entity.model && entity.model.model && entity.model.model.graph) {
                     propertyComponent = pc.app.root.findByPath(`${entity.model.model.graph.path}/${propertyLocation.entityPath[0]}`);
                 }
+                if (!propertyComponent) {
+                    var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
+                    propertyComponent = this.nodes[entityPath[entityPath.length - 1] || ""];
+                }
                 if (!propertyComponent) return null;
                 break;
             default:
@@ -93,6 +97,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
         }
 
         return this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath);
+    }
+
+    unresolve(path) {
+
     }
 
     update(deltaTime) {
