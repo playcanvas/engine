@@ -49,6 +49,47 @@ class AnimBinder {
 
     /**
      * @private
+     * @static
+     * @function
+     * @name pc.AnimPropertyLocator#encode
+     * @description Converts a locator array into its string version
+     * @param {Array} locator - The property location in the scene defined as an array
+     * @returns {string} The locator encoded as a string
+     * @example
+     * // returns 'spotLight/light/color.r'
+     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
+     */
+    static encode(locator) {
+        return AnimBinder.joinPath([
+            AnimBinder.joinPath(Array.isArray(locator.entityPath) ? locator.entityPath : [locator.entityPath]),
+            locator.component,
+            AnimBinder.joinPath(Array.isArray(locator.propertyPath) ? locator.propertyPath : [locator.propertyPath])
+        ], '/');
+    }
+
+    /**
+     * @private
+     * @static
+     * @function
+     * @name pc.AnimPropertyLocator#decode
+     * @description Converts a locator string into its array version
+     * @param {Array} locator - The property location in the scene defined as a string
+     * @returns {Array} - The locator decoded into an array
+     * @example
+     * // returns { entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] }
+     * decode('spotLight/light/color.r');
+     */
+    static decode(locator) {
+        var locatorSections = AnimBinder.splitPath(locator, '/');
+        return {
+            entityPath: AnimBinder.splitPath(locatorSections[0]),
+            component: locatorSections[1],
+            propertyPath: AnimBinder.splitPath(locatorSections[2])
+        };
+    }
+
+    /**
+     * @private
      * @function
      * @name pc.AnimBinder#resolve
      * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
@@ -80,47 +121,6 @@ class AnimBinder {
      */
     update(deltaTime) {
 
-    }
-
-    /**
-     * @private
-     * @static
-     * @function
-     * @name pc.AnimPropertyLocator#encode
-     * @description Converts a locator array into its string version
-     * @param {Array} locator - The property location in the scene defined as an array
-     * @returns {string} The locator encoded as a string
-     * @example
-     * // returns 'spotLight/light/color.r'
-     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
-     */
-    static encode(locator) {
-        return AnimBinder.joinPath([
-            AnimBinder.joinPath(locator.entityPath),
-            locator.component,
-            AnimBinder.joinPath(locator.propertyPath)
-        ], '/');
-    }
-
-    /**
-     * @private
-     * @static
-     * @function
-     * @name pc.AnimPropertyLocator#decode
-     * @description Converts a locator string into its array version
-     * @param {Array} locator - The property location in the scene defined as a string
-     * @returns {Array} - The locator decoded into an array
-     * @example
-     * // returns { entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] }
-     * decode('spotLight/light/color.r');
-     */
-    static decode(locator) {
-        var locatorSections = AnimBinder.splitPath(locator, '/');
-        return {
-            entityPath: AnimBinder.splitPath(locatorSections[0]),
-            component: locatorSections[1],
-            propertyPath: AnimBinder.splitPath(locatorSections[2])
-        };
     }
 }
 
