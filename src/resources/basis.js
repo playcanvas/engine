@@ -1,11 +1,4 @@
-import {
-    PIXELFORMAT_ASTC_4x4,
-    PIXELFORMAT_ATC_RGB, PIXELFORMAT_ATC_RGBA,
-    PIXELFORMAT_DXT1, PIXELFORMAT_DXT5,
-    PIXELFORMAT_ETC1, PIXELFORMAT_ETC2_RGBA,
-    PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4
-} from '../graphics/graphics.js';
+import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/graphics.js';
 
 import { http } from '../net/http.js';
 
@@ -56,18 +49,22 @@ function BasisWorker() {
 
     // Map basis format to engine pixel format
     var basisToEngineMapping = { };
-    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = PIXELFORMAT_ETC1;
-    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = PIXELFORMAT_ETC2_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = PIXELFORMAT_DXT1;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = PIXELFORMAT_DXT5;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = PIXELFORMAT_PVRTC_4BPP_RGB_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = PIXELFORMAT_ASTC_4x4;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = PIXELFORMAT_ATC_RGB;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = PIXELFORMAT_ATC_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = PIXELFORMAT_R8_G8_B8_A8;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = PIXELFORMAT_R5_G6_B5;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = PIXELFORMAT_R4_G4_B4_A4;
+    // Note that we don't specify the enum constants directly because they're not
+    // available in the worker. And if they are specified in the worker code string,
+    // they unfortunately get mangled by Terser on minification. So let's write in
+    // the actual values directly.
+    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = 21; // PIXELFORMAT_ETC1
+    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = 23; // PIXELFORMAT_ETC2_RGBA
+    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = 8;  // PIXELFORMAT_DXT1
+    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = 10; // PIXELFORMAT_DXT5
+    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = 26; // PIXELFORMAT_PVRTC_4BPP_RGB_1
+    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = 27; // PIXELFORMAT_PVRTC_4BPP_RGBA_1
+    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = 28; // PIXELFORMAT_ASTC_4x4
+    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = 29; // PIXELFORMAT_ATC_RGB
+    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = 30; // PIXELFORMAT_ATC_RGBA
+    basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = 7;  // PIXELFORMAT_R8_G8_B8_A8
+    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = 3;  // PIXELFORMAT_R5_G6_B5
+    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = 5;  // PIXELFORMAT_R4_G4_B4_A4
 
     var hasPerformance = typeof performance !== 'undefined';
 
@@ -359,19 +356,6 @@ function basisInitialize(basisCode, basisModule, callback) {
     var code = [
         "/* basis.js */",
         basisCode,
-        "/* mappings */",
-        "var PIXELFORMAT_ETC1 = " + PIXELFORMAT_ETC1 + ";",
-        "var PIXELFORMAT_ETC2_RGBA = " + PIXELFORMAT_ETC2_RGBA + ";",
-        "var PIXELFORMAT_DXT1 = " + PIXELFORMAT_DXT1 + ";",
-        "var PIXELFORMAT_DXT5 = " + PIXELFORMAT_DXT5 + ";",
-        "var PIXELFORMAT_PVRTC_4BPP_RGB_1 = " + PIXELFORMAT_PVRTC_4BPP_RGB_1 + ";",
-        "var PIXELFORMAT_PVRTC_4BPP_RGBA_1 = " + PIXELFORMAT_PVRTC_4BPP_RGBA_1 + ";",
-        "var PIXELFORMAT_ASTC_4x4 = " + PIXELFORMAT_ASTC_4x4 + ";",
-        "var PIXELFORMAT_ATC_RGB = " + PIXELFORMAT_ATC_RGB + ";",
-        "var PIXELFORMAT_ATC_RGBA = " + PIXELFORMAT_ATC_RGBA + ";",
-        "var PIXELFORMAT_R8_G8_B8_A8 = " + PIXELFORMAT_R8_G8_B8_A8 + ";",
-        "var PIXELFORMAT_R5_G6_B5 = " + PIXELFORMAT_R5_G6_B5 + ";",
-        "var PIXELFORMAT_R4_G4_B4_A4 = " + PIXELFORMAT_R4_G4_B4_A4 + ";",
         "",
         "/* worker */",
         '(' + BasisWorker.toString() + ')()\n\n'

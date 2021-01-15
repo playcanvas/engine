@@ -47,7 +47,6 @@
     "babel-eslint": "10.1.0",
     "chai": "^4.2.0",
     "eslint": "^7.17.0",
-    "google-closure-compiler": "^20210106.0.0",
     "http-server": "^0.12.3",
     "jsdoc": "^3.6.6",
     "karma": "^6.0.0",
@@ -57,19 +56,18 @@
     "mocha": "^8.2.1",
     "preprocessor": "^1.4.0",
     "rollup": "^2.36.1",
+    "rollup-plugin-terser": "^7.0.2",
     "sinon": "^9.2.3",
     "tsd-jsdoc": "^2.5.0",
-    "typescript": "^4.1.3",
-    "uglify-js": "^3.12.4"
+    "typescript": "^4.1.3"
   },
   "scripts": {
     "build": "rollup -c",
     "build:es5": "rollup -c --environment target:es5",
+    "build:es5min": "rollup -c --environment target:es5min",
     "build:es6": "rollup -c --environment target:es6",
     "build:debug": "rollup -c --environment target:debug",
     "build:profiler": "rollup -c --environment target:profiler",
-    "build:all": "npm run build && npm run closure",
-    "closure": "google-closure-compiler --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=nonStandardJsDocs --jscomp_off=checkTypes --externs externs.js --language_in=ECMASCRIPT5_STRICT --js build/playcanvas.js --js_output_file build/playcanvas.min.js",
     "docs": "jsdoc -c conf-api.json",
     "lint": "eslint --ext .js examples extras src rollup.config.js",
     "serve": "http-server build -a localhost -p 51000",
@@ -78,7 +76,6 @@
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
     "tsd": "jsdoc -c conf-tsd.json",
-    "uglify": "uglifyjs build/playcanvas.js --compress --mangle --output build/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz"
   }
 }
