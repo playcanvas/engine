@@ -32,11 +32,11 @@ import {
     TEXTURELOCK_READ, TEXTURELOCK_WRITE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from './graphics/graphics.js';
+} from './graphics/constants.js';
 import { drawQuadWithShader } from './graphics/simple-post-effect.js';
 import { programlib } from './graphics/program-lib/program-lib.js';
 import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-import { GraphicsDevice } from './graphics/device.js';
+import { GraphicsDevice } from './graphics/graphics-device.js';
 import { IndexBuffer } from './graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
 import { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';

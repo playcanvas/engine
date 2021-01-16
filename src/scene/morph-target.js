@@ -1,6 +1,6 @@
 import { BoundingBox } from '../shape/bounding-box.js';
 
-import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/graphics.js';
+import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 

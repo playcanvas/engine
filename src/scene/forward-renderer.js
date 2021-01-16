@@ -21,7 +21,7 @@ import {
     SEMANTIC_ATTR, SEMANTIC_POSITION,
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';

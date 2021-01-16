@@ -6,7 +6,7 @@ import { Vec2 } from '../../../math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR } from '../../../graphics/graphics.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR } from '../../../graphics/constants.js';
 import { VertexIterator } from '../../../graphics/vertex-iterator.js';
 
 import { createMesh } from '../../../scene/procedural.js';

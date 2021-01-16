@@ -20,7 +20,7 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';

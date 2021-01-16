@@ -10,7 +10,7 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 

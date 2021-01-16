@@ -3,7 +3,7 @@ import { Color } from '../../../core/color.js';
 import {
     CULLFACE_NONE,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/graphics.js';
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
