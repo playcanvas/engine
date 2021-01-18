@@ -459,19 +459,7 @@ function Application(canvas, options) {
     });
 
     // placeholder for area light luts
-    var placeholderLutTex =  new Texture(this.graphicsDevice, {
-        width: 2,
-        height: 2,
-        format: PIXELFORMAT_R8_G8_B8_A8
-    });
-    placeholderLutTex.name = 'placeholder';
-
-    var pixels = placeholderLutTex.lock();
-    pixels.fill(0);
-    placeholderLutTex.unlock();
-
-    this.graphicsDevice.scope.resolve('areaLightsLutTex1').setValue(placeholderLutTex);
-    this.graphicsDevice.scope.resolve('areaLightsLutTex2').setValue(placeholderLutTex);
+    this._createAreaLightPlaceholderLuts();
 
     if (this.graphicsDevice.webgl2) {
         // WebGL 2 depth layer just copies existing depth
@@ -1033,6 +1021,16 @@ Object.assign(Application.prototype, {
         }
     },
 
+    // handle area light property
+    _handleAreaLightDataProperty: function (prop) {
+        var asset = this.assets.get(prop);
+        if (asset) {
+            this.setAreaLightData(asset);
+        } else {
+            this.assets.once('add:' + prop, this.setAreaLightData, this);
+        }
+    },
+
     // set application properties from data file
     _parseApplicationProperties: function (props, callback) {
         var i;
@@ -1106,12 +1104,7 @@ Object.assign(Application.prototype, {
         }
 
         if (props.areaLightData) {
-            asset = this.assets.get(props.areaLightData);
-            if (asset) {
-                this.setAreaLightData(asset);
-            } else {
-                this.assets.once('add:' + props.areaLightData, this.setAreaLightData, this);
-            }
+            this._handleAreaLightDataProperty(props.areaLightData);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1697,8 +1690,25 @@ Object.assign(Application.prototype, {
         }
     },
 
+    // placeholder textures for area light luts
+    _createAreaLightPlaceholderLuts: function () {
+        var placeholderLutTex =  new Texture(this.graphicsDevice, {
+            width: 2,
+            height: 2,
+            format: PIXELFORMAT_R8_G8_B8_A8
+        });
+        placeholderLutTex.name = 'placeholder';
+
+        var pixels = placeholderLutTex.lock();
+        pixels.fill(0);
+        placeholderLutTex.unlock();
+
+        this.graphicsDevice.scope.resolve('areaLightsLutTex1').setValue(placeholderLutTex);
+        this.graphicsDevice.scope.resolve('areaLightsLutTex2').setValue(placeholderLutTex);
+    },
+
     // creates LUT texture used by area lights
-    _uploadAreaLightLUTs: function (asset) {
+    _uploadAreaLightLuts: function (asset) {
         this._areaLightLuts = {
             data1: new Float32Array(asset.resource, 0, 16384),
             data2: new Float32Array(asset.resource, 16384 * 4, 16384),
@@ -1813,18 +1823,20 @@ Object.assign(Application.prototype, {
      * @function
      * @private
      * @name pc.Application#setAreaLightData
-     * @description Sets the area light LUT asset to current scene.
+     * @description Sets the area light LUT asset for this app.
      * @param {pc.Asset} asset - Asset of type `binary` to be set.
      */
     setAreaLightData: function (asset) {
         if (asset) {
             var self = this;
             asset.ready(function (asset) {
-                self._uploadAreaLightLUTs(asset);
+                self._uploadAreaLightLuts(asset);
             });
             this.assets.load(asset);
         }
-        // TODO: decide what to do in this case
+        // #ifdef DEBUG
+        console.warn("setAreaLightData: asset is not valid");
+        // #endif
     },
 
     /**
