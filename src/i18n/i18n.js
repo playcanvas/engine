@@ -1,7 +1,5 @@
 import { EventHandler } from '../core/event-handler.js';
 
-import { Asset } from '../asset/asset.js';
-
 import { I18nParser } from './i18n-parser.js';
 
 // Maps locale to function that returns the plural index
