@@ -27,4 +27,4 @@ var saveByteArray = (function () {
 
 var version = new Float32Array([0.0]);
 
-saveByteArray([luts.data1, luts.data2, version], 'luts.bin');
+saveByteArray([luts.data1, luts.data2, version], 'area-light-luts.bin');
