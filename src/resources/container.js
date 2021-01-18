@@ -30,7 +30,7 @@ class ContainerResource {
     }
 
     instantiateModelEntity(options) {
-        var entity = new pc.Entity();
+        var entity = new Entity();
         entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
         return entity;
     }
