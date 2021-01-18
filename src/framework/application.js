@@ -12,11 +12,10 @@ import { http } from '../net/http.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
+    FILTER_NEAREST,
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, 
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION,
-    TEXTURETYPE_DEFAULT,
     TYPE_FLOAT32
 } from '../graphics/graphics.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
@@ -457,9 +456,6 @@ function Application(canvas, options) {
         name: "World",
         id: LAYERID_WORLD
     });
-
-    // placeholder for area light luts
-    this._createAreaLightPlaceholderLuts();
 
     if (this.graphicsDevice.webgl2) {
         // WebGL 2 depth layer just copies existing depth
@@ -1690,135 +1686,6 @@ Object.assign(Application.prototype, {
         }
     },
 
-    // placeholder textures for area light luts
-    _createAreaLightPlaceholderLuts: function () {
-        var placeholderLutTex =  new Texture(this.graphicsDevice, {
-            width: 2,
-            height: 2,
-            format: PIXELFORMAT_R8_G8_B8_A8
-        });
-        placeholderLutTex.name = 'placeholder';
-
-        var pixels = placeholderLutTex.lock();
-        pixels.fill(0);
-        placeholderLutTex.unlock();
-
-        this.graphicsDevice.scope.resolve('areaLightsLutTex1').setValue(placeholderLutTex);
-        this.graphicsDevice.scope.resolve('areaLightsLutTex2').setValue(placeholderLutTex);
-    },
-
-    // creates LUT texture used by area lights
-    _uploadAreaLightLuts: function (asset) {
-        this._areaLightLuts = {
-            data1: new Float32Array(asset.resource, 0, 16384),
-            data2: new Float32Array(asset.resource, 16384 * 4, 16384),
-            version: new Float32Array(asset.resource, 32768 * 4, 1)[0]
-        };
-
-        function createTexture(device, data, format) {
-            var tex = new Texture(device, {
-                width: 64,
-                height: 64,
-                format: format,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE,
-                type: TEXTURETYPE_DEFAULT,
-                magFilter: FILTER_LINEAR,
-                minFilter: FILTER_NEAREST,
-                anisotropy: 1
-            });
-
-            tex.lock().set(data);
-            tex.unlock();
-            tex.upload();
-
-            return tex;
-        }
-
-        function offsetScale(data, offset, scale) {
-
-            var count = data.length;
-            var ret = new Float32Array(count);
-            for (var i = 0; i < count; i++) {
-                var n = i % 4;
-                ret[i] = (data[i] + offset[n]) * scale[n];
-            }
-            return ret;
-        }
-
-        function convertToHalfFloat(data) {
-
-            var count = data.length;
-            var ret = new Uint16Array(count);
-            var float2Half = math.float2Half;
-            for (var i = 0; i < count; i++) {
-                ret[i] = float2Half(data[i]);
-            }
-
-            return ret;
-        }
-
-        function convertToUint(data){
-
-            var count = data.length;
-            var ret = new Uint8ClampedArray(count);
-            for (var i = 0; i < count; i++) {
-                ret[i] = data[i] * 255;
-            }
-
-            return ret;
-        }
-
-        // create texture if not already
-        var luts = this._areaLightLuts;
-        if (luts && !luts.ready) {
-            if (luts.version !== 0) {
-                console.warn(`areaLightData version: ${luts.version} is not yet supported!`);
-            }
-
-            luts.ready = true;
-            var device = this.graphicsDevice;
-            var data1, data2;
-            var format = device._areaLightLutFormat;
-
-            // pick format for lut texture
-            if (format === PIXELFORMAT_RGBA32F) {
-
-                // float
-                data1 = luts.data1;
-                data2 = luts.data2;
-
-            } else if (format === PIXELFORMAT_RGBA16F) {
-
-                // half float
-                data1 = convertToHalfFloat(luts.data1);
-                data2 = convertToHalfFloat(luts.data2);
-
-            } else {
-
-                // low precision format
-                // offset and scale to avoid clipping and increase precision - this is undone in the shader
-
-                var o1 = [0.0, 0.2976, 0.01381, 0.0];
-                var s1 = [0.999, 3.08737, 1.6546, 0.603249];
-
-                var o2 = [-0.306897, 0.0, 0.0, 0.0];
-                var s2 = [1.442787, 1.0, 1.0, 1.0];
-
-                data1 = convertToUint(offsetScale(luts.data1, o1, s1));
-                data2 = convertToUint(offsetScale(luts.data2, o2, s2));
-
-            }
-
-            var tex1 = createTexture(device, data1, format);
-            var tex2 = createTexture(device, data2, format);
-
-            // assign to scope variables
-            device.scope.resolve('areaLightsLutTex1').setValue(tex1);
-            device.scope.resolve('areaLightsLutTex2').setValue(tex2);
-        }
-    },
-
     /**
      * @function
      * @private
@@ -1828,9 +1695,9 @@ Object.assign(Application.prototype, {
      */
     setAreaLightData: function (asset) {
         if (asset) {
-            var self = this;
+            var renderer = this.renderer;
             asset.ready(function (asset) {
-                self._uploadAreaLightLuts(asset);
+                renderer._uploadAreaLightLuts(asset.resource);
             });
             this.assets.load(asset);
         }
