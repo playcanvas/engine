@@ -413,7 +413,7 @@ var standard = {
      * @name _fsAddBaseCode
      * @description Add "Base" Code section to fragment shader.
      * @param {string} code - Current fragment shader code.
-     * @param {pc.GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} chunks - All available shader chunks.
      * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
@@ -435,7 +435,7 @@ var standard = {
      * @name _fsAddStartCode
      * @description Add "Start" Code section to fragment shader.
      * @param {string} code -  Current fragment shader code.
-     * @param {pc.GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} chunks - All available shader chunks.
      * @param {object} options - The Shader Definition options.
      * @returns {string} The new fragment shader code (old+new).
