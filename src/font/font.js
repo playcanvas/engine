@@ -2,7 +2,7 @@ import { FONT_MSDF } from './constants.js';
 
 /**
  * @class
- * @name pc.Font
+ * @name Font
  * @classdesc Represents the resource of a font asset.
  * @param {pc.Texture[]} textures - The font textures.
  * @param {object} data - The font data.

@@ -9,7 +9,7 @@ var defaultOptions = {
 
 /**
  * @class
- * @name pc.RenderTarget
+ * @name RenderTarget
  * @classdesc A render target is a rectangular rendering surface.
  * @description Creates a new render target. A color buffer or a depth buffer must be set.
  * @param {object} options - Object for passing optional arguments.
@@ -98,7 +98,7 @@ class RenderTarget {
 
     /**
      * @function
-     * @name pc.RenderTarget#destroy
+     * @name RenderTarget#destroy
      * @description Frees resources associated with this render target.
      */
     destroy() {
@@ -148,7 +148,7 @@ class RenderTarget {
 
     /**
      * @function
-     * @name pc.RenderTarget#resolve
+     * @name RenderTarget#resolve
      * @description If samples > 1, resolves the anti-aliased render target (WebGL2 only).
      * When you're rendering to an anti-aliased render target, pixels aren't written directly to the readable texture.
      * Instead, they're first written to a MSAA buffer, where each sample for each pixel is stored independently.
@@ -175,7 +175,7 @@ class RenderTarget {
 
     /**
      * @function
-     * @name pc.RenderTarget#copy
+     * @name RenderTarget#copy
      * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
      * Depth buffer can only be copied on WebGL 2.0.
      * @param {pc.RenderTarget} source - Source render target to copy from.
@@ -199,7 +199,7 @@ class RenderTarget {
 
     /**
      * @readonly
-     * @name pc.RenderTarget#colorBuffer
+     * @name RenderTarget#colorBuffer
      * @type {pc.Texture}
      * @description Color buffer set up on the render target.
      */
@@ -209,7 +209,7 @@ class RenderTarget {
 
     /**
      * @readonly
-     * @name pc.RenderTarget#depthBuffer
+     * @name RenderTarget#depthBuffer
      * @type {pc.Texture}
      * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
      * Not available, if depth property was used instead.
@@ -220,7 +220,7 @@ class RenderTarget {
 
     /**
      * @readonly
-     * @name pc.RenderTarget#face
+     * @name RenderTarget#face
      * @type {number}
      * @description If the render target is bound to a cubemap, this property
      * specifies which face of the cubemap is rendered to. Can be:
@@ -238,7 +238,7 @@ class RenderTarget {
 
     /**
      * @readonly
-     * @name pc.RenderTarget#width
+     * @name RenderTarget#width
      * @type {number}
      * @description Width of the render target in pixels.
      */
@@ -248,7 +248,7 @@ class RenderTarget {
 
     /**
      * @readonly
-     * @name pc.RenderTarget#height
+     * @name RenderTarget#height
      * @type {number}
      * @description Height of the render target in pixels.
      */

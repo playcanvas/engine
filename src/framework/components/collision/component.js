@@ -5,7 +5,7 @@ import { Component } from '../component.js';
 /**
  * @component
  * @class
- * @name pc.CollisionComponent
+ * @name CollisionComponent
  * @augments pc.Component
  * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent}
  * to make a collision volume that can be simulated using the physics engine.
@@ -71,28 +71,28 @@ class CollisionComponent extends Component {
     // Events Documentation
     /**
      * @event
-     * @name pc.CollisionComponent#contact
+     * @name CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
      * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#collisionstart
+     * @name CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
      * @param {pc.ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#collisionend
+     * @name CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
      * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
      */
 
     /**
      * @event
-     * @name pc.CollisionComponent#triggerenter
+     * @name CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
@@ -100,7 +100,7 @@ class CollisionComponent extends Component {
 
     /**
      * @event
-     * @name pc.CollisionComponent#triggerleave
+     * @name CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.

@@ -5,7 +5,7 @@ import { hasAudio, hasAudioContext } from './capabilities.js';
 /**
  * @private
  * @class
- * @name pc.Channel
+ * @name Channel
  * @classdesc A channel is created when the pc.SoundManager begins playback of a pc.Sound. Usually created internally by
  * pc.SoundManager#playSound or pc.SoundManager#playSound3d. Developers usually won't have to create Channels manually.
  * @param {pc.SoundManager} manager - The SoundManager instance.
@@ -48,7 +48,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#getVolume
+     * @name Channel#getVolume
      * @description Get the current value for the volume. Between 0 and 1.
      * @returns {number} The volume of the channel.
      */
@@ -59,7 +59,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#getLoop
+     * @name Channel#getLoop
      * @description Get the current looping state of the Channel.
      * @returns {boolean} The loop property for the channel.
      */
@@ -70,7 +70,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#setLoop
+     * @name Channel#setLoop
      * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
      * @param {boolean} loop - True to loop the sound, false otherwise.
      */
@@ -84,7 +84,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#getPitch
+     * @name Channel#getPitch
      * @description Get the current pitch of the Channel.
      * @returns {number} The pitch of the channel.
      */
@@ -95,7 +95,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#onManagerVolumeChange
+     * @name Channel#onManagerVolumeChange
      * @description Handle the manager's 'volumechange' event.
      */
     onManagerVolumeChange() {
@@ -105,7 +105,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#onManagerSuspend
+     * @name Channel#onManagerSuspend
      * @description Handle the manager's 'suspend' event.
      */
     onManagerSuspend() {
@@ -118,7 +118,7 @@ class Channel {
     /**
      * @private
      * @function
-     * @name pc.Channel#onManagerResume
+     * @name Channel#onManagerResume
      * @description Handle the manager's 'resume' event.
      */
     onManagerResume() {
@@ -134,7 +134,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel#play
+         * @name Channel#play
          * @description Begin playback of sound.
          */
         play: function () {
@@ -168,7 +168,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel#pause
+         * @name Channel#pause
          * @description Pause playback of sound. Call unpause() to resume playback from the same position.
          */
         pause: function () {
@@ -184,7 +184,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel#unpause
+         * @name Channel#unpause
          * @description Resume playback of the sound. Playback resumes at the point that the audio was paused.
          */
         unpause: function () {
@@ -212,7 +212,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel#stop
+         * @name Channel#stop
          * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
          */
         stop: function () {
@@ -229,7 +229,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.Channel#setVolume
+         * @name Channel#setVolume
          * @description Set the volume of playback between 0 and 1.
          * @param {number} volume - The volume of the sound. Will be clamped between 0 and 1.
          */

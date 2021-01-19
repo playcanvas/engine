@@ -4,7 +4,7 @@ var TemplateUtils = {
     /**
      * @private
      * @function
-     * @name pc.TemplateUtils#waitForTemplatesInScene
+     * @name TemplateUtils#waitForTemplatesInScene
      * @description Delay execution of the callback until collapsedInstances
      * are expanded (if present). For expansion we need to wait for template assets
      * to load.
@@ -29,7 +29,7 @@ var TemplateUtils = {
     /**
      * @private
      * @function
-     * @name pc.TemplateUtils#waitForTemplateAssets
+     * @name TemplateUtils#waitForTemplateAssets
      * @description Delay execution of the callback until template assets
      * referenced by the provided entities are loaded.
      * @param {object[]} entities - Scene entity data from the database.
@@ -74,7 +74,7 @@ var TemplateUtils = {
     /**
      * @private
      * @function
-     * @name pc.TemplateUtils#expandTemplateEntities
+     * @name TemplateUtils#expandTemplateEntities
      * @description Expand entities marked with the collapsed_entity flag.
      * @param {pc.Application} app - The application.
      * @param {object} entities - Scene entity data from the database.

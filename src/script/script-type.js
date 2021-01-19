@@ -8,7 +8,7 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
 
 /**
  * @class
- * @name pc.ScriptType
+ * @name ScriptType
  * @augments pc.EventHandler
  * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}.
  * Also referred to as Script Type.
@@ -76,7 +76,7 @@ class ScriptType extends EventHandler {
      * @private
      * @readonly
      * @static
-     * @name pc.ScriptType.__name
+     * @name ScriptType.__name
      * @type {string}
      * @description Name of a Script Type.
      */
@@ -94,7 +94,7 @@ class ScriptType extends EventHandler {
      * @field
      * @static
      * @readonly
-     * @name pc.ScriptType.scriptName
+     * @name ScriptType.scriptName
      * @type {string|null}
      * @description Name of a Script Type
      */
@@ -106,7 +106,7 @@ class ScriptType extends EventHandler {
      * @field
      * @static
      * @readonly
-     * @name pc.ScriptType.attributes
+     * @name ScriptType.attributes
      * @type {pc.ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
      * @example
@@ -149,7 +149,7 @@ class ScriptType extends EventHandler {
      * @readonly
      * @static
      * @function
-     * @name pc.ScriptType.extend
+     * @name ScriptType.extend
      * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
      * @description Shorthand function to extend Script Type prototype with list of methods.
      * @example
@@ -175,33 +175,33 @@ class ScriptType extends EventHandler {
 
     /**
      * @function
-     * @name pc.ScriptType#[initialize]
+     * @name ScriptType#[initialize]
      * @description Called when script is about to run for the first time.
      */
 
     /**
      * @function
-     * @name pc.ScriptType#[postInitialize]
+     * @name ScriptType#[postInitialize]
      * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
      */
 
     /**
      * @function
-     * @name pc.ScriptType#[update]
+     * @name ScriptType#[update]
      * @description Called for enabled (running state) scripts on each tick.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
      * @function
-     * @name pc.ScriptType#[postUpdate]
+     * @name ScriptType#[postUpdate]
      * @description Called for enabled (running state) scripts on each tick, after update.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
      * @function
-     * @name pc.ScriptType#[swap]
+     * @name ScriptType#[swap]
      * @description Called when a ScriptType that already exists in the registry
      * gets redefined. If the new ScriptType has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
@@ -209,7 +209,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#enable
+     * @name ScriptType#enable
      * @description Fired when a script instance becomes enabled.
      * @example
      * PlayerController.prototype.initialize = function () {
@@ -221,7 +221,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#disable
+     * @name ScriptType#disable
      * @description Fired when a script instance becomes disabled.
      * @example
      * PlayerController.prototype.initialize = function () {
@@ -233,7 +233,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#state
+     * @name ScriptType#state
      * @description Fired when a script instance changes state to enabled or disabled.
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
@@ -246,7 +246,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#destroy
+     * @name ScriptType#destroy
      * @description Fired when a script instance is destroyed and removed from component.
      * @example
      * PlayerController.prototype.initialize = function () {
@@ -259,7 +259,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#attr
+     * @name ScriptType#attr
      * @description Fired when any script attribute has been changed.
      * @param {string} name - Name of attribute.
      * @param {object} value - New value.
@@ -274,7 +274,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#attr:[name]
+     * @name ScriptType#attr:[name]
      * @description Fired when a specific script attribute has been changed.
      * @param {object} value - New value.
      * @param {object} valueOld - Old value.
@@ -288,7 +288,7 @@ class ScriptType extends EventHandler {
 
     /**
      * @event
-     * @name pc.ScriptType#error
+     * @name ScriptType#error
      * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
      * @param {Error} err - Native JavaScript Error object with details of error.
      * @param {string} method - The method of the script instance that the exception originated from.

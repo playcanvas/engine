@@ -8,7 +8,7 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
  * @class
- * @name pc.SpriteAnimationClip
+ * @name SpriteAnimationClip
  * @augments pc.EventHandler
  * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
  * @param {pc.SpriteComponent} component - The sprite component managing this clip.
@@ -127,7 +127,7 @@ class SpriteAnimationClip extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SpriteAnimationClip#_update
+     * @name SpriteAnimationClip#_update
      * @param {number} dt - The delta time.
      * @description Advances the animation looping if necessary.
      */
@@ -211,7 +211,7 @@ class SpriteAnimationClip extends EventHandler {
 
     /**
      * @function
-     * @name pc.SpriteAnimationClip#play
+     * @name SpriteAnimationClip#play
      * @description Plays the animation. If it's already playing then this does nothing.
      */
     play() {
@@ -228,7 +228,7 @@ class SpriteAnimationClip extends EventHandler {
 
     /**
      * @function
-     * @name pc.SpriteAnimationClip#pause
+     * @name SpriteAnimationClip#pause
      * @description Pauses the animation.
      */
     pause() {
@@ -243,7 +243,7 @@ class SpriteAnimationClip extends EventHandler {
 
     /**
      * @function
-     * @name pc.SpriteAnimationClip#resume
+     * @name SpriteAnimationClip#resume
      * @description Resumes the paused animation.
      */
     resume() {
@@ -256,7 +256,7 @@ class SpriteAnimationClip extends EventHandler {
 
     /**
      * @function
-     * @name pc.SpriteAnimationClip#stop
+     * @name SpriteAnimationClip#stop
      * @description Stops the animation and resets the animation to the first frame.
      */
     stop() {
@@ -425,37 +425,37 @@ class SpriteAnimationClip extends EventHandler {
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#play
+     * @name SpriteAnimationClip#play
      * @description Fired when the clip starts playing.
      */
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#pause
+     * @name SpriteAnimationClip#pause
      * @description Fired when the clip is paused.
      */
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#resume
+     * @name SpriteAnimationClip#resume
      * @description Fired when the clip is resumed.
      */
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#stop
+     * @name SpriteAnimationClip#stop
      * @description Fired when the clip is stopped.
      */
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#end
+     * @name SpriteAnimationClip#end
      * @description Fired when the clip stops playing because it reached its ending.
      */
 
     /**
      * @event
-     * @name pc.SpriteAnimationClip#loop
+     * @name SpriteAnimationClip#loop
      * @description Fired when the clip reached the end of its current loop.
      */
 }

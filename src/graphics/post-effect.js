@@ -13,7 +13,7 @@ var primitive = {
 
 /**
  * @class
- * @name pc.PostEffect
+ * @name PostEffect
  * @classdesc Base class for all post effects. Post effects take a a render target as input
  * apply effects to it and then render the result to an output render target or the screen
  * if no output is specified.
@@ -35,7 +35,7 @@ class PostEffect {
 
     /**
      * @function
-     * @name pc.PostEffect#render
+     * @name PostEffect#render
      * @description Render the post effect using the specified inputTarget
      * to the specified outputTarget.
      * @param {pc.RenderTarget} inputTarget - The input render target.
@@ -72,7 +72,7 @@ function createFullscreenQuad(device) {
 /**
  * @static
  * @function
- * @name pc.drawFullscreenQuad
+ * @name drawFullscreenQuad
  * @description Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post effects based on {@link pc.PostEffect}.
  * @param {pc.GraphicsDevice} device - The graphics device of the application.
  * @param {pc.RenderTarget} target - The output render target.

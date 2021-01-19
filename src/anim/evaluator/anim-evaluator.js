@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimEvaluator
+ * @name AnimEvaluator
  * @classdesc AnimEvaluator blends multiple sets of animation clips together.
  * @description Create a new animation evaluator.
  * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link pc.AnimTarget}.
@@ -104,7 +104,7 @@ class AnimEvaluator {
 
     /**
      * @private
-     * @name pc.AnimEvaluator
+     * @name AnimEvaluator
      * @type {number}
      * @description The number of clips.
      */
@@ -115,7 +115,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#addClip
+     * @name AnimEvaluator#addClip
      * @description Add a clip to the evaluator.
      * @param {pc.AnimClip} clip - the clip to add to the evaluator.
      */
@@ -173,7 +173,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#removeClip
+     * @name AnimEvaluator#removeClip
      * @description Remove a clip from the evaluator.
      * @param {number} index - index of the clip to remove.
      */
@@ -210,7 +210,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#removeClips
+     * @name AnimEvaluator#removeClips
      * @description Remove all clips from the evaluator.
      */
     removeClips() {
@@ -222,7 +222,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#findClip
+     * @name AnimEvaluator#findClip
      * @description Returns the first clip which matches the given name, or null if no such clip was found.
      * @param {string} name - name of the clip to find.
      * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
@@ -241,7 +241,7 @@ class AnimEvaluator {
     /**
      * @private
      * @function
-     * @name pc.AnimEvaluator#update
+     * @name AnimEvaluator#update
      * @description Evaluator frame update function. All the attached {@link pc.AnimClip}s are evaluated,
      * blended and the results set on the {@link pc.AnimTarget}.
      * @param {number} deltaTime - the amount of time that has passed since the last update, in seconds.

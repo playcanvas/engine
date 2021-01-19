@@ -18,7 +18,7 @@ import {
 
 /**
  * @class
- * @name pc.I18n
+ * @name I18n
  * @augments pc.EventHandler
  * @classdesc Handles localization. Responsible for loading localization assets
  * and returning translations for a certain key. Can also handle plural forms. To override
@@ -44,7 +44,7 @@ class I18n extends EventHandler {
     /**
      * @static
      * @function
-     * @name pc.I18n#findAvailableLocale
+     * @name I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
      * @param {string} desiredLocale - The desired locale e.g. En-US.
@@ -57,7 +57,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#getText
+     * @name I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -107,7 +107,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#getPluralText
+     * @name I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
      * @param {string} key - The localization key.
@@ -158,7 +158,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#addData
+     * @name I18n#addData
      * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
      * @param {object} data - The localization data. See example for the expected format of the data.
      * @example
@@ -217,7 +217,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#removeData
+     * @name I18n#removeData
      * @description Removes localization data.
      * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
      */
@@ -261,7 +261,7 @@ class I18n extends EventHandler {
 
     /**
      * @function
-     * @name pc.I18n#destroy
+     * @name I18n#destroy
      * @description Frees up memory.
      */
     destroy = function () {

@@ -7,35 +7,35 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 // Events Documentation
 /**
  * @event
- * @name pc.Mouse#mousemove
+ * @name Mouse#mousemove
  * @description Fired when the mouse is moved.
  * @param {pc.MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
- * @name pc.Mouse#mousedown
+ * @name Mouse#mousedown
  * @description Fired when a mouse button is pressed.
  * @param {pc.MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
- * @name pc.Mouse#mouseup
+ * @name Mouse#mouseup
  * @description Fired when a mouse button is released.
  * @param {pc.MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
- * @name pc.Mouse#mousewheel
+ * @name Mouse#mousewheel
  * @description Fired when a mouse wheel is moved.
  * @param {pc.MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @class
- * @name pc.Mouse
+ * @name Mouse
  * @augments pc.EventHandler
  * @classdesc A Mouse Device, bound to a DOM Element.
  * @description Create a new Mouse device.
@@ -70,7 +70,7 @@ class Mouse extends EventHandler {
     /**
      * @static
      * @function
-     * @name pc.Mouse.isPointerLocked
+     * @name Mouse.isPointerLocked
      * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}.
      * @returns {boolean} True if locked.
      */
@@ -80,7 +80,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#attach
+     * @name Mouse#attach
      * @description Attach mouse events to an Element.
      * @param {Element} element - The DOM element to attach the mouse to.
      */
@@ -99,7 +99,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#detach
+     * @name Mouse#detach
      * @description Remove mouse events from the element that it is attached to.
      */
     detach() {
@@ -116,7 +116,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#disableContextMenu
+     * @name Mouse#disableContextMenu
      * @description Disable the context menu usually activated with right-click.
      */
     disableContextMenu() {
@@ -126,7 +126,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#enableContextMenu
+     * @name Mouse#enableContextMenu
      * @description Enable the context menu usually activated with right-click. This option is active by default.
      */
     enableContextMenu() {
@@ -136,7 +136,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#enablePointerLock
+     * @name Mouse#enablePointerLock
      * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
      * Allowing raw access to mouse movement input without risking the mouse exiting the element.
      * Notes:
@@ -177,7 +177,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#disablePointerLock
+     * @name Mouse#disablePointerLock
      * @description Return control of the mouse cursor to the user.
      * @param {pc.callbacks.LockMouse} [success] - Function called when the mouse lock is disabled.
      */
@@ -198,7 +198,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#update
+     * @name Mouse#update
      * @description Update method, should be called once per frame.
      */
     update() {
@@ -210,7 +210,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#isPressed
+     * @name Mouse#isPressed
      * @description Returns true if the mouse button is currently pressed.
      * @param {number} button - The mouse button to test. Can be:
      *
@@ -226,7 +226,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#wasPressed
+     * @name Mouse#wasPressed
      * @description Returns true if the mouse button was pressed this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *
@@ -242,7 +242,7 @@ class Mouse extends EventHandler {
 
     /**
      * @function
-     * @name pc.Mouse#wasReleased
+     * @name Mouse#wasReleased
      * @description Returns true if the mouse button was released this frame (since the last call to update).
      * @param {number} button - The mouse button to test. Can be:
      *

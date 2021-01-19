@@ -8,7 +8,7 @@ import { Texture } from '../graphics/texture.js';
 
 /**
  * @class
- * @name pc.CubemapHandler
+ * @name CubemapHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading cubemap {@link pc.Texture} resources.
  * @param {pc.GraphicsDevice} device - The graphics device.

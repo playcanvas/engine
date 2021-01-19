@@ -6,7 +6,7 @@ import { VrDisplay } from './vr-display.js';
  * @private
  * @deprecated
  * @class
- * @name pc.VrManager
+ * @name VrManager
  * @augments pc.EventHandler
  * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
  * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
@@ -53,7 +53,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @event
-     * @name pc.VrManager#displayconnect
+     * @name VrManager#displayconnect
      * @description Fired when an VR display is connected.
      * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
      * @example
@@ -66,7 +66,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @event
-     * @name pc.VrManager#displaydisconnect
+     * @name VrManager#displaydisconnect
      * @description Fired when an VR display is disconnected.
      * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
      * @example
@@ -79,7 +79,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @static
-     * @name pc.VrManager.isSupported
+     * @name VrManager.isSupported
      * @type {boolean}
      * @description Reports whether this device supports the WebVR API.
      */
@@ -99,7 +99,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrManager#destroy
+     * @name VrManager#destroy
      * @description Remove events and clear up manager.
      */
     destroy() {
@@ -110,7 +110,7 @@ class VrManager extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrManager#poll
+     * @name VrManager#poll
      * @description Called once per frame to poll all attached displays.
      */
     poll() {

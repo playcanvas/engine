@@ -3,7 +3,7 @@ import { Application } from './application.js';
 /**
  * @private
  * @class
- * @name pc.ApplicationStats
+ * @name ApplicationStats
  * @param {pc.GraphicsDevice} device - The graphics device.
  */
 class ApplicationStats {

@@ -12,7 +12,7 @@ var tmpMat4 = new Mat4();
 
 /**
  * @class
- * @name pc.OrientedBox
+ * @name OrientedBox
  * @description Create a new oriented box.
  * @classdesc Oriented Box.
  * @property {pc.Mat4} [worldTransform] The world transform of the OBB.
@@ -31,7 +31,7 @@ class OrientedBox {
 
     /**
      * @function
-     * @name pc.OrientedBox#intersectsRay
+     * @name OrientedBox#intersectsRay
      * @description Test if a ray intersects with the OBB.
      * @param {pc.Ray} ray - Ray to test against (direction must be normalized).
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
@@ -52,7 +52,7 @@ class OrientedBox {
 
     /**
      * @function
-     * @name pc.OrientedBox#containsPoint
+     * @name OrientedBox#containsPoint
      * @description Test if a point is inside a OBB.
      * @param {pc.Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the OBB and false otherwise.
@@ -64,7 +64,7 @@ class OrientedBox {
 
     /**
      * @function
-     * @name pc.OrientedBox#intersectsBoundingSphere
+     * @name OrientedBox#intersectsBoundingSphere
      * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
      * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.

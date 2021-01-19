@@ -41,7 +41,7 @@ class Chunks {
 
 /**
  * @class
- * @name pc.StandardMaterial
+ * @name StandardMaterial
  * @augments pc.Material
  * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
@@ -364,7 +364,7 @@ class StandardMaterial extends Material {
 
     /**
      * @function
-     * @name pc.StandardMaterial#clone
+     * @name StandardMaterial#clone
      * @description Duplicates a Standard material. All properties are duplicated except textures
      * where only the references are copied.
      * @returns {pc.StandardMaterial} A cloned Standard material.

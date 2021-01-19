@@ -2,7 +2,7 @@ import { Vec3 } from '../math/vec3.js';
 
 /**
  * @class
- * @name pc.Ray
+ * @name Ray
  * @classdesc An infinite ray.
  * @description Creates a new infinite ray starting at a given origin and pointing in a given direction.
  * @example
@@ -24,7 +24,7 @@ class Ray {
 
     /**
      * @function
-     * @name pc.Ray#set
+     * @name Ray#set
      * @description Sets origin and direction to the supplied vector values.
      * @param {pc.Vec3} origin - The starting point of the ray.
      * @param {pc.Vec3} direction - The direction of the ray.

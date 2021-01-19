@@ -23,7 +23,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
  * @class
- * @name pc.Asset
+ * @name Asset
  * @augments pc.EventHandler
  * @classdesc An asset record of a file or data resource that can be loaded by the engine.
  * The asset contains three important fields:
@@ -105,21 +105,21 @@ class Asset extends EventHandler {
 
     /**
      * @event
-     * @name pc.Asset#load
+     * @name Asset#load
      * @description Fired when the asset has completed loading.
      * @param {pc.Asset} asset - The asset that was loaded.
      */
 
     /**
      * @event
-     * @name pc.Asset#remove
+     * @name Asset#remove
      * @description Fired when the asset is removed from the asset registry.
      * @param {pc.Asset} asset - The asset that was removed.
      */
 
     /**
      * @event
-     * @name pc.Asset#error
+     * @name Asset#error
      * @description Fired if the asset encounters an error while loading.
      * @param {string} err - The error message.
      * @param {pc.Asset} asset - The asset that generated the error.
@@ -127,7 +127,7 @@ class Asset extends EventHandler {
 
     /**
      * @event
-     * @name pc.Asset#change
+     * @name Asset#change
      * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
      * @param {pc.Asset} asset - The asset that was loaded.
      * @param {string} property - The name of the property that changed.
@@ -137,7 +137,7 @@ class Asset extends EventHandler {
 
     /**
      * @event
-     * @name pc.Asset#add:localized
+     * @name Asset#add:localized
      * @description Fired when we add a new localized asset id to the asset.
      * @param {string} locale - The locale.
      * @param {number} assetId - The asset id we added.
@@ -145,14 +145,14 @@ class Asset extends EventHandler {
 
     /**
      * @event
-     * @name pc.Asset#remove:localized
+     * @name Asset#remove:localized
      * @description Fired when we remove a localized asset id from the asset.
      * @param {string} locale - The locale.
      * @param {number} assetId - The asset id we removed.
      */
 
     /**
-     * @name pc.Asset#getFileUrl
+     * @name Asset#getFileUrl
      * @function
      * @description Return the URL required to fetch the file for this asset.
      * @returns {string} The URL.
@@ -233,7 +233,7 @@ class Asset extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Asset#getLocalizedAssetId
+     * @name Asset#getLocalizedAssetId
      * @param {string} locale - The desired locale e.g. Ar-AR.
      * @description Returns the asset id of the asset that corresponds to the specified locale.
      * @returns {number} An asset id or null if there is no asset specified for the desired locale.
@@ -247,7 +247,7 @@ class Asset extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Asset#addLocalizedAssetId
+     * @name Asset#addLocalizedAssetId
      * @param {string} locale - The locale e.g. Ar-AR.
      * @param {number} assetId - The asset id.
      * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
@@ -261,7 +261,7 @@ class Asset extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Asset#removeLocalizedAssetId
+     * @name Asset#removeLocalizedAssetId
      * @param {string} locale - The locale e.g. Ar-AR.
      * @description Removes a localized asset.
      */
@@ -275,7 +275,7 @@ class Asset extends EventHandler {
 
     /**
      * @function
-     * @name pc.Asset#ready
+     * @name Asset#ready
      * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
      * @param {pc.callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
@@ -308,7 +308,7 @@ class Asset extends EventHandler {
 
     /**
      * @function
-     * @name pc.Asset#unload
+     * @name Asset#unload
      * @description Destroys the associated resource and marks asset as unloaded.
      * @example
      * var asset = app.assets.find("My Asset");

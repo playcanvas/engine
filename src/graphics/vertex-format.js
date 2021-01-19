@@ -9,7 +9,7 @@ import {
 
 /**
  * @class
- * @name pc.VertexFormat
+ * @name VertexFormat
  * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
  * a {@link pc.VertexBuffer}.
  * @description Returns a new pc.VertexFormat object.
@@ -192,7 +192,7 @@ class VertexFormat {
      * @field
      * @static
      * @readonly
-     * @name pc.VertexFormat.defaultInstancingFormat
+     * @name VertexFormat.defaultInstancingFormat
      * @type {pc.VertexFormat}
      * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
      */
@@ -202,7 +202,7 @@ class VertexFormat {
 
     /**
      * @function
-     * @name pc.VertexFormat#update
+     * @name VertexFormat#update
      * @description Applies any changes made to the VertexFormat's properties.
      */
     update() {

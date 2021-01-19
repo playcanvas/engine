@@ -5,7 +5,7 @@ import {
 
 /**
  * @class
- * @name pc.IndexBuffer
+ * @name IndexBuffer
  * @classdesc An index buffer stores index values into a {@link pc.VertexBuffer}.
  * Indexed graphical primitives can normally utilize less memory that unindexed
  * primitives (if vertices are shared).
@@ -80,7 +80,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#destroy
+     * @name IndexBuffer#destroy
      * @description Frees resources associated with this index buffer.
      */
     destroy() {
@@ -109,7 +109,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#getFormat
+     * @name IndexBuffer#getFormat
      * @description Returns the data format of the specified index buffer.
      * @returns {number} The data format of the specified index buffer. Can be:
      *
@@ -123,7 +123,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#getNumIndices
+     * @name IndexBuffer#getNumIndices
      * @description Returns the number of indices stored in the specified index buffer.
      * @returns {number} The number of indices stored in the specified index buffer.
      */
@@ -133,7 +133,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#lock
+     * @name IndexBuffer#lock
      * @description Gives access to the block of memory that stores the buffer's indices.
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
@@ -143,7 +143,7 @@ class IndexBuffer {
 
     /**
      * @function
-     * @name pc.IndexBuffer#unlock
+     * @name IndexBuffer#unlock
      * @description Signals that the block of memory returned by a call to the lock function is
      * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
      * currently active device.

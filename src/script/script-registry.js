@@ -2,7 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 /**
  * @class
- * @name pc.ScriptRegistry
+ * @name ScriptRegistry
  * @augments pc.EventHandler
  * @classdesc Container for all Script Types that are available to this application.
  * @description Create an instance of a pc.ScriptRegistry.
@@ -26,7 +26,7 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#add
+     * @name ScriptRegistry#add
      * @description Add {@link pc.ScriptType} to registry.
      * Note: when {@link pc.createScript} is called, it will add the {@link pc.ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
@@ -139,7 +139,7 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#remove
+     * @name ScriptRegistry#remove
      * @description Remove {@link pc.ScriptType}.
      * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
@@ -173,7 +173,7 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#get
+     * @name ScriptRegistry#get
      * @description Get {@link pc.ScriptType} by name.
      * @param {string} name - Name of a {@link pc.ScriptType}.
      * @returns {Class<pc.ScriptType>} The Script Type if it exists in the registry or null otherwise.
@@ -188,7 +188,7 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#has
+     * @name ScriptRegistry#has
      * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
      * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link pc.ScriptType}.
      * @returns {boolean} True if {@link pc.ScriptType} is in registry.
@@ -211,7 +211,7 @@ class ScriptRegistry extends EventHandler {
     /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @function
-     * @name pc.ScriptRegistry#list
+     * @name ScriptRegistry#list
      * @description Get list of all {@link pc.ScriptType}s from registry.
      * @returns {Array<Class<pc.ScriptType>>} list of all {@link pc.ScriptType}s in registry.
      * @example

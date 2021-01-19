@@ -16,7 +16,7 @@ var _tempScrollValue = new Vec2();
 /**
  * @component
  * @class
- * @name pc.ScrollViewComponent
+ * @name ScrollViewComponent
  * @augments pc.Component
  * @classdesc A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with optional horizontal and vertical scroll bars.
  * @description Create a new ScrollViewComponent.
@@ -653,7 +653,7 @@ class ScrollViewComponent extends Component {
 
     /**
      * @event
-     * @name pc.ScrollViewComponent#set:scroll
+     * @name ScrollViewComponent#set:scroll
      * @description Fired whenever the scroll position changes.
      * @param {pc.Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
      */

@@ -18,7 +18,7 @@ for (var i = 0; i < tipJointIds.length; i++) {
 
 /**
  * @class
- * @name pc.XrJoint
+ * @name XrJoint
  * @classdesc Represents joint of a finger
  * @description Represents joint of a finger
  * @param {number} index - Index of a joint within a finger
@@ -92,7 +92,7 @@ class XrJoint {
 
     /**
      * @function
-     * @name pc.XrJoint#getPosition
+     * @name XrJoint#getPosition
      * @description Get the world space position of a joint
      * @returns {pc.Vec3} The world space position of a joint
      */
@@ -104,7 +104,7 @@ class XrJoint {
 
     /**
      * @function
-     * @name pc.XrJoint#getRotation
+     * @name XrJoint#getRotation
      * @description Get the world space rotation of a joint
      * @returns {pc.Quat} The world space rotation of a joint
      */

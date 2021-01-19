@@ -10,7 +10,7 @@ import { RenderAction } from './render-action.js';
 
 /**
  * @class
- * @name pc.LayerComposition
+ * @name LayerComposition
  * @augments pc.EventHandler
  * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
  * @description Create a new layer composition.
@@ -481,7 +481,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#push
+     * @name LayerComposition#push
      * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
@@ -502,7 +502,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insert
+     * @name LayerComposition#insert
      * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      * @param {number} index - Insertion position.
@@ -525,7 +525,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#remove
+     * @name LayerComposition#remove
      * @description Removes a layer (both opaque and semi-transparent parts) from {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
@@ -557,7 +557,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#pushOpaque
+     * @name LayerComposition#pushOpaque
      * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
@@ -575,7 +575,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insertOpaque
+     * @name LayerComposition#insertOpaque
      * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      * @param {number} index - Insertion position.
@@ -598,7 +598,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#removeOpaque
+     * @name LayerComposition#removeOpaque
      * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
@@ -626,7 +626,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#pushTransparent
+     * @name LayerComposition#pushTransparent
      * @description Adds part of the layer with semi-transparent objects to the end of the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
@@ -644,7 +644,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#insertTransparent
+     * @name LayerComposition#insertTransparent
      * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      * @param {number} index - Insertion position.
@@ -667,7 +667,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#removeTransparent
+     * @name LayerComposition#removeTransparent
      * @description Removes a transparent part of the layer from {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
@@ -710,7 +710,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getOpaqueIndex
+     * @name LayerComposition#getOpaqueIndex
      * @description Gets index of the opaque part of the supplied layer in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
@@ -721,7 +721,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getTransparentIndex
+     * @name LayerComposition#getTransparentIndex
      * @description Gets index of the semi-transparent part of the supplied layer in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.
@@ -732,7 +732,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getLayerById
+     * @name LayerComposition#getLayerById
      * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      * @param {number} id - An ID of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
@@ -746,7 +746,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * @function
-     * @name pc.LayerComposition#getLayerByName
+     * @name LayerComposition#getLayerByName
      * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
      * @param {string} name - The name of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
@@ -816,7 +816,7 @@ class LayerComposition extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.LayerComposition#sortTransparentLayers
+     * @name LayerComposition#sortTransparentLayers
      * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
@@ -830,7 +830,7 @@ class LayerComposition extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.LayerComposition#sortOpaqueLayers
+     * @name LayerComposition#sortOpaqueLayers
      * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.

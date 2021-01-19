@@ -7,7 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @private
  * @class
- * @name pc.EntityReference
+ * @name EntityReference
  * @augments pc.EventHandler
  * @description Helper class used for managing component properties that represent entity references.
  * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that
@@ -231,7 +231,7 @@ class EntityReference extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.EntityReference#onParentComponentEnable
+     * @name EntityReference#onParentComponentEnable
      * @description Must be called from the parent component's onEnable() method in
      * order for entity references to be correctly resolved when {@link pc.Entity#clone}
      * is called.
@@ -399,7 +399,7 @@ class EntityReference extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.EntityReference#hasComponent
+     * @name EntityReference#hasComponent
      * @description Convenience method indicating whether the entity exists and has a
      * component of the provided type.
      * @param {string} componentName - Name of the component.

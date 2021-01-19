@@ -14,7 +14,7 @@ var _postEffectQuadDraw = {
 
 /**
  * @function
- * @name pc.drawQuadWithShader
+ * @name drawQuadWithShader
  * @description Draws a screen-space quad using a specific shader. Mostly used by post-effects.
  * @param {pc.GraphicsDevice} device - The graphics device used to draw the quad.
  * @param {pc.RenderTarget|undefined} target - The destination render target. If undefined, target is the frame buffer.
@@ -125,7 +125,7 @@ function destroyPostEffectQuad() {
 
 /**
  * @function
- * @name pc.drawTexture
+ * @name drawTexture
  * @description Draws a texture in screen-space. Mostly used by post-effects.
  * @param {pc.GraphicsDevice} device - The graphics device used to draw the texture.
  * @param {pc.Texture} texture - The source texture to be drawn. Accessible as `uniform sampler2D source` in shader.

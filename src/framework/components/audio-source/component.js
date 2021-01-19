@@ -8,7 +8,7 @@ import { Component } from '../component.js';
  * @private
  * @component
  * @class
- * @name pc.AudioSourceComponent
+ * @name AudioSourceComponent
  * @augments pc.Component
  * @classdesc The AudioSource Component controls playback of an audio sample. This
  * class will be deprecated in favor of {@link pc.SoundComponent}.
@@ -60,7 +60,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#play
+     * @name AudioSourceComponent#play
      * @description Begin playback of an audio asset in the component attached to an entity.
      * @param {string} name - The name of the Asset to play.
      */
@@ -93,7 +93,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#pause
+     * @name AudioSourceComponent#pause
      * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}.
      */
     pause() {
@@ -105,7 +105,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#unpause
+     * @name AudioSourceComponent#unpause
      * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
      */
     unpause() {
@@ -117,7 +117,7 @@ class AudioSourceComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AudioSourceComponent#stop
+     * @name AudioSourceComponent#stop
      * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
      */
     stop() {

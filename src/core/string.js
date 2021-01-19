@@ -92,35 +92,35 @@ function numCharsToTakeForNextSymbol(string, index) {
 
 /**
  * @namespace
- * @name pc.string
+ * @name string
  * @description Extended String API.
  */
 var string = {
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_LOWERCASE
+     * @name string.ASCII_LOWERCASE
      * @description All lowercase letters.
      */
     ASCII_LOWERCASE: ASCII_LOWERCASE,
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_UPPERCASE
+     * @name string.ASCII_UPPERCASE
      * @description All uppercase letters.
      */
     ASCII_UPPERCASE: ASCII_UPPERCASE,
     /**
      * @constant
      * @type {string}
-     * @name pc.string.ASCII_LETTERS
+     * @name string.ASCII_LETTERS
      * @description All ASCII letters.
      */
     ASCII_LETTERS: ASCII_LETTERS,
 
     /**
      * @function
-     * @name pc.string.format
+     * @name string.format
      * @description Return a string with {n} replaced with the n-th argument.
      * @param {string} s - The string to format.
      * @param {object} [arguments] - All other arguments are substituted into the string.
@@ -138,7 +138,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.toBool
+     * @name string.toBool
      * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
      * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
      * an Exception.
@@ -164,7 +164,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.getCodePoint
+     * @name string.getCodePoint
      * @description Get the code point number for a character in a string. Polyfill for
      * [`codePointAt`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
      * @param {string} string - The string to get the code point from.
@@ -178,7 +178,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.getCodePoints
+     * @name string.getCodePoints
      * @description Gets an array of all code points in a string.
      * @param {string} string - The string to get code points from.
      * @returns {number[]} The code points in the string.
@@ -199,7 +199,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.getSymbols
+     * @name string.getSymbols
      * @description Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
      * some symbols (such as emoji or accented characters) are actually made up of multiple character codes.
      * @param {string} string - The string to break into symbols.
@@ -240,7 +240,7 @@ var string = {
 
     /**
      * @function
-     * @name pc.string.fromCodePoint
+     * @name string.fromCodePoint
      * @description Get the string for a given code point or set of code points. Polyfill for
      * [`fromCodePoint`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
      * @param {...number} args - The code points to convert to a string.

@@ -18,7 +18,7 @@ import { Mat4 } from '../math/mat4.js';
 
 /**
  * @class
- * @name pc.Scene
+ * @name Scene
  * @augments pc.EventHandler
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
@@ -466,7 +466,7 @@ class Scene extends EventHandler {
 
     /**
      * @function
-     * @name pc.Scene#setSkybox
+     * @name Scene#setSkybox
      * @description Sets the cubemap for the scene skybox.
      * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
      * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
@@ -548,14 +548,14 @@ class Scene extends EventHandler {
 
     /**
      * @event
-     * @name pc.Scene#set:skybox
+     * @name Scene#set:skybox
      * @description Fired when the skybox is set.
      * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
      */
 
     /**
      * @event
-     * @name pc.Scene#set:layers
+     * @name Scene#set:layers
      * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
      * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
      * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.

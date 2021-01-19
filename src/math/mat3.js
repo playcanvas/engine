@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Mat3
+ * @name Mat3
  * @classdesc A 3x3 matrix.
  * @description Creates a new identity Mat3 object.
  * @property {Float32Array} data Matrix elements in the form of a flat array.
@@ -17,7 +17,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#clone
+     * @name Mat3#clone
      * @description Creates a duplicate of the specified matrix.
      * @returns {pc.Mat3} A duplicate matrix.
      * @example
@@ -31,7 +31,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#copy
+     * @name Mat3#copy
      * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
      * @param {pc.Mat3} rhs - A 3x3 matrix to be copied.
      * @returns {pc.Mat3} Self for chaining.
@@ -60,7 +60,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#set
+     * @name Mat3#set
      * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
      * @param {number[]} src - An array[9] to be copied.
      * @returns {pc.Mat3} Self for chaining.
@@ -86,7 +86,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#equals
+     * @name Mat3#equals
      * @param {pc.Mat3} rhs - The other matrix.
      * @description Reports whether two matrices are equal.
      * @returns {boolean} True if the matrices are equal and false otherwise.
@@ -112,7 +112,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#isIdentity
+     * @name Mat3#isIdentity
      * @description Reports whether the specified matrix is the identity matrix.
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
@@ -134,7 +134,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#setIdentity
+     * @name Mat3#setIdentity
      * @description Sets the matrix to the identity matrix.
      * @returns {pc.Mat3} Self for chaining.
      * @example
@@ -160,7 +160,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#toString
+     * @name Mat3#toString
      * @description Converts the matrix to string form.
      * @returns {string} The matrix in string form.
      * @example
@@ -180,7 +180,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#transpose
+     * @name Mat3#transpose
      * @description Generates the transpose of the specified 3x3 matrix.
      * @returns {pc.Mat3} Self for chaining.
      * @example
@@ -202,7 +202,7 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#setFromMat4
+     * @name Mat3#setFromMat4
      * @description Converts the specified 4x4 matrix to a Mat3.
      * @param {pc.Mat4} m - The 4x4 matrix to convert.
      * @returns {pc.Mat3} Self for chaining.
@@ -230,7 +230,7 @@ class Mat3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Mat3.IDENTITY
+     * @name Mat3.IDENTITY
      * @type {pc.Mat3}
      * @description A constant matrix set to the identity.
      */
@@ -240,7 +240,7 @@ class Mat3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Mat3.ZERO
+     * @name Mat3.ZERO
      * @type {pc.Mat3}
      * @description A constant matrix with all elements set to 0.
      */

@@ -83,7 +83,7 @@ fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = PIXELFORMAT_PVRTC_4BPP_RGBA_1;
 
 /**
  * @class
- * @name pc.DdsParser
+ * @name DdsParser
  * @implements {pc.TextureParser}
  * @classdesc Texture parser for dds files.
  */

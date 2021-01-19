@@ -2,7 +2,7 @@ import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/constants.js';
 
 /**
  * @class
- * @name pc.StencilParameters
+ * @name StencilParameters
  * @classdesc Holds stencil test settings.
  * @description Create a new StencilParameters instance.
  * @param {object} options - Options object to configure the stencil parameters.

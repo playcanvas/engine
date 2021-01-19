@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimBinder
+ * @name AnimBinder
  * @classdesc This interface is used by {@link pc.AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link pc.AnimTarget}.
  */
@@ -51,7 +51,7 @@ class AnimBinder {
      * @private
      * @static
      * @function
-     * @name pc.AnimPropertyLocator#encode
+     * @name AnimPropertyLocator#encode
      * @description Converts a locator array into its string version
      * @param {Array} locator - The property location in the scene defined as an array
      * @returns {string} The locator encoded as a string
@@ -71,7 +71,7 @@ class AnimBinder {
      * @private
      * @static
      * @function
-     * @name pc.AnimPropertyLocator#decode
+     * @name AnimPropertyLocator#decode
      * @description Converts a locator string into its array version
      * @param {Array} locator - The property location in the scene defined as a string
      * @returns {Array} - The locator decoded into an array
@@ -91,7 +91,7 @@ class AnimBinder {
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#resolve
+     * @name AnimBinder#resolve
      * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which
      * will handle setting the value, or return null if no such target exists.
      * @param {string} path - the animation curve path to resolve.
@@ -104,7 +104,7 @@ class AnimBinder {
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#unresolve
+     * @name AnimBinder#unresolve
      * @description Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
      * @param {string} path - the animation curve path which is no longer driven.
      */
@@ -115,7 +115,7 @@ class AnimBinder {
     /**
      * @private
      * @function
-     * @name pc.AnimBinder#update
+     * @name AnimBinder#update
      * @description Called by {@link pc.AnimEvaluator} once a frame after animation updates are done.
      * @param {number} deltaTime - amount of time that passed in the current update.
      */

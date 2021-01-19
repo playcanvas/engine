@@ -42,7 +42,7 @@ const toMIME = {
 
 /**
  * @class
- * @name pc.AudioHandler
+ * @name AudioHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.Sound} resources.
  * @param {pc.SoundManager} manager - The sound manager.
@@ -102,7 +102,7 @@ class AudioHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundHandler._createSound
+     * @name SoundHandler._createSound
      * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
      * @param {string} url - The url of the audio asset.
      * @param {Function} success - Function to be called if the audio asset was loaded or if we

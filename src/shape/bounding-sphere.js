@@ -7,7 +7,7 @@ var tmpVecD = new Vec3();
 
 /**
  * @class
- * @name pc.BoundingSphere
+ * @name BoundingSphere
  * @classdesc A bounding sphere is a volume for facilitating fast intersection testing.
  * @description Creates a new bounding sphere.
  * @example
@@ -73,7 +73,7 @@ class BoundingSphere {
 
     /**
      * @function
-     * @name pc.BoundingSphere#intersectsRay
+     * @name BoundingSphere#intersectsRay
      * @description Test if a ray intersects with the sphere.
      * @param {pc.Ray} ray - Ray to test against (direction must be normalized).
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
@@ -105,7 +105,7 @@ class BoundingSphere {
 
     /**
      * @function
-     * @name pc.BoundingSphere#intersectsBoundingSphere
+     * @name BoundingSphere#intersectsBoundingSphere
      * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
      * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.

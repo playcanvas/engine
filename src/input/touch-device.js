@@ -4,7 +4,7 @@ import { TouchEvent } from './touch-event.js';
 
 /**
  * @class
- * @name pc.TouchDevice
+ * @name TouchDevice
  * @augments pc.EventHandler
  * @classdesc Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
  * See also {@link pc.Touch} and {@link pc.TouchEvent}.
@@ -27,7 +27,7 @@ class TouchDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.TouchDevice#attach
+     * @name TouchDevice#attach
      * @description Attach a device to an element in the DOM.
      * If the device is already attached to an element this method will detach it first.
      * @param {Element} element - The element to attach to.
@@ -47,7 +47,7 @@ class TouchDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.TouchDevice#detach
+     * @name TouchDevice#detach
      * @description Detach a device from the element it is attached to.
      */
     detach() {

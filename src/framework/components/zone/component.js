@@ -6,7 +6,7 @@ import { Component } from '../component.js';
  * @private
  * @component
  * @class
- * @name pc.ZoneComponent
+ * @name ZoneComponent
  * @augments pc.Component
  * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
  * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
@@ -28,7 +28,7 @@ class ZoneComponent extends Component {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#enable
+     * @name ZoneComponent#enable
      * @description Fired when Component becomes enabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
@@ -40,7 +40,7 @@ class ZoneComponent extends Component {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#disable
+     * @name ZoneComponent#disable
      * @description Fired when Component becomes disabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
@@ -52,7 +52,7 @@ class ZoneComponent extends Component {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#state
+     * @name ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
      * Note: this event does not take in account entity or any of its parent enabled state.
      * @param {boolean} enabled - True if now enabled, False if disabled.
@@ -65,7 +65,7 @@ class ZoneComponent extends Component {
     /**
      * @private
      * @event
-     * @name pc.ZoneComponent#remove
+     * @name ZoneComponent#remove
      * @description Fired when a zone is removed from an entity.
      * @example
      * entity.zone.on('remove', function () {

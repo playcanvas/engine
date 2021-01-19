@@ -10,7 +10,7 @@ const _schema = ['enabled'];
 
 /**
  * @class
- * @name pc.SoundComponentSystem
+ * @name SoundComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc Manages creation of {@link pc.SoundComponent}s.
  * @description Create a SoundComponentSystem.

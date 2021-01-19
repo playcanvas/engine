@@ -68,7 +68,7 @@ function arrayGet4(offset, outputArray, outputIndex) {
 
 /**
  * @class
- * @name pc.VertexIteratorAccessor
+ * @name VertexIteratorAccessor
  * @classdesc Helps with accessing a specific vertex attribute.
  * @description Returns a new pc.VertexIteratorAccessor object.
  * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
@@ -158,7 +158,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#get
+     * @name VertexIteratorAccessor#get
      * @description Get a attribute component at the iterator's current index.
      * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
      * @returns {number} The value of a attribute component.
@@ -169,7 +169,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#set
+     * @name VertexIteratorAccessor#set
      * @description Set all the attribute components at the iterator's current index.
      * @param {number} a - The first component value.
      * @param {number} [b] - The second component value (if applicable).
@@ -182,7 +182,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#getToArray
+     * @name VertexIteratorAccessor#getToArray
      * @description Read attribute components to an output array.
      * @param {number} offset - The component offset at which to read data from the buffer. Will be used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
@@ -194,7 +194,7 @@ class VertexIteratorAccessor {
 
     /**
      * @function
-     * @name pc.VertexIteratorAccessor#setFromArray
+     * @name VertexIteratorAccessor#setFromArray
      * @description Write attribute components from an input array.
      * @param {number} index - The starting index at which to write data into the buffer. Will be used instead of the iterator's current index.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
@@ -207,7 +207,7 @@ class VertexIteratorAccessor {
 
 /**
  * @class
- * @name pc.VertexIterator
+ * @name VertexIterator
  * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
  * @description Returns a new pc.VertexIterator object.
  * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
@@ -237,7 +237,7 @@ class VertexIterator {
 
     /**
      * @function
-     * @name pc.VertexIterator#next
+     * @name VertexIterator#next
      * @description Moves the vertex iterator on to the next vertex.
      * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to 1.
      * @example
@@ -264,7 +264,7 @@ class VertexIterator {
 
     /**
      * @function
-     * @name pc.VertexIterator#end
+     * @name VertexIterator#end
      * @description Notifies the vertex buffer being iterated that writes are complete. Internally
      * the vertex buffer is unlocked and vertex data is uploaded to video memory.
      * @example

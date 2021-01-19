@@ -7,7 +7,7 @@ import { JsonModelParser } from './parser/json-model.js';
 
 /**
  * @class
- * @name pc.ModelHandler
+ * @name ModelHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.Model} resources.
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
@@ -137,7 +137,7 @@ class ModelHandler {
 
     /**
      * @function
-     * @name pc.ModelHandler#addParser
+     * @name ModelHandler#addParser
      * @description Add a parser that converts raw data into a {@link pc.Model}
      * Default parser is for JSON models.
      * @param {object} parser - See JsonModelParser for example.

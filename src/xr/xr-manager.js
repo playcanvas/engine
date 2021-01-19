@@ -16,7 +16,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
- * @name pc.XrManager
+ * @name XrManager
  * @augments pc.EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
@@ -89,7 +89,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#available
+     * @name XrManager#available
      * @description Fired when availability of specific XR type is changed.
      * @param {string} type - The session type that has changed availability.
      * @param {boolean} available - True if specified session type is now available.
@@ -101,7 +101,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#available:[type]
+     * @name XrManager#available:[type]
      * @description Fired when availability of specific XR type is changed.
      * @param {boolean} available - True if specified session type is now available.
      * @example
@@ -112,7 +112,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#start
+     * @name XrManager#start
      * @description Fired when XR session is started
      * @example
      * app.xr.on('start', function () {
@@ -122,7 +122,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Fired when XR session is ended
      * @example
      * app.xr.on('end', function () {
@@ -132,7 +132,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#update
+     * @name XrManager#update
      * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
      * @description Fired when XR session is updated, providing relevant XRFrame object.
      * @example
@@ -143,7 +143,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#error
+     * @name XrManager#error
      * @param {Error} error - Error object related to failure of session start or check of session type support.
      * @description Fired when XR session is failed to start or failed to check for session type support.
      * @example
@@ -154,7 +154,7 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#start
+     * @name XrManager#start
      * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
      * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
@@ -272,7 +272,7 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
      * @example
      * app.keyboard.on('keydown', function (evt) {
@@ -295,7 +295,7 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#isAvailable
+     * @name XrManager#isAvailable
      * @description Check if specific type of session is available
      * @param {string} type - session type. Can be one of the following:
      *

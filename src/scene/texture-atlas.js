@@ -2,7 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 /**
  * @class
- * @name pc.TextureAtlas
+ * @name TextureAtlas
  * @augments pc.EventHandler
  * @classdesc A pc.TextureAtlas contains a number of frames from a texture. Each frame
  * defines a region in a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
@@ -37,7 +37,7 @@ class TextureAtlas extends EventHandler {
 
     /**
      * @function
-     * @name pc.TextureAtlas#setFrame
+     * @name TextureAtlas#setFrame
      * @param {string} key - The key of the frame.
      * @param {object} data - The properties of the frame.
      * @param {pc.Vec4} data.rect - The u, v, width, height properties of the frame in pixels.
@@ -71,7 +71,7 @@ class TextureAtlas extends EventHandler {
 
     /**
      * @function
-     * @name pc.TextureAtlas#removeFrame
+     * @name TextureAtlas#removeFrame
      * @param {string} key - The key of the frame.
      * @example
      * atlas.removeFrame('1');
@@ -86,7 +86,7 @@ class TextureAtlas extends EventHandler {
 
     /**
      * @function
-     * @name pc.TextureAtlas#destroy
+     * @name TextureAtlas#destroy
      * @description Free up the underlying texture owned by the atlas.
      */
     destroy() {

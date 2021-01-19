@@ -88,7 +88,7 @@ var depthLayer;
 /**
  * @component
  * @class
- * @name pc.ParticleSystemComponent
+ * @name ParticleSystemComponent
  * @augments pc.Component
  * @classdesc Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
  * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
@@ -777,7 +777,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#reset
+     * @name ParticleSystemComponent#reset
      * @description Resets particle state, doesn't affect playing.
      */
     reset() {
@@ -788,7 +788,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#stop
+     * @name ParticleSystemComponent#stop
      * @description Disables the emission of new particles, lets existing to finish their simulation.
      */
     stop() {
@@ -801,7 +801,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#pause
+     * @name ParticleSystemComponent#pause
      * @description Freezes the simulation.
      */
     pause() {
@@ -810,7 +810,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#unpause
+     * @name ParticleSystemComponent#unpause
      * @description Unfreezes the simulation.
      */
     unpause() {
@@ -819,7 +819,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#play
+     * @name ParticleSystemComponent#play
      * @description Enables/unfreezes the simulation.
      */
     play() {
@@ -833,7 +833,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * @function
-     * @name pc.ParticleSystemComponent#isPlaying
+     * @name ParticleSystemComponent#isPlaying
      * @description Checks if simulation is in progress.
      * @returns {boolean} True if the particle system is currently playing and false otherwise.
      */
@@ -853,7 +853,7 @@ class ParticleSystemComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.ParticleSystemComponent#rebuild
+     * @name ParticleSystemComponent#rebuild
      * @description Rebuilds all data used by this particle system.
      */
     rebuild() {

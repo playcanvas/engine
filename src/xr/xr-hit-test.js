@@ -5,7 +5,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /**
  * @class
- * @name pc.XrHitTest
+ * @name XrHitTest
  * @augments pc.EventHandler
  * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
  * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
@@ -32,7 +32,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#add
+     * @name XrHitTest#add
      * @description Fired when new {@link pc.XrHitTestSource} is added to the list.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
@@ -43,7 +43,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#remove
+     * @name XrHitTest#remove
      * @description Fired when {@link pc.XrHitTestSource} is removed to the list.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
@@ -54,7 +54,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#result
+     * @name XrHitTest#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
      * @param {pc.Vec3} position - Position of hit test
@@ -69,7 +69,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTest#error
+     * @name XrHitTest#error
      * @param {Error} error - Error object related to failure of creating hit test source.
      * @description Fired when failed create hit test source.
      */
@@ -116,7 +116,7 @@ class XrHitTest extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrHitTest#start
+     * @name XrHitTest#start
      * @description Attempts to start hit test with provided reference space.
      * @param {object} [options] - Optional object for passing arguments.
      * @param {string} [options.spaceType] - Reference space type. Defaults to {@link pc.XRSPACE_VIEWER}. Can be one of the following:

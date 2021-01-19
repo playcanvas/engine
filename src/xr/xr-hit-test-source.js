@@ -8,7 +8,7 @@ var poolQuat = [];
 
 /**
  * @class
- * @name pc.XrHitTestSource
+ * @name XrHitTestSource
  * @augments pc.EventHandler
  * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
@@ -31,7 +31,7 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTestSource#remove
+     * @name XrHitTestSource#remove
      * @description Fired when {pc.XrHitTestSource} is removed.
      * @example
      * hitTestSource.once('remove', function () {
@@ -41,7 +41,7 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrHitTestSource#result
+     * @name XrHitTestSource#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
      * @param {pc.Vec3} position - Position of hit test
      * @param {pc.Quat} rotation - Rotation of hit test
@@ -55,7 +55,7 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrHitTestSource#remove
+     * @name XrHitTestSource#remove
      * @description Stop and remove hit test source.
      */
     remove() {

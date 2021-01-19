@@ -21,7 +21,7 @@ function clamp(num, min, max) {
 /**
  * @private
  * @class
- * @name pc.AnimBlendTree
+ * @name AnimBlendTree
  * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
  * @description Create a new BlendTree.
  * @param {pc.AnimState} state - The AnimState that this AnimBlendTree belongs to.

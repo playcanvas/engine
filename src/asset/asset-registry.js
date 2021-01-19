@@ -10,7 +10,7 @@ import { Asset } from './asset.js';
 
 /**
  * @class
- * @name pc.AssetRegistry
+ * @name AssetRegistry
  * @augments pc.EventHandler
  * @classdesc Container for all assets that are available to this application.
  * @description Create an instance of an AssetRegistry.
@@ -35,7 +35,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#load
+     * @name AssetRegistry#load
      * @description Fired when an asset completes loading.
      * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
@@ -46,7 +46,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#load:[id]
+     * @name AssetRegistry#load:[id]
      * @description Fired when an asset completes loading.
      * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
@@ -60,7 +60,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#load:url:[url]
+     * @name AssetRegistry#load:url:[url]
      * @description Fired when an asset completes loading.
      * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
@@ -74,7 +74,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#add
+     * @name AssetRegistry#add
      * @description Fired when an asset is added to the registry.
      * @param {pc.Asset} asset - The asset that was added.
      * @example
@@ -85,7 +85,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#add:[id]
+     * @name AssetRegistry#add:[id]
      * @description Fired when an asset is added to the registry.
      * @param {pc.Asset} asset - The asset that was added.
      * @example
@@ -97,14 +97,14 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#add:url:[url]
+     * @name AssetRegistry#add:url:[url]
      * @description Fired when an asset is added to the registry.
      * @param {pc.Asset} asset - The asset that was added.
      */
 
     /**
      * @event
-     * @name pc.AssetRegistry#remove
+     * @name AssetRegistry#remove
      * @description Fired when an asset is removed from the registry.
      * @param {pc.Asset} asset - The asset that was removed.
      * @example
@@ -115,7 +115,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#remove:[id]
+     * @name AssetRegistry#remove:[id]
      * @description Fired when an asset is removed from the registry.
      * @param {pc.Asset} asset - The asset that was removed.
      * @example
@@ -127,14 +127,14 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#remove:url:[url]
+     * @name AssetRegistry#remove:url:[url]
      * @description Fired when an asset is removed from the registry.
      * @param {pc.Asset} asset - The asset that was removed.
      */
 
     /**
      * @event
-     * @name pc.AssetRegistry#error
+     * @name AssetRegistry#error
      * @description Fired when an error occurs during asset loading.
      * @param {string} err - The error message.
      * @param {pc.Asset} asset - The asset that generated the error.
@@ -149,7 +149,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @event
-     * @name pc.AssetRegistry#error:[id]
+     * @name AssetRegistry#error:[id]
      * @description Fired when an error occurs during asset loading.
      * @param {pc.Asset} asset - The asset that generated the error.
      * @example
@@ -163,7 +163,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#list
+     * @name AssetRegistry#list
      * @description Create a filtered list of assets from the registry.
      * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
      * @returns {pc.Asset[]} The filtered list of assets.
@@ -181,7 +181,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#add
+     * @name AssetRegistry#add
      * @description Add an asset to the registry.
      * @param {pc.Asset} asset - The asset to add.
      * @example
@@ -223,7 +223,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#remove
+     * @name AssetRegistry#remove
      * @description Remove an asset from the registry.
      * @param {pc.Asset} asset - The asset to remove.
      * @returns {boolean} True if the asset was successfully removed and false otherwise.
@@ -283,7 +283,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#get
+     * @name AssetRegistry#get
      * @description Retrieve an asset from the registry by its id field.
      * @param {number} id - The id of the asset to get.
      * @returns {pc.Asset} The asset.
@@ -297,7 +297,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#getByUrl
+     * @name AssetRegistry#getByUrl
      * @description Retrieve an asset from the registry by it's file's URL field.
      * @param {string} url - The url of the asset to get.
      * @returns {pc.Asset} The asset.
@@ -311,7 +311,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#load
+     * @name AssetRegistry#load
      * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded.
      * @param {pc.Asset} asset - The asset to load.
      * @example
@@ -400,7 +400,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#loadFromUrl
+     * @name AssetRegistry#loadFromUrl
      * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
      * if you are not integrated with the PlayCanvas Editor.
      * @param {string} url - The url to load.
@@ -417,7 +417,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#loadFromUrlAndFilename
+     * @name AssetRegistry#loadFromUrlAndFilename
      * @description Use this to load and create an asset when both the URL and filename are required. For example, use this function when loading
      * BLOB assets, where the URL does not adequately identify the file.
      * @param {string} url - The url to load.
@@ -570,7 +570,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#findAll
+     * @name AssetRegistry#findAll
      * @description Return all Assets with the specified name and type found in the registry.
      * @param {string} name - The name of the Assets to find.
      * @param {string} [type] - The type of the Assets to find.
@@ -609,7 +609,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#findByTag
+     * @name AssetRegistry#findByTag
      * @description Return all Assets that satisfy the search query.
      * Query can be simply a string, or comma separated strings,
      * to have inclusive results of assets that match at least one query.
@@ -635,7 +635,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#filter
+     * @name AssetRegistry#filter
      * @description Return all Assets that satisfy filter callback.
      * @param {pc.callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
      * @returns {pc.Asset[]} A list of all Assets found.
@@ -656,7 +656,7 @@ class AssetRegistry extends EventHandler {
 
     /**
      * @function
-     * @name pc.AssetRegistry#find
+     * @name AssetRegistry#find
      * @description Return the first Asset with the specified name and type found in the registry.
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.

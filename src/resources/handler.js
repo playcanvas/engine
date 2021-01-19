@@ -1,6 +1,6 @@
 /**
  * @interface
- * @name pc.ResourceHandler
+ * @name ResourceHandler
  * @description Interface for ResourceHandlers used by {@link pc.ResourceLoader}.
  */
 class ResourceHandler {
@@ -8,7 +8,7 @@ class ResourceHandler {
 
     /**
      * @function
-     * @name pc.ResourceHandler#load
+     * @name ResourceHandler#load
      * @description Load a resource from a remote URL. When loaded (or failed),
      * use the callback to return an the raw resource data (or error).
      * @param {string|object} url - Either the URL of the resource to load or a structure containing the
@@ -25,7 +25,7 @@ class ResourceHandler {
 
     /**
      * @function
-     * @name pc.ResourceHandler#open
+     * @name ResourceHandler#open
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link pc.ResourceHandler#load}.
@@ -40,7 +40,7 @@ class ResourceHandler {
 
     /**
      * @function
-     * @name pc.ResourceHandler#[patch]
+     * @name ResourceHandler#[patch]
      * @description Optional function to perform any operations on a resource, that requires a dependency on its asset data
      * or any other asset data.
      * @param {pc.Asset} asset - The asset to patch.

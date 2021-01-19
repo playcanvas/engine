@@ -2,7 +2,7 @@ import { ScopeId } from './scope-id.js';
 
 /**
  * @class
- * @name pc.ScopeSpace
+ * @name ScopeSpace
  * @classdesc The scope for variables and subspaces.
  * @param {string} name - The scope name.
  * @property {string} name The scope name.
@@ -19,7 +19,7 @@ class ScopeSpace {
 
     /**
      * @function
-     * @name pc.ScopeSpace#resolve
+     * @name ScopeSpace#resolve
      * @description Get (or create, if it doesn't already exist) a variable in the scope.
      * @param {string} name - The variable name.
      * @returns {pc.ScopeId} The variable instance.
@@ -37,7 +37,7 @@ class ScopeSpace {
 
     /**
      * @function
-     * @name pc.ScopeSpace#getSubSpace
+     * @name ScopeSpace#getSubSpace
      * @description Get (or create, if it doesn't already exist) a subspace in the scope.
      * @param {string} name - The subspace name.
      * @returns {pc.ScopeSpace} The subspace instance.

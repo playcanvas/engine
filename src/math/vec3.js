@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Vec3
+ * @name Vec3
  * @classdesc A 3-dimensional vector.
  * @description Creates a new Vec3 object.
  * @param {number|number[]} [x] - The x value. If x is an array of length 3, the array will be used to populate all components.
@@ -10,7 +10,7 @@
  * var v = new pc.Vec3(1, 2, 3);
  */
 /**
- * @name pc.Vec3#x
+ * @name Vec3#x
  * @type {number}
  * @description The first component of the vector.
  * @example
@@ -23,7 +23,7 @@
  * vec.x = 0;
  */
 /**
- * @name pc.Vec3#y
+ * @name Vec3#y
  * @type {number}
  * @description The second component of the vector.
  * @example
@@ -36,7 +36,7 @@
  * vec.y = 0;
  */
 /**
- * @name pc.Vec3#z
+ * @name Vec3#z
  * @type {number}
  * @description The third component of the vector.
  * @example
@@ -63,7 +63,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#add
+     * @name Vec3#add
      * @description Adds a 3-dimensional vector to another in place.
      * @param {pc.Vec3} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec3} Self for chaining.
@@ -86,7 +86,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#add2
+     * @name Vec3#add2
      * @description Adds two 3-dimensional vectors together and returns the result.
      * @param {pc.Vec3} lhs - The first vector operand for the addition.
      * @param {pc.Vec3} rhs - The second vector operand for the addition.
@@ -111,7 +111,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#clone
+     * @name Vec3#clone
      * @description Returns an identical copy of the specified 3-dimensional vector.
      * @returns {pc.Vec3} A 3-dimensional vector containing the result of the cloning.
      * @example
@@ -125,7 +125,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#copy
+     * @name Vec3#copy
      * @description Copied the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
      * @param {pc.Vec3} rhs - A vector to copy to the specified vector.
      * @returns {pc.Vec3} Self for chaining.
@@ -147,7 +147,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#cross
+     * @name Vec3#cross
      * @description Returns the result of a cross product operation performed on the two specified 3-dimensional vectors.
      * @param {pc.Vec3} lhs - The first 3-dimensional vector operand of the cross product.
      * @param {pc.Vec3} rhs - The second 3-dimensional vector operand of the cross product.
@@ -176,7 +176,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#distance
+     * @name Vec3#distance
      * @description Returns the distance between the two specified 3-dimensional vectors.
      * @param {pc.Vec3} rhs - The second 3-dimensional vector to test.
      * @returns {number} The distance between the two vectors.
@@ -195,7 +195,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#dot
+     * @name Vec3#dot
      * @description Returns the result of a dot product operation performed on the two specified 3-dimensional vectors.
      * @param {pc.Vec3} rhs - The second 3-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
@@ -211,7 +211,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#equals
+     * @name Vec3#equals
      * @description Reports whether two vectors are equal.
      * @param {pc.Vec3} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
@@ -226,7 +226,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#length
+     * @name Vec3#length
      * @description Returns the magnitude of the specified 3-dimensional vector.
      * @returns {number} The magnitude of the specified 3-dimensional vector.
      * @example
@@ -241,7 +241,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#lengthSq
+     * @name Vec3#lengthSq
      * @description Returns the magnitude squared of the specified 3-dimensional vector.
      * @returns {number} The magnitude of the specified 3-dimensional vector.
      * @example
@@ -256,7 +256,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#lerp
+     * @name Vec3#lerp
      * @description Returns the result of a linear interpolation between two specified 3-dimensional vectors.
      * @param {pc.Vec3} lhs - The 3-dimensional to interpolate from.
      * @param {pc.Vec3} rhs - The 3-dimensional to interpolate to.
@@ -283,7 +283,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#mul
+     * @name Vec3#mul
      * @description Multiplies a 3-dimensional vector to another in place.
      * @param {pc.Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec3} Self for chaining.
@@ -306,7 +306,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#mul2
+     * @name Vec3#mul2
      * @description Returns the result of multiplying the specified 3-dimensional vectors together.
      * @param {pc.Vec3} lhs - The 3-dimensional vector used as the first multiplicand of the operation.
      * @param {pc.Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
@@ -331,7 +331,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#normalize
+     * @name Vec3#normalize
      * @description Returns this 3-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
      * @returns {pc.Vec3} Self for chaining.
@@ -382,7 +382,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#scale
+     * @name Vec3#scale
      * @description Scales each dimension of the specified 3-dimensional vector by the supplied
      * scalar value.
      * @param {number} scalar - The value by which each vector component is multiplied.
@@ -409,7 +409,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#set
+     * @name Vec3#set
      * @description Sets the specified 3-dimensional vector to the supplied numerical values.
      * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
@@ -432,7 +432,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#sub
+     * @name Vec3#sub
      * @description Subtracts a 3-dimensional vector from another in place.
      * @param {pc.Vec3} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec3} Self for chaining.
@@ -455,7 +455,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#sub2
+     * @name Vec3#sub2
      * @description Subtracts two 3-dimensional vectors from one another and returns the result.
      * @param {pc.Vec3} lhs - The first vector operand for the addition.
      * @param {pc.Vec3} rhs - The second vector operand for the addition.
@@ -480,7 +480,7 @@ class Vec3 {
 
     /**
      * @function
-     * @name pc.Vec3#toString
+     * @name Vec3#toString
      * @description Converts the vector to string form.
      * @returns {string} The vector in string form.
      * @example
@@ -496,7 +496,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.ZERO
+     * @name Vec3.ZERO
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 0].
      */
@@ -506,7 +506,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.ONE
+     * @name Vec3.ONE
      * @type {pc.Vec3}
      * @description A constant vector set to [1, 1, 1].
      */
@@ -516,7 +516,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.UP
+     * @name Vec3.UP
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 1, 0].
      */
@@ -526,7 +526,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.DOWN
+     * @name Vec3.DOWN
      * @type {pc.Vec3}
      * @description A constant vector set to [0, -1, 0].
      */
@@ -536,7 +536,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.RIGHT
+     * @name Vec3.RIGHT
      * @type {pc.Vec3}
      * @description A constant vector set to [1, 0, 0].
      */
@@ -546,7 +546,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.LEFT
+     * @name Vec3.LEFT
      * @type {pc.Vec3}
      * @description A constant vector set to [-1, 0, 0].
      */
@@ -556,7 +556,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.FORWARD
+     * @name Vec3.FORWARD
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, -1].
      */
@@ -566,7 +566,7 @@ class Vec3 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec3.BACK
+     * @name Vec3.BACK
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 1].
      */

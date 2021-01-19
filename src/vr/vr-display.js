@@ -10,7 +10,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
  * @private
  * @deprecated
  * @class
- * @name pc.VrDisplay
+ * @name VrDisplay
  * @augments pc.EventHandler
  * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
  * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
@@ -114,7 +114,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#destroy
+     * @name VrDisplay#destroy
      * @description Destroy this display object.
      */
     destroy() {
@@ -127,7 +127,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#poll
+     * @name VrDisplay#poll
      * @description Called once per frame to update the current status from the display. Usually called by {@link pc.VrManager}.
      */
     poll() {
@@ -227,7 +227,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#requestPresent
+     * @name VrDisplay#requestPresent
      * @description Try to present full screen VR content on this display.
      * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
      * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
@@ -254,7 +254,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#exitPresent
+     * @name VrDisplay#exitPresent
      * @description Try to stop presenting VR content on this display.
      * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
      * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
@@ -280,7 +280,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#requestAnimationFrame
+     * @name VrDisplay#requestAnimationFrame
      * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}.
      * @param {pc.callbacks.VrFrame} fn - Function called when it is time to update the frame.
      */
@@ -292,7 +292,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#submitFrame
+     * @name VrDisplay#submitFrame
      * @description Called when animation update is complete and the frame is ready to be sent to the display. Usually only called from inside {@link pc.Application}.
      */
     submitFrame() {
@@ -303,7 +303,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#reset
+     * @name VrDisplay#reset
      * @description Called to reset the pose of the pc.VrDisplay. Treating its current pose as the origin/zero. This should only be called in 'sitting' experiences.
      */
     reset() {
@@ -314,7 +314,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#setClipPlanes
+     * @name VrDisplay#setClipPlanes
      * @description Set the near and far depth plans of the display. This enables mapping of values in the
      * render target depth attachment to scene coordinates.
      * @param {number} n - The near depth distance.
@@ -331,7 +331,7 @@ class VrDisplay extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.VrDisplay#getFrameData
+     * @name VrDisplay#getFrameData
      * @description Return the current frame data that is updated during polling.
      * @returns {VRFrameData} The frame data object.
      */

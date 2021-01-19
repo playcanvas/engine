@@ -198,7 +198,7 @@ import viewNormalVS from './viewNormal.vert';
  * @static
  * @readonly
  * @type {object}
- * @name pc.shaderChunks
+ * @name shaderChunks
  * @description Object containing all default shader chunks used by shader generators.
  */
 var shaderChunks = {

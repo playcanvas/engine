@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimTrack
+ * @name AnimTrack
  * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
  * @description Create a new animation track.
  * @param {string} name - the track name

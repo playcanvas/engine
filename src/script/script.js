@@ -20,7 +20,7 @@ const reservedScriptNames = new Set([
 /**
  * @static
  * @function
- * @name pc.createScript
+ * @name createScript
  * @description Create and register a new {@link pc.ScriptType}.
  * It returns new class type (constructor function), which is auto-registered to {@link pc.ScriptRegistry} using it's name.
  * This is the main interface to create Script Types, to define custom logic using JavaScript, that is used to create interaction for entities.
@@ -87,7 +87,7 @@ createScript.reservedAttributes = reservedAttributes;
 /**
  * @static
  * @function
- * @name pc.registerScript
+ * @name registerScript
  * @description Register a existing class type as a Script Type to {@link pc.ScriptRegistry}.
  * Useful when defining a ES6 script class that extends {@link pc.ScriptType} (see example).
  * @param {Class<pc.ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.

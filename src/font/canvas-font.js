@@ -15,7 +15,7 @@ const DEFAULT_TEXTURE_SIZE = 512;
 /**
  * @private
  * @class
- * @name pc.CanvasFont
+ * @name CanvasFont
  * @augments pc.EventHandler
  * @classdesc Represents the resource of a canvas font asset.
  * @param {pc.Application} app - The application.
@@ -74,7 +74,7 @@ class CanvasFont extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.CanvasFont#createTextures
+     * @name CanvasFont#createTextures
      * @description Render the necessary textures for all characters in a string to be used for the canvas font.
      * @param {string} text - The list of characters to render into the texture atlas.
      */
@@ -99,7 +99,7 @@ class CanvasFont extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.CanvasFont#updateTextures
+     * @name CanvasFont#updateTextures
      * @description Update the list of characters to include in the atlas to include those provided and re-render the texture atlas
      * to include all the characters that have been supplied so far.
      * @param {string} text - The list of characters to add to the texture atlas.
@@ -123,7 +123,7 @@ class CanvasFont extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.CanvasFont#destroy
+     * @name CanvasFont#destroy
      * @description Tears down all resources used by the font.
      */
     destroy() {

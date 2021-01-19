@@ -3,7 +3,7 @@ import { AnimSnapshot } from './anim-snapshot.js';
 /**
  * @private
  * @class
- * @name pc.AnimClip
+ * @name AnimClip
  * @classdesc AnimClip wraps the running state of an animation track. It contains and update
  * the animation 'cursor' and performs looping logic.
  * @description Create a new animation clip.

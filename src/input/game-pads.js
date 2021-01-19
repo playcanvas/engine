@@ -83,7 +83,7 @@ const PRODUCT_CODES = {
 
 /**
  * @class
- * @name pc.GamePads
+ * @name GamePads
  * @classdesc Input handler for accessing GamePad input.
  */
 class GamePads {
@@ -98,7 +98,7 @@ class GamePads {
 
     /**
      * @function
-     * @name pc.GamePads#update
+     * @name GamePads#update
      * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
      * to work.
      */
@@ -124,7 +124,7 @@ class GamePads {
 
     /**
      * @function
-     * @name pc.GamePads#poll
+     * @name GamePads#poll
      * @description Poll for the latest data from the gamepad API.
      * @param {object[]} [pads] - An optional array used to receive the gamepads mapping. This array will be
      * returned by this function.
@@ -165,7 +165,7 @@ class GamePads {
 
     /**
      * @function
-     * @name pc.GamePads#isPressed
+     * @name GamePads#isPressed
      * @description Returns true if the button on the pad requested is pressed.
      * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
      * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
@@ -182,7 +182,7 @@ class GamePads {
 
     /**
      * @function
-     * @name pc.GamePads#wasPressed
+     * @name GamePads#wasPressed
      * @description Returns true if the button was pressed since the last frame.
      * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
      * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
@@ -200,7 +200,7 @@ class GamePads {
 
     /**
      * @function
-     * @name pc.GamePads#getAxis
+     * @name GamePads#getAxis
      * @description Get the value of one of the analogue axes of the pad.
      * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
      * @param {number} axes - The axes to get the value of, use constants pc.PAD_L_STICK_X, etc.

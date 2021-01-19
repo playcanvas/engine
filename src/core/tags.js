@@ -2,7 +2,7 @@ import { EventHandler } from './event-handler.js';
 
 /**
  * @class
- * @name pc.Tags
+ * @name Tags
  * @augments pc.EventHandler
  * @classdesc Set of tag names.
  * @description Create an instance of a Tags.
@@ -20,7 +20,7 @@ class Tags extends EventHandler {
 
     /**
      * @function
-     * @name pc.Tags#add
+     * @name Tags#add
      * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
      * @param {...*} name - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
@@ -58,7 +58,7 @@ class Tags extends EventHandler {
 
     /**
      * @function
-     * @name pc.Tags#remove
+     * @name Tags#remove
      * @description Remove tag.
      * @param {...*} name - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
@@ -100,7 +100,7 @@ class Tags extends EventHandler {
 
     /**
      * @function
-     * @name pc.Tags#clear
+     * @name Tags#clear
      * @description Remove all tags.
      * @example
      * tags.clear();
@@ -121,7 +121,7 @@ class Tags extends EventHandler {
 
     /**
      * @function
-     * @name pc.Tags#has
+     * @name Tags#has
      * @description Check if tags satisfy filters.
      * Filters can be provided by simple name of tag, as well as by array of tags.
      * When an array is provided it will check if tags contain each tag within the array.
@@ -177,7 +177,7 @@ class Tags extends EventHandler {
 
     /**
      * @function
-     * @name pc.Tags#list
+     * @name Tags#list
      * @description Returns immutable array of tags.
      * @returns {string[]} Copy of tags array.
      */
@@ -225,7 +225,7 @@ class Tags extends EventHandler {
     /**
      * @field
      * @readonly
-     * @name pc.Tags#size
+     * @name Tags#size
      * @type {number}
      * @description Number of tags in set.
      */
@@ -236,21 +236,21 @@ class Tags extends EventHandler {
 
 /**
  * @event
- * @name pc.Tags#add
+ * @name Tags#add
  * @param {string} tag - Name of a tag added to a set.
  * @param {object} parent - Parent object who tags belong to.
  */
 
 /**
  * @event
- * @name pc.Tags#remove
+ * @name Tags#remove
  * @param {string} tag - Name of a tag removed from a set.
  * @param {object} parent - Parent object who tags belong to.
  */
 
 /**
  * @event
- * @name pc.Tags#change
+ * @name Tags#change
  * @param {object} [parent] - Parent object who tags belong to.
  * @description Fires when tags been added / removed.
  * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation.

@@ -5,7 +5,7 @@ import { ScriptHandler } from '../resources/script.js';
 import { Application } from './application.js';
 
 /**
- * @name pc.script
+ * @name script
  * @namespace
  * @description The pc.script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
@@ -23,7 +23,7 @@ var script = {
     /**
      * @private
      * @function
-     * @name pc.script.create
+     * @name script.create
      * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
      * instantiated when attached to Entities.
      * @param {string} name - The name of the script object.
@@ -64,7 +64,7 @@ var script = {
     /**
      * @private
      * @function
-     * @name pc.script.attribute
+     * @name script.attribute
      * @description Creates a script attribute for the current script. The script attribute can be accessed
      * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
      * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
@@ -116,7 +116,7 @@ var script = {
 
     /**
      * @function
-     * @name pc.script.createLoadingScreen
+     * @name script.createLoadingScreen
      * @description Handles the creation of the loading screen of the application. A script can subscribe to
      * the events of a {@link pc.Application} to show a loading screen, progress bar etc. In order for this to work
      * you need to set the project's loading screen script to the script that calls this method.

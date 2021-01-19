@@ -2,7 +2,7 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 
 /**
  * @class
- * @name pc.Batch
+ * @name Batch
  * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
  * @param {pc.MeshInstance[]} meshInstances - The mesh instances to be batched.
  * @param {boolean} dynamic - Whether this batch is dynamic (supports transforming mesh instances at runtime).

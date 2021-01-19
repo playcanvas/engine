@@ -8,7 +8,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
  * @class
- * @name pc.SceneRegistry
+ * @name SceneRegistry
  * @description Container for storing the name and url for scene files.
  * @param {pc.Application} app - The application.
  */
@@ -26,7 +26,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#list
+     * @name SceneRegistry#list
      * @description Return the list of scene.
      * @returns {pc.SceneRegistryItem[]} All items in the registry.
      */
@@ -118,7 +118,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#loadSceneHierarchy
+     * @name SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
@@ -179,7 +179,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#loadSceneSettings
+     * @name SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
      * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
      * @param {pc.callbacks.LoadSettings} callback - The function called after the settings

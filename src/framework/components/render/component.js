@@ -17,7 +17,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @private
  * @component
  * @class
- * @name pc.RenderComponent
+ * @name RenderComponent
  * @augments pc.Component
  * @classdesc Enables an Entity to render a {@link pc.Mesh} or a primitive shape. This component attaches {@link pc.MeshInstance} geometry to the Entity.
  * @description Create a new RenderComponent.
@@ -238,7 +238,7 @@ class RenderComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RenderComponent#hide
+     * @name RenderComponent#hide
      * @description Stop rendering {@link pc.MeshInstance}s without removing them from the scene hierarchy.
      * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance to false.
      * Note, this does not remove the mesh instances from the scene hierarchy or draw call list.
@@ -255,7 +255,7 @@ class RenderComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RenderComponent#show
+     * @name RenderComponent#show
      * @description Enable rendering of the render {@link pc.MeshInstance}s if hidden using {@link pc.RenderComponent#hide}.
      * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
      */
@@ -425,7 +425,7 @@ class RenderComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RenderComponent#generateWireframe
+     * @name RenderComponent#generateWireframe
      * @description Generates the necessary internal data for this component to be
      * renderable as wireframe. Once this function has been called, any mesh
      * instance can have its renderStyle property set to pc.RENDERSTYLE_WIREFRAME.
