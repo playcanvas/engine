@@ -242,7 +242,7 @@ class Lightmapper {
      * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
-     * pc.BAKE_COLORDIR.
+     * {@link BAKE_COLORDIR}.
      */
     bake(nodes, mode) {
 

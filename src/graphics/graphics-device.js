@@ -2486,9 +2486,9 @@ class GraphicsDevice extends EventHandler {
      * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
      * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
      * combination of:
-     * * pc.CLEARFLAG_COLOR
-     * * pc.CLEARFLAG_DEPTH
-     * * pc.CLEARFLAG_STENCIL
+     * * {@link CLEARFLAG_COLOR}
+     * * {@link CLEARFLAG_DEPTH}
+     * * {@link CLEARFLAG_STENCIL}
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
      * device.clear();
@@ -3089,7 +3089,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setBlendEquation
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
      * * {@link BLENDEQUATION_ADD}
      * * {@link BLENDEQUATION_SUBTRACT}
@@ -3111,7 +3111,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setBlendEquationSeparate
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link pc.BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
      * * {@link BLENDEQUATION_ADD}
      * * {@link BLENDEQUATION_SUBTRACT}
@@ -3454,7 +3454,7 @@ class GraphicsDevice extends EventHandler {
      * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
      * available uniform vectors available after subtracting the number taken by a typical
      * heavyweight shader. If a different number is required, it can be tuned via
-     * pc.GraphicsDevice#setBoneLimit.
+     * {@link GraphicsDevice#setBoneLimit}.
      * @returns {number} The maximum number of bones that can be supported by the host hardware.
      */
     getBoneLimit() {

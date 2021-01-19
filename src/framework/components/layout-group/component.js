@@ -66,8 +66,8 @@ function isEnabledAndHasEnabledElement(entity) {
  *   2. Apply the natural width of each child.
  *   3. If the new total width of all children exceeds the available space of the
  * container, reduce each child's width proportionally based on the normalized {@link
- * pc.LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
- * pc.LayoutChildComponent#minWidth} of each child.
+ * LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
+ * LayoutChildComponent#minWidth} of each child.
  * * {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
  *
  * Defaults to pc.FITTING_NONE.
