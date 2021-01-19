@@ -151,7 +151,7 @@ var _completePartialMipmapChain = function (texture) {
 /**
  * @class
  * @name TextureHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler used for loading 2D and 3D {@link Texture} resources.
  * @param {GraphicsDevice} device - The graphics device.
  * @param {AssetRegistry} assets - The asset registry.

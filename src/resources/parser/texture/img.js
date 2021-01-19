@@ -9,7 +9,7 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
 /**
  * @class
  * @name ImgParser
- * @implements {pc.TextureParser}
+ * @implements {TextureParser}
  * @classdesc Parser for browser-supported image formats.
  */
 class ImgParser {

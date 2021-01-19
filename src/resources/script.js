@@ -3,7 +3,7 @@ import { script } from '../framework/script.js';
 /**
  * @class
  * @name ScriptHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler for loading JavaScript files dynamically
  * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link createScript},
  * or regular JavaScript files, such as third-party libraries.

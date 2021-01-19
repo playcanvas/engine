@@ -32,7 +32,7 @@ function upgradeDataSchema(data) {
 /**
  * @class
  * @name FontHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler used for loading {@link Font} resources.
  * @param {ResourceLoader} loader - The resource loader.
  */
