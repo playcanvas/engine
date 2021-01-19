@@ -157,12 +157,12 @@ class CurveSet {
      * @type {number}
      * @description The interpolation scheme applied to all curves in the curve set. Can be:
      *
-     * * {@link pc.CURVE_LINEAR}
-     * * {@link pc.CURVE_SMOOTHSTEP}
-     * * {@link pc.CURVE_SPLINE}
-     * * {@link pc.CURVE_STEP}
+     * * {@link CURVE_LINEAR}
+     * * {@link CURVE_SMOOTHSTEP}
+     * * {@link CURVE_SPLINE}
+     * * {@link CURVE_STEP}
      *
-     * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
+     * Defaults to {@link CURVE_SMOOTHSTEP}.
      */
     get type() {
         return this._type;

@@ -57,7 +57,7 @@ var instanceOptions = {
  * @property {boolean} isPlaying Returns true if the slot is currently playing.
  * @property {boolean} isPaused Returns true if the slot is currently paused.
  * @property {boolean} isStopped Returns true if the slot is currently stopped.
- * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
+ * @property {pc.SoundInstance[]} instances An array that contains all the {@link SoundInstance}s currently being played by the slot.
  */
 class SoundSlot extends EventHandler {
     constructor(component, name, options) {
@@ -96,7 +96,7 @@ class SoundSlot extends EventHandler {
 
     /**
      * @function pc.SoundSlot#play
-     * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
+     * @description Plays a sound. If {@link SoundSlot#overlap} is true the new sound
      * instance will be played independently of any other instances already playing.
      * Otherwise existing sound instances will stop before playing the new sound.
      * @returns {pc.SoundInstance} The new sound instance.
@@ -142,7 +142,7 @@ class SoundSlot extends EventHandler {
     /**
      * @function
      * @name SoundSlot#pause
-     * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+     * @description Pauses all sound instances. To continue playback call {@link SoundSlot#resume}.
      * @returns {boolean} True if the sound instances paused successfully, false otherwise.
      */
     pause() {
@@ -273,7 +273,7 @@ class SoundSlot extends EventHandler {
     /**
      * @function
      * @name SoundSlot#clearExternalNodes
-     * @description Clears any external nodes set by {@link pc.SoundSlot#setExternalNodes}.
+     * @description Clears any external nodes set by {@link SoundSlot#setExternalNodes}.
      */
     clearExternalNodes() {
         this._firstNode = null;
@@ -291,8 +291,8 @@ class SoundSlot extends EventHandler {
     /**
      * @function
      * @name SoundSlot#getExternalNodes
-     * @description Gets an array that contains the two external nodes set by {@link pc.SoundSlot#setExternalNodes}.
-     * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by {@link pc.SoundSlot#setExternalNodes}.
+     * @description Gets an array that contains the two external nodes set by {@link SoundSlot#setExternalNodes}.
+     * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by {@link SoundSlot#setExternalNodes}.
      */
     getExternalNodes() {
         return [this._firstNode, this._lastNode];

@@ -8,8 +8,8 @@ import { TemplateUtils } from '../templates/template-utils.js';
  * @class
  * @name SceneHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Scene} resources.
- * @param {pc.Application} app - The running {@link pc.Application}.
+ * @classdesc Resource handler used for loading {@link Scene} resources.
+ * @param {pc.Application} app - The running {@link Application}.
  */
 class SceneHandler {
     constructor(app) {

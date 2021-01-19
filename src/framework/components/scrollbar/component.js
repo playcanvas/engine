@@ -19,8 +19,8 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
  * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
  *
- * * {@link pc.ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
- * * {@link pc.ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
+ * * {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
+ * * {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
  *
  * Defaults to pc.ORIENTATION_HORIZONTAL.
  * @property {number} value The current position value of the scrollbar, in the range 0 to 1. Defaults to 0.

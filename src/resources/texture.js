@@ -66,7 +66,7 @@ class TextureParser {
      * @name TextureParser#open
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
      * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link pc.ResourceHandler#load}.
+     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {pc.Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {pc.GraphicsDevice} device - The graphics device
      * @returns {pc.Texture} The parsed resource data.
@@ -152,7 +152,7 @@ var _completePartialMipmapChain = function (texture) {
  * @class
  * @name TextureHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources.
+ * @classdesc Resource handler used for loading 2D and 3D {@link Texture} resources.
  * @param {pc.GraphicsDevice} device - The graphics device.
  * @param {pc.AssetRegistry} assets - The asset registry.
  * @param {pc.ResourceLoader} loader - The resource loader.

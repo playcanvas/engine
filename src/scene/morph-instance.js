@@ -145,7 +145,7 @@ class MorphInstance {
     /**
      * @function
      * @name MorphInstance#clone
-     * @description Clones a MorphInstance. The returned clone uses the same {@link pc.Morph} and weights are set to defaults.
+     * @description Clones a MorphInstance. The returned clone uses the same {@link Morph} and weights are set to defaults.
      * @returns {pc.MorphInstance} A clone of the specified MorphInstance.
      */
     clone() {

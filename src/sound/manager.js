@@ -18,7 +18,7 @@ import { Listener } from './listener.js';
  * @description Creates a new sound manager.
  * @param {object} [options] - Options options object.
  * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
- * @property {number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
+ * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
  */
 class SoundManager extends EventHandler {
     constructor(options) {

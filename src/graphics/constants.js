@@ -907,7 +907,7 @@ export const STENCILOP_ZERO = 1;
  * @constant
  * @name STENCILOP_REPLACE
  * @type {number}
- * @description Replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc}).
+ * @description Replace value with the reference value (see {@link GraphicsDevice#setStencilFunc}).
  */
 export const STENCILOP_REPLACE = 2;
 /**

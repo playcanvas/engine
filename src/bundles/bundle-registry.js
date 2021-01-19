@@ -343,7 +343,7 @@ class BundleRegistry {
      * @function
      * @name ResourceLoader#destroy
      * @description Destroys the registry, and releases its resources. Does not unload bundle assets
-     * as these should be unloaded by the {@link pc.AssetRegistry}.
+     * as these should be unloaded by the {@link AssetRegistry}.
      */
     destroy() {
         this._assets.off('add', this._onAssetAdded, this);

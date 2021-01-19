@@ -9,7 +9,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * @param {pc.XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Image Tracking is supported.
  * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
- * @property {pc.XrTrackedImage[]} images List of {@link pc.XrTrackedImage} that contain tracking information.
+ * @property {pc.XrTrackedImage[]} images List of {@link XrTrackedImage} that contain tracking information.
  */
 class XrImageTracking extends EventHandler {
     constructor(manager) {

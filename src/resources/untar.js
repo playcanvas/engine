@@ -198,7 +198,7 @@ function UntarScope(isWorker) {
      * @function
      * @name Untar#untar
      * @description Untars the array buffer provided in the constructor.
-     * @param {string} [filenamePrefix] - The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
+     * @param {string} [filenamePrefix] - The prefix for each filename in the tar archive. This is usually the {@link AssetRegistry} prefix.
      * @returns {object[]} An array of files in this format {name, start, size, url}.
      */
     UntarInternal.prototype.untar = function (filenamePrefix) {
@@ -269,7 +269,7 @@ function getWorkerUrl() {
  * @name UntarWorker
  * @classdesc Wraps untar'ing a tar archive with a Web Worker.
  * @description Creates new instance of a pc.UntarWorker.
- * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
+ * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link AssetRegistry} prefix.
  */
 class UntarWorker {
     constructor(filenamePrefix) {

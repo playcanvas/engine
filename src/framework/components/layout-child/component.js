@@ -6,7 +6,7 @@ import { Component } from '../component.js';
  * @name LayoutChildComponent
  * @augments Component
  * @description Create a new LayoutChildComponent.
- * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
+ * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link LayoutGroupComponent}.
  * @param {pc.LayoutChildComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.
  * @property {number} minWidth The minimum width the element should be rendered at.

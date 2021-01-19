@@ -43,7 +43,7 @@ function onContainerAssetRemoved(containerAsset) {
  * @class
  * @name RenderHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.Render} resources.
+ * @classdesc Resource handler used for loading {@link Render} resources.
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */

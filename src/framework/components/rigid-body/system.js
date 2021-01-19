@@ -326,7 +326,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @function
      * @name RigidBodyComponentSystem#raycastFirst
      * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-     * if the ray hits an entity with a collision component, it returns a {@link pc.RaycastResult}, otherwise returns null.
+     * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
      * @param {pc.Vec3} start - The world space point where the ray starts.
      * @param {pc.Vec3} end - The world space point where the ray ends.
      * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
@@ -373,7 +373,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @function
      * @name RigidBodyComponentSystem#raycastAll
      * @description Raycast the world and return all entities the ray hits. It returns an array
-     * of {@link pc.RaycastResult}, one for each hit. If no hits are detected, the returned
+     * of {@link RaycastResult}, one for each hit. If no hits are detected, the returned
      * array will be of length 0.
      * @param {pc.Vec3} start - The world space point where the ray starts.
      * @param {pc.Vec3} end - The world space point where the ray ends.

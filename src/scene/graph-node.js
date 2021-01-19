@@ -29,7 +29,7 @@ var up = new Vec3();
  * @classdesc A hierarchical scene node.
  * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
  * @property {string} name The non-unique name of a graph node.
- * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
+ * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
  */
 class GraphNode extends EventHandler {
     constructor(name) {
@@ -563,7 +563,7 @@ class GraphNode extends EventHandler {
      * @description Get the world space rotation for the specified GraphNode in Euler angle
      * form. The order of the returned Euler angles is XYZ. The value returned by this function
      * should be considered read-only. In order to set the world-space rotation of the graph
-     * node, use {@link pc.GraphNode#setEulerAngles}.
+     * node, use {@link GraphNode#setEulerAngles}.
      * @returns {pc.Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
      * var angles = this.entity.getEulerAngles(); // [0,0,0]
@@ -581,7 +581,7 @@ class GraphNode extends EventHandler {
      * @description Get the rotation in local space for the specified GraphNode. The rotation
      * is returned as euler angles in a 3-dimensional vector where the order is XYZ. The
      * returned vector should be considered read-only. To update the local rotation, use
-     * {@link pc.GraphNode#setLocalEulerAngles}.
+     * {@link GraphNode#setLocalEulerAngles}.
      * @returns {pc.Vec3} The local space rotation of the graph node as euler angles in XYZ order.
      * @example
      * var angles = this.entity.getLocalEulerAngles();
@@ -598,7 +598,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getLocalPosition
      * @description Get the position in local space for the specified GraphNode. The position
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
-     * To update the local position, use {@link pc.GraphNode#setLocalPosition}.
+     * To update the local position, use {@link GraphNode#setLocalPosition}.
      * @returns {pc.Vec3} The local space position of the graph node.
      * @example
      * var position = this.entity.getLocalPosition();
@@ -614,7 +614,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getLocalRotation
      * @description Get the rotation in local space for the specified GraphNode. The rotation
      * is returned as a quaternion. The returned quaternion should be considered read-only.
-     * To update the local rotation, use {@link pc.GraphNode#setLocalRotation}.
+     * To update the local rotation, use {@link GraphNode#setLocalRotation}.
      * @returns {pc.Quat} The local space rotation of the graph node as a quaternion.
      * @example
      * var rotation = this.entity.getLocalRotation();
@@ -628,7 +628,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getLocalScale
      * @description Get the scale in local space for the specified GraphNode. The scale
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
-     * To update the local scale, use {@link pc.GraphNode#setLocalScale}.
+     * To update the local scale, use {@link GraphNode#setLocalScale}.
      * @returns {pc.Vec3} The local space scale of the graph node.
      * @example
      * var scale = this.entity.getLocalScale();
@@ -661,7 +661,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getPosition
      * @description Get the world space position for the specified GraphNode. The
      * value returned by this function should be considered read-only. In order to set
-     * the world-space position of the graph node, use {@link pc.GraphNode#setPosition}.
+     * the world-space position of the graph node, use {@link GraphNode#setPosition}.
      * @returns {pc.Vec3} The world space position of the graph node.
      * @example
      * var position = this.entity.getPosition();
@@ -678,7 +678,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getRotation
      * @description Get the world space rotation for the specified GraphNode in quaternion
      * form. The value returned by this function should be considered read-only. In order
-     * to set the world-space rotation of the graph node, use {@link pc.GraphNode#setRotation}.
+     * to set the world-space rotation of the graph node, use {@link GraphNode#setRotation}.
      * @returns {pc.Quat} The world space rotation of the graph node as a quaternion.
      * @example
      * var rotation = this.entity.getRotation();

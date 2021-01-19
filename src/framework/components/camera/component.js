@@ -35,9 +35,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @property {number} projection The type of projection used to render the camera.
  * Can be:
  *
- * * {@link pc.PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
+ * * {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
  * resembles a truncated pyramid.
- * * {@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
+ * * {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
  * frustum is a cuboid.
  *
  * Defaults to pc.PROJECTION_PERSPECTIVE.
@@ -47,9 +47,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * the value.
  * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
  *
- * * {@link pc.ASPECT_AUTO}: aspect ratio will be calculated from the current render
+ * * {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
  * target's width divided by height.
- * * {@link pc.ASPECT_MANUAL}: use the aspectRatio value.
+ * * {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
  * Defaults to pc.ASPECT_AUTO.
  * @property {pc.Color} clearColor The color used to clear the canvas to before the
@@ -63,14 +63,14 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @property {number} farClip The distance from the camera after which no rendering
  * will take place. Defaults to 1000.
  * @property {number} fov The field of view of the camera in degrees. Usually this is
- * the Y-axis field of view, see {@link pc.CameraComponent#horizontalFov}. Used for
- * {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
+ * the Y-axis field of view, see {@link CameraComponent#horizontalFov}. Used for
+ * {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
  * @property {boolean} horizontalFov Set which axis to use for the Field of View
  * calculation. Defaults to false.
  * @property {number} nearClip The distance from the camera before which no rendering
  * will take place. Defaults to 0.1.
  * @property {number} orthoHeight The half-height of the orthographic view window (in
- * the Y-axis). Used for {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+ * the Y-axis). Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
  * @property {number} priority Controls the order in which cameras are rendered. Cameras
  * with smaller values for priority are rendered first. Defaults to 0.
  * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in
@@ -101,7 +101,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * Otherwise both front and back faces will be rendered. Defaults to true.
  * @property {boolean} flipFaces If true the camera will invert front and back faces.
  * Can be useful for reflection rendering. Defaults to false.
- * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this
+ * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this
  * camera should belong. Don't push/pop/splice or modify this array, if you want to
  * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
  * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
@@ -353,7 +353,7 @@ class CameraComponent extends Component {
      * @deprecated
      * @function
      * @name CameraComponent#enterVr
-     * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
+     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
      * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
@@ -373,9 +373,9 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#enterVr
      * @variation 2
-     * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
+     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
      * @param {pc.VrDisplay} display - The VrDisplay to present. If not supplied this uses
-     * {@link pc.VrManager#display} as the default.
+     * {@link VrManager#display} as the default.
      * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err). On success it returns null on
      * failure it returns the error message.
@@ -471,28 +471,28 @@ class CameraComponent extends Component {
      * @description Attempt to start XR session with this camera
      * @param {string} type - The type of session. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has
      * limited feature availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
      * to the VR device with the best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
      * to the VR/AR device that is intended to be blended with the real-world environment.
      *
      * @param {string} spaceType - reference space type. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic
+     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
      * tracking capabilities.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
      * origin near the viewer at the time of creation. It is meant for seated or basic
      * local XR sessions.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
      * a native origin at the floor in a safe position for the user to stand. The y-axis
      * equals 0 at floor level. Floor level value might be estimated by the underlying
      * platform. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
      * with its native origin at the floor, where the user is expected to move within a
      * pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
      * user is expected to move freely around their environment, potentially long
      * distances from their starting point.
      *

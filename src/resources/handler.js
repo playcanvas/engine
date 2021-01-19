@@ -1,7 +1,7 @@
 /**
  * @interface
  * @name ResourceHandler
- * @description Interface for ResourceHandlers used by {@link pc.ResourceLoader}.
+ * @description Interface for ResourceHandlers used by {@link ResourceLoader}.
  */
 class ResourceHandler {
     constructor() {}
@@ -28,7 +28,7 @@ class ResourceHandler {
      * @name ResourceHandler#open
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
      * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link pc.ResourceHandler#load}.
+     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */

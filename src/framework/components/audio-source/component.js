@@ -11,7 +11,7 @@ import { Component } from '../component.js';
  * @name AudioSourceComponent
  * @augments Component
  * @classdesc The AudioSource Component controls playback of an audio sample. This
- * class will be deprecated in favor of {@link pc.SoundComponent}.
+ * class will be deprecated in favor of {@link SoundComponent}.
  * @description Create a new AudioSource Component.
  * @param {pc.AudioSourceComponentSystem} system - The ComponentSystem that created
  * this component.
@@ -26,7 +26,7 @@ import { Component } from '../component.js';
  * @property {boolean} loop If true the audio will restart when it finishes playing.
  * @property {boolean} 3d If true the audio will play back at the location of the*
  * entity in space, so the audio will be affect by the position of the
- * {@link pc.AudioListenerComponent}.
+ * {@link AudioListenerComponent}.
  * @property {string} distanceModel Determines which algorithm to use to reduce the
  * volume of the audio as it moves away from the listener. Can be:
  *
@@ -94,7 +94,7 @@ class AudioSourceComponent extends Component {
      * @private
      * @function
      * @name AudioSourceComponent#pause
-     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}.
+     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link AudioSourceComponent#unpause}.
      */
     pause() {
         if (this.channel) {

@@ -155,21 +155,21 @@ class XrManager extends EventHandler {
     /**
      * @function
      * @name XrManager#start
-     * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
+     * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
      * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @param {string} spaceType - reference space type. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @example
      * button.on('click', function () {
@@ -299,9 +299,9 @@ class XrManager extends EventHandler {
      * @description Check if specific type of session is available
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
      * if (app.xr.isAvailable(pc.XRTYPE_VR)) {

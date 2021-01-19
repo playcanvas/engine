@@ -11,27 +11,27 @@ import {
  * @class
  * @name VertexFormat
  * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
- * a {@link pc.VertexBuffer}.
+ * a {@link VertexBuffer}.
  * @description Returns a new pc.VertexFormat object.
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
  * @param {object[]} description - An array of vertex attribute descriptions.
  * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
  * the vertex data to a shader input. Can be:
  *
- * * {@link pc.SEMANTIC_POSITION}
- * * {@link pc.SEMANTIC_NORMAL}
- * * {@link pc.SEMANTIC_TANGENT}
- * * {@link pc.SEMANTIC_BLENDWEIGHT}
- * * {@link pc.SEMANTIC_BLENDINDICES}
- * * {@link pc.SEMANTIC_COLOR}
- * * {@link pc.SEMANTIC_TEXCOORD0}
- * * {@link pc.SEMANTIC_TEXCOORD1}
- * * {@link pc.SEMANTIC_TEXCOORD2}
- * * {@link pc.SEMANTIC_TEXCOORD3}
- * * {@link pc.SEMANTIC_TEXCOORD4}
- * * {@link pc.SEMANTIC_TEXCOORD5}
- * * {@link pc.SEMANTIC_TEXCOORD6}
- * * {@link pc.SEMANTIC_TEXCOORD7}
+ * * {@link SEMANTIC_POSITION}
+ * * {@link SEMANTIC_NORMAL}
+ * * {@link SEMANTIC_TANGENT}
+ * * {@link SEMANTIC_BLENDWEIGHT}
+ * * {@link SEMANTIC_BLENDINDICES}
+ * * {@link SEMANTIC_COLOR}
+ * * {@link SEMANTIC_TEXCOORD0}
+ * * {@link SEMANTIC_TEXCOORD1}
+ * * {@link SEMANTIC_TEXCOORD2}
+ * * {@link SEMANTIC_TEXCOORD3}
+ * * {@link SEMANTIC_TEXCOORD4}
+ * * {@link SEMANTIC_TEXCOORD5}
+ * * {@link SEMANTIC_TEXCOORD6}
+ * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
  * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
@@ -39,13 +39,13 @@ import {
  * Can be 1, 2, 3 or 4.
  * @param {number} description[].type - The data type of the attribute. Can be:
  *
- * * {@link pc.TYPE_INT8}
- * * {@link pc.TYPE_UINT8}
- * * {@link pc.TYPE_INT16}
- * * {@link pc.TYPE_UINT16}
- * * {@link pc.TYPE_INT32}
- * * {@link pc.TYPE_UINT32}
- * * {@link pc.TYPE_FLOAT32}
+ * * {@link TYPE_INT8}
+ * * {@link TYPE_UINT8}
+ * * {@link TYPE_INT16}
+ * * {@link TYPE_UINT16}
+ * * {@link TYPE_INT32}
+ * * {@link TYPE_UINT32}
+ * * {@link TYPE_FLOAT32}
  *
  * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped from a
  * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
@@ -58,20 +58,20 @@ import {
  * @property {string} elements[].name The meaning of the vertex element. This is used to link
  * the vertex data to a shader input. Can be:
  *
- * * {@link pc.SEMANTIC_POSITION}
- * * {@link pc.SEMANTIC_NORMAL}
- * * {@link pc.SEMANTIC_TANGENT}
- * * {@link pc.SEMANTIC_BLENDWEIGHT}
- * * {@link pc.SEMANTIC_BLENDINDICES}
- * * {@link pc.SEMANTIC_COLOR}
- * * {@link pc.SEMANTIC_TEXCOORD0}
- * * {@link pc.SEMANTIC_TEXCOORD1}
- * * {@link pc.SEMANTIC_TEXCOORD2}
- * * {@link pc.SEMANTIC_TEXCOORD3}
- * * {@link pc.SEMANTIC_TEXCOORD4}
- * * {@link pc.SEMANTIC_TEXCOORD5}
- * * {@link pc.SEMANTIC_TEXCOORD6}
- * * {@link pc.SEMANTIC_TEXCOORD7}
+ * * {@link SEMANTIC_POSITION}
+ * * {@link SEMANTIC_NORMAL}
+ * * {@link SEMANTIC_TANGENT}
+ * * {@link SEMANTIC_BLENDWEIGHT}
+ * * {@link SEMANTIC_BLENDINDICES}
+ * * {@link SEMANTIC_COLOR}
+ * * {@link SEMANTIC_TEXCOORD0}
+ * * {@link SEMANTIC_TEXCOORD1}
+ * * {@link SEMANTIC_TEXCOORD2}
+ * * {@link SEMANTIC_TEXCOORD3}
+ * * {@link SEMANTIC_TEXCOORD4}
+ * * {@link SEMANTIC_TEXCOORD5}
+ * * {@link SEMANTIC_TEXCOORD6}
+ * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
  * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
@@ -79,13 +79,13 @@ import {
  * Can be 1, 2, 3 or 4.
  * @property {number} elements[].dataType The data type of the attribute. Can be:
  *
- * * {@link pc.TYPE_INT8}
- * * {@link pc.TYPE_UINT8}
- * * {@link pc.TYPE_INT16}
- * * {@link pc.TYPE_UINT16}
- * * {@link pc.TYPE_INT32}
- * * {@link pc.TYPE_UINT32}
- * * {@link pc.TYPE_FLOAT32}
+ * * {@link TYPE_INT8}
+ * * {@link TYPE_UINT8}
+ * * {@link TYPE_INT16}
+ * * {@link TYPE_UINT16}
+ * * {@link TYPE_INT32}
+ * * {@link TYPE_UINT32}
+ * * {@link TYPE_FLOAT32}
  * @property {boolean} elements[].normalize If true, vertex attribute data will be mapped from a
  * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
  * unchanged. If this property is unspecified, false is assumed.
@@ -194,7 +194,7 @@ class VertexFormat {
      * @readonly
      * @name VertexFormat.defaultInstancingFormat
      * @type {pc.VertexFormat}
-     * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
+     * @description Returns {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      */
     static get defaultInstancingFormat() {
         return VertexFormat._defaultInstancingFormat;

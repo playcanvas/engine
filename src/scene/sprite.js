@@ -23,8 +23,8 @@ const spriteIndices = [
  * @class
  * @name Sprite
  * @augments EventHandler
- * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}.
- * It can be used by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a
+ * @classdesc A pc.Sprite is contains references to one or more frames of a {@link TextureAtlas}.
+ * It can be used by the {@link SpriteComponent} or the {@link ElementComponent} to render a
  * single frame or a sprite animation.
  * @param {pc.GraphicsDevice} device - The graphics device of the application.
  * @param {object} [options] - Options for creating the pc.Sprite.
@@ -32,9 +32,9 @@ const spriteIndices = [
  * Defaults to 1.
  * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
  *
- * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
- * * {@link pc.SPRITE_RENDERMODE_SLICED}
- * * {@link pc.SPRITE_RENDERMODE_TILED}
+ * * {@link SPRITE_RENDERMODE_SIMPLE}
+ * * {@link SPRITE_RENDERMODE_SLICED}
+ * * {@link SPRITE_RENDERMODE_TILED}
  *
  * Defaults to pc.SPRITE_RENDERMODE_SIMPLE.
  * @param {pc.TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
@@ -44,9 +44,9 @@ const spriteIndices = [
  * @property {pc.TextureAtlas} atlas The texture atlas.
  * @property {number} renderMode The rendering mode of the sprite. Can be:
  *
- * * {@link pc.SPRITE_RENDERMODE_SIMPLE}
- * * {@link pc.SPRITE_RENDERMODE_SLICED}
- * * {@link pc.SPRITE_RENDERMODE_TILED}
+ * * {@link SPRITE_RENDERMODE_SIMPLE}
+ * * {@link SPRITE_RENDERMODE_SLICED}
+ * * {@link SPRITE_RENDERMODE_TILED}
  *
  * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
  * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.

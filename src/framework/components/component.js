@@ -4,7 +4,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @class
  * @name Component
  * @augments EventHandler
- * @classdesc Components are used to attach functionality on a {@link pc.Entity}. Components
+ * @classdesc Components are used to attach functionality on a {@link Entity}. Components
  * can receive update events each frame, and expose properties to the PlayCanvas Editor.
  * @description Base constructor for a Component.
  * @param {pc.ComponentSystem} system - The ComponentSystem used to create this Component.
@@ -84,7 +84,7 @@ class Component extends EventHandler {
      * @private
      * @name Component#data
      * @type {pc.ComponentData}
-     * @description {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
+     * @description {pc.ComponentData} data Access the {@link ComponentData} directly.
      * Usually you should access the data properties via the individual properties as
      * modifying this data directly will not fire 'set' events.
      */

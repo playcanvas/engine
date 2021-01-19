@@ -14,7 +14,7 @@ const _schema = ['enabled'];
  * @class
  * @name ScreenComponentSystem
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link pc.ScreenComponent}s.
+ * @classdesc Manages creation of {@link ScreenComponent}s.
  * @description Create a new ScreenComponentSystem.
  * @param {pc.Application} app - The application.
  */

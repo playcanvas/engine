@@ -16,7 +16,7 @@ import { standardMaterialParameterTypes } from '../../../scene/materials/standar
 /**
  * @private
  * @name JsonStandardMaterialParser
- * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
+ * @description Convert incoming JSON data into a {@link StandardMaterial}.
  */
 class JsonStandardMaterialParser {
     constructor() {

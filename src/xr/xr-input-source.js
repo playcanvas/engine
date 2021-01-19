@@ -23,25 +23,25 @@ var ids = 0;
  * @property {object} inputSource XRInputSource object that is associated with this input source.
  * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
  *
- * * {@link pc.XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
- * * {@link pc.XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction with the canvas element associated with an inline session’s output context, such as a mouse click or touch event.
- * * {@link pc.XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates from either a handheld device or other hand-tracking mechanism and represents that the user is using their hands or the held device for pointing.
+ * * {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
+ * * {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction with the canvas element associated with an inline session’s output context, such as a mouse click or touch event.
+ * * {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates from either a handheld device or other hand-tracking mechanism and represents that the user is using their hands or the held device for pointing.
  *
  * @property {string} handedness Describes which hand input source is associated with. Can be one of the following:
  *
- * * {@link pc.XRHAND_NONE}: None - input source is not meant to be held in hands.
- * * {@link pc.XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
- * * {@link pc.XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
+ * * {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
+ * * {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
+ * * {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
  *
  * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
  * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
- * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link pc.XrHand} otherwise it is null.
+ * @property {pc.XrHand|null} hand If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is null.
  * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
  * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
  * @property {boolean} squeezing True if input source is in active squeeze action between squeezestart and squeezeend events.
  * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
- * @property {pc.Entity} elementEntity If {@link pc.XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
- * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link pc.XrHitTestSource} created by this input source.
+ * @property {pc.Entity} elementEntity If {@link XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
+ * @property {pc.XrHitTestSource[]} hitTestSources list of active {@link XrHitTestSource} created by this input source.
  */
 class XrInputSource extends EventHandler {
     constructor(manager, xrInputSource) {
@@ -80,7 +80,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#remove
-     * @description Fired when {@link pc.XrInputSource} is removed.
+     * @description Fired when {@link XrInputSource} is removed.
      * @example
      * inputSource.once('remove', function () {
      *     // input source is not available anymore
@@ -146,7 +146,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#hittest:add
-     * @description Fired when new {@link pc.XrHitTestSource} is added to the input source.
+     * @description Fired when new {@link XrHitTestSource} is added to the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * inputSource.on('hittest:add', function (hitTestSource) {
@@ -157,7 +157,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#hittest:remove
-     * @description Fired when {@link pc.XrHitTestSource} is removed to the the input source.
+     * @description Fired when {@link XrHitTestSource} is removed to the the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * inputSource.on('remove', function (hitTestSource) {
@@ -252,7 +252,7 @@ class XrInputSource extends EventHandler {
     /**
      * @function
      * @name XrInputSource#getPosition
-     * @description Get the world space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
+     * @description Get the world space position of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space position of handheld input source.
      */
     getPosition() {
@@ -267,7 +267,7 @@ class XrInputSource extends EventHandler {
     /**
      * @function
      * @name XrInputSource#getLocalPosition
-     * @description Get the local space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * @description Get the local space position of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space position of handheld input source.
      */
     getLocalPosition() {
@@ -277,7 +277,7 @@ class XrInputSource extends EventHandler {
     /**
      * @function
      * @name XrInputSource#getRotation
-     * @description Get the world space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
+     * @description Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space rotation of handheld input source.
      */
     getRotation() {
@@ -292,7 +292,7 @@ class XrInputSource extends EventHandler {
     /**
      * @function
      * @name XrInputSource#getLocalRotation
-     * @description Get the local space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * @description Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space rotation of handheld input source.
      */
     getLocalRotation = function () {
@@ -330,11 +330,11 @@ class XrInputSource extends EventHandler {
      * against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ].
      * Can be any combination of the following:
      *
-     * * {@link pc.XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
+     * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
      * computed based on the feature points detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
+     * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
      * computed based on the planes detected by the underlying Augmented Reality system.
-     * * {@link pc.XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
+     * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
      * computed based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.

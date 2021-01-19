@@ -16,24 +16,24 @@ class ResourceLoader {
     /**
      * @function
      * @name ResourceLoader#addHandler
-     * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
+     * @description Add a {@link ResourceHandler} for a resource type. Handler should support atleast load() and open().
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
      * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
      *
-     * * {@link pc.ASSET_ANIMATION}
-     * * {@link pc.ASSET_AUDIO}
-     * * {@link pc.ASSET_IMAGE}
-     * * {@link pc.ASSET_JSON}
-     * * {@link pc.ASSET_MODEL}
-     * * {@link pc.ASSET_MATERIAL}
-     * * {@link pc.ASSET_TEXT}
-     * * {@link pc.ASSET_TEXTURE}
-     * * {@link pc.ASSET_CUBEMAP}
-     * * {@link pc.ASSET_SHADER}
-     * * {@link pc.ASSET_CSS}
-     * * {@link pc.ASSET_HTML}
-     * * {@link pc.ASSET_SCRIPT}
-     * * {@link pc.ASSET_CONTAINER}
+     * * {@link ASSET_ANIMATION}
+     * * {@link ASSET_AUDIO}
+     * * {@link ASSET_IMAGE}
+     * * {@link ASSET_JSON}
+     * * {@link ASSET_MODEL}
+     * * {@link ASSET_MATERIAL}
+     * * {@link ASSET_TEXT}
+     * * {@link ASSET_TEXTURE}
+     * * {@link ASSET_CUBEMAP}
+     * * {@link ASSET_SHADER}
+     * * {@link ASSET_CSS}
+     * * {@link ASSET_HTML}
+     * * {@link ASSET_SCRIPT}
+     * * {@link ASSET_CONTAINER}
      *
      * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
      * @example
@@ -48,7 +48,7 @@ class ResourceLoader {
     /**
      * @function
      * @name ResourceLoader#removeHandler
-     * @description Remove a {@link pc.ResourceHandler} for a resource type.
+     * @description Remove a {@link ResourceHandler} for a resource type.
      * @param {string} type - The name of the type that the handler will be removed.
      */
     removeHandler(type) {
@@ -58,7 +58,7 @@ class ResourceLoader {
     /**
      * @function
      * @name ResourceLoader#getHandler
-     * @description Get a {@link pc.ResourceHandler} for a resource type.
+     * @description Get a {@link ResourceHandler} for a resource type.
      * @param {string} type - The name of the resource type that the handler is registered with.
      * @returns {pc.ResourceHandler} The registered handler.
      */

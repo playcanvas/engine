@@ -297,7 +297,7 @@ class Mat4 {
      * @description Multiplies the specified 4x4 matrices together and stores the result in
      * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
      * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
-     * are not verified to be in the expected format. This function is faster than general {@link pc.Mat4#mul2}.
+     * are not verified to be in the expected format. This function is faster than general {@link Mat4#mul2}.
      * @param {pc.Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of the operation.
      * @param {pc.Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
      * @returns {pc.Mat4} Self for chaining.

@@ -34,7 +34,7 @@ var regexFrame = /^data\.frames\.(\d+)$/;
  * @class
  * @name TextureAtlasHandler
  * @implements {pc.ResourceHandler}
- * @classdesc Resource handler used for loading {@link pc.TextureAtlas} resources.
+ * @classdesc Resource handler used for loading {@link TextureAtlas} resources.
  * @param {pc.ResourceLoader} loader - The resource loader.
  */
 class TextureAtlasHandler {

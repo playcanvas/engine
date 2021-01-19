@@ -22,7 +22,7 @@ import {
  * @augments EventHandler
  * @classdesc Handles localization. Responsible for loading localization assets
  * and returning translations for a certain key. Can also handle plural forms. To override
- * its default behavior define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.
+ * its default behavior define a different implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
  * @param {pc.Application} app - The application.
  * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
  * change language to the new locale.
@@ -219,7 +219,7 @@ class I18n extends EventHandler {
      * @function
      * @name I18n#removeData
      * @description Removes localization data.
-     * @param {object} data - The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
+     * @param {object} data - The localization data. The data is expected to be in the same format as {@link I18n#addData}.
      */
     removeData(data) {
         var parsed;

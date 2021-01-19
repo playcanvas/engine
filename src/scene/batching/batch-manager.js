@@ -123,7 +123,7 @@ class BatchManager {
      * @param {string} name - Custom name.
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale after being batched?
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
-     * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
+     * {@link BatchManager#prepare} will split objects into local groups based on this size.
      * @param {number} [id] - Optional custom unique id for the group (will be generated automatically otherwise).
      * @param {number[]} [layers] - Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will
      * belong to these layers. Layers of source models will be ignored.
@@ -194,7 +194,7 @@ class BatchManager {
     /**
      * @function
      * @name BatchManager#getGroupByName
-     * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
+     * @description Retrieves a {@link BatchGroup} object with a corresponding name, if it exists, or null otherwise.
      * @param {string} name - Name.
      * @returns {pc.BatchGroup} Group object.
      */
@@ -213,7 +213,7 @@ class BatchManager {
      * @private
      * @function
      * @name BatchManager#getBatches
-     * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied.
+     * @description  Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
      * @param  {number} batchGroupId - The id of the batch group.
      * @returns {pc.Batch[]} A list of batches that are used to render the batch group.
      */
@@ -495,7 +495,7 @@ class BatchManager {
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * @param {boolean} translucent - Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {pc.MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
+     * @returns {pc.MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link BatchManager#create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -628,7 +628,7 @@ class BatchManager {
     /**
      * @function
      * @name BatchManager#create
-     * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
+     * @description Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and returns a {@link Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
      * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
