@@ -2759,7 +2759,7 @@ class ForwardRenderer {
         var renderedByCam = comp._renderedByCam;
         var renderedLayer = comp._renderedLayer;
         var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+        var i, layer, layerIndex, transparent, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
@@ -2852,7 +2852,7 @@ class ForwardRenderer {
             if (!visible.done) {
 
                 if (layer.onPreCull) {
-                    layer.onPreCull(j);
+                    layer.onPreCull(cameraPass);
                 }
 
                 drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
@@ -2895,8 +2895,8 @@ class ForwardRenderer {
             globalLightCounter++;
             if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
             casters = comp._lightShadowCasters[i];
-            cameras = comp._globalLightCameras[globalLightCounter];
-            for (j = 0; j < cameras.length; j++) {
+            let cameras = comp._globalLightCameras[globalLightCounter];
+            for (let j = 0; j < cameras.length; j++) {
                 this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
             }
         }
