@@ -44,18 +44,18 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
- * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
- * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
+ * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
+ * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
  * @property {number} transitionMode Controls how the button responds when the user hovers over it/presses it.
- * @property {pc.Color} hoverTint Color to be used on the button image when the user hovers over it.
- * @property {pc.Color} pressedTint Color to be used on the button image when the user presses it.
- * @property {pc.Color} inactiveTint Color to be used on the button image when the button is not interactive.
+ * @property {Color} hoverTint Color to be used on the button image when the user hovers over it.
+ * @property {Color} pressedTint Color to be used on the button image when the user presses it.
+ * @property {Color} inactiveTint Color to be used on the button image when the button is not interactive.
  * @property {number} fadeDuration Duration to be used when fading between tints, in milliseconds.
- * @property {pc.Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
+ * @property {Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
  * @property {number} hoverSpriteFrame Frame to be used from the hover sprite.
- * @property {pc.Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
+ * @property {Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
  * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
- * @property {pc.Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
+ * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
  */
 class ButtonComponent extends Component {

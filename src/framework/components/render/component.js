@@ -31,22 +31,22 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
  * * "plane": The component will render a plane (1 unit in each dimension)
  * * "sphere": The component will render a sphere (radius 0.5)
- * @property {pc.Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
- * @property {pc.Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
- * @property {pc.Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
+ * @property {Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
+ * @property {Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
+ * @property {Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
  * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
  * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
  * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark meshes as non-movable (optimization).
- * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * @property {BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
  * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
- * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
+ * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which the meshes should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
- * @property {pc.Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
+ * @property {Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
  */
 class RenderComponent extends Component {
     constructor(system, entity)   {

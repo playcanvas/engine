@@ -34,8 +34,8 @@ const MAX_DISTANCE = 10000;
  * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the sound source moves further from the listener.
  * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
  * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
- * @property {pc.Vec3} position The position of the sound in 3D space.
- * @property {pc.Vec3} velocity The velocity of the sound.
+ * @property {Vec3} position The position of the sound in 3D space.
+ * @property {Vec3} velocity The velocity of the sound.
  * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
  * * {@link DISTANCE_LINEAR}

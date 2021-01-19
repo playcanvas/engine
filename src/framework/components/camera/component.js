@@ -52,7 +52,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * * {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
  * Defaults to pc.ASPECT_AUTO.
- * @property {pc.Color} clearColor The color used to clear the canvas to before the
+ * @property {Color} clearColor The color used to clear the canvas to before the
  * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
  * @property {boolean} clearColorBuffer If true the camera will clear the color buffer
  * to the color set in clearColor. Defaults to true.
@@ -73,24 +73,24 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * the Y-axis). Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
  * @property {number} priority Controls the order in which cameras are rendered. Cameras
  * with smaller values for priority are rendered first. Defaults to 0.
- * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in
+ * @property {Vec4} rect Controls where on the screen the camera will be rendered in
  * normalized screen coordinates. Defaults to [0, 0, 1, 1].
- * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
+ * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle.
  * The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
- * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera.
+ * @property {PostEffectQueue} postEffects The post effects queue for this camera.
  * Use this to add or remove post effects from the camera.
  * @property {boolean} frustumCulling Controls the culling of mesh instances against
  * the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
  * If false, all mesh instances in the scene are rendered by the camera, regardless of
  * visibility. Defaults to false.
- * @property {pc.callbacks.CalculateMatrix} calculateTransform Custom function you can
+ * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can
  * provide to calculate the camera transformation matrix manually. Can be used for complex
  * effects like reflections. Function is called using component's scope.
  * Arguments:
  * * {pc.Mat4} transformMatrix: output of the function.
  * * {number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT.
  * Left and right are only used in stereo rendering.
- * @property {pc.callbacks.CalculateMatrix} calculateProjection Custom function you can
+ * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
  * provide to calculate the camera projection matrix manually. Can be used for complex
  * effects like doing oblique projection. Function is called using component's scope.
  * Arguments:

@@ -13,8 +13,8 @@ var tmpVecE = new Vec3();
  * @classdesc Axis-Aligned Bounding Box.
  * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
  * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter.
- * @property {pc.Vec3} center Center of box.
- * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
+ * @property {Vec3} center Center of box.
+ * @property {Vec3} halfExtents Half the distance across the box in each axis.
  */
 class BoundingBox {
     constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {

@@ -9,8 +9,8 @@ import { EventHandler } from '../../core/event-handler.js';
  * @description Base constructor for a Component.
  * @param {ComponentSystem} system - The ComponentSystem used to create this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {pc.ComponentSystem} system The ComponentSystem used to create this Component.
- * @property {pc.Entity} entity The Entity that this Component is attached to.
+ * @property {ComponentSystem} system The ComponentSystem used to create this Component.
+ * @property {Entity} entity The Entity that this Component is attached to.
  * @property {boolean} enabled Enables or disables the component.
  */
 class Component extends EventHandler {

@@ -24,8 +24,8 @@ var mat4B = new Mat4();
  * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
  * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
- * @property {pc.Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
+ * @property {Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
  */
 class XrLightEstimation extends EventHandler {
     constructor(manager) {

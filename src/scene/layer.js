@@ -110,7 +110,7 @@ class InstanceList {
  * * {@link SORTMODE_FRONT2BACK}
  *
  * Defaults to pc.SORTMODE_BACK2FRONT.
- * @property {pc.RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
+ * @property {RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
  *
  * * {@link SHADER_FORWARD}
@@ -123,12 +123,12 @@ class InstanceList {
  *
  * @property {boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link Layer#clearColor}, {@link Layer#clearColorBuffer},
  * {@link Layer#clearDepthBuffer} and {@link Layer#clearStencilBuffer}.
- * @property {pc.Color} clearColor The color used to clear the canvas to before each camera starts to render.
+ * @property {Color} clearColor The color used to clear the canvas to before each camera starts to render.
  * @property {boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
  * @property {boolean} clearDepthBuffer If true cameras will clear the depth buffer.
  * @property {boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
  *
- * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
+ * @property {Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
  * Both layers must share cameras. Frustum culling is only performed for one layer. Useful for rendering multiple passes using different shaders.
  * @property {Function} cullingMask Visibility mask that interacts with {@link MeshInstance#mask}.
  * @property {Function} onEnable Custom function that is called after the layer has been enabled.

@@ -14,7 +14,7 @@ import { Entity } from '../../entity.js';
  * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
  * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
  * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
+ * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
  */
 class ScriptComponent extends Component {
     constructor(system, entity) {

@@ -64,8 +64,8 @@ class Touch {
  * @param {TouchDevice} device - The source device of the touch events.
  * @param {TouchEvent} event - The original browser TouchEvent.
  * @property {Element} element The target Element that the event was fired from.
- * @property {pc.Touch[]} touches A list of all touches currently in contact with the device.
- * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event.
+ * @property {Touch[]} touches A list of all touches currently in contact with the device.
+ * @property {Touch[]} changedTouches A list of touches that have changed since the last event.
  * @property {TouchEvent} event - The original browser TouchEvent.
  */
 class TouchEvent {

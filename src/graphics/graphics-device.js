@@ -240,7 +240,7 @@ function testTextureFloatHighPrecision(device) {
  * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
  * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only].
  * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only].
- * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
+ * @property {ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
  */
 class GraphicsDevice extends EventHandler {
     constructor(canvas, options) {

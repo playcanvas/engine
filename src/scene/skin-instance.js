@@ -13,7 +13,7 @@ var _invMatrix = new Mat4();
  * skin vertices from object space to world space.
  * @param {Skin} skin - The skin that will provide the inverse bind pose matrices to
  * generate the final matrix palette.
- * @property {pc.GraphNode[]} bones An array of nodes representing each bone in this skin instance.
+ * @property {GraphNode[]} bones An array of nodes representing each bone in this skin instance.
  */
 class SkinInstance {
     constructor(skin) {

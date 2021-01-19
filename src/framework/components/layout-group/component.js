@@ -37,13 +37,13 @@ function isEnabledAndHasEnabledElement(entity) {
  * Defaults to false.
  * @property {boolean} reverseY Reverses the order of children along the y axis.
  * Defaults to true.
- * @property {pc.Vec2} alignment Specifies the horizontal and vertical alignment of
+ * @property {Vec2} alignment Specifies the horizontal and vertical alignment of
  * child elements. Values range from 0 to 1 where [0, 0] is the bottom left and
  * [1, 1] is the top right. Defaults to [0, 1].
- * @property {pc.Vec4} padding Padding to be applied inside the container before
+ * @property {Vec4} padding Padding to be applied inside the container before
  * positioning any children. Specified as left, bottom, right and top values.
  * Defaults to [0, 0, 0, 0] (no padding).
- * @property {pc.Vec2} spacing Spacing to be applied between each child element.
+ * @property {Vec2} spacing Spacing to be applied between each child element.
  * Defaults to [0, 0] (no spacing).
  * @property {number} widthFitting Fitting logic to be applied when positioning and
  * scaling child elements. Can be:

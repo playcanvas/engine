@@ -5,7 +5,7 @@
  * @classdesc AnimEvaluator blends multiple sets of animation clips together.
  * @description Create a new animation evaluator.
  * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
- * @property {pc.AnimClip[]} clips - the list of animation clips
+ * @property {AnimClip[]} clips - the list of animation clips
  */
 class AnimEvaluator {
     constructor(binder) {

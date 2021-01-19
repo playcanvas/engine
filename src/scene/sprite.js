@@ -41,7 +41,7 @@ const spriteIndices = [
  * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
  * using. Defaults to null.
  * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
- * @property {pc.TextureAtlas} atlas The texture atlas.
+ * @property {TextureAtlas} atlas The texture atlas.
  * @property {number} renderMode The rendering mode of the sprite. Can be:
  *
  * * {@link SPRITE_RENDERMODE_SIMPLE}
@@ -49,7 +49,7 @@ const spriteIndices = [
  * * {@link SPRITE_RENDERMODE_TILED}
  *
  * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
- * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
+ * @property {Mesh[]} meshes An array that contains a mesh for each frame.
  */
 class Sprite extends EventHandler {
     constructor(device, options) {

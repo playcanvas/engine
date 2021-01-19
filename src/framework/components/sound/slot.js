@@ -57,7 +57,7 @@ var instanceOptions = {
  * @property {boolean} isPlaying Returns true if the slot is currently playing.
  * @property {boolean} isPaused Returns true if the slot is currently paused.
  * @property {boolean} isStopped Returns true if the slot is currently stopped.
- * @property {pc.SoundInstance[]} instances An array that contains all the {@link SoundInstance}s currently being played by the slot.
+ * @property {SoundInstance[]} instances An array that contains all the {@link SoundInstance}s currently being played by the slot.
  */
 class SoundSlot extends EventHandler {
     constructor(component, name, options) {

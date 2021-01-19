@@ -38,7 +38,7 @@ import { Component } from '../component.js';
  * * "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
- * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the
+ * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the
  * x, y and z axes. Defaults to [0.5, 0.5, 0.5].
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
@@ -46,9 +46,9 @@ import { Component } from '../component.js';
  * collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
  * @property {number} height The total height of the capsule, cylinder or cone-shaped collision
  * volume from tip to tip. Defaults to 2.
- * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be
+ * @property {Asset} asset The asset for the model of the mesh collision volume - can also be
  * an asset id. Defaults to null.
- * @property {pc.Model} model The model that is added to the scene graph for the mesh collision
+ * @property {Model} model The model that is added to the scene graph for the mesh collision
  * volume.
  */
 class CollisionComponent extends Component {

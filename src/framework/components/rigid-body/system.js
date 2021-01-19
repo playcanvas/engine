@@ -23,9 +23,9 @@ var frameCollisions = {};
  * @param {Entity} entity - The entity that was hit.
  * @param {Vec3} point - The point at which the ray hit the entity in world space.
  * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
- * @property {pc.Entity} entity The entity that was hit.
- * @property {pc.Vec3} point The point at which the ray hit the entity in world space.
- * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
+ * @property {Entity} entity The entity that was hit.
+ * @property {Vec3} point The point at which the ray hit the entity in world space.
+ * @property {Vec3} normal The normal vector of the surface where the ray hit in world space.
  */
 class RaycastResult {
     constructor(entity, point, normal) {
@@ -43,13 +43,13 @@ class RaycastResult {
  * @param {Entity} a - The first entity involved in the contact.
  * @param {Entity} b - The second entity involved in the contact.
  * @param {ContactPoint} contactPoint - The contact point between the two entities.
- * @property {pc.Entity} a The first entity involved in the contact.
- * @property {pc.Entity} b The second entity involved in the contact.
- * @property {pc.Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
- * @property {pc.Vec3} localPointB The point on Entity B where the contact occurred, relative to B.
- * @property {pc.Vec3} pointA The point on Entity A where the contact occurred, in world space.
- * @property {pc.Vec3} pointB The point on Entity B where the contact occurred, in world space.
- * @property {pc.Vec3} normal The normal vector of the contact on Entity B, in world space.
+ * @property {Entity} a The first entity involved in the contact.
+ * @property {Entity} b The second entity involved in the contact.
+ * @property {Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
+ * @property {Vec3} localPointB The point on Entity B where the contact occurred, relative to B.
+ * @property {Vec3} pointA The point on Entity A where the contact occurred, in world space.
+ * @property {Vec3} pointB The point on Entity B where the contact occurred, in world space.
+ * @property {Vec3} normal The normal vector of the contact on Entity B, in world space.
  */
 class SingleContactResult {
     constructor(a, b, contactPoint) {
@@ -83,11 +83,11 @@ class SingleContactResult {
  * @param {Vec3} point - The point on the entity where the contact occurred, in world space.
  * @param {Vec3} pointOther - The point on the other entity where the contact occurred, in world space.
  * @param {Vec3} normal - The normal vector of the contact on the other entity, in world space.
- * @property {pc.Vec3} localPoint The point on the entity where the contact occurred, relative to the entity.
- * @property {pc.Vec3} localPointOther The point on the other entity where the contact occurred, relative to the other entity.
- * @property {pc.Vec3} point The point on the entity where the contact occurred, in world space.
- * @property {pc.Vec3} pointOther The point on the other entity where the contact occurred, in world space.
- * @property {pc.Vec3} normal The normal vector of the contact on the other entity, in world space.
+ * @property {Vec3} localPoint The point on the entity where the contact occurred, relative to the entity.
+ * @property {Vec3} localPointOther The point on the other entity where the contact occurred, relative to the other entity.
+ * @property {Vec3} point The point on the entity where the contact occurred, in world space.
+ * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
+ * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
  */
 class ContactPoint {
     constructor(localPoint, localPointOther, point, pointOther, normal) {
@@ -114,8 +114,8 @@ class ContactPoint {
  * @description Create a new ContactResult.
  * @param {Entity} other - The entity that was involved in the contact with this entity.
  * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
- * @property {pc.Entity} other The entity that was involved in the contact with this entity.
- * @property {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity.
+ * @property {Entity} other The entity that was involved in the contact with this entity.
+ * @property {ContactPoint[]} contacts An array of ContactPoints with the other entity.
  */
 class ContactResult {
     constructor(other, contacts) {
@@ -157,7 +157,7 @@ const _schema = [
  * settings for your project.
  * @description Create a new RigidBodyComponentSystem.
  * @param {Application} app - The Application.
- * @property {pc.Vec3} gravity The world space vector representing global gravity in the physics simulation.
+ * @property {Vec3} gravity The world space vector representing global gravity in the physics simulation.
  * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
  */
 class RigidBodyComponentSystem extends ComponentSystem {
