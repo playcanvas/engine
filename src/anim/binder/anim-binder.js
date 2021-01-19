@@ -95,7 +95,7 @@ class AnimBinder {
      * @description Resolve the provided target path and return an instance of {@link AnimTarget} which
      * will handle setting the value, or return null if no such target exists.
      * @param {string} path - the animation curve path to resolve.
-     * @returns {pc.AnimTarget|null} - returns the target instance on success and null otherwise.
+     * @returns {AnimTarget|null} - returns the target instance on success and null otherwise.
      */
     resolve(path) {
         return null;

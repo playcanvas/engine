@@ -69,7 +69,7 @@ class TextureParser {
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {GraphicsDevice} device - The graphics device
-     * @returns {pc.Texture} The parsed resource data.
+     * @returns {Texture} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */
     open(url, data, device) {

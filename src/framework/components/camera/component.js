@@ -202,7 +202,7 @@ class CameraComponent extends Component {
      * app.systems.rigidbody.raycastFirst(start, end, function (result) {
      *     console.log("Entity " + result.entity.name + " was selected");
      * });
-     * @returns {pc.Vec3} The world space coordinate.
+     * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
         var device = this.system.app.graphicsDevice;
@@ -217,7 +217,7 @@ class CameraComponent extends Component {
      * @description Convert a point from 3D world space to 2D screen space.
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
-     * @returns {pc.Vec3} The screen space coordinate.
+     * @returns {Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, screenCoord) {
         var device = this.system.app.graphicsDevice;

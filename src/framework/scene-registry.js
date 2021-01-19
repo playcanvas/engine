@@ -28,7 +28,7 @@ class SceneRegistry {
      * @function
      * @name SceneRegistry#list
      * @description Return the list of scene.
-     * @returns {pc.SceneRegistryItem[]} All items in the registry.
+     * @returns {SceneRegistryItem[]} All items in the registry.
      */
     list() {
         return this._list;
@@ -64,7 +64,7 @@ class SceneRegistry {
      * @name  pc.SceneRegistry#find
      * @description  Find a Scene by name and return the {@link SceneRegistryItem}.
      * @param  {string} name - The name of the scene.
-     * @returns {pc.SceneRegistryItem} The stored data about a scene.
+     * @returns {SceneRegistryItem} The stored data about a scene.
      */
     find(name) {
         if (this._index.hasOwnProperty(name)) {
@@ -79,7 +79,7 @@ class SceneRegistry {
      * @name  pc.SceneRegistry#findByUrl
      * @description  Find a scene by the URL and return the {@link SceneRegistryItem}.
      * @param  {string} url - The URL to search by.
-     * @returns {pc.SceneRegistryItem} The stored data about a scene.
+     * @returns {SceneRegistryItem} The stored data about a scene.
      */
     findByUrl(url) {
         if (this._urlIndex.hasOwnProperty(url)) {

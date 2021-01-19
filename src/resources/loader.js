@@ -60,7 +60,7 @@ class ResourceLoader {
      * @name ResourceLoader#getHandler
      * @description Get a {@link ResourceHandler} for a resource type.
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {pc.ResourceHandler} The registered handler.
+     * @returns {ResourceHandler} The registered handler.
      */
     getHandler(type) {
         return this._handlers[type];

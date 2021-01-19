@@ -186,7 +186,7 @@ class SoundComponent extends Component {
      * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
      * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
      * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
-     * @returns {pc.SoundSlot} The new slot.
+     * @returns {SoundSlot} The new slot.
      * @example
      * // get an asset by id
      * var asset = app.assets.get(10);
@@ -238,7 +238,7 @@ class SoundComponent extends Component {
      * @name SoundComponent#slot
      * @description Returns the slot with the specified name.
      * @param {string} name - The name of the slot.
-     * @returns {pc.SoundSlot} The slot.
+     * @returns {SoundSlot} The slot.
      * @example
      * // get a slot and set its volume
      * this.entity.sound.slot('beep').volume = 0.5;
@@ -261,7 +261,7 @@ class SoundComponent extends Component {
      *     asset: asset
      * });
      * this.entity.sound.play('beep');
-     * @returns {pc.SoundInstance} The sound instance that will be played.
+     * @returns {SoundInstance} The sound instance that will be played.
      */
     play(name) {
         if (!this.enabled || !this.entity.enabled) {

@@ -96,7 +96,7 @@ class TouchEvent {
      * touches by their id so that you can be sure you are referencing the same touch.
      * @param {number} id - The identifier of the touch.
      * @param {Touch[]} list - An array of touches to search.
-     * @returns {pc.Touch} The {@link Touch} object or null.
+     * @returns {Touch} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
         var i, l = list.length;

@@ -22,7 +22,7 @@ class ScopeSpace {
      * @name ScopeSpace#resolve
      * @description Get (or create, if it doesn't already exist) a variable in the scope.
      * @param {string} name - The variable name.
-     * @returns {pc.ScopeId} The variable instance.
+     * @returns {ScopeId} The variable instance.
      */
     resolve(name) {
         // Check if the ScopeId already exists
@@ -40,7 +40,7 @@ class ScopeSpace {
      * @name ScopeSpace#getSubSpace
      * @description Get (or create, if it doesn't already exist) a subspace in the scope.
      * @param {string} name - The subspace name.
-     * @returns {pc.ScopeSpace} The subspace instance.
+     * @returns {ScopeSpace} The subspace instance.
      */
     getSubSpace(name) {
         // Check if the nested namespace already exists

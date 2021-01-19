@@ -75,7 +75,7 @@ class Model {
      * @description Clones a model. The returned model has a newly created hierarchy
      * and mesh instances, but meshes are shared between the clone and the specified
      * model.
-     * @returns {pc.Model} A clone of the specified model.
+     * @returns {Model} A clone of the specified model.
      * @example
      * var clonedModel = model.clone();
      */

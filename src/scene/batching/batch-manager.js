@@ -127,7 +127,7 @@ class BatchManager {
      * @param {number} [id] - Optional custom unique id for the group (will be generated automatically otherwise).
      * @param {number[]} [layers] - Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will
      * belong to these layers. Layers of source models will be ignored.
-     * @returns {pc.BatchGroup} Group object.
+     * @returns {BatchGroup} Group object.
      */
     addGroup(name, dynamic, maxAabbSize, id, layers) {
         if (id === undefined) {
@@ -196,7 +196,7 @@ class BatchManager {
      * @name BatchManager#getGroupByName
      * @description Retrieves a {@link BatchGroup} object with a corresponding name, if it exists, or null otherwise.
      * @param {string} name - Name.
-     * @returns {pc.BatchGroup} Group object.
+     * @returns {BatchGroup} Group object.
      */
     getGroupByName(name) {
         var groups = this._batchGroups;
@@ -215,7 +215,7 @@ class BatchManager {
      * @name BatchManager#getBatches
      * @description  Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
      * @param  {number} batchGroupId - The id of the batch group.
-     * @returns {pc.Batch[]} A list of batches that are used to render the batch group.
+     * @returns {Batch[]} A list of batches that are used to render the batch group.
      */
     getBatches(batchGroupId) {
         var results = [];
@@ -495,7 +495,7 @@ class BatchManager {
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * @param {boolean} translucent - Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {pc.MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link BatchManager#create}.
+     * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to {@link BatchManager#create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -632,7 +632,7 @@ class BatchManager {
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
-     * @returns {pc.Batch} The resulting batch object.
+     * @returns {Batch} The resulting batch object.
      */
     create(meshInstances, dynamic, batchGroupId) {
 
@@ -916,7 +916,7 @@ class BatchManager {
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
      * @param {Batch} batch - A batch object.
      * @param {MeshInstance[]} clonedMeshInstances - New mesh instances.
-     * @returns {pc.Batch} New batch object.
+     * @returns {Batch} New batch object.
      */
     clone(batch, clonedMeshInstances) {
         var batch2 = new Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);

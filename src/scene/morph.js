@@ -226,7 +226,7 @@ class Morph extends RefCountedObject {
      * @name Morph#getTarget
      * @description Gets the morph target by index.
      * @param {number} index - An index of morph target.
-     * @returns {pc.MorphTarget} A morph target object.
+     * @returns {MorphTarget} A morph target object.
      */
     getTarget(index) {
         return this._targets[index];

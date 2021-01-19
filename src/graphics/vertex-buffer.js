@@ -77,7 +77,7 @@ class VertexBuffer{
      * @function
      * @name VertexBuffer#getFormat
      * @description Returns the data format of the specified vertex buffer.
-     * @returns {pc.VertexFormat} The data format of the specified vertex buffer.
+     * @returns {VertexFormat} The data format of the specified vertex buffer.
      */
     getFormat() {
         return this.format;

@@ -106,7 +106,7 @@ class SoundManager extends EventHandler {
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {pc.Channel} The channel playing the sound.
+     * @returns {Channel} The channel playing the sound.
      */
     playSound(sound, options) {
         options = options || {};
@@ -128,7 +128,7 @@ class SoundManager extends EventHandler {
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {pc.Channel3d} The 3D channel playing the sound.
+     * @returns {Channel3d} The 3D channel playing the sound.
      */
     playSound3d(sound, position, options) {
         options = options || {};

@@ -28,7 +28,7 @@ class Ray {
      * @description Sets origin and direction to the supplied vector values.
      * @param {Vec3} origin - The starting point of the ray.
      * @param {Vec3} direction - The direction of the ray.
-     * @returns {pc.Ray} Self for chaining.
+     * @returns {Ray} Self for chaining.
      */
     set(origin, direction) {
         this.origin.copy(origin);

@@ -329,7 +329,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
+     * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end) {
         var result = null;
@@ -377,7 +377,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * array will be of length 0.
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @returns {pc.RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
         // #ifdef DEBUG

@@ -91,7 +91,7 @@ class BoundingBox {
      * @function
      * @name BoundingBox#clone
      * @description Returns a clone of the AABB
-     * @returns {pc.BoundingBox} A duplicate AABB.
+     * @returns {BoundingBox} A duplicate AABB.
      */
     clone() {
         return new BoundingBox(this.center.clone(), this.halfExtents.clone());
@@ -228,7 +228,7 @@ class BoundingBox {
      * @function
      * @name BoundingBox#getMin
      * @description Return the minimum corner of the AABB.
-     * @returns {pc.Vec3} Minimum corner.
+     * @returns {Vec3} Minimum corner.
      */
     getMin() {
         return this._min.copy(this.center).sub(this.halfExtents);
@@ -238,7 +238,7 @@ class BoundingBox {
      * @function
      * @name BoundingBox#getMax
      * @description Return the maximum corner of the AABB.
-     * @returns {pc.Vec3} Maximum corner.
+     * @returns {Vec3} Maximum corner.
      */
     getMax() {
         return this._max.copy(this.center).add(this.halfExtents);

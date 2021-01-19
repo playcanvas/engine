@@ -19,7 +19,7 @@ class Mat3 {
      * @function
      * @name Mat3#clone
      * @description Creates a duplicate of the specified matrix.
-     * @returns {pc.Mat3} A duplicate matrix.
+     * @returns {Mat3} A duplicate matrix.
      * @example
      * var src = new pc.Mat3().translate(10, 20, 30);
      * var dst = src.clone();
@@ -34,7 +34,7 @@ class Mat3 {
      * @name Mat3#copy
      * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
      * @param {Mat3} rhs - A 3x3 matrix to be copied.
-     * @returns {pc.Mat3} Self for chaining.
+     * @returns {Mat3} Self for chaining.
      * @example
      * var src = new pc.Mat3().translate(10, 20, 30);
      * var dst = new pc.Mat3();
@@ -63,7 +63,7 @@ class Mat3 {
      * @name Mat3#set
      * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
      * @param {number[]} src - An array[9] to be copied.
-     * @returns {pc.Mat3} Self for chaining.
+     * @returns {Mat3} Self for chaining.
      * @example
      * var dst = new pc.Mat3();
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
@@ -136,7 +136,7 @@ class Mat3 {
      * @function
      * @name Mat3#setIdentity
      * @description Sets the matrix to the identity matrix.
-     * @returns {pc.Mat3} Self for chaining.
+     * @returns {Mat3} Self for chaining.
      * @example
      * m.setIdentity();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
@@ -182,7 +182,7 @@ class Mat3 {
      * @function
      * @name Mat3#transpose
      * @description Generates the transpose of the specified 3x3 matrix.
-     * @returns {pc.Mat3} Self for chaining.
+     * @returns {Mat3} Self for chaining.
      * @example
      * var m = new pc.Mat3();
      *
@@ -205,7 +205,7 @@ class Mat3 {
      * @name Mat3#setFromMat4
      * @description Converts the specified 4x4 matrix to a Mat3.
      * @param {Mat4} m - The 4x4 matrix to convert.
-     * @returns {pc.Mat3} Self for chaining.
+     * @returns {Mat3} Self for chaining.
      */
     setFromMat4(m) {
         var src = m.data;

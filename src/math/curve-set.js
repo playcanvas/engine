@@ -59,7 +59,7 @@ class CurveSet {
      * @name CurveSet#get
      * @description Return a specific curve in the curve set.
      * @param {number} index - The index of the curve to return.
-     * @returns {pc.Curve} The curve at the specified index.
+     * @returns {Curve} The curve at the specified index.
      */
     get(index) {
         return this.curves[index];
@@ -91,7 +91,7 @@ class CurveSet {
      * @function
      * @name CurveSet#clone
      * @description Returns a clone of the specified curve set object.
-     * @returns {pc.CurveSet} A clone of the specified curve set.
+     * @returns {CurveSet} A clone of the specified curve set.
      */
     clone() {
         var result = new CurveSet();

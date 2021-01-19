@@ -225,7 +225,7 @@ class AnimEvaluator {
      * @name AnimEvaluator#findClip
      * @description Returns the first clip which matches the given name, or null if no such clip was found.
      * @param {string} name - name of the clip to find.
-     * @returns {pc.AnimClip|null} - the clip with the given name or null if no such clip was found.
+     * @returns {AnimClip|null} - the clip with the given name or null if no such clip was found.
      */
     findClip(name) {
         var clips = this._clips;

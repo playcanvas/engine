@@ -123,7 +123,7 @@ class AnimationComponent extends Component {
      * @name AnimationComponent#getAnimation
      * @description Return an animation.
      * @param {string} name - The name of the animation asset.
-     * @returns {pc.Animation} An Animation.
+     * @returns {Animation} An Animation.
      */
     getAnimation(name) {
         return this.data.animations[name];

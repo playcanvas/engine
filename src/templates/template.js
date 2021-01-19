@@ -22,7 +22,7 @@ class Template {
      * @function
      * @name Template#instantiate
      * @description Create an instance of this template.
-     * @returns {pc.Entity} The root entity of the created instance.
+     * @returns {Entity} The root entity of the created instance.
      */
     instantiate() {
         if (!this._templateRoot) { // at first use, after scripts are loaded

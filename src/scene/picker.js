@@ -83,7 +83,7 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
      * @param {number} [height] - The height of the rectangle.
-     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection(10, 20);

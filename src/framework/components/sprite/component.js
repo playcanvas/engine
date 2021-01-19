@@ -459,7 +459,7 @@ class SpriteComponent extends Component {
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {object} [data.loop] - Whether to loop the animation clip.
      * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
-     * @returns {pc.SpriteAnimationClip} The new clip that was added.
+     * @returns {SpriteAnimationClip} The new clip that was added.
      */
     addClip(data) {
         var clip = new SpriteAnimationClip(this, {
@@ -492,7 +492,7 @@ class SpriteComponent extends Component {
      * @name SpriteComponent#clip
      * @description Get an animation clip by name.
      * @param {string} name - The name of the clip.
-     * @returns {pc.SpriteAnimationClip} The clip.
+     * @returns {SpriteAnimationClip} The clip.
      */
     clip(name) {
         return this._clips[name];
@@ -503,7 +503,7 @@ class SpriteComponent extends Component {
      * @name SpriteComponent#play
      * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
      * @param {string} name - The name of the clip to play.
-     * @returns {pc.SpriteAnimationClip} The clip that started playing.
+     * @returns {SpriteAnimationClip} The clip that started playing.
      */
     play(name) {
         var clip = this._clips[name];

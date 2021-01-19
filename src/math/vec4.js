@@ -86,7 +86,7 @@ class Vec4 {
      * @name Vec4#add
      * @description Adds a 4-dimensional vector to another in place.
      * @param {Vec4} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
      * var b = new pc.Vec4(20, 20, 20, 20);
@@ -111,7 +111,7 @@ class Vec4 {
      * @description Adds two 4-dimensional vectors together and returns the result.
      * @param {Vec4} lhs - The first vector operand for the addition.
      * @param {Vec4} rhs - The second vector operand for the addition.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
      * var b = new pc.Vec4(20, 20, 20, 20);
@@ -135,7 +135,7 @@ class Vec4 {
      * @function
      * @name Vec4#clone
      * @description Returns an identical copy of the specified 4-dimensional vector.
-     * @returns {pc.Vec4} A 4-dimensional vector containing the result of the cloning.
+     * @returns {Vec4} A 4-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec4(10, 20, 30, 40);
      * var vclone = v.clone();
@@ -150,7 +150,7 @@ class Vec4 {
      * @name Vec4#copy
      * @description Copied the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
      * @param {Vec4} rhs - A vector to copy to the specified vector.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var src = new pc.Vec4(10, 20, 30, 40);
      * var dst = new pc.Vec4();
@@ -238,7 +238,7 @@ class Vec4 {
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(0, 0, 0, 0);
      * var b = new pc.Vec4(10, 10, 10, 10);
@@ -262,7 +262,7 @@ class Vec4 {
      * @name Vec4#mul
      * @description Multiplies a 4-dimensional vector to another in place.
      * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(2, 3, 4, 5);
      * var b = new pc.Vec4(4, 5, 6, 7);
@@ -287,7 +287,7 @@ class Vec4 {
      * @description Returns the result of multiplying the specified 4-dimensional vectors together.
      * @param {Vec4} lhs - The 4-dimensional vector used as the first multiplicand of the operation.
      * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(2, 3, 4, 5);
      * var b = new pc.Vec4(4, 5, 6, 7);
@@ -312,7 +312,7 @@ class Vec4 {
      * @name Vec4#normalize
      * @description Returns this 4-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var v = new pc.Vec4(25, 0, 0, 0);
      *
@@ -340,7 +340,7 @@ class Vec4 {
      * @description Scales each dimension of the specified 4-dimensional vector by the supplied
      * scalar value.
      * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var v = new pc.Vec4(2, 4, 8, 16);
      *
@@ -370,7 +370,7 @@ class Vec4 {
      * @param {number} y - The value to set on the second component of the vector.
      * @param {number} z - The value to set on the third component of the vector.
      * @param {number} w - The value to set on the fourth component of the vector.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var v = new pc.Vec4();
      * v.set(5, 10, 20, 40);
@@ -392,7 +392,7 @@ class Vec4 {
      * @name Vec4#sub
      * @description Subtracts a 4-dimensional vector from another in place.
      * @param {Vec4} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
      * var b = new pc.Vec4(20, 20, 20, 20);
@@ -417,7 +417,7 @@ class Vec4 {
      * @description Subtracts two 4-dimensional vectors from one another and returns the result.
      * @param {Vec4} lhs - The first vector operand for the subtraction.
      * @param {Vec4} rhs - The second vector operand for the subtraction.
-     * @returns {pc.Vec4} Self for chaining.
+     * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
      * var b = new pc.Vec4(20, 20, 20, 20);

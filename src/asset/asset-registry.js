@@ -166,7 +166,7 @@ class AssetRegistry extends EventHandler {
      * @name AssetRegistry#list
      * @description Create a filtered list of assets from the registry.
      * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
-     * @returns {pc.Asset[]} The filtered list of assets.
+     * @returns {Asset[]} The filtered list of assets.
      */
     list(filters) {
         filters = filters || {};
@@ -286,7 +286,7 @@ class AssetRegistry extends EventHandler {
      * @name AssetRegistry#get
      * @description Retrieve an asset from the registry by its id field.
      * @param {number} id - The id of the asset to get.
-     * @returns {pc.Asset} The asset.
+     * @returns {Asset} The asset.
      * @example
      * var asset = app.assets.get(100);
      */
@@ -300,7 +300,7 @@ class AssetRegistry extends EventHandler {
      * @name AssetRegistry#getByUrl
      * @description Retrieve an asset from the registry by it's file's URL field.
      * @param {string} url - The url of the asset to get.
-     * @returns {pc.Asset} The asset.
+     * @returns {Asset} The asset.
      * @example
      * var asset = app.assets.getByUrl("../path/to/image.jpg");
      */
@@ -574,7 +574,7 @@ class AssetRegistry extends EventHandler {
      * @description Return all Assets with the specified name and type found in the registry.
      * @param {string} name - The name of the Assets to find.
      * @param {string} [type] - The type of the Assets to find.
-     * @returns {pc.Asset[]} A list of all Assets found.
+     * @returns {Asset[]} A list of all Assets found.
      * @example
      * var assets = app.assets.findAll("myTextureAsset", "texture");
      * console.log("Found " + assets.length + " assets called " + name);
@@ -615,7 +615,7 @@ class AssetRegistry extends EventHandler {
      * to have inclusive results of assets that match at least one query.
      * A query that consists of an array of tags can be used to match assets that have each tag of array.
      * @param {...*} query - Name of a tag or array of tags.
-     * @returns {pc.Asset[]} A list of all Assets matched query.
+     * @returns {Asset[]} A list of all Assets matched query.
      * @example
      * var assets = app.assets.findByTag("level-1");
      * // returns all assets that tagged by `level-1`
@@ -638,7 +638,7 @@ class AssetRegistry extends EventHandler {
      * @name AssetRegistry#filter
      * @description Return all Assets that satisfy filter callback.
      * @param {callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
-     * @returns {pc.Asset[]} A list of all Assets found.
+     * @returns {Asset[]} A list of all Assets found.
      * @example
      * var assets = app.assets.filter(function (asset) {
      *     return asset.name.indexOf('monster') !== -1;
@@ -660,7 +660,7 @@ class AssetRegistry extends EventHandler {
      * @description Return the first Asset with the specified name and type found in the registry.
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.
-     * @returns {pc.Asset} A single Asset or null if no Asset is found.
+     * @returns {Asset} A single Asset or null if no Asset is found.
      * @example
      * var asset = app.assets.find("myTextureAsset", "texture");
      */

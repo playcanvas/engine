@@ -180,7 +180,7 @@ class XrHand extends EventHandler {
      * @name XrHand#getJointById
      * @description Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/
      * @param {number} id - id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/
-     * @returns {pc.XrJoint|null} Joint or null if not available
+     * @returns {XrJoint|null} Joint or null if not available
      */
     getJointById(id) {
         return this._jointsById[id] || null;

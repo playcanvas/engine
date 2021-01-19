@@ -78,7 +78,7 @@ class XrTrackedImage extends EventHandler {
      * @function
      * @name XrTrackedImage#getPosition
      * @description Get the position of the tracked image. The position is the most recent one based on the tracked image state.
-     * @returns {pc.Vec3} Position in world space.
+     * @returns {Vec3} Position in world space.
      * @example
      * // update entity position to match tracked image position
      * entity.setPosition(trackedImage.getPosition());
@@ -92,7 +92,7 @@ class XrTrackedImage extends EventHandler {
      * @function
      * @name XrTrackedImage#getRotation
      * @description Get the rotation of the tracked image. The rotation is the most recent based on the tracked image state.
-     * @returns {pc.Quat} Rotation in world space.
+     * @returns {Quat} Rotation in world space.
      * @example
      * // update entity rotation to match tracked image rotation
      * entity.setRotation(trackedImage.getRotation());
