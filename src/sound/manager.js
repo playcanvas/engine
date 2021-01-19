@@ -102,7 +102,7 @@ class SoundManager extends EventHandler {
      * @function
      * @name SoundManager#playSound
      * @description Create a new pc.Channel and begin playback of the sound.
-     * @param {pc.Sound} sound - The Sound object to play.
+     * @param {Sound} sound - The Sound object to play.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
@@ -123,8 +123,8 @@ class SoundManager extends EventHandler {
      * @function
      * @name SoundManager#playSound3d
      * @description Create a new pc.Channel3d and begin playback of the sound at the position specified.
-     * @param {pc.Sound} sound - The Sound object to play.
-     * @param {pc.Vec3} position - The position of the sound in 3D space.
+     * @param {Sound} sound - The Sound object to play.
+     * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.

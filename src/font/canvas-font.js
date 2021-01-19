@@ -18,12 +18,12 @@ const DEFAULT_TEXTURE_SIZE = 512;
  * @name CanvasFont
  * @augments EventHandler
  * @classdesc Represents the resource of a canvas font asset.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @param {object} options - The font options.
  * @param {string} [options.fontName] - The name of the font, use in the same manner as a CSS font.
  * @param {string} [options.fontWeight] - The weight of the font, e.g. 'normal', 'bold', defaults to "normal".
  * @param {number} [options.fontSize] - The size the font will be rendered into to the texture atlas at, defaults to 32.
- * @param {pc.Color} [options.color] - The color the font will be rendered into the texture atlas as, defaults to white.
+ * @param {Color} [options.color] - The color the font will be rendered into the texture atlas as, defaults to white.
  * @param {number} [options.width] - The width of each texture atlas, defaults to 512.
  * @param {number} [options.height] - The height of each texture atlas, defaults to 512.
  * @param {number} [options.padding] - Amount of glyph padding added to each glyph in the atlas.

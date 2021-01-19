@@ -15,9 +15,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * camera components can be enabled simultaneously (for split-screen or offscreen
  * rendering, for example).
  * @description Create a new Camera Component.
- * @param {pc.CameraComponentSystem} system - The ComponentSystem that created this
+ * @param {CameraComponentSystem} system - The ComponentSystem that created this
  * Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @example
  * // Add a pc.CameraComponent to an entity
  * var entity = new pc.Entity();
@@ -192,7 +192,7 @@ class CameraComponent extends Component {
      * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
      * @param {number} cameraz - The distance from the camera in world space to create
      * the new point.
-     * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
+     * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
      * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -215,8 +215,8 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#worldToScreen
      * @description Convert a point from 3D world space to 2D screen space.
-     * @param {pc.Vec3} worldCoord - The world space coordinate.
-     * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
+     * @param {Vec3} worldCoord - The world space coordinate.
+     * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {pc.Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, screenCoord) {
@@ -316,7 +316,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#calculateAspectRatio
      * @description Calculates aspect ratio value for a given render target.
-     * @param {pc.RenderTarget} [rt] - Optional render target. If unspecified, the
+     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the
      * backbuffer is assumed.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
@@ -331,7 +331,7 @@ class CameraComponent extends Component {
      * @private
      * @name CameraComponent#frameBegin
      * @description Start rendering the frame for this camera.
-     * @param {pc.RenderTarget} rt - Render target to which rendering will be performed.
+     * @param {RenderTarget} rt - Render target to which rendering will be performed.
      * Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
      */
     frameBegin(rt) {
@@ -354,7 +354,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#enterVr
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {callbacks.VrCamera} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
@@ -374,9 +374,9 @@ class CameraComponent extends Component {
      * @name CameraComponent#enterVr
      * @variation 2
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {pc.VrDisplay} display - The VrDisplay to present. If not supplied this uses
+     * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
      * {@link VrManager#display} as the default.
-     * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success
+     * @param {callbacks.VrCamera} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err). On success it returns null on
      * failure it returns the error message.
      * @example
@@ -438,7 +438,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#exitVr
      * @description Attempt to stop presenting this camera.
-     * @param {pc.callbacks.VrCamera} callback - Function called once to indicate
+     * @param {callbacks.VrCamera} callback - Function called once to indicate
      * success of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
@@ -498,7 +498,7 @@ class CameraComponent extends Component {
      *
      * @param {object} [options] - object with options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
-     * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once
+     * @param {callbacks.XrError} [options.callback] - Optional callback function called once
      * the session is started. The callback has one argument Error - it is null if the XR
      * session started successfully.
      * @example
@@ -521,7 +521,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#endXr
      * @description Attempt to end XR session of this camera
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once
+     * @param {callbacks.XrError} [callback] - Optional callback function called once
      * session is ended. The callback has one argument Error - it is null if successfully
      * ended XR session.
      * @example

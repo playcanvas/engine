@@ -2,7 +2,7 @@
  * @private
  * @class
  * @name BundleRegistry
- * @param {pc.AssetRegistry} assets - The asset registry.
+ * @param {AssetRegistry} assets - The asset registry.
  * @classdesc Keeps track of which assets are in bundles and loads files from bundles.
  */
 class BundleRegistry {
@@ -253,7 +253,7 @@ class BundleRegistry {
      * @function
      * @name BundleRegistry#listBundlesForAsset
      * @description Lists all of the available bundles that reference the specified asset id.
-     * @param {pc.Asset} asset - The asset.
+     * @param {Asset} asset - The asset.
      * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
      */
     listBundlesForAsset(asset) {

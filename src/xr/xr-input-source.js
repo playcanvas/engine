@@ -17,7 +17,7 @@ var ids = 0;
  * @augments EventHandler
  * @classdesc Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
  * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @param {object} xrInputSource - [XRInputSource]{@link https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource} object that is created by WebXR API.
  * @property {number} id Unique number associated with instance of input source. Same physical devices when reconnected will not share this ID.
  * @property {object} inputSource XRInputSource object that is associated with this input source.
@@ -147,7 +147,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:add
      * @description Fired when new {@link XrHitTestSource} is added to the input source.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * inputSource.on('hittest:add', function (hitTestSource) {
      *     // new hit test source is added
@@ -158,7 +158,7 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:remove
      * @description Fired when {@link XrHitTestSource} is removed to the the input source.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * inputSource.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -169,9 +169,9 @@ class XrInputSource extends EventHandler {
      * @event
      * @name XrInputSource#hittest:result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {pc.Vec3} position - Position of hit test
-     * @param {pc.Quat} rotation - Rotation of hit test
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
+     * @param {Vec3} position - Position of hit test
+     * @param {Quat} rotation - Rotation of hit test
      * @example
      * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
      *     target.setPosition(position);
@@ -337,8 +337,8 @@ class XrInputSource extends EventHandler {
      * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
      * computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function
+     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function
      * called once hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {

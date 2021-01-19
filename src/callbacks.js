@@ -23,20 +23,20 @@
  * @callback pc.callbacks.LoadAsset
  * @description Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
  * @param {string|null} err - The error message is null if no errors were encountered.
- * @param {pc.Asset} [asset] - The loaded asset if no errors were encountered.
+ * @param {Asset} [asset] - The loaded asset if no errors were encountered.
  */
 
 /**
  * @callback pc.callbacks.FilterAsset
  * @description Callback used by {@link AssetRegistry#filter} to filter assets.
- * @param {pc.Asset} asset - The current asset to filter.
+ * @param {Asset} asset - The current asset to filter.
  * @returns {boolean} Return `true` to include asset to result list.
  */
 
 /**
  * @callback pc.callbacks.AssetReady
  * @description Callback used by {@link Asset#ready} and called when an asset is ready.
- * @param {pc.Asset} asset - The ready asset.
+ * @param {Asset} asset - The ready asset.
  */
 
 /**
@@ -54,7 +54,7 @@
  * @callback pc.callbacks.LoadHierarchy
  * @description Callback used by {@link SceneRegistry#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -67,22 +67,22 @@
  * @callback pc.callbacks.LoadScene
  * @description Callback used by {@link SceneRegistry#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {pc.Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
  * @callback pc.callbacks.CalculateMatrix
  * @description Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
- * @param {pc.Mat4} transformMatrix - Output of the function.
+ * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
  */
 
 /**
  * @callback pc.callbacks.CalculateSortDistance
  * @description Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance}, which determines its place in the render order.
- * @param {pc.MeshInstance} meshInstance - The mesh instance.
- * @param {pc.Vec3} cameraPosition - The position of the camera.
- * @param {pc.Vec3} cameraForward - The forward vector of the camera.
+ * @param {MeshInstance} meshInstance - The mesh instance.
+ * @param {Vec3} cameraPosition - The position of the camera.
+ * @param {Vec3} cameraForward - The forward vector of the camera.
  */
 
 /**
@@ -95,14 +95,14 @@
  * @private
  * @callback pc.callbacks.CreateScript
  * @description Callback used by {@link script.create}.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  */
 
 /**
  * @callback pc.callbacks.CreateScreen
  * @description Callback used by {@link script.createLoadingScreen}.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 
 /**
@@ -142,14 +142,14 @@
 /**
  * @callback pc.callbacks.FindNode
  * @description Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph node and all of its descendants.
- * @param {pc.GraphNode} node - The current graph node.
+ * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from {@link GraphNode#find} or {@link GraphNode#findOne}.
  */
 
 /**
  * @callback pc.callbacks.ForEach
  * @description Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its descendants.
- * @param {pc.GraphNode} node - The current graph node.
+ * @param {GraphNode} node - The current graph node.
  */
 
 /**
@@ -181,5 +181,5 @@
  * @callback pc.callbacks.XrHitTestStart
  * @description Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
- * @param {pc.XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
+ * @param {XrHitTestSource|null} hitTestSource - object that provides access to hit results against real world geometry.
  */

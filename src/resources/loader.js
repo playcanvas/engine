@@ -1,7 +1,7 @@
 /**
  * @class
  * @name ResourceLoader
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
  * multiple requests. Add ResourceHandlers to handle different types of resources.
  */
@@ -35,7 +35,7 @@ class ResourceLoader {
      * * {@link ASSET_SCRIPT}
      * * {@link ASSET_CONTAINER}
      *
-     * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
+     * @param {ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
      * @example
      * var loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
@@ -74,8 +74,8 @@ class ResourceLoader {
      * the resource.
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {pc.callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
-     * @param {pc.Asset} [asset] - Optional asset that is passed into handler
+     * @param {callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed into handler
      * Passed (err, resource) where err is null if there are no errors.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
@@ -216,8 +216,8 @@ class ResourceLoader {
      * @name ResourceLoader#patch
      * @description Perform any operations on a resource, that requires a dependency on its asset data
      * or any other asset data.
-     * @param {pc.Asset} asset - The asset to patch.
-     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {Asset} asset - The asset to patch.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         var handler = this._handlers[asset.type];

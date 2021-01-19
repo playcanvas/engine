@@ -23,7 +23,7 @@ import {
  * @classdesc Handles localization. Responsible for loading localization assets
  * and returning translations for a certain key. Can also handle plural forms. To override
  * its default behavior define a different implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
  * change language to the new locale.
  * @property {number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load

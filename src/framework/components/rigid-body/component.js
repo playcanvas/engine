@@ -24,8 +24,8 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
  * can apply forces and impulses to rigid bodies.
  * @description Create a new RigidBodyComponent.
- * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component.
- * @param {pc.Entity} entity - The entity this component is attached to.
+ * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+ * @param {Entity} entity - The entity this component is attached to.
  * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
  * bodies, other types have infinite mass. Defaults to 1.
  * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
@@ -92,35 +92,35 @@ class RigidBodyComponent extends Component {
      * @event
      * @name RigidBodyComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link Entity} that stopped touching this rigid body.
+     * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * @param {pc.Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
      */
 
     /**
      * @event
      * @name RigidBodyComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * @param {pc.Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
      */
 
     get linearVelocity() {
@@ -317,9 +317,9 @@ class RigidBodyComponent extends Component {
      * body. However, the force can be applied at an offset this point by specifying a world space vector from
      * the body's origin to the point of application. This function has two valid signatures. You can either
      * specify the force (and optional relative point) via 3D-vector or numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the force in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world-space or
      * the x-component of the force in world-space.
-     * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
      * which to apply the impulse in world-space or the y-component of the force in world-space.
      * @param {number} [z] - The z-component of the force in world-space.
      * @param {number} [px] - The x-component of a world-space offset from the body's position where the force is applied.
@@ -401,7 +401,7 @@ class RigidBodyComponent extends Component {
      * @name RigidBodyComponent#applyTorque
      * @description Apply torque (rotational force) to the body. This function has two valid signatures.
      * You can either specify the torque force with a 3D-vector or with 3 numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
      * the x-component of the torque force in world-space.
      * @param {number} [y] - The y-component of the torque force in world-space.
      * @param {number} [z] - The z-component of the torque force in world-space.
@@ -446,9 +446,9 @@ class RigidBodyComponent extends Component {
      * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
      * This function has two valid signatures. You can either specify the impulse (and optional relative
      * point) via 3D-vector or numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
      * the x-component of the impulse in world-space.
-     * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
+     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
      * which to apply the impulse in the local-space of the entity or the y-component of the impulse to
      * apply in world-space.
      * @param {number} [z] - The z-component of the impulse to apply in world-space.
@@ -528,7 +528,7 @@ class RigidBodyComponent extends Component {
      * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
      * This function has two valid signatures. You can either specify the torque force with a 3D-vector
      * or with 3 numbers.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
      * the x-component of the torque impulse in world-space.
      * @param {number} [y] - The y-component of the torque impulse in world-space.
      * @param {number} [z] - The z-component of the torque impulse in world-space.
@@ -691,8 +691,8 @@ class RigidBodyComponent extends Component {
      * The first takes a 3-dimensional vector for the position and an optional 3-dimensional vector for Euler rotation.
      * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
      * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
-     * @param {pc.Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-     * @param {pc.Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
+     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
+     * @param {Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
      * position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.

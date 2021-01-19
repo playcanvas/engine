@@ -4,7 +4,7 @@
  * @name AnimEvaluator
  * @classdesc AnimEvaluator blends multiple sets of animation clips together.
  * @description Create a new animation evaluator.
- * @param {pc.AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+ * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
  * @property {pc.AnimClip[]} clips - the list of animation clips
  */
 class AnimEvaluator {
@@ -117,7 +117,7 @@ class AnimEvaluator {
      * @function
      * @name AnimEvaluator#addClip
      * @description Add a clip to the evaluator.
-     * @param {pc.AnimClip} clip - the clip to add to the evaluator.
+     * @param {AnimClip} clip - the clip to add to the evaluator.
      */
     addClip(clip) {
         var targets = this._targets;

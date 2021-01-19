@@ -8,7 +8,7 @@ import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
  * @description Create a new AnimComponentLayer.
  * @param {string} name - The name of the layer.
  * @param {object} controller - The controller to manage this layers animations.
- * @param {pc.AnimComponent} component - The component that this layer is a member of.
+ * @param {AnimComponent} component - The component that this layer is a member of.
  */
 class AnimComponentLayer {
     constructor(name, controller, component) {

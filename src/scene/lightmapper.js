@@ -124,11 +124,11 @@ function collectModels(node, nodes, nodesMeshInstances, allNodes) {
  * @class
  * @name Lightmapper
  * @classdesc The lightmapper is used to bake scene lights into textures.
- * @param {pc.GraphicsDevice} device - The grahpics device used by the lightmapper.
- * @param {pc.Entity} root - The root entity of the scene.
- * @param {pc.Scene} scene - The scene to lightmap.
- * @param {pc.ForwardRenderer} renderer - The renderer.
- * @param {pc.AssetRegistry} assets - Registry of assets to lightmap.
+ * @param {GraphicsDevice} device - The grahpics device used by the lightmapper.
+ * @param {Entity} root - The root entity of the scene.
+ * @param {Scene} scene - The scene to lightmap.
+ * @param {ForwardRenderer} renderer - The renderer.
+ * @param {AssetRegistry} assets - Registry of assets to lightmap.
  */
 class Lightmapper {
     constructor(device, root, scene, renderer, assets) {
@@ -234,7 +234,7 @@ class Lightmapper {
      * @function
      * @name Lightmapper#bake
      * @description Generates and applies the lightmaps.
-     * @param {pc.Entity[]|null} nodes - An array of entities (with model components) to render
+     * @param {Entity[]|null} nodes - An array of entities (with model components) to render
      * lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *

@@ -8,7 +8,7 @@
  * the PlayCanvas engine should map vertex buffer elements onto the attributes specified in the vertex
  * shader code.
  * @description Creates a new shader object.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
  * @param {object} definition - The shader definition from which to build the shader.
  * @param {object} definition.attributes - Object detailing the mapping of vertex shader attribute names
  * to semantics (pc.SEMANTIC_*). This enables the engine to match vertex buffer data as inputs to the

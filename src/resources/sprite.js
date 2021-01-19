@@ -23,8 +23,8 @@ function onTextureAtlasAdded(atlasAsset) {
  * @name SpriteHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link Sprite} resources.
- * @param {pc.AssetRegistry} assets - The asset registry.
- * @param {pc.GraphicsDevice} device - The graphics device.
+ * @param {AssetRegistry} assets - The asset registry.
+ * @param {GraphicsDevice} device - The graphics device.
  */
 class SpriteHandler {
     constructor(assets, device) {

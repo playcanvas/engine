@@ -20,7 +20,7 @@ var _prepareDeprecationWarning = false;
  * @name Picker
  * @classdesc Picker object used to select mesh instances from screen coordinates.
  * @description Create a new instance of a Picker object.
- * @param {pc.Application} app - The application managing this picker instance.
+ * @param {Application} app - The application managing this picker instance.
  * @param {number} width - The width of the pick buffer in pixels.
  * @param {number} height - The height of the pick buffer in pixels.
  * @property {number} width Width of the pick buffer in pixels (read-only).
@@ -161,9 +161,9 @@ class Picker {
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
      * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera - The camera component used to render the scene.
-     * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
-     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * @param {CameraComponent} camera - The camera component used to render the scene.
+     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
      * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     prepare(camera, scene, arg) {

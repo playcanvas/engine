@@ -32,8 +32,8 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @name SpriteComponent
  * @augments Component
  * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
- * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the SpriteComponent. Can be:
  *
  * * {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
@@ -869,42 +869,42 @@ class SpriteComponent extends Component {
      * @event
      * @name SpriteComponent#play
      * @description Fired when an animation clip starts playing.
-     * @param {pc.SpriteAnimationClip} clip - The clip that started playing.
+     * @param {SpriteAnimationClip} clip - The clip that started playing.
      */
 
     /**
      * @event
      * @name SpriteComponent#pause
      * @description Fired when an animation clip is paused.
-     * @param {pc.SpriteAnimationClip} clip - The clip that was paused.
+     * @param {SpriteAnimationClip} clip - The clip that was paused.
      */
 
     /**
      * @event
      * @name SpriteComponent#resume
      * @description Fired when an animation clip is resumed.
-     * @param {pc.SpriteAnimationClip} clip - The clip that was resumed.
+     * @param {SpriteAnimationClip} clip - The clip that was resumed.
      */
 
     /**
      * @event
      * @name SpriteComponent#stop
      * @description Fired when an animation clip is stopped.
-     * @param {pc.SpriteAnimationClip} clip - The clip that was stopped.
+     * @param {SpriteAnimationClip} clip - The clip that was stopped.
      */
 
     /**
      * @event
      * @name SpriteComponent#end
      * @description Fired when an animation clip stops playing because it reached its ending.
-     * @param {pc.SpriteAnimationClip} clip - The clip that ended.
+     * @param {SpriteAnimationClip} clip - The clip that ended.
      */
 
     /**
      * @event
      * @name SpriteComponent#loop
      * @description Fired when an animation clip reached the end of its current loop.
-     * @param {pc.SpriteAnimationClip} clip - The clip.
+     * @param {SpriteAnimationClip} clip - The clip.
      */
 }
 

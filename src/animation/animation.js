@@ -61,7 +61,7 @@ class Animation {
      * @function
      * @name Animation#addNode
      * @description Adds a node to the internal nodes array.
-     * @param {pc.Node} node - The node to add.
+     * @param {Node} node - The node to add.
      */
     addNode(node) {
         this._nodes.push(node);

@@ -15,8 +15,8 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @augments Component
  * @description Create a new ScrollbarComponent.
  * @classdesc A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
- * @param {pc.ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
  *
  * * {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.

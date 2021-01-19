@@ -12,7 +12,7 @@
  * @class
  * @name AnimTarget
  * @classdesc Stores the information required by {@link AnimEvaluator} for updating a target value.
- * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
+ * @param {AnimSetter} func - this function will be called when a new animation value is output by
  * the {@link AnimEvaluator}.
  * @param {'vector'|'quaternion'} type - the type of animation data this target expects.
  * @param {number} components - the number of components on this target (this should ideally match the number

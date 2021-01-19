@@ -33,7 +33,7 @@ class Mat3 {
      * @function
      * @name Mat3#copy
      * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
-     * @param {pc.Mat3} rhs - A 3x3 matrix to be copied.
+     * @param {Mat3} rhs - A 3x3 matrix to be copied.
      * @returns {pc.Mat3} Self for chaining.
      * @example
      * var src = new pc.Mat3().translate(10, 20, 30);
@@ -87,7 +87,7 @@ class Mat3 {
     /**
      * @function
      * @name Mat3#equals
-     * @param {pc.Mat3} rhs - The other matrix.
+     * @param {Mat3} rhs - The other matrix.
      * @description Reports whether two matrices are equal.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
@@ -204,7 +204,7 @@ class Mat3 {
      * @function
      * @name Mat3#setFromMat4
      * @description Converts the specified 4x4 matrix to a Mat3.
-     * @param {pc.Mat4} m - The 4x4 matrix to convert.
+     * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {pc.Mat3} Self for chaining.
      */
     setFromMat4(m) {

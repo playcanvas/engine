@@ -18,7 +18,7 @@ var primitive = {
  * apply effects to it and then render the result to an output render target or the screen
  * if no output is specified.
  * @description Creates new PostEffect.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {pc.GraphicsDevice} device The graphics device of the application. [read only].
  * @property {pc.VertexBuffer} vertexBuffer The vertex buffer for the fullscreen quad. Used when calling {@link drawFullscreenQuad}. [read only].
  * @property {pc.Shader|null} shader The shader definition for the fullscreen quad. Needs to be set by the custom post effect (default is null). Used when calling {@link drawFullscreenQuad}.
@@ -38,9 +38,9 @@ class PostEffect {
      * @name PostEffect#render
      * @description Render the post effect using the specified inputTarget
      * to the specified outputTarget.
-     * @param {pc.RenderTarget} inputTarget - The input render target.
-     * @param {pc.RenderTarget} outputTarget - The output render target. If null then this will be the screen.
-     * @param {pc.Vec4} rect - (Optional) The rect of the current camera. If not specified then it will default to [0,0,1,1].
+     * @param {RenderTarget} inputTarget - The input render target.
+     * @param {RenderTarget} outputTarget - The output render target. If null then this will be the screen.
+     * @param {Vec4} rect - (Optional) The rect of the current camera. If not specified then it will default to [0,0,1,1].
      */
     render(inputTarget, outputTarget, rect) {
     }
@@ -74,11 +74,11 @@ function createFullscreenQuad(device) {
  * @function
  * @name drawFullscreenQuad
  * @description Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post effects based on {@link PostEffect}.
- * @param {pc.GraphicsDevice} device - The graphics device of the application.
- * @param {pc.RenderTarget} target - The output render target.
- * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer for the rectangle mesh. When calling from a custom post effect, pass the field {@link PostEffect#vertexBuffer}.
- * @param {pc.Shader} shader - The shader to be used for drawing the rectangle. When calling from a custom post effect, pass the field {@link PostEffect#shader}.
- * @param {pc.Vec4} [rect] - The normalized screen-space position (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
+ * @param {GraphicsDevice} device - The graphics device of the application.
+ * @param {RenderTarget} target - The output render target.
+ * @param {VertexBuffer} vertexBuffer - The vertex buffer for the rectangle mesh. When calling from a custom post effect, pass the field {@link PostEffect#vertexBuffer}.
+ * @param {Shader} shader - The shader to be used for drawing the rectangle. When calling from a custom post effect, pass the field {@link PostEffect#shader}.
+ * @param {Vec4} [rect] - The normalized screen-space position (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
  */
 function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     var oldRt = device.getRenderTarget();

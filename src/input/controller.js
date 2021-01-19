@@ -18,9 +18,9 @@ import { Mouse } from './mouse.js';
  * @description Create a new instance of a Controller.
  * @param {Element} [element] - Element to attach Controller to.
  * @param {object} [options] - Optional arguments.
- * @param {pc.Keyboard} [options.keyboard] - A Keyboard object to use.
- * @param {pc.Mouse} [options.mouse] - A Mouse object to use.
- * @param {pc.GamePads} [options.gamepads] - A Gamepads object to use.
+ * @param {Keyboard} [options.keyboard] - A Keyboard object to use.
+ * @param {Mouse} [options.mouse] - A Mouse object to use.
+ * @param {GamePads} [options.gamepads] - A Gamepads object to use.
  * @example
  * var c = new pc.Controller(document);
  *

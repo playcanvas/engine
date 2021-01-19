@@ -468,7 +468,7 @@ class Scene extends EventHandler {
      * @function
      * @name Scene#setSkybox
      * @description Sets the cubemap for the scene skybox.
-     * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
+     * @param {Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
      * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
      * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
@@ -550,15 +550,15 @@ class Scene extends EventHandler {
      * @event
      * @name Scene#set:skybox
      * @description Fired when the skybox is set.
-     * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
+     * @param {Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
      */
 
     /**
      * @event
      * @name Scene#set:layers
      * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-     * @param {pc.LayerComposition} oldComp - Previously used {@link LayerComposition}.
-     * @param {pc.LayerComposition} newComp - Newly set {@link LayerComposition}.
+     * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
+     * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
      *     var list = newComp.layerList;

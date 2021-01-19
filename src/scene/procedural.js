@@ -224,7 +224,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @function
  * @name createMesh
  * @description Creates a new mesh object from the supplied vertex information and topology.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
@@ -355,7 +355,7 @@ function createMesh(device, positions, opts) {
  *
  * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the torus's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus (defaults to 0.2).
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
@@ -654,7 +654,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  *
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cylinder's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
@@ -699,7 +699,7 @@ function createCylinder(device, opts) {
  *
  * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the capsule's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
@@ -737,7 +737,7 @@ function createCapsule(device, opts) {
  *
  * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the cone's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
  * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
@@ -775,7 +775,7 @@ function createCone(device, opts) {
  *
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the sphere's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
  * @param {number} [opts.segments] - The number of divisions along the longitudinal
@@ -858,9 +858,9 @@ function createSphere(device, opts) {
  *
  * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the plane's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
+ * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
  * @returns {pc.Mesh} A new plane-shaped mesh.
@@ -937,9 +937,9 @@ function createPlane(device, opts) {
  *
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
  * information is generated into the vertex buffer of the box's mesh.
- * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {pc.Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
+ * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).

@@ -403,7 +403,7 @@ class Layer {
      * @function
      * @name Layer#addMeshInstances
      * @description Adds an array of mesh instances to this layer.
-     * @param {pc.MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
@@ -471,7 +471,7 @@ class Layer {
      * @function
      * @name Layer#removeMeshInstances
      * @description Removes multiple mesh instances from this layer.
-     * @param {pc.MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
@@ -521,7 +521,7 @@ class Layer {
      * @function
      * @name Layer#addLight
      * @description Adds a light to this layer.
-     * @param {pc.LightComponent} light - A {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
         if (this._lightComponents.indexOf(light) >= 0) return;
@@ -535,7 +535,7 @@ class Layer {
      * @function
      * @name Layer#removeLight
      * @description Removes a light from this layer.
-     * @param {pc.LightComponent} light - A {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
         var id = this._lightComponents.indexOf(light);
@@ -564,7 +564,7 @@ class Layer {
      * @function
      * @name Layer#addShadowCasters
      * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
-     * @param {pc.MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
         var m;
@@ -581,7 +581,7 @@ class Layer {
      * @function
      * @name Layer#removeShadowCasters
      * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
-     * @param {pc.MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
         var id;
@@ -647,7 +647,7 @@ class Layer {
      * @function
      * @name Layer#addCamera
      * @description Adds a camera to this layer.
-     * @param {pc.CameraComponent} camera - A {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     addCamera(camera) {
         if (this.cameras.indexOf(camera) >= 0) return;
@@ -659,7 +659,7 @@ class Layer {
      * @function
      * @name Layer#removeCamera
      * @description Removes a camera from this layer.
-     * @param {pc.CameraComponent} camera - A {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
         var id = this.cameras.indexOf(camera);

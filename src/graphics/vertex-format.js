@@ -13,7 +13,7 @@ import {
  * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
  * a {@link VertexBuffer}.
  * @description Returns a new pc.VertexFormat object.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
  * @param {object[]} description - An array of vertex attribute descriptions.
  * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
  * the vertex data to a shader input. Can be:

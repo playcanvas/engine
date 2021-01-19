@@ -20,7 +20,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
  * @augments EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
- * @param {pc.Application} app - The main application.
+ * @param {Application} app - The main application.
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.
  * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
@@ -156,7 +156,7 @@ class XrManager extends EventHandler {
      * @function
      * @name XrManager#start
      * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
-     * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
+     * @param {CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
      *
      * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
@@ -177,7 +177,7 @@ class XrManager extends EventHandler {
      * });
      * @param {object} [options] - object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
-     * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     start(camera, type, spaceType, options) {
         var self = this;
@@ -280,7 +280,7 @@ class XrManager extends EventHandler {
      *         app.xr.end();
      *     }
      * });
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     end(callback) {
         if (! this._session) {

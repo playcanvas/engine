@@ -17,7 +17,7 @@ var MAX_ITERATIONS = 100;
  * @augments ComponentSystem
  * @description Create a new LayoutGroupComponentSystem.
  * @classdesc Manages creation of {@link LayoutGroupComponent}s.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
     constructor(app) {

@@ -21,8 +21,8 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @augments Component
  * @classdesc Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches {@link MeshInstance} geometry to the Entity.
  * @description Create a new RenderComponent.
- * @param {pc.RenderComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the render. Can be one of the following:
  * * "asset": The component will render a render asset
  * * "box": The component will render a box (1 unit in each dimension)

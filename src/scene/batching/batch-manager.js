@@ -82,9 +82,9 @@ function getScaleSign(mi) {
  * @class
  * @name BatchManager
  * @classdesc Glues many mesh instances into a single one for better performance.
- * @param {pc.GraphicsDevice} device - The graphics device used by the batch manager.
- * @param {pc.Entity} root - The entity under which batched models are added.
- * @param {pc.Scene} scene - The scene that the batch manager affects.
+ * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+ * @param {Entity} root - The entity under which batched models are added.
+ * @param {Scene} scene - The scene that the batch manager affects.
  */
 class BatchManager {
     constructor(device, root, scene) {
@@ -490,7 +490,7 @@ class BatchManager {
      * * Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
      * * Bounding box of a batch is larger than maxAabbSize in any dimension.
      *
-     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances
+     * @param {MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * @param {boolean} translucent - Are we batching UI elements or sprites
@@ -629,7 +629,7 @@ class BatchManager {
      * @function
      * @name BatchManager#create
      * @description Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and returns a {@link Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances.
+     * @param {MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
@@ -871,7 +871,7 @@ class BatchManager {
      * @function
      * @name BatchManager#update
      * @description Updates bounding box for a batch. Called automatically.
-     * @param {pc.Batch} batch - A batch object.
+     * @param {Batch} batch - A batch object.
      */
     update(batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
@@ -914,8 +914,8 @@ class BatchManager {
      * @function
      * @name BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
-     * @param {pc.Batch} batch - A batch object.
-     * @param {pc.MeshInstance[]} clonedMeshInstances - New mesh instances.
+     * @param {Batch} batch - A batch object.
+     * @param {MeshInstance[]} clonedMeshInstances - New mesh instances.
      * @returns {pc.Batch} New batch object.
      */
     clone(batch, clonedMeshInstances) {
@@ -956,7 +956,7 @@ class BatchManager {
      * @function
      * @name BatchManager#destroy
      * @description Removes the batch model from all layers and destroys it.
-     * @param {pc.Batch} batch - A batch object.
+     * @param {Batch} batch - A batch object.
      */
     destroy(batch) {
         if (!batch.model)

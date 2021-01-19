@@ -6,9 +6,9 @@
  * @description Create a new animation track.
  * @param {string} name - the track name
  * @param {number} duration - the duration of the track in seconds.
- * @param {pc.AnimData[]} inputs - list of curve key data.
- * @param {pc.AnimData[]} outputs - list of curve value data.
- * @param {pc.AnimCurve[]} curves - the list of curves.
+ * @param {AnimData[]} inputs - list of curve key data.
+ * @param {AnimData[]} outputs - list of curve value data.
+ * @param {AnimCurve[]} curves - the list of curves.
  */
 class AnimTrack {
     constructor(name, duration, inputs, outputs, curves) {

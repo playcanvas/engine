@@ -46,9 +46,9 @@ class Command {
  * @classdesc An instance of a {@link Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
- * @param {pc.Mesh} mesh - The graphics mesh being instanced.
- * @param {pc.Material} material - The material used to render this instance.
+ * @param {GraphNode} node - The graph node defining the transform for this instance.
+ * @param {Mesh} mesh - The graphics mesh being instanced.
+ * @param {Material} material - The material used to render this instance.
  * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -463,7 +463,7 @@ class MeshInstance {
      * @function
      * @name MeshInstance#setInstancing
      * @description Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
-     * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
      * Pass null to turn off hardware instancing.
      */
     setInstancing(vertexBuffer) {

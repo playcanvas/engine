@@ -9,7 +9,7 @@ function isMousePointerLocked() {
  * @name MouseEvent
  * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
  * @description Create an new MouseEvent.
- * @param {pc.Mouse} mouse - The Mouse device that is firing this event.
+ * @param {Mouse} mouse - The Mouse device that is firing this event.
  * @param {MouseEvent} event - The original browser event that fired.
  * @property {number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.
  * @property {number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.

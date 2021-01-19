@@ -23,8 +23,8 @@ import { Component } from '../component.js';
  * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
  *
  * @description Create a new CollisionComponent.
- * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the collision volume. Can be:
  *
  * * "box": A box-shaped collision volume.
@@ -73,21 +73,21 @@ class CollisionComponent extends Component {
      * @event
      * @name CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result - Details of the contact between the two Entities.
+     * @param {ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
      * @event
      * @name CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other - The {@link Entity} that stopped touching this collision volume.
+     * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
@@ -95,7 +95,7 @@ class CollisionComponent extends Component {
      * @name CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link Entity} that entered this collision volume.
+     * @param {Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
@@ -103,7 +103,7 @@ class CollisionComponent extends Component {
      * @name CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link RigidBodyComponent} attached.
-     * @param {pc.Entity} other - The {@link Entity} that exited this collision volume.
+     * @param {Entity} other - The {@link Entity} that exited this collision volume.
      */
 
     onSetType(name, oldValue, newValue) {

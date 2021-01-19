@@ -569,7 +569,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
  * @augments ComponentSystem
  * @classdesc Manages creation of {@link CollisionComponent}s.
  * @description Creates a new CollisionComponentSystem.
- * @param {pc.Application} app - The running {pc.Application}.
+ * @param {Application} app - The running {pc.Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
     constructor(app) {

@@ -10,7 +10,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  * @class
  * @name SceneRegistry
  * @description Container for storing the name and url for scene files.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class SceneRegistry {
     constructor(app) {
@@ -122,7 +122,7 @@ class SceneRegistry {
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
-     * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading,
+     * @param {callbacks.LoadHierarchy} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
      *
@@ -182,7 +182,7 @@ class SceneRegistry {
      * @name SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene.
      * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl.
-     * @param {pc.callbacks.LoadSettings} callback - The function called after the settings
+     * @param {callbacks.LoadSettings} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      *
@@ -224,7 +224,7 @@ class SceneRegistry {
      * @description Load the scene hierarchy and scene settings. This is an internal method used
      * by the pc.Application.
      * @param {string} url - The URL of the scene file.
-     * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
+     * @param {callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
      * {@link Scene}.
      */

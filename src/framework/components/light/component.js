@@ -32,8 +32,8 @@ var _lightPropsDefault = [];
  * a point light where light is emitted in a cone rather than in all directions. Lights
  * also have the ability to cast shadows to add realism to your scenes.
  * @description Creates a new Light Component.
- * @param {pc.LightComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @example
  * // Add a pc.LightComponent to an entity
  * var entity = new pc.Entity();

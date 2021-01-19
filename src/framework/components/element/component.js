@@ -80,8 +80,8 @@ var matD = new Mat4();
  * * [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
  * * [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
  *
- * @param {pc.ElementComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {string} type The type of the ElementComponent. Can be:
  *
  * * {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.
@@ -1597,75 +1597,75 @@ _define("rangeEnd");
  * @event
  * @name ElementComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#mouseenter
  * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 /**
  * @event
  * @name ElementComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 /**
  * @event
  * @name ElementComponent#mousemove
  * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#mousewheel
  * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event - The event.
+ * @param {ElementMouseEvent|pc.ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#touchstart
  * @description Fired when a touch starts on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#touchend
  * @description Fired when a touch ends on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#touchmove
  * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ElementComponent#touchcancel
  * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 export { ElementComponent };

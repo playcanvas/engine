@@ -28,7 +28,7 @@ if (window.XRHand) {
  * @name XrHand
  * @classdesc Represents a hand with fingers and joints
  * @description Represents a hand with fingers and joints
- * @param {pc.XrInputSource} inputSource - Input Source that hand is related to
+ * @param {XrInputSource} inputSource - Input Source that hand is related to
  * @property {pc.XrFinger[]} fingers List of fingers of a hand
  * @property {pc.XrJoint[]} joints List of joints of hand
  * @property {pc.XrJoint[]} tips List of joints that are tips of a fingers

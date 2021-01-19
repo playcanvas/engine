@@ -9,7 +9,7 @@ import { TemplateUtils } from '../templates/template-utils.js';
  * @name SceneHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link Scene} resources.
- * @param {pc.Application} app - The running {@link Application}.
+ * @param {Application} app - The running {@link Application}.
  */
 class SceneHandler {
     constructor(app) {

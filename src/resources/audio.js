@@ -45,7 +45,7 @@ const toMIME = {
  * @name AudioHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link Sound} resources.
- * @param {pc.SoundManager} manager - The sound manager.
+ * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
     constructor(manager) {

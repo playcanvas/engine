@@ -44,7 +44,7 @@ class Color {
      * @function
      * @name Color#copy
      * @description Copies the contents of a source color to a destination color.
-     * @param {pc.Color} rhs - A color to copy to the specified color.
+     * @param {Color} rhs - A color to copy to the specified color.
      * @returns {pc.Color} Self for chaining.
      * @example
      * var src = new pc.Color(1, 0, 0, 1);
@@ -67,7 +67,7 @@ class Color {
      * @function
      * @name Color#equals
      * @description Reports whether two colors are equal.
-     * @param {pc.Color} rhs - The color to compare to the specified color.
+     * @param {Color} rhs - The color to compare to the specified color.
      * @returns {boolean} True if the colors are equal and false otherwise.
      * @example
      * var a = new pc.Color(1, 0, 0, 1);
@@ -101,8 +101,8 @@ class Color {
      * @function
      * @name Color#lerp
      * @description Returns the result of a linear interpolation between two specified colors.
-     * @param {pc.Color} lhs - The color to interpolate from.
-     * @param {pc.Color} rhs - The color to interpolate to.
+     * @param {Color} lhs - The color to interpolate from.
+     * @param {Color} rhs - The color to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.

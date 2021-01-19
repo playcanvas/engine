@@ -51,7 +51,7 @@ class Vec2 {
      * @function
      * @name Vec2#add
      * @description Adds a 2-dimensional vector to another in place.
-     * @param {pc.Vec2} rhs - The vector to add to the specified vector.
+     * @param {Vec2} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
@@ -73,8 +73,8 @@ class Vec2 {
      * @function
      * @name Vec2#add2
      * @description Adds two 2-dimensional vectors together and returns the result.
-     * @param {pc.Vec2} lhs - The first vector operand for the addition.
-     * @param {pc.Vec2} rhs - The second vector operand for the addition.
+     * @param {Vec2} lhs - The first vector operand for the addition.
+     * @param {Vec2} rhs - The second vector operand for the addition.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
@@ -111,7 +111,7 @@ class Vec2 {
      * @function
      * @name Vec2#copy
      * @description Copied the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
-     * @param {pc.Vec2} rhs - A vector to copy to the specified vector.
+     * @param {Vec2} rhs - A vector to copy to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var src = new pc.Vec2(10, 20);
@@ -132,7 +132,7 @@ class Vec2 {
      * @function
      * @name Vec2#distance
      * @description Returns the distance between the two specified 2-dimensional vectors.
-     * @param {pc.Vec2} rhs - The second 2-dimensional vector to test.
+     * @param {Vec2} rhs - The second 2-dimensional vector to test.
      * @returns {number} The distance between the two vectors.
      * @example
      * var v1 = new pc.Vec2(5, 10);
@@ -150,7 +150,7 @@ class Vec2 {
      * @function
      * @name Vec2#dot
      * @description Returns the result of a dot product operation performed on the two specified 2-dimensional vectors.
-     * @param {pc.Vec2} rhs - The second 2-dimensional vector operand of the dot product.
+     * @param {Vec2} rhs - The second 2-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
      * @example
      * var v1 = new pc.Vec2(5, 10);
@@ -166,7 +166,7 @@ class Vec2 {
      * @function
      * @name Vec2#equals
      * @description Reports whether two vectors are equal.
-     * @param {pc.Vec2} rhs - The vector to compare to the specified vector.
+     * @param {Vec2} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
      * @example
      * var a = new pc.Vec2(1, 2);
@@ -211,8 +211,8 @@ class Vec2 {
      * @function
      * @name Vec2#lerp
      * @description Returns the result of a linear interpolation between two specified 2-dimensional vectors.
-     * @param {pc.Vec2} lhs - The 2-dimensional to interpolate from.
-     * @param {pc.Vec2} rhs - The 2-dimensional to interpolate to.
+     * @param {Vec2} lhs - The 2-dimensional to interpolate from.
+     * @param {Vec2} rhs - The 2-dimensional to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
@@ -237,7 +237,7 @@ class Vec2 {
      * @function
      * @name Vec2#mul
      * @description Multiplies a 2-dimensional vector to another in place.
-     * @param {pc.Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(2, 3);
@@ -259,8 +259,8 @@ class Vec2 {
      * @function
      * @name Vec2#mul2
      * @description Returns the result of multiplying the specified 2-dimensional vectors together.
-     * @param {pc.Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
-     * @param {pc.Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
+     * @param {Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(2, 3);
@@ -355,7 +355,7 @@ class Vec2 {
      * @function
      * @name Vec2#sub
      * @description Subtracts a 2-dimensional vector from another in place.
-     * @param {pc.Vec2} rhs - The vector to add to the specified vector.
+     * @param {Vec2} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
@@ -377,8 +377,8 @@ class Vec2 {
      * @function
      * @name Vec2#sub2
      * @description Subtracts two 2-dimensional vectors from one another and returns the result.
-     * @param {pc.Vec2} lhs - The first vector operand for the addition.
-     * @param {pc.Vec2} rhs - The second vector operand for the addition.
+     * @param {Vec2} lhs - The first vector operand for the addition.
+     * @param {Vec2} rhs - The second vector operand for the addition.
      * @returns {pc.Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);

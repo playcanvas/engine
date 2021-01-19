@@ -107,14 +107,14 @@ class Asset extends EventHandler {
      * @event
      * @name Asset#load
      * @description Fired when the asset has completed loading.
-     * @param {pc.Asset} asset - The asset that was loaded.
+     * @param {Asset} asset - The asset that was loaded.
      */
 
     /**
      * @event
      * @name Asset#remove
      * @description Fired when the asset is removed from the asset registry.
-     * @param {pc.Asset} asset - The asset that was removed.
+     * @param {Asset} asset - The asset that was removed.
      */
 
     /**
@@ -122,14 +122,14 @@ class Asset extends EventHandler {
      * @name Asset#error
      * @description Fired if the asset encounters an error while loading.
      * @param {string} err - The error message.
-     * @param {pc.Asset} asset - The asset that generated the error.
+     * @param {Asset} asset - The asset that generated the error.
      */
 
     /**
      * @event
      * @name Asset#change
      * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
-     * @param {pc.Asset} asset - The asset that was loaded.
+     * @param {Asset} asset - The asset that was loaded.
      * @param {string} property - The name of the property that changed.
      * @param {*} value - The new property value.
      * @param {*} oldValue - The old property value.
@@ -277,7 +277,7 @@ class Asset extends EventHandler {
      * @function
      * @name Asset#ready
      * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
-     * @param {pc.callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
+     * @param {callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * var asset = app.assets.find("My Asset");

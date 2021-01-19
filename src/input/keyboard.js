@@ -49,7 +49,7 @@ const _keyCodeToKeyIdentifier = {
  * @event
  * @name Keyboard#keydown
  * @description Event fired when a key is pressed.
- * @param {pc.KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
+ * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
  * var onKeyDown = function (e) {
  *     if (e.key === pc.KEY_SPACE) {
@@ -64,7 +64,7 @@ const _keyCodeToKeyIdentifier = {
  * @event
  * @name Keyboard#keyup
  * @description Event fired when a key is released.
- * @param {pc.KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
+ * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
  * @example
  * var onKeyUp = function (e) {
  *     if (e.key === pc.KEY_SPACE) {

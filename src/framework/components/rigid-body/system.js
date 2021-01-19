@@ -20,9 +20,9 @@ var frameCollisions = {};
  * @name RaycastResult
  * @classdesc Object holding the result of a successful raycast hit.
  * @description Create a new RaycastResult.
- * @param {pc.Entity} entity - The entity that was hit.
- * @param {pc.Vec3} point - The point at which the ray hit the entity in world space.
- * @param {pc.Vec3} normal - The normal vector of the surface where the ray hit in world space.
+ * @param {Entity} entity - The entity that was hit.
+ * @param {Vec3} point - The point at which the ray hit the entity in world space.
+ * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
  * @property {pc.Entity} entity The entity that was hit.
  * @property {pc.Vec3} point The point at which the ray hit the entity in world space.
  * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
@@ -40,9 +40,9 @@ class RaycastResult {
  * @name SingleContactResult
  * @classdesc Object holding the result of a contact between two rigid bodies.
  * @description Create a new SingleContactResult.
- * @param {pc.Entity} a - The first entity involved in the contact.
- * @param {pc.Entity} b - The second entity involved in the contact.
- * @param {pc.ContactPoint} contactPoint - The contact point between the two entities.
+ * @param {Entity} a - The first entity involved in the contact.
+ * @param {Entity} b - The second entity involved in the contact.
+ * @param {ContactPoint} contactPoint - The contact point between the two entities.
  * @property {pc.Entity} a The first entity involved in the contact.
  * @property {pc.Entity} b The second entity involved in the contact.
  * @property {pc.Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
@@ -78,11 +78,11 @@ class SingleContactResult {
  * @name ContactPoint
  * @classdesc Object holding the result of a contact between two Entities.
  * @description Create a new ContactPoint.
- * @param {pc.Vec3} localPoint - The point on the entity where the contact occurred, relative to the entity.
- * @param {pc.Vec3} localPointOther - The point on the other entity where the contact occurred, relative to the other entity.
- * @param {pc.Vec3} point - The point on the entity where the contact occurred, in world space.
- * @param {pc.Vec3} pointOther - The point on the other entity where the contact occurred, in world space.
- * @param {pc.Vec3} normal - The normal vector of the contact on the other entity, in world space.
+ * @param {Vec3} localPoint - The point on the entity where the contact occurred, relative to the entity.
+ * @param {Vec3} localPointOther - The point on the other entity where the contact occurred, relative to the other entity.
+ * @param {Vec3} point - The point on the entity where the contact occurred, in world space.
+ * @param {Vec3} pointOther - The point on the other entity where the contact occurred, in world space.
+ * @param {Vec3} normal - The normal vector of the contact on the other entity, in world space.
  * @property {pc.Vec3} localPoint The point on the entity where the contact occurred, relative to the entity.
  * @property {pc.Vec3} localPointOther The point on the other entity where the contact occurred, relative to the other entity.
  * @property {pc.Vec3} point The point on the entity where the contact occurred, in world space.
@@ -112,8 +112,8 @@ class ContactPoint {
  * @name ContactResult
  * @classdesc Object holding the result of a contact between two Entities.
  * @description Create a new ContactResult.
- * @param {pc.Entity} other - The entity that was involved in the contact with this entity.
- * @param {pc.ContactPoint[]} contacts - An array of ContactPoints with the other entity.
+ * @param {Entity} other - The entity that was involved in the contact with this entity.
+ * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
  * @property {pc.Entity} other The entity that was involved in the contact with this entity.
  * @property {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity.
  */
@@ -129,7 +129,7 @@ class ContactResult {
  * @event
  * @name RigidBodyComponentSystem#contact
  * @description Fired when a contact occurs between two rigid bodies.
- * @param {pc.SingleContactResult} result - Details of the contact between the two bodies.
+ * @param {SingleContactResult} result - Details of the contact between the two bodies.
  */
 
 const _schema = [
@@ -156,7 +156,7 @@ const _schema = [
  * is only valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
  * @description Create a new RigidBodyComponentSystem.
- * @param {pc.Application} app - The Application.
+ * @param {Application} app - The Application.
  * @property {pc.Vec3} gravity The world space vector representing global gravity in the physics simulation.
  * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
  */
@@ -327,8 +327,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @name RigidBodyComponentSystem#raycastFirst
      * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
      * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
-     * @param {pc.Vec3} start - The world space point where the ray starts.
-     * @param {pc.Vec3} end - The world space point where the ray ends.
+     * @param {Vec3} start - The world space point where the ray starts.
+     * @param {Vec3} end - The world space point where the ray ends.
      * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end) {
@@ -375,8 +375,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @description Raycast the world and return all entities the ray hits. It returns an array
      * of {@link RaycastResult}, one for each hit. If no hits are detected, the returned
      * array will be of length 0.
-     * @param {pc.Vec3} start - The world space point where the ray starts.
-     * @param {pc.Vec3} end - The world space point where the ray ends.
+     * @param {Vec3} start - The world space point where the ray starts.
+     * @param {Vec3} end - The world space point where the ray ends.
      * @returns {pc.RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
@@ -424,8 +424,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @function
      * @name RigidBodyComponentSystem#_storeCollision
      * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision.
-     * @param {pc.Entity} entity - The entity.
-     * @param {pc.Entity} other - The entity that collides with the first entity.
+     * @param {Entity} entity - The entity.
+     * @param {Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
      */
     _storeCollision(entity, other) {

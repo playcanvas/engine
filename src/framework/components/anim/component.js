@@ -20,8 +20,8 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
  * @augments Component
  * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
  * @description Create a new AnimComponent.
- * @param {pc.AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} activate If true the first animation will begin playing when the scene is loaded.
  */

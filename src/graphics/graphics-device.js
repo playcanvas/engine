@@ -1218,7 +1218,7 @@ class GraphicsDevice extends EventHandler {
      * device is created with a program library that manages all of the programs that are
      * used to render any graphical primitives. However, this function allows the user to
      * replace the existing program library with a new one.
-     * @param {pc.ProgramLibrary} programLib - The program library to assign to the device.
+     * @param {ProgramLibrary} programLib - The program library to assign to the device.
      */
     setProgramLibrary(programLib) {
         this.programLib = programLib;
@@ -1259,8 +1259,8 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#copyRenderTarget
      * @description Copies source render target into destination render target. Mostly used by post-effects.
-     * @param {pc.RenderTarget} source - The source render target.
-     * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
+     * @param {RenderTarget} source - The source render target.
+     * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
      * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
@@ -1343,7 +1343,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#initRenderTarget
      * @description Initialize render target before it can be used.
-     * @param {pc.RenderTarget} target - The render target to be initialized.
+     * @param {RenderTarget} target - The render target to be initialized.
      */
     initRenderTarget(target) {
         if (target._glFrameBuffer) return;
@@ -2581,7 +2581,7 @@ class GraphicsDevice extends EventHandler {
      * @description Sets the specified render target on the device. If null
      * is passed as a parameter, the back buffer becomes the current target
      * for all rendering operations.
-     * @param {pc.RenderTarget} renderTarget - The render target to activate.
+     * @param {RenderTarget} renderTarget - The render target to activate.
      * @example
      * // Set a render target to receive all rendering output
      * device.setRenderTarget(renderTarget);
@@ -2740,7 +2740,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setTransformFeedbackBuffer
      * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
-     * @param {pc.VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer} tf - The output vertex buffer.
      */
     setTransformFeedbackBuffer(tf) {
         if (this.transformFeedbackBuffer === tf)
@@ -3171,7 +3171,7 @@ class GraphicsDevice extends EventHandler {
      * @description Sets the current index buffer on the graphics device. On subsequent
      * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
      * index data for any indexed primitives.
-     * @param {pc.IndexBuffer} indexBuffer - The index buffer to assign to the device.
+     * @param {IndexBuffer} indexBuffer - The index buffer to assign to the device.
      */
     setIndexBuffer(indexBuffer) {
         // Store the index buffer
@@ -3183,7 +3183,7 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#setVertexBuffer
      * @description Sets the current vertex buffer on the graphics device. On subsequent calls to
      * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
-     * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -3409,7 +3409,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setShader
      * @description Sets the active shader to be used during subsequent draw calls.
-     * @param {pc.Shader} shader - The shader to set to assign to the device.
+     * @param {Shader} shader - The shader to set to assign to the device.
      * @returns {boolean} True if the shader was successfully set, false otherwise.
      */
     setShader(shader) {

@@ -4,8 +4,8 @@
  * @name AnimNode
  * @classdesc AnimNodes are used to represent a single animation track in the current state. Each state can contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will control the weight (contribution to the states final animation) of it's child AnimNodes.
  * @description Create a new AnimNode.
- * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.
- * @param {pc.BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
+ * @param {AnimState} state - The AnimState that this BlendTree belongs to.
+ * @param {BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is stored as part of a pc.BlendTree hierarchy.
  * @param {string} name - The name of the AnimNode. Used when assigning a pc.AnimTrack to it.
  * @param {number[]|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.BlendTree.
  * @param {number} [speed] - The speed that its pc.AnimTrack should play at. Defaults to 1.
