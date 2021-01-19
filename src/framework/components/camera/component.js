@@ -73,6 +73,8 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * the Y-axis). Used for {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
  * @property {number} priority Controls the order in which cameras are rendered. Cameras
  * with smaller values for priority are rendered first. Defaults to 0.
+ * @property {pc.RenderTarget} renderTarget Render target to which rendering of the cameras
+ * is performed. If not set, it will render simply to the screen.
  * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in
  * normalized screen coordinates. Defaults to [0, 0, 1, 1].
  * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
@@ -176,12 +178,9 @@ class CameraComponent extends Component {
     set priority(newValue) {
         this._priority = newValue;
 
-        var layers = this.layers;
-        for (var i = 0; i < layers.length; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(layers[i]);
-            if (!layer) continue;
-            layer._sortCameras();
-        }
+        // layer composition needs to update order
+        let layerComp = this.system.app.scene.layers;
+        layerComp._dirtyCameras = true;
     }
 
     /**
@@ -235,8 +234,9 @@ class CameraComponent extends Component {
         var layers = this.layers;
         for (var i = 0; i < layers.length; i++) {
             var layer = this.system.app.scene.layers.getLayerById(layers[i]);
-            if (!layer) continue;
-            layer.addCamera(this);
+            if (layer) {
+                layer.addCamera(this);
+            }
         }
     }
 
@@ -244,8 +244,9 @@ class CameraComponent extends Component {
         var layers = this.layers;
         for (var i = 0; i < layers.length; i++) {
             var layer = this.system.app.scene.layers.getLayerById(layers[i]);
-            if (!layer) continue;
-            layer.removeCamera(this);
+            if (layer) {
+                layer.removeCamera(this);
+            }
         }
     }
 

@@ -657,7 +657,7 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition();
+        this.defaultLayerComposition = new LayerComposition("default");
 
         this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
@@ -1041,7 +1041,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition();
+            var composition = new LayerComposition("application");
 
             var layers = {};
             for (var key in props.layers) {
