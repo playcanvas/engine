@@ -200,7 +200,7 @@ class RenderTarget {
     /**
      * @readonly
      * @name RenderTarget#colorBuffer
-     * @type {pc.Texture}
+     * @type {Texture}
      * @description Color buffer set up on the render target.
      */
     get colorBuffer() {
@@ -210,7 +210,7 @@ class RenderTarget {
     /**
      * @readonly
      * @name RenderTarget#depthBuffer
-     * @type {pc.Texture}
+     * @type {Texture}
      * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
      * Not available, if depth property was used instead.
      */

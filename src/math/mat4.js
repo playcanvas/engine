@@ -1275,7 +1275,7 @@ class Mat4 {
      * @static
      * @readonly
      * @name Mat4.IDENTITY
-     * @type {pc.Mat4}
+     * @type {Mat4}
      * @description A constant matrix set to the identity.
      */
     static IDENTITY = Object.freeze(new Mat4());
@@ -1285,7 +1285,7 @@ class Mat4 {
      * @static
      * @readonly
      * @name Mat4.ZERO
-     * @type {pc.Mat4}
+     * @type {Mat4}
      * @description A constant matrix with all elements set to 0.
      */
     static ZERO = Object.freeze(new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));

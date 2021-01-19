@@ -84,7 +84,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#right
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description The normalized local space X-axis vector of the graph node in world space.
      */
     get right() {
@@ -97,7 +97,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#up
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description The normalized local space Y-axis vector of the graph node in world space.
      */
     get up() {
@@ -110,7 +110,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#forward
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description The normalized local space negative Z-axis vector of the graph node in world space.
      */
     get forward() {
@@ -146,7 +146,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#parent
-     * @type {pc.GraphNode}
+     * @type {GraphNode}
      * @description A read-only property to get a parent graph node.
      */
     get parent() {
@@ -178,7 +178,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#root
-     * @type {pc.GraphNode}
+     * @type {GraphNode}
      * @description A read-only property to get highest graph node from current node.
      */
     get root() {
@@ -195,7 +195,7 @@ class GraphNode extends EventHandler {
     /**
      * @readonly
      * @name GraphNode#children
-     * @type {pc.GraphNode[]}
+     * @type {GraphNode[]}
      * @description A read-only property to get the children of this graph node.
      */
     get children() {

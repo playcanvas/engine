@@ -191,7 +191,7 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#scene
- * @type {pc.Scene}
+ * @type {Scene}
  * @description The scene managed by the application.
  * @example
  * // Set the tone mapping property of the application's scene
@@ -220,7 +220,7 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#scenes
- * @type {pc.SceneRegistry}
+ * @type {SceneRegistry}
  * @description The scene registry managed by the application.
  * @example
  * // Search the scene registry for a item with the name 'racetrack1'
@@ -232,7 +232,7 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#assets
- * @type {pc.AssetRegistry}
+ * @type {AssetRegistry}
  * @description The asset registry managed by the application.
  * @example
  * // Search the asset registry for all assets with the tag 'vehicle'
@@ -241,13 +241,13 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#graphicsDevice
- * @type {pc.GraphicsDevice}
+ * @type {GraphicsDevice}
  * @description The graphics device used by the application.
  */
 
 /**
  * @name Application#systems
- * @type {pc.ComponentSystemRegistry}
+ * @type {ComponentSystemRegistry}
  * @description The application's component system registry. The pc.Application
  * constructor adds the following component systems to its component system registry:
  *
@@ -279,7 +279,7 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#xr
- * @type {pc.XrManager}
+ * @type {XrManager}
  * @description The XR Manager that provides ability to start VR/AR sessions.
  * @example
  * // check if VR is available
@@ -291,19 +291,19 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#lightmapper
- * @type {pc.Lightmapper}
+ * @type {Lightmapper}
  * @description The run-time lightmapper.
  */
 
 /**
  * @name Application#loader
- * @type {pc.ResourceLoader}
+ * @type {ResourceLoader}
  * @description The resource loader.
  */
 
 /**
  * @name Application#root
- * @type {pc.Entity}
+ * @type {Entity}
  * @description The root entity of the application.
  * @example
  * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
@@ -312,43 +312,43 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @name Application#keyboard
- * @type {pc.Keyboard}
+ * @type {Keyboard}
  * @description The keyboard device.
  */
 
 /**
  * @name Application#mouse
- * @type {pc.Mouse}
+ * @type {Mouse}
  * @description The mouse device.
  */
 
 /**
  * @name Application#touch
- * @type {pc.TouchDevice}
+ * @type {TouchDevice}
  * @description Used to get touch events input.
  */
 
 /**
  * @name Application#gamepads
- * @type {pc.GamePads}
+ * @type {GamePads}
  * @description Used to access GamePad input.
  */
 
 /**
  * @name Application#elementInput
- * @type {pc.ElementInput}
+ * @type {ElementInput}
  * @description Used to handle input for {@link ElementComponent}s.
  */
 
 /**
  * @name Application#scripts
- * @type {pc.ScriptRegistry}
+ * @type {ScriptRegistry}
  * @description The application's script registry.
  */
 
 /**
  * @name Application#batcher
- * @type {pc.BatchManager}
+ * @type {BatchManager}
  * @description The application's batch manager. The batch manager is used to
  * merge mesh instances in the scene, which reduces the overall number of draw
  * calls, thereby boosting performance.
@@ -385,7 +385,7 @@ var tempGraphNode = new GraphNode();
 
  /**
   * @name Application#i18n
-  * @type {pc.I18n}
+  * @type {I18n}
   * @description Handles localization.
   */
 
@@ -393,7 +393,7 @@ var tempGraphNode = new GraphNode();
  * @private
  * @static
  * @name app
- * @type {pc.Application|undefined}
+ * @type {Application|undefined}
  * @description Gets the current application, if any.
  */
 var app = null;

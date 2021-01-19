@@ -62,7 +62,7 @@ class Skeleton {
 
     /**
      * @name Skeleton#animation
-     * @type {pc.Animation}
+     * @type {Animation}
      * @description Animation currently assigned to skeleton.
      */
     get animation() {

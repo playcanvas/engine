@@ -416,7 +416,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.ZERO
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [0, 0].
      */
     static ZERO = Object.freeze(new Vec2(0, 0));
@@ -426,7 +426,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.ONE
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [1, 1].
      */
     static ONE = Object.freeze(new Vec2(1, 1));
@@ -436,7 +436,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.UP
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [0, 1].
      */
     static UP = Object.freeze(new Vec2(0, 1));
@@ -446,7 +446,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.DOWN
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [0, -1].
      */
     static DOWN = Object.freeze(new Vec2(0, -1));
@@ -456,7 +456,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.RIGHT
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [1, 0].
      */
     static RIGHT = Object.freeze(new Vec2(1, 0));
@@ -466,7 +466,7 @@ class Vec2 {
      * @static
      * @readonly
      * @name Vec2.LEFT
-     * @type {pc.Vec2}
+     * @type {Vec2}
      * @description A constant vector set to [-1, 0].
      */
     static LEFT = Object.freeze(new Vec2(-1, 0));

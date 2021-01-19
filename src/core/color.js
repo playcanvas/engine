@@ -181,7 +181,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.BLACK
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to black [0, 0, 0, 1].
      */
     static BLACK = Object.freeze(new Color(0, 0, 0, 1));
@@ -191,7 +191,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.BLUE
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to blue [0, 0, 1, 1].
      */
     static BLUE = Object.freeze(new Color(0, 0, 1, 1));
@@ -201,7 +201,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.CYAN
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to cyan [0, 1, 1, 1].
      */
     static CYAN = Object.freeze(new Color(0, 1, 1, 1));
@@ -211,7 +211,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.GRAY
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
      */
     static GRAY = Object.freeze(new Color(0.5, 0.5, 0.5, 1));
@@ -221,7 +221,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.GREEN
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to green [0, 1, 0, 1].
      */
     static GREEN = Object.freeze(new Color(0, 1, 0, 1));
@@ -231,7 +231,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.MAGENTA
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to magenta [1, 0, 1, 1].
      */
     static MAGENTA = Object.freeze(new Color(1, 0, 1, 1));
@@ -241,7 +241,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.RED
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to red [1, 0, 0, 1].
      */
     static RED = Object.freeze(new Color(1, 0, 0, 1));
@@ -251,7 +251,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.WHITE
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to white [1, 1, 1, 1].
      */
     static WHITE = Object.freeze(new Color(1, 1, 1, 1));
@@ -261,7 +261,7 @@ class Color {
      * @static
      * @readonly
      * @name Color.YELLOW
-     * @type {pc.Color}
+     * @type {Color}
      * @description A constant color set to yellow [1, 1, 0, 1].
      */
     static YELLOW = Object.freeze(new Color(1, 1, 0, 1));

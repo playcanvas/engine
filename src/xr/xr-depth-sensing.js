@@ -227,7 +227,7 @@ class XrDepthSensing extends EventHandler {
     /* eslint-disable jsdoc/check-examples */
     /**
      * @name XrDepthSensing#texture
-     * @type {pc.Texture}
+     * @type {Texture}
      * @description Texture that contains packed depth information. The format of this texture is {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can be normalized using {@link XrDepthSensing#uvMatrix}.
      * @example
      * material.diffuseMap = depthSensing.texture;
@@ -262,7 +262,7 @@ class XrDepthSensing extends EventHandler {
 
     /**
      * @name XrDepthSensing#uvMatrix
-     * @type {pc.Mat4}
+     * @type {Mat4}
      * @description 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader. It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
      * @example
      * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);

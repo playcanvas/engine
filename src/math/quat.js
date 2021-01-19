@@ -702,7 +702,7 @@ class Quat {
      * @static
      * @readonly
      * @name Quat.IDENTITY
-     * @type {pc.Quat}
+     * @type {Quat}
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
     static IDENTITY = Object.freeze(new Quat(0, 0, 0, 1));
@@ -712,7 +712,7 @@ class Quat {
      * @static
      * @readonly
      * @name Quat.ZERO
-     * @type {pc.Quat}
+     * @type {Quat}
      * @description A constant quaternion set to [0, 0, 0, 0].
      */
     static ZERO = Object.freeze(new Quat(0, 0, 0, 0));

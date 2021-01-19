@@ -497,7 +497,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.ZERO
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [0, 0, 0].
      */
     static ZERO = Object.freeze(new Vec3(0, 0, 0));
@@ -507,7 +507,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.ONE
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [1, 1, 1].
      */
     static ONE = Object.freeze(new Vec3(1, 1, 1));
@@ -517,7 +517,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.UP
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [0, 1, 0].
      */
     static UP = Object.freeze(new Vec3(0, 1, 0));
@@ -527,7 +527,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.DOWN
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [0, -1, 0].
      */
     static DOWN = Object.freeze(new Vec3(0, -1, 0));
@@ -537,7 +537,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.RIGHT
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [1, 0, 0].
      */
     static RIGHT = Object.freeze(new Vec3(1, 0, 0));
@@ -547,7 +547,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.LEFT
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [-1, 0, 0].
      */
     static LEFT = Object.freeze(new Vec3(-1, 0, 0));
@@ -557,7 +557,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.FORWARD
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [0, 0, -1].
      */
     static FORWARD = Object.freeze(new Vec3(0, 0, -1));
@@ -567,7 +567,7 @@ class Vec3 {
      * @static
      * @readonly
      * @name Vec3.BACK
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @description A constant vector set to [0, 0, 1].
      */
     static BACK = Object.freeze(new Vec3(0, 0, 1));

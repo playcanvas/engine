@@ -121,19 +121,19 @@ class CameraComponent extends Component {
     /**
      * @readonly
      * @name CameraComponent#frustum
-     * @type {pc.Frustum}
+     * @type {Frustum}
      * @description Queries the camera's frustum shape.
      */
     /**
      * @readonly
      * @name CameraComponent#projectionMatrix
-     * @type {pc.Mat4}
+     * @type {Mat4}
      * @description Queries the camera's projection matrix.
      */
     /**
      * @readonly
      * @name CameraComponent#viewMatrix
-     * @type {pc.Mat4}
+     * @type {Mat4}
      * @description Queries the camera's view matrix.
      */
 
