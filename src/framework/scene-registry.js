@@ -36,8 +36,8 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#add
-     * @description  Add a new item to the scene registry.
+     * @name pc.SceneRegistry#add
+     * @description Add a new item to the scene registry.
      * @param {string} name - The name of the scene.
      * @param {string} url -  The url of the scene file.
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
@@ -61,9 +61,9 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#find
-     * @description  Find a Scene by name and return the {@link SceneRegistryItem}.
-     * @param  {string} name - The name of the scene.
+     * @name pc.SceneRegistry#find
+     * @description Find a Scene by name and return the {@link SceneRegistryItem}.
+     * @param {string} name - The name of the scene.
      * @returns {SceneRegistryItem} The stored data about a scene.
      */
     find(name) {
@@ -76,9 +76,9 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#findByUrl
-     * @description  Find a scene by the URL and return the {@link SceneRegistryItem}.
-     * @param  {string} url - The URL to search by.
+     * @name pc.SceneRegistry#findByUrl
+     * @description Find a scene by the URL and return the {@link SceneRegistryItem}.
+     * @param {string} url - The URL to search by.
      * @returns {SceneRegistryItem} The stored data about a scene.
      */
     findByUrl(url) {
@@ -90,9 +90,9 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#remove
-     * @description  Remove an item from the scene registry.
-     * @param  {string} name - The name of the scene.
+     * @name pc.SceneRegistry#remove
+     * @description Remove an item from the scene registry.
+     * @param {string} name - The name of the scene.
      */
     remove(name) {
         if (this._index.hasOwnProperty(name)) {
@@ -220,7 +220,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name  pc.SceneRegistry#loadScene
+     * @name pc.SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used
      * by the pc.Application.
      * @param {string} url - The URL of the scene file.

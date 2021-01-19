@@ -14,7 +14,7 @@ class IndexedList {
      * @private
      * @function
      * @name IndexedList#push
-     * @description  Add a new item into the list with a index key.
+     * @description Add a new item into the list with a index key.
      * @param {string} key -  Key used to look up item in index.
      * @param {object} item - Item to be stored.
      */

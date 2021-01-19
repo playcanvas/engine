@@ -120,7 +120,7 @@ var script = {
      * @description Handles the creation of the loading screen of the application. A script can subscribe to
      * the events of a {@link Application} to show a loading screen, progress bar etc. In order for this to work
      * you need to set the project's loading screen script to the script that calls this method.
-     * @param  {pc.callbacks.CreateScreen} callback - A function which can set up and tear down a customised loading screen.
+     * @param {callbacks.CreateScreen} callback - A function which can set up and tear down a customised loading screen.
      * @example
      * pc.script.createLoadingScreen(function (app) {
      *     var showSplashScreen = function () {};

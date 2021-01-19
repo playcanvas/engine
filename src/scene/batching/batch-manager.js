@@ -183,7 +183,7 @@ class BatchManager {
      * @name BatchManager#markGroupDirty
      * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
      * Note, re-batching a group is a potentially expensive operation.
-     * @param  {number} id - Batch Group ID to mark as dirty.
+     * @param {number} id - Batch Group ID to mark as dirty.
      */
     markGroupDirty(id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
@@ -213,8 +213,8 @@ class BatchManager {
      * @private
      * @function
      * @name BatchManager#getBatches
-     * @description  Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
-     * @param  {number} batchGroupId - The id of the batch group.
+     * @description Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
+     * @param {number} batchGroupId - The id of the batch group.
      * @returns {Batch[]} A list of batches that are used to render the batch group.
      */
     getBatches(batchGroupId) {
