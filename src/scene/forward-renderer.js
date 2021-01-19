@@ -854,7 +854,11 @@ Object.assign(ForwardRenderer.prototype, {
         placeholderLutTex.name = 'placeholder';
 
         var pixels = placeholderLutTex.lock();
-        pixels.fill(0);
+        for (var i = 0; i < 4; i++) {
+            for (var c = 0; c < 4; c++) {
+                pixels[i * 4 + c] = 0;
+            }
+        }
         placeholderLutTex.unlock();
 
         this.device.scope.resolve('areaLightsLutTex1').setValue(placeholderLutTex);
