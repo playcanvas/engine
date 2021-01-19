@@ -89,7 +89,7 @@ var depthLayer;
  * @component
  * @class
  * @name ParticleSystemComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
  * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
  * However, it requires client to support reasonable uniform count, reading from multiple textures in vertex shader and OES_texture_float extension, including rendering into float textures.

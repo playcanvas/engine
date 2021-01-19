@@ -25,7 +25,7 @@ const _schema = [
 /**
  * @class
  * @name AnimationComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents.
  * @description Create an AnimationComponentSystem.
  * @param {pc.Application} app - The application managing this system.

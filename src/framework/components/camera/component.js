@@ -9,7 +9,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @component
  * @class
  * @name CameraComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The Camera Component enables an Entity to render the scene. A scene
  * requires at least one enabled camera component to be rendered. Note that multiple
  * camera components can be enabled simultaneously (for split-screen or offscreen

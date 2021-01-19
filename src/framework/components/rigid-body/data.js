@@ -6,7 +6,7 @@ import { BODYGROUP_STATIC, BODYMASK_NOT_STATIC, BODYTYPE_STATIC } from './consta
  * @private
  * @class
  * @name RigidBodyComponentData
- * @augments pc.ComponentData
+ * @augments ComponentData
  * @classdesc Contains data for the RigidBodyComponent.
  * @description Create a new data structure for a RigidBodyComponent.
  */

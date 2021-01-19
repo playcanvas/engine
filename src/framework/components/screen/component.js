@@ -12,7 +12,7 @@ var _transform = new Mat4();
  * @component
  * @class
  * @name ScreenComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
  * @description Create a new ScreenComponent.
  * @param {pc.ScreenComponentSystem} system - The ComponentSystem that created this Component.

@@ -8,7 +8,7 @@ import { SoundSlot } from './slot.js';
  * @component
  * @class
  * @name SoundComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
  * @description Create a new Sound Component.
  * @param {pc.SoundComponentSystem} system - The ComponentSystem that created this

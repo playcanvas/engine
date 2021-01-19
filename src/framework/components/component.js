@@ -3,7 +3,7 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @class
  * @name Component
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Components are used to attach functionality on a {@link pc.Entity}. Components
  * can receive update events each frame, and expose properties to the PlayCanvas Editor.
  * @description Base constructor for a Component.

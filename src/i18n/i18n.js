@@ -19,7 +19,7 @@ import {
 /**
  * @class
  * @name I18n
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Handles localization. Responsible for loading localization assets
  * and returning translations for a certain key. Can also handle plural forms. To override
  * its default behavior define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.

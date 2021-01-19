@@ -9,7 +9,7 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
 /**
  * @class
  * @name ScriptType
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}.
  * Also referred to as Script Type.
  *

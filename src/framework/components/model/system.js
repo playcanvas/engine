@@ -13,7 +13,7 @@ const _schema = ['enabled'];
 /**
  * @class
  * @name ModelComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Allows an Entity to render a model or a primitive shape like a box,
  * capsule, sphere, cylinder, cone etc.
  * @description Create a new ModelComponentSystem.

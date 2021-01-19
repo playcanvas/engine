@@ -120,7 +120,7 @@ class ElementInputEvent {
 /**
  * @class
  * @name ElementMouseEvent
- * @augments pc.ElementInputEvent
+ * @augments ElementInputEvent
  * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementMouseEvent.
  * @param {MouseEvent} event - The MouseEvent that was originally raised.
@@ -177,7 +177,7 @@ class ElementMouseEvent extends ElementInputEvent {
 /**
  * @class
  * @name ElementTouchEvent
- * @augments pc.ElementInputEvent
+ * @augments ElementInputEvent
  * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementTouchEvent.
  * @param {TouchEvent} event - The TouchEvent that was originally raised.
@@ -205,7 +205,7 @@ class ElementTouchEvent extends ElementInputEvent {
 /**
  * @class
  * @name ElementSelectEvent
- * @augments pc.ElementInputEvent
+ * @augments ElementInputEvent
  * @classdesc Represents a XRInputSourceEvent fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementSelectEvent.
  * @param {object} event - The XRInputSourceEvent that was originally raised.

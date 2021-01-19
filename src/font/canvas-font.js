@@ -16,7 +16,7 @@ const DEFAULT_TEXTURE_SIZE = 512;
  * @private
  * @class
  * @name CanvasFont
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Represents the resource of a canvas font asset.
  * @param {pc.Application} app - The application.
  * @param {object} options - The font options.

@@ -9,7 +9,7 @@ import { Component } from '../component.js';
  * @component
  * @class
  * @name AudioSourceComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The AudioSource Component controls playback of an audio sample. This
  * class will be deprecated in favor of {@link pc.SoundComponent}.
  * @description Create a new AudioSource Component.

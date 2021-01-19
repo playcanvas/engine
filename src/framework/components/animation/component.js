@@ -13,7 +13,7 @@ import { Component } from '../component.js';
  * @component Animation
  * @class
  * @name AnimationComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The Animation Component allows an Entity to playback animations on models.
  * @description Create a new AnimationComponent.
  * @param {pc.AnimationComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.

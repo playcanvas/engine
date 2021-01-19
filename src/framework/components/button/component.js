@@ -38,7 +38,7 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @component
  * @class
  * @name ButtonComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
  * @description Create a new ButtonComponent.
  * @param {pc.ButtonComponentSystem} system - The ComponentSystem that created this Component.

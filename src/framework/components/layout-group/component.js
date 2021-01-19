@@ -19,7 +19,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * @component
  * @class
  * @name LayoutGroupComponent
- * @augments pc.Component
+ * @augments Component
  * @description Create a new LayoutGroupComponent.
  * @classdesc A LayoutGroupComponent enables the Entity to position and scale child
  * {@link pc.ElementComponent}s according to configurable layout rules.

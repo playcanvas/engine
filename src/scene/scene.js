@@ -19,7 +19,7 @@ import { Mat4 } from '../math/mat4.js';
 /**
  * @class
  * @name Scene
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.

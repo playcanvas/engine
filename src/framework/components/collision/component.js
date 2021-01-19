@@ -6,7 +6,7 @@ import { Component } from '../component.js';
  * @component
  * @class
  * @name CollisionComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent}
  * to make a collision volume that can be simulated using the physics engine.
  *

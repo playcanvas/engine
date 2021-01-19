@@ -3,7 +3,7 @@ import { EventHandler } from './event-handler.js';
 /**
  * @class
  * @name Tags
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Set of tag names.
  * @description Create an instance of a Tags.
  * @param {object} [parent] - Parent object who tags belong to.

@@ -18,7 +18,7 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @component
  * @class
  * @name RigidBodyComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
  * entities to be simulated using realistic physics.
  * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you

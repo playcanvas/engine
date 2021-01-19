@@ -143,7 +143,7 @@ var tempGraphNode = new GraphNode();
 /**
  * @class
  * @name Application
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc A pc.Application represents and manages your PlayCanvas application.
  * If you are developing using the PlayCanvas Editor, the pc.Application is created
  * for you. You can access your pc.Application instance in your scripts. Below is a

@@ -150,7 +150,7 @@ const _schema = [
 /**
  * @class
  * @name RigidBodyComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
  * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
  * is only valid if 3D Physics is enabled in your application. You can enable this in the application

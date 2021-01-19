@@ -4,7 +4,7 @@ import { Component } from '../component.js';
  * @component
  * @class
  * @name AudioListenerComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard correctly.
  * @description Create new AudioListenerComponent.
  * @param {pc.AudioListenerComponentSystem} system - The ComponentSystem that created this Component.

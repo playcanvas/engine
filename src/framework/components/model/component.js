@@ -15,7 +15,7 @@ import { Component } from '../component.js';
  * @component
  * @class
  * @name ModelComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc Enables an Entity to render a model or a primitive shape. This Component attaches additional model
  * geometry in to the scene graph below the Entity.
  * @description Create a new ModelComponent.
