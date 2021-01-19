@@ -9,7 +9,7 @@ import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
 import { LayerComposition } from './layer-composition.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var _deviceDeprecationWarning = false;
 var _getSelectionDeprecationWarning = false;
@@ -30,7 +30,7 @@ var _prepareDeprecationWarning = false;
 class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
-            app = Application.getApplication();
+            app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
                 // #ifdef DEBUG
