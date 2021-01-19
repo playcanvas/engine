@@ -772,7 +772,7 @@ export const SORTMODE_FRONT2BACK = 4;
 /**
  * @private
  * @constant
- * @name pc.SORTMODE_CUSTOM
+ * @name SORTMODE_CUSTOM
  * @type {number}
  * @description Provide custom functions for sorting drawcalls and calculating distance.
  */

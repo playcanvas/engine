@@ -36,7 +36,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#add
+     * @name SceneRegistry#add
      * @description Add a new item to the scene registry.
      * @param {string} name - The name of the scene.
      * @param {string} url -  The url of the scene file.
@@ -61,7 +61,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#find
+     * @name SceneRegistry#find
      * @description Find a Scene by name and return the {@link SceneRegistryItem}.
      * @param {string} name - The name of the scene.
      * @returns {SceneRegistryItem} The stored data about a scene.
@@ -76,7 +76,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#findByUrl
+     * @name SceneRegistry#findByUrl
      * @description Find a scene by the URL and return the {@link SceneRegistryItem}.
      * @param {string} url - The URL to search by.
      * @returns {SceneRegistryItem} The stored data about a scene.
@@ -90,7 +90,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#remove
+     * @name SceneRegistry#remove
      * @description Remove an item from the scene registry.
      * @param {string} name - The name of the scene.
      */
@@ -220,7 +220,7 @@ class SceneRegistry {
 
     /**
      * @function
-     * @name pc.SceneRegistry#loadScene
+     * @name SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used
      * by the pc.Application.
      * @param {string} url - The URL of the scene file.
