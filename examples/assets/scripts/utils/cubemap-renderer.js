@@ -41,10 +41,13 @@ CubemapRenderer.prototype.initialize = function () {
     // disable camera component, as it's used only as a source of properties
     camera.enabled = false;
 
+    // limit maximum texture size
+    var resolution = Math.min(this.resolution, this.app.graphicsDevice.maxTextureSize);
+
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
-        width: this.resolution,
-        height: this.resolution,
+        width: resolution,
+        height: resolution,
         format: pc.PIXELFORMAT_R8_G8_B8_A8,
         cubemap: true,
         mipmaps: this.mipmaps,
