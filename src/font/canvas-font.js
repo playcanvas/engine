@@ -253,7 +253,7 @@ class CanvasFont extends EventHandler {
             this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
             var xoffset = this.padding + (this.glyphSize - width) / 2;
-            var yoffset = -this.padding;
+            var yoffset = -this.padding + metrics[ch].descent - maxDescent;
             var xadvance = width;
 
             this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
