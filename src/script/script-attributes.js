@@ -176,7 +176,7 @@ class ScriptAttributes {
      * @description Add Attribute.
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
-     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type of an attribute value.
+     * @param {string} args.type - Type of an attribute value. Can be one of "boolean", "number", "string", "json", "asset", "entity", "rgb", "rgba", "vec2", "vec3", "vec4", "curve".
      * @param {*} [args.default] - Default attribute value.
      * @param {string} [args.title] - Title for Editor's for field UI.
      * @param {string} [args.description] - Description for Editor's for field UI.
