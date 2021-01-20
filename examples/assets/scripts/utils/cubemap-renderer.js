@@ -1,7 +1,7 @@
 // How to use in the Editor:
 // - create entity with Camera component - position of the entity defines where the cubemap is rendered from
 //   and properties of the Camera are used to render cubemap (adjust near / far distance, clearing, layers and other properties)
-//   Note: the layers should contain all layers visible by cybemap camera.
+//   Note: the layers should contain all layers visible by cubemap camera.
 // - to use generated cube map, you can access it like this using script:
 //   material.cubeMap = entity.script.cubemapRenderer.cubeMap;
 
