@@ -198,7 +198,7 @@
         var light = new pc.Entity();
         light.addComponent("light", {
             type: "directional",
-            color: new pc.Color(1, 1, 1),
+            color: pc.Color.YELLOW,
             range: 40,
             castShadows: true,
             layers: [worldLayer.id],

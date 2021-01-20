@@ -93,11 +93,11 @@ CubemapRenderer.prototype.initialize = function () {
             clearStencilBuffer: camera.clearStencilBuffer,
             farClip: camera.farClip,
             nearClip: camera.nearClip,
-            frustumCulling: camera.frustumCulling
-        });
+            frustumCulling: camera.frustumCulling,
 
-        // this camera renders into texture target
-        e.camera.camera.renderTarget = renderTarget;
+            // this camera renders into texture target
+            renderTarget: renderTarget
+        });
 
         // add the camera as a child entity
         this.entity.addChild(e);
