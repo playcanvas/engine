@@ -211,7 +211,7 @@ class VertexIteratorAccessor {
  * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
  * @description Returns a new pc.VertexIterator object.
  * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
- * @property {object<string, pc.VertexIteratorAccessor>} element The vertex buffer elements.
+ * @property {object<string, VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {
     constructor(vertexBuffer) {

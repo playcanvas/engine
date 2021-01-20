@@ -25,7 +25,7 @@ import { Component } from '../component.js';
  * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
  * @property {number} duration Get the duration in seconds of the current animation. [read only]
  * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
- * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
+ * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
  */
 class AnimationComponent extends Component {
     constructor(system, entity) {
