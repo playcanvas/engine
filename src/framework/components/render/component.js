@@ -1,4 +1,3 @@
-import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { SkinInstance } from '../../../scene/skin-instance.js';
@@ -425,33 +424,16 @@ class RenderComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.RenderComponent#generateWireframe
-     * @description Generates the necessary internal data for this component to be
-     * renderable as wireframe. Once this function has been called, any mesh
-     * instance can have its renderStyle property set to pc.RENDERSTYLE_WIREFRAME.
-     * @example
-     * render.generateWireframe();
-     * for (var i = 0; i < render.meshInstances.length; i++) {
-     *     render.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
-     * }
+     * @name pc.RenderComponent#setRenderStyle
+     * @description Set rendering of all {@link pc.MeshInstance}s to the specified render style.
+     * @param {number} renderStyle - The render style. Can be:
+     *
+     * * {@link pc.RENDERSTYLE_SOLID}
+     * * {@link pc.RENDERSTYLE_WIREFRAME}
+     * * {@link pc.RENDERSTYLE_POINTS}
      */
-    generateWireframe() {
-
-        // Build an array of unique meshes
-        var i, mesh, meshes = [];
-        for (i = 0; i < this._meshInstances.length; i++) {
-            mesh = this._meshInstances[i].mesh;
-            if (meshes.indexOf(mesh) === -1) {
-                meshes.push(mesh);
-            }
-        }
-
-        for (i = 0; i < meshes.length; ++i) {
-            mesh = meshes[i];
-            if (!mesh.primitive[RENDERSTYLE_WIREFRAME]) {
-                mesh.generateWireframe();
-            }
-        }
+    setRenderStyle(renderStyle) {
+        MeshInstance._prepareRenderStyleForArray(this._meshInstances, renderStyle);
     }
 
     get aabb() {

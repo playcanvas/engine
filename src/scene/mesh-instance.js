@@ -151,6 +151,27 @@ class MeshInstance {
         this.flipFaces = false;
     }
 
+    static _meshSet = new Set();
+
+    // generates wireframes for an array of mesh instances
+    static _prepareRenderStyleForArray(meshInstances, renderStyle) {
+
+        for (let i = 0; i < meshInstances.length; i++) {
+
+            // switch mesh instance to the requested style
+            meshInstances[i].renderStyle = renderStyle;
+
+            // process all unique meshes
+            let mesh = meshInstances[i].mesh;
+            if (!MeshInstance._meshSet.has(mesh)) {
+                MeshInstance._meshSet.add(mesh);
+                mesh.prepareRenderState(renderStyle);
+            }
+        }
+
+        MeshInstance._meshSet.clear();
+    }
+
     get mesh() {
         return this._mesh;
     }
