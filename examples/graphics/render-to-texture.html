@@ -114,11 +114,11 @@
 
             // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
             // to make it rendered first each frame
-            priority: -1
-        });
+            priority: -1,
 
-        // this camera renders into texture target
-        textureCamera.camera.renderTarget = renderTarget;
+            // this camera renders into texture target
+            renderTarget: renderTarget
+        });
 
         // add sphere at the position of this camera to see it in the world
         textureCamera.addComponent("model", {
