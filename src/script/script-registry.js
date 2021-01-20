@@ -176,7 +176,7 @@ class ScriptRegistry extends EventHandler {
      * @name ScriptRegistry#get
      * @description Get {@link ScriptType} by name.
      * @param {string} name - Name of a {@link ScriptType}.
-     * @returns {Class<pc.ScriptType>} The Script Type if it exists in the registry or null otherwise.
+     * @returns {Class<ScriptType>} The Script Type if it exists in the registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
