@@ -161,12 +161,14 @@
  */
 
 /**
+ * @private
  * @callback callbacks.VrDisplay
  * @description Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
  * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
  */
 
 /**
+ * @private
  * @callback callbacks.VrFrame
  * @description Callback used by {@link VrDisplay#requestAnimationFrame}.
  */
