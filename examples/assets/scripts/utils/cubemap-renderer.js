@@ -81,7 +81,7 @@ CubemapRenderer.prototype.initialize = function () {
             fov: 90,
 
             // cubemap will render all layers as setup on Entity's camera
-            layers: camera.layers.slice(),
+            layers: camera.layers,
 
             // priority
             priority: camera.priority,
