@@ -213,7 +213,7 @@ class ScriptRegistry extends EventHandler {
      * @function
      * @name ScriptRegistry#list
      * @description Get list of all {@link ScriptType}s from registry.
-     * @returns {Array<Class<pc.ScriptType>>} list of all {@link ScriptType}s in registry.
+     * @returns {Array<Class<ScriptType>>} list of all {@link ScriptType}s in registry.
      * @example
      * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function (o) {
