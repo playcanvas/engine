@@ -90,7 +90,7 @@ createScript.reservedAttributes = reservedAttributes;
  * @name registerScript
  * @description Register a existing class type as a Script Type to {@link ScriptRegistry}.
  * Useful when defining a ES6 script class that extends {@link ScriptType} (see example).
- * @param {Class<pc.ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.
+ * @param {Class<ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.
  * Class must extend {@link ScriptType} (see example). Please note: A class created using {@link createScript} is auto-registered,
  * and should therefore not be pass into {@link registerScript} (which would result in swapping out all related script instances).
  * @param {string} [name] - Optional unique name of the Script Type. By default it will use the same name as the existing class.

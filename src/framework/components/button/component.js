@@ -541,7 +541,7 @@ function toColor3(color4) {
  * @event
  * @name ButtonComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
- * @param {ElementMouseEvent|pc.ElementTouchEvent} event - The event.
+ * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
  */
 
 /**

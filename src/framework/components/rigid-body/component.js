@@ -692,7 +692,7 @@ class RigidBodyComponent extends Component {
      * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
      * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
      * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-     * @param {Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
+     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
      * position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.

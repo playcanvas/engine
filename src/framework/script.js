@@ -27,7 +27,7 @@ var script = {
      * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
      * instantiated when attached to Entities.
      * @param {string} name - The name of the script object.
-     * @param {callbacks.CreateScript} callback - The callback function which is passed an {pc.Application} object,
+     * @param {callbacks.CreateScript} callback - The callback function which is passed an {@link Application} object,
      * which is used to access Entities and Components, and should return the Type of the script resource
      * to be instanced for each Entity.
      * @example

@@ -499,7 +499,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#has
      * @description Detect if script is attached to an entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
      * if (entity.script.has('playerController')) {
@@ -525,7 +525,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#get
      * @description Get a script instance (if attached).
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
      * @example
      * var controller = entity.script.get('playerController');
@@ -550,7 +550,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#create
      * @description Create a script instance and attach to an entity script component.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
@@ -652,7 +652,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#destroy
      * @description Destroy the script instance that is attached to an entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
@@ -712,7 +712,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#swap
      * @description Swap the script instance.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
      */
     /* eslint-enable jsdoc/no-undefined-types */
@@ -886,7 +886,7 @@ class ScriptComponent extends Component {
      * @function
      * @name ScriptComponent#move
      * @description Move script instance to different position to alter update order of scripts within entity.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example

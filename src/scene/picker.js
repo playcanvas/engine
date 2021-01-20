@@ -163,7 +163,7 @@ class Picker {
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
-     * @param {Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * @param {Layer|RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
      * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     prepare(camera, scene, arg) {

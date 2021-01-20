@@ -361,7 +361,7 @@ class Material {
      * @name Material#setParameter
      * @description Sets a shader parameter on a material.
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number|number[]|Texture} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 

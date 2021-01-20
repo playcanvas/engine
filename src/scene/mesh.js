@@ -392,12 +392,12 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#setVertexStream
      * @description Sets the vertex data for any supported semantic.
-     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see pc.SEMANTIC_* in {@link VertexFormat}.
+     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex data for the specified semantic.
      * @param {number} componentCount - The number of values that form a single Vertex element. For example when setting a 3D position represented by 3 numbers
      * per vertex, number 3 should be specified.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
-     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see pc.TYPE_* in {@link VertexFormat}. When not specified, pc.TYPE_FLOAT32 is used.
+     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see TYPE_* in {@link VertexFormat}. When not specified, {@link TYPE_FLOAT32} is used.
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a 0 to 255 range down to 0 to 1 when fed to a shader.
      * If false, vertex attribute data is left unchanged. If this property is unspecified, false is assumed.
      */
@@ -419,7 +419,7 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#getVertexStream
      * @description Gets the vertex data corresponding to a semantic.
-     * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see pc.SEMANTIC_* in {@link VertexFormat}.
+     * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An array to populate with the vertex data.
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.

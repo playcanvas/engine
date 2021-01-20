@@ -31,7 +31,7 @@ class ScriptRegistry extends EventHandler {
      * Note: when {@link createScript} is called, it will add the {@link ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
-     * @param {Class<pc.ScriptType>} script - Script Type that is created using {@link createScript}.
+     * @param {Class<ScriptType>} script - Script Type that is created using {@link createScript}.
      * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
      * var PlayerController = pc.createScript('playerController');
@@ -141,7 +141,7 @@ class ScriptRegistry extends EventHandler {
      * @function
      * @name ScriptRegistry#remove
      * @description Remove {@link ScriptType}.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
@@ -190,7 +190,7 @@ class ScriptRegistry extends EventHandler {
      * @function
      * @name ScriptRegistry#has
      * @description Check if a {@link ScriptType} with the specified name is in the registry.
-     * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {

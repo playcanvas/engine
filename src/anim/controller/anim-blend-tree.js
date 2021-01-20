@@ -27,7 +27,7 @@ function clamp(num, min, max) {
  * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
  * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a pc.AnimBlendTree hierarchy.
  * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
- * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.AnimBlendTree.
+ * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.AnimBlendTree.
  * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
  * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
