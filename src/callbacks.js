@@ -8,7 +8,7 @@
 
 /**
  * @callback callbacks.HandleEvent
- * @description Callback used by {@link events} functions. Note the callback is limited to 8 arguments.
+ * @description Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  * @param {*} [arg1] - First argument that is passed from caller.
  * @param {*} [arg2] - Second argument that is passed from caller.
  * @param {*} [arg3] - Third argument that is passed from caller.
