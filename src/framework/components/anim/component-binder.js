@@ -82,7 +82,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 break;
             case 'graph':
                 if (entity.model && entity.model.model && entity.model.model.graph) {
-                    propertyComponent = pc.app.root.findByPath(`${entity.model.model.graph.path}/${propertyLocation.entityPath[0]}`);
+                    propertyComponent = entity.model.model.graph.findByPath(propertyLocation.entityPath[0]);
                 }
                 if (!propertyComponent) {
                     var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
