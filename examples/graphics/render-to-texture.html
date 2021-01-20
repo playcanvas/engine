@@ -130,7 +130,7 @@
         var light = new pc.Entity();
         light.addComponent("light", {
             type: "point",
-            color: new pc.Color(1, 1, 1),
+            color: pc.Color.WHITE,
             range: 200,
             castShadows: true,
             layers: [worldLayer.id]
