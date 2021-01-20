@@ -20,7 +20,7 @@ import { Application } from './application.js';
  * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
  * @param {Application} [app] - The application the entity belongs to, default is the current application.
  * @property {AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
- * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioSourceComponent} attached to this entity. [read only]
+ * @property {AudioListenerComponent} [audiolistener] Gets the {@link AudioListenerComponent} attached to this entity. [read only]
  * @property {ButtonComponent} [button] Gets the {@link ButtonComponent} attached to this entity. [read only]
  * @property {CameraComponent} [camera] Gets the {@link CameraComponent} attached to this entity. [read only]
  * @property {CollisionComponent} [collision] Gets the {@link CollisionComponent} attached to this entity. [read only]
