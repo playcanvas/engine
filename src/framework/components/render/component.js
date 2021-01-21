@@ -1,3 +1,4 @@
+import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { SkinInstance } from '../../../scene/skin-instance.js';
@@ -46,6 +47,10 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which the meshes should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  * @property {pc.Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
+ * @property {number} renderStyle Set rendering of all {@link pc.MeshInstance}s to the specified render style. Can be one of the following:
+ * * {@link pc.RENDERSTYLE_SOLID}
+ * * {@link pc.RENDERSTYLE_WIREFRAME}
+ * * {@link pc.RENDERSTYLE_POINTS}
  */
 class RenderComponent extends Component {
     constructor(system, entity)   {
@@ -62,6 +67,7 @@ class RenderComponent extends Component {
 
         this._meshInstances = [];
         this._layers = [LAYERID_WORLD]; // assign to the default world layer
+        this._renderStyle = RENDERSTYLE_SOLID;
 
         // bounding box which can be set to override bounding box based on mesh
         this._aabb = null;
@@ -421,19 +427,15 @@ class RenderComponent extends Component {
         }
     }
 
-    /**
-     * @private
-     * @function
-     * @name pc.RenderComponent#setRenderStyle
-     * @description Set rendering of all {@link pc.MeshInstance}s to the specified render style.
-     * @param {number} renderStyle - The render style. Can be:
-     *
-     * * {@link pc.RENDERSTYLE_SOLID}
-     * * {@link pc.RENDERSTYLE_WIREFRAME}
-     * * {@link pc.RENDERSTYLE_POINTS}
-     */
-    setRenderStyle(renderStyle) {
-        MeshInstance._prepareRenderStyleForArray(this._meshInstances, renderStyle);
+    get renderStyle() {
+        return this._renderStyle;
+    }
+
+    set renderStyle(renderStyle) {
+        if (this._renderStyle !== renderStyle) {
+            this._renderStyle = renderStyle;
+            MeshInstance._prepareRenderStyleForArray(this._meshInstances, renderStyle);
+        }
     }
 
     get aabb() {

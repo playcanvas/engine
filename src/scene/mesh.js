@@ -710,6 +710,9 @@ class Mesh extends RefCountedObject {
             this._geometryData.vertexStreamsUpdated = false;
             this._geometryData.indexStreamUpdated = false;
             this._geometryData.recreate = false;
+
+            // update other render states
+            this.updateRenderStates();
         }
     }
 
@@ -788,6 +791,18 @@ class Mesh extends RefCountedObject {
                 count: this.vertexBuffer ? this.vertexBuffer.numVertices : 0,
                 indexed: false
             };
+        }
+    }
+
+    // updates existing render states with changes to solid render state
+    updateRenderStates() {
+
+        if (this.primitive[RENDERSTYLE_POINTS]) {
+            this.prepareRenderState(RENDERSTYLE_POINTS);
+        }
+
+        if (this.primitive[RENDERSTYLE_WIREFRAME]) {
+            this.prepareRenderState(RENDERSTYLE_WIREFRAME);
         }
     }
 
