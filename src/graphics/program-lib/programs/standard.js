@@ -458,7 +458,6 @@ var standard = {
 
         if (options.dirLightMap) {
             lighting = true;
-            options.useSpecular = true;
         }
 
         if (options.shadingModel === SPECULAR_PHONG) {
@@ -1348,7 +1347,7 @@ var standard = {
 
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
-            var lightmapChunkPropName = options.dirLightMap ? 'lightmapDirPS' : 'lightmapSinglePS';
+            var lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
             code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
