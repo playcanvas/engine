@@ -175,6 +175,18 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
+     * @name pc.AnimComponent#rebind
+     * @description Rebind all of the components layers
+     */
+    rebind() {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            this.data.layers[i].rebind();
+        }
+    }
+
+    /**
+     * @private
+     * @function
      * @name pc.AnimComponent#findAnimationLayer
      * @description Finds a pc.AnimComponentLayer in this component.
      * @param {string} layerName - The name of the anim component layer to find

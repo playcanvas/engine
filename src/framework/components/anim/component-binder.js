@@ -19,6 +19,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
     constructor(animComponent, graph) {
         super(graph);
         this.animComponent = animComponent;
+        this._targetCache = {};
+        // #ifdef DEBUG
+        this._visitedFallbackGraphPaths = {};
+        // #endif
     }
 
     static _packFloat(values) {
@@ -67,6 +71,9 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
+        if (this._targetCache[path]) {
+            return this._targetCache[path];
+        }
         var propertyLocation = AnimBinder.decode(path);
 
         var entity = this._getEntityFromHierarchy(propertyLocation.entityPath);
@@ -75,10 +82,16 @@ class AnimComponentBinder extends DefaultAnimBinder {
             return null;
 
         var propertyComponent;
+        var targetIdentifier;
 
         switch (propertyLocation.component) {
             case 'entity':
                 propertyComponent = entity;
+                targetIdentifier = AnimBinder.encode({
+                    entityPath: entity.path,
+                    component: 'entity',
+                    propertyPath: propertyLocation.propertyPath
+                });
                 break;
             case 'graph':
                 if (entity.model && entity.model.model && entity.model.model.graph) {
@@ -87,16 +100,37 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 if (!propertyComponent) {
                     var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
                     propertyComponent = this.nodes[entityPath[entityPath.length - 1] || ""];
+
+                    // #ifdef DEBUG
+                    var fallbackGraphPath = (entityPath[entityPath.length - 1] || "") + '/' + propertyLocation.propertyPath;
+                    if (this._visitedFallbackGraphPaths[fallbackGraphPath]) {
+                        console.warn('Multiple nodes with the path ' + fallbackGraphPath + ' are present in the entities graph which may result in the incorrect binding of animations');
+                    }
+                    this._visitedFallbackGraphPaths[fallbackGraphPath] = true;
+                    // #endif
                 }
                 if (!propertyComponent) return null;
+                targetIdentifier = AnimBinder.encode({
+                    entityPath: propertyComponent.path,
+                    component: 'graph',
+                    propertyPath: propertyLocation.propertyPath
+                });
                 break;
             default:
                 propertyComponent = entity.findComponent(propertyLocation.component);
                 if (!propertyComponent)
                     return null;
+                targetIdentifier = AnimBinder.encode({
+                    entityPath: entity.path,
+                    component: propertyLocation.component,
+                    propertyPath: propertyLocation.propertyPath
+                });
+                break;
         }
 
-        return this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath);
+        var animTarget = this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath, targetIdentifier);
+        this._targetCache[path] = animTarget;
+        return animTarget;
     }
 
     update(deltaTime) {
@@ -174,7 +208,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         };
     }
 
-    _createAnimTargetForProperty(propertyComponent, propertyHierarchy) {
+    _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetIdentifier) {
 
         if (this.handlers && propertyHierarchy[0] === 'weights') {
             return this.handlers.weights(propertyComponent);
@@ -240,10 +274,31 @@ class AnimComponentBinder extends DefaultAnimBinder {
             return new AnimTarget(function (values) {
                 setter(values);
                 propertyComponent.material.update();
-            }, animDataType, animDataComponents);
+            }, animDataType, animDataComponents, targetIdentifier);
         }
 
-        return new AnimTarget(setter, animDataType, animDataComponents);
+        return new AnimTarget(setter, animDataType, animDataComponents, targetIdentifier);
+    }
+
+    rebind() {
+        this._targetCache = {};
+        // #ifdef DEBUG
+        this._visitedFallbackGraphPaths = {};
+        // #endif
+        var entity = this.animComponent && this.animComponent.entity;
+        var graph = entity.model && entity.model.model && entity.model.model.graph;
+        if (!graph) return;
+        this.graph = graph;
+        var nodes = { };
+        // cache node names so we can quickly resolve animation paths
+        var flatten = function (node) {
+            nodes[node.name] = node;
+            for (var i = 0; i < node.children.length; ++i) {
+                flatten(node.children[i]);
+            }
+        };
+        flatten(this.graph);
+        this.nodes = nodes;
     }
 }
 

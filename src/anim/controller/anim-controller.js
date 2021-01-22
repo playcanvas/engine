@@ -456,6 +456,10 @@ class AnimController {
         this._animEvaluator.removeClips();
     }
 
+    rebind() {
+        this._animEvaluator.rebind();
+    }
+
     update(dt) {
         if (!this._playing) {
             return;
