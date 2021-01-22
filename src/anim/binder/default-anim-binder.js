@@ -56,7 +56,12 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                return new AnimTarget(func, 'vector', 3);
+                var targetIdentifier = AnimBinder.encode({
+                    entityPath: node.path,
+                    component: 'entity',
+                    propertyPath: 'localPosition'
+                });
+                return new AnimTarget(func, 'vector', 3, targetIdentifier);
             },
 
             'localRotation': function (node) {
@@ -64,7 +69,12 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                return new AnimTarget(func, 'quaternion', 4);
+                var targetIdentifier = AnimBinder.encode({
+                    entityPath: node.path,
+                    component: 'entity',
+                    propertyPath: 'localRotation'
+                });
+                return new AnimTarget(func, 'quaternion', 4, targetIdentifier);
             },
 
             'localScale': function (node) {
@@ -72,7 +82,12 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                return new AnimTarget(func, 'vector', 3);
+                var targetIdentifier = AnimBinder.encode({
+                    entityPath: node.path,
+                    component: 'entity',
+                    propertyPath: 'localScale'
+                });
+                return new AnimTarget(func, 'vector', 3, targetIdentifier);
             },
 
             'weights': function (node) {
@@ -91,7 +106,12 @@ class DefaultAnimBinder {
                                 morphInstance.setWeight(i, value[i]);
                             }
                         };
-                        return new AnimTarget(func, 'vector', morphInstance.morph._targets.length);
+                        var targetIdentifier = AnimBinder.encode({
+                            entityPath: node.path,
+                            component: 'entity',
+                            propertyPath: 'weights'
+                        });
+                        return new AnimTarget(func, 'vector', morphInstance.morph._targets.length, targetIdentifier);
                     }
                 }
 
@@ -115,7 +135,12 @@ class DefaultAnimBinder {
                                 meshInstance.material.update();
                             }
                         }.bind(this);
-                        return new AnimTarget(func, 'vector', 1);
+                        var targetIdentifier = AnimBinder.encode({
+                            entityPath: node.path,
+                            component: 'material',
+                            propertyPath: 'materialTexture'
+                        });
+                        return new AnimTarget(func, 'vector', 1, targetIdentifier);
                     }
                 }
 
