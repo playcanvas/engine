@@ -363,7 +363,7 @@ class Scene extends EventHandler {
         this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
         this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
-        if (settings.render.skyboxRotation !== undefined) {
+        if (settings.render.skyboxRotation) {
             this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
         }
 
