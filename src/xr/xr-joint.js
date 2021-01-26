@@ -2,7 +2,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
-var tipJointIds = window.XRHand ? [
+var tipJointIds = typeof window !== 'undefined' && window.XRHand ? [
     XRHand.THUMB_PHALANX_TIP,
     XRHand.INDEX_PHALANX_TIP,
     XRHand.MIDDLE_PHALANX_TIP,

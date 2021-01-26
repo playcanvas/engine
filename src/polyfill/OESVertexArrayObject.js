@@ -277,6 +277,7 @@ OESVertexArrayObject.prototype.bindVertexArrayOES = function bindVertexArrayOES(
 };
 
 // You MUST call this BEFORE adding event listeners for 'webglcontextrestored'
+if(typeof window !== 'undefined'){
 window.setupVertexArrayObject = function(gl) {
     // Ignore if already installed (or the browser provides the extension)
     // FIXME: when all stable browsers support getSupportedExtensions
@@ -292,6 +293,7 @@ window.setupVertexArrayObject = function(gl) {
             return;
         }
     }
+}
 
     if (gl.getSupportedExtensions) {
         var original_getSupportedExtensions = gl.getSupportedExtensions;
