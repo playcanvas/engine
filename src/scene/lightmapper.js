@@ -549,9 +549,7 @@ class Lightmapper {
 
 
         // Init shaders
-        var dilate = shaderChunks.dilatePS;
-
-        var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, dilate, "lmDilate");
+        var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
         var constantTexSource = device.scope.resolve("source");
         var constantPixelOffset = device.scope.resolve("pixelOffset");
         var constantBakeDir = device.scope.resolve("bakeDir");
