@@ -13,7 +13,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     FILTER_NEAREST,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, 
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION,
     TYPE_FLOAT32
@@ -1700,10 +1700,11 @@ Object.assign(Application.prototype, {
                 renderer._uploadAreaLightLuts(asset.resource);
             });
             this.assets.load(asset);
+        } else {
+            // #ifdef DEBUG
+            console.warn("setAreaLightData: asset is not valid");
+            // #endif
         }
-        // #ifdef DEBUG
-        console.warn("setAreaLightData: asset is not valid");
-        // #endif
     },
 
     /**

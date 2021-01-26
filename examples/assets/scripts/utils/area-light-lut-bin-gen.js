@@ -8,7 +8,9 @@ var LTC_MAT_2 = [1, 0, 0, 0, 1, 7.91421e-31, 0, 0, 1, 1.04392e-24, 0, 0, 1, 3.49
 
 var luts = {
     data1: new Float32Array(LTC_MAT_1),
-    data2: new Float32Array(LTC_MAT_2)
+    data2: new Float32Array(LTC_MAT_2),
+    majorVersion: 0,
+    minorVersion: 1
 };
 
 var saveByteArray = (function () {
@@ -25,6 +27,6 @@ var saveByteArray = (function () {
     };
 }());
 
-var version = new Float32Array([0.0]);
+var versions = new Int16Array([luts.majorVersion, luts.minorVersion]);
 
-saveByteArray([luts.data1, luts.data2, version], 'area-light-luts.bin');
+saveByteArray([luts.data1, luts.data2, versions], 'area-light-luts.bin');
