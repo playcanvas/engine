@@ -941,7 +941,7 @@ Object.assign(ForwardRenderer.prototype, {
             luts.ready = true;
             var device = this.device;
             var data1, data2;
-            var format = device._areaLightLutFormat;
+            var format = device.areaLightLutFormat;
 
             // pick format for lut texture
             if (format === PIXELFORMAT_RGBA32F) {

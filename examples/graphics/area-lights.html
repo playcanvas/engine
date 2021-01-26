@@ -228,7 +228,7 @@
 
             // Create lights with light source shape 
             light1 = createAreaLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-3, 4, 0), 4, new pc.Color(1, 1, 1), 2, true, 10);
-            light2 = createAreaLight("omni", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0), 2, true, 10);
+            light2 = createAreaLight("omni", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0), 2, false, 10);
             light3 = createAreaLight("directional", pc.LIGHTSHAPE_DISK, new pc.Vec3(0, 0, 0), 0.2, new pc.Color(0.7, 0.7, 1), 10, true, far);
         }
 

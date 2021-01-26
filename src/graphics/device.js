@@ -684,7 +684,7 @@ var GraphicsDevice = function (canvas, options) {
     // #endif
 
     // area light LUT format and flag
-    this._areaLightLutFormat = (this.extTextureFloat) ? PIXELFORMAT_RGBA32F : (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : PIXELFORMAT_R8_G8_B8_A8;
+    this.areaLightLutFormat = (this.extTextureFloat && this.extTextureFloatLinear) ? PIXELFORMAT_RGBA32F : (this.extTextureHalfFloat && this.extTextureHalfFloatLinear && this.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : PIXELFORMAT_R8_G8_B8_A8;
 };
 
 GraphicsDevice.prototype = Object.create(EventHandler.prototype);

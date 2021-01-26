@@ -1018,15 +1018,18 @@ var standard = {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
 
-        if (device._areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
+        if (device.areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
             code += "#define AREA_R8_G8_B8_A8_LUTS\n";
+            code += "#define AREA_LUTS_PRECISION lowp\n";
+        } else {
+            code += "#define AREA_LUTS_PRECISION highp\n";
         }
 
         if (hasAreaLights) {
             code += "#define AREA_LIGHTS\n";
-            code += "uniform sampler2D areaLightsLutTex1;\n";
-            code += "uniform sampler2D areaLightsLutTex2;\n";
+            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
+            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
         }
 
         var lightShape = LIGHTSHAPE_PUNCTUAL;
