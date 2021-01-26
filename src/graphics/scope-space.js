@@ -3,18 +3,18 @@ import { ScopeId } from './scope-id.js';
 /**
  * @class
  * @name pc.ScopeSpace
- * @classdesc The scope for variables and subspaces.
+ * @classdesc The scope for variables.
  * @param {string} name - The scope name.
  * @property {string} name The scope name.
  */
 class ScopeSpace {
     constructor(name) {
+
         // Store the name
         this.name = name;
 
-        // Create the empty tables
-        this.variables = {};
-        this.namespaces = {};
+        // Create map which maps a uniform name into ScopeId
+        this.variables = new Map();
     }
 
     /**
@@ -25,32 +25,24 @@ class ScopeSpace {
      * @returns {pc.ScopeId} The variable instance.
      */
     resolve(name) {
-        // Check if the ScopeId already exists
-        if (!this.variables.hasOwnProperty(name)) {
-            // Create and add to the table
-            this.variables[name] = new ScopeId(name);
+
+        // add new ScopeId if it does not exist yet
+        if (!this.variables.has(name)) {
+            this.variables.set(name, new ScopeId(name));
         }
 
-        // Now return the ScopeId instance
-        return this.variables[name];
+        // return the ScopeId instance
+        return this.variables.get(name);
     }
 
-    /**
-     * @function
-     * @name pc.ScopeSpace#getSubSpace
-     * @description Get (or create, if it doesn't already exist) a subspace in the scope.
-     * @param {string} name - The subspace name.
-     * @returns {pc.ScopeSpace} The subspace instance.
-     */
-    getSubSpace(name) {
-        // Check if the nested namespace already exists
-        if (!this.namespaces.hasOwnProperty(name)) {
-            // Create and add to the table
-            this.namespaces[name] = new ScopeSpace(name);
+    // clears value for any uniform with matching value (used to remove deleted textures)
+    removeValue(value) {
+        for (var uniformName in this.variables) {
+            var uniform = this.variables[uniformName];
+            if (uniform.value === value) {
+                uniform.value = null;
+            }
         }
-
-        // Now return the ScopeNamespace instance
-        return this.namespaces[name];
     }
 }
 

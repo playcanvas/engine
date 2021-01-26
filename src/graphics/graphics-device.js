@@ -28,7 +28,7 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation
-} from './graphics.js';
+} from './constants.js';
 
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
@@ -684,9 +684,13 @@ class GraphicsDevice extends EventHandler {
         this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
         // #endif
 
-        // area light LUT format
-        this._areaLightLutFormat = (this.extTextureFloat) ? PIXELFORMAT_RGBA32F : (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : PIXELFORMAT_R8_G8_B8_A8;
-
+        // area light LUT format - order of preference: half, float, 8bit
+        this._areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) {
+            this._areaLightLutFormat = PIXELFORMAT_RGBA16F;
+        } else if (this.extTextureFloat) {
+            this._areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        }
     }
 
     // #ifdef DEBUG
@@ -1764,12 +1768,7 @@ class GraphicsDevice extends EventHandler {
             }
 
             // Remove texture from any uniforms
-            for (var uniformName in this.scope.variables) {
-                var uniform = this.scope.variables[uniformName];
-                if (uniform.value === texture) {
-                    uniform.value = null;
-                }
-            }
+            this.scope.removeValue(texture);
 
             // Update shadowed texture unit state to remove texture from any units
             for (var i = 0; i < this.textureUnits.length; i++) {

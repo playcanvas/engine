@@ -1,6 +1,6 @@
 import {
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { Texture } from '../../graphics/texture.js';
 
 import {

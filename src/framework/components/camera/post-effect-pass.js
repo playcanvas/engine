@@ -2,7 +2,7 @@ import { Vec4 } from '../../../math/vec4.js';
 
 import { shaderChunks } from '../../../graphics/program-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../../graphics/program-lib/utils.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F } from '../../../graphics/graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F } from '../../../graphics/constants.js';
 import { drawQuadWithShader } from '../../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
@@ -233,7 +233,6 @@ class PostEffectPass {
             }
         });
 
-        this.layer._generateCameraHash(); // post effect doesn't contain actual cameras, but we need to generate cam data
         this.layer.isPostEffect = true;
         this.layer.unmodifiedUvs = options.unmodifiedUvs;
         this.layer.postEffectBilinear = options.bilinear;

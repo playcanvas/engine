@@ -3,7 +3,7 @@ import { Tags } from '../core/tags.js';
 
 import { EventHandler } from '../core/event-handler.js';
 
-import { I18n } from '../i18n/i18n.js';
+import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetVariants } from './asset-variants.js';
@@ -240,7 +240,7 @@ class Asset extends EventHandler {
      */
     getLocalizedAssetId(locale) {
         // tries to find either the desired locale or a fallback locale
-        locale = I18n.findAvailableLocale(locale, this._i18n);
+        locale = findAvailableLocale(locale, this._i18n);
         return this._i18n[locale] || null;
     }
 

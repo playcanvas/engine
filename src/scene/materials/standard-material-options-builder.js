@@ -3,7 +3,7 @@ import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 import {
     PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,

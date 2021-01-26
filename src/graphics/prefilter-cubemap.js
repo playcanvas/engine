@@ -5,7 +5,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from './graphics.js';
+} from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
