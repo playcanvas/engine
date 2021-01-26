@@ -49,10 +49,19 @@ var PASS_DIR = 1;
 var passTexName = ["texture_lightMap", "texture_dirLightMap"];
 var passMaterial = [];
 
-// helper class to wrap node for baking including its meshInstances
-class BakeNode {
-    constructor(node, meshInstances) {
+// helper class to wrap node including its meshInstances
+class MeshNode {
+    constructor(node, meshInstances = null) {
         this.node = node;
+
+        if (node.render) {
+            this.component = node.render;
+            meshInstances = meshInstances ? meshInstances : node.render.meshInstances;
+        } else {
+            this.component = node.model;
+            meshInstances = meshInstances ? meshInstances : node.model.model.meshInstances;
+        }
+
         this.meshInstances = meshInstances;
     }
 }
@@ -162,6 +171,8 @@ class Lightmapper {
         return tex;
     }
 
+    // TODO: report warning on nodes set up for baking that don't have uv1
+
     // recursively walk the hierarchy of nodes starting at the specified node
     // collect all nodes that need to be lightmapped to bakeNodes array
     // collect all nodes with geometry to allNodes array
@@ -171,7 +182,7 @@ class Lightmapper {
         // mesh instances from model component
         let meshInstances;
         if (node.model && node.model.model && node.model.enabled) {
-            if (allNodes) allNodes.push(node);
+            if (allNodes) allNodes.push(new MeshNode(node));
             if (node.model.lightmapped) {
                 if (bakeNodes) {
                     meshInstances = node.model.model.meshInstances;
@@ -181,7 +192,7 @@ class Lightmapper {
 
         // mesh instances from render component
         if (node.render && node.render.enabled) {
-            if (allNodes) allNodes.push(node);
+            if (allNodes) allNodes.push(new MeshNode(node));
             if (node.render.lightmapped) {
                 if (bakeNodes) {
                     meshInstances = node.render.meshInstances;
@@ -207,7 +218,7 @@ class Lightmapper {
                     // is this mesh an instance of already used mesh in this node
                     if (this._tempSet.has(mesh)) {
                         // collect each instance (object with shared VB) as separate "node"
-                        bakeNodes.push(new BakeNode(node, [meshInstances[i]]));
+                        bakeNodes.push(new MeshNode(node, [meshInstances[i]]));
                     } else {
                         notInstancedMeshInstances.push(meshInstances[i]);
                     }
@@ -218,7 +229,7 @@ class Lightmapper {
 
                 // collect all non-shared objects as one "node"
                 if (notInstancedMeshInstances.length > 0) {
-                    bakeNodes.push(new BakeNode(node, notInstancedMeshInstances));
+                    bakeNodes.push(new MeshNode(node, notInstancedMeshInstances));
                 }
             }
         }
@@ -360,7 +371,10 @@ class Lightmapper {
         var startFboTime = device._renderTargetCreationTime;
         var startCompileTime = device._shaderStats.compileTime;
 
+        // MeshNode objects for baking
         var bakeNodes = [];
+
+        // all MeshNode objects
         var allNodes = [];
 
         // delete old lightmaps if present
@@ -530,10 +544,6 @@ class Lightmapper {
         var node;
         var lm, rcv, m;
 
-        var renderOrModel = function (node) {
-            return node.render ? node.render : node.model;
-        };
-
         var renderOrModelMeshInstances = function (node) {
             return node.render ? node.render.meshInstances : node.model.model.meshInstances;
         };
@@ -543,14 +553,14 @@ class Lightmapper {
         origShaderDefs.length = sceneLightmapsNode.length;
         var shaderDefs;
         for (node = 0; node < allNodes.length; node++) {
-            rcv = renderOrModelMeshInstances(allNodes[node]);
+            rcv = allNodes[node].meshInstances;
             shaderDefs = [];
             for (i = 0; i < rcv.length; i++) {
                 shaderDefs.push(rcv[i]._shaderDefs);
                 rcv[i]._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
             }
             for (i = 0; i < sceneLightmapsNode.length; i++) {
-                if (sceneLightmapsNode[i] === allNodes[node]) {
+                if (sceneLightmapsNode[i] === allNodes[node].node) {
                     origShaderDefs[i] = shaderDefs;
                     break;
                 }
@@ -563,11 +573,11 @@ class Lightmapper {
         var meshes;
         var rom;
         for (node = 0; node < allNodes.length; node++) {
-            rom = renderOrModel(allNodes[node]);
+            rom = allNodes[node].component;
             origCastShadows[node] = rom.castShadows;
             rom.castShadows = rom.castShadowsLightmap;
             if (rom.castShadowsLightmap) {
-                meshes = renderOrModelMeshInstances(allNodes[node]);
+                meshes = allNodes[node].meshInstances;
                 for (i = 0; i < meshes.length; i++) {
                     meshes[i].visibleThisFrame = true;
                     casters.push(meshes[i]);
@@ -905,7 +915,7 @@ class Lightmapper {
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {
-            renderOrModel(allNodes[node]).castShadows = origCastShadows[node];
+            allNodes[node].component.castShadows = origCastShadows[node];
         }
 
         // Enable existing scene lightmaps
