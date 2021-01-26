@@ -15,6 +15,8 @@ import {
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
 var _tempSphere = new BoundingSphere();
+var _meshSet = new Set();
+
 
 // internal data structure used to store data used by hardware instancing
 class InstancingData {
@@ -151,8 +153,6 @@ class MeshInstance {
         this.flipFaces = false;
     }
 
-    static _meshSet = new Set();
-
     // generates wireframes for an array of mesh instances
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
 
@@ -163,13 +163,13 @@ class MeshInstance {
 
             // process all unique meshes
             let mesh = meshInstances[i].mesh;
-            if (!MeshInstance._meshSet.has(mesh)) {
-                MeshInstance._meshSet.add(mesh);
+            if (!_meshSet.has(mesh)) {
+                _meshSet.add(mesh);
                 mesh.prepareRenderState(renderStyle);
             }
         }
 
-        MeshInstance._meshSet.clear();
+        _meshSet.clear();
     }
 
     get mesh() {
