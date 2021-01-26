@@ -6,7 +6,7 @@ import {
     PIXELFORMAT_ETC1, PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     TEXHINT_ASSET
-} from '../../../graphics/graphics.js';
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/

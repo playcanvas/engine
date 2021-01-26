@@ -51,98 +51,96 @@ import { Component } from '../component.js';
  * @property {pc.Model} model The model that is added to the scene graph for the mesh collision
  * volume.
  */
-var CollisionComponent = function CollisionComponent(system, entity) {
-    Component.call(this, system, entity);
+class CollisionComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._compoundParent = null;
+        this._compoundParent = null;
 
-    this.entity.on('insert', this._onInsert, this);
+        this.entity.on('insert', this._onInsert, this);
 
-    this.on('set_type', this.onSetType, this);
-    this.on('set_halfExtents', this.onSetHalfExtents, this);
-    this.on('set_radius', this.onSetRadius, this);
-    this.on('set_height', this.onSetHeight, this);
-    this.on('set_axis', this.onSetAxis, this);
-    this.on("set_asset", this.onSetAsset, this);
-    this.on("set_model", this.onSetModel, this);
-};
-CollisionComponent.prototype = Object.create(Component.prototype);
-CollisionComponent.prototype.constructor = CollisionComponent;
+        this.on('set_type', this.onSetType, this);
+        this.on('set_halfExtents', this.onSetHalfExtents, this);
+        this.on('set_radius', this.onSetRadius, this);
+        this.on('set_height', this.onSetHeight, this);
+        this.on('set_axis', this.onSetAxis, this);
+        this.on("set_asset", this.onSetAsset, this);
+        this.on("set_model", this.onSetModel, this);
+    }
 
-// Events Documentation
-/**
- * @event
- * @name pc.CollisionComponent#contact
- * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
- * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
- */
+    // Events Documentation
+    /**
+     * @event
+     * @name pc.CollisionComponent#contact
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     */
 
-/**
- * @event
- * @name pc.CollisionComponent#collisionstart
- * @description The 'collisionstart' event is fired when two rigid bodies start touching.
- * @param {pc.ContactResult} result - Details of the contact between the two Entities.
- */
+    /**
+     * @event
+     * @name pc.CollisionComponent#collisionstart
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * @param {pc.ContactResult} result - Details of the contact between the two Entities.
+     */
 
-/**
- * @event
- * @name pc.CollisionComponent#collisionend
- * @description The 'collisionend' event is fired two rigid-bodies stop touching.
- * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
- */
+    /**
+     * @event
+     * @name pc.CollisionComponent#collisionend
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
+     */
 
-/**
- * @event
- * @name pc.CollisionComponent#triggerenter
- * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
- * a {@link pc.RigidBodyComponent} attached.
- * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
- */
+    /**
+     * @event
+     * @name pc.CollisionComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
+     */
 
-/**
- * @event
- * @name pc.CollisionComponent#triggerleave
- * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
- * a {@link pc.RigidBodyComponent} attached.
- * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
- */
+    /**
+     * @event
+     * @name pc.CollisionComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
+     */
 
-Object.assign(CollisionComponent.prototype, {
-    onSetType: function (name, oldValue, newValue) {
+    onSetType(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             this.system.changeType(this, oldValue, newValue);
         }
-    },
+    }
 
-    onSetHalfExtents: function (name, oldValue, newValue) {
+    onSetHalfExtents(name, oldValue, newValue) {
         var t = this.data.type;
         if (this.data.initialized && t === 'box') {
             this.system.recreatePhysicalShapes(this);
         }
-    },
+    }
 
-    onSetRadius: function (name, oldValue, newValue) {
+    onSetRadius(name, oldValue, newValue) {
         var t = this.data.type;
         if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
-    },
+    }
 
-    onSetHeight: function (name, oldValue, newValue) {
+    onSetHeight(name, oldValue, newValue) {
         var t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
-    },
+    }
 
-    onSetAxis: function (name, oldValue, newValue) {
+    onSetAxis(name, oldValue, newValue) {
         var t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
-    },
+    }
 
-    onSetAsset: function (name, oldValue, newValue) {
+    onSetAsset(name, oldValue, newValue) {
         var asset;
         var assets = this.system.app.assets;
 
@@ -175,25 +173,25 @@ Object.assign(CollisionComponent.prototype, {
             }
             this.system.recreatePhysicalShapes(this);
         }
-    },
+    }
 
-    onSetModel: function (name, oldValue, newValue) {
+    onSetModel(name, oldValue, newValue) {
         if (this.data.initialized && this.data.type === 'mesh') {
             // recreate physical shapes skipping loading the model
             // from the 'asset' as the model passed in newValue might
             // have been created procedurally
             this.system.implementations.mesh.doRecreatePhysicalShape(this);
         }
-    },
+    }
 
-    onAssetRemoved: function (asset) {
+    onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this.data.asset === asset.id) {
             this.asset = null;
         }
-    },
+    }
 
-    _getCompoundChildShapeIndex: function (shape) {
+    _getCompoundChildShapeIndex(shape) {
         var compound = this.data.shape;
         var shapes = compound.getNumChildShapes();
 
@@ -205,9 +203,9 @@ Object.assign(CollisionComponent.prototype, {
         }
 
         return null;
-    },
+    }
 
-    _onInsert: function (parent) {
+    _onInsert(parent) {
         // TODO
         // if is child of compound shape
         // and there is no change of compoundParent, then update child transform
@@ -232,9 +230,9 @@ Object.assign(CollisionComponent.prototype, {
                 ancestor = ancestor.parent;
             }
         }
-    },
+    }
 
-    _updateCompound: function () {
+    _updateCompound() {
         var entity = this.entity;
         if (entity._dirtyWorld) {
             var dirty = entity._dirtyLocal;
@@ -257,9 +255,9 @@ Object.assign(CollisionComponent.prototype, {
                     bodyComponent.activate();
             }
         }
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
             var asset = this.system.app.assets.get(this.data.asset);
             // recreate the collision shape if the model asset is not loaded
@@ -288,9 +286,9 @@ Object.assign(CollisionComponent.prototype, {
         } else if (this.entity.trigger) {
             this.entity.trigger.enable();
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
         } else if (this._compoundParent && this !== this._compoundParent) {
@@ -303,9 +301,9 @@ Object.assign(CollisionComponent.prototype, {
         } else if (this.entity.trigger) {
             this.entity.trigger.disable();
         }
-    },
+    }
 
-    onBeforeRemove: function () {
+    onBeforeRemove() {
         if (this.asset) {
             this.asset = null;
         }
@@ -314,6 +312,6 @@ Object.assign(CollisionComponent.prototype, {
 
         this.off();
     }
-});
+}
 
 export { CollisionComponent };

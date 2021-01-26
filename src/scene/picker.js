@@ -1,5 +1,5 @@
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
-import { GraphicsDevice } from '../graphics/device.js';
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 
@@ -9,7 +9,7 @@ import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
 import { LayerComposition } from './layer-composition.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var _deviceDeprecationWarning = false;
 var _getSelectionDeprecationWarning = false;
@@ -30,7 +30,7 @@ var _prepareDeprecationWarning = false;
 class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
-            app = Application.getApplication();
+            app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
                 // #ifdef DEBUG
@@ -42,8 +42,6 @@ class Picker {
         this.app = app;
         this.device = app.graphicsDevice;
         var device = this.device;
-
-        this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
@@ -239,7 +237,7 @@ class Picker {
                 }
             });
 
-            this.layerComp = new LayerComposition();
+            this.layerComp = new LayerComposition("picker");
             this.layerComp.pushOpaque(this.layer);
 
             this.meshInstances = this.layer.opaqueMeshInstances;
@@ -307,7 +305,7 @@ class Picker {
         }
 
         // save old camera state
-        this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
+        let originalLayers = this.onLayerPreRender(this.layer, sourceLayer, sourceRt, camera);
 
         // clear registered meshes, rendering will register them again
         self.mapping.length = 0;
@@ -316,10 +314,10 @@ class Picker {
         this.app.renderer.renderComposition(this.layerComp);
 
         // restore old camera state
-        this.onLayerPostRender(this.layer);
+        this.onLayerPostRender(this.layer, camera, originalLayers);
     }
 
-    onLayerPreRender(layer, sourceLayer, sourceRt) {
+    onLayerPreRender(layer, sourceLayer, sourceRt, camera) {
         if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
             layer.onDisable();
             layer.onEnable();
@@ -336,14 +334,25 @@ class Picker {
         var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
         layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
         this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
+
+        // add layer to be rendered by the camera
+        let originalLayers = camera.layers.slice();
+        let cameraLayers = camera.layers;
+        cameraLayers.push(this.layer.id);
+        camera.layers = cameraLayers;
+
+        return originalLayers;
     }
 
-    onLayerPostRender(layer) {
+    onLayerPostRender(layer, camera, originalLayers) {
 
         // restore original settings
         layer.cameras[0].camera._clearOptions = layer.oldClear;
         layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
         layer.cameras[0].aspectRatio = layer.oldAspect;
+
+        // restore camera layers to original condition
+        camera.layers = originalLayers;
     }
 
     /**

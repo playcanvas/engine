@@ -1,4 +1,4 @@
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/graphics.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
@@ -108,10 +108,17 @@ class MorphInstance {
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
-        if (this.morph) {
-            // this destroys morph if refcount gets to 0
-            this.morph.decRefCount();
+        let morph = this.morph;
+        if (morph) {
+
+            // decrease ref count
             this.morph = null;
+            morph.decRefCount();
+
+            // destroy morph
+            if (morph.getRefCount() < 1) {
+                morph.destroy();
+            }
         }
 
         if (this.rtPositions) {

@@ -16,7 +16,6 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
-            "area-lights",
             "area-picker",
             "batching-dynamic",
             "grab-pass",
@@ -48,6 +47,7 @@ var categories = [
             "point-cloud-simulation",
             "portal",
             "post-effects",
+            "render-to-cubemap",
             "render-to-texture",
             "shader-burn",
             "shader-toon",

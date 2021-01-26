@@ -1,4 +1,4 @@
-// base class for reference counted objects
+// base class implementing reference counting for objects
 class RefCountedObject {
     constructor() {
         // counter
@@ -12,21 +12,12 @@ class RefCountedObject {
 
     // decrements the counter. When the value reaches zero, destroy is called
     decRefCount() {
-        if (--this._refCount === 0) {
-            this.destroy();
-        }
+        this._refCount--;
     }
 
     // returns current count
     getRefCount() {
         return this._refCount;
-    }
-
-    // default version of destroy functionality
-    destroy() {
-        // #ifdef DEBUG
-        console.error("Class extended from the RefCountedObject class needs to have a destroy function implemented.");
-        // #endif
     }
 }
 

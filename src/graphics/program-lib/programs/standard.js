@@ -6,7 +6,7 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
     SHADERTAG_MATERIAL,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../graphics.js';
+} from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {
@@ -458,7 +458,6 @@ var standard = {
 
         if (options.dirLightMap) {
             lighting = true;
-            options.useSpecular = true;
         }
 
         if (options.shadingModel === SPECULAR_PHONG) {
@@ -1351,7 +1350,7 @@ var standard = {
 
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
-            var lightmapChunkPropName = options.dirLightMap ? 'lightmapDirPS' : 'lightmapSinglePS';
+            var lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
             code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }

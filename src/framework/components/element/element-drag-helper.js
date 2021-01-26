@@ -15,7 +15,7 @@ var _planeOrigin = new Vec3();
 var _planeNormal = new Vec3();
 var _entityRotation = new Quat();
 
-var OPPOSITE_AXIS = {
+const OPPOSITE_AXIS = {
     x: 'y',
     y: 'x'
 };
@@ -29,40 +29,38 @@ var OPPOSITE_AXIS = {
  * @param {pc.ElementComponent} element - The Element that should become draggable.
  * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
  */
-function ElementDragHelper(element, axis) {
-    EventHandler.call(this);
+class ElementDragHelper extends EventHandler {
+    constructor(element, axis) {
+        super();
 
-    if (!element || !(element instanceof ElementComponent)) {
-        throw new Error('Element was null or not an ElementComponent');
+        if (!element || !(element instanceof ElementComponent)) {
+            throw new Error('Element was null or not an ElementComponent');
+        }
+
+        if (axis && axis !== 'x' && axis !== 'y') {
+            throw new Error('Unrecognized axis: ' + axis);
+        }
+
+        this._element = element;
+        this._app = element.system.app;
+        this._axis = axis || null;
+        this._enabled = true;
+        this._dragScale = new Vec3();
+        this._dragStartMousePosition = new Vec3();
+        this._dragStartHandlePosition = new Vec3();
+        this._deltaMousePosition = new Vec3();
+        this._deltaHandlePosition = new Vec3();
+        this._isDragging = false;
+
+        this._toggleLifecycleListeners('on');
     }
 
-    if (axis && axis !== 'x' && axis !== 'y') {
-        throw new Error('Unrecognized axis: ' + axis);
-    }
-
-    this._element = element;
-    this._app = element.system.app;
-    this._axis = axis || null;
-    this._enabled = true;
-    this._dragScale = new Vec3();
-    this._dragStartMousePosition = new Vec3();
-    this._dragStartHandlePosition = new Vec3();
-    this._deltaMousePosition = new Vec3();
-    this._deltaHandlePosition = new Vec3();
-    this._isDragging = false;
-
-    this._toggleLifecycleListeners('on');
-}
-ElementDragHelper.prototype = Object.create(EventHandler.prototype);
-ElementDragHelper.prototype.constructor = ElementDragHelper;
-
-Object.assign(ElementDragHelper.prototype, {
-    _toggleLifecycleListeners: function (onOrOff) {
+    _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
-    },
+    }
 
-    _toggleDragListeners: function (onOrOff) {
+    _toggleDragListeners(onOrOff) {
         var isOn = onOrOff === 'on';
         var addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
 
@@ -90,9 +88,9 @@ Object.assign(ElementDragHelper.prototype, {
         }
 
         this._hasDragListeners = isOn;
-    },
+    }
 
-    _onMouseDownOrTouchStart: function (event) {
+    _onMouseDownOrTouchStart(event) {
         if (this._element && !this._isDragging && this.enabled) {
             this._dragCamera = event.camera;
             this._calculateDragScale();
@@ -108,18 +106,18 @@ Object.assign(ElementDragHelper.prototype, {
                 this.fire('drag:start');
             }
         }
-    },
+    }
 
-    _onMouseUpOrTouchEnd: function () {
+    _onMouseUpOrTouchEnd() {
         if (this._isDragging) {
             this._isDragging = false;
             this._toggleDragListeners('off');
 
             this.fire('drag:end');
         }
-    },
+    }
 
-    _screenToLocal: function (event) {
+    _screenToLocal(event) {
         this._determineInputPosition(event);
         this._chooseRayOriginAndDirection();
 
@@ -142,9 +140,9 @@ Object.assign(ElementDragHelper.prototype, {
         }
 
         return null;
-    },
+    }
 
-    _determineInputPosition: function (event) {
+    _determineInputPosition(event) {
         var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
 
         if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
@@ -156,9 +154,9 @@ Object.assign(ElementDragHelper.prototype, {
         } else {
             console.warn('Could not determine position from input event');
         }
-    },
+    }
 
-    _chooseRayOriginAndDirection: function () {
+    _chooseRayOriginAndDirection() {
         if (this._element.screen && this._element.screen.screen.screenSpace) {
             _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
             _rayDirection.set(0, 0, -1);
@@ -167,9 +165,9 @@ Object.assign(ElementDragHelper.prototype, {
             _rayOrigin.copy(this._dragCamera.entity.getPosition());
             _rayDirection.copy(_inputWorldPosition).sub(_rayOrigin).normalize();
         }
-    },
+    }
 
-    _calculateDragScale: function () {
+    _calculateDragScale() {
         var current = this._element.entity.parent;
         var screen = this._element.screen && this._element.screen.screen;
         var isWithin2DScreen = screen && screen.screenSpace;
@@ -190,9 +188,9 @@ Object.assign(ElementDragHelper.prototype, {
         dragScale.x = 1 / dragScale.x;
         dragScale.y = 1 / dragScale.y;
         dragScale.z = 1 / dragScale.z;
-    },
+    }
 
-    _onMove: function (event) {
+    _onMove(event) {
         if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
             var currentMousePosition = this._screenToLocal(event);
 
@@ -210,47 +208,43 @@ Object.assign(ElementDragHelper.prototype, {
                 this.fire('drag:move', this._deltaHandlePosition);
             }
         }
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         this._toggleLifecycleListeners('off');
         this._toggleDragListeners('off');
     }
-});
 
-Object.defineProperty(ElementDragHelper.prototype, 'enabled', {
-    get: function () {
+    get enabled() {
         return this._enabled;
-    },
+    }
 
-    set: function (value) {
+    set enabled(value) {
         this._enabled = value;
     }
-});
 
-Object.defineProperty(ElementDragHelper.prototype, 'isDragging', {
-    get: function () {
+    get isDragging() {
         return this._isDragging;
     }
-});
 
-/**
- * @event
- * @name pc.ElementDragHelper#drag:start
- * @description Fired when a new drag operation starts.
- */
+    /**
+     * @event
+     * @name pc.ElementDragHelper#drag:start
+     * @description Fired when a new drag operation starts.
+     */
 
-/**
- * @event
- * @name pc.ElementDragHelper#drag:end
- * @description Fired when the current new drag operation ends.
- */
+    /**
+     * @event
+     * @name pc.ElementDragHelper#drag:end
+     * @description Fired when the current new drag operation ends.
+     */
 
-/**
- * @event
- * @name pc.ElementDragHelper#drag:move
- * @description Fired whenever the position of the dragged element changes.
- * @param {pc.Vec3} value - The current position.
- */
+    /**
+     * @event
+     * @name pc.ElementDragHelper#drag:move
+     * @description Fired whenever the position of the dragged element changes.
+     * @param {pc.Vec3} value - The current position.
+     */
+}
 
 export { ElementDragHelper };

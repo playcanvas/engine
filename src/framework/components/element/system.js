@@ -5,7 +5,7 @@ import { Vec4 } from '../../../math/vec4.js';
 
 import {
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/graphics.js';
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
@@ -18,7 +18,7 @@ import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
 import { ElementComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class
@@ -27,65 +27,61 @@ var _schema = ['enabled'];
  * @classdesc Manages creation of {@link pc.ElementComponent}s.
  * @param {pc.Application} app - The application.
  */
-function ElementComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ElementComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'element';
+        this.id = 'element';
 
-    this.ComponentType = ElementComponent;
-    this.DataType = ElementComponentData;
+        this.ComponentType = ElementComponent;
+        this.DataType = ElementComponentData;
 
-    this.schema = _schema;
-    this._unicodeConverter = null;
-    this._rtlReorder = null;
+        this.schema = _schema;
+        this._unicodeConverter = null;
+        this._rtlReorder = null;
 
-    // default texture - make white so we can tint it with emissive color
-    this._defaultTexture = new Texture(app.graphicsDevice, { width: 1, height: 1, format: PIXELFORMAT_R8_G8_B8_A8 });
-    this._defaultTexture.name = 'element-system';
-    var pixels = this._defaultTexture.lock();
-    var pixelData = new Uint8Array(4);
-    pixelData[0] = 255.0;
-    pixelData[1] = 255.0;
-    pixelData[2] = 255.0;
-    pixelData[3] = 255.0;
-    pixels.set(pixelData);
-    this._defaultTexture.unlock();
+        // default texture - make white so we can tint it with emissive color
+        this._defaultTexture = new Texture(app.graphicsDevice, { width: 1, height: 1, format: PIXELFORMAT_R8_G8_B8_A8 });
+        this._defaultTexture.name = 'element-system';
+        var pixels = this._defaultTexture.lock();
+        var pixelData = new Uint8Array(4);
+        pixelData[0] = 255.0;
+        pixelData[1] = 255.0;
+        pixelData[2] = 255.0;
+        pixelData[3] = 255.0;
+        pixels.set(pixelData);
+        this._defaultTexture.unlock();
 
-    // image element materials created on demand by getImageElementMaterial()
-    this.defaultImageMaterial = null;
-    this.defaultImage9SlicedMaterial = null;
-    this.defaultImage9TiledMaterial = null;
-    this.defaultImageMaskMaterial = null;
-    this.defaultImage9SlicedMaskMaterial = null;
-    this.defaultImage9TiledMaskMaterial = null;
-    this.defaultScreenSpaceImageMaterial = null;
-    this.defaultScreenSpaceImage9SlicedMaterial = null;
-    this.defaultScreenSpaceImage9TiledMaterial = null;
-    this.defaultScreenSpaceImageMask9SlicedMaterial = null;
-    this.defaultScreenSpaceImageMask9TiledMaterial = null;
-    this.defaultScreenSpaceImageMaskMaterial = null;
+        // image element materials created on demand by getImageElementMaterial()
+        this.defaultImageMaterial = null;
+        this.defaultImage9SlicedMaterial = null;
+        this.defaultImage9TiledMaterial = null;
+        this.defaultImageMaskMaterial = null;
+        this.defaultImage9SlicedMaskMaterial = null;
+        this.defaultImage9TiledMaskMaterial = null;
+        this.defaultScreenSpaceImageMaterial = null;
+        this.defaultScreenSpaceImage9SlicedMaterial = null;
+        this.defaultScreenSpaceImage9TiledMaterial = null;
+        this.defaultScreenSpaceImageMask9SlicedMaterial = null;
+        this.defaultScreenSpaceImageMask9TiledMaterial = null;
+        this.defaultScreenSpaceImageMaskMaterial = null;
 
-    // text element materials created on demand by getTextElementMaterial()
-    this.defaultTextMaterial = null;
-    this.defaultBitmapTextMaterial = null;
-    this.defaultScreenSpaceTextMaterial = null;
-    this.defaultScreenSpaceBitmapTextMaterial = null;
+        // text element materials created on demand by getTextElementMaterial()
+        this.defaultTextMaterial = null;
+        this.defaultBitmapTextMaterial = null;
+        this.defaultScreenSpaceTextMaterial = null;
+        this.defaultScreenSpaceBitmapTextMaterial = null;
 
-    this.defaultImageMaterials = [];
+        this.defaultImageMaterials = [];
 
-    this.on('beforeremove', this.onRemoveComponent, this);
-}
-ElementComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ElementComponentSystem.prototype.constructor = ElementComponentSystem;
+        this.on('beforeremove', this.onRemoveComponent, this);
+    }
 
-Component._buildAccessors(ElementComponent.prototype, _schema);
-
-Object.assign(ElementComponentSystem.prototype, {
-    destroy: function () {
+    destroy() {
         this._defaultTexture.destroy();
-    },
+    }
 
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         component._beingInitialized = true;
 
         if (data.anchor !== undefined) {
@@ -248,7 +244,6 @@ Object.assign(ElementComponentSystem.prototype, {
         }
         // OTHERWISE: group
 
-
         // find screen
         // do this here not in constructor so that component is added to the entity
         var result = component._parseUpToScreen();
@@ -256,20 +251,20 @@ Object.assign(ElementComponentSystem.prototype, {
             component._updateScreen(result.screen);
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        super.initializeComponentData(component, data, properties);
 
         component._beingInitialized = false;
 
         if (component.type === ELEMENTTYPE_IMAGE && component._image._meshDirty) {
             component._image._updateMesh(component._image.mesh);
         }
-    },
+    }
 
-    onRemoveComponent: function (entity, component) {
+    onRemoveComponent(entity, component) {
         component.onRemove();
-    },
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var source = entity.element;
 
         var data = {
@@ -325,9 +320,9 @@ Object.assign(ElementComponentSystem.prototype, {
         }
 
         return this.addComponent(clone, data);
-    },
+    }
 
-    getTextElementMaterial: function (screenSpace, msdf) {
+    getTextElementMaterial(screenSpace, msdf) {
         if (screenSpace) {
             if (msdf) {
                 if (!this.defaultScreenSpaceTextMaterial) {
@@ -411,11 +406,9 @@ Object.assign(ElementComponentSystem.prototype, {
             this.defaultBitmapTextMaterial.update();
         }
         return this.defaultBitmapTextMaterial;
+    }
 
-
-    },
-
-    _createBaseImageMaterial: function () {
+    _createBaseImageMaterial() {
         var material = new StandardMaterial();
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
@@ -434,9 +427,9 @@ Object.assign(ElementComponentSystem.prototype, {
         material.depthWrite = false;
 
         return material;
-    },
+    }
 
-    getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
+    getImageElementMaterial(screenSpace, mask, nineSliced, nineSliceTiled) {
         /* eslint-disable no-else-return */
         if (screenSpace) {
             if (mask) {
@@ -605,23 +598,25 @@ Object.assign(ElementComponentSystem.prototype, {
             }
         }
         /* eslint-enable no-else-return */
-    },
+    }
 
-    registerUnicodeConverter: function (func) {
+    registerUnicodeConverter(func) {
         this._unicodeConverter = func;
-    },
+    }
 
-    registerRtlReorder: function (func) {
+    registerRtlReorder(func) {
         this._rtlReorder = func;
-    },
+    }
 
-    getUnicodeConverter: function () {
+    getUnicodeConverter() {
         return this._unicodeConverter;
-    },
+    }
 
-    getRtlReorder: function () {
+    getRtlReorder() {
         return this._rtlReorder;
     }
-});
+}
+
+Component._buildAccessors(ElementComponent.prototype, _schema);
 
 export { ElementComponentSystem };

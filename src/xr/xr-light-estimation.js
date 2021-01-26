@@ -27,199 +27,187 @@ var mat4B = new Mat4();
  * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.
  * @property {pc.Quat|null} rotation Rotation of what is estimated to be the most prominent directional light. Or null if data is not available.
  */
-function XrLightEstimation(manager) {
-    EventHandler.call(this);
+class XrLightEstimation extends EventHandler {
+    constructor(manager) {
+        super();
 
-    this._manager = manager;
+        this._manager = manager;
 
-    this._supported = false;
-    this._available = false;
+        this._supported = false;
+        this._available = false;
 
-    this._lightProbeRequested = false;
-    this._lightProbe = null;
+        this._lightProbeRequested = false;
+        this._lightProbe = null;
 
-    this._intensity = 0;
-    this._rotation = new Quat();
-    this._color = new Color();
+        this._intensity = 0;
+        this._rotation = new Quat();
+        this._color = new Color();
 
-    this._sphericalHarmonics = new Float32Array(27);
+        this._sphericalHarmonics = new Float32Array(27);
 
-    this._manager.on('start', this._onSessionStart, this);
-    this._manager.on('end', this._onSessionEnd, this);
-}
-XrLightEstimation.prototype = Object.create(EventHandler.prototype);
-XrLightEstimation.prototype.constructor = XrLightEstimation;
-
-/**
- * @event
- * @name pc.XrLightEstimation#available
- * @description Fired when light estimation data becomes available.
- */
-
-/**
- * @event
- * @name pc.XrLightEstimation#error
- * @param {Error} error - Error object related to failure of light estimation start.
- * @description Fired when light estimation has failed to start.
- * @example
- * app.xr.lightEstimation.on('error', function (ex) {
- *     // has failed to start
- * });
- */
-
-XrLightEstimation.prototype._onSessionStart = function () {
-    var supported = !! this._manager.session.requestLightProbe;
-    if (! supported) return;
-    this._supported = true;
-};
-
-XrLightEstimation.prototype._onSessionEnd = function () {
-    this._supported = false;
-    this._available = false;
-
-    this._lightProbeRequested = false;
-    this._lightProbe = null;
-};
-
-/**
- * @function
- * @name pc.XrLightEstimation#start
- * @description Start estimation of illimunation data.
- * Availability of such data will come later and an `available` event will be fired.
- * If it failed to start estimation, an `error` event will be fired.
- * @example
- * app.xr.on('start', function () {
- *     if (app.xr.lightEstimation.supported) {
- *         app.xr.lightEstimation.start();
- *     }
- * });
- */
-XrLightEstimation.prototype.start = function () {
-    var err;
-
-    if (! this._manager.session)
-        err = new Error('XR session is not running');
-
-    if (! err && this._manager.type !== XRTYPE_AR)
-        err = new Error('XR session type is not AR');
-
-    if (! err && ! this._supported)
-        err = new Error('light-estimation is not supported');
-
-    if (! err && this._lightProbe || this._lightProbeRequested)
-        err = new Error('light estimation is already requested');
-
-    if (err) {
-        this.fire('error', err);
-        return;
+        this._manager.on('start', this._onSessionStart, this);
+        this._manager.on('end', this._onSessionEnd, this);
     }
 
-    var self = this;
-    this._lightProbeRequested = true;
+    /**
+     * @event
+     * @name pc.XrLightEstimation#available
+     * @description Fired when light estimation data becomes available.
+     */
 
-    this._manager.session.requestLightProbe(
-    ).then(function (lightProbe) {
-        var wasRequested = self._lightProbeRequested;
-        self._lightProbeRequested = false;
+    /**
+     * @event
+     * @name pc.XrLightEstimation#error
+     * @param {Error} error - Error object related to failure of light estimation start.
+     * @description Fired when light estimation has failed to start.
+     * @example
+     * app.xr.lightEstimation.on('error', function (ex) {
+     *     // has failed to start
+     * });
+     */
 
-        if (self._manager.active) {
-            if (wasRequested) {
-                self._lightProbe = lightProbe;
-            }
-        } else {
-            self.fire('error', new Error('XR session is not active'));
+    _onSessionStart() {
+        var supported = !! this._manager.session.requestLightProbe;
+        if (! supported) return;
+        this._supported = true;
+    }
+
+    _onSessionEnd() {
+        this._supported = false;
+        this._available = false;
+
+        this._lightProbeRequested = false;
+        this._lightProbe = null;
+    }
+
+    /**
+     * @function
+     * @name pc.XrLightEstimation#start
+     * @description Start estimation of illimunation data.
+     * Availability of such data will come later and an `available` event will be fired.
+     * If it failed to start estimation, an `error` event will be fired.
+     * @example
+     * app.xr.on('start', function () {
+     *     if (app.xr.lightEstimation.supported) {
+     *         app.xr.lightEstimation.start();
+     *     }
+     * });
+     */
+    start() {
+        var err;
+
+        if (! this._manager.session)
+            err = new Error('XR session is not running');
+
+        if (! err && this._manager.type !== XRTYPE_AR)
+            err = new Error('XR session type is not AR');
+
+        if (! err && ! this._supported)
+            err = new Error('light-estimation is not supported');
+
+        if (! err && this._lightProbe || this._lightProbeRequested)
+            err = new Error('light estimation is already requested');
+
+        if (err) {
+            this.fire('error', err);
+            return;
         }
-    }).catch(function (ex) {
-        self._lightProbeRequested = false;
-        self.fire('error', ex);
-    });
-};
 
-/**
- * @function
- * @name pc.XrLightEstimation#end
- * @description End estimation of illumination data.
- */
-XrLightEstimation.prototype.end = function () {
-    this._lightProbeRequested = false;
-    this._lightProbe = null;
-    this._available = false;
-};
+        var self = this;
+        this._lightProbeRequested = true;
 
-XrLightEstimation.prototype.update = function (frame) {
-    if (! this._lightProbe) return;
+        this._manager.session.requestLightProbe(
+        ).then(function (lightProbe) {
+            var wasRequested = self._lightProbeRequested;
+            self._lightProbeRequested = false;
 
-    var lightEstimate = frame.getLightEstimate(this._lightProbe);
-    if (! lightEstimate) return;
-
-    if (! this._available) {
-        this._available = true;
-        this.fire('available');
+            if (self._manager.active) {
+                if (wasRequested) {
+                    self._lightProbe = lightProbe;
+                }
+            } else {
+                self.fire('error', new Error('XR session is not active'));
+            }
+        }).catch(function (ex) {
+            self._lightProbeRequested = false;
+            self.fire('error', ex);
+        });
     }
 
-    // intensity
-    var pli = lightEstimate.primaryLightIntensity;
-    this._intensity = Math.max(1.0, Math.max(pli.x, Math.max(pli.y, pli.z)));
+    /**
+     * @function
+     * @name pc.XrLightEstimation#end
+     * @description End estimation of illumination data.
+     */
+    end() {
+        this._lightProbeRequested = false;
+        this._lightProbe = null;
+        this._available = false;
+    }
 
-    // color
-    vec3A.copy(pli).scale(1 / this._intensity);
-    this._color.set(vec3A.x, vec3A.y, vec3A.z);
+    update(frame) {
+        if (! this._lightProbe) return;
 
-    // rotation
-    vec3A.set(0, 0, 0);
-    vec3B.copy(lightEstimate.primaryLightDirection);
-    mat4A.setLookAt(vec3B, vec3A, Vec3.UP);
-    mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // direcitonal light is looking down
-    mat4A.mul(mat4B);
-    this._rotation.setFromMat4(mat4A);
+        var lightEstimate = frame.getLightEstimate(this._lightProbe);
+        if (! lightEstimate) return;
 
-    // spherical harmonics
-    this._sphericalHarmonics.set(lightEstimate.sphericalHarmonicsCoefficients);
-};
+        if (! this._available) {
+            this._available = true;
+            this.fire('available');
+        }
 
-Object.defineProperty(XrLightEstimation.prototype, 'supported', {
-    get: function () {
+        // intensity
+        var pli = lightEstimate.primaryLightIntensity;
+        this._intensity = Math.max(1.0, Math.max(pli.x, Math.max(pli.y, pli.z)));
+
+        // color
+        vec3A.copy(pli).scale(1 / this._intensity);
+        this._color.set(vec3A.x, vec3A.y, vec3A.z);
+
+        // rotation
+        vec3A.set(0, 0, 0);
+        vec3B.copy(lightEstimate.primaryLightDirection);
+        mat4A.setLookAt(vec3B, vec3A, Vec3.UP);
+        mat4B.setFromAxisAngle(Vec3.RIGHT, 90); // direcitonal light is looking down
+        mat4A.mul(mat4B);
+        this._rotation.setFromMat4(mat4A);
+
+        // spherical harmonics
+        this._sphericalHarmonics.set(lightEstimate.sphericalHarmonicsCoefficients);
+    }
+
+    get supported() {
         return this._supported;
     }
-});
 
-/**
- * @name pc.XrLightEstimation#available
- * @type {boolean}
- * @description True if estimated light information is available.
- * @example
- * if (app.xr.lightEstimation.available) {
- *     entity.light.intensity = app.xr.lightEstimation.intensity;
- * }
- */
-Object.defineProperty(XrLightEstimation.prototype, 'available', {
-    get: function () {
+    /**
+     * @name pc.XrLightEstimation#available
+     * @type {boolean}
+     * @description True if estimated light information is available.
+     * @example
+     * if (app.xr.lightEstimation.available) {
+     *     entity.light.intensity = app.xr.lightEstimation.intensity;
+     * }
+     */
+    get available() {
         return this._available;
     }
-});
 
-Object.defineProperty(XrLightEstimation.prototype, 'intensity', {
-    get: function () {
+    get intensity() {
         return this._available ? this._intensity : null;
     }
-});
 
-Object.defineProperty(XrLightEstimation.prototype, 'color', {
-    get: function () {
+    get color() {
         return this._available ? this._color : null;
     }
-});
 
-Object.defineProperty(XrLightEstimation.prototype, 'rotation', {
-    get: function () {
+    get rotation() {
         return this._available ? this._rotation : null;
     }
-});
 
-Object.defineProperty(XrLightEstimation.prototype, 'sphericalHarmonics', {
-    get: function () {
+    get sphericalHarmonics() {
         return this._available ? this._sphericalHarmonics : null;
     }
-});
+}
 
 export { XrLightEstimation };

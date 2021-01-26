@@ -1,21 +1,19 @@
 import { EventHandler } from '../core/event-handler.js';
 
-function Render() {
-    EventHandler.call(this);
-    this._meshes = null;
-}
+class Render extends EventHandler {
+    constructor() {
+        super();
+        this._meshes = null;
+    }
 
-Render.prototype = Object.create(EventHandler.prototype);
-Render.prototype.constructor = Render;
-
-Object.defineProperty(Render.prototype, 'meshes', {
-    get: function () {
+    get meshes() {
         return this._meshes;
-    },
-    set: function (value) {
+    }
+
+    set meshes(value) {
         this._meshes = value;
         this.fire('set:meshes', value);
     }
-});
+}
 
 export { Render };

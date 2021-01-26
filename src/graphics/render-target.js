@@ -1,6 +1,6 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './graphics.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
-import { GraphicsDevice } from './device.js';
+import { GraphicsDevice } from './graphics-device.js';
 
 var defaultOptions = {
     depth: true,
@@ -59,6 +59,11 @@ class RenderTarget {
         } else {
             // new constructor
             this._colorBuffer = options.colorBuffer;
+        }
+
+        // mark color buffer texture as render target
+        if (this._colorBuffer) {
+            this._colorBuffer._isRenderTarget = true;
         }
 
         this._glFrameBuffer = null;

@@ -1,8 +1,6 @@
 import { Vec3 } from '../math/vec3.js';
 import { Mat4 } from '../math/mat4.js';
 
-import { hasAudioContext } from '../audio/capabilities.js';
-
 /**
  * @private
  * @class
@@ -10,50 +8,56 @@ import { hasAudioContext } from '../audio/capabilities.js';
  * @classdesc Represents an audio listener - used internally.
  * @param {pc.SoundManager} manager - The sound manager.
  */
-function Listener(manager) {
-    this.position = new Vec3();
-    this.velocity = new Vec3();
-    this.orientation = new Mat4();
+class Listener {
+    constructor(manager) {
+        this._manager = manager;
 
-    if (hasAudioContext()) {
-        this.listener = manager.context.listener;
+        this.position = new Vec3();
+        this.velocity = new Vec3();
+        this.orientation = new Mat4();
     }
-}
 
-Object.assign(Listener.prototype, {
-    getPosition: function () {
+    getPosition() {
         return this.position;
-    },
+    }
 
-    setPosition: function (position) {
+    setPosition(position) {
         this.position.copy(position);
-        if (this.listener) {
-            this.listener.setPosition(position.x, position.y, position.z);
+        const listener = this.listener;
+        if (listener) {
+            listener.setPosition(position.x, position.y, position.z);
         }
-    },
+    }
 
-    getVelocity: function () {
+    getVelocity() {
         return this.velocity;
-    },
+    }
 
-    setVelocity: function (velocity) {
+    setVelocity(velocity) {
         this.velocity.copy(velocity);
-        if (this.listener) {
-            this.listener.setPosition(velocity.x, velocity.y, velocity.z);
+        const listener = this.listener;
+        if (listener) {
+            listener.setPosition(velocity.x, velocity.y, velocity.z);
         }
-    },
+    }
 
-    setOrientation: function (orientation) {
+    setOrientation(orientation) {
         this.orientation.copy(orientation);
-        if (this.listener) {
-            this.listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10],
-                                         orientation.data[4], orientation.data[5], orientation.data[6]);
+        const listener = this.listener;
+        if (listener) {
+            listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10],
+                                    orientation.data[4], orientation.data[5], orientation.data[6]);
         }
-    },
+    }
 
-    getOrientation: function () {
+    getOrientation() {
         return this.orientation;
     }
-});
+
+    get listener() {
+        const context = this._manager.context;
+        return context ? context.listener : null;
+    }
+}
 
 export { Listener };

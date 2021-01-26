@@ -1,97 +1,8 @@
 import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
-import {
-    EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL,
-    MOUSEBUTTON_NONE
-} from './constants.js';
-
-/**
- * @class
- * @name pc.MouseEvent
- * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
- * @description Create an new MouseEvent.
- * @param {pc.Mouse} mouse - The Mouse device that is firing this event.
- * @param {MouseEvent} event - The original browser event that fired.
- * @property {number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.
- * @property {number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to.
- * @property {number} dx The change in x co-ordinate since the last mouse event.
- * @property {number} dy The change in y co-ordinate since the last mouse event.
- * @property {number} button The mouse button associated with this event. Can be:
- *
- * * {@link pc.MOUSEBUTTON_LEFT}
- * * {@link pc.MOUSEBUTTON_MIDDLE}
- * * {@link pc.MOUSEBUTTON_RIGHT}
- *
- * @property {number} wheelDelta A value representing the amount the mouse wheel has moved, only
- * valid for {@link mousewheel} events.
- * @property {Element} element The element that the mouse was fired from.
- * @property {boolean} ctrlKey True if the ctrl key was pressed when this event was fired.
- * @property {boolean} shiftKey True if the shift key was pressed when this event was fired.
- * @property {boolean} altKey True if the alt key was pressed when this event was fired.
- * @property {boolean} metaKey True if the meta key was pressed when this event was fired.
- * @property {MouseEvent} event The original browser event.
- */
-function MouseEvent(mouse, event) {
-    var coords = {
-        x: 0,
-        y: 0
-    };
-
-    if (event) {
-        if (event instanceof MouseEvent) {
-            throw Error("Expected MouseEvent");
-        }
-        coords = mouse._getTargetCoords(event);
-    } else {
-        event = { };
-    }
-
-    if (coords) {
-        this.x = coords.x;
-        this.y = coords.y;
-    } else if (Mouse.isPointerLocked()) {
-        this.x = 0;
-        this.y = 0;
-    } else {
-        return;
-    }
-
-    // deltaY is in a different range across different browsers. The only thing
-    // that is consistent is the sign of the value so snap to -1/+1.
-    this.wheelDelta = 0;
-    if (event.type === 'wheel') {
-        if (event.deltaY > 0) {
-            this.wheelDelta = 1;
-        } else if (event.deltaY < 0) {
-            this.wheelDelta = -1;
-        }
-    }
-
-    // Get the movement delta in this event
-    if (Mouse.isPointerLocked()) {
-        this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
-        this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
-    } else {
-        this.dx = this.x - mouse._lastX;
-        this.dy = this.y - mouse._lastY;
-    }
-
-    if (event.type === 'mousedown' || event.type === 'mouseup') {
-        this.button = event.button;
-    } else {
-        this.button = MOUSEBUTTON_NONE;
-    }
-    this.buttons = mouse._buttons.slice(0);
-    this.element = event.target;
-
-    this.ctrlKey = event.ctrlKey || false;
-    this.altKey = event.altKey || false;
-    this.shiftKey = event.shiftKey || false;
-    this.metaKey = event.metaKey || false;
-
-    this.event = event;
-}
+import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
+import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 // Events Documentation
 /**
@@ -130,52 +41,50 @@ function MouseEvent(mouse, event) {
  * @description Create a new Mouse device.
  * @param {Element} [element] - The Element that the mouse events are attached to.
  */
-function Mouse(element) {
-    EventHandler.call(this);
+class Mouse extends EventHandler {
+    constructor(element) {
+        super();
 
-    // Clear the mouse state
-    this._lastX      = 0;
-    this._lastY      = 0;
-    this._buttons      = [false, false, false];
-    this._lastbuttons  = [false, false, false];
+        // Clear the mouse state
+        this._lastX      = 0;
+        this._lastY      = 0;
+        this._buttons      = [false, false, false];
+        this._lastbuttons  = [false, false, false];
 
 
-    // Setup event handlers so they are bound to the correct 'this'
-    this._upHandler = this._handleUp.bind(this);
-    this._downHandler = this._handleDown.bind(this);
-    this._moveHandler = this._handleMove.bind(this);
-    this._wheelHandler = this._handleWheel.bind(this);
-    this._contextMenuHandler = function (event) {
-        event.preventDefault();
-    };
+        // Setup event handlers so they are bound to the correct 'this'
+        this._upHandler = this._handleUp.bind(this);
+        this._downHandler = this._handleDown.bind(this);
+        this._moveHandler = this._handleMove.bind(this);
+        this._wheelHandler = this._handleWheel.bind(this);
+        this._contextMenuHandler = function (event) {
+            event.preventDefault();
+        };
 
-    this._target = null;
-    this._attached = false;
+        this._target = null;
+        this._attached = false;
 
-    this.attach(element);
-}
-Mouse.prototype = Object.create(EventHandler.prototype);
-Mouse.prototype.constructor = Mouse;
+        this.attach(element);
+    }
 
-/**
- * @static
- * @function
- * @name pc.Mouse.isPointerLocked
- * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}.
- * @returns {boolean} True if locked.
- */
-Mouse.isPointerLocked = function () {
-    return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
-};
+    /**
+     * @static
+     * @function
+     * @name pc.Mouse.isPointerLocked
+     * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}.
+     * @returns {boolean} True if locked.
+     */
+    static isPointerLocked() {
+        return isMousePointerLocked();
+    }
 
-Object.assign(Mouse.prototype, {
     /**
      * @function
      * @name pc.Mouse#attach
      * @description Attach mouse events to an Element.
      * @param {Element} element - The DOM element to attach the mouse to.
      */
-    attach: function (element) {
+    attach(element) {
         this._target = element;
 
         if (this._attached) return;
@@ -186,14 +95,14 @@ Object.assign(Mouse.prototype, {
         window.addEventListener("mousedown", this._downHandler, opts);
         window.addEventListener("mousemove", this._moveHandler, opts);
         window.addEventListener("wheel", this._wheelHandler, opts);
-    },
+    }
 
     /**
      * @function
      * @name pc.Mouse#detach
      * @description Remove mouse events from the element that it is attached to.
      */
-    detach: function () {
+    detach() {
         if (!this._attached) return;
         this._attached = false;
         this._target = null;
@@ -203,27 +112,27 @@ Object.assign(Mouse.prototype, {
         window.removeEventListener("mousedown", this._downHandler, opts);
         window.removeEventListener("mousemove", this._moveHandler, opts);
         window.removeEventListener("wheel", this._wheelHandler, opts);
-    },
+    }
 
     /**
      * @function
      * @name pc.Mouse#disableContextMenu
      * @description Disable the context menu usually activated with right-click.
      */
-    disableContextMenu: function () {
+    disableContextMenu() {
         if (!this._target) return;
         this._target.addEventListener("contextmenu", this._contextMenuHandler);
-    },
+    }
 
     /**
      * @function
      * @name pc.Mouse#enableContextMenu
      * @description Enable the context menu usually activated with right-click. This option is active by default.
      */
-    enableContextMenu: function () {
+    enableContextMenu() {
         if (!this._target) return;
         this._target.removeEventListener("contextmenu", this._contextMenuHandler);
-    },
+    }
 
     /**
      * @function
@@ -238,7 +147,7 @@ Object.assign(Mouse.prototype, {
      * @param {pc.callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
      * @param {pc.callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
      */
-    enablePointerLock: function (success, error) {
+    enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
             if (error)
                 error();
@@ -264,7 +173,7 @@ Object.assign(Mouse.prototype, {
         }
 
         document.body.requestPointerLock();
-    },
+    }
 
     /**
      * @function
@@ -272,7 +181,7 @@ Object.assign(Mouse.prototype, {
      * @description Return control of the mouse cursor to the user.
      * @param {pc.callbacks.LockMouse} [success] - Function called when the mouse lock is disabled.
      */
-    disablePointerLock: function (success) {
+    disablePointerLock(success) {
         if (!document.exitPointerLock) {
             return;
         }
@@ -285,19 +194,19 @@ Object.assign(Mouse.prototype, {
             document.addEventListener('pointerlockchange', s, false);
         }
         document.exitPointerLock();
-    },
+    }
 
     /**
      * @function
      * @name pc.Mouse#update
      * @description Update method, should be called once per frame.
      */
-    update: function () {
+    update() {
         // Copy current button state
         this._lastbuttons[0] = this._buttons[0];
         this._lastbuttons[1] = this._buttons[1];
         this._lastbuttons[2] = this._buttons[2];
-    },
+    }
 
     /**
      * @function
@@ -311,9 +220,9 @@ Object.assign(Mouse.prototype, {
      *
      * @returns {boolean} True if the mouse button is current pressed.
      */
-    isPressed: function (button) {
+    isPressed(button) {
         return this._buttons[button];
-    },
+    }
 
     /**
      * @function
@@ -327,9 +236,9 @@ Object.assign(Mouse.prototype, {
      *
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
-    wasPressed: function (button) {
+    wasPressed(button) {
         return (this._buttons[button] && !this._lastbuttons[button]);
-    },
+    }
 
     /**
      * @function
@@ -343,11 +252,11 @@ Object.assign(Mouse.prototype, {
      *
      * @returns {boolean} True if the mouse button was released since the last update.
      */
-    wasReleased: function (button) {
+    wasReleased(button) {
         return (!this._buttons[button] && this._lastbuttons[button]);
-    },
+    }
 
-    _handleUp: function (event) {
+    _handleUp(event) {
         // disable released button
         this._buttons[event.button] = false;
 
@@ -356,9 +265,9 @@ Object.assign(Mouse.prototype, {
 
         // send 'mouseup' event
         this.fire(EVENT_MOUSEUP, e);
-    },
+    }
 
-    _handleDown: function (event) {
+    _handleDown(event) {
         // Store which button has affected
         this._buttons[event.button] = true;
 
@@ -366,9 +275,9 @@ Object.assign(Mouse.prototype, {
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEDOWN, e);
-    },
+    }
 
-    _handleMove: function (event) {
+    _handleMove(event) {
         var e = new MouseEvent(this, event);
         if (!e.event) return;
 
@@ -377,16 +286,16 @@ Object.assign(Mouse.prototype, {
         // Store the last offset position to calculate deltas
         this._lastX = e.x;
         this._lastY = e.y;
-    },
+    }
 
-    _handleWheel: function (event) {
+    _handleWheel(event) {
         var e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEWHEEL, e);
-    },
+    }
 
-    _getTargetCoords: function (event) {
+    _getTargetCoords(event) {
         var rect = this._target.getBoundingClientRect();
         var left = Math.floor(rect.left);
         var top = Math.floor(rect.top);
@@ -405,6 +314,6 @@ Object.assign(Mouse.prototype, {
             y: event.clientY - top
         };
     }
-});
+}
 
-export { Mouse, MouseEvent };
+export { Mouse };

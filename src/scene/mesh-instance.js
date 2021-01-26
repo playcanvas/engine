@@ -15,6 +15,8 @@ import {
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
 var _tempSphere = new BoundingSphere();
+var _meshSet = new Set();
+
 
 // internal data structure used to store data used by hardware instancing
 class InstancingData {
@@ -151,6 +153,25 @@ class MeshInstance {
         this.flipFaces = false;
     }
 
+    // generates wireframes for an array of mesh instances
+    static _prepareRenderStyleForArray(meshInstances, renderStyle) {
+
+        for (let i = 0; i < meshInstances.length; i++) {
+
+            // switch mesh instance to the requested style
+            meshInstances[i].renderStyle = renderStyle;
+
+            // process all unique meshes
+            let mesh = meshInstances[i].mesh;
+            if (!_meshSet.has(mesh)) {
+                _meshSet.add(mesh);
+                mesh.prepareRenderState(renderStyle);
+            }
+        }
+
+        _meshSet.clear();
+    }
+
     get mesh() {
         return this._mesh;
     }
@@ -161,7 +182,6 @@ class MeshInstance {
             return;
 
         if (this._mesh) {
-            // this destroys the mesh if refcount gets to 0
             this._mesh.decRefCount();
         }
 
@@ -397,9 +417,16 @@ class MeshInstance {
 
     destroy() {
 
-        if (this.mesh) {
-            // release previous mesh
+        let mesh = this.mesh;
+        if (mesh) {
+
+            // this decreases ref count on the mesh
             this.mesh = null;
+
+            // destroy mesh
+            if (mesh.getRefCount() < 1) {
+                mesh.destroy();
+            }
         }
 
         if (this._skinInstance) {

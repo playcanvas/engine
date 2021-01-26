@@ -9,13 +9,12 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 import { VertexIterator } from '../../graphics/vertex-iterator.js';
 
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { partitionSkin } from '../../scene/skin-partition.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -26,6 +25,8 @@ import { MorphInstance } from '../../scene/morph-instance.js';
 import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
+
+import { Material } from '../../scene/materials/material.js';
 
 var JSON_PRIMITIVE_TYPE = {
     "points": PRIMITIVE_POINTS,
@@ -51,7 +52,6 @@ var JSON_VERTEX_ELEMENT_TYPE = {
 class JsonModelParser {
     constructor(device) {
         this._device = device;
-        this._defaultMaterial = getDefaultMaterial();
     }
 
     parse(data) {
@@ -411,7 +411,7 @@ class JsonModelParser {
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
 
-            var meshInstance = new MeshInstance(node, mesh, this._defaultMaterial);
+            var meshInstance = new MeshInstance(node, mesh, Material.defaultMaterial);
 
             if (mesh.skin) {
                 var skinIndex = skins.indexOf(mesh.skin);

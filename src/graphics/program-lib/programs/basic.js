@@ -1,6 +1,6 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
-} from '../../graphics.js';
+} from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {

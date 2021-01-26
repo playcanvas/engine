@@ -3,7 +3,7 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 import { Vec4 } from '../../../math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/graphics.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
@@ -20,6 +20,9 @@ import { TextElement } from './text-element.js';
 // #ifdef DEBUG
 var _debugLogging = false;
 // #endif
+
+var position = new Vec3();
+var invParentWtm = new Mat4();
 
 var vecA = new Vec3();
 var vecB = new Vec3();
@@ -147,124 +150,117 @@ var matD = new Mat4();
  * @property {number} rangeEnd Index of the last character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
  * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene, but instead limit child elements to only be rendered where this element is rendered.
  */
-function ElementComponent(system, entity) {
-    Component.call(this, system, entity);
+class ElementComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    // set to true by the ElementComponentSystem while
-    // the component is being initialized
-    this._beingInitialized = false;
+        // set to true by the ElementComponentSystem while
+        // the component is being initialized
+        this._beingInitialized = false;
 
-    this._anchor = new Vec4();
-    this._localAnchor = new Vec4();
+        this._anchor = new Vec4();
+        this._localAnchor = new Vec4();
 
-    this._pivot = new Vec2();
+        this._pivot = new Vec2();
 
-    this._width = this._calculatedWidth = 32;
-    this._height = this._calculatedHeight = 32;
+        this._width = this._calculatedWidth = 32;
+        this._height = this._calculatedHeight = 32;
 
-    this._margin = new Vec4(0, 0, -32, -32);
+        this._margin = new Vec4(0, 0, -32, -32);
 
-    // the model transform used to render
-    this._modelTransform = new Mat4();
+        // the model transform used to render
+        this._modelTransform = new Mat4();
 
-    this._screenToWorld = new Mat4();
+        this._screenToWorld = new Mat4();
 
-    // transform that updates local position according to anchor values
-    this._anchorTransform = new Mat4();
+        // transform that updates local position according to anchor values
+        this._anchorTransform = new Mat4();
 
-    this._anchorDirty = true;
+        this._anchorDirty = true;
 
-    // transforms to calculate screen coordinates
-    this._parentWorldTransform = new Mat4();
-    this._screenTransform = new Mat4();
+        // transforms to calculate screen coordinates
+        this._parentWorldTransform = new Mat4();
+        this._screenTransform = new Mat4();
 
-    // the corners of the element relative to its screen component.
-    // Order is bottom left, bottom right, top right, top left
-    this._screenCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+        // the corners of the element relative to its screen component.
+        // Order is bottom left, bottom right, top right, top left
+        this._screenCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
-    // canvas-space corners of the element.
-    // Order is bottom left, bottom right, top right, top left
-    this._canvasCorners = [new Vec2(), new Vec2(), new Vec2(), new Vec2()];
+        // canvas-space corners of the element.
+        // Order is bottom left, bottom right, top right, top left
+        this._canvasCorners = [new Vec2(), new Vec2(), new Vec2(), new Vec2()];
 
-    // the world-space corners of the element
-    // Order is bottom left, bottom right, top right, top left
-    this._worldCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+        // the world-space corners of the element
+        // Order is bottom left, bottom right, top right, top left
+        this._worldCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
-    this._cornersDirty = true;
-    this._canvasCornersDirty = true;
-    this._worldCornersDirty = true;
+        this._cornersDirty = true;
+        this._canvasCornersDirty = true;
+        this._worldCornersDirty = true;
 
-    this.entity.on('insert', this._onInsert, this);
+        this.entity.on('insert', this._onInsert, this);
 
-    this._patch();
+        this._patch();
 
-    this.screen = null;
+        this.screen = null;
 
-    this._type = ELEMENTTYPE_GROUP;
+        this._type = ELEMENTTYPE_GROUP;
 
-    // element types
-    this._image = null;
-    this._text = null;
-    this._group = null;
+        // element types
+        this._image = null;
+        this._text = null;
+        this._group = null;
 
-    this._drawOrder = 0;
+        this._drawOrder = 0;
 
-    // input related
-    this._useInput = false;
+        // input related
+        this._useInput = false;
 
-    this._layers = [LAYERID_UI]; // assign to the default UI layer
-    this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
+        this._layers = [LAYERID_UI]; // assign to the default UI layer
+        this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
-    this._batchGroupId = -1;
-    // #ifdef DEBUG
-    this._batchGroup = null;
-    // #endif
-    //
+        this._batchGroupId = -1;
+        // #ifdef DEBUG
+        this._batchGroup = null;
+        // #endif
+        //
 
-    this._offsetReadAt = 0;
-    this._maskOffset = 0.5;
-    this._maskedBy = null; // the entity that is masking this element
-}
-ElementComponent.prototype = Object.create(Component.prototype);
-ElementComponent.prototype.constructor = ElementComponent;
+        this._offsetReadAt = 0;
+        this._maskOffset = 0.5;
+        this._maskedBy = null; // the entity that is masking this element
+    }
 
-Object.assign(ElementComponent.prototype, {
-    _patch: function () {
+    _patch() {
         this.entity._sync = this._sync;
         this.entity.setPosition = this._setPosition;
         this.entity.setLocalPosition = this._setLocalPosition;
-    },
+    }
 
-    _unpatch: function () {
+    _unpatch() {
         this.entity._sync = Entity.prototype._sync;
         this.entity.setPosition = Entity.prototype.setPosition;
         this.entity.setLocalPosition = Entity.prototype.setLocalPosition;
-    },
+    }
 
-    _setPosition: function () {
-        var position = new Vec3();
-        var invParentWtm = new Mat4();
+    _setPosition(x, y, z) {
+        if (!this.element.screen)
+            return Entity.prototype.setPosition.call(this, x, y, z);
 
-        return function (x, y, z) {
-            if (!this.element.screen)
-                return Entity.prototype.setPosition.call(this, x, y, z);
+        if (x instanceof Vec3) {
+            position.copy(x);
+        } else {
+            position.set(x, y, z);
+        }
 
-            if (x instanceof Vec3) {
-                position.copy(x);
-            } else {
-                position.set(x, y, z);
-            }
+        this.getWorldTransform(); // ensure hierarchy is up to date
+        invParentWtm.copy(this.element._screenToWorld).invert();
+        invParentWtm.transformPoint(position, this.localPosition);
 
-            this.getWorldTransform(); // ensure hierarchy is up to date
-            invParentWtm.copy(this.element._screenToWorld).invert();
-            invParentWtm.transformPoint(position, this.localPosition);
+        if (!this._dirtyLocal)
+            this._dirtifyLocal();
+    }
 
-            if (!this._dirtyLocal)
-                this._dirtifyLocal();
-        };
-    }(),
-
-    _setLocalPosition: function (x, y, z) {
+    _setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
             this.localPosition.copy(x);
         } else {
@@ -282,10 +278,10 @@ Object.assign(ElementComponent.prototype, {
 
         if (!this._dirtyLocal)
             this._dirtifyLocal();
-    },
+    }
 
     // this method overwrites GraphNode#sync and so operates in scope of the Entity.
-    _sync: function () {
+    _sync() {
         var element = this.element;
         var screen = element.screen;
 
@@ -404,9 +400,9 @@ Object.assign(ElementComponent.prototype, {
 
             this._dirtyWorld = false;
         }
-    },
+    }
 
-    _onInsert: function (parent) {
+    _onInsert(parent) {
         // when the entity is reparented find a possible new screen and mask
 
         var result = this._parseUpToScreen();
@@ -416,9 +412,9 @@ Object.assign(ElementComponent.prototype, {
         this._updateScreen(result.screen);
 
         this._dirtifyMask();
-    },
+    }
 
-    _dirtifyMask: function () {
+    _dirtifyMask() {
         var current = this.entity;
         while (current) {
             // search up the hierarchy until we find an entity which has:
@@ -449,9 +445,9 @@ Object.assign(ElementComponent.prototype, {
 
             current = next;
         }
-    },
+    }
 
-    _onPrerender: function () {
+    _onPrerender() {
         for (var i = 0; i < this.system._prerender.length; i++) {
             var mask = this.system._prerender[i];
             // #ifdef DEBUG
@@ -466,25 +462,22 @@ Object.assign(ElementComponent.prototype, {
         }
 
         this.system._prerender.length = 0;
-    },
+    }
 
-    _bindScreen: function (screen) {
-        screen.on('set:resolution', this._onScreenResize, this);
-        screen.on('set:referenceresolution', this._onScreenResize, this);
-        screen.on('set:scaleblend', this._onScreenResize, this);
-        screen.on('set:screenspace', this._onScreenSpaceChange, this);
-        screen.on('remove', this._onScreenRemove, this);
-    },
+    _bindScreen(screen) {
+        // Bind the Element to the Screen. We used to subscribe to Screen events here. However,
+        // that was very slow when there are thousands of Elements. When the time comes to unbind
+        // the Element from the Screen, finding the event callbacks to remove takes a considerable
+        // amount of time. So instead, the Screen stores the Element component and calls its
+        // functions directly.
+        screen._bindElement(this);
+    }
 
-    _unbindScreen: function (screen) {
-        screen.off('set:resolution', this._onScreenResize, this);
-        screen.off('set:referenceresolution', this._onScreenResize, this);
-        screen.off('set:scaleblend', this._onScreenResize, this);
-        screen.off('set:screenspace', this._onScreenSpaceChange, this);
-        screen.off('remove', this._onScreenRemove, this);
-    },
+    _unbindScreen(screen) {
+        screen._unbindElement(this);
+    }
 
-    _updateScreen: function (screen) {
+    _updateScreen(screen) {
         if (this.screen && this.screen !== screen) {
             this._unbindScreen(this.screen.screen);
         }
@@ -509,19 +502,19 @@ Object.assign(ElementComponent.prototype, {
 
         // calculate draw order
         if (this.screen) this.screen.screen.syncDrawOrder();
-    },
+    }
 
-    syncMask: function (depth) {
+    syncMask(depth) {
         var result = this._parseUpToScreen();
         this._updateMask(result.mask, depth);
-    },
+    }
 
     // set the maskedby property to the entity that is masking this element
     // - set the stencil buffer to check the mask value
     //   so as to only render inside the mask
     //   Note: if this entity is itself a mask the stencil params
     //   will be updated in updateMask to include masking
-    _setMaskedBy: function (mask) {
+    _setMaskedBy(mask) {
         var renderableElement = this._image || this._text;
 
         if (mask) {
@@ -552,11 +545,11 @@ Object.assign(ElementComponent.prototype, {
             }
             this._maskedBy = null;
         }
-    },
+    }
 
     // recursively update entity's stencil params
     // to render the correct value into the stencil buffer
-    _updateMask: function (currentMask, depth) {
+    _updateMask(currentMask, depth) {
         var i, l, sp, children;
 
         if (currentMask) {
@@ -634,12 +627,12 @@ Object.assign(ElementComponent.prototype, {
             // decrement mask counter as we come back up the hierarchy
             if (this.mask) depth--;
         }
-    },
+    }
 
     // search up the parent hierarchy until we reach a screen
     // this screen is the parent screen
     // also searches for masked elements to get the relevant mask
-    _parseUpToScreen: function () {
+    _parseUpToScreen() {
         var result = {
             screen: null,
             mask: null
@@ -658,9 +651,9 @@ Object.assign(ElementComponent.prototype, {
         if (parent && parent.screen) result.screen = parent;
 
         return result;
-    },
+    }
 
-    _onScreenResize: function (res) {
+    _onScreenResize(res) {
         this._anchorDirty = true;
         this._cornersDirty = true;
         this._worldCornersDirty = true;
@@ -668,13 +661,13 @@ Object.assign(ElementComponent.prototype, {
         this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
 
         this.fire('screen:set:resolution', res);
-    },
+    }
 
-    _onScreenSpaceChange: function () {
+    _onScreenSpaceChange() {
         this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
-    },
+    }
 
-    _onScreenRemove: function () {
+    _onScreenRemove() {
         if (this.screen) {
             if (this.screen._destroying) {
                 // If the screen entity is being destroyed, we don't call
@@ -685,10 +678,10 @@ Object.assign(ElementComponent.prototype, {
                 this._updateScreen(null);
             }
         }
-    },
+    }
 
     // store pixel positions of anchor relative to current parent resolution
-    _calculateLocalAnchors: function () {
+    _calculateLocalAnchors() {
         var resx = 1000;
         var resy = 1000;
         var parent = this.entity._parent;
@@ -708,10 +701,10 @@ Object.assign(ElementComponent.prototype, {
             this._anchor.z * resx,
             this._anchor.w * resy
         );
-    },
+    }
 
     // internal - apply offset x,y to local position and find point in world space
-    getOffsetPosition: function (x, y) {
+    getOffsetPosition(x, y) {
         var p = this.entity.getLocalPosition().clone();
 
         p.x += x;
@@ -720,17 +713,17 @@ Object.assign(ElementComponent.prototype, {
         this._screenToWorld.transformPoint(p, p);
 
         return p;
-    },
+    }
 
-    onLayersChanged: function (oldComp, newComp) {
+    onLayersChanged(oldComp, newComp) {
         this.addModelToLayers(this._image ? this._image._model : this._text._model);
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
         newComp.on("remove", this.onLayerRemoved, this);
-    },
+    }
 
-    onLayerAdded: function (layer) {
+    onLayerAdded(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
@@ -738,9 +731,9 @@ Object.assign(ElementComponent.prototype, {
         } else if (this._text) {
             layer.addMeshInstances(this._text._model.meshInstances);
         }
-    },
+    }
 
-    onLayerRemoved: function (layer) {
+    onLayerRemoved(layer) {
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         if (this._image) {
@@ -748,9 +741,9 @@ Object.assign(ElementComponent.prototype, {
         } else if (this._text) {
             layer.removeMeshInstances(this._text._model.meshInstances);
         }
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         if (this._image) this._image.onEnable();
         if (this._text) this._text.onEnable();
         if (this._group) this._group.onEnable();
@@ -770,9 +763,9 @@ Object.assign(ElementComponent.prototype, {
         }
 
         this.fire("enableelement");
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this.system.app.scene.off("set:layers", this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
             this.system.app.scene.layers.off("add", this.onLayerAdded, this);
@@ -792,9 +785,9 @@ Object.assign(ElementComponent.prototype, {
         }
 
         this.fire("disableelement");
-    },
+    }
 
-    onRemove: function () {
+    onRemove() {
         this.entity.off('insert', this._onInsert, this);
         this._unpatch();
         if (this._image) this._image.destroy();
@@ -811,13 +804,13 @@ Object.assign(ElementComponent.prototype, {
         }
 
         this.off();
-    },
+    }
 
     // recalculates
     // localAnchor, width, height, (local position is updated if anchors are split)
     // assumes these properties are up to date
     // _margin
-    _calculateSize: function (propagateCalculatedWidth, propagateCalculatedHeight) {
+    _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
         if (!this.entity._parent && !this.screen) return;
 
@@ -845,25 +838,25 @@ Object.assign(ElementComponent.prototype, {
         this.entity.setLocalPosition(p);
 
         this._sizeDirty = false;
-    },
+    }
 
     // internal set width without updating margin
-    _setWidth: function (w) {
+    _setWidth(w) {
         this._width = w;
         this._setCalculatedWidth(w, false);
 
         this.fire('set:width', this._width);
-    },
+    }
 
     // internal set height without updating margin
-    _setHeight: function (h) {
+    _setHeight(h) {
         this._height = h;
         this._setCalculatedHeight(h, false);
 
         this.fire('set:height', this._height);
-    },
+    }
 
-    _setCalculatedWidth: function (value, updateMargins) {
+    _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
             return;
 
@@ -880,9 +873,9 @@ Object.assign(ElementComponent.prototype, {
         this._flagChildrenAsDirty();
         this.fire('set:calculatedWidth', this._calculatedWidth);
         this.fire('resize', this._calculatedWidth, this._calculatedHeight);
-    },
+    }
 
-    _setCalculatedHeight: function (value, updateMargins) {
+    _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
             return;
 
@@ -899,9 +892,9 @@ Object.assign(ElementComponent.prototype, {
         this._flagChildrenAsDirty();
         this.fire('set:calculatedHeight', this._calculatedHeight);
         this.fire('resize', this._calculatedWidth, this._calculatedHeight);
-    },
+    }
 
-    _flagChildrenAsDirty: function () {
+    _flagChildrenAsDirty() {
         var i, l;
         var c = this.entity._children;
         for (i = 0, l = c.length; i < l; i++) {
@@ -910,9 +903,9 @@ Object.assign(ElementComponent.prototype, {
                 c[i].element._sizeDirty = true;
             }
         }
-    },
+    }
 
-    addModelToLayers: function (model) {
+    addModelToLayers(model) {
         var layer;
         this._addedModels.push(model);
         for (var i = 0; i < this.layers.length; i++) {
@@ -920,9 +913,9 @@ Object.assign(ElementComponent.prototype, {
             if (!layer) continue;
             layer.addMeshInstances(model.meshInstances);
         }
-    },
+    }
 
-    removeModelFromLayers: function (model) {
+    removeModelFromLayers(model) {
         var layer;
         var idx = this._addedModels.indexOf(model);
         if (idx >= 0) {
@@ -933,9 +926,9 @@ Object.assign(ElementComponent.prototype, {
             if (!layer) continue;
             layer.removeMeshInstances(model.meshInstances);
         }
-    },
+    }
 
-    getMaskOffset: function () {
+    getMaskOffset() {
         // reset offset on new frame
         // we always count offset down from 0.5
         var frame = this.system.app.frame;
@@ -946,9 +939,9 @@ Object.assign(ElementComponent.prototype, {
         var mo = this._maskOffset;
         this._maskOffset -= 0.001;
         return mo;
-    },
+    }
 
-    isVisibleForCamera: function (camera) {
+    isVisibleForCamera(camera) {
         var clipL, clipR, clipT, clipB;
 
         if (this.maskedBy) {
@@ -985,24 +978,24 @@ Object.assign(ElementComponent.prototype, {
         }
 
         return true;
-    },
+    }
 
-    _isScreenSpace: function () {
+    _isScreenSpace() {
         if (this.screen && this.screen.screen) {
             return this.screen.screen.screenSpace;
         }
 
         return false;
-    },
+    }
 
-    _isScreenCulled: function () {
+    _isScreenCulled() {
         if (this.screen && this.screen.screen) {
             return this.screen.screen.cull;
         }
 
         return false;
     }
-});
+}
 
 Object.defineProperty(ElementComponent.prototype, "type", {
     get: function () {

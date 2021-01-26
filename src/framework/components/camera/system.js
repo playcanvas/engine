@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class
@@ -20,31 +20,27 @@ var _schema = ['enabled'];
  * @param {pc.Application} app - The Application.
  * @property {pc.CameraComponent[]} cameras Holds all the active camera components.
  */
-var CameraComponentSystem = function (app) {
-    ComponentSystem.call(this, app);
+class CameraComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'camera';
+        this.id = 'camera';
 
-    this.ComponentType = CameraComponent;
-    this.DataType = CameraComponentData;
+        this.ComponentType = CameraComponent;
+        this.DataType = CameraComponentData;
 
-    this.schema = _schema;
+        this.schema = _schema;
 
-    // holds all the active camera components
-    this.cameras = [];
+        // holds all the active camera components
+        this.cameras = [];
 
-    this.on('beforeremove', this.onBeforeRemove, this);
-    this.app.on("prerender", this.onPrerender, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
+        this.app.on("prerender", this.onPrerender, this);
 
-    ComponentSystem.bind('update', this.onUpdate, this);
-};
-CameraComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-CameraComponentSystem.prototype.constructor = CameraComponentSystem;
+        ComponentSystem.bind('update', this.onUpdate, this);
+    }
 
-Component._buildAccessors(CameraComponent.prototype, _schema);
-
-Object.assign(CameraComponentSystem.prototype, {
-    initializeComponentData: function (component, data, properties) {
+    initializeComponentData(component, data, properties) {
         properties = [
             'aspectRatio',
             'aspectRatioMode',
@@ -97,10 +93,10 @@ Object.assign(CameraComponentSystem.prototype, {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, data, ['enabled']);
-    },
+        super.initializeComponentData(component, data, ['enabled']);
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var c = entity.camera;
         this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
@@ -126,13 +122,13 @@ Object.assign(CameraComponentSystem.prototype, {
             rect: c.rect,
             scissorRect: c.scissorRect
         });
-    },
+    }
 
-    onBeforeRemove: function (entity, component) {
+    onBeforeRemove(entity, component) {
         this.removeCamera(component);
-    },
+    }
 
-    onUpdate: function (dt) {
+    onUpdate(dt) {
         if (this.app.vr) {
             var components = this.store;
 
@@ -156,32 +152,34 @@ Object.assign(CameraComponentSystem.prototype, {
                 }
             }
         }
-    },
+    }
 
-    onPrerender: function () {
+    onPrerender() {
         for (var i = 0, len = this.cameras.length; i < len; i++) {
             this.cameras[i].onPrerender();
         }
-    },
+    }
 
-    addCamera: function (camera) {
+    addCamera(camera) {
         this.cameras.push(camera);
         this.sortCamerasByPriority();
-    },
+    }
 
-    removeCamera: function (camera) {
+    removeCamera(camera) {
         var index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
             this.sortCamerasByPriority();
         }
-    },
+    }
 
-    sortCamerasByPriority: function () {
+    sortCamerasByPriority() {
         this.cameras.sort(function (a, b) {
             return a.priority - b.priority;
         });
     }
-});
+}
+
+Component._buildAccessors(CameraComponent.prototype, _schema);
 
 export { CameraComponentSystem };

@@ -1,7 +1,7 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';

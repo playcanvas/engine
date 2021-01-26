@@ -1,4 +1,4 @@
-import { typedArrayTypes } from './graphics.js';
+import { typedArrayTypes } from './constants.js';
 
 function set1(a) {
     this.array[this.index] = a;

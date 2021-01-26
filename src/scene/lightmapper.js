@@ -12,7 +12,7 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
