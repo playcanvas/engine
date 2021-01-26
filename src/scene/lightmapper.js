@@ -37,7 +37,6 @@ var maxSize = 2048;
 
 var sceneLightmaps = [];
 var sceneLightmapsNode = [];
-var lmCamera;
 var tempVec = new Vec3();
 var bounds = new BoundingBox();
 var lightBounds = new BoundingBox();
@@ -149,6 +148,16 @@ class Lightmapper {
                 type: TEXTURETYPE_RGBM
             });
             this.blackTex.name = 'lightmapBlack';
+
+            // camera used for baking
+            let camera = new Camera();
+            camera.clearColor = new Color(0, 0, 0, 0);
+            camera.clearColorBuffer = true;
+            camera.clearDepthBuffer = false;
+            camera.clearStencilBuffer = false;
+            camera.frustumCulling = false;
+            camera.node = new GraphNode();
+            this.camera = camera;
         }
     }
 
@@ -530,23 +539,8 @@ class Lightmapper {
         scene.fog = FOG_NONE;
         scene.ambientLight.set(0, 0, 0);
 
-        // Create pseudo-camera
-        if (!lmCamera) {
-            lmCamera = new Camera();
-            lmCamera.clearColor = new Color(0, 0, 0, 0);
-            lmCamera.clearColorBuffer = true;
-            lmCamera.clearDepthBuffer = false;
-            lmCamera.clearStencilBuffer = false;
-            lmCamera.frustumCulling = false;
-            lmCamera.node = new GraphNode();
-        }
-
         var node;
         var lm, rcv, m;
-
-        var renderOrModelMeshInstances = function (node) {
-            return node.render ? node.render.meshInstances : node.model.model.meshInstances;
-        };
 
         // Disable existing scene lightmaps
         var origShaderDefs = [];
@@ -682,7 +676,7 @@ class Lightmapper {
             shadowMapRendered = false;
 
             lights[i]._cacheShadowMap = true;
-            if (lights[i]._type !== LIGHTTYPE_DIRECTIONAL) {
+            if (lights[i].type !== LIGHTTYPE_DIRECTIONAL) {
                 lights[i]._node.getWorldTransform();
                 lights[i].getBoundingSphere(tempSphere);
                 lightBounds.center = tempSphere.center;
@@ -690,7 +684,7 @@ class Lightmapper {
                 lightBounds.halfExtents.y = tempSphere.radius;
                 lightBounds.halfExtents.z = tempSphere.radius;
             }
-            if (lights[i]._type === LIGHTTYPE_SPOT) {
+            if (lights[i].type === LIGHTTYPE_SPOT) {
                 light = lights[i];
                 shadowCam = this.renderer.getShadowCamera(device, light);
 
@@ -717,27 +711,27 @@ class Lightmapper {
                 bounds = nodeBounds[node];
 
                 // Tweak camera to fully see the model, so directional light frustum will also see it
-                if (lights[i]._type === LIGHTTYPE_DIRECTIONAL) {
+                if (lights[i].type === LIGHTTYPE_DIRECTIONAL) {
                     tempVec.copy(bounds.center);
                     tempVec.y += bounds.halfExtents.y;
 
-                    lmCamera.node.setPosition(tempVec);
-                    lmCamera.node.setEulerAngles(-90, 0, 0);
+                    this.camera.node.setPosition(tempVec);
+                    this.camera.node.setEulerAngles(-90, 0, 0);
 
                     var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
-                    lmCamera.projection = PROJECTION_ORTHOGRAPHIC;
-                    lmCamera.nearClip = 0;
-                    lmCamera.farClip = bounds.halfExtents.y * 2;
-                    lmCamera.aspectRatio = 1;
-                    lmCamera.orthoHeight = frustumSize;
+                    this.camera.projection = PROJECTION_ORTHOGRAPHIC;
+                    this.camera.nearClip = 0;
+                    this.camera.farClip = bounds.halfExtents.y * 2;
+                    this.camera.aspectRatio = 1;
+                    this.camera.orthoHeight = frustumSize;
                 } else {
                     if (!lightBounds.intersects(bounds)) {
                         continue;
                     }
                 }
 
-                if (lights[i]._type === LIGHTTYPE_SPOT) {
+                if (lights[i].type === LIGHTTYPE_SPOT) {
                     var nodeVisible = false;
                     for (j = 0; j < rcv.length; j++) {
                         if (rcv[j]._isVisible(shadowCam)) {
@@ -750,18 +744,18 @@ class Lightmapper {
                     }
                 }
 
-                if (lights[i]._type === LIGHTTYPE_DIRECTIONAL) {
+                if (lights[i].type === LIGHTTYPE_DIRECTIONAL) {
                     lightArray[LIGHTTYPE_DIRECTIONAL][0] = lights[i];
                     lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
                     if (!shadowMapRendered && lights[i].castShadows) {
-                        this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
+                        this.renderer.cullDirectionalShadowmap(lights[i], casters, this.camera, 0);
                         this.renderer.renderShadows(lightArray[LIGHTTYPE_DIRECTIONAL], 0);
                         shadowMapRendered = true;
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (lights[i]._type === LIGHTTYPE_OMNI) {
+                    if (lights[i].type === LIGHTTYPE_OMNI) {
                         lightArray[LIGHTTYPE_OMNI][0] = lights[i];
                         lightArray[LIGHTTYPE_SPOT].length = 0;
                         if (!shadowMapRendered && lights[i].castShadows) {
@@ -805,7 +799,7 @@ class Lightmapper {
                     }
 
                     // ping-ponging output
-                    this.renderer.setCamera(lmCamera, targTmp, true);
+                    this.renderer.setCamera(this.camera, targTmp, true);
 
                     if (pass === PASS_DIR) {
                         constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
@@ -816,7 +810,7 @@ class Lightmapper {
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
 
-                    this.renderer.renderForward(lmCamera,
+                    this.renderer.renderForward(this.camera,
                                                 rcv, rcv.length,
                                                 lightArray,
                                                 SHADER_FORWARDHDR);
@@ -917,6 +911,10 @@ class Lightmapper {
         for (node = 0; node < allNodes.length; node++) {
             allNodes[node].component.castShadows = origCastShadows[node];
         }
+
+        var renderOrModelMeshInstances = function (node) {
+            return node.render ? node.render.meshInstances : node.model.model.meshInstances;
+        };
 
         // Enable existing scene lightmaps
         for (i = 0; i < origShaderDefs.length; i++) {
