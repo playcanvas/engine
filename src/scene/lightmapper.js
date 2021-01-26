@@ -26,6 +26,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM,
+    MASK_LIGHTMAP, MASK_BAKED,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../scene/constants.js';
 import { Camera } from '../scene/camera.js';
@@ -33,8 +34,6 @@ import { GraphNode } from '../scene/graph-node.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 var maxSize = 2048;
-var maskBaked = 2;
-var maskLightmap = 4;
 
 var sceneLightmaps = [];
 var sceneLightmapsNode = [];
@@ -50,73 +49,33 @@ var PASS_DIR = 1;
 var passTexName = ["texture_lightMap", "texture_dirLightMap"];
 var passMaterial = [];
 
-function collectModels(node, nodes, nodesMeshInstances, allNodes) {
-    if (!node.enabled) return;
+// helper class to wrap node for baking including its meshInstances
+class BakeNode {
+    constructor(node, meshInstances) {
+        this.node = node;
+        this.meshInstances = meshInstances;
+    }
+}
 
-    var i, meshInstances;
+// helper class to store all lights including their original state
+class LightInfo {
+    constructor(light) {
+        this.light = light;
 
-    // mesh instances from model component
-    if (node.model && node.model.model && node.model.enabled) {
-        if (allNodes) allNodes.push(node);
-        if (node.model.lightmapped) {
-            if (nodes) {
-                meshInstances = node.model.model.meshInstances;
-            }
-        }
+        // original light properties
+        this.store();
     }
 
-    // mesh instances from render component
-    if (node.render && node.render.enabled) {
-        if (allNodes) allNodes.push(node);
-        if (node.render.lightmapped) {
-            if (nodes) {
-                meshInstances = node.render.meshInstances;
-            }
-        }
+    store() {
+        this.mask = this.light.mask;
+        this.shadowUpdateMode = this.light.shadowUpdateMode;
+        this.enabled = this.light.enabled;
     }
 
-    if (meshInstances) {
-        var hasUv1 = true;
-
-        for (i = 0; i < meshInstances.length; i++) {
-            if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
-                hasUv1 = false;
-                break;
-            }
-        }
-        if (hasUv1) {
-
-            var j;
-            var isInstance;
-            var notInstancedMeshInstances = [];
-            for (i = 0; i < meshInstances.length; i++) {
-                isInstance = false;
-                for (j = 0; j < meshInstances.length; j++) {
-                    if (i !== j) {
-                        if (meshInstances[i].mesh === meshInstances[j].mesh) {
-                            isInstance = true;
-                        }
-                    }
-                }
-                // collect each instance (object with shared VB) as separate "node"
-                if (isInstance) {
-                    nodes.push(node);
-                    nodesMeshInstances.push([meshInstances[i]]);
-                } else {
-                    notInstancedMeshInstances.push(meshInstances[i]);
-                }
-            }
-
-            // collect all non-shared objects as one "node"
-            if (notInstancedMeshInstances.length > 0) {
-                nodes.push(node);
-                nodesMeshInstances.push(notInstancedMeshInstances);
-            }
-        }
-    }
-
-    for (i = 0; i < node._children.length; i++) {
-        collectModels(node._children[i], nodes, nodesMeshInstances, allNodes);
+    restore() {
+        this.light.mask = this.mask;
+        this.light.shadowUpdateMode = this.shadowUpdateMode;
+        this.light.enabled = this.enabled;
     }
 }
 
@@ -138,8 +97,10 @@ class Lightmapper {
         this.renderer = renderer;
         this.assets = assets;
 
-        // #ifdef PROFILER
-        this._stats = {
+        this._tempSet = new Set();
+        this._initCalled = false;
+
+        this.stats = {
             renderPasses: 0,
             lightmapCount: 0,
             totalRenderTime: 0,
@@ -149,15 +110,122 @@ class Lightmapper {
             compileTime: 0,
             shadersLinked: 0
         };
-        // #endif
     }
 
     destroy() {
+
+        if (this.blackTex) {
+            this.blackTex.destroy();
+            this.blackTex = null;
+        }
+
         this.device = null;
         this.root = null;
         this.scene = null;
         this.renderer = null;
         this.assets = null;
+    }
+
+    initBake() {
+
+        // only initialize one time
+        if (!this._initCalled) {
+            this._initCalled = true;
+
+            // small black texture
+            this.blackTex = new Texture(this.device, {
+                width: 4,
+                height: 4,
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                type: TEXTURETYPE_RGBM
+            });
+            this.blackTex.name = 'lightmapBlack';
+        }
+    }
+
+    createTexture(size, type) {
+
+        let tex = new Texture(this.device, {
+            // #ifdef PROFILER
+            profilerHint: TEXHINT_LIGHTMAP,
+            // #endif
+            width: size,
+            height: size,
+            format: PIXELFORMAT_R8_G8_B8_A8,
+            mipmaps: false,
+            type: type,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST
+        });
+        tex.name = 'lightmap';
+
+        return tex;
+    }
+
+    // recursively walk the hierarchy of nodes starting at the specified node
+    // collect all nodes that need to be lightmapped to bakeNodes array
+    // collect all nodes with geometry to allNodes array
+    collectModels(node, bakeNodes, allNodes) {
+        if (!node.enabled) return;
+
+        // mesh instances from model component
+        let meshInstances;
+        if (node.model && node.model.model && node.model.enabled) {
+            if (allNodes) allNodes.push(node);
+            if (node.model.lightmapped) {
+                if (bakeNodes) {
+                    meshInstances = node.model.model.meshInstances;
+                }
+            }
+        }
+
+        // mesh instances from render component
+        if (node.render && node.render.enabled) {
+            if (allNodes) allNodes.push(node);
+            if (node.render.lightmapped) {
+                if (bakeNodes) {
+                    meshInstances = node.render.meshInstances;
+                }
+            }
+        }
+
+        if (meshInstances) {
+            var hasUv1 = true;
+
+            for (let i = 0; i < meshInstances.length; i++) {
+                if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                    hasUv1 = false;
+                    break;
+                }
+            }
+            if (hasUv1) {
+
+                var notInstancedMeshInstances = [];
+                for (let i = 0; i < meshInstances.length; i++) {
+                    let mesh = meshInstances[i].mesh;
+
+                    // is this mesh an instance of already used mesh in this node
+                    if (this._tempSet.has(mesh)) {
+                        // collect each instance (object with shared VB) as separate "node"
+                        bakeNodes.push(new BakeNode(node, [meshInstances[i]]));
+                    } else {
+                        notInstancedMeshInstances.push(meshInstances[i]);
+                    }
+                    this._tempSet.add(mesh);
+                }
+
+                this._tempSet.clear();
+
+                // collect all non-shared objects as one "node"
+                if (notInstancedMeshInstances.length > 0) {
+                    bakeNodes.push(new BakeNode(node, notInstancedMeshInstances));
+                }
+            }
+        }
+
+        for (let i = 0; i < node._children.length; i++) {
+            this.collectModels(node._children[i], bakeNodes, allNodes);
+        }
     }
 
     calculateLightmapSize(node) {
@@ -230,11 +298,40 @@ class Lightmapper {
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
     }
 
+    // TODO !!!!!!!!!!!  clean this up, make sure it does not leak !!!!!!
+    deleteLightmaps(nodes) {
+
+        if (nodes) {
+
+            // delete old lightmaps, if present
+            for (let i = sceneLightmapsNode.length - 1; i >= 0; i--) {
+                for (let j = 0; j < nodes.length; j++) {
+                    if (sceneLightmapsNode[i] === nodes[j]) {
+                        for (let k = 0; k < sceneLightmaps[i].length; k++) {
+                            sceneLightmaps[i][k].destroy();
+                        }
+                        sceneLightmaps.splice(i, 1);
+                        sceneLightmapsNode.splice(i, 1);
+                    }
+                }
+            }
+        } else {
+
+            for (let i = 0; i < sceneLightmaps.length; i++) {
+                for (let j = 0; j < sceneLightmaps[i].length; j++) {
+                    sceneLightmaps[i][j].destroy();
+                }
+            }
+            sceneLightmaps = [];
+            sceneLightmapsNode = [];
+        }
+    }
+
     /**
      * @function
      * @name pc.Lightmapper#bake
      * @description Generates and applies the lightmaps.
-     * @param {pc.Entity[]|null} nodes - An array of entities (with model components) to render
+     * @param {pc.Entity[]|null} nodes - An array of entities (with model or render components) to render
      * lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
@@ -246,87 +343,130 @@ class Lightmapper {
      */
     bake(nodes, mode) {
 
-        // #ifdef PROFILER
+        var device = this.device;
         var startTime = now();
-        this.device.fire('lightmapper:start', {
+
+        // #ifdef PROFILER
+        device.fire('lightmapper:start', {
             timestamp: startTime,
             target: this
         });
-        var stats = this._stats;
         // #endif
 
+        this.stats.renderPasses = 0;
+        this.stats.shadowMapTime = 0;
+        this.stats.forwardTime = 0;
+        var startShaders = device._shaderStats.linked;
+        var startFboTime = device._renderTargetCreationTime;
+        var startCompileTime = device._shaderStats.compileTime;
+
+        var bakeNodes = [];
+        var allNodes = [];
+
+        // delete old lightmaps if present
+        this.deleteLightmaps(nodes);
+
+        // collect nodes / meshInstances for baking
+        if (nodes) {
+
+            // collect nodes for baking based on specified list of nodes
+            for (let i = 0; i < nodes.length; i++) {
+                this.collectModels(nodes[i], bakeNodes, null);
+            }
+
+            // collect all nodes from the scene
+            this.collectModels(this.root, null, allNodes);
+
+        } else {
+
+            // collect nodes from the root of the scene
+            this.collectModels(this.root, bakeNodes, allNodes);
+
+        }
+
+        // bake nodes
+        if (bakeNodes.length > 0) {
+
+            this.initBake();
+            this.bakeInternal(mode, bakeNodes, allNodes);
+        }
+
+        let nowTime = now();
+        this.stats.totalRenderTime = nowTime - startTime;
+        this.stats.shadersLinked = device._shaderStats.linked - startShaders;
+        this.stats.compileTime = device._shaderStats.compileTime - startCompileTime;
+        this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
+
+        // #ifdef PROFILER
+        device.fire('lightmapper:end', {
+            timestamp: nowTime,
+            target: this
+        });
+        // #endif
+    }
+
+    allocateTextures(bakeNodes, lmaps, texPool, passCount) {
+
+        let device = this.device;
+        for (let i = 0; i < bakeNodes.length; i++) {
+            let size = this.calculateLightmapSize(bakeNodes[i].node);
+            for (let pass = 0; pass < passCount; pass++) {
+                let tex = this.createTexture(size, (pass === PASS_COLOR) ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
+                lmaps[pass].push(tex);
+            }
+
+            if (!texPool[size]) {
+                let tex2 = this.createTexture(size, TEXTURETYPE_RGBM);
+                texPool[size] = new RenderTarget(device, tex2, { depth: false });
+            }
+        }
+    }
+
+    prepareLightsToBake(layerComposition, allLights) {
+
+        var bakeLights = [];
+        var sceneLights = layerComposition._lights;
+
+        for (let i = 0; i < sceneLights.length; i++) {
+            let light = sceneLights[i];
+
+            // store all lights and their original settings we need to temporariy modify
+            allLights.push(new LightInfo(light));
+
+            // bake light
+            if (light.enabled && (light.mask & MASK_LIGHTMAP) !== 0) {
+
+                // if baked, it can't be used as static
+                light.isStatic = false;
+
+                light.mask = 0xFFFFFFFF;
+                light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
+                bakeLights.push(sceneLights[i]);
+            }
+        }
+
+        return bakeLights;
+    }
+
+    restoreLights(allLights) {
+
+        for (let i = 0; i < allLights.length; i++) {
+            allLights[i].restore();
+        }
+    }
+
+    bakeInternal(mode, bakeNodes, allNodes) {
+
+        var scene = this.scene;
         var i, j;
         var device = this.device;
-        var scene = this.scene;
+
+        this.stats.lightmapCount = bakeNodes.length;
 
         var passCount = 1;
         if (mode === undefined) mode = BAKE_COLORDIR;
         if (mode === BAKE_COLORDIR) passCount = 2;
         var pass;
-
-        // #ifdef PROFILER
-        stats.renderPasses = stats.shadowMapTime = stats.forwardTime = 0;
-        var startShaders = device._shaderStats.linked;
-        var startFboTime = device._renderTargetCreationTime;
-        var startCompileTime = device._shaderStats.compileTime;
-        // #endif
-
-        var allNodes = [];
-        var nodesMeshInstances = [];
-        if (!nodes) {
-            // ///// Full bake /////
-
-            // delete old lightmaps, if present
-            for (i = 0; i < sceneLightmaps.length; i++) {
-                for (j = 0; j < sceneLightmaps[i].length; j++) {
-                    sceneLightmaps[i][j].destroy();
-                }
-            }
-            sceneLightmaps = [];
-            sceneLightmapsNode = [];
-
-            // collect
-            nodes = [];
-            collectModels(this.root, nodes, nodesMeshInstances, allNodes);
-        } else {
-            // ///// Selected bake /////
-
-            // delete old lightmaps, if present
-            var k;
-            for (i = sceneLightmapsNode.length - 1; i >= 0; i--) {
-                for (j = 0; j < nodes.length; j++) {
-                    if (sceneLightmapsNode[i] === nodes[j]) {
-                        for (k = 0; k < sceneLightmaps[i].length; k++) {
-                            sceneLightmaps[i][k].destroy();
-                        }
-                        sceneLightmaps.splice(i, 1);
-                        sceneLightmapsNode.splice(i, 1);
-                    }
-                }
-            }
-
-            // collect
-            var _nodes = [];
-            for (i = 0; i < nodes.length; i++) {
-                collectModels(nodes[i], _nodes, nodesMeshInstances);
-            }
-            nodes = _nodes;
-
-            collectModels(this.root, null, null, allNodes);
-        }
-
-        if (nodes.length === 0) {
-            device.fire('lightmapper:end', {
-                timestamp: now(),
-                target: this
-            });
-
-            return;
-        }
-
-        // #ifdef PROFILER
-        stats.lightmapCount = nodes.length;
-        // #endif
 
         // Disable static preprocessing (lightmapper needs original model draw calls)
         var revertStatic = false;
@@ -336,87 +476,16 @@ class Lightmapper {
         }
 
         // Calculate lightmap sizes and allocate textures
-        var texSize = [];
-        var lmaps = [[], []];
-        var texPool = {};
-        var size;
-        var tex;
-        var blackTex = new Texture(this.device, {
-            width: 4,
-            height: 4,
-            format: PIXELFORMAT_R8_G8_B8_A8,
-            type: TEXTURETYPE_RGBM
-        });
-        blackTex.name = 'lightmap';
-        for (i = 0; i < nodes.length; i++) {
-            size = this.calculateLightmapSize(nodes[i]);
-            texSize.push(size);
-            for (pass = 0; pass < passCount; pass++) {
-                tex = new Texture(device, {
-                    // #ifdef PROFILER
-                    profilerHint: TEXHINT_LIGHTMAP,
-                    // #endif
-                    width: size,
-                    height: size,
-                    format: PIXELFORMAT_R8_G8_B8_A8,
-                    mipmaps: false,
-                    type: (pass === PASS_COLOR) ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
-                    minFilter: FILTER_NEAREST,
-                    magFilter: FILTER_NEAREST
-                });
-                tex.name = 'lightmap';
-
-                lmaps[pass].push(tex);
-            }
-
-            if (!texPool[size]) {
-                var tex2 = new Texture(device, {
-                    // #ifdef PROFILER
-                    profilerHint: TEXHINT_LIGHTMAP,
-                    // #endif
-                    width: size,
-                    height: size,
-                    format: PIXELFORMAT_R8_G8_B8_A8,
-                    mipmaps: false,
-                    type: TEXTURETYPE_RGBM,
-                    minFilter: FILTER_NEAREST,
-                    magFilter: FILTER_NEAREST
-                });
-                tex2.name = 'lightmap';
-
-                var targ2 = new RenderTarget(device, tex2, {
-                    depth: false
-                });
-                texPool[size] = targ2;
-            }
-        }
+        let lmaps = [[], []];
+        let texPool = {};
+        this.allocateTextures(bakeNodes, lmaps, texPool, passCount);
 
         var activeComp = scene.layers;
         activeComp._update();
 
         // Collect bakeable lights
-        var lights = [];
-        var origMask = [];
-        var origShadowMode = [];
-        var origEnabled = [];
-        var sceneLights = activeComp._lights;
-        var mask;
-        for (i = 0; i < sceneLights.length; i++) {
-            if (sceneLights[i].enabled) {
-                mask = sceneLights[i].mask;
-                if ((mask & maskLightmap) !== 0) {
-                    origMask.push(mask);
-                    origShadowMode.push(sceneLights[i].shadowUpdateMode);
-                    sceneLights[i].mask = 0xFFFFFFFF;
-                    sceneLights[i].shadowUpdateMode =
-                        sceneLights[i]._type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
-                    lights.push(sceneLights[i]);
-                    sceneLights[i].isStatic = false; // if baked, can't be used as static
-                }
-            }
-            origEnabled.push(sceneLights[i].enabled);
-            sceneLights[i].enabled = false;
-        }
+        let allLights = [];
+        let lights = this.prepareLightsToBake(activeComp, allLights);
 
 
         // Init shaders
@@ -517,7 +586,7 @@ class Lightmapper {
         var targ, targTmp, texTmp;
         var light, shadowCam;
         var nodeLightCount = [];
-        nodeLightCount.length = nodes.length;
+        nodeLightCount.length = bakeNodes.length;
 
         var lmMaterial;
         for (pass = 0; pass < passCount; pass++) {
@@ -530,7 +599,7 @@ class Lightmapper {
                     // don't bake ambient
                     lmMaterial.ambient = new Color(0, 0, 0);
                     lmMaterial.ambientTint = true;
-                    lmMaterial.lightMap = blackTex;
+                    lmMaterial.lightMap = this.blackTex;
                 } else {
                     lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
                     lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
@@ -550,8 +619,8 @@ class Lightmapper {
             }
         }
 
-        for (node = 0; node < nodes.length; node++) {
-            rcv = nodesMeshInstances[node];
+        for (node = 0; node < bakeNodes.length; node++) {
+            rcv = bakeNodes[node].meshInstances;
             nodeLightCount[node] = 0;
 
             // Calculate model AABB
@@ -570,13 +639,13 @@ class Lightmapper {
                 // patch meshInstance
                 m = rcv[i];
                 m._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM); // disable LM define, if set, to get bare ambient on first pass
-                m.mask = maskLightmap; // only affected by LM lights
+                m.mask = MASK_LIGHTMAP; // only affected by LM lights
                 m.deleteParameter("texture_lightMap");
                 m.deleteParameter("texture_dirLightMap");
 
                 // patch material
-                m.setParameter("texture_lightMap", m.material.lightMap ? m.material.lightMap : blackTex);
-                m.setParameter("texture_dirLightMap", blackTex);
+                m.setParameter("texture_lightMap", m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setParameter("texture_dirLightMap", this.blackTex);
             }
 
             for (pass = 0; pass < passCount; pass++) {
@@ -628,13 +697,13 @@ class Lightmapper {
                 this.renderer.updateCameraFrustum(shadowCam);
             }
 
-            if (nodesMeshInstances.length > 0) {
-                this.renderer.updateShaders(nodesMeshInstances[0]);
+            if (bakeNodes.length > 0) {
+                this.renderer.updateShaders(bakeNodes[0].meshInstances);
             }
 
-            for (node = 0; node < nodes.length; node++) {
+            for (node = 0; node < bakeNodes.length; node++) {
 
-                rcv = nodesMeshInstances[node];
+                rcv = bakeNodes[node].meshInstances;
                 bounds = nodeBounds[node];
 
                 // Tweak camera to fully see the model, so directional light frustum will also see it
@@ -732,7 +801,7 @@ class Lightmapper {
                         constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
                     }
 
-                    // console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+                    // console.log("Baking light "+lights[i]._node.name + " on model " + bakeNodes[node].node.name);
 
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
@@ -743,9 +812,9 @@ class Lightmapper {
                                                 SHADER_FORWARDHDR);
 
                     // #ifdef PROFILER
-                    stats.shadowMapTime += this.renderer._shadowMapTime;
-                    stats.forwardTime += this.renderer._forwardTime;
-                    stats.renderPasses++;
+                    this.stats.shadowMapTime += this.renderer._shadowMapTime;
+                    this.stats.forwardTime += this.renderer._forwardTime;
+                    this.stats.renderPasses++;
                     // #endif
 
                     lmaps[pass][node] = texTmp;
@@ -776,8 +845,8 @@ class Lightmapper {
 
 
         var sceneLmaps;
-        for (node = 0; node < nodes.length; node++) {
-            rcv = nodesMeshInstances[node];
+        for (node = 0; node < bakeNodes.length; node++) {
+            rcv = bakeNodes[node].meshInstances;
             sceneLmaps = [];
 
             for (pass = 0; pass < passCount; pass++) {
@@ -802,7 +871,7 @@ class Lightmapper {
 
                 for (i = 0; i < rcv.length; i++) {
                     m = rcv[i];
-                    m.mask = maskBaked;
+                    m.mask = MASK_BAKED;
 
                     // Set lightmap
                     rcv[i].setParameter(passTexName[pass], lm);
@@ -815,7 +884,7 @@ class Lightmapper {
             }
 
             sceneLightmaps.push(sceneLmaps);
-            sceneLightmapsNode.push(nodes[node]);
+            sceneLightmapsNode.push(bakeNodes[node].node);
         }
 
         for (var key in texPool) {
@@ -828,7 +897,7 @@ class Lightmapper {
         // Set up linear filtering
         for (i = 0; i < sceneLightmaps.length; i++) {
             for (j = 0; j < sceneLightmaps[i].length; j++) {
-                tex = sceneLightmaps[i][j];
+                let tex = sceneLightmaps[i][j];
                 tex.minFilter = FILTER_LINEAR;
                 tex.magFilter = FILTER_LINEAR;
             }
@@ -849,15 +918,7 @@ class Lightmapper {
             }
         }
 
-        // Enable all lights back
-        for (i = 0; i < lights.length; i++) {
-            lights[i].mask = origMask[i];
-            lights[i].shadowUpdateMode = origShadowMode[i];
-        }
-
-        for (i = 0; i < sceneLights.length; i++) {
-            sceneLights[i].enabled = origEnabled[i];
-        }
+        this.restoreLights(allLights);
 
         // Roll back scene stuff
         scene.fog = origFog;
@@ -867,18 +928,6 @@ class Lightmapper {
         if (revertStatic) {
             scene._needsStaticPrepare = true;
         }
-
-        // #ifdef PROFILER
-        this.device.fire('lightmapper:end', {
-            timestamp: now(),
-            target: this
-        });
-
-        stats.totalRenderTime = now() - startTime;
-        stats.shadersLinked = device._shaderStats.linked - startShaders;
-        stats.compileTime = device._shaderStats.compileTime - startCompileTime;
-        stats.fboTime = device._renderTargetCreationTime - startFboTime;
-        // #endif
     }
 }
 
