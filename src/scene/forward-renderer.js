@@ -513,10 +513,10 @@ class ForwardRenderer {
         this.ambientColor = new Float32Array(3);
 
         this.cameraParams = new Float32Array(4);
-    }
 
-    // placeholder texture for area light LUTs
-    this._createAreaLightPlaceholderLuts();
+        // placeholder texture for area light LUTs
+        this._createAreaLightPlaceholderLuts();
+    }
 
     sortCompare(drawCallA, drawCallB) {
         if (drawCallA.layer === drawCallB.layer) {

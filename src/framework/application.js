@@ -1016,14 +1016,14 @@ class Application extends EventHandler {
     }
 
     // handle area light property
-    _handleAreaLightDataProperty: function (prop) {
+    _handleAreaLightDataProperty(prop) {
         var asset = this.assets.get(prop);
         if (asset) {
             this.setAreaLightData(asset);
         } else {
             this.assets.once('add:' + prop, this.setAreaLightData, this);
         }
-    },
+    }
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
@@ -1688,7 +1688,7 @@ class Application extends EventHandler {
      * @description Sets the area light LUT asset for this app.
      * @param {pc.Asset} asset - Asset of type `binary` to be set.
      */
-    setAreaLightData: function (asset) {
+    setAreaLightData(asset) {
         if (asset) {
             var renderer = this.renderer;
             asset.ready(function (asset) {
@@ -1700,7 +1700,7 @@ class Application extends EventHandler {
             console.warn("setAreaLightData: asset is not valid");
             // #endif
         }
-    },
+    }
 
     /**
      * @function
