@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
 
@@ -68,9 +68,6 @@ class SoundManager extends EventHandler {
         } else {
             console.warn('No support for 3D audio found');
         }
-
-        if (!hasAudio())
-            console.warn('No support for 2D audio found');
 
         this.listener = new Listener(this);
 
