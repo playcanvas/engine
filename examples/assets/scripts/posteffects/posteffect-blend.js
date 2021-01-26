@@ -71,7 +71,7 @@ var Blend = pc.createScript('blend');
 
 Blend.attributes.add('mixRatio', {
     type: 'number',
-    default: 1,
+    default: 0.5,
     min: 0,
     max: 1,
     title: 'Mix Ratio'
@@ -86,7 +86,9 @@ Blend.attributes.add('blendMap', {
 Blend.prototype.initialize = function () {
     this.effect = new BlendEffect(this.app.graphicsDevice);
     this.effect.mixRatio = this.mixRatio;
-    this.effect.blendMap = this.blendMap.resource;
+    if (this.blendMap) {
+        this.effect.blendMap = this.blendMap.resource;
+    }
 
     var queue = this.entity.camera.postEffects;
 
