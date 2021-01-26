@@ -18,7 +18,7 @@ import {
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
-import { Application } from '../../framework/application.js';
+import { getApplication } from '../../framework/globals.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { Quat } from '../../math/quat.js';
@@ -898,7 +898,7 @@ function _defineColor(obj, name, defaultValue, hasMultiplier) {
         var arr = changeMat ? mat[uform] : new Float32Array(3);
         var gammaCorrection = false;
         if (mat.useGammaTonemap) {
-            var scene = mat._scene || Application.getApplication().scene;
+            var scene = mat._scene || getApplication().scene;
             gammaCorrection = scene.gammaCorrection;
         }
         for (var c = 0; c < 3; c++) {
@@ -932,7 +932,7 @@ function _defineColor(obj, name, defaultValue, hasMultiplier) {
             var arr = changeMat ? mat[uform] : new Float32Array(3);
             var gammaCorrection = false;
             if (mat.useGammaTonemap) {
-                var scene = mat._scene || Application.getApplication().scene;
+                var scene = mat._scene || getApplication().scene;
                 gammaCorrection = scene.gammaCorrection;
             }
             for (var c = 0; c < 3; c++) {

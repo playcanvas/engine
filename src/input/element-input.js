@@ -6,7 +6,7 @@ import { Vec4 } from '../math/vec4.js';
 
 import { Ray } from '../shape/ray.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
@@ -1025,7 +1025,7 @@ class ElementInput {
     }
 
     get app() {
-        return this._app || Application.getApplication();
+        return this._app || getApplication();
     }
 
     set app(value) {
