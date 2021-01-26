@@ -37,6 +37,11 @@
 
         var miniStats = new pcx.MiniStats(app);
 
+        var material = new pc.StandardMaterial();
+        material.shininess = 0;
+        material.useMetalness = true;
+        material.update();
+
         // All render component primitive shape types
         var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
 
@@ -45,11 +50,12 @@
 
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
             var entity = new pc.Entity();
-            entity.addComponent('render', {
+            entity.addComponent(Math.random() < 0.5 ? 'render' : 'model', {
                 castShadows: false,
                 castShadowsLightmap: true,
                 lightmapped: true,
-                type: shape
+                type: shape,
+                material: material
             });
             app.root.addChild(entity);
 
@@ -62,7 +68,8 @@
             castShadows: false,
             castShadowsLightmap: false,
             lightmapped: true,
-            type: "plane"
+            type: "plane",
+            material: material
         });
         app.root.addChild(ground);
         ground.setLocalPosition(0, -1, 0);
@@ -81,6 +88,7 @@
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.GREEN,
+            intensity: 0.3,
             type: "directional"
         });
         app.root.addChild(light);
@@ -102,8 +110,27 @@
             range: 100,
             type: "point"
         });
-        lightPoint.setLocalPosition(0, 2, 0);
+        lightPoint.setLocalPosition(-3, 2, 0);
         app.root.addChild(lightPoint);
+
+        // Create an entity with a spot light component that is configured as a baked light
+        var lightSpot = new pc.Entity();
+        lightSpot.addComponent("light", {
+            affectDynamic: false,
+            affectLightmapped: true,
+            bake: true,
+            castShadows: true,
+            normalOffsetBias: 0.05,
+            shadowBias: 0.2,
+            shadowDistance: 50,
+            shadowResolution: 512,
+            shadowType: pc.SHADOW_PCF3,
+            color: pc.Color.BLUE,
+            range: 100,
+            type: "spot"
+        });
+        lightSpot.setLocalPosition(5, 8, 0);
+        app.root.addChild(lightSpot);
 
         // Create an entity with a camera component
         var camera = new pc.Entity();
