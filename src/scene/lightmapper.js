@@ -46,7 +46,6 @@ var PASS_COLOR = 0;
 var PASS_DIR = 1;
 
 var passTexName = ["texture_lightMap", "texture_dirLightMap"];
-var passMaterial = [];
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -107,6 +106,7 @@ class Lightmapper {
 
         this._tempSet = new Set();
         this._initCalled = false;
+        this.passMaterials = [];
 
         this.stats = {
             renderPasses: 0,
@@ -158,6 +158,43 @@ class Lightmapper {
             camera.frustumCulling = false;
             camera.node = new GraphNode();
             this.camera = camera;
+        }
+    }
+
+    createMaterials(device, scene, passCount) {
+
+        var xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
+        var bakeLmEnd = shaderChunks.bakeLmEndPS;
+
+        for (let pass = 0; pass < passCount; pass++) {
+            if (!this.passMaterials[pass]) {
+
+                let lmMaterial = new StandardMaterial();
+                lmMaterial.chunks.transformVS = xformUv1; // draw UV1
+
+                if (pass === PASS_COLOR) {
+                    lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
+                    // don't bake ambient
+                    lmMaterial.ambient = new Color(0, 0, 0);
+                    lmMaterial.ambientTint = true;
+                    lmMaterial.lightMap = this.blackTex;
+                } else {
+                    lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
+                    lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
+                }
+
+                // avoid writing unrelated things to alpha
+                lmMaterial.chunks.outputAlphaPS = "\n";
+                lmMaterial.chunks.outputAlphaOpaquePS = "\n";
+                lmMaterial.chunks.outputAlphaPremulPS = "\n";
+                lmMaterial.cull = CULLFACE_NONE;
+                lmMaterial.forceUv1 = true; // provide data to xformUv1
+                lmMaterial.update();
+                lmMaterial.updateShader(device, scene);
+                lmMaterial.name = "lmMaterial" + pass;
+
+                this.passMaterials[pass] = lmMaterial;
+            }
         }
     }
 
@@ -478,7 +515,7 @@ class Lightmapper {
         }
     }
 
-    bakeInternal(mode, bakeNodes, allNodes) {
+    bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
 
         var scene = this.scene;
         var i, j;
@@ -486,10 +523,10 @@ class Lightmapper {
 
         this.stats.lightmapCount = bakeNodes.length;
 
-        var passCount = 1;
-        if (mode === undefined) mode = BAKE_COLORDIR;
-        if (mode === BAKE_COLORDIR) passCount = 2;
+        var passCount = mode === BAKE_COLORDIR ? 2 : 1;
         var pass;
+
+        this.createMaterials(device, scene, passCount);
 
         // Disable static preprocessing (lightmapper needs original model draw calls)
         var revertStatic = false;
@@ -512,8 +549,6 @@ class Lightmapper {
 
 
         // Init shaders
-        var xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
-        var bakeLmEnd = shaderChunks.bakeLmEndPS;
         var dilate = shaderChunks.dilatePS;
 
         var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, dilate, "lmDilate");
@@ -591,37 +626,6 @@ class Lightmapper {
         var light, shadowCam;
         var nodeLightCount = [];
         nodeLightCount.length = bakeNodes.length;
-
-        var lmMaterial;
-        for (pass = 0; pass < passCount; pass++) {
-            if (!passMaterial[pass]) {
-                lmMaterial = new StandardMaterial();
-                lmMaterial.chunks.transformVS = xformUv1; // draw UV1
-
-                if (pass === PASS_COLOR) {
-                    lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
-                    // don't bake ambient
-                    lmMaterial.ambient = new Color(0, 0, 0);
-                    lmMaterial.ambientTint = true;
-                    lmMaterial.lightMap = this.blackTex;
-                } else {
-                    lmMaterial.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
-                    lmMaterial.chunks.endPS = shaderChunks.bakeDirLmEndPS;
-                }
-
-                // avoid writing unrelated things to alpha
-                lmMaterial.chunks.outputAlphaPS = "\n";
-                lmMaterial.chunks.outputAlphaOpaquePS = "\n";
-                lmMaterial.chunks.outputAlphaPremulPS = "\n";
-                lmMaterial.cull = CULLFACE_NONE;
-                lmMaterial.forceUv1 = true; // provide data to xformUv1
-                lmMaterial.update();
-                lmMaterial.updateShader(device, scene);
-                lmMaterial.name = "lmMaterial" + pass;
-
-                passMaterial[pass] = lmMaterial;
-            }
-        }
 
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
@@ -792,7 +796,7 @@ class Lightmapper {
                     }
 
                     for (j = 0; j < rcv.length; j++) {
-                        rcv[j].material = passMaterial[pass];
+                        rcv[j].material = this.passMaterials[pass];
                     }
                     if (passCount > 1) {
                         this.renderer.updateShaders(rcv); // update between passes
