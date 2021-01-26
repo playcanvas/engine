@@ -40,6 +40,8 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
+ * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults 
+ * to 0.
  * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
  * calculation multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
  * that all energy is lost in the collision while a value of 1 means that no energy is lost. Should be
@@ -76,6 +78,7 @@ class RigidBodyComponent extends Component {
         this.on('set_linearFactor', this.onSetLinearFactor, this);
         this.on('set_angularFactor', this.onSetAngularFactor, this);
         this.on('set_friction', this.onSetFriction, this);
+        this.on('set_rollingFriction', this.onSetRollingFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_type', this.onSetType, this);
         this.on('set_group', this.onSetGroupOrMask, this);
@@ -198,6 +201,7 @@ class RigidBodyComponent extends Component {
 
             body.setRestitution(this.restitution);
             body.setFriction(this.friction);
+            body.setRollingFriction(this.rollingFriction);
             body.setDamping(this.linearDamping, this.angularDamping);
 
             if (this.type === BODYTYPE_DYNAMIC) {
@@ -800,6 +804,13 @@ class RigidBodyComponent extends Component {
         var body = this.data.body;
         if (body) {
             body.setFriction(newValue);
+        }
+    }
+
+    onSetRollingFriction(name, oldValue, newValue) {
+        var body = this.data.body;
+        if (body) {
+            body.setRollingFriction(newValue);
         }
     }
 
