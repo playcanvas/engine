@@ -533,9 +533,6 @@ class ModelComponent extends Component {
 
             model.meshInstances = [new MeshInstance(node, mesh, this._material)];
 
-            if (this.system._inTools)
-                model.generateWireframe();
-
             this.model = model;
             this._asset = null;
         }
