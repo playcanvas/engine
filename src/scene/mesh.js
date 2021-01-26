@@ -17,7 +17,7 @@ import { VertexIterator } from '../graphics/vertex-iterator.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME } from './constants.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var id = 0;
 
@@ -180,7 +180,7 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this.vertexBuffer = null;
         this.indexBuffer = [null];
         this.primitive = [{
