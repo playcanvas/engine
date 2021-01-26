@@ -40,7 +40,7 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
- * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults 
+ * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
  * to 0.
  * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
  * calculation multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
