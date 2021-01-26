@@ -2,7 +2,7 @@ import { path } from '../core/path.js';
 
 import { http, Http } from '../net/http.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
@@ -136,7 +136,7 @@ class AudioHandler {
 
                 manager.context.decodeAudioData(response, success, error);
             });
-        } else if (hasAudio()) {
+        } else {
             var audio = null;
 
             try {
