@@ -14,6 +14,7 @@ import { RenderAction } from './render-action.js';
  * @augments pc.EventHandler
  * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
  * @description Create a new layer composition.
+ * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
  * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
  * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
  * True means only semi-transparent objects are rendered, and false means opaque.
@@ -24,8 +25,10 @@ import { RenderAction } from './render-action.js';
  */
 // Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    constructor() {
+    constructor(name = "Untitled") {
         super();
+
+        this.name = name;
 
         // all layers added into the composition
         this.layerList = [];
@@ -335,14 +338,17 @@ class LayerComposition extends EventHandler {
                 renderAction = renderActions[renderActionCount] = new RenderAction();
             }
 
+            // render target from the camera takes precedence over the render target from the layer
+            var rt = layer.renderTarget;
+            var camera = layer.cameras[cameraIndex];
+            if (camera && camera.renderTarget) {
+                rt = camera.renderTarget;
+            }
+
             // store the properties
             renderAction.layerIndex = layerIndex;
             renderAction.cameraIndex = cameraIndex;
-
-            // render target for rendering - target from the camera overrrides target from the layer
-            var camera = layer.cameras[cameraIndex];
-            var cameraTarget = camera ? camera.renderTarget : undefined;
-            renderAction.renderTarget = cameraTarget ? cameraTarget : layer.renderTarget;
+            renderAction.renderTarget = rt;
 
             renderActionCount++;
         }
@@ -353,14 +359,13 @@ class LayerComposition extends EventHandler {
             this._dirtyCameras = false;
             result |= COMPUPDATED_CAMERAS;
 
+            // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
-
-            // walk the layers
             for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 layer._dirtyCameras = false;
 
-                // build array of unique cameras from all layers
+                // for all cameras in the layer
                 for (j = 0; j < layer.cameras.length; j++) {
                     camera = layer.cameras[j];
                     index = this.cameras.indexOf(camera);
@@ -370,61 +375,40 @@ class LayerComposition extends EventHandler {
                 }
             }
 
-            var hash, groupLength;
-            var skipCount = 0;
+            // sort cameras by priority
+            if (this.cameras.length > 1) {
+                this.cameras.sort((a, b) => a.priority - b.priority);
+            }
 
-            // build render actions array which is the actual rendering sequence based on layers and cameras attached to them
-            for (i = 0; i < len; i++) {
+            // render in order of cameras sorted by priority
+            for (i = 0; i < this.cameras.length; i++) {
+                camera = this.cameras[i];
 
-                if (skipCount) {
-                    skipCount--;
-                    continue;
-                }
+                // walk all global sorted list of layers (sublayers) to check if camera renders it
+                // this adds both opaque and transparent sublayers if camera renders the layer
+                for (j = 0; j < len; j++) {
 
-                layer = this.layerList[i];
-                if (layer.cameras.length === 0 && !layer.isPostEffect) {
-                    continue;
-                }
+                    layer = this.layerList[j];
+                    if (layer) {
 
-                hash = layer._cameraHash;
+                        // if layer needs to be rendered
+                        if (layer.cameras.length > 0 || layer.isPostEffect) {
 
-                // single camera in layer
-                if (hash === 0) {
-                    addRenderAction(layer, i, 0);
+                            // if the camera renders this layer
+                            if (camera.layers.indexOf(layer.id) >= 0) {
 
-                } else { // multiple cameras in a layer
+                                // camera index in the layer array
+                                cameraIndex = layer.cameras.indexOf(camera);
+                                if (cameraIndex >= 0) {
+                                    addRenderAction(layer, j, cameraIndex);
+                                }
 
-                    // count a sequence of following sublayers with the same cameras
-                    groupLength = 1;
-                    for (j = i + 1; j < len; j++) {
-                        if (hash !== this.layerList[j]._cameraHash) {
-                            groupLength = (j - i) - 1;
-                            break;
-                        } else if (j === len - 1) {
-                            groupLength = j - i;
-                        }
-                    }
+                            } else if (layer.isPostEffect) {
 
-                    if (groupLength === 1) {
-
-                        // no sequence - render all cameras for this layer
-                        for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
-                            addRenderAction(layer, i, cameraIndex);
-                        }
-
-                    } else {
-
-                        // sequence of groupLength - add a whole sequence for each camera
-                        // sequence is added by camera to minimize number of times directional shadows gets re-rendered, which is done per camera
-                        // this changes sequence: Layer1 (Camera1, Camera2), Layer2 (Camera1, Camera2) to sequence:
-                        // Camera1(Layer1, Layer2), Camera2 (Layer1, Layer2) to group layer rendering into the same camera.
-                        for (cameraIndex = 0; cameraIndex < layer.cameras.length; cameraIndex++) {
-                            for (j = 0; j <= groupLength; j++) {
-                                addRenderAction(layer, i + j, cameraIndex);
+                                // post-effect layers don't have camera
+                                addRenderAction(layer, j, -1);
                             }
                         }
-                        // skip the sequence sublayers (can't just modify i in JS)
-                        skipCount = groupLength;
                     }
                 }
             }
