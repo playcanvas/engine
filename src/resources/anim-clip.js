@@ -1,8 +1,8 @@
 import { http, Http } from '../net/http.js';
 
-import { AnimCurve } from '../anim/anim-curve.js';
-import { AnimData } from '../anim/anim-data.js';
-import { AnimTrack } from '../anim/anim-track.js';
+import { AnimCurve } from '../anim/evaluator/anim-curve.js';
+import { AnimData } from '../anim/evaluator/anim-data.js';
+import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
 /**
  * @private

@@ -47,6 +47,10 @@
                 material.normalMap = assetManifest[1].asset.resource;
                 material.glossMap = assetManifest[2].asset.resource;
                 material.metalness = 0.7;
+
+                material.diffuseMapTiling.set(7, 7);
+                material.normalMapTiling.set(7, 7);
+                material.glossMapTiling.set(7, 7);
             }
 
             material.update();

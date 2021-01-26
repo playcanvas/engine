@@ -9,7 +9,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
     TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 import {

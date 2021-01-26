@@ -21,7 +21,7 @@ import {
     SEMANTIC_ATTR, SEMANTIC_POSITION,
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
@@ -93,8 +93,8 @@ var viewR = new Mat4();
 var viewPosL = new Vec3();
 var viewPosR = new Vec3();
 var projL, projR;
-var viewMat3L = new Mat4();
-var viewMat3R = new Mat4();
+var viewMat3L = new Mat3();
+var viewMat3R = new Mat3();
 var viewProjMatL = new Mat4();
 var viewProjMatR = new Mat4();
 
@@ -2759,7 +2759,7 @@ class ForwardRenderer {
         var renderedByCam = comp._renderedByCam;
         var renderedLayer = comp._renderedLayer;
         var renderAction, renderActions = comp._renderActions;
-        var i, layer, layerIndex, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
+        var i, layer, layerIndex, transparent, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
 
         // update the skybox, since this might change _meshInstances
         if (this.scene.updateSkybox) {
@@ -2852,7 +2852,7 @@ class ForwardRenderer {
             if (!visible.done) {
 
                 if (layer.onPreCull) {
-                    layer.onPreCull(j);
+                    layer.onPreCull(cameraPass);
                 }
 
                 drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
@@ -2860,7 +2860,7 @@ class ForwardRenderer {
                 visible.done = true;
 
                 if (layer.onPostCull) {
-                    layer.onPostCull(j);
+                    layer.onPostCull(cameraPass);
                 }
             }
 
@@ -2895,8 +2895,8 @@ class ForwardRenderer {
             globalLightCounter++;
             if (!light.castShadows || !light.enabled || light.shadowUpdateMode === SHADOWUPDATE_NONE) continue;
             casters = comp._lightShadowCasters[i];
-            cameras = comp._globalLightCameras[globalLightCounter];
-            for (j = 0; j < cameras.length; j++) {
+            let cameras = comp._globalLightCameras[globalLightCounter];
+            for (let j = 0; j < cameras.length; j++) {
                 this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
             }
         }

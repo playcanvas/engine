@@ -9,7 +9,7 @@ import {
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
@@ -17,7 +17,7 @@ import { VertexIterator } from '../graphics/vertex-iterator.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME } from './constants.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var id = 0;
 
@@ -180,7 +180,7 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this.vertexBuffer = null;
         this.indexBuffer = [null];
         this.primitive = [{

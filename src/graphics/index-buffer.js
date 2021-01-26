@@ -1,7 +1,7 @@
 import {
     BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
-} from './graphics.js';
+} from './constants.js';
 
 /**
  * @class

@@ -1,6 +1,6 @@
 import { math } from '../math/math.js';
 
-import { hasAudio, hasAudioContext } from './capabilities.js';
+import { hasAudioContext } from './capabilities.js';
 
 /**
  * @private
@@ -36,12 +36,10 @@ class Channel {
 
             const context = manager.context;
             this.gain = context.createGain();
-        } else if (hasAudio()) {
+        } else if (sound.audio) {
             // handle the case where sound was
-            if (sound.audio) {
-                this.source = sound.audio.cloneNode(false);
-                this.source.pause(); // not initially playing
-            }
+            this.source = sound.audio.cloneNode(false);
+            this.source.pause(); // not initially playing
         }
     }
 
@@ -274,7 +272,7 @@ if (hasAudioContext()) {
             }
         }
     });
-} else if (hasAudio()) {
+} else {
     Object.assign(Channel.prototype, {
         play: function () {
             if (this.source) {

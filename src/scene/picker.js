@@ -1,5 +1,5 @@
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
-import { GraphicsDevice } from '../graphics/device.js';
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 
@@ -9,7 +9,7 @@ import { Command } from './mesh-instance.js';
 import { Layer } from './layer.js';
 import { LayerComposition } from './layer-composition.js';
 
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 var _deviceDeprecationWarning = false;
 var _getSelectionDeprecationWarning = false;
@@ -30,7 +30,7 @@ var _prepareDeprecationWarning = false;
 class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
-            app = Application.getApplication();
+            app = getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
                 // #ifdef DEBUG
@@ -42,8 +42,6 @@ class Picker {
         this.app = app;
         this.device = app.graphicsDevice;
         var device = this.device;
-
-        this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;

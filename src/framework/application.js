@@ -17,9 +17,9 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION,
     TYPE_FLOAT32
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
-import { GraphicsDevice } from '../graphics/device.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
@@ -120,6 +120,11 @@ import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
+
+import {
+    getApplication,
+    setApplication
+} from './globals.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -406,7 +411,7 @@ class Application extends EventHandler {
 
         // Store application instance
         Application._applications[canvas.id] = this;
-        Application._currentApplication = this;
+        setApplication(this);
 
         app = this;
 
@@ -812,8 +817,6 @@ class Application extends EventHandler {
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
-    static _currentApplication = null;
-
     static _applications = {};
 
     /**
@@ -830,7 +833,7 @@ class Application extends EventHandler {
      * var app = pc.Application.getApplication();
      */
     static getApplication(id) {
-        return id ? Application._applications[id] : Application._currentApplication;
+        return id ? Application._applications[id] : getApplication();
     }
 
     /**
@@ -2278,8 +2281,8 @@ class Application extends EventHandler {
 
         Application._applications[canvasId] = null;
 
-        if (Application._currentApplication === this) {
-            Application._currentApplication = null;
+        if (getApplication() === this) {
+            setApplication(null);
         }
     }
 
@@ -2308,7 +2311,7 @@ var makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        Application._currentApplication = application;
+        setApplication(application);
 
         if (frameRequest) {
             window.cancelAnimationFrame(frameRequest);

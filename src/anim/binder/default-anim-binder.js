@@ -1,7 +1,7 @@
-import { AnimPropertyLocator } from '../framework/components/anim/property-locator.js';
-import { Entity } from '../framework/entity.js';
+import { Entity } from '../../framework/entity.js';
 
-import { AnimTarget } from './anim-target.js';
+import { AnimBinder } from './anim-binder.js';
+import { AnimTarget } from '../evaluator/anim-target.js';
 
 /**
  * @private
@@ -13,23 +13,20 @@ import { AnimTarget } from './anim-target.js';
  */
 class DefaultAnimBinder {
     constructor(graph) {
-        this.propertyLocator = new AnimPropertyLocator();
+        this.graph = graph;
 
         if (!graph) return;
 
         var nodes = { };
-
         // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {
-            nodes[node.name] = {
-                node: node,
-                count: 0
-            };
+            nodes[node.name] = node;
             for (var i = 0; i < node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
         flatten(graph);
+        this.nodes = nodes;
 
         var findMeshInstances = function (node) {
 
@@ -51,7 +48,7 @@ class DefaultAnimBinder {
             return meshInstances;
         };
 
-        this.nodes = nodes;                 // map of node name -> { node, count }
+        this.nodeCounts = {};                 // map of node path -> count
         this.activeNodes = [];              // list of active nodes
         this.handlers = {
             'localPosition': function (node) {
@@ -128,40 +125,47 @@ class DefaultAnimBinder {
     }
 
     resolve(path) {
-        var pathSections = this.propertyLocator.decode(path);
+        var propertyLocation = AnimBinder.decode(path);
 
-        var node = this.nodes[pathSections[0][0] || ""];
+        var node = this.graph.findByPath(propertyLocation.entityPath[0]);
+        if (!node) {
+            var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
+            node = this.nodes[entityPath[entityPath.length - 1] || ""];
+        }
         if (!node) {
             return null;
         }
 
-        var handler = this.handlers[pathSections[2][0]];
+        var handler = this.handlers[propertyLocation.propertyPath[0]];
         if (!handler) {
             return null;
         }
 
-        var target = handler(node.node);
+        var target = handler(node);
         if (!target) {
             return null;
         }
 
-        if (node.count === 0) {
-            this.activeNodes.push(node.node);
+        if (!this.nodeCounts[node.path]) {
+            this.activeNodes.push(node);
+            this.nodeCounts[node.path] = 1;
+        } else {
+            this.nodeCounts[node.path]++;
         }
-        node.count++;
 
         return target;
     }
 
     unresolve(path) {
-        var pathSections = this.propertyLocator.decode(path);
-        if (pathSections[1] !== 'graph')
+        var propertyLocation = AnimBinder.decode(path);
+        if (propertyLocation.component !== 'graph')
             return;
 
-        var node = this.nodes[pathSections[0][0]];
+        var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
+        var node = this.nodes[entityPath[entityPath.length - 1] || ""];
 
-        node.count--;
-        if (node.count === 0) {
+        this.nodeCounts[node.path]--;
+        if (this.nodeCounts[node.path] === 0) {
             var activeNodes = this.activeNodes;
             var i = activeNodes.indexOf(node.node);  // :(
             var len = activeNodes.length;

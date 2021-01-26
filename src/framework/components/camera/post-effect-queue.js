@@ -1,6 +1,6 @@
 import { now } from '../../../core/time.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 

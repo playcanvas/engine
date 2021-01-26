@@ -17,6 +17,8 @@ import { VrDisplay } from './vr-display.js';
  */
 class VrManager extends EventHandler {
     constructor(app) {
+        super();
+
         var self = this;
 
         this.isSupported = VrManager.isSupported;

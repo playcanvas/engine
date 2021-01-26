@@ -1,7 +1,7 @@
 import {
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
-} from './graphics.js';
+} from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';

@@ -2,7 +2,7 @@ import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
 
-import { SEMANTIC_POSITION } from '../../../graphics/graphics.js';
+import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
 
 import { RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';

@@ -3,7 +3,7 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 import { Vec4 } from '../../../math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/graphics.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
