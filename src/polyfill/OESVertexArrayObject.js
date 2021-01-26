@@ -277,45 +277,47 @@ OESVertexArrayObject.prototype.bindVertexArrayOES = function bindVertexArrayOES(
 };
 
 // You MUST call this BEFORE adding event listeners for 'webglcontextrestored'
-window.setupVertexArrayObject = function(gl) {
-    // Ignore if already installed (or the browser provides the extension)
-    // FIXME: when all stable browsers support getSupportedExtensions
-    // and getExtension, remove the workarounds below.
-    if (gl.getSupportedExtensions) {
-        var exts = gl.getSupportedExtensions();
-        if (exts.indexOf("OES_vertex_array_object") != -1) {
-            return;
+if(typeof window !== 'undefined'){
+    window.setupVertexArrayObject = function(gl) {
+        // Ignore if already installed (or the browser provides the extension)
+        // FIXME: when all stable browsers support getSupportedExtensions
+        // and getExtension, remove the workarounds below.
+        if (gl.getSupportedExtensions) {
+            var exts = gl.getSupportedExtensions();
+            if (exts.indexOf("OES_vertex_array_object") != -1) {
+                return;
+            }
+        } else if (gl.getExtension) {
+            var vao = gl.getExtension("OES_vertex_array_object");
+            if (vao) {
+                return;
+            }
         }
-    } else if (gl.getExtension) {
-        var vao = gl.getExtension("OES_vertex_array_object");
-        if (vao) {
-            return;
-        }
-    }
 
-    if (gl.getSupportedExtensions) {
-        var original_getSupportedExtensions = gl.getSupportedExtensions;
-        gl.getSupportedExtensions = function getSupportedExtensions() {
-            var list = original_getSupportedExtensions.call(this) || [];
-            list.push("OES_vertex_array_object");
-            return list;
+        if (gl.getSupportedExtensions) {
+            var original_getSupportedExtensions = gl.getSupportedExtensions;
+            gl.getSupportedExtensions = function getSupportedExtensions() {
+                var list = original_getSupportedExtensions.call(this) || [];
+                list.push("OES_vertex_array_object");
+                return list;
+            };
+        }
+        
+        var original_getExtension = gl.getExtension;
+        gl.getExtension = function getExtension(name) {
+            if (name == "OES_vertex_array_object") {
+                if (!gl.__OESVertexArrayObject) {
+                    gl.__OESVertexArrayObject = new OESVertexArrayObject(gl);
+                }
+                return gl.__OESVertexArrayObject;
+            }
+            if (original_getExtension) {
+                return original_getExtension.call(this, name);
+            } else {
+                return null;
+            }
         };
     }
-    
-    var original_getExtension = gl.getExtension;
-    gl.getExtension = function getExtension(name) {
-        if (name == "OES_vertex_array_object") {
-            if (!gl.__OESVertexArrayObject) {
-                gl.__OESVertexArrayObject = new OESVertexArrayObject(gl);
-            }
-            return gl.__OESVertexArrayObject;
-        }
-        if (original_getExtension) {
-            return original_getExtension.call(this, name);
-        } else {
-            return null;
-        }
-    };
-};
+}
 
 }());

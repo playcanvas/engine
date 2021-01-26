@@ -321,8 +321,9 @@ class GraphicsDevice extends EventHandler {
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs
-        window.setupVertexArrayObject(gl);
-
+        if (typeof window !== 'undefined') {
+            window.setupVertexArrayObject(gl);
+        }
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
