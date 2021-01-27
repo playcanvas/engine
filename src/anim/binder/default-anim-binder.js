@@ -184,8 +184,7 @@ class DefaultAnimBinder {
         if (path.component !== 'graph')
             return;
 
-        var entityPathArr = AnimBinder.splitPath(path.entityPath, '/');
-        var node = this.nodes[entityPathArr[entityPathArr.length - 1] || ""];
+        var node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
 
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {
