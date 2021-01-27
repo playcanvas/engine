@@ -19,11 +19,11 @@
  * of components found on all attached animation curves).
  */
 class AnimTarget {
-    constructor(func, type, components, targetIdentifier) {
+    constructor(func, type, components, targetPath) {
         this._func = func;
         this._type = type;
         this._components = components;
-        this._targetIdentifier = targetIdentifier;
+        this._targetPath = targetPath;
     }
 
     get func() {
@@ -38,8 +38,8 @@ class AnimTarget {
         return this._components;
     }
 
-    get targetIdentifier() {
-        return this._targetIdentifier;
+    get targetPath() {
+        return this._targetPath;
     }
 }
 

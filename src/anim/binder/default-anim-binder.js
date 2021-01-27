@@ -27,6 +27,10 @@ class DefaultAnimBinder {
         };
         flatten(graph);
         this.nodes = nodes;
+        this.targetCache = {};
+        // #ifdef DEBUG
+        this.visitedFallbackGraphPaths = {};
+        // #endif
 
         var findMeshInstances = function (node) {
 
@@ -56,12 +60,7 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                var targetIdentifier = AnimBinder.encode({
-                    entityPath: node.path,
-                    component: 'entity',
-                    propertyPath: 'localPosition'
-                });
-                return new AnimTarget(func, 'vector', 3, targetIdentifier);
+                return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localPosition');
             },
 
             'localRotation': function (node) {
@@ -69,12 +68,7 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                var targetIdentifier = AnimBinder.encode({
-                    entityPath: node.path,
-                    component: 'entity',
-                    propertyPath: 'localRotation'
-                });
-                return new AnimTarget(func, 'quaternion', 4, targetIdentifier);
+                return DefaultAnimBinder.createAnimTarget(func, 'quaternion', 4, node, 'localRotation');
             },
 
             'localScale': function (node) {
@@ -82,12 +76,7 @@ class DefaultAnimBinder {
                 var func = function (value) {
                     object.set.apply(object, value);
                 };
-                var targetIdentifier = AnimBinder.encode({
-                    entityPath: node.path,
-                    component: 'entity',
-                    propertyPath: 'localScale'
-                });
-                return new AnimTarget(func, 'vector', 3, targetIdentifier);
+                return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localScale');
             },
 
             'weights': function (node) {
@@ -106,12 +95,7 @@ class DefaultAnimBinder {
                                 morphInstance.setWeight(i, value[i]);
                             }
                         };
-                        var targetIdentifier = AnimBinder.encode({
-                            entityPath: node.path,
-                            component: 'entity',
-                            propertyPath: 'weights'
-                        });
-                        return new AnimTarget(func, 'vector', morphInstance.morph._targets.length, targetIdentifier);
+                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstance.morph._targets.length, node, 'weights');
                     }
                 }
 
@@ -135,12 +119,7 @@ class DefaultAnimBinder {
                                 meshInstance.material.update();
                             }
                         }.bind(this);
-                        var targetIdentifier = AnimBinder.encode({
-                            entityPath: node.path,
-                            component: 'material',
-                            propertyPath: 'materialTexture'
-                        });
-                        return new AnimTarget(func, 'vector', 1, targetIdentifier);
+                        return DefaultAnimBinder.createAnimTarget(func, 'vector', 1, node, 'materialTexture', 'material');
                     }
                 }
 
@@ -149,27 +128,47 @@ class DefaultAnimBinder {
         };
     }
 
-    resolve(path) {
-        var propertyLocation = AnimBinder.decode(path);
-
-        var node = this.graph.findByPath(propertyLocation.entityPath[0]);
+    findNode(graph, path) {
+        var node = graph.findByPath(path.entityPath.join('/'));
         if (!node) {
-            var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
-            node = this.nodes[entityPath[entityPath.length - 1] || ""];
+            node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+
+            // #ifdef DEBUG
+            var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
+            if (this.visitedFallbackGraphPaths[fallbackGraphPath]) {
+                console.warn('Multiple nodes with the path ' + fallbackGraphPath + ' are present in the ' + entity.name + ' entity\'s graph which may result in the incorrect binding of animations');
+            }
+            this.visitedFallbackGraphPaths[fallbackGraphPath] = true;
+            // #endif
         }
+        return node;
+    }
+
+    static createAnimTarget(func, type, valueCount, node, propertyPath, componentType) {
+        var targetPath = AnimBinder.encode(node.path, componentType ? componentType : 'entity', propertyPath);
+        return new AnimTarget(func, type, valueCount, targetPath);
+    }
+
+    resolve(path) {
+        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        if (target) return target;
+
+        var node = this.findNode(this.graph, path);
         if (!node) {
             return null;
         }
 
-        var handler = this.handlers[propertyLocation.propertyPath[0]];
+        var handler = this.handlers[path.propertyPath];
         if (!handler) {
             return null;
         }
 
-        var target = handler(node);
+        target = handler(node);
         if (!target) {
             return null;
         }
+
+        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
 
         if (!this.nodeCounts[node.path]) {
             this.activeNodes.push(node);
@@ -182,12 +181,11 @@ class DefaultAnimBinder {
     }
 
     unresolve(path) {
-        var propertyLocation = AnimBinder.decode(path);
-        if (propertyLocation.component !== 'graph')
+        if (path.component !== 'graph')
             return;
 
-        var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
-        var node = this.nodes[entityPath[entityPath.length - 1] || ""];
+        var entityPathArr = AnimBinder.splitPath(path.entityPath, '/');
+        var node = this.nodes[entityPathArr[entityPathArr.length - 1] || ""];
 
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {

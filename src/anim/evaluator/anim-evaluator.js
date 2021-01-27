@@ -133,7 +133,7 @@ class AnimEvaluator {
             for (var j = 0; j < paths.length; ++j) {
                 var path = paths[j];
                 var resolved = this._binder.resolve(path);
-                var target = targets[resolved && resolved.targetIdentifier || null];
+                var target = targets[resolved && resolved.targetPath || null];
 
                 // create new target if it doesn't exist yet
                 if (!target && resolved) {
@@ -148,7 +148,7 @@ class AnimEvaluator {
                         target.value.push(0);
                     }
 
-                    targets[resolved.targetIdentifier] = target;
+                    targets[resolved.targetPath] = target;
                 }
 
                 // binding may have failed
@@ -194,7 +194,7 @@ class AnimEvaluator {
                     target.curves--;
                     if (target.curves === 0) {
                         this._binder.unresolve(path);
-                        delete targets[target.targetIdentifier];
+                        delete targets[target.targetPath];
                     }
                 }
             }

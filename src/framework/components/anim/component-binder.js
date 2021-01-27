@@ -19,10 +19,6 @@ class AnimComponentBinder extends DefaultAnimBinder {
     constructor(animComponent, graph) {
         super(graph);
         this.animComponent = animComponent;
-        this._targetCache = {};
-        // #ifdef DEBUG
-        this._visitedFallbackGraphPaths = {};
-        // #endif
     }
 
     static _packFloat(values) {
@@ -71,66 +67,50 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
-        if (this._targetCache[path]) {
-            return this._targetCache[path];
-        }
-        var propertyLocation = AnimBinder.decode(path);
+        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        if (target) return target;
 
-        var entity = this._getEntityFromHierarchy(propertyLocation.entityPath);
-
-        if (!entity)
-            return null;
-
+        var entity;
         var propertyComponent;
-        var targetIdentifier;
+        var targetPath;
 
-        switch (propertyLocation.component) {
+        switch (path.component) {
             case 'entity':
+                entity = this._getEntityFromHierarchy(path.entityPath);
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    'entity',
+                    path.propertyPath
+                );
                 propertyComponent = entity;
-                targetIdentifier = AnimBinder.encode({
-                    entityPath: entity.path,
-                    component: 'entity',
-                    propertyPath: propertyLocation.propertyPath
-                });
                 break;
             case 'graph':
-                if (entity.model && entity.model.model && entity.model.model.graph) {
-                    propertyComponent = entity.model.model.graph.findByPath(propertyLocation.entityPath[0]);
-                }
-                if (!propertyComponent) {
-                    var entityPath = AnimBinder.splitPath(propertyLocation.entityPath[0], '/');
-                    propertyComponent = this.nodes[entityPath[entityPath.length - 1] || ""];
-
-                    // #ifdef DEBUG
-                    var fallbackGraphPath = (entityPath[entityPath.length - 1] || "") + '/' + propertyLocation.propertyPath;
-                    if (this._visitedFallbackGraphPaths[fallbackGraphPath]) {
-                        console.warn('Multiple nodes with the path ' + fallbackGraphPath + ' are present in the entities graph which may result in the incorrect binding of animations');
-                    }
-                    this._visitedFallbackGraphPaths[fallbackGraphPath] = true;
-                    // #endif
-                }
+                entity = this.animComponent.entity;
+                var graph = entity.model && entity.model.model && entity.model.model.graph;
+                propertyComponent = this.findNode(graph, path);
                 if (!propertyComponent) return null;
-                targetIdentifier = AnimBinder.encode({
-                    entityPath: propertyComponent.path,
-                    component: 'graph',
-                    propertyPath: propertyLocation.propertyPath
-                });
+                targetPath = AnimBinder.encode(
+                    propertyComponent.path,
+                    'graph',
+                    path.propertyPath
+                );
                 break;
             default:
-                propertyComponent = entity.findComponent(propertyLocation.component);
+                entity = this._getEntityFromHierarchy(path.entityPath);
+                propertyComponent = entity.findComponent(path.component);
                 if (!propertyComponent)
                     return null;
-                targetIdentifier = AnimBinder.encode({
-                    entityPath: entity.path,
-                    component: propertyLocation.component,
-                    propertyPath: propertyLocation.propertyPath
-                });
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    path.component,
+                    path.propertyPath
+                );
                 break;
         }
 
-        var animTarget = this._createAnimTargetForProperty(propertyComponent, propertyLocation.propertyPath, targetIdentifier);
-        this._targetCache[path] = animTarget;
-        return animTarget;
+        target = this._createAnimTargetForProperty(propertyComponent, path.propertyPath, targetPath);
+        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
+        return target;
     }
 
     update(deltaTime) {
@@ -153,7 +133,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         if (entityHierarchy.length === 1) {
             return currEntity;
         }
-        return currEntity._parent.findByPath(entityHierarchy.join('/'));
+        return currEntity._parent.findByPath(Array.isArray(entityHierarchy) ? entityHierarchy.join('/') : entityHierarchy);
     }
 
     // resolve an object path
@@ -208,7 +188,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         };
     }
 
-    _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetIdentifier) {
+    _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetPath) {
 
         if (this.handlers && propertyHierarchy[0] === 'weights') {
             return this.handlers.weights(propertyComponent);
@@ -274,16 +254,16 @@ class AnimComponentBinder extends DefaultAnimBinder {
             return new AnimTarget(function (values) {
                 setter(values);
                 propertyComponent.material.update();
-            }, animDataType, animDataComponents, targetIdentifier);
+            }, animDataType, animDataComponents, targetPath);
         }
 
-        return new AnimTarget(setter, animDataType, animDataComponents, targetIdentifier);
+        return new AnimTarget(setter, animDataType, animDataComponents, targetPath);
     }
 
     rebind() {
-        this._targetCache = {};
+        this.targetCache = {};
         // #ifdef DEBUG
-        this._visitedFallbackGraphPaths = {};
+        this.visitedFallbackGraphPaths = {};
         // #endif
         var entity = this.animComponent && this.animComponent.entity;
         var graph = entity.model && entity.model.model && entity.model.model.graph;

@@ -226,9 +226,9 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AnimComponent#removeStateAnimations
-     * @description Removes animations from a state in the loaded state graph.
-     * @param {string} nodeName - The name of the state node that should have its animation tracks removed.
+     * @name pc.AnimComponent#removeNodeAnimations
+     * @description Removes animations from a node in the loaded state graph.
+     * @param {string} nodeName - The name of the node that should have its animation tracks removed.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {
