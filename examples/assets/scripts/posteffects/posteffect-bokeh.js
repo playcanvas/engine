@@ -9,7 +9,6 @@
  * @property {number} maxBlur The maximum amount of blurring. Ranges from 0 to 1.
  * @property {number} aperture Bigger values create a shallower depth of field.
  * @property {number} focus Controls the focus of the effect.
- * @property {number} aspect Controls the blurring effect.
  */
 function BokehEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
@@ -119,7 +118,6 @@ function BokehEffect(graphicsDevice) {
     this.maxBlur = 0.02;
     this.aperture = 1;
     this.focus = 1;
-    this.aspect = graphicsDevice.width / graphicsDevice.height;
 }
 
 BokehEffect.prototype = Object.create(pc.PostEffect.prototype);
@@ -133,7 +131,7 @@ Object.assign(BokehEffect.prototype, {
         scope.resolve("uMaxBlur").setValue(this.maxBlur);
         scope.resolve("uAperture").setValue(this.aperture);
         scope.resolve("uFocus").setValue(this.focus);
-        scope.resolve("uAspect").setValue(this.aspect);
+        scope.resolve("uAspect").setValue(device.width / device.height);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
 
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
@@ -145,7 +143,7 @@ var Bokeh = pc.createScript('bokeh');
 
 Bokeh.attributes.add('maxBlur', {
     type: 'number',
-    default: 1,
+    default: 0.02,
     min: 0,
     max: 1,
     title: 'Max Blur'
@@ -153,7 +151,7 @@ Bokeh.attributes.add('maxBlur', {
 
 Bokeh.attributes.add('aperture', {
     type: 'number',
-    default: 0.025,
+    default: 1,
     min: 0,
     max: 1,
     title: 'Aperture'
@@ -165,18 +163,11 @@ Bokeh.attributes.add('focus', {
     title: 'Focus'
 });
 
-Bokeh.attributes.add('aspect', {
-    type: 'number',
-    default: 1,
-    title: 'Aspect'
-});
-
 Bokeh.prototype.initialize = function () {
     this.effect = new BokehEffect(this.app.graphicsDevice);
     this.effect.maxBlur = this.maxBlur;
     this.effect.aperture = this.aperture;
     this.effect.focus = this.focus;
-    this.effect.aspect = this.aspect;
 
     this.on('attr', function (name, value) {
         this.effect[name] = value;
