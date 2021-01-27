@@ -42,10 +42,10 @@ var bounds = new BoundingBox();
 var lightBounds = new BoundingBox();
 var tempSphere = {};
 
-var PASS_COLOR = 0;
-var PASS_DIR = 1;
+const PASS_COLOR = 0;
+const PASS_DIR = 1;
 
-var passTexName = ["texture_lightMap", "texture_dirLightMap"];
+const passTexName = ["texture_lightMap", "texture_dirLightMap"];
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -60,6 +60,7 @@ class MeshNode {
             meshInstances = meshInstances ? meshInstances : node.model.model.meshInstances;
         }
 
+        this.castShadows = this.component.castShadows;
         this.meshInstances = meshInstances;
     }
 }
@@ -156,6 +157,8 @@ class Lightmapper {
             camera.clearDepthBuffer = false;
             camera.clearStencilBuffer = false;
             camera.frustumCulling = false;
+            camera.projection = PROJECTION_ORTHOGRAPHIC;
+            camera.aspectRatio = 1;
             camera.node = new GraphNode();
             this.camera = camera;
         }
@@ -457,6 +460,8 @@ class Lightmapper {
         this.stats.compileTime = device._shaderStats.compileTime - startCompileTime;
         this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
 
+        console.log("stats: ", this.stats);
+
         // #ifdef PROFILER
         device.fire('lightmapper:end', {
             timestamp: nowTime,
@@ -595,13 +600,11 @@ class Lightmapper {
         }
 
         // Change shadow casting
-        var origCastShadows = [];
         var casters = [];
         var meshes;
         var rom;
         for (node = 0; node < allNodes.length; node++) {
             rom = allNodes[node].component;
-            origCastShadows[node] = rom.castShadows;
             rom.castShadows = rom.castShadowsLightmap;
             if (rom.castShadowsLightmap) {
                 meshes = allNodes[node].meshInstances;
@@ -622,12 +625,9 @@ class Lightmapper {
         var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
         var light, shadowCam;
-        var nodeLightCount = [];
-        nodeLightCount.length = bakeNodes.length;
 
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
-            nodeLightCount[node] = 0;
 
             // Calculate model AABB
             if (rcv.length > 0) {
@@ -722,10 +722,8 @@ class Lightmapper {
 
                     var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
-                    this.camera.projection = PROJECTION_ORTHOGRAPHIC;
                     this.camera.nearClip = 0;
                     this.camera.farClip = bounds.halfExtents.y * 2;
-                    this.camera.aspectRatio = 1;
                     this.camera.orthoHeight = frustumSize;
                 } else {
                     if (!lightBounds.intersects(bounds)) {
@@ -807,7 +805,7 @@ class Lightmapper {
                         constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
                     }
 
-                    // console.log("Baking light "+lights[i]._node.name + " on model " + bakeNodes[node].node.name);
+                    console.log("Baking light " + lights[i]._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
 
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
@@ -833,8 +831,6 @@ class Lightmapper {
                         m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                     }
                 }
-
-                nodeLightCount[node]++;
 
                 // Revert original materials
                 for (j = 0; j < rcv.length; j++) {
@@ -911,7 +907,7 @@ class Lightmapper {
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {
-            allNodes[node].component.castShadows = origCastShadows[node];
+            allNodes[node].component.castShadows = allNodes[node].castShadows;
         }
 
         var renderOrModelMeshInstances = function (node) {
