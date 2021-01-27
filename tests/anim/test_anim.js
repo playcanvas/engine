@@ -14,12 +14,11 @@ describe("pc.AnimEvaluator", function () {
         // create curve
         var keys = new pc.AnimData(1, [0, 1, 2]);
         var translations = new pc.AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curvePath = pc.AnimBinder.encode({
-            entityPath: 'child1',
+        var curvePath = {
+            entityPath: ['child1'],
             component: 'graph',
-            propertyPath: 'localPosition'
-        });
-        console.log(curvePath);
+            propertyPath: ['localPosition']
+        };
         var curve = new pc.AnimCurve([curvePath], 0, 0, pc.INTERPOLATION_LINEAR);
 
         // construct the animation track
