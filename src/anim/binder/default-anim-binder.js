@@ -129,7 +129,7 @@ class DefaultAnimBinder {
     }
 
     findNode(graph, path) {
-        var node = graph.findByPath(path.entityPath.join('/'));
+        var node = graph.findByPath(path.entityPath);
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
 
@@ -150,7 +150,8 @@ class DefaultAnimBinder {
     }
 
     resolve(path) {
-        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        var encodedPath = AnimBinder.encode(path.entityPath, path.component, path.propertyPath);
+        var target = this.targetCache[encodedPath];
         if (target) return target;
 
         var node = this.findNode(this.graph, path);
@@ -168,7 +169,7 @@ class DefaultAnimBinder {
             return null;
         }
 
-        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
+        this.targetCache[encodedPath] = target;
 
         if (!this.nodeCounts[node.path]) {
             this.activeNodes.push(node);

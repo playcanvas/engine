@@ -59,13 +59,13 @@ class AnimBinder {
      * @returns {string} The locator encoded as a string
      * @example
      * // returns 'spotLight/light/color.r'
-     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
+     * encode(['spotLight'], 'light', ['color', 'r']);
      */
     static encode(entityPath, component, propertyPath) {
         return `${
-            Array.isArray(entityPath) ? AnimBinder.joinPath(entityPath) : entityPath
+            Array.isArray(entityPath) ? entityPath.join('/') : entityPath
         }/${component}/${
-            Array.isArray(propertyPath) ? AnimBinder.joinPath(propertyPath) : propertyPath
+            Array.isArray(propertyPath) ? propertyPath.join('/') : propertyPath
         }`;
     }
 

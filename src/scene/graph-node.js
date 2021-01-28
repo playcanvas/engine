@@ -467,14 +467,14 @@ class GraphNode extends EventHandler {
      * @name pc.GraphNode#findByPath
      * @description Get the first node found in the graph by its full path in the graph.
      * The full path has this form 'parent/child/sub-child'. The search is depth first.
-     * @param {string} path - The full path of the pc.GraphNode.
+     * @param {string|Array} path - The full path of the pc.GraphNode as either a string or array of pc.GraphNode names
      * @returns {pc.GraphNode} The first node to be found matching the supplied path.
      * @example
      * var path = this.entity.findByPath('child/another_child');
      */
     findByPath(path) {
-        // split the paths in parts. Each part represents a deeper hierarchy level
-        var parts = path.split('/');
+        // if the path isn't an array, split the path in parts. Each part represents a deeper hierarchy level
+        var parts = Array.isArray(path) ? path : path.split('/');
         var currentParent = this;
         var result = null;
 

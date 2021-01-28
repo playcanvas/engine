@@ -67,7 +67,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
-        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        var encodedPath = AnimBinder.encode(path.entityPath, path.component, path.propertyPath);
+        var target = this.targetCache[encodedPath];
         if (target) return target;
 
         var entity;
@@ -109,7 +110,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         }
 
         target = this._createAnimTargetForProperty(propertyComponent, path.propertyPath, targetPath);
-        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
+        this.targetCache[encodedPath] = target;
         return target;
     }
 
@@ -133,7 +134,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         if (entityHierarchy.length === 1) {
             return currEntity;
         }
-        return currEntity._parent.findByPath(Array.isArray(entityHierarchy) ? entityHierarchy.join('/') : entityHierarchy);
+        return currEntity._parent.findByPath(entityHierarchy);
     }
 
     // resolve an object path
