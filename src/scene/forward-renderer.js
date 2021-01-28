@@ -907,11 +907,11 @@ class ForwardRenderer {
         }
 
         // create lut textures
-        var versions = new Int16Array(resource, 32768 * 4, 2);
+        var versions = new Int16Array(resource, 0, 2);
 
         var luts = {
-            data1: new Float32Array(resource, 0, 16384),
-            data2: new Float32Array(resource, 16384 * 4, 16384),
+            data1: new Float32Array(resource, 4, 16384),
+            data2: new Float32Array(resource, 4 + 16384 * 4, 16384),
             majorVersion: versions[0],
             minorVersion: versions[1]
         };

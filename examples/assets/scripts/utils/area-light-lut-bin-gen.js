@@ -29,4 +29,4 @@ var saveByteArray = (function () {
 
 var versions = new Int16Array([luts.majorVersion, luts.minorVersion]);
 
-saveByteArray([luts.data1, luts.data2, versions], 'area-light-luts.bin');
+saveByteArray([versions, luts.data1, luts.data2], 'area-light-luts.bin');
