@@ -852,15 +852,6 @@ class ForwardRenderer {
     // creates LUT texture used by area lights
     _uploadAreaLightLuts(resource) {
 
-        var versions = new Int16Array(resource, 32768 * 4, 2);
-
-        this._areaLightLuts = {
-            data1: new Float32Array(resource, 0, 16384),
-            data2: new Float32Array(resource, 16384 * 4, 16384),
-            majorVersion: versions[0],
-            minorVersion: versions[1]
-        };
-
         function createTexture(device, data, format) {
             var tex = new Texture(device, {
                 width: 64,
@@ -915,14 +906,17 @@ class ForwardRenderer {
             return ret;
         }
 
-        // create texture if not already
-        var luts = this._areaLightLuts;
-        if (luts && !luts.ready) {
-            if (luts.majorVersion !== 0 || luts.minorVersion !== 1) {
-                console.warn(`areaLightData version: ${luts.version} is not yet supported!`);
-            }
+        // create lut textures
+        var versions = new Int16Array(resource, 32768 * 4, 2);
 
-            luts.ready = true;
+        var luts = {
+            data1: new Float32Array(resource, 0, 16384),
+            data2: new Float32Array(resource, 16384 * 4, 16384),
+            majorVersion: versions[0],
+            minorVersion: versions[1]
+        };
+
+        if (luts.majorVersion === 0 && luts.minorVersion === 1) {
             var device = this.device;
             var data1, data2;
             var format = device.areaLightLutFormat;
