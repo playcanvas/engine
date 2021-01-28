@@ -26,13 +26,6 @@
         // Create the app and start the update loop
         var app = new pc.Application(canvas);
 
-    </script>
-
-    <!-- LUT table for area lights, included after the app has been created -->
-    <script src="../../scripts/lights/area-light-lut.js"></script>
-
-    <script>
-
         // helper function to create a primitive with shape type, position, scale, color
         function createPrimitive(primitiveType, position, scale, color, assetManifest) {
 
@@ -152,6 +145,10 @@
                 type: "container",
                 url: "../assets/models/statue.glb"
             },
+            {
+                type: "binary",
+                url: "../assets/binary/area-light-luts.bin"
+            },            
         ];
 
         // Load all assets and then run the example
@@ -185,6 +182,9 @@
             });
 
             var miniStats = new pcx.MiniStats(app);
+
+            // set the loaded area light LUT data
+            app.setAreaLightLuts(assetManifest[4].asset);
 
             // set up some general scene rendering properties
             app.scene.gammaCorrection = pc.GAMMA_SRGB;
@@ -232,7 +232,7 @@
 
             // Create lights with light source shape 
             light1 = createAreaLight("spot", pc.LIGHTSHAPE_RECT, new pc.Vec3(-3, 4, 0), 4, new pc.Color(1, 1, 1), 2, true, 10);
-            light2 = createAreaLight("omni", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0), 2, true, 10);
+            light2 = createAreaLight("omni", pc.LIGHTSHAPE_SPHERE, new pc.Vec3(5, 2, -2), 2, new pc.Color(1, 1, 0), 2, false, 10);
             light3 = createAreaLight("directional", pc.LIGHTSHAPE_DISK, new pc.Vec3(0, 0, 0), 0.2, new pc.Color(0.7, 0.7, 1), 10, true, far);
         }
 
@@ -256,7 +256,6 @@
             }
 
             if (light3) {
-
                 light3.setLocalEulerAngles(pc.math.lerp(230, 310, factor2), pc.math.lerp(-30, 0, factor3), 90);
 
                 var dir = light3.getWorldTransform().getY();

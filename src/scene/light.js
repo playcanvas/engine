@@ -7,12 +7,6 @@ import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
-    TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
-} from '../graphics/constants.js';
-import { Texture } from '../graphics/texture.js';
-
-import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_LIGHTMAP,
@@ -328,112 +322,6 @@ class Light {
         this.key = key;
     }
 
-    // creates LUT texture used by area lights
-    uploadAreaLightLUTs() {
-
-        function createTexture(device, data, format) {
-            var tex = new Texture(device, {
-                width: 64,
-                height: 64,
-                format: format,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE,
-                type: TEXTURETYPE_DEFAULT,
-                magFilter: FILTER_LINEAR,
-                minFilter: FILTER_NEAREST,
-                anisotropy: 1
-            });
-
-            tex.lock().set(data);
-            tex.unlock();
-            tex.upload();
-
-            return tex;
-        }
-
-        function offsetScale(data, offset, scale) {
-
-            var count = data.length;
-            var ret = new Float32Array(count);
-            for (var i = 0; i < count; i++) {
-                var n = i % 4;
-                ret[i] = (data[i] + offset[n]) * scale[n];
-            }
-            return ret;
-        }
-
-        function convertToHalfFloat(data) {
-
-            var count = data.length;
-            var ret = new Uint16Array(count);
-            var float2Half = math.float2Half;
-            for (var i = 0; i < count; i++) {
-                ret[i] = float2Half(data[i]);
-            }
-
-            return ret;
-        }
-
-        function convertToUint(data){
-
-            var count = data.length;
-            var ret = new Uint8ClampedArray(count);
-            for (var i = 0; i < count; i++) {
-                ret[i] = data[i] * 255;
-            }
-
-            return ret;
-        }
-
-        // create texture if not already
-        var app = Application.getApplication();
-        var luts = pc._areaLightLutData;
-        if (luts && !luts.ready) {
-
-            luts.ready = true;
-            var device = app.graphicsDevice;
-            var data1, data2;
-            var format = device._areaLightLutFormat;
-
-            // pick format for lut texture
-            if (format === PIXELFORMAT_RGBA32F) {
-
-                // float
-                data1 = luts.data1;
-                data2 = luts.data2;
-
-            } else if (format === PIXELFORMAT_RGBA16F) {
-
-                // half float
-                data1 = convertToHalfFloat(luts.data1);
-                data2 = convertToHalfFloat(luts.data2);
-
-            } else {
-
-                // low precision format
-                // offset and scale to avoid clipping and increase precision - this is undone in the shader
-
-                var o1 = [0.0, 0.2976, 0.01381, 0.0];
-                var s1 = [0.999, 3.08737, 1.6546, 0.603249];
-
-                var o2 = [-0.306897, 0.0, 0.0, 0.0];
-                var s2 = [1.442787, 1.0, 1.0, 1.0];
-
-                data1 = convertToUint(offsetScale(luts.data1, o1, s1));
-                data2 = convertToUint(offsetScale(luts.data2, o2, s2));
-
-            }
-
-            var tex1 = createTexture(device, data1, format);
-            var tex2 = createTexture(device, data2, format);
-
-            // assign to scope variables
-            device.scope.resolve('areaLightsLutTex1').setValue(tex1);
-            device.scope.resolve('areaLightsLutTex2').setValue(tex2);
-
-        }
-    }
-
     get type() {
         return this._type;
     }
@@ -458,10 +346,6 @@ class Light {
     set shape(value = LIGHTSHAPE_PUNCTUAL) {
         if (this._shape === value)
             return;
-
-        if (value !== LIGHTSHAPE_PUNCTUAL) {
-            this.uploadAreaLightLUTs();
-        }
 
         this._shape = value;
         this._destroyShadowMap();

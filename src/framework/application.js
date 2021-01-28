@@ -1015,6 +1015,16 @@ class Application extends EventHandler {
         }
     }
 
+    // handle area light property
+    _handleAreaLightDataProperty(prop) {
+        var asset = this.assets.get(prop);
+        if (asset) {
+            this.setAreaLightLuts(asset);
+        } else {
+            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
+        }
+    }
+
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         var i;
@@ -1085,6 +1095,10 @@ class Application extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
+        }
+
+        if (props.areaLightData) {
+            this._handleAreaLightDataProperty(props.areaLightData);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1664,6 +1678,27 @@ class Application extends EventHandler {
             } else {
                 this.setSkybox(null);
             }
+        }
+    }
+
+    /**
+     * @function
+     * @private
+     * @name pc.Application#setAreaLightLuts
+     * @description Sets the area light LUT asset for this app.
+     * @param {pc.Asset} asset - Asset of type `binary` to be set.
+     */
+    setAreaLightLuts(asset) {
+        if (asset) {
+            var renderer = this.renderer;
+            asset.ready(function (asset) {
+                renderer._uploadAreaLightLuts(asset.resource);
+            });
+            this.assets.load(asset);
+        } else {
+            // #ifdef DEBUG
+            console.warn("setAreaLightLuts: asset is not valid");
+            // #endif
         }
     }
 

@@ -685,11 +685,11 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
-        this._areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
-        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) {
-            this._areaLightLutFormat = PIXELFORMAT_RGBA16F;
-        } else if (this.extTextureFloat) {
-            this._areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
+            this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
+        } else if (this.extTextureFloat && this.extTextureFloatLinear) {
+            this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
     }
 

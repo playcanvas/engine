@@ -2,7 +2,7 @@ import { Color } from '../../../core/color.js';
 
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
 import { Light } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
@@ -68,6 +68,10 @@ class LightComponentSystem extends ComponentSystem {
         if (data.enable) {
             console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
             data.enabled = data.enable;
+        }
+
+        if (!data.shape) {
+            data.shape = LIGHTSHAPE_PUNCTUAL;
         }
 
         var light = new Light();

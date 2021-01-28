@@ -149,7 +149,7 @@ void calcLTCLightValues()
 
 #ifdef CLEARCOAT
 	ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
-	ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, ccSpecularityNoFres);
+	ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularityNoFres));
 #endif
 }
 
