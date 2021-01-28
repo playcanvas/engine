@@ -12,7 +12,7 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
     STENCILOP_DECREMENT,
     TYPE_FLOAT32
-} from '../../../graphics/graphics.js';
+} from '../../../graphics/constants.js';
 import { VertexBuffer } from '../../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../graphics/vertex-format.js';
 

@@ -1,4 +1,4 @@
-import { AnimTrack } from '../../../anim/anim-track.js';
+import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 
 /**
  * @private
@@ -46,6 +46,16 @@ class AnimComponentLayer {
      */
     reset() {
         this._controller.reset();
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.AnimComponentLayer#rebind
+     * @description Rebind any animations in the layer to the currently present components and model of the anim components entity.
+     */
+    rebind() {
+        this._controller.rebind();
     }
 
     update(dt) {

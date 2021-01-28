@@ -1,6 +1,6 @@
 import { http } from '../../../net/http.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { basisTargetFormat, basisTranscode } from '../../basis.js';

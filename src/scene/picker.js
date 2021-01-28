@@ -1,5 +1,5 @@
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
-import { GraphicsDevice } from '../graphics/device.js';
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 
@@ -42,8 +42,6 @@ class Picker {
         this.app = app;
         this.device = app.graphicsDevice;
         var device = this.device;
-
-        this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;

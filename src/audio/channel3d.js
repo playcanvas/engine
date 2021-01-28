@@ -15,7 +15,7 @@ class Channel3d extends Channel {
         this.position = new Vec3();
         this.velocity = new Vec3();
 
-        if (this.hasAudioContext()) {
+        if (hasAudioContext()) {
             this.panner = manager.context.createPanner();
         } else {
             this.maxDistance = MAX_DISTANCE;

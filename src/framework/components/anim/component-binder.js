@@ -1,5 +1,6 @@
-import { AnimTarget } from '../../../anim/anim-target.js';
-import { DefaultAnimBinder } from '../../../anim/default-anim-binder.js';
+import { AnimTarget } from '../../../anim/evaluator/anim-target.js';
+import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
+import { AnimBinder } from '../../../anim/binder/anim-binder.js';
 
 import { Color } from '../../../core/color.js';
 
@@ -66,36 +67,50 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     resolve(path) {
-        var pathSections = this.propertyLocator.decode(path);
+        var target = this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)];
+        if (target) return target;
 
-        var entityHierarchy = pathSections[0];
-        var component = pathSections[1];
-        var propertyHierarchy = pathSections[2];
-
-        var entity = this._getEntityFromHierarchy(entityHierarchy);
-
-        if (!entity)
-            return null;
-
+        var entity;
         var propertyComponent;
+        var targetPath;
 
-        switch (component) {
+        switch (path.component) {
             case 'entity':
+                entity = this._getEntityFromHierarchy(path.entityPath);
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    'entity',
+                    path.propertyPath
+                );
                 propertyComponent = entity;
                 break;
             case 'graph':
-                if (!this.nodes || !this.nodes[entityHierarchy[0]]) {
-                    return null;
-                }
-                propertyComponent = this.nodes[entityHierarchy[0]].node;
+                entity = this.animComponent.entity;
+                var graph = entity.model && entity.model.model && entity.model.model.graph;
+                propertyComponent = this.findNode(graph, path);
+                if (!propertyComponent) return null;
+                targetPath = AnimBinder.encode(
+                    propertyComponent.path,
+                    'graph',
+                    path.propertyPath
+                );
                 break;
             default:
-                propertyComponent = entity.findComponent(component);
+                entity = this._getEntityFromHierarchy(path.entityPath);
+                propertyComponent = entity.findComponent(path.component);
                 if (!propertyComponent)
                     return null;
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    path.component,
+                    path.propertyPath
+                );
+                break;
         }
 
-        return this._createAnimTargetForProperty(propertyComponent, propertyHierarchy);
+        target = this._createAnimTargetForProperty(propertyComponent, path.propertyPath, targetPath);
+        this.targetCache[AnimBinder.encode(path.entityPath, path.component, path.propertyPath)] = target;
+        return target;
     }
 
     update(deltaTime) {
@@ -118,7 +133,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         if (entityHierarchy.length === 1) {
             return currEntity;
         }
-        return currEntity._parent.findByPath(entityHierarchy.join('/'));
+        return currEntity._parent.findByPath(Array.isArray(entityHierarchy) ? entityHierarchy.join('/') : entityHierarchy);
     }
 
     // resolve an object path
@@ -173,7 +188,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
         };
     }
 
-    _createAnimTargetForProperty(propertyComponent, propertyHierarchy) {
+    _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetPath) {
 
         if (this.handlers && propertyHierarchy[0] === 'weights') {
             return this.handlers.weights(propertyComponent);
@@ -239,10 +254,31 @@ class AnimComponentBinder extends DefaultAnimBinder {
             return new AnimTarget(function (values) {
                 setter(values);
                 propertyComponent.material.update();
-            }, animDataType, animDataComponents);
+            }, animDataType, animDataComponents, targetPath);
         }
 
-        return new AnimTarget(setter, animDataType, animDataComponents);
+        return new AnimTarget(setter, animDataType, animDataComponents, targetPath);
+    }
+
+    rebind() {
+        this.targetCache = {};
+        // #ifdef DEBUG
+        this.visitedFallbackGraphPaths = {};
+        // #endif
+        var entity = this.animComponent && this.animComponent.entity;
+        var graph = entity.model && entity.model.model && entity.model.model.graph;
+        if (!graph) return;
+        this.graph = graph;
+        var nodes = { };
+        // cache node names so we can quickly resolve animation paths
+        var flatten = function (node) {
+            nodes[node.name] = node;
+            for (var i = 0; i < node.children.length; ++i) {
+                flatten(node.children[i]);
+            }
+        };
+        flatten(this.graph);
+        this.nodes = nodes;
     }
 }
 

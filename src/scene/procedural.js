@@ -9,7 +9,7 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES, SEMANTIC_COLOR,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     TYPE_FLOAT32, TYPE_UINT8
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';

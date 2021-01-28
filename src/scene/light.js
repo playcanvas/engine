@@ -9,7 +9,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
     TEXTURETYPE_DEFAULT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 import {
@@ -455,7 +455,7 @@ class Light {
         return this._shape;
     }
 
-    set shape(value) {
+    set shape(value = LIGHTSHAPE_PUNCTUAL) {
         if (this._shape === value)
             return;
 
@@ -470,7 +470,6 @@ class Light {
         var stype = this._shadowType;
         this._shadowType = null;
         this.shadowType = stype; // refresh shadow type; switching shape and back may change it
-
     }
 
     get shadowType() {

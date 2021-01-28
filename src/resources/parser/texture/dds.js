@@ -8,7 +8,7 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     PIXELFORMAT_RGBA32F,
     TEXHINT_ASSET
-} from '../../../graphics/graphics.js';
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 /* eslint-disable no-unused-vars */

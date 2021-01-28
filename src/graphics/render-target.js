@@ -1,6 +1,6 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './graphics.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
-import { GraphicsDevice } from './device.js';
+import { GraphicsDevice } from './graphics-device.js';
 
 var defaultOptions = {
     depth: true,

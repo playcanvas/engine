@@ -49,6 +49,28 @@ class AnimBinder {
 
     /**
      * @private
+     * @static
+     * @function
+     * @name pc.AnimBinder#encode
+     * @description Converts a locator array into its string version
+     * @param {string|Array} entityPath - The entity location in the scene defined as an array or string path
+     * @param {string} component - The component of the entity the property is located under
+     * @param {string|Array} propertyPath - The property location in the entity defined as an array or string path
+     * @returns {string} The locator encoded as a string
+     * @example
+     * // returns 'spotLight/light/color.r'
+     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
+     */
+    static encode(entityPath, component, propertyPath) {
+        return `${
+            Array.isArray(entityPath) ? AnimBinder.joinPath(entityPath) : entityPath
+        }/${component}/${
+            Array.isArray(propertyPath) ? AnimBinder.joinPath(propertyPath) : propertyPath
+        }`;
+    }
+
+    /**
+     * @private
      * @function
      * @name pc.AnimBinder#resolve
      * @description Resolve the provided target path and return an instance of {@link pc.AnimTarget} which

@@ -1,7 +1,7 @@
 import { hashCode } from '../core/hash.js';
 import { Color } from '../core/color.js';
 
-import { CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL } from '../graphics/graphics.js';
+import { CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL } from '../graphics/constants.js';
 
 import {
     BLEND_NONE,

@@ -1,7 +1,7 @@
 import { math } from '../math/math.js';
 import { Mat4 } from '../math/mat4.js';
 
-import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/graphics.js';
+import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 var _invMatrix = new Mat4();

@@ -13,7 +13,7 @@ import {
     PIXELFORMAT_ATC_RGBA,
     TEXTURELOCK_WRITE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
-} from './graphics.js';
+} from './constants.js';
 
 var _pixelSizeTable = null;
 var _blockSizeTable = null;

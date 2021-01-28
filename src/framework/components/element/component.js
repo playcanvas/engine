@@ -3,7 +3,7 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 import { Vec4 } from '../../../math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/graphics.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
@@ -465,19 +465,16 @@ class ElementComponent extends Component {
     }
 
     _bindScreen(screen) {
-        screen.on('set:resolution', this._onScreenResize, this);
-        screen.on('set:referenceresolution', this._onScreenResize, this);
-        screen.on('set:scaleblend', this._onScreenResize, this);
-        screen.on('set:screenspace', this._onScreenSpaceChange, this);
-        screen.on('remove', this._onScreenRemove, this);
+        // Bind the Element to the Screen. We used to subscribe to Screen events here. However,
+        // that was very slow when there are thousands of Elements. When the time comes to unbind
+        // the Element from the Screen, finding the event callbacks to remove takes a considerable
+        // amount of time. So instead, the Screen stores the Element component and calls its
+        // functions directly.
+        screen._bindElement(this);
     }
 
     _unbindScreen(screen) {
-        screen.off('set:resolution', this._onScreenResize, this);
-        screen.off('set:referenceresolution', this._onScreenResize, this);
-        screen.off('set:scaleblend', this._onScreenResize, this);
-        screen.off('set:screenspace', this._onScreenSpaceChange, this);
-        screen.off('remove', this._onScreenRemove, this);
+        screen._unbindElement(this);
     }
 
     _updateScreen(screen) {

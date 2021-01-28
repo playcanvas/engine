@@ -5,7 +5,7 @@ import {
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 import { BasisParser } from './parser/texture/basis.js';

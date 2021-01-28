@@ -1,6 +1,6 @@
 import { Mat4 } from '../math/mat4.js';
 
-import { BUFFER_DYNAMIC, PRIMITIVE_LINES, SEMANTIC_POSITION, SEMANTIC_COLOR, TYPE_FLOAT32, TYPE_UINT8 } from '../graphics/graphics.js';
+import { BUFFER_DYNAMIC, PRIMITIVE_LINES, SEMANTIC_POSITION, SEMANTIC_COLOR, TYPE_FLOAT32, TYPE_UINT8 } from '../graphics/constants.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 

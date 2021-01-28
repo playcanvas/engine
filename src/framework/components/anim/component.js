@@ -1,16 +1,16 @@
 import { Asset } from '../../../asset/asset.js';
 
-import { AnimEvaluator } from '../../../anim/anim-evaluator.js';
+import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
+import { AnimController } from '../../../anim/controller/anim-controller.js';
 
 import { Component } from '../component.js';
 
 import {
     ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
-} from './constants.js';
-import { AnimComponentBinder } from './binder.js';
-import { AnimComponentLayer } from './layer.js';
-import { AnimController } from './controller.js';
-import { AnimStateGraph } from './state-graph.js';
+} from '../../../anim/controller/constants.js';
+import { AnimComponentBinder } from './component-binder.js';
+import { AnimComponentLayer } from './component-layer.js';
+import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 
 /**
  * @private
@@ -175,6 +175,18 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
+     * @name pc.AnimComponent#rebind
+     * @description Rebind all of the components layers
+     */
+    rebind() {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            this.data.layers[i].rebind();
+        }
+    }
+
+    /**
+     * @private
+     * @function
      * @name pc.AnimComponent#findAnimationLayer
      * @description Finds a pc.AnimComponentLayer in this component.
      * @param {string} layerName - The name of the anim component layer to find
@@ -214,9 +226,9 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
-     * @name pc.AnimComponent#removeStateAnimations
-     * @description Removes animations from a state in the loaded state graph.
-     * @param {string} nodeName - The name of the state node that should have its animation tracks removed.
+     * @name pc.AnimComponent#removeNodeAnimations
+     * @description Removes animations from a node in the loaded state graph.
+     * @param {string} nodeName - The name of the node that should have its animation tracks removed.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {

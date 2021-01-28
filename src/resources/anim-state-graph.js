@@ -1,6 +1,5 @@
 import { http, Http } from '../net/http.js';
-
-import { AnimStateGraph } from '../framework/components/anim/state-graph.js';
+import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
 /**
  * @private
