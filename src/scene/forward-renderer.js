@@ -916,7 +916,9 @@ class ForwardRenderer {
             minorVersion: versions[1]
         };
 
-        if (luts.majorVersion === 0 && luts.minorVersion === 1) {
+        if (luts.majorVersion !== 0 || luts.minorVersion !== 1) {
+            console.warn(`areaLightLuts asset version: ${luts.majorVersion}.${luts.minorVersion} is not supported in current engine version!`);
+        } else {
             var device = this.device;
             var data1, data2;
             var format = device.areaLightLutFormat;
