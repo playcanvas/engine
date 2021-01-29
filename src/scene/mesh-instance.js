@@ -8,7 +8,7 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM, SHADERDEF_DIRLM,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -150,6 +150,8 @@ class MeshInstance {
         // Negative scale batching support
         this.flipFaces = false;
     }
+
+    static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
 
     get mesh() {
         return this._mesh;
@@ -570,9 +572,9 @@ class MeshInstance {
         if (value) {
             this.mask = (this.mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
         } else {
-            this.deleteParameter("texture_lightMap");
-            this.deleteParameter("texture_dirLightMap");
-            this._shaderDefs &= ~SHADERDEF_LM;
+            this.deleteParameter(MeshInstance.lightmapParamNames[0]);
+            this.deleteParameter(MeshInstance.lightmapParamNames[1]);
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }

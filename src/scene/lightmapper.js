@@ -19,6 +19,8 @@ import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
 
+import { MeshInstance } from './mesh-instance.js';
+
 import {
     BAKE_COLORDIR,
     FOG_NONE,
@@ -35,8 +37,6 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 var maxSize = 2048;
 
-var sceneLightmaps = [];
-var sceneLightmapsNode = [];
 var tempVec = new Vec3();
 var bounds = new BoundingBox();
 var lightBounds = new BoundingBox();
@@ -44,8 +44,7 @@ var tempSphere = {};
 
 const PASS_COLOR = 0;
 const PASS_DIR = 1;
-
-const passTexName = ["texture_lightMap", "texture_dirLightMap"];
+const LightmapUniqueName = "Lightmapper_lightmap";
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -215,7 +214,7 @@ class Lightmapper {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST
         });
-        tex.name = 'lightmap';
+        tex.name = LightmapUniqueName;
 
         return tex;
     }
@@ -358,33 +357,66 @@ class Lightmapper {
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
     }
 
-    // TODO !!!!!!!!!!!  clean this up, make sure it does not leak !!!!!!
-    deleteLightmaps(nodes) {
 
-        if (nodes) {
+    setLightmaping(nodes, value, shaderDefs) {
 
-            // delete old lightmaps, if present
-            for (let i = sceneLightmapsNode.length - 1; i >= 0; i--) {
-                for (let j = 0; j < nodes.length; j++) {
-                    if (sceneLightmapsNode[i] === nodes[j]) {
-                        for (let k = 0; k < sceneLightmaps[i].length; k++) {
-                            sceneLightmaps[i][k].destroy();
+        for (let i = 0; i < nodes.length; i++) {
+            let meshInstances = nodes[i].meshInstances;
+            for (let j = 0; j < meshInstances.length; j++) {
+                meshInstances[j].setLightmapped(value);
+
+                if (value && shaderDefs) {
+                    meshInstances[j]._shaderDefs |= shaderDefs;
+                }
+            }
+        }
+    }
+
+    deleteLightmaps(bakeNodes, allNodes) {
+
+        // helper function to scan meshInstances in nodes array, and based on 'add' parameter,
+        // referenced lightmaps are either added to or removed from the set
+        function scan(nodes, set, add) {
+            const parNames = MeshInstance.lightmapParamNames;
+
+            for (let i = 0; i < nodes.length; i++) {
+                let node = nodes[i];
+                for (let m = 0; m < node.meshInstances.length; m++) {
+                    let mi = node.meshInstances[m];
+
+                    // process all lightmaps for a meshInstance
+                    for (let p = 0; p < parNames.length; p++) {
+                        let lm = mi.getParameter(parNames[p]);
+                        if (lm) {
+                            if (add) {
+                                mi.deleteParameter(parNames[p]);
+                                set.add(lm.data);
+                            } else {
+                                set.delete(lm.data);
+                            }
                         }
-                        sceneLightmaps.splice(i, 1);
-                        sceneLightmapsNode.splice(i, 1);
                     }
                 }
             }
-        } else {
-
-            for (let i = 0; i < sceneLightmaps.length; i++) {
-                for (let j = 0; j < sceneLightmaps[i].length; j++) {
-                    sceneLightmaps[i][j].destroy();
-                }
-            }
-            sceneLightmaps = [];
-            sceneLightmapsNode = [];
         }
+
+        // loop over bakeNodes, store LMs they use in a set, and clear them from meshInstances
+        var lightmaps = new Set();
+        scan(bakeNodes, lightmaps, true);
+
+        // loop over all nodes, and any LMs they use, remove from the set
+        scan(allNodes, lightmaps, false);
+
+        // delete textures
+        var count = 0;
+        lightmaps.forEach((tex) => {
+            if (tex.name === LightmapUniqueName) {
+                tex.destroy();
+                count++;
+            }
+        });
+
+        console.log("removed lightmaps: " + count);
     }
 
     /**
@@ -426,9 +458,6 @@ class Lightmapper {
         // all MeshNode objects
         var allNodes = [];
 
-        // delete old lightmaps if present
-        this.deleteLightmaps(nodes);
-
         // collect nodes / meshInstances for baking
         if (nodes) {
 
@@ -449,6 +478,12 @@ class Lightmapper {
 
         // bake nodes
         if (bakeNodes.length > 0) {
+
+            // delete no longer needed lightmaps
+            this.deleteLightmaps(bakeNodes, allNodes);
+
+            // disable lightmapping
+            this.setLightmaping(bakeNodes, false);
 
             this.initBake();
             this.bakeInternal(mode, bakeNodes, allNodes);
@@ -548,6 +583,7 @@ class Lightmapper {
         var activeComp = scene.layers;
         activeComp._update();
 
+        // TODO: should be sorted by light type to avoid shader recompiles when type changes?????
         // Collect bakeable lights
         let allLights = [];
         let lights = this.prepareLightsToBake(activeComp, allLights);
@@ -580,24 +616,6 @@ class Lightmapper {
         var node;
         var lm, rcv, m;
 
-        // Disable existing scene lightmaps
-        var origShaderDefs = [];
-        origShaderDefs.length = sceneLightmapsNode.length;
-        var shaderDefs;
-        for (node = 0; node < allNodes.length; node++) {
-            rcv = allNodes[node].meshInstances;
-            shaderDefs = [];
-            for (i = 0; i < rcv.length; i++) {
-                shaderDefs.push(rcv[i]._shaderDefs);
-                rcv[i]._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
-            }
-            for (i = 0; i < sceneLightmapsNode.length; i++) {
-                if (sceneLightmapsNode[i] === allNodes[node].node) {
-                    origShaderDefs[i] = shaderDefs;
-                    break;
-                }
-            }
-        }
 
         // Change shadow casting
         var casters = [];
@@ -644,14 +662,15 @@ class Lightmapper {
             for (i = 0; i < rcv.length; i++) {
                 // patch meshInstance
                 m = rcv[i];
-                m._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM); // disable LM define, if set, to get bare ambient on first pass
+
+                m.setLightmapped(false);
+
+                // ??????????
                 m.mask = MASK_LIGHTMAP; // only affected by LM lights
-                m.deleteParameter("texture_lightMap");
-                m.deleteParameter("texture_dirLightMap");
 
                 // patch material
-                m.setParameter("texture_lightMap", m.material.lightMap ? m.material.lightMap : this.blackTex);
-                m.setParameter("texture_dirLightMap", this.blackTex);
+                m.setParameter(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setParameter(MeshInstance.lightmapParamNames[1], this.blackTex);
             }
 
             for (pass = 0; pass < passCount; pass++) {
@@ -701,10 +720,6 @@ class Lightmapper {
                 shadowCam.fov = light._outerConeAngle * 2;
 
                 this.renderer.updateCameraFrustum(shadowCam);
-            }
-
-            if (bakeNodes.length > 0) {
-                this.renderer.updateShaders(bakeNodes[0].meshInstances);
             }
 
             for (node = 0; node < bakeNodes.length; node++) {
@@ -794,9 +809,9 @@ class Lightmapper {
                     for (j = 0; j < rcv.length; j++) {
                         rcv[j].material = this.passMaterials[pass];
                     }
-                    if (passCount > 1) {
-                        this.renderer.updateShaders(rcv); // update between passes
-                    }
+
+                    // update shader
+                    this.renderer.updateShaders(rcv);
 
                     // ping-ponging output
                     this.renderer.setCamera(this.camera, targTmp, true);
@@ -805,7 +820,7 @@ class Lightmapper {
                         constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
                     }
 
-                    console.log("Baking light " + lights[i]._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
+                    //console.log("Baking light " + lights[i]._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
 
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
@@ -827,7 +842,7 @@ class Lightmapper {
 
                     for (j = 0; j < rcv.length; j++) {
                         m = rcv[j];
-                        m.setParameter(passTexName[pass], texTmp); // ping-ponging input
+                        m.setParameter(MeshInstance.lightmapParamNames[pass], texTmp); // ping-ponging input
                         m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                     }
                 }
@@ -846,10 +861,9 @@ class Lightmapper {
         }
 
 
-        var sceneLmaps;
+        var lightmaps = [];
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
-            sceneLmaps = [];
 
             for (pass = 0; pass < passCount; pass++) {
                 lm = lmaps[pass][node];
@@ -876,17 +890,13 @@ class Lightmapper {
                     m.mask = MASK_BAKED;
 
                     // Set lightmap
-                    rcv[i].setParameter(passTexName[pass], lm);
-                    if (pass === PASS_DIR) rcv[i]._shaderDefs |= SHADERDEF_DIRLM;
+                    rcv[i].setParameter(MeshInstance.lightmapParamNames[pass], lm);
                 }
-                sceneLmaps[pass] = lm;
+                lightmaps.push(lm);
 
                 // Clean up
                 if (pass === passCount - 1) targ.destroy();
             }
-
-            sceneLightmaps.push(sceneLmaps);
-            sceneLightmapsNode.push(bakeNodes[node].node);
         }
 
         for (var key in texPool) {
@@ -897,12 +907,9 @@ class Lightmapper {
         }
 
         // Set up linear filtering
-        for (i = 0; i < sceneLightmaps.length; i++) {
-            for (j = 0; j < sceneLightmaps[i].length; j++) {
-                let tex = sceneLightmaps[i][j];
-                tex.minFilter = FILTER_LINEAR;
-                tex.magFilter = FILTER_LINEAR;
-            }
+        for (i = 0; i < lightmaps.length; i++) {
+            lightmaps[i].minFilter = FILTER_LINEAR;
+            lightmaps[i].magFilter = FILTER_LINEAR;
         }
 
         // Revert shadow casting
@@ -910,19 +917,12 @@ class Lightmapper {
             allNodes[node].component.castShadows = allNodes[node].castShadows;
         }
 
-        var renderOrModelMeshInstances = function (node) {
-            return node.render ? node.render.meshInstances : node.model.model.meshInstances;
-        };
 
-        // Enable existing scene lightmaps
-        for (i = 0; i < origShaderDefs.length; i++) {
-            if (origShaderDefs[i]) {
-                rcv = renderOrModelMeshInstances(sceneLightmapsNode[i]);
-                for (j = 0; j < rcv.length; j++) {
-                    rcv[j]._shaderDefs |= origShaderDefs[i][j] & (SHADERDEF_LM | SHADERDEF_DIRLM);
-                }
-            }
-        }
+
+        // Enable new lightmaps
+        let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
+        this.setLightmaping(bakeNodes, true, shaderDefs);
+
 
         this.restoreLights(allLights);
 

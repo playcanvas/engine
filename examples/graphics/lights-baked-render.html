@@ -38,8 +38,9 @@
         var miniStats = new pcx.MiniStats(app);
 
         var material = new pc.StandardMaterial();
-        material.shininess = 0;
-        //material.useMetalness = true;
+        material.shininess = 60;
+        material.useMetalness = true;
+        material.metalness = 0.03;
         material.update();
 
         // All render component primitive shape types
@@ -132,6 +133,7 @@
         lightSpot.setLocalPosition(5, 8, 0);
         app.root.addChild(lightSpot);
 
+
         // Create an entity with a camera component
         var camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -155,6 +157,7 @@
 
         // bake lightmaps
         app.lightmapper.bake(null, bakeType);
+//        app.lightmapper.bake([ground], bakeType);
 
         // Set an update function on the app's update event
         var time = 4;
@@ -165,6 +168,7 @@
             if (time > 7 && bake) {
                 bake = false;
                 console.log("bake");
+//                app.lightmapper.bake([ground], bakeType);
                 app.lightmapper.bake(null, bakeType);
             }
 
