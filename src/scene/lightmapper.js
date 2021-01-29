@@ -134,11 +134,17 @@ class Lightmapper {
         this.assets = null;
     }
 
-    initBake() {
+    initBake(device) {
 
         // only initialize one time
         if (!this._initCalled) {
             this._initCalled = true;
+
+            this.dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
+            this.constantTexSource = device.scope.resolve("source");
+            this.constantPixelOffset = device.scope.resolve("pixelOffset");
+            this.constantBakeDir = device.scope.resolve("bakeDir");
+            this.pixelOffset = new Float32Array(2);
 
             // small black texture
             this.blackTex = new Texture(this.device, {
@@ -485,7 +491,7 @@ class Lightmapper {
             // disable lightmapping
             this.setLightmaping(bakeNodes, false);
 
-            this.initBake();
+            this.initBake(device);
             this.bakeInternal(mode, bakeNodes, allNodes);
         }
 
@@ -587,15 +593,6 @@ class Lightmapper {
         // Collect bakeable lights
         let allLights = [];
         let lights = this.prepareLightsToBake(activeComp, allLights);
-
-
-        // Init shaders
-        var dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
-        var constantTexSource = device.scope.resolve("source");
-        var constantPixelOffset = device.scope.resolve("pixelOffset");
-        var constantBakeDir = device.scope.resolve("bakeDir");
-
-        var pixelOffset = new Float32Array(2);
 
         var drawCalls = activeComp._meshInstances;
 
@@ -817,7 +814,7 @@ class Lightmapper {
                     this.renderer.setCamera(this.camera, targTmp, true);
 
                     if (pass === PASS_DIR) {
-                        constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
+                        this.constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
                     }
 
                     //console.log("Baking light " + lights[i]._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
@@ -861,7 +858,12 @@ class Lightmapper {
         }
 
 
-        var lightmaps = [];
+        let lightmaps = [];
+        let pixelOffset = this.pixelOffset;
+        let dilateShader = this.dilateShader;
+        let constantTexSource = this.constantTexSource;
+        let constantPixelOffset = this.constantPixelOffset;
+
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
 
