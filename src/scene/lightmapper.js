@@ -147,6 +147,7 @@ class Lightmapper {
             this.constantPixelOffset = device.scope.resolve("pixelOffset");
             this.constantBakeDir = device.scope.resolve("bakeDir");
             this.pixelOffset = new Float32Array(2);
+            this.materials = [];
 
             // small black texture
             this.blackTex = new Texture(this.device, {
@@ -169,6 +170,11 @@ class Lightmapper {
             camera.node = new GraphNode();
             this.camera = camera;
         }
+    }
+
+    finishBake() {
+
+        this.materials = null;
     }
 
     createMaterials(device, scene, passCount) {
@@ -527,6 +533,7 @@ class Lightmapper {
 
             this.initBake(device);
             this.bakeInternal(mode, bakeNodes, allNodes);
+            this.finishBake();
         }
 
         let nowTime = now();
@@ -643,6 +650,18 @@ class Lightmapper {
         }
     }
 
+    backupMaterials(meshInstances) {
+        for (let i = 0; i < meshInstances.length; i++) {
+            this.materials[i] = meshInstances[i].material;
+        }
+    }
+
+    restoreMaterials(meshInstances) {
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].material = this.materials[i];
+        }
+    }
+
     bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
 
         var scene = this.scene;
@@ -686,8 +705,6 @@ class Lightmapper {
 
 
 
-
-        var origMat = [];
 
         // Prepare models
         var nodeTarg = [[], []];
@@ -829,9 +846,7 @@ class Lightmapper {
                 }
 
                 // Store original materials
-                for (j = 0; j < rcv.length; j++) {
-                    origMat[j] = rcv[j].material;
-                }
+                this.backupMaterials(rcv);
 
                 for (pass = 0; pass < passCount; pass++) {
                     lm = lmaps[pass][node];
@@ -887,10 +902,8 @@ class Lightmapper {
                     }
                 }
 
-                // Revert original materials
-                for (j = 0; j < rcv.length; j++) {
-                    rcv[j].material = origMat[j];
-                }
+                // Revert to original materials
+                this.restoreMaterials(rcv);
             }
 
             bakeLight.enabled = false; // disable the light
