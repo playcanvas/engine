@@ -17,7 +17,7 @@ FollowCamera.attributes.add('lerpAmount', {
     max: 1,
     default: 0.1,
     title: 'Lerp Amount',
-    description: 'The amount to lerp towards the target transform every frame'
+    description: 'The amount to lerp the camera towards its desired position every frame based on a 60fps frame rate. Lerping is frame rate independent though and will be correct for other frame rates.'
 });
 
 // initialize code called once per entity
@@ -56,12 +56,13 @@ FollowCamera.prototype.update = function(dt) {
         this.updateTargetPosition();
 
         // Lerp the current camera position to where we want it to be
-        this.currentPos.lerp(this.currentPos, this.targetPos, this.lerpAmount);
+        // Note that the lerping is framerate independent
+        this.currentPos.lerp(this.currentPos, this.targetPos, this.lerpAmount * dt * 60);
 
         // Set the camera's position
         this.entity.setPosition(this.currentPos);
 
-        // Look at the point relative to the target
+        // Look at the target entity from the new position
         this.entity.lookAt(this.target.getPosition());
     }
 };
