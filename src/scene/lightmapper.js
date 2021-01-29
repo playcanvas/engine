@@ -293,6 +293,17 @@ class Lightmapper {
         }
     }
 
+    // updates world transform for nodes
+    updateTransforms(nodes) {
+
+        for (let i = 0; i < nodes.length; i++) {
+            let meshInstances = nodes[i].meshInstances;
+            for (let j = 0; j < meshInstances.length; j++) {
+                meshInstances[j].node.getWorldTransform();
+            }
+        }
+    }
+
     calculateLightmapSize(node) {
         var data, parent;
         var sizeMult = this.scene.lightmapSizeMultiplier || 16;
@@ -528,9 +539,8 @@ class Lightmapper {
         }
     }
 
-    prepareLightsToBake(layerComposition, allLights) {
+    prepareLightsToBake(layerComposition, allLights, bakeLights) {
 
-        var bakeLights = [];
         var sceneLights = layerComposition._lights;
 
         for (let i = 0; i < sceneLights.length; i++) {
@@ -551,13 +561,43 @@ class Lightmapper {
             }
         }
 
-        return bakeLights;
+        // sort bake lights by type to minimize shader switches
+        bakeLights.sort();
     }
 
     restoreLights(allLights) {
 
         for (let i = 0; i < allLights.length; i++) {
             allLights[i].restore();
+        }
+    }
+
+    setupScene() {
+
+        // lightmapper needs original model draw calls
+        this.revertStatic = false;
+        if (this.scene._needsStaticPrepare) {
+            this.scene._needsStaticPrepare = false;
+            this.revertStatic = true;
+        }
+
+        // backup
+        this.fog = this.scene.fog;
+        this.ambientLight = this.scene.ambientLight.clone();
+
+        // set up scene
+        this.scene.fog = FOG_NONE;
+        this.scene.ambientLight.set(0, 0, 0);
+    }
+
+    restoreScene() {
+
+        this.scene.fog = this.fog;
+        this.scene.ambientLight = this.ambientLight;
+
+        // Revert static preprocessing
+        if (this.revertStatic) {
+            this.scene._needsStaticPrepare = true;
         }
     }
 
@@ -573,42 +613,23 @@ class Lightmapper {
         var pass;
 
         this.createMaterials(device, scene, passCount);
+        this.setupScene();
 
-        // Disable static preprocessing (lightmapper needs original model draw calls)
-        var revertStatic = false;
-        if (scene._needsStaticPrepare) {
-            scene._needsStaticPrepare = false;
-            revertStatic = true;
-        }
+        // update layer composition
+        scene.layers._update();
 
         // Calculate lightmap sizes and allocate textures
         let lmaps = [[], []];
         let texPool = {};
         this.allocateTextures(bakeNodes, lmaps, texPool, passCount);
 
-        var activeComp = scene.layers;
-        activeComp._update();
+        // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
+        let allLights = [], bakeLights = [];
+        this.prepareLightsToBake(scene.layers, allLights, bakeLights);
 
-        // TODO: should be sorted by light type to avoid shader recompiles when type changes?????
-        // Collect bakeable lights
-        let allLights = [];
-        let lights = this.prepareLightsToBake(activeComp, allLights);
+        // update transforms
+        this.updateTransforms(allNodes);
 
-        var drawCalls = activeComp._meshInstances;
-
-        // update scene matrices
-        for (i = 0; i < drawCalls.length; i++) {
-            if (drawCalls[i].node) drawCalls[i].node.getWorldTransform();
-        }
-
-        // Store scene values
-        var origFog = scene.fog;
-        var origAmbientR = scene.ambientLight.r;
-        var origAmbientG = scene.ambientLight.g;
-        var origAmbientB = scene.ambientLight.b;
-
-        scene.fog = FOG_NONE;
-        scene.ambientLight.set(0, 0, 0);
 
         var node;
         var lm, rcv, m;
@@ -639,7 +660,7 @@ class Lightmapper {
         var nodeBounds = [];
         var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
-        var light, shadowCam;
+        var shadowCam;
 
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
@@ -680,41 +701,42 @@ class Lightmapper {
         }
 
         // Disable all bakeable lights
-        for (j = 0; j < lights.length; j++)
-            lights[j].enabled = false;
+        for (j = 0; j < bakeLights.length; j++) {
+            bakeLights[j].enabled = false;
+        }
 
         var lightArray = [[], [], []];
 
         // Accumulate lights into RGBM textures
         var shadersUpdatedOn1stPass = false;
         var shadowMapRendered;
-        for (i = 0; i < lights.length; i++) {
+        for (i = 0; i < bakeLights.length; i++) {
+            let bakeLight = bakeLights[i];
 
-            lights[i].enabled = true; // enable next light
+            bakeLight.enabled = true; // enable next light
             shadowMapRendered = false;
 
-            lights[i]._cacheShadowMap = true;
-            if (lights[i].type !== LIGHTTYPE_DIRECTIONAL) {
-                lights[i]._node.getWorldTransform();
-                lights[i].getBoundingSphere(tempSphere);
+            bakeLight._cacheShadowMap = true;
+            if (bakeLight.type !== LIGHTTYPE_DIRECTIONAL) {
+                bakeLight._node.getWorldTransform();
+                bakeLight.getBoundingSphere(tempSphere);
                 lightBounds.center = tempSphere.center;
                 lightBounds.halfExtents.x = tempSphere.radius;
                 lightBounds.halfExtents.y = tempSphere.radius;
                 lightBounds.halfExtents.z = tempSphere.radius;
             }
-            if (lights[i].type === LIGHTTYPE_SPOT) {
-                light = lights[i];
-                shadowCam = this.renderer.getShadowCamera(device, light);
+            if (bakeLight.type === LIGHTTYPE_SPOT) {
+                shadowCam = this.renderer.getShadowCamera(device, bakeLight);
 
-                shadowCam._node.setPosition(light._node.getPosition());
-                shadowCam._node.setRotation(light._node.getRotation());
+                shadowCam._node.setPosition(bakeLight._node.getPosition());
+                shadowCam._node.setRotation(bakeLight._node.getRotation());
                 shadowCam._node.rotateLocal(-90, 0, 0);
 
                 shadowCam.projection = PROJECTION_PERSPECTIVE;
-                shadowCam.nearClip = light.attenuationEnd / 1000;
-                shadowCam.farClip = light.attenuationEnd;
+                shadowCam.nearClip = bakeLight.attenuationEnd / 1000;
+                shadowCam.farClip = bakeLight.attenuationEnd;
                 shadowCam.aspectRatio = 1;
-                shadowCam.fov = light._outerConeAngle * 2;
+                shadowCam.fov = bakeLight._outerConeAngle * 2;
 
                 this.renderer.updateCameraFrustum(shadowCam);
             }
@@ -725,7 +747,7 @@ class Lightmapper {
                 bounds = nodeBounds[node];
 
                 // Tweak camera to fully see the model, so directional light frustum will also see it
-                if (lights[i].type === LIGHTTYPE_DIRECTIONAL) {
+                if (bakeLight.type === LIGHTTYPE_DIRECTIONAL) {
                     tempVec.copy(bounds.center);
                     tempVec.y += bounds.halfExtents.y;
 
@@ -743,7 +765,7 @@ class Lightmapper {
                     }
                 }
 
-                if (lights[i].type === LIGHTTYPE_SPOT) {
+                if (bakeLight.type === LIGHTTYPE_SPOT) {
                     var nodeVisible = false;
                     for (j = 0; j < rcv.length; j++) {
                         if (rcv[j]._isVisible(shadowCam)) {
@@ -756,30 +778,30 @@ class Lightmapper {
                     }
                 }
 
-                if (lights[i].type === LIGHTTYPE_DIRECTIONAL) {
-                    lightArray[LIGHTTYPE_DIRECTIONAL][0] = lights[i];
+                if (bakeLight.type === LIGHTTYPE_DIRECTIONAL) {
+                    lightArray[LIGHTTYPE_DIRECTIONAL][0] = bakeLight;
                     lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
-                    if (!shadowMapRendered && lights[i].castShadows) {
-                        this.renderer.cullDirectionalShadowmap(lights[i], casters, this.camera, 0);
+                    if (!shadowMapRendered && bakeLight.castShadows) {
+                        this.renderer.cullDirectionalShadowmap(bakeLight, casters, this.camera, 0);
                         this.renderer.renderShadows(lightArray[LIGHTTYPE_DIRECTIONAL], 0);
                         shadowMapRendered = true;
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (lights[i].type === LIGHTTYPE_OMNI) {
-                        lightArray[LIGHTTYPE_OMNI][0] = lights[i];
+                    if (bakeLight.type === LIGHTTYPE_OMNI) {
+                        lightArray[LIGHTTYPE_OMNI][0] = bakeLight;
                         lightArray[LIGHTTYPE_SPOT].length = 0;
-                        if (!shadowMapRendered && lights[i].castShadows) {
-                            this.renderer.cullLocalShadowmap(lights[i], casters);
+                        if (!shadowMapRendered && bakeLight.castShadows) {
+                            this.renderer.cullLocalShadowmap(bakeLight, casters);
                             this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
                             shadowMapRendered = true;
                         }
                     } else {
                         lightArray[LIGHTTYPE_OMNI].length = 0;
-                        lightArray[LIGHTTYPE_SPOT][0] = lights[i];
-                        if (!shadowMapRendered && lights[i].castShadows) {
-                            this.renderer.cullLocalShadowmap(lights[i], casters);
+                        lightArray[LIGHTTYPE_SPOT][0] = bakeLight;
+                        if (!shadowMapRendered && bakeLight.castShadows) {
+                            this.renderer.cullLocalShadowmap(bakeLight, casters);
                             this.renderer.renderShadows(lightArray[LIGHTTYPE_SPOT]);
                             shadowMapRendered = true;
                         }
@@ -803,6 +825,7 @@ class Lightmapper {
                         scene.updateShaders = true;
                     }
 
+                    // set up material for baking a pass
                     for (j = 0; j < rcv.length; j++) {
                         rcv[j].material = this.passMaterials[pass];
                     }
@@ -814,10 +837,10 @@ class Lightmapper {
                     this.renderer.setCamera(this.camera, targTmp, true);
 
                     if (pass === PASS_DIR) {
-                        this.constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
+                        this.constantBakeDir.setValue(bakeLight.bakeDir ? 1 : 0);
                     }
 
-                    //console.log("Baking light " + lights[i]._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
+                    //console.log("Baking light " + bakeLight._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
 
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
@@ -850,10 +873,10 @@ class Lightmapper {
                 }
             }
 
-            lights[i].enabled = false; // disable that light
-            lights[i]._cacheShadowMap = false;
-            if (lights[i]._isCachedShadowMap) {
-                lights[i]._destroyShadowMap();
+            bakeLight.enabled = false; // disable the light
+            bakeLight._cacheShadowMap = false;
+            if (bakeLight._isCachedShadowMap) {
+                bakeLight._destroyShadowMap();
             }
         }
 
@@ -925,17 +948,9 @@ class Lightmapper {
         let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
         this.setLightmaping(bakeNodes, true, shaderDefs);
 
-
+        // restore changes
         this.restoreLights(allLights);
-
-        // Roll back scene stuff
-        scene.fog = origFog;
-        scene.ambientLight.set(origAmbientR, origAmbientG, origAmbientB);
-
-        // Revert static preprocessing
-        if (revertStatic) {
-            scene._needsStaticPrepare = true;
-        }
+        this.restoreScene();
     }
 }
 

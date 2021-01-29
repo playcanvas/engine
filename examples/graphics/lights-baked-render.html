@@ -54,14 +54,14 @@
             entity.addComponent(Math.random() < 0.5 ? 'render' : 'model', {
                 castShadows: false,
                 castShadowsLightmap: true,
-                lightmapped: true,
+               lightmapped: true,
                 type: shape,
                 material: material
             });
             app.root.addChild(entity);
 
             // random orientation
-            entity.setLocalPosition(Math.random() * 10 - 5, Math.random() * 5, Math.random() * 10 - 5);
+            entity.setLocalPosition(Math.random() * 14 - 7, 0.5, Math.random() * 14 - 7);
         };
 
         var ground = new pc.Entity("Ground");
@@ -73,8 +73,35 @@
             material: material
         });
         app.root.addChild(ground);
-        ground.setLocalPosition(0, -1, 0);
+        ground.setLocalPosition(0, 0, 0);
         ground.setLocalScale(40, 40, 40);
+
+
+        // var count = 50;
+        // for (var l = 0; l < count; l++) {
+        //     var light = new pc.Entity("Directional");
+        //     light.addComponent("light", {
+        //         affectDynamic: true,
+        //         affectLightmapped: false,
+        //         bake: true,
+        //         castShadows: true,
+        //         normalOffsetBias: 0.05,
+        //         shadowBias: 0.2,
+        //         shadowDistance: 50,
+        //         shadowResolution: 2048,
+        //         shadowType: pc.SHADOW_PCF3,
+        //         color: pc.Color.WHITE,
+        //         intensity: 1 / count,
+        //         type: "directional"
+        //     });
+        //     app.root.addChild(light);
+
+        //     var p = l > (count * 0.8) ? 20 : 90;
+        //     var p2 = p * 0.5;
+        //     light.setLocalEulerAngles(-45 + Math.random() * p - p2, 0, Math.random() * p - p2);
+        // }
+
+
 
         // Create an entity with a directional light component that is configured as a baked light
         var light = new pc.Entity("Directional");
@@ -88,8 +115,8 @@
             shadowDistance: 50,
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.GREEN,
-            intensity: 0.3,
+            color: pc.Color.WHITE,
+            intensity: 0.5,
             type: "directional"
         });
         app.root.addChild(light);
@@ -130,7 +157,7 @@
             range: 100,
             type: "spot"
         });
-        lightSpot.setLocalPosition(5, 8, 0);
+        lightSpot.setLocalPosition(5, 5, 0);
         app.root.addChild(lightSpot);
 
 
@@ -160,7 +187,7 @@
 //        app.lightmapper.bake([ground], bakeType);
 
         // Set an update function on the app's update event
-        var time = 4;
+        var time = 7;
         var bake = true;
         app.on("update", function (dt) {
             time += dt;
@@ -169,7 +196,7 @@
                 bake = false;
                 console.log("bake");
 //                app.lightmapper.bake([ground], bakeType);
-                app.lightmapper.bake(null, bakeType);
+//                app.lightmapper.bake(null, bakeType);
             }
 
             // orbit camera
