@@ -293,6 +293,27 @@ class Lightmapper {
         }
     }
 
+    // prepare all meshInstances that cast shadows into lightmaps
+    prepareShadowCasters(nodes) {
+
+        var casters = [];
+        for (let n = 0; n < nodes.length; n++) {
+            let component = nodes[n].component;
+
+            component.castShadows = component.castShadowsLightmap;
+            if (component.castShadowsLightmap) {
+
+                let meshes = nodes[n].meshInstances;
+                for (i = 0; i < meshes.length; i++) {
+                    meshes[i].visibleThisFrame = true;
+                    casters.push(meshes[i]);
+                }
+            }
+        }
+
+        return casters;
+    }
+
     // updates world transform for nodes
     updateTransforms(nodes) {
 
@@ -511,6 +532,7 @@ class Lightmapper {
         this.stats.shadersLinked = device._shaderStats.linked - startShaders;
         this.stats.compileTime = device._shaderStats.compileTime - startCompileTime;
         this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
+        this.stats.lightmapCount = bakeNodes.length;
 
         console.log("stats: ", this.stats);
 
@@ -607,8 +629,6 @@ class Lightmapper {
         var i, j;
         var device = this.device;
 
-        this.stats.lightmapCount = bakeNodes.length;
-
         var passCount = mode === BAKE_COLORDIR ? 2 : 1;
         var pass;
 
@@ -630,29 +650,19 @@ class Lightmapper {
         // update transforms
         this.updateTransforms(allNodes);
 
+        // get all meshInstances that cast shadows into lightmap and set them up for realtime shadow casting
+        let casters = this.prepareShadowCasters(allNodes);
+
+        // TODO: handle morphing as well
+        // update skinned meshes
+        this.renderer.updateCpuSkinMatrices(casters);
+        this.renderer.gpuUpdate(casters);
 
         var node;
         var lm, rcv, m;
 
 
-        // Change shadow casting
-        var casters = [];
-        var meshes;
-        var rom;
-        for (node = 0; node < allNodes.length; node++) {
-            rom = allNodes[node].component;
-            rom.castShadows = rom.castShadowsLightmap;
-            if (rom.castShadowsLightmap) {
-                meshes = allNodes[node].meshInstances;
-                for (i = 0; i < meshes.length; i++) {
-                    meshes[i].visibleThisFrame = true;
-                    casters.push(meshes[i]);
-                }
-            }
-        }
 
-        this.renderer.updateCpuSkinMatrices(casters);
-        this.renderer.gpuUpdate(casters);
 
         var origMat = [];
 
