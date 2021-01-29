@@ -50,7 +50,7 @@ FollowCamera.prototype.updateTargetPosition = function () {
 };
 
 // update code called every frame
-FollowCamera.prototype.update = function(dt) {
+FollowCamera.prototype.postUpdate = function(dt) {
     if (this.target) {
         // Calculate where we want the camera to be
         this.updateTargetPosition();
