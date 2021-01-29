@@ -38,7 +38,6 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 var maxSize = 2048;
 
 var tempVec = new Vec3();
-var bounds = new BoundingBox();
 var lightBounds = new BoundingBox();
 var tempSphere = {};
 
@@ -61,6 +60,9 @@ class MeshNode {
 
         this.castShadows = this.component.castShadows;
         this.meshInstances = meshInstances;
+
+        // world space aabb for all meshInstances
+        this.bounds = null;
     }
 }
 
@@ -623,6 +625,24 @@ class Lightmapper {
         }
     }
 
+    // compute bounding box for each node
+    computeBounds(nodes) {
+
+        let bounds = new BoundingBox();
+
+        for (let i = 0; i < nodes.length; i++) {
+            const meshInstances = nodes[i].meshInstances;
+            if (meshInstances.length > 0) {
+                bounds.copy(meshInstances[0].aabb);
+                for (let m = 1; m < meshInstances.length; m++) {
+                    bounds.add(meshInstances[m].aabb);
+                }
+            }
+
+            nodes[i].bounds = bounds.clone();
+        }
+    }
+
     bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
 
         var scene = this.scene;
@@ -658,6 +678,9 @@ class Lightmapper {
         this.renderer.updateCpuSkinMatrices(casters);
         this.renderer.gpuUpdate(casters);
 
+        // compute bounding boxes
+        this.computeBounds(bakeNodes);
+
         var node;
         var lm, rcv, m;
 
@@ -667,25 +690,12 @@ class Lightmapper {
         var origMat = [];
 
         // Prepare models
-        var nodeBounds = [];
         var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
         var shadowCam;
 
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
-
-            // Calculate model AABB
-            if (rcv.length > 0) {
-                bounds.copy(rcv[0].aabb);
-                for (i = 0; i < rcv.length; i++) {
-                    rcv[i].node.getWorldTransform();
-                    bounds.add(rcv[i].aabb);
-                }
-            }
-            var nbounds = new BoundingBox();
-            nbounds.copy(bounds);
-            nodeBounds.push(nbounds);
 
             for (i = 0; i < rcv.length; i++) {
                 // patch meshInstance
@@ -754,7 +764,7 @@ class Lightmapper {
             for (node = 0; node < bakeNodes.length; node++) {
 
                 rcv = bakeNodes[node].meshInstances;
-                bounds = nodeBounds[node];
+                const bounds = bakeNodes[node].bounds;
 
                 // Tweak camera to fully see the model, so directional light frustum will also see it
                 if (bakeLight.type === LIGHTTYPE_DIRECTIONAL) {
