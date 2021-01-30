@@ -137,7 +137,6 @@ class Vec2 {
      * @example
      * var right = new pc.Vec2(1, 0);
      * var up = new pc.Vec2(0, 1);
-
      * var crossProduct = right.cross(up);
      *
      * // Should print 1
