@@ -1,5 +1,4 @@
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 

@@ -1,5 +1,4 @@
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
