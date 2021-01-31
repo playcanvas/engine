@@ -782,7 +782,7 @@ var standard = {
 
         code += chunks.startVS;
         code += codeBody;
-        code += "}";
+        code += chunks.endVS;
 
         var vshader = code;
 
