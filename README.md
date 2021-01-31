@@ -122,7 +122,6 @@ Now you can run various build options:
 | Command                | Description                               | Outputs                          |
 |------------------------|-------------------------------------------|----------------------------------|
 | `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run closure`      | Build minified release engine             | `build\playcanvas.min.js`        |
 | `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
 | `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
 
@@ -140,8 +139,8 @@ Latest stable release:
 
 Specific engine versions:
 
-* https://code.playcanvas.com/playcanvas-0.181.11.js
-* https://code.playcanvas.com/playcanvas-0.181.11.min.js
+* https://code.playcanvas.com/playcanvas-1.38.4.js
+* https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
 ### Generate Source Maps
 
