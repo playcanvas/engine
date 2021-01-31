@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup Node.js 10.x
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2.1.4
       with:
         node-version: 10.x
     - name: Setup Java JDK 1.8
