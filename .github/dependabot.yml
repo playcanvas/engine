@@ -9,6 +9,6 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    # Look for `package.json` and `lock` files in the `root` directory
     schedule:
-      # Check for updates to GitHub Actions every weekday
       interval: "daily"
