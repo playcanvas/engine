@@ -1,10 +1,10 @@
 import { version, revision } from '../core/core.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
+import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { http } from '../net/http.js';
