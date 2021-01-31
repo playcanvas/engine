@@ -1,12 +1,11 @@
 import { now } from  '../core/time.js';
 
-import { Color } from '../core/color.js';
-
+import { math } from '../math/math.js';
+import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
-import { math } from '../math/math.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 

@@ -1,8 +1,8 @@
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
-import { Vec3 } from '../math/vec3.js';
+import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
+import { Vec3 } from '../math/vec3.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
