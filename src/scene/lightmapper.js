@@ -38,7 +38,6 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 var maxSize = 2048;
 
 var tempVec = new Vec3();
-var lightBounds = new BoundingBox();
 var tempSphere = {};
 
 const PASS_COLOR = 0;
@@ -73,6 +72,21 @@ class LightInfo {
 
         // original light properties
         this.store();
+
+        // bounds for non-directional light
+        if (light.type !== LIGHTTYPE_DIRECTIONAL) {
+
+            // world sphere
+            light._node.getWorldTransform();
+            light.getBoundingSphere(tempSphere);
+
+            // world aabb
+            this.lightBounds = new BoundingBox();
+            this.lightBounds.center = tempSphere.center;
+            this.lightBounds.halfExtents.x = tempSphere.radius;
+            this.lightBounds.halfExtents.y = tempSphere.radius;
+            this.lightBounds.halfExtents.z = tempSphere.radius;
+        }
     }
 
     store() {
@@ -142,6 +156,7 @@ class Lightmapper {
         if (!this._initCalled) {
             this._initCalled = true;
 
+            // shader related
             this.dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
             this.constantTexSource = device.scope.resolve("source");
             this.constantPixelOffset = device.scope.resolve("pixelOffset");
@@ -403,7 +418,6 @@ class Lightmapper {
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
     }
 
-
     setLightmaping(nodes, value, shaderDefs) {
 
         for (let i = 0; i < nodes.length; i++) {
@@ -578,7 +592,8 @@ class Lightmapper {
             let light = sceneLights[i];
 
             // store all lights and their original settings we need to temporariy modify
-            allLights.push(new LightInfo(light));
+            const lightInfo = new LightInfo(light);
+            allLights.push(lightInfo);
 
             // bake light
             if (light.enabled && (light.mask & MASK_LIGHTMAP) !== 0) {
@@ -588,7 +603,7 @@ class Lightmapper {
 
                 light.mask = 0xFFFFFFFF;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
-                bakeLights.push(sceneLights[i]);
+                bakeLights.push(lightInfo);
             }
         }
 
@@ -662,14 +677,63 @@ class Lightmapper {
         }
     }
 
+    // preparas camera / frustum of the light for rendering the bakeNode
+    // returns true if light affects the node
+    LightCameraPrepare(bakeLight, bakeNode, shadowCam) {
+
+        let light = bakeLight.light;
+        let lightAffectsNode = true;
+        const bounds = bakeNode.bounds;
+
+        if (light.type === LIGHTTYPE_DIRECTIONAL) {
+
+            // tweak directional light camera to fully see the bakeNode, so that the node is fully inside the frustum
+            tempVec.copy(bounds.center);
+            tempVec.y += bounds.halfExtents.y;
+
+            this.camera.node.setPosition(tempVec);
+            this.camera.node.setEulerAngles(-90, 0, 0);
+
+            this.camera.nearClip = 0;
+            this.camera.farClip = bounds.halfExtents.y * 2;
+
+            const frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
+            this.camera.orthoHeight = frustumSize;
+
+        } else {
+
+            // for other light types, test if light affects the node
+            if (!bakeLight.lightBounds.intersects(bounds)) {
+                lightAffectsNode = false;
+            }
+        }
+
+        // per meshInstance culling for spot light
+        if (light.type === LIGHTTYPE_SPOT) {
+            let nodeVisible = false;
+
+            const meshInstances = bakeNode.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+                if (meshInstances[i]._isVisible(shadowCam)) {
+                    nodeVisible = true;
+                    break;
+                }
+            }
+            if (!nodeVisible) {
+                lightAffectsNode = false;
+            }
+        }
+
+        return lightAffectsNode;
+    }
+
+
     bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
 
         var scene = this.scene;
-        var i, j;
         var device = this.device;
 
         var passCount = mode === BAKE_COLORDIR ? 2 : 1;
-        var pass;
 
         this.createMaterials(device, scene, passCount);
         this.setupScene();
@@ -692,8 +756,8 @@ class Lightmapper {
         // get all meshInstances that cast shadows into lightmap and set them up for realtime shadow casting
         let casters = this.prepareShadowCasters(allNodes);
 
-        // TODO: handle morphing as well
-        // update skinned meshes
+        // update skinned and morphed meshes
+        this.renderer.updateMorphing(casters);
         this.renderer.updateCpuSkinMatrices(casters);
         this.renderer.gpuUpdate(casters);
 
@@ -702,6 +766,8 @@ class Lightmapper {
 
         var node;
         var lm, rcv, m;
+        var i, j;
+        var pass;
 
 
 
@@ -739,7 +805,7 @@ class Lightmapper {
 
         // Disable all bakeable lights
         for (j = 0; j < bakeLights.length; j++) {
-            bakeLights[j].enabled = false;
+            bakeLights[j].light.enabled = false;
         }
 
         var lightArray = [[], [], []];
@@ -750,95 +816,66 @@ class Lightmapper {
         for (i = 0; i < bakeLights.length; i++) {
             let bakeLight = bakeLights[i];
 
-            bakeLight.enabled = true; // enable next light
+            bakeLight.light.enabled = true; // enable next light
             shadowMapRendered = false;
 
-            bakeLight._cacheShadowMap = true;
-            if (bakeLight.type !== LIGHTTYPE_DIRECTIONAL) {
-                bakeLight._node.getWorldTransform();
-                bakeLight.getBoundingSphere(tempSphere);
-                lightBounds.center = tempSphere.center;
-                lightBounds.halfExtents.x = tempSphere.radius;
-                lightBounds.halfExtents.y = tempSphere.radius;
-                lightBounds.halfExtents.z = tempSphere.radius;
-            }
-            if (bakeLight.type === LIGHTTYPE_SPOT) {
-                shadowCam = this.renderer.getShadowCamera(device, bakeLight);
+            bakeLight.light._cacheShadowMap = true;
 
-                shadowCam._node.setPosition(bakeLight._node.getPosition());
-                shadowCam._node.setRotation(bakeLight._node.getRotation());
+            if (bakeLight.light.type === LIGHTTYPE_SPOT) {
+                shadowCam = this.renderer.getShadowCamera(device, bakeLight.light);
+
+                shadowCam._node.setPosition(bakeLight.light._node.getPosition());
+                shadowCam._node.setRotation(bakeLight.light._node.getRotation());
                 shadowCam._node.rotateLocal(-90, 0, 0);
 
                 shadowCam.projection = PROJECTION_PERSPECTIVE;
-                shadowCam.nearClip = bakeLight.attenuationEnd / 1000;
-                shadowCam.farClip = bakeLight.attenuationEnd;
+                shadowCam.nearClip = bakeLight.light.attenuationEnd / 1000;
+                shadowCam.farClip = bakeLight.light.attenuationEnd;
                 shadowCam.aspectRatio = 1;
-                shadowCam.fov = bakeLight._outerConeAngle * 2;
+                shadowCam.fov = bakeLight.light._outerConeAngle * 2;
 
                 this.renderer.updateCameraFrustum(shadowCam);
             }
 
             for (node = 0; node < bakeNodes.length; node++) {
 
-                rcv = bakeNodes[node].meshInstances;
-                const bounds = bakeNodes[node].bounds;
+                let bakeNode = bakeNodes[node];
+                rcv = bakeNode.meshInstances;
 
-                // Tweak camera to fully see the model, so directional light frustum will also see it
-                if (bakeLight.type === LIGHTTYPE_DIRECTIONAL) {
-                    tempVec.copy(bounds.center);
-                    tempVec.y += bounds.halfExtents.y;
-
-                    this.camera.node.setPosition(tempVec);
-                    this.camera.node.setEulerAngles(-90, 0, 0);
-
-                    var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
-
-                    this.camera.nearClip = 0;
-                    this.camera.farClip = bounds.halfExtents.y * 2;
-                    this.camera.orthoHeight = frustumSize;
-                } else {
-                    if (!lightBounds.intersects(bounds)) {
-                        continue;
-                    }
+                const lightAffectsNode = this.LightCameraPrepare(bakeLight, bakeNode, shadowCam);
+                if (!lightAffectsNode) {
+                    continue;
                 }
 
-                if (bakeLight.type === LIGHTTYPE_SPOT) {
-                    var nodeVisible = false;
-                    for (j = 0; j < rcv.length; j++) {
-                        if (rcv[j]._isVisible(shadowCam)) {
-                            nodeVisible = true;
-                            break;
-                        }
-                    }
-                    if (!nodeVisible) {
-                        continue;
-                    }
-                }
 
-                if (bakeLight.type === LIGHTTYPE_DIRECTIONAL) {
-                    lightArray[LIGHTTYPE_DIRECTIONAL][0] = bakeLight;
+
+
+
+
+                if (bakeLight.light.type === LIGHTTYPE_DIRECTIONAL) {
+                    lightArray[LIGHTTYPE_DIRECTIONAL][0] = bakeLight.light;
                     lightArray[LIGHTTYPE_OMNI].length = 0;
                     lightArray[LIGHTTYPE_SPOT].length = 0;
-                    if (!shadowMapRendered && bakeLight.castShadows) {
-                        this.renderer.cullDirectionalShadowmap(bakeLight, casters, this.camera, 0);
+                    if (!shadowMapRendered && bakeLight.light.castShadows) {
+                        this.renderer.cullDirectionalShadowmap(bakeLight.light, casters, this.camera, 0);
                         this.renderer.renderShadows(lightArray[LIGHTTYPE_DIRECTIONAL], 0);
                         shadowMapRendered = true;
                     }
                 } else {
                     lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (bakeLight.type === LIGHTTYPE_OMNI) {
-                        lightArray[LIGHTTYPE_OMNI][0] = bakeLight;
+                    if (bakeLight.light.type === LIGHTTYPE_OMNI) {
+                        lightArray[LIGHTTYPE_OMNI][0] = bakeLight.light;
                         lightArray[LIGHTTYPE_SPOT].length = 0;
-                        if (!shadowMapRendered && bakeLight.castShadows) {
-                            this.renderer.cullLocalShadowmap(bakeLight, casters);
+                        if (!shadowMapRendered && bakeLight.light.castShadows) {
+                            this.renderer.cullLocalShadowmap(bakeLight.light, casters);
                             this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
                             shadowMapRendered = true;
                         }
                     } else {
                         lightArray[LIGHTTYPE_OMNI].length = 0;
-                        lightArray[LIGHTTYPE_SPOT][0] = bakeLight;
-                        if (!shadowMapRendered && bakeLight.castShadows) {
-                            this.renderer.cullLocalShadowmap(bakeLight, casters);
+                        lightArray[LIGHTTYPE_SPOT][0] = bakeLight.light;
+                        if (!shadowMapRendered && bakeLight.light.castShadows) {
+                            this.renderer.cullLocalShadowmap(bakeLight.light, casters);
                             this.renderer.renderShadows(lightArray[LIGHTTYPE_SPOT]);
                             shadowMapRendered = true;
                         }
@@ -872,7 +909,7 @@ class Lightmapper {
                     this.renderer.setCamera(this.camera, targTmp, true);
 
                     if (pass === PASS_DIR) {
-                        this.constantBakeDir.setValue(bakeLight.bakeDir ? 1 : 0);
+                        this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                     }
 
                     //console.log("Baking light " + bakeLight._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
@@ -906,10 +943,10 @@ class Lightmapper {
                 this.restoreMaterials(rcv);
             }
 
-            bakeLight.enabled = false; // disable the light
-            bakeLight._cacheShadowMap = false;
-            if (bakeLight._isCachedShadowMap) {
-                bakeLight._destroyShadowMap();
+            bakeLight.light.enabled = false; // disable the light
+            bakeLight.light._cacheShadowMap = false;
+            if (bakeLight.light._isCachedShadowMap) {
+                bakeLight.light._destroyShadowMap();
             }
         }
 
