@@ -752,6 +752,33 @@ class Lightmapper {
         return lightAffectsNode;
     }
 
+    // set up light array for a single light
+    setupLightArray(lightArray, light) {
+
+        lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
+        lightArray[LIGHTTYPE_OMNI].length = 0;
+        lightArray[LIGHTTYPE_SPOT].length = 0;
+
+        lightArray[light.type][0] = light;
+    }
+
+    renderShadowMap(shadowMapRendered, casters, lightArray, light) {
+
+        if (!shadowMapRendered && light.castShadows) {
+
+            if (light.type === LIGHTTYPE_DIRECTIONAL) {
+                this.renderer.cullDirectionalShadowmap(light, casters, this.camera, 0);
+            } else  if (light.type === LIGHTTYPE_OMNI) {
+                this.renderer.cullLocalShadowmap(light, casters);
+            } else {
+                this.renderer.cullLocalShadowmap(light, casters);
+            }
+
+            this.renderer.renderShadows(lightArray[light.type], 0);
+        }
+
+        return true;
+    }
 
     bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
 
@@ -794,9 +821,6 @@ class Lightmapper {
         var i, j;
         var pass;
 
-
-
-
         // Prepare models
         var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
@@ -832,16 +856,15 @@ class Lightmapper {
             bakeLights[j].light.enabled = false;
         }
 
-        var lightArray = [[], [], []];
+        let lightArray = [[], [], []];
 
         // Accumulate lights into RGBM textures
         var shadersUpdatedOn1stPass = false;
-        var shadowMapRendered;
         for (i = 0; i < bakeLights.length; i++) {
             let bakeLight = bakeLights[i];
 
             bakeLight.light.enabled = true; // enable next light
-            shadowMapRendered = false;
+            let shadowMapRendered = false;
 
             bakeLight.light._cacheShadowMap = true;
 
@@ -858,40 +881,10 @@ class Lightmapper {
                     continue;
                 }
 
+                this.setupLightArray(lightArray, bakeLight.light);
 
-
-
-
-
-                if (bakeLight.light.type === LIGHTTYPE_DIRECTIONAL) {
-                    lightArray[LIGHTTYPE_DIRECTIONAL][0] = bakeLight.light;
-                    lightArray[LIGHTTYPE_OMNI].length = 0;
-                    lightArray[LIGHTTYPE_SPOT].length = 0;
-                    if (!shadowMapRendered && bakeLight.light.castShadows) {
-                        this.renderer.cullDirectionalShadowmap(bakeLight.light, casters, this.camera, 0);
-                        this.renderer.renderShadows(lightArray[LIGHTTYPE_DIRECTIONAL], 0);
-                        shadowMapRendered = true;
-                    }
-                } else {
-                    lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-                    if (bakeLight.light.type === LIGHTTYPE_OMNI) {
-                        lightArray[LIGHTTYPE_OMNI][0] = bakeLight.light;
-                        lightArray[LIGHTTYPE_SPOT].length = 0;
-                        if (!shadowMapRendered && bakeLight.light.castShadows) {
-                            this.renderer.cullLocalShadowmap(bakeLight.light, casters);
-                            this.renderer.renderShadows(lightArray[LIGHTTYPE_OMNI]);
-                            shadowMapRendered = true;
-                        }
-                    } else {
-                        lightArray[LIGHTTYPE_OMNI].length = 0;
-                        lightArray[LIGHTTYPE_SPOT][0] = bakeLight.light;
-                        if (!shadowMapRendered && bakeLight.light.castShadows) {
-                            this.renderer.cullLocalShadowmap(bakeLight.light, casters);
-                            this.renderer.renderShadows(lightArray[LIGHTTYPE_SPOT]);
-                            shadowMapRendered = true;
-                        }
-                    }
-                }
+                // render light shadow map if not yet
+                shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
 
                 // Store original materials
                 this.backupMaterials(rcv);
