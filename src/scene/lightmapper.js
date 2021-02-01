@@ -189,7 +189,7 @@ class Lightmapper {
 
     finishBake() {
 
-        this.materials = null;
+        this.materials = [];
     }
 
     createMaterials(device, scene, passCount) {
