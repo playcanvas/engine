@@ -846,11 +846,11 @@ class Lightmapper {
 
             for (let pass = 0; pass < passCount; pass++) {
 
-                var nodeRT = bakeNode.renderTargets[pass];
-                var lightmap = nodeRT.colorBuffer;
+                let nodeRT = bakeNode.renderTargets[pass];
+                let lightmap = nodeRT.colorBuffer;
 
-                var tempRT = this.renderTargets.get(lightmap.width);
-                var tempTex = tempRT.colorBuffer;
+                let tempRT = this.renderTargets.get(lightmap.width);
+                let tempTex = tempRT.colorBuffer;
 
                 pixelOffset[0] = 1 / lightmap.width;
                 pixelOffset[1] = 1 / lightmap.height;
@@ -870,8 +870,8 @@ class Lightmapper {
 
     bakeInternal(passCount, bakeNodes, allNodes) {
 
-        var scene = this.scene;
-        var device = this.device;
+        let scene = this.scene;
+        let device = this.device;
 
         this.createMaterials(device, scene, passCount);
         this.setupScene();
@@ -900,14 +900,10 @@ class Lightmapper {
         // compute bounding boxes
         this.computeBounds(bakeNodes);
 
-        var node;
-        var lm, rcv, m;
+        var rcv, m;
         var i, j;
-        var pass;
 
         // Prepare models
-        // var nodeTarg = [[], []];
-        var targ, targTmp, texTmp;
 
         for (i = 0; i < bakeNodes.length; i++) {
             let bakeNode = bakeNodes[i];
@@ -934,19 +930,18 @@ class Lightmapper {
         }
 
         let lightArray = [[], [], []];
+        let pass, node;
+        let shadersUpdatedOn1stPass = false;
 
         // Accumulate lights into RGBM textures
-        var shadersUpdatedOn1stPass = false;
         for (i = 0; i < bakeLights.length; i++) {
             let bakeLight = bakeLights[i];
 
             bakeLight.light.enabled = true; // enable next light
+            bakeLight.light._cacheShadowMap = true;
             let shadowMapRendered = false;
 
-            bakeLight.light._cacheShadowMap = true;
-
             const shadowCam = this.lightCameraPrepare(device, bakeLight);
-
 
             for (node = 0; node < bakeNodes.length; node++) {
 
@@ -967,11 +962,14 @@ class Lightmapper {
                 this.backupMaterials(rcv);
 
                 for (pass = 0; pass < passCount; pass++) {
-                    targ = bakeNode.renderTargets[pass];
-                    lm = targ.colorBuffer;
 
-                    targTmp = this.renderTargets.get(lm.width);
-                    texTmp = targTmp.colorBuffer;
+                    // lightmap size
+                    let nodeRT = bakeNode.renderTargets[pass];
+                    let lightmapSize = bakeNode.renderTargets[pass].colorBuffer.width;
+
+                    // get matching temp render target to render to
+                    let tempRT = this.renderTargets.get(lightmapSize);
+                    let tempTex = tempRT.colorBuffer;
 
                     if (pass === 0) {
                         shadersUpdatedOn1stPass = scene.updateShaders;
@@ -988,7 +986,7 @@ class Lightmapper {
                     this.renderer.updateShaders(rcv);
 
                     // ping-ponging output
-                    this.renderer.setCamera(this.camera, targTmp, true);
+                    this.renderer.setCamera(this.camera, tempRT, true);
 
                     if (pass === PASS_DIR) {
                         this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
@@ -997,10 +995,7 @@ class Lightmapper {
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
 
-                    this.renderer.renderForward(this.camera,
-                                                rcv, rcv.length,
-                                                lightArray,
-                                                SHADER_FORWARDHDR);
+                    this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
 
                     // #ifdef PROFILER
                     this.stats.shadowMapTime += this.renderer._shadowMapTime;
@@ -1008,13 +1003,15 @@ class Lightmapper {
                     this.stats.renderPasses++;
                     // #endif
 
-                    bakeNode.renderTargets[pass] = targTmp;
+                    // temp render target now has lightmap, store it for the node
+                    bakeNode.renderTargets[pass] = tempRT;
 
-                    this.renderTargets.set(lm.width, targ);
+                    // and release previous lightmap into temp render target pool
+                    this.renderTargets.set(lightmapSize, nodeRT);
 
                     for (j = 0; j < rcv.length; j++) {
                         m = rcv[j];
-                        m.setParameter(MeshInstance.lightmapParamNames[pass], texTmp); // ping-ponging input
+                        m.setParameter(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
                         m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                     }
                 }
@@ -1023,14 +1020,15 @@ class Lightmapper {
                 this.restoreMaterials(rcv);
             }
 
-            bakeLight.light.enabled = false; // disable the light
+            // disable the light
+            bakeLight.light.enabled = false;
+
+            // release light shadowmap
             bakeLight.light._cacheShadowMap = false;
             if (bakeLight.light._isCachedShadowMap) {
                 bakeLight.light._destroyShadowMap();
             }
         }
-
-
 
         this.dilateTextures(device, bakeNodes, passCount);
 
