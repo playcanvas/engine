@@ -832,6 +832,42 @@ class Lightmapper {
         return true;
     }
 
+    dilateTextures(device, bakeNodes, passCount) {
+
+        const numDilates2x = 4; // 8 dilates
+
+        let pixelOffset = this.pixelOffset;
+        let dilateShader = this.dilateShader;
+        let constantTexSource = this.constantTexSource;
+        let constantPixelOffset = this.constantPixelOffset;
+
+        for (let node = 0; node < bakeNodes.length; node++) {
+            let bakeNode = bakeNodes[node];
+
+            for (let pass = 0; pass < passCount; pass++) {
+
+                var nodeRT = bakeNode.renderTargets[pass];
+                var lightmap = nodeRT.colorBuffer;
+
+                var tempRT = this.renderTargets.get(lightmap.width);
+                var tempTex = tempRT.colorBuffer;
+
+                pixelOffset[0] = 1 / lightmap.width;
+                pixelOffset[1] = 1 / lightmap.height;
+                constantPixelOffset.setValue(pixelOffset);
+
+                // bounce dilate between textures
+                for (let i = 0; i < numDilates2x; i++) {
+                    constantTexSource.setValue(lightmap);
+                    drawQuadWithShader(device, tempRT, dilateShader);
+
+                    constantTexSource.setValue(tempTex);
+                    drawQuadWithShader(device, nodeRT, dilateShader);
+                }
+            }
+        }
+    }
+
     bakeInternal(passCount, bakeNodes, allNodes) {
 
         var scene = this.scene;
@@ -995,37 +1031,8 @@ class Lightmapper {
         }
 
 
-        let pixelOffset = this.pixelOffset;
-        let dilateShader = this.dilateShader;
-        let constantTexSource = this.constantTexSource;
-        let constantPixelOffset = this.constantPixelOffset;
 
-        for (node = 0; node < bakeNodes.length; node++) {
-            let bakeNode = bakeNodes[node];
-            rcv = bakeNode.meshInstances;
-
-            for (pass = 0; pass < passCount; pass++) {
-                targ = bakeNode.renderTargets[pass];
-                lm = targ.colorBuffer;
-
-                targTmp = this.renderTargets.get(lm.width);
-
-                texTmp = targTmp.colorBuffer;
-
-                // Dilate
-                var numDilates2x = 4; // 8 dilates
-                pixelOffset[0] = 1 / lm.width;
-                pixelOffset[1] = 1 / lm.height;
-                constantPixelOffset.setValue(pixelOffset);
-                for (i = 0; i < numDilates2x; i++) {
-                    constantTexSource.setValue(lm);
-                    drawQuadWithShader(device, targTmp, dilateShader);
-
-                    constantTexSource.setValue(texTmp);
-                    drawQuadWithShader(device, targ, dilateShader);
-                }
-            }
-        }
+        this.dilateTextures(device, bakeNodes, passCount);
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {
