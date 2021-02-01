@@ -677,9 +677,33 @@ class Lightmapper {
         }
     }
 
+    lightCameraPrepare(device, bakeLight) {
+
+        let light = bakeLight.light;
+        let shadowCam;
+
+        // only prepare camera for spot light, other cameras need to be adjusted per cubemap face / per node later
+        if (light.type === LIGHTTYPE_SPOT) {
+            shadowCam = this.renderer.getShadowCamera(device, light);
+
+            shadowCam._node.setPosition(light._node.getPosition());
+            shadowCam._node.setRotation(light._node.getRotation());
+            shadowCam._node.rotateLocal(-90, 0, 0);
+
+            shadowCam.projection = PROJECTION_PERSPECTIVE;
+            shadowCam.nearClip = light.attenuationEnd / 1000;
+            shadowCam.farClip = light.attenuationEnd;
+            shadowCam.aspectRatio = 1;
+            shadowCam.fov = light._outerConeAngle * 2;
+
+            this.renderer.updateCameraFrustum(shadowCam);
+        }
+        return shadowCam;
+    }
+
     // preparas camera / frustum of the light for rendering the bakeNode
-    // returns true if light affects the node
-    LightCameraPrepare(bakeLight, bakeNode, shadowCam) {
+    // returns true if light affects the bakeNode
+    lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam) {
 
         let light = bakeLight.light;
         let lightAffectsNode = true;
@@ -708,7 +732,8 @@ class Lightmapper {
             }
         }
 
-        // per meshInstance culling for spot light
+        // per meshInstance culling for spot light only
+        // (point lights cull per face later, directional lights don't cull)
         if (light.type === LIGHTTYPE_SPOT) {
             let nodeVisible = false;
 
@@ -775,7 +800,6 @@ class Lightmapper {
         // Prepare models
         var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
-        var shadowCam;
 
         for (node = 0; node < bakeNodes.length; node++) {
             rcv = bakeNodes[node].meshInstances;
@@ -821,28 +845,15 @@ class Lightmapper {
 
             bakeLight.light._cacheShadowMap = true;
 
-            if (bakeLight.light.type === LIGHTTYPE_SPOT) {
-                shadowCam = this.renderer.getShadowCamera(device, bakeLight.light);
+            const shadowCam = this.lightCameraPrepare(device, bakeLight);
 
-                shadowCam._node.setPosition(bakeLight.light._node.getPosition());
-                shadowCam._node.setRotation(bakeLight.light._node.getRotation());
-                shadowCam._node.rotateLocal(-90, 0, 0);
-
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                shadowCam.nearClip = bakeLight.light.attenuationEnd / 1000;
-                shadowCam.farClip = bakeLight.light.attenuationEnd;
-                shadowCam.aspectRatio = 1;
-                shadowCam.fov = bakeLight.light._outerConeAngle * 2;
-
-                this.renderer.updateCameraFrustum(shadowCam);
-            }
 
             for (node = 0; node < bakeNodes.length; node++) {
 
                 let bakeNode = bakeNodes[node];
                 rcv = bakeNode.meshInstances;
 
-                const lightAffectsNode = this.LightCameraPrepare(bakeLight, bakeNode, shadowCam);
+                const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam);
                 if (!lightAffectsNode) {
                     continue;
                 }
