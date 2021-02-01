@@ -37,6 +37,8 @@
 
         var miniStats = new pcx.MiniStats(app);
 
+        app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+
         var material = new pc.StandardMaterial();
         material.shininess = 60;
         material.useMetalness = true;
@@ -44,9 +46,10 @@
         material.update();
 
         // All render component primitive shape types
-        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+//        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+        var shapes = ["box"];
 
-        for (var i = 0; i < 40; i++) {
+        for (var i = 0; i <20; i++) {
             var shape = shapes[Math.floor(Math.random() * shapes.length)];
 
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
@@ -61,7 +64,9 @@
             app.root.addChild(entity);
 
             // random orientation
-            entity.setLocalPosition(Math.random() * 14 - 7, 0.5, Math.random() * 14 - 7);
+            let scale = 1 + Math.random() * 2;
+            entity.setLocalPosition(Math.random() * 14 - 7, 0.5 * scale, Math.random() * 14 - 7);
+            entity.setLocalScale(scale, scale, scale);
         };
 
         var ground = new pc.Entity("Ground");
@@ -77,7 +82,8 @@
         ground.setLocalScale(40, 40, 40);
 
 
-        // var count = 50;
+        // var lights = [];
+        // var count = 450;
         // for (var l = 0; l < count; l++) {
         //     var light = new pc.Entity("Directional");
         //     light.addComponent("light", {
@@ -91,12 +97,13 @@
         //         shadowResolution: 2048,
         //         shadowType: pc.SHADOW_PCF3,
         //         color: pc.Color.WHITE,
-        //         intensity: 1 / count,
+        //         intensity: 2 / count,
         //         type: "directional"
         //     });
         //     app.root.addChild(light);
+        //     lights.push(light);
 
-        //     var p = l > (count * 0.8) ? 20 : 90;
+        //     var p = l > (count * 1) ? 20 : 90;
         //     var p2 = p * 0.5;
         //     light.setLocalEulerAngles(-45 + Math.random() * p - p2, 0, Math.random() * p - p2);
         // }
@@ -115,8 +122,8 @@
             shadowDistance: 50,
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.WHITE,
-            intensity: 0.5,
+            color: pc.Color.GREEN,
+            intensity: 0.3,
             type: "directional"
         });
         app.root.addChild(light);
@@ -138,7 +145,7 @@
             range: 100,
             type: "point"
         });
-        lightPoint.setLocalPosition(-3, 2, 0);
+        lightPoint.setLocalPosition(-6, 4, 0);
         app.root.addChild(lightPoint);
 
         // Create an entity with a spot light component that is configured as a baked light
@@ -157,7 +164,7 @@
             range: 100,
             type: "spot"
         });
-        lightSpot.setLocalPosition(5, 5, 0);
+        lightSpot.setLocalPosition(5, 7, 0);
         app.root.addChild(lightSpot);
 
 
@@ -170,10 +177,37 @@
         });
         app.root.addChild(camera);
 
-        //var bakeType = pc.BAKE_COLOR;
+        // var bakeType = pc.BAKE_COLOR;
         var bakeType = pc.BAKE_COLORDIR;
 
 
+
+        // var url = "../assets/models/temple.glb";
+        // app.assets.loadFromUrl(url, "container", function (err, asset) {
+        //     this.entity = new pc.Entity();
+        //     this.entity.addComponent("model", {
+        //         type: "asset",
+        //         asset: asset.resource.model,
+        //         castShadows: true
+        //     });
+        //     app.root.addChild(this.entity);
+
+        //     this.entity.model.castShadowsLightmap = true;
+        //     this.entity.model.lightmapped = true;
+
+
+        //     // lightmap baking properties
+        //     app.scene.lightmapMode = bakeType;
+        //     app.scene.lightmapMaxResolution = 2048;
+
+        //     // For baked lights, this property perhaps has the biggest impact on lightmap resolution:
+        //     app.scene.lightmapSizeMultiplier = 32;
+
+        //     // bake lightmaps
+        //     app.lightmapper.bake(null, bakeType);
+
+        // });
+        
 
         // lightmap baking properties
         app.scene.lightmapMode = bakeType;
@@ -184,7 +218,11 @@
 
         // bake lightmaps
         app.lightmapper.bake(null, bakeType);
-//        app.lightmapper.bake([ground], bakeType);
+       // app.lightmapper.bake([ground], bakeType);
+
+    //    for (var l = 0; l < lights.length; l++) {
+    //     lights[l].destroy();
+    //    }
 
         // Set an update function on the app's update event
         var time = 7;
@@ -195,12 +233,12 @@
             if (time > 7 && bake) {
                 bake = false;
                 console.log("bake");
-//                app.lightmapper.bake([ground], bakeType);
+                app.lightmapper.bake([ground], bakeType);
 //                app.lightmapper.bake(null, bakeType);
             }
 
             // orbit camera
-            camera.setLocalPosition(20 * Math.sin(time * 0.4), 3, 6);
+            camera.setLocalPosition(20 * Math.sin(time * 0.4), 12, 20);
             camera.lookAt(pc.Vec3.ZERO);
         });
 
