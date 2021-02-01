@@ -62,6 +62,9 @@ class MeshNode {
 
         // world space aabb for all meshInstances
         this.bounds = null;
+
+        // render target with attached color buffer for each render pass
+        this.renderTargets = [];
     }
 }
 
@@ -123,6 +126,9 @@ class Lightmapper {
         this._tempSet = new Set();
         this._initCalled = false;
         this.passMaterials = [];
+
+        // dictionary of spare render targets with color buffer for each used size
+        this.renderTargets = new Map();
 
         this.stats = {
             renderPasses: 0,
@@ -187,9 +193,24 @@ class Lightmapper {
         }
     }
 
-    finishBake() {
+    finishBake(bakeNodes) {
 
         this.materials = [];
+
+        // spare render targets including color buffer
+        this.renderTargets.forEach( (rt) => {
+            rt.colorBuffer.destroy();
+            rt.destroy();
+        });
+        this.renderTargets.clear();
+
+        // destroy render targets from nodes (but not color buffer)
+        bakeNodes.forEach( (node) => {
+            node.renderTargets.forEach( (rt) => {
+                rt.destroy();
+            });
+            node.renderTargets.lenght = 0;
+        });
     }
 
     createMaterials(device, scene, passCount) {
@@ -418,15 +439,31 @@ class Lightmapper {
         return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
     }
 
-    setLightmaping(nodes, value, shaderDefs) {
+    setLightmaping(nodes, value, passCount, shaderDefs) {
 
         for (let i = 0; i < nodes.length; i++) {
-            let meshInstances = nodes[i].meshInstances;
-            for (let j = 0; j < meshInstances.length; j++) {
-                meshInstances[j].setLightmapped(value);
+            let node = nodes[i];
+            let meshInstances = node.meshInstances;
 
-                if (value && shaderDefs) {
-                    meshInstances[j]._shaderDefs |= shaderDefs;
+            for (let j = 0; j < meshInstances.length; j++) {
+
+                let meshInstance = meshInstances[j];
+                meshInstance.setLightmapped(value);
+
+                if (value) {
+                    if (shaderDefs) {
+                        meshInstance._shaderDefs |= shaderDefs;
+                    }
+
+                    meshInstance.mask = MASK_BAKED;
+
+                    // textures
+                    for (let pass = 0; pass < passCount; pass++) {
+                        let tex = node.renderTargets[pass].colorBuffer;
+                        tex.minFilter = FILTER_LINEAR;
+                        tex.magFilter = FILTER_LINEAR;
+                        meshInstance.setParameter(MeshInstance.lightmapParamNames[pass], tex);
+                    }
                 }
             }
         }
@@ -493,7 +530,7 @@ class Lightmapper {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      */
-    bake(nodes, mode) {
+    bake(nodes, mode = BAKE_COLORDIR) {
 
         var device = this.device;
         var startTime = now();
@@ -543,11 +580,18 @@ class Lightmapper {
             this.deleteLightmaps(bakeNodes, allNodes);
 
             // disable lightmapping
-            this.setLightmaping(bakeNodes, false);
+            const passCount = mode === BAKE_COLORDIR ? 2 : 1;
+            this.setLightmaping(bakeNodes, false, passCount);
 
             this.initBake(device);
-            this.bakeInternal(mode, bakeNodes, allNodes);
-            this.finishBake();
+            this.bakeInternal(passCount, bakeNodes, allNodes);
+
+            // Enable new lightmaps
+            let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
+            this.setLightmaping(bakeNodes, true, passCount, shaderDefs);
+
+            // clean up memory
+            this.finishBake(bakeNodes);
         }
 
         let nowTime = now();
@@ -567,19 +611,27 @@ class Lightmapper {
         // #endif
     }
 
-    allocateTextures(bakeNodes, lmaps, texPool, passCount) {
+    // this allocates lightmap textures and render targets. Note that the type used here is always TEXTURETYPE_DEFAULT,
+    // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
+    allocateTextures(bakeNodes, passCount) {
 
         let device = this.device;
         for (let i = 0; i < bakeNodes.length; i++) {
-            let size = this.calculateLightmapSize(bakeNodes[i].node);
+
+            // required lightmap size
+            let bakeNode = bakeNodes[i];
+            let size = this.calculateLightmapSize(bakeNode.node);
+
+            // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                let tex = this.createTexture(size, (pass === PASS_COLOR) ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
-                lmaps[pass].push(tex);
+                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT);
+                bakeNode.renderTargets[pass] = new RenderTarget(device, tex, { depth: false });
             }
 
-            if (!texPool[size]) {
-                let tex2 = this.createTexture(size, TEXTURETYPE_RGBM);
-                texPool[size] = new RenderTarget(device, tex2, { depth: false });
+            // single temporary render target of each size
+            if (!this.renderTargets.has(size)) {
+                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT);
+                this.renderTargets.set(size, new RenderTarget(device, tex, { depth: false }));
             }
         }
     }
@@ -780,12 +832,10 @@ class Lightmapper {
         return true;
     }
 
-    bakeInternal(mode = BAKE_COLORDIR, bakeNodes, allNodes) {
+    bakeInternal(passCount, bakeNodes, allNodes) {
 
         var scene = this.scene;
         var device = this.device;
-
-        var passCount = mode === BAKE_COLORDIR ? 2 : 1;
 
         this.createMaterials(device, scene, passCount);
         this.setupScene();
@@ -794,9 +844,7 @@ class Lightmapper {
         scene.layers._update();
 
         // Calculate lightmap sizes and allocate textures
-        let lmaps = [[], []];
-        let texPool = {};
-        this.allocateTextures(bakeNodes, lmaps, texPool, passCount);
+        this.allocateTextures(bakeNodes, passCount);
 
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
         let allLights = [], bakeLights = [];
@@ -822,15 +870,16 @@ class Lightmapper {
         var pass;
 
         // Prepare models
-        var nodeTarg = [[], []];
+        // var nodeTarg = [[], []];
         var targ, targTmp, texTmp;
 
-        for (node = 0; node < bakeNodes.length; node++) {
-            rcv = bakeNodes[node].meshInstances;
+        for (i = 0; i < bakeNodes.length; i++) {
+            let bakeNode = bakeNodes[i];
+            rcv = bakeNode.meshInstances;
 
-            for (i = 0; i < rcv.length; i++) {
+            for (j = 0; j < rcv.length; j++) {
                 // patch meshInstance
-                m = rcv[i];
+                m = rcv[j];
 
                 m.setLightmapped(false);
 
@@ -840,14 +889,6 @@ class Lightmapper {
                 // patch material
                 m.setParameter(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
                 m.setParameter(MeshInstance.lightmapParamNames[1], this.blackTex);
-            }
-
-            for (pass = 0; pass < passCount; pass++) {
-                lm = lmaps[pass][node];
-                targ = new RenderTarget(device, lm, {
-                    depth: false
-                });
-                nodeTarg[pass].push(targ);
             }
         }
 
@@ -890,9 +931,10 @@ class Lightmapper {
                 this.backupMaterials(rcv);
 
                 for (pass = 0; pass < passCount; pass++) {
-                    lm = lmaps[pass][node];
-                    targ = nodeTarg[pass][node];
-                    targTmp = texPool[lm.width];
+                    targ = bakeNode.renderTargets[pass];
+                    lm = targ.colorBuffer;
+
+                    targTmp = this.renderTargets.get(lm.width);
                     texTmp = targTmp.colorBuffer;
 
                     if (pass === 0) {
@@ -916,8 +958,6 @@ class Lightmapper {
                         this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                     }
 
-                    //console.log("Baking light " + bakeLight._node.name + " on model " + bakeNodes[node].node.name + ", pass: " + pass);
-
                     this.renderer._forwardTime = 0;
                     this.renderer._shadowMapTime = 0;
 
@@ -932,9 +972,9 @@ class Lightmapper {
                     this.stats.renderPasses++;
                     // #endif
 
-                    lmaps[pass][node] = texTmp;
-                    nodeTarg[pass][node] = targTmp;
-                    texPool[lm.width] = targ;
+                    bakeNode.renderTargets[pass] = targTmp;
+
+                    this.renderTargets.set(lm.width, targ);
 
                     for (j = 0; j < rcv.length; j++) {
                         m = rcv[j];
@@ -955,19 +995,21 @@ class Lightmapper {
         }
 
 
-        let lightmaps = [];
         let pixelOffset = this.pixelOffset;
         let dilateShader = this.dilateShader;
         let constantTexSource = this.constantTexSource;
         let constantPixelOffset = this.constantPixelOffset;
 
         for (node = 0; node < bakeNodes.length; node++) {
-            rcv = bakeNodes[node].meshInstances;
+            let bakeNode = bakeNodes[node];
+            rcv = bakeNode.meshInstances;
 
             for (pass = 0; pass < passCount; pass++) {
-                lm = lmaps[pass][node];
-                targ = nodeTarg[pass][node];
-                targTmp = texPool[lm.width];
+                targ = bakeNode.renderTargets[pass];
+                lm = targ.colorBuffer;
+
+                targTmp = this.renderTargets.get(lm.width);
+
                 texTmp = targTmp.colorBuffer;
 
                 // Dilate
@@ -982,45 +1024,13 @@ class Lightmapper {
                     constantTexSource.setValue(texTmp);
                     drawQuadWithShader(device, targ, dilateShader);
                 }
-
-
-                for (i = 0; i < rcv.length; i++) {
-                    m = rcv[i];
-                    m.mask = MASK_BAKED;
-
-                    // Set lightmap
-                    rcv[i].setParameter(MeshInstance.lightmapParamNames[pass], lm);
-                }
-                lightmaps.push(lm);
-
-                // Clean up
-                if (pass === passCount - 1) targ.destroy();
             }
-        }
-
-        for (var key in texPool) {
-            if (texPool.hasOwnProperty(key)) {
-                texPool[key].colorBuffer.destroy();
-                texPool[key].destroy();
-            }
-        }
-
-        // Set up linear filtering
-        for (i = 0; i < lightmaps.length; i++) {
-            lightmaps[i].minFilter = FILTER_LINEAR;
-            lightmaps[i].magFilter = FILTER_LINEAR;
         }
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {
             allNodes[node].component.castShadows = allNodes[node].castShadows;
         }
-
-
-
-        // Enable new lightmaps
-        let shaderDefs = mode === BAKE_COLORDIR ? (SHADERDEF_LM | SHADERDEF_DIRLM) : SHADERDEF_LM;
-        this.setLightmaping(bakeNodes, true, shaderDefs);
 
         // restore changes
         this.restoreLights(allLights);
