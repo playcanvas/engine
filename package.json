@@ -55,7 +55,7 @@
     "karma-spec-reporter": "0.0.32",
     "mocha": "8.2.1",
     "preprocessor": "1.4.0",
-    "rollup": "2.38.2",
+    "rollup": "2.38.3",
     "rollup-plugin-terser": "7.0.2",
     "sinon": "9.2.4",
     "tsd-jsdoc": "2.5.0",
