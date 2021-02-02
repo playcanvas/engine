@@ -729,7 +729,7 @@ class Lightmapper {
 
         return bounds;
     }
-    
+
     backupMaterials(meshInstances) {
         for (let i = 0; i < meshInstances.length; i++) {
             this.materials[i] = meshInstances[i].material;
