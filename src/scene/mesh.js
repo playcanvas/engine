@@ -5,17 +5,18 @@ import { BoundingBox } from '../shape/bounding-box.js';
 
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
-    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PRIMITIVE_LINES, PRIMITIVE_TRIANGLES,
+    INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
-    TYPE_FLOAT32, TYPE_UINT8
+    TYPE_FLOAT32, TYPE_UINT8,
+    typedArrayIndexFormats
 } from '../graphics/constants.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 import { VertexIterator } from '../graphics/vertex-iterator.js';
 
-import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME } from './constants.js';
+import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
 import { getApplication } from '../framework/globals.js';
 
@@ -220,15 +221,19 @@ class Mesh extends RefCountedObject {
             this.vertexBuffer = null;
         }
 
-        var j, ib;
-        for (j = 0; j < this.indexBuffer.length; j++) {
-            ib = this.indexBuffer[j];
-            if (ib)
-                ib.destroy();
+        for (let j = 0; j < this.indexBuffer.length; j++) {
+            this._destroyIndexBuffer(j);
         }
 
         this.indexBuffer.length = 0;
         this._geometryData = null;
+    }
+
+    _destroyIndexBuffer(index) {
+        if (this.indexBuffer[index]) {
+            this.indexBuffer[index].destroy();
+            this.indexBuffer[index] = null;
+        }
     }
 
     // initializes local bounding boxes for each bone based on vertices affected by the bone
@@ -705,6 +710,9 @@ class Mesh extends RefCountedObject {
             this._geometryData.vertexStreamsUpdated = false;
             this._geometryData.indexStreamUpdated = false;
             this._geometryData.recreate = false;
+
+            // update other render states
+            this.updateRenderStates();
         }
     }
 
@@ -772,19 +780,36 @@ class Mesh extends RefCountedObject {
         }
     }
 
+    // prepares the mesh to be rendered with specific render style
+    prepareRenderState(renderStyle) {
+        if (renderStyle === RENDERSTYLE_WIREFRAME) {
+            this.generateWireframe();
+        } else if (renderStyle === RENDERSTYLE_POINTS) {
+            this.primitive[RENDERSTYLE_POINTS] = {
+                type: PRIMITIVE_POINTS,
+                base: 0,
+                count: this.vertexBuffer ? this.vertexBuffer.numVertices : 0,
+                indexed: false
+            };
+        }
+    }
+
+    // updates existing render states with changes to solid render state
+    updateRenderStates() {
+
+        if (this.primitive[RENDERSTYLE_POINTS]) {
+            this.prepareRenderState(RENDERSTYLE_POINTS);
+        }
+
+        if (this.primitive[RENDERSTYLE_WIREFRAME]) {
+            this.prepareRenderState(RENDERSTYLE_WIREFRAME);
+        }
+    }
+
     generateWireframe() {
-        var typedArray = function (indexBuffer) {
-            switch (indexBuffer.format) {
-                case INDEXFORMAT_UINT8:
-                    return new Uint8Array(indexBuffer.storage);
-                case INDEXFORMAT_UINT16:
-                    return new Uint16Array(indexBuffer.storage);
-                case INDEXFORMAT_UINT32:
-                    return new Uint32Array(indexBuffer.storage);
-                default:
-                    return null;
-            }
-        };
+
+        // release existing IB
+        this._destroyIndexBuffer(RENDERSTYLE_WIREFRAME);
 
         var lines = [];
         var format;
@@ -794,7 +819,7 @@ class Mesh extends RefCountedObject {
             var base = this.primitive[RENDERSTYLE_SOLID].base;
             var count = this.primitive[RENDERSTYLE_SOLID].count;
             var indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
-            var srcIndices = typedArray(indexBuffer);
+            var srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
 
             var uniqueLineIndices = {};
 
@@ -818,7 +843,7 @@ class Mesh extends RefCountedObject {
         }
 
         var wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length);
-        var dstIndices = typedArray(wireBuffer);
+        var dstIndices = new typedArrayIndexFormats[wireBuffer.format](wireBuffer.storage);
         dstIndices.set(lines);
         wireBuffer.unlock();
 

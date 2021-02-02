@@ -16,7 +16,6 @@ export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
-export { Color } from './core/color.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
@@ -30,6 +29,7 @@ export { http, Http } from './net/http.js';
 // MATH
 export * from './math/constants.js';
 export { math } from './math/math.js';
+export { Color } from './math/color.js';
 export { Curve } from './math/curve.js';
 export { CurveSet } from './math/curve-set.js';
 export { Mat3 } from './math/mat3.js';

@@ -130,6 +130,24 @@ class Vec2 {
 
     /**
      * @function
+     * @name pc.Vec2#cross
+     * @description Returns the result of a cross product operation performed on the two specified 2-dimensional vectors.
+     * @param {pc.Vec2} rhs - The second 2-dimensional vector operand of the cross product.
+     * @returns {number} The cross product of the two vectors.
+     * @example
+     * var right = new pc.Vec2(1, 0);
+     * var up = new pc.Vec2(0, 1);
+     * var crossProduct = right.cross(up);
+     *
+     * // Should print 1
+     * console.log("The result of the cross product is: " + crossProduct);
+     */
+    cross(rhs) {
+        return this.x * rhs.y - this.y * rhs.x;
+    }
+
+    /**
+     * @function
      * @name pc.Vec2#distance
      * @description Returns the distance between the two specified 2-dimensional vectors.
      * @param {pc.Vec2} rhs - The second 2-dimensional vector to test.

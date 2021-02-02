@@ -1,5 +1,6 @@
 import { hashCode } from '../core/hash.js';
-import { Color } from '../core/color.js';
+
+import { Color } from '../math/color.js';
 
 import { CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL } from '../graphics/constants.js';
 
@@ -36,10 +37,6 @@ function sortFrontToBack(drawCallA, drawCallB) {
 }
 
 var sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
-
-function sortCameras(camA, camB) {
-    return camA.priority - camB.priority;
-}
 
 function sortLights(lightA, lightB) {
     return lightB.key - lightA.key;
@@ -110,7 +107,6 @@ class InstanceList {
  * * {@link pc.SORTMODE_FRONT2BACK}
  *
  * Defaults to pc.SORTMODE_BACK2FRONT.
- * @property {pc.RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
  *
  * * {@link pc.SHADER_FORWARD}
@@ -252,9 +248,6 @@ class Layer {
         this._dirtyLights = false;
         this._dirtyCameras = false;
 
-        // if there is single camera in a layer, this is 0, otherwise unique ID of the combination of the cameras
-        this._cameraHash = 0;
-
         this._lightHash = 0;
         this._staticLightHash = 0;
         this._needsStaticPrepare = true;
@@ -390,14 +383,6 @@ class Layer {
         }
         this._refCounter--;
     }
-
-    // SUBLAYER GROUPS
-    // If there are multiple sublayer with identical _cameraHash without anything in between, these
-    // are called a SUBLAYER GROUP instead of:
-    //     for each sublayer
-    //         for each camera
-    // we go:
-    //     for each sublayerGroup
 
     /**
      * @function
@@ -627,22 +612,6 @@ class Layer {
         }
     }
 
-    _generateCameraHash() {
-        // generate hash to check if cameras in layers are identical
-        // order of cameras shouldn't matter
-        if (this.cameras.length > 1) {
-            this.cameras.sort(sortCameras);
-            var str = "";
-            for (var i = 0; i < this.cameras.length; i++) {
-                str += this.cameras[i].entity.getGuid();
-            }
-            this._cameraHash = hashCode(str);
-        } else {
-            this._cameraHash = 0;
-        }
-        this._dirtyCameras = true;
-    }
-
     /**
      * @function
      * @name pc.Layer#addCamera
@@ -652,7 +621,7 @@ class Layer {
     addCamera(camera) {
         if (this.cameras.indexOf(camera) >= 0) return;
         this.cameras.push(camera);
-        this._generateCameraHash();
+        this._dirtyCameras = true;
     }
 
     /**
@@ -665,7 +634,7 @@ class Layer {
         var id = this.cameras.indexOf(camera);
         if (id < 0) return;
         this.cameras.splice(id, 1);
-        this._generateCameraHash();
+        this._dirtyCameras = true;
 
         // visible lists in layer are not updated after camera is removed
         // so clear out any remaining mesh instances
@@ -679,12 +648,7 @@ class Layer {
      */
     clearCameras() {
         this.cameras.length = 0;
-        this._cameraHash = 0;
         this._dirtyCameras = true;
-    }
-
-    _sortCameras() {
-        this._generateCameraHash();
     }
 
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {

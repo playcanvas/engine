@@ -1,7 +1,7 @@
 import { string } from '../../../core/string.js';
-import { Color } from '../../../core/color.js';
 
 import { math } from '../../../math/math.js';
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';

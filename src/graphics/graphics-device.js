@@ -685,11 +685,11 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
-        this._areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
-        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable) {
-            this._areaLightLutFormat = PIXELFORMAT_RGBA16F;
-        } else if (this.extTextureFloat) {
-            this._areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
+            this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
+        } else if (this.extTextureFloat && this.extTextureFloatLinear) {
+            this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
     }
 
@@ -1768,12 +1768,7 @@ class GraphicsDevice extends EventHandler {
             }
 
             // Remove texture from any uniforms
-            for (var uniformName in this.scope.variables) {
-                var uniform = this.scope.variables[uniformName];
-                if (uniform.value === texture) {
-                    uniform.value = null;
-                }
-            }
+            this.scope.removeValue(texture);
 
             // Update shadowed texture unit state to remove texture from any units
             for (var i = 0; i < this.textureUnits.length; i++) {

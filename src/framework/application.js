@@ -1,10 +1,10 @@
 import { version, revision } from '../core/core.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
+import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { http } from '../net/http.js';
@@ -662,7 +662,7 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition();
+        this.defaultLayerComposition = new LayerComposition("default");
 
         this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
@@ -1015,6 +1015,16 @@ class Application extends EventHandler {
         }
     }
 
+    // handle area light property
+    _handleAreaLightDataProperty(prop) {
+        var asset = this.assets.get(prop);
+        if (asset) {
+            this.setAreaLightLuts(asset);
+        } else {
+            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
+        }
+    }
+
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         var i;
@@ -1044,7 +1054,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition();
+            var composition = new LayerComposition("application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1085,6 +1095,10 @@ class Application extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
+        }
+
+        if (props.areaLightData) {
+            this._handleAreaLightDataProperty(props.areaLightData);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1664,6 +1678,27 @@ class Application extends EventHandler {
             } else {
                 this.setSkybox(null);
             }
+        }
+    }
+
+    /**
+     * @function
+     * @private
+     * @name pc.Application#setAreaLightLuts
+     * @description Sets the area light LUT asset for this app.
+     * @param {pc.Asset} asset - Asset of type `binary` to be set.
+     */
+    setAreaLightLuts(asset) {
+        if (asset) {
+            var renderer = this.renderer;
+            asset.ready(function (asset) {
+                renderer._uploadAreaLightLuts(asset.resource);
+            });
+            this.assets.load(asset);
+        } else {
+            // #ifdef DEBUG
+            console.warn("setAreaLightLuts: asset is not valid");
+            // #endif
         }
     }
 

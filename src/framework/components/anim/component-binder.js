@@ -2,8 +2,7 @@ import { AnimTarget } from '../../../anim/evaluator/anim-target.js';
 import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
 import { AnimBinder } from '../../../anim/binder/anim-binder.js';
 
-import { Color } from '../../../core/color.js';
-
+import { Color } from '../../../math/color.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';

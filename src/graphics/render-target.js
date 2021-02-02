@@ -61,6 +61,11 @@ class RenderTarget {
             this._colorBuffer = options.colorBuffer;
         }
 
+        // mark color buffer texture as render target
+        if (this._colorBuffer) {
+            this._colorBuffer._isRenderTarget = true;
+        }
+
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
 
