@@ -46,10 +46,10 @@
         material.update();
 
         // All render component primitive shape types
-//        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
-        var shapes = ["box"];
+        var shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+//        var shapes = ["box"];
 
-        for (var i = 0; i <20; i++) {
+        for (var i = 0; i < 40; i++) {
             var shape = shapes[Math.floor(Math.random() * shapes.length)];
 
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
@@ -57,7 +57,7 @@
             entity.addComponent(Math.random() < 0.5 ? 'render' : 'model', {
                 castShadows: false,
                 castShadowsLightmap: true,
-               lightmapped: true,
+                lightmapped: true,
                 type: shape,
                 material: material
             });
@@ -65,8 +65,9 @@
 
             // random orientation
             let scale = 1 + Math.random() * 2;
-            entity.setLocalPosition(Math.random() * 14 - 7, 0.5 * scale, Math.random() * 14 - 7);
+            entity.setLocalPosition(Math.random() * 30 - 15, 0.5 * scale, Math.random() * 30 - 15);
             entity.setLocalScale(scale, scale, scale);
+            entity.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         };
 
         var ground = new pc.Entity("Ground");
@@ -82,52 +83,68 @@
         ground.setLocalScale(40, 40, 40);
 
 
-        // var lights = [];
-        // var count = 450;
-        // for (var l = 0; l < count; l++) {
-        //     var light = new pc.Entity("Directional");
-        //     light.addComponent("light", {
-        //         affectDynamic: true,
-        //         affectLightmapped: false,
-        //         bake: true,
-        //         castShadows: true,
-        //         normalOffsetBias: 0.05,
-        //         shadowBias: 0.2,
-        //         shadowDistance: 50,
-        //         shadowResolution: 2048,
-        //         shadowType: pc.SHADOW_PCF3,
-        //         color: pc.Color.WHITE,
-        //         intensity: 2 / count,
-        //         type: "directional"
-        //     });
-        //     app.root.addChild(light);
-        //     lights.push(light);
 
-        //     var p = l > (count * 1) ? 20 : 90;
-        //     var p2 = p * 0.5;
-        //     light.setLocalEulerAngles(-45 + Math.random() * p - p2, 0, Math.random() * p - p2);
-        // }
+        var roof = new pc.Entity("Ground");
+        roof.addComponent('render', {
+            castShadows: false,
+            castShadowsLightmap: true,
+            lightmapped: true,
+            type: "box",
+            material: material
+        });
+        app.root.addChild(roof);
+        roof.setLocalPosition(0, 6, -10);
+        roof.setLocalScale(15, 1, 25);
+        roof.setLocalEulerAngles(-30, 0, 0);
+
+
+
+        var lights = [];
+        var count = 200;
+        for (var l = 0; l < count; l++) {
+            var light = new pc.Entity("Directional");
+            light.addComponent("light", {
+                affectDynamic: true,
+                affectLightmapped: false,
+                bake: true,
+                castShadows: true,
+                normalOffsetBias: 0.05,
+                shadowBias: 0.2,
+                shadowDistance: 50,
+                shadowResolution: 2048,
+                shadowType: pc.SHADOW_PCF3,
+                color: pc.Color.WHITE,
+                intensity: 1.0 / count,
+                type: "directional"
+            });
+            app.root.addChild(light);
+            lights.push(light);
+
+            var p = l > (count * 0.2) ? 10 : 90;
+            var p2 = p * 0.5;
+            light.setLocalEulerAngles(-45 + Math.random() * p - p2, 0, Math.random() * p - p2);
+        }
 
 
 
         // Create an entity with a directional light component that is configured as a baked light
-        var light = new pc.Entity("Directional");
-        light.addComponent("light", {
-            affectDynamic: false,
-            affectLightmapped: true,
-            bake: true,
-            castShadows: true,
-            normalOffsetBias: 0.05,
-            shadowBias: 0.2,
-            shadowDistance: 50,
-            shadowResolution: 2048,
-            shadowType: pc.SHADOW_PCF3,
-            color: pc.Color.GREEN,
-            intensity: 0.3,
-            type: "directional"
-        });
-        app.root.addChild(light);
-        light.setLocalEulerAngles(45, 30, 0);
+        // var light = new pc.Entity("Directional");
+        // light.addComponent("light", {
+        //     affectDynamic: false,
+        //     affectLightmapped: true,
+        //     bake: true,
+        //     castShadows: true,
+        //     normalOffsetBias: 0.05,
+        //     shadowBias: 0.2,
+        //     shadowDistance: 50,
+        //     shadowResolution: 2048,
+        //     shadowType: pc.SHADOW_PCF3,
+        //     color: pc.Color.GREEN,
+        //     intensity: 0.3,
+        //     type: "directional"
+        // });
+        // app.root.addChild(light);
+        // light.setLocalEulerAngles(45, 30, 0);
 
         // Create an entity with a point light component that is configured as a baked light
         var lightPoint = new pc.Entity("Point");
@@ -142,10 +159,10 @@
             shadowResolution: 512,
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.RED,
-            range: 100,
+            range: 10,
             type: "point"
         });
-        lightPoint.setLocalPosition(-6, 4, 0);
+        lightPoint.setLocalPosition(-6, 5, 0);
         app.root.addChild(lightPoint);
 
         // Create an entity with a spot light component that is configured as a baked light
@@ -161,7 +178,7 @@
             shadowResolution: 512,
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.BLUE,
-            range: 100,
+            range: 10,
             type: "spot"
         });
         lightSpot.setLocalPosition(5, 7, 0);
@@ -177,8 +194,8 @@
         });
         app.root.addChild(camera);
 
-        // var bakeType = pc.BAKE_COLOR;
-        var bakeType = pc.BAKE_COLORDIR;
+        var bakeType = pc.BAKE_COLOR;
+        //var bakeType = pc.BAKE_COLORDIR;
 
 
 
@@ -220,9 +237,9 @@
         app.lightmapper.bake(null, bakeType);
        // app.lightmapper.bake([ground], bakeType);
 
-    //    for (var l = 0; l < lights.length; l++) {
-    //     lights[l].destroy();
-    //    }
+       for (var l = 0; l < lights.length; l++) {
+        lights[l].destroy();
+       }
 
         // Set an update function on the app's update event
         var time = 7;
@@ -233,7 +250,7 @@
             if (time > 7 && bake) {
                 bake = false;
                 console.log("bake");
-                app.lightmapper.bake([ground], bakeType);
+                //app.lightmapper.bake([ground], bakeType);
 //                app.lightmapper.bake(null, bakeType);
             }
 
