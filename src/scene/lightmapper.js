@@ -832,7 +832,7 @@ class Lightmapper {
 
     dilateTextures(device, bakeNodes, passCount) {
 
-        const numDilates2x = 4; // 8 dilates
+        const numDilates2x = 16; // 32 dilates
 
         let pixelOffset = this.pixelOffset;
         let dilateShader = this.dilateShader;
@@ -910,8 +910,6 @@ class Lightmapper {
                 m = rcv[j];
 
                 m.setLightmapped(false);
-
-                // ??????????
                 m.mask = MASK_LIGHTMAP; // only affected by LM lights
 
                 // patch material
