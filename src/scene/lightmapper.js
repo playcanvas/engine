@@ -348,7 +348,7 @@ class Lightmapper {
             if (component.castShadowsLightmap) {
 
                 let meshes = nodes[n].meshInstances;
-                for (i = 0; i < meshes.length; i++) {
+                for (let i = 0; i < meshes.length; i++) {
                     meshes[i].visibleThisFrame = true;
                     casters.push(meshes[i]);
                 }
