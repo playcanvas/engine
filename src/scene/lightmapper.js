@@ -698,7 +698,7 @@ class Lightmapper {
     }
 
     // compute bounding box for each node
-    computeBounds(nodes) {
+    computeNodeBounds(nodes) {
 
         let bounds = new BoundingBox();
 
@@ -715,6 +715,21 @@ class Lightmapper {
         }
     }
 
+    // compute compound bounding box for an array of mesh instances
+    computeBounds(meshInstances) {
+
+        let bounds = new BoundingBox();
+
+        for (let i = 0; i < meshInstances.length; i++) {
+            bounds.copy(meshInstances[0].aabb);
+            for (let m = 1; m < meshInstances.length; m++) {
+                bounds.add(meshInstances[m].aabb);
+            }
+        }
+
+        return bounds;
+    }
+    
     backupMaterials(meshInstances) {
         for (let i = 0; i < meshInstances.length; i++) {
             this.materials[i] = meshInstances[i].material;
@@ -753,31 +768,30 @@ class Lightmapper {
 
     // preparas camera / frustum of the light for rendering the bakeNode
     // returns true if light affects the bakeNode
-    lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam) {
+    lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds) {
 
         let light = bakeLight.light;
         let lightAffectsNode = true;
-        const bounds = bakeNode.bounds;
 
         if (light.type === LIGHTTYPE_DIRECTIONAL) {
 
-            // tweak directional light camera to fully see the bakeNode, so that the node is fully inside the frustum
-            tempVec.copy(bounds.center);
-            tempVec.y += bounds.halfExtents.y;
+            // tweak directional light camera to fully see all casters and they are fully inside the frustum
+            tempVec.copy(casterBounds.center);
+            tempVec.y += casterBounds.halfExtents.y;
 
             this.camera.node.setPosition(tempVec);
             this.camera.node.setEulerAngles(-90, 0, 0);
 
             this.camera.nearClip = 0;
-            this.camera.farClip = bounds.halfExtents.y * 2;
+            this.camera.farClip = casterBounds.halfExtents.y * 2;
 
-            const frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
+            const frustumSize = Math.max(casterBounds.halfExtents.x, casterBounds.halfExtents.z);
             this.camera.orthoHeight = frustumSize;
 
         } else {
 
             // for other light types, test if light affects the node
-            if (!bakeLight.lightBounds.intersects(bounds)) {
+            if (!bakeLight.lightBounds.intersects(bakeNode.bounds)) {
                 lightAffectsNode = false;
             }
         }
@@ -895,8 +909,11 @@ class Lightmapper {
         this.renderer.updateCpuSkinMatrices(casters);
         this.renderer.gpuUpdate(casters);
 
-        // compute bounding boxes
-        this.computeBounds(bakeNodes);
+        // compute bounding boxes for nodes
+        this.computeNodeBounds(bakeNodes);
+
+        // compound bounding box for all casters, used to compute shared directional light shadow
+        const casterBounds = this.computeBounds(casters);
 
         let i, j, rcv, m;
 
@@ -942,14 +959,14 @@ class Lightmapper {
                 let bakeNode = bakeNodes[node];
                 rcv = bakeNode.meshInstances;
 
-                const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam);
+                const lightAffectsNode = this.lightCameraPrepareAndCull(bakeLight, bakeNode, shadowCam, casterBounds);
                 if (!lightAffectsNode) {
                     continue;
                 }
 
                 this.setupLightArray(lightArray, bakeLight.light);
 
-                // render light shadow map if not yet
+                // render light shadow map needs to be rendered
                 shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight.light);
 
                 // Store original materials
