@@ -35,14 +35,14 @@ import { Camera } from '../scene/camera.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 
-var maxSize = 2048;
-
-var tempVec = new Vec3();
-var tempSphere = {};
+const MAX_LIGHTMAP_SIZE = 2048;
 
 const PASS_COLOR = 0;
 const PASS_DIR = 1;
 const LightmapUniqueName = "Lightmapper_lightmap";
+
+let tempVec = new Vec3();
+let tempSphere = {};
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -215,8 +215,8 @@ class Lightmapper {
 
     createMaterials(device, scene, passCount) {
 
-        var xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
-        var bakeLmEnd = shaderChunks.bakeLmEndPS;
+        const xformUv1 = "#define UV1LAYOUT\n" + shaderChunks.transformVS;
+        const bakeLmEnd = shaderChunks.bakeLmEndPS;
 
         for (let pass = 0; pass < passCount; pass++) {
             if (!this.passMaterials[pass]) {
@@ -299,7 +299,7 @@ class Lightmapper {
         }
 
         if (meshInstances) {
-            var hasUv1 = true;
+            let hasUv1 = true;
 
             for (let i = 0; i < meshInstances.length; i++) {
                 if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
@@ -309,7 +309,7 @@ class Lightmapper {
             }
             if (hasUv1) {
 
-                var notInstancedMeshInstances = [];
+                let notInstancedMeshInstances = [];
                 for (let i = 0; i < meshInstances.length; i++) {
                     let mesh = meshInstances[i].mesh;
 
@@ -340,7 +340,7 @@ class Lightmapper {
     // prepare all meshInstances that cast shadows into lightmaps
     prepareShadowCasters(nodes) {
 
-        var casters = [];
+        let casters = [];
         for (let n = 0; n < nodes.length; n++) {
             let component = nodes[n].component;
 
@@ -370,11 +370,11 @@ class Lightmapper {
     }
 
     calculateLightmapSize(node) {
-        var data, parent;
-        var sizeMult = this.scene.lightmapSizeMultiplier || 16;
-        var scale = tempVec;
+        let data, parent;
+        const sizeMult = this.scene.lightmapSizeMultiplier || 16;
+        let scale = tempVec;
 
-        var srcArea, lightmapSizeMultiplier;
+        let srcArea, lightmapSizeMultiplier;
 
         if (node.model) {
             lightmapSizeMultiplier = node.model.lightmapSizeMultiplier;
@@ -405,7 +405,7 @@ class Lightmapper {
         }
 
         // copy area
-        var area = { x: 1, y: 1, z: 1, uv: 1 };
+        let area = { x: 1, y: 1, z: 1, uv: 1 };
         if (srcArea) {
             area.x = srcArea.x;
             area.y = srcArea.y;
@@ -413,7 +413,7 @@ class Lightmapper {
             area.uv = srcArea.uv;
         }
 
-        var areaMult = lightmapSizeMultiplier || 1;
+        const areaMult = lightmapSizeMultiplier || 1;
         area.x *= areaMult;
         area.y *= areaMult;
         area.z *= areaMult;
@@ -430,13 +430,13 @@ class Lightmapper {
         scale.y = Math.abs(scale.y);
         scale.z = Math.abs(scale.z);
 
-        var totalArea = area.x * scale.y * scale.z +
+        let totalArea = area.x * scale.y * scale.z +
                         area.y * scale.x * scale.z +
                         area.z * scale.x * scale.y;
         totalArea /= area.uv;
         totalArea = Math.sqrt(totalArea);
 
-        return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
+        return Math.min(math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || MAX_LIGHTMAP_SIZE);
     }
 
     setLightmaping(nodes, value, passCount, shaderDefs) {
@@ -498,14 +498,14 @@ class Lightmapper {
         }
 
         // loop over bakeNodes, store LMs they use in a set, and clear them from meshInstances
-        var lightmaps = new Set();
+        let lightmaps = new Set();
         scan(bakeNodes, lightmaps, true);
 
         // loop over all nodes, and any LMs they use, remove from the set
         scan(allNodes, lightmaps, false);
 
         // delete textures
-        var count = 0;
+        let count = 0;
         lightmaps.forEach((tex) => {
             if (tex.name === LightmapUniqueName) {
                 tex.destroy();
@@ -532,8 +532,8 @@ class Lightmapper {
      */
     bake(nodes, mode = BAKE_COLORDIR) {
 
-        var device = this.device;
-        var startTime = now();
+        let device = this.device;
+        const startTime = now();
 
         // #ifdef PROFILER
         device.fire('lightmapper:start', {
@@ -545,15 +545,15 @@ class Lightmapper {
         this.stats.renderPasses = 0;
         this.stats.shadowMapTime = 0;
         this.stats.forwardTime = 0;
-        var startShaders = device._shaderStats.linked;
-        var startFboTime = device._renderTargetCreationTime;
-        var startCompileTime = device._shaderStats.compileTime;
+        const startShaders = device._shaderStats.linked;
+        const startFboTime = device._renderTargetCreationTime;
+        const startCompileTime = device._shaderStats.compileTime;
 
         // MeshNode objects for baking
-        var bakeNodes = [];
+        let bakeNodes = [];
 
         // all MeshNode objects
-        var allNodes = [];
+        let allNodes = [];
 
         // collect nodes / meshInstances for baking
         if (nodes) {
@@ -601,8 +601,6 @@ class Lightmapper {
         this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
         this.stats.lightmapCount = bakeNodes.length;
 
-        console.log("stats: ", this.stats);
-
         // #ifdef PROFILER
         device.fire('lightmapper:end', {
             timestamp: nowTime,
@@ -638,7 +636,7 @@ class Lightmapper {
 
     prepareLightsToBake(layerComposition, allLights, bakeLights) {
 
-        var sceneLights = layerComposition._lights;
+        let sceneLights = layerComposition._lights;
 
         for (let i = 0; i < sceneLights.length; i++) {
             let light = sceneLights[i];
@@ -900,11 +898,9 @@ class Lightmapper {
         // compute bounding boxes
         this.computeBounds(bakeNodes);
 
-        var rcv, m;
-        var i, j;
+        let i, j, rcv, m;
 
         // Prepare models
-
         for (i = 0; i < bakeNodes.length; i++) {
             let bakeNode = bakeNodes[i];
             rcv = bakeNode.meshInstances;
