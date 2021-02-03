@@ -140,14 +140,10 @@
         this.mesh.clear(true, false);
         updateMesh(this.mesh, true);
 
-        // Create the mesh instance
-        var node = new pc.GraphNode();
-        var material = new pc.StandardMaterial();
-        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
-
         // Create Entity and add it to the scene
         this.entity = new pc.Entity();
 
+        // Create the mesh instance
         var material = new pc.StandardMaterial();
         var meshInstance = new pc.MeshInstance(this.entity, this.mesh, material);
 
