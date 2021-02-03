@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
 
-var _schema = ['enabled'];
+const _schema = ['enabled'];
 
 /**
  * @class
@@ -19,26 +19,22 @@ var _schema = ['enabled'];
  * @description Create a new ModelComponentSystem.
  * @param {pc.Application} app - The Application.
  */
-function ModelComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class ModelComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'model';
+        this.id = 'model';
 
-    this.ComponentType = ModelComponent;
-    this.DataType = ModelComponentData;
+        this.ComponentType = ModelComponent;
+        this.DataType = ModelComponentData;
 
-    this.schema = _schema;
-    this.defaultMaterial = app.scene.defaultMaterial;
+        this.schema = _schema;
+        this.defaultMaterial = app.scene.defaultMaterial;
 
-    this.on('beforeremove', this.onRemove, this);
-}
-ModelComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-ModelComponentSystem.prototype.constructor = ModelComponentSystem;
+        this.on('beforeremove', this.onRemove, this);
+    }
 
-Component._buildAccessors(ModelComponent.prototype, _schema);
-
-Object.assign(ModelComponentSystem.prototype, {
-    initializeComponentData: function (component, _data, properties) {
+    initializeComponentData(component, _data, properties) {
         // order matters here
         properties = [
             'material',
@@ -71,10 +67,10 @@ Object.assign(ModelComponentSystem.prototype, {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, _data, ['enabled']);
-    },
+        super.initializeComponentData(component, _data, ['enabled']);
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var data = {
             type: entity.model.type,
             asset: entity.model.asset,
@@ -130,11 +126,13 @@ Object.assign(ModelComponentSystem.prototype, {
                 meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
             }
         }
-    },
+    }
 
-    onRemove: function (entity, component) {
+    onRemove(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(ModelComponent.prototype, _schema);
 
 export { ModelComponentSystem };

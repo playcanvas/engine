@@ -1,4 +1,4 @@
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './graphics.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 
@@ -77,49 +77,48 @@ import { VertexBuffer } from './vertex-buffer.js';
  * };
  */
 /* eslint-enable jsdoc/check-examples */
-function TransformFeedback(inputBuffer, usage) {
-    usage = usage || BUFFER_GPUDYNAMIC;
-    this.device = inputBuffer.device;
-    var gl = this.device.gl;
+class TransformFeedback {
+    constructor(inputBuffer, usage = BUFFER_GPUDYNAMIC) {
+        this.device = inputBuffer.device;
+        var gl = this.device.gl;
 
-    // #ifdef DEBUG
-    if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
-        console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
+        // #ifdef DEBUG
+        if (!inputBuffer.format.interleaved && inputBuffer.format.elements.length > 1) {
+            console.error("Vertex buffer used by TransformFeedback needs to be interleaved.");
+        }
+        // #endif
+
+        this._inputBuffer = inputBuffer;
+        if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
+            // have to recreate input buffer with other usage
+            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
+            gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
+        }
+
+        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
     }
-    // #endif
 
-    this._inputBuffer = inputBuffer;
-    if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
-        // have to recreate input buffer with other usage
-        gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
+    /**
+     * @function
+     * @name pc.TransformFeedback.createShader
+     * @description Creates a transform feedback ready vertex shader from code.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} name - Unique name for caching the shader.
+     * @returns {pc.Shader} A shader to use in the process() function.
+     */
+    static createShader(graphicsDevice, vsCode, name) {
+        return createShaderFromCode(graphicsDevice, vsCode, null, name, true);
     }
 
-    this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
-}
-
-/**
- * @function
- * @name pc.TransformFeedback#createShader
- * @description Creates a transform feedback ready vertex shader from code.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
- * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
- * @param {string} name - Unique name for caching the shader.
- * @returns {pc.Shader} A shader to use in the process() function.
- */
-TransformFeedback.createShader = function (graphicsDevice, vsCode, name) {
-    return createShaderFromCode(graphicsDevice, vsCode, null, name, true);
-};
-
-Object.assign(TransformFeedback.prototype, {
     /**
      * @function
      * @name pc.TransformFeedback#destroy
      * @description Destroys the transform feedback helper object.
      */
-    destroy: function () {
+    destroy() {
         this._outputBuffer.destroy();
-    },
+    }
 
     /**
      * @function
@@ -128,9 +127,7 @@ Object.assign(TransformFeedback.prototype, {
      * @param {pc.Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
      * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
      */
-    process: function (shader, swap) {
-        if (swap === undefined) swap = true;
-
+    process(shader, swap = true) {
         var device = this.device;
 
         // #ifdef DEBUG
@@ -169,30 +166,26 @@ Object.assign(TransformFeedback.prototype, {
             this._outputBuffer._vao = tmp;
         }
     }
-});
 
-/**
- * @readonly
- * @name pc.TransformFeedback#inputBuffer
- * @type {pc.VertexBuffer}
- * @description The current input buffer.
- */
-Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.TransformFeedback#inputBuffer
+     * @type {pc.VertexBuffer}
+     * @description The current input buffer.
+     */
+    get inputBuffer() {
         return this._inputBuffer;
     }
-});
 
-/**
- * @readonly
- * @name pc.TransformFeedback#outputBuffer
- * @type {pc.VertexBuffer}
- * @description The current output buffer.
- */
-Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
-    get: function () {
+    /**
+     * @readonly
+     * @name pc.TransformFeedback#outputBuffer
+     * @type {pc.VertexBuffer}
+     * @description The current output buffer.
+     */
+    get outputBuffer() {
         return this._outputBuffer;
     }
-});
+}
 
 export { TransformFeedback };

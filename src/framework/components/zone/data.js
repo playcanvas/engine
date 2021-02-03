@@ -1,5 +1,7 @@
-function ZoneComponentData() {
-    this.enabled = true;
+class ZoneComponentData {
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { ZoneComponentData };

@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
 
@@ -20,84 +20,88 @@ import { Listener } from './listener.js';
  * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
  * @property {number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
  */
-function SoundManager(options) {
-    EventHandler.call(this);
+class SoundManager extends EventHandler {
+    constructor(options) {
+        super();
 
-    if (hasAudioContext() || options.forceWebAudioApi) {
-        if (typeof AudioContext !== 'undefined') {
-            this.context = new AudioContext();
-        } else if (typeof webkitAudioContext !== 'undefined') {
-            this.context = new webkitAudioContext();
-        }
+        this._context = null;
+        this._forceWebAudioApi = options.forceWebAudioApi;
 
-        if (this.context) {
-            var context = this.context;
+        this._resumeContext = null;
+        this._unlock = null;
 
+        if (hasAudioContext() || this._forceWebAudioApi) {
             // resume AudioContext on user interaction because of new Chrome autoplay policy
-            this.resumeContext = function () {
-                this.context.resume();
-                window.removeEventListener('mousedown', this.resumeContext);
-                window.removeEventListener('touchend', this.resumeContext);
-            }.bind(this);
+            this._resumeContext = () => {
+                window.removeEventListener('mousedown', this._resumeContext);
+                window.removeEventListener('touchend', this._resumeContext);
 
-            window.addEventListener('mousedown', this.resumeContext);
-            window.addEventListener('touchend', this.resumeContext);
+                if (this.context) {
+                    this.context.resume();
+                }
+            };
+
+            window.addEventListener('mousedown', this._resumeContext);
+            window.addEventListener('touchend', this._resumeContext);
 
             // iOS only starts sound as a response to user interaction
             if (platform.ios) {
                 // Play an inaudible sound when the user touches the screen
                 // This only happens once
-                var unlock = function () {
-                    var buffer = context.createBuffer(1, 1, 44100);
-                    var source = context.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(context.destination);
-                    source.start(0);
-                    source.disconnect();
-
+                this._unlock = () => {
                     // no further need for this so remove the listener
-                    window.removeEventListener('touchend', unlock);
+                    window.removeEventListener('touchend', this._unlock);
+
+                    const context = this.context;
+                    if (context) {
+                        var buffer = context.createBuffer(1, 1, 44100);
+                        var source = context.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(context.destination);
+                        source.start(0);
+                        source.disconnect();
+                    }
                 };
 
-                window.addEventListener('touchend', unlock);
+                window.addEventListener('touchend', this._unlock);
             }
+        } else {
+            console.warn('No support for 3D audio found');
         }
-    } else {
-        console.warn('No support for 3D audio found');
+
+        this.listener = new Listener(this);
+
+        this._volume = 1;
+        this.suspended = false;
     }
 
-    if (!hasAudio())
-        console.warn('No support for 2D audio found');
-
-    this.listener = new Listener(this);
-
-    this._volume = 1;
-    this.suspended = false;
-}
-SoundManager.prototype = Object.create(EventHandler.prototype);
-SoundManager.prototype.constructor = SoundManager;
-
-Object.assign(SoundManager.prototype, {
-    suspend: function  () {
+    suspend() {
         this.suspended = true;
         this.fire('suspend');
-    },
+    }
 
-    resume: function () {
+    resume() {
         this.suspended = false;
         this.fire('resume');
-    },
+    }
 
-    destroy: function () {
-        window.removeEventListener('mousedown', this.resumeContext);
-        window.removeEventListener('touchend', this.resumeContext);
+    destroy() {
+        if (this._resumeContext) {
+            window.removeEventListener('mousedown', this._resumeContext);
+            window.removeEventListener('touchend', this._resumeContext);
+        }
+
+        if (this._unlock) {
+            window.removeEventListener('touchend', this._unlock);
+        }
 
         this.fire('destroy');
-        if (this.context && this.context.close) {
-            this.context.close();
-            this.context = null;
+
+        if (this._context && this._context.close) {
+            this._context.close();
+            this._context = null;
         }
-    },
+    }
 
     /**
      * @private
@@ -110,7 +114,7 @@ Object.assign(SoundManager.prototype, {
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {pc.Channel} The channel playing the sound.
      */
-    playSound: function (sound, options) {
+    playSound(sound, options) {
         options = options || {};
         var channel = null;
         if (Channel) {
@@ -118,7 +122,7 @@ Object.assign(SoundManager.prototype, {
             channel.play();
         }
         return channel;
-    },
+    }
 
     /**
      * @private
@@ -132,7 +136,7 @@ Object.assign(SoundManager.prototype, {
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {pc.Channel3d} The 3D channel playing the sound.
      */
-    playSound3d: function (sound, position, options) {
+    playSound3d(sound, position, options) {
         options = options || {};
         var channel = null;
         if (Channel3d) {
@@ -162,17 +166,31 @@ Object.assign(SoundManager.prototype, {
 
         return channel;
     }
-});
 
-Object.defineProperty(SoundManager.prototype, 'volume', {
-    get: function () {
+    get volume() {
         return this._volume;
-    },
-    set: function (volume) {
+    }
+
+    set volume(volume) {
         volume = math.clamp(volume, 0, 1);
         this._volume = volume;
         this.fire('volumechange', volume);
     }
-});
+
+    get context() {
+        // lazy create the AudioContext if possible
+        if (!this._context) {
+            if (hasAudioContext() || this._forceWebAudioApi) {
+                if (typeof AudioContext !== 'undefined') {
+                    this._context = new AudioContext();
+                } else if (typeof webkitAudioContext !== 'undefined') {
+                    this._context = new webkitAudioContext();
+                }
+            }
+        }
+
+        return this._context;
+    }
+}
 
 export { SoundManager };

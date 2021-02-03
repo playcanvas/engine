@@ -1,5 +1,7 @@
-function ScriptComponentData() {
-    this.enabled = true;
+class ScriptComponentData {
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { ScriptComponentData };

@@ -124,7 +124,6 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 | Command           | Description                               | Outputs                          |
 | ----------------- | ----------------------------------------- | -------------------------------- |
 | `npm run build`   | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run closure` | Build minified release engine             | `build\playcanvas.min.js`        |
 | `npm run tsd`     | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
 | `npm run docs`    | Build engine [API reference docs][docs]   | `docs`                           |
 
@@ -142,8 +141,8 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 特定引擎版本：
 
-- https://code.playcanvas.com/playcanvas-0.181.11.js
-- https://code.playcanvas.com/playcanvas-0.181.11.min.js
+- https://code.playcanvas.com/playcanvas-1.38.4.js
+- https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
 ### 生成 Source Maps
 

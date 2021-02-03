@@ -1,12 +1,12 @@
 import { string } from '../../../core/string.js';
-import { Color } from '../../../core/color.js';
 
 import { math } from '../../../math/math.js';
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR } from '../../../graphics/graphics.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR } from '../../../graphics/constants.js';
 import { VertexIterator } from '../../../graphics/vertex-iterator.js';
 
 import { createMesh } from '../../../scene/procedural.js';
@@ -16,138 +16,39 @@ import { Model } from '../../../scene/model.js';
 
 import { LocalizedAsset } from '../../../asset/asset-localized.js';
 
-import { FONT_BITMAP, FONT_MSDF } from '../text/font.js';
+import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
 
 import { Markup } from './markup.js';
 
-function MeshInfo() {
-    // number of symbols
-    this.count = 0;
-    // number of quads created
-    this.quad = 0;
-    // number of quads on specific line
-    this.lines = {};
-    // float array for positions
-    this.positions = [];
-    // float array for normals
-    this.normals = [];
-    // float array for UVs
-    this.uvs = [];
-    // float array for vertex colors
-    this.colors = [];
-    // float array for indices
-    this.indices = [];
-    // pc.MeshInstance created from this MeshInfo
-    this.meshInstance = null;
+class MeshInfo {
+    constructor() {
+        // number of symbols
+        this.count = 0;
+        // number of quads created
+        this.quad = 0;
+        // number of quads on specific line
+        this.lines = {};
+        // float array for positions
+        this.positions = [];
+        // float array for normals
+        this.normals = [];
+        // float array for UVs
+        this.uvs = [];
+        // float array for vertex colors
+        this.colors = [];
+        // float array for indices
+        this.indices = [];
+        // pc.MeshInstance created from this MeshInfo
+        this.meshInstance = null;
+    }
 }
 
-function TextElement(element) {
-    this._element = element;
-    this._system = element.system;
-    this._entity = element.entity;
-
-    // public
-    this._text = "";            // the original user-defined text
-    this._symbols = [];         // array of visible symbols with unicode processing and markup removed
-    this._colorPalette = [];    // per-symbol color palette
-    this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
-    this._i18nKey = null;
-
-    this._fontAsset = new LocalizedAsset(this._system.app);
-    this._fontAsset.disableLocalization = true;
-    this._fontAsset.on('load', this._onFontLoad, this);
-    this._fontAsset.on('change', this._onFontChange, this);
-    this._fontAsset.on('remove', this._onFontRemove, this);
-
-    this._font = null;
-
-    this._color = new Color(1, 1, 1, 1);
-    this._colorUniform = new Float32Array(3);
-
-    this._spacing = 1;
-    this._fontSize = 32;
-    this._fontMinY = 0;
-    this._fontMaxY = 0;
-    // the font size that is set directly by the fontSize setter
-    this._originalFontSize = 32;
-    this._maxFontSize = 32;
-    this._minFontSize = 8;
-    this._autoFitWidth = false;
-    this._autoFitHeight = false;
-    this._maxLines = -1;
-    this._lineHeight = 32;
-    this._scaledLineHeight = 32;
-    this._wrapLines = false;
-
-    this._drawOrder = 0;
-
-    this._alignment = new Vec2(0.5, 0.5);
-
-    this._autoWidth = true;
-    this._autoHeight = true;
-
-    this.width = 0;
-    this.height = 0;
-
-    // private
-    this._node = new GraphNode();
-    this._model = new Model();
-    this._model.graph = this._node;
-    this._entity.addChild(this._node);
-
-    this._meshInfo = [];
-    this._material = null;
-
-    this._aabbDirty = true;
-    this._aabb = new BoundingBox();
-
-    this._noResize = false; // flag used to disable resizing events
-
-    this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
-    this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
-
-    this._rtlReorder = false;
-    this._unicodeConverter = false;
-    this._rtl = false;              // true when the current text is RTL
-
-    this._outlineColor = new Color(0, 0, 0, 1);
-    this._outlineColorUniform = new Float32Array(4);
-    this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
-    this._outlineThickness = 0.0;
-
-    this._shadowColor = new Color(0, 0, 0, 1);
-    this._shadowColorUniform = new Float32Array(4);
-    this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
-    this._shadowOffset = new Vec2(0, 0);
-    this._shadowOffsetUniform = new Float32Array(2);
-
-    this._enableMarkup = false;
-
-    // initialize based on screen
-    this._onScreenChange(this._element.screen);
-
-    // start listening for element events
-    element.on('resize', this._onParentResize, this);
-    element.on('set:screen', this._onScreenChange, this);
-    element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
-    element.on('set:draworder', this._onDrawOrderChange, this);
-    element.on('set:pivot', this._onPivotChange, this);
-
-    this._system.app.i18n.on('set:locale', this._onLocaleSet, this);
-    this._system.app.i18n.on('data:add', this._onLocalizationData, this);
-    this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
-
-    // substring render range
-    this._rangeStart = 0;
-    this._rangeEnd = 0;
-}
-
-var LINE_BREAK_CHAR = /^[\r\n]$/;
-var WHITESPACE_CHAR = /^[ \t]$/;
-var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+const LINE_BREAK_CHAR = /^[\r\n]$/;
+const WHITESPACE_CHAR = /^[ \t]$/;
+const WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
-var CONTROL_CHARS = [
+const CONTROL_CHARS = [
     '\u061C',
     '\u200E',
     '\u200F',
@@ -163,7 +64,7 @@ var CONTROL_CHARS = [
 ];
 
 // glyph data to use for missing control characters
-var CONTROL_GLYPH_DATA = {
+const CONTROL_GLYPH_DATA = {
     width: 0,
     height: 0,
     xadvance: 0,
@@ -171,8 +72,109 @@ var CONTROL_GLYPH_DATA = {
     yoffset: 0
 };
 
-Object.assign(TextElement.prototype, {
-    destroy: function () {
+class TextElement {
+    constructor(element) {
+        this._element = element;
+        this._system = element.system;
+        this._entity = element.entity;
+
+        // public
+        this._text = "";            // the original user-defined text
+        this._symbols = [];         // array of visible symbols with unicode processing and markup removed
+        this._colorPalette = [];    // per-symbol color palette
+        this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
+        this._i18nKey = null;
+
+        this._fontAsset = new LocalizedAsset(this._system.app);
+        this._fontAsset.disableLocalization = true;
+        this._fontAsset.on('load', this._onFontLoad, this);
+        this._fontAsset.on('change', this._onFontChange, this);
+        this._fontAsset.on('remove', this._onFontRemove, this);
+
+        this._font = null;
+
+        this._color = new Color(1, 1, 1, 1);
+        this._colorUniform = new Float32Array(3);
+
+        this._spacing = 1;
+        this._fontSize = 32;
+        this._fontMinY = 0;
+        this._fontMaxY = 0;
+        // the font size that is set directly by the fontSize setter
+        this._originalFontSize = 32;
+        this._maxFontSize = 32;
+        this._minFontSize = 8;
+        this._autoFitWidth = false;
+        this._autoFitHeight = false;
+        this._maxLines = -1;
+        this._lineHeight = 32;
+        this._scaledLineHeight = 32;
+        this._wrapLines = false;
+
+        this._drawOrder = 0;
+
+        this._alignment = new Vec2(0.5, 0.5);
+
+        this._autoWidth = true;
+        this._autoHeight = true;
+
+        this.width = 0;
+        this.height = 0;
+
+        // private
+        this._node = new GraphNode();
+        this._model = new Model();
+        this._model.graph = this._node;
+        this._entity.addChild(this._node);
+
+        this._meshInfo = [];
+        this._material = null;
+
+        this._aabbDirty = true;
+        this._aabb = new BoundingBox();
+
+        this._noResize = false; // flag used to disable resizing events
+
+        this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
+        this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
+
+        this._rtlReorder = false;
+        this._unicodeConverter = false;
+        this._rtl = false;              // true when the current text is RTL
+
+        this._outlineColor = new Color(0, 0, 0, 1);
+        this._outlineColorUniform = new Float32Array(4);
+        this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThickness = 0.0;
+
+        this._shadowColor = new Color(0, 0, 0, 1);
+        this._shadowColorUniform = new Float32Array(4);
+        this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
+        this._shadowOffset = new Vec2(0, 0);
+        this._shadowOffsetUniform = new Float32Array(2);
+
+        this._enableMarkup = false;
+
+        // initialize based on screen
+        this._onScreenChange(this._element.screen);
+
+        // start listening for element events
+        element.on('resize', this._onParentResize, this);
+        element.on('set:screen', this._onScreenChange, this);
+        element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+        element.on('set:draworder', this._onDrawOrderChange, this);
+        element.on('set:pivot', this._onPivotChange, this);
+
+        this._system.app.i18n.on('set:locale', this._onLocaleSet, this);
+        this._system.app.i18n.on('data:add', this._onLocalizationData, this);
+        this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
+
+        // substring render range
+        this._rangeStart = 0;
+        this._rangeEnd = 0;
+    }
+
+    destroy() {
         this._setMaterial(null); // clear material from mesh instances
 
         if (this._model) {
@@ -193,26 +195,26 @@ Object.assign(TextElement.prototype, {
         this._system.app.i18n.off('set:locale', this._onLocaleSet, this);
         this._system.app.i18n.off('data:add', this._onLocalizationData, this);
         this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
-    },
+    }
 
-    _onParentResize: function (width, height) {
+    _onParentResize(width, height) {
         if (this._noResize) return;
         if (this._font) this._updateText();
-    },
+    }
 
-    _onScreenChange: function (screen) {
+    _onScreenChange(screen) {
         if (screen) {
             this._updateMaterial(screen.screen.screenSpace);
         } else {
             this._updateMaterial(false);
         }
-    },
+    }
 
-    _onScreenSpaceChange: function (value) {
+    _onScreenSpaceChange(value) {
         this._updateMaterial(value);
-    },
+    }
 
-    _onDrawOrderChange: function (order) {
+    _onDrawOrderChange(order) {
         this._drawOrder = order;
 
         if (this._model) {
@@ -223,14 +225,14 @@ Object.assign(TextElement.prototype, {
                 this._model.meshInstances[i].drawOrder = order;
             }
         }
-    },
+    }
 
-    _onPivotChange: function (pivot) {
+    _onPivotChange(pivot) {
         if (this._font)
             this._updateText();
-    },
+    }
 
-    _onLocaleSet: function (locale) {
+    _onLocaleSet(locale) {
         if (!this._i18nKey) return;
 
         // if the localized font is different
@@ -245,19 +247,19 @@ Object.assign(TextElement.prototype, {
         }
 
         this._resetLocalizedText();
-    },
+    }
 
-    _onLocalizationData: function (locale, messages) {
+    _onLocalizationData(locale, messages) {
         if (this._i18nKey && messages[this._i18nKey]) {
             this._resetLocalizedText();
         }
-    },
+    }
 
-    _resetLocalizedText: function () {
+    _resetLocalizedText() {
         this._setText(this._system.app.i18n.getText(this._i18nKey));
-    },
+    }
 
-    _setText: function (text) {
+    _setText(text) {
         if (this.unicodeConverter) {
             var unicodeConverterFunc = this._system.getUnicodeConverter();
             if (unicodeConverterFunc) {
@@ -273,9 +275,9 @@ Object.assign(TextElement.prototype, {
             }
             this._text = text;
         }
-    },
+    }
 
-    _updateText: function (text) {
+    _updateText(text) {
         var i;
         var len;
         var results;
@@ -524,9 +526,9 @@ Object.assign(TextElement.prototype, {
         this._rangeStart = 0;
         this._rangeEnd = this._symbols.length;
         this._updateRenderRange();
-    },
+    }
 
-    _removeMeshInstance: function (meshInstance) {
+    _removeMeshInstance(meshInstance) {
 
         meshInstance.material = null;
 
@@ -538,9 +540,9 @@ Object.assign(TextElement.prototype, {
         var idx = this._model.meshInstances.indexOf(meshInstance);
         if (idx !== -1)
             this._model.meshInstances.splice(idx, 1);
-    },
+    }
 
-    _setMaterial: function (material) {
+    _setMaterial(material) {
         var i;
         var len;
 
@@ -551,9 +553,9 @@ Object.assign(TextElement.prototype, {
                 mi.material = material;
             }
         }
-    },
+    }
 
-    _updateMaterial: function (screenSpace) {
+    _updateMaterial(screenSpace) {
         var element = this._element;
         var screenCulled = element._isScreenCulled();
         var visibleFn = function (camera) {
@@ -579,9 +581,9 @@ Object.assign(TextElement.prototype, {
 
             }
         }
-    },
+    }
 
-    _updateMeshes: function () {
+    _updateMeshes() {
         var json = this._font.data;
         var self = this;
 
@@ -1036,22 +1038,22 @@ Object.assign(TextElement.prototype, {
 
         // flag text element aabb to be updated
         this._aabbDirty = true;
-    },
+    }
 
-    _onFontRender: function () {
+    _onFontRender() {
         // if the font has been changed (e.g. canvasfont re-render)
         // re-applying the same font updates character map and ensures
         // everything is up to date.
         this.font = this._font;
-    },
+    }
 
-    _onFontLoad: function (asset) {
+    _onFontLoad(asset) {
         if (this.font !== asset.resource) {
             this.font = asset.resource;
         }
-    },
+    }
 
-    _onFontChange: function (asset, name, _new, _old) {
+    _onFontChange(asset, name, _new, _old) {
         if (name === 'data') {
             this._font.data = _new;
 
@@ -1067,13 +1069,13 @@ Object.assign(TextElement.prototype, {
                 }
             }
         }
-    },
+    }
 
-    _onFontRemove: function (asset) {
+    _onFontRemove(asset) {
 
-    },
+    }
 
-    _setTextureParams: function (mi, texture) {
+    _setTextureParams(mi, texture) {
         if (this._font) {
             if (this._font.type === FONT_MSDF) {
                 mi.deleteParameter("texture_emissiveMap");
@@ -1085,9 +1087,9 @@ Object.assign(TextElement.prototype, {
                 mi.setParameter("texture_opacityMap", texture);
             }
         }
-    },
+    }
 
-    _getPxRange: function (font) {
+    _getPxRange(font) {
         // calculate pxrange from range and scale properties on a character
         var keys = Object.keys(this._font.data.chars);
         for (var i = 0; i < keys.length; i++) {
@@ -1097,9 +1099,9 @@ Object.assign(TextElement.prototype, {
             }
         }
         return 2; // default
-    },
+    }
 
-    _getUv: function (char) {
+    _getUv(char) {
         var data = this._font.data;
 
         if (!data.chars[char]) {
@@ -1132,25 +1134,25 @@ Object.assign(TextElement.prototype, {
             (x2 / width),
             edge - (y2 / height)  // top right
         ];
-    },
+    }
 
-    onEnable: function () {
+    onEnable() {
         this._fontAsset.autoLoad = true;
 
         if (this._model) {
             this._element.addModelToLayers(this._model);
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this._fontAsset.autoLoad = false;
 
         if (this._model) {
             this._element.removeModelFromLayers(this._model);
         }
-    },
+    }
 
-    _setStencil: function (stencilParams) {
+    _setStencil(stencilParams) {
         if (this._model) {
             var instances = this._model.meshInstances;
             for (var i = 0; i < instances.length; i++) {
@@ -1158,24 +1160,24 @@ Object.assign(TextElement.prototype, {
                 instances[i].stencilBack = stencilParams;
             }
         }
-    },
+    }
 
-    _shouldAutoFitWidth: function () {
+    _shouldAutoFitWidth() {
         return this._autoFitWidth && !this._autoWidth;
-    },
+    }
 
-    _shouldAutoFitHeight: function () {
+    _shouldAutoFitHeight() {
         return this._autoFitHeight && !this._autoHeight;
-    },
+    }
 
-    _shouldAutoFit: function () {
+    _shouldAutoFit() {
         return this._autoFitWidth && !this._autoWidth ||
                this._autoFitHeight && !this._autoHeight;
-    },
+    }
 
     // calculate the number of characters per texture up to, but not including
     // the specified symbolIndex
-    _calculateCharsPerTexture: function (symbolIndex) {
+    _calculateCharsPerTexture(symbolIndex) {
         var charactersPerTexture = {};
 
         if (symbolIndex === undefined) {
@@ -1204,9 +1206,9 @@ Object.assign(TextElement.prototype, {
             }
         }
         return charactersPerTexture;
-    },
+    }
 
-    _updateRenderRange: function () {
+    _updateRenderRange() {
         var startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
         var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
@@ -1224,24 +1226,22 @@ Object.assign(TextElement.prototype, {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "text", {
-    get: function () {
+    get text() {
         return this._text;
-    },
-    set: function (value) {
+    }
+
+    set text(value) {
         this._i18nKey = null;
         var str = value != null && value.toString() || "";
         this._setText(str);
     }
-});
 
-Object.defineProperty(TextElement.prototype, "key", {
-    get: function () {
+    get key() {
         return this._i18nKey;
-    },
-    set: function (value) {
+    }
+
+    set key(value) {
         var str = value !== null ? value.toString() : null;
         if (this._i18nKey === str) {
             return;
@@ -1255,14 +1255,12 @@ Object.defineProperty(TextElement.prototype, "key", {
             this._fontAsset.disableLocalization = true;
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "color", {
-    get: function () {
+    get color() {
         return this._color;
-    },
+    }
 
-    set: function (value) {
+    set color(value) {
         var r = value.r;
         var g = value.g;
         var b = value.b;
@@ -1297,14 +1295,12 @@ Object.defineProperty(TextElement.prototype, "color", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "opacity", {
-    get: function () {
+    get opacity() {
         return this._color.a;
-    },
+    }
 
-    set: function (value) {
+    set opacity(value) {
         if (this._color.a === value) return;
 
         this._color.a = value;
@@ -1316,14 +1312,12 @@ Object.defineProperty(TextElement.prototype, "opacity", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "lineHeight", {
-    get: function () {
+    get lineHeight() {
         return this._lineHeight;
-    },
+    }
 
-    set: function (value) {
+    set lineHeight(value) {
         var _prev = this._lineHeight;
         this._lineHeight = value;
         this._scaledLineHeight = value;
@@ -1331,48 +1325,40 @@ Object.defineProperty(TextElement.prototype, "lineHeight", {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "wrapLines", {
-    get: function () {
+    get wrapLines() {
         return this._wrapLines;
-    },
+    }
 
-    set: function (value) {
+    set wrapLines(value) {
         var _prev = this._wrapLines;
         this._wrapLines = value;
         if (_prev !== value && this._font) {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "lines", {
-    get: function () {
+    get lines() {
         return this._lineContents;
     }
-});
 
-Object.defineProperty(TextElement.prototype, "spacing", {
-    get: function () {
+    get spacing() {
         return this._spacing;
-    },
+    }
 
-    set: function (value) {
+    set spacing(value) {
         var _prev = this._spacing;
         this._spacing = value;
         if (_prev !== value && this._font) {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "fontSize", {
-    get: function () {
+    get fontSize() {
         return this._fontSize;
-    },
+    }
 
-    set: function (value) {
+    set fontSize(value) {
         var _prev = this._fontSize;
         this._fontSize = value;
         this._originalFontSize = value;
@@ -1380,27 +1366,23 @@ Object.defineProperty(TextElement.prototype, "fontSize", {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "fontAsset", {
-    get: function () {
+    get fontAsset() {
         // getting fontAsset returns the currently used localized asset
         return this._fontAsset.localizedAsset;
-    },
+    }
 
-    set: function (value) {
+    set fontAsset(value) {
         // setting the fontAsset sets the default assets which in turn
         // will set the localized asset to be actually used
         this._fontAsset.defaultAsset = value;
     }
-});
 
-Object.defineProperty(TextElement.prototype, "font", {
-    get: function () {
+    get font() {
         return this._font;
-    },
+    }
 
-    set: function (value) {
+    set font(value) {
         var i;
         var len;
 
@@ -1484,14 +1466,12 @@ Object.defineProperty(TextElement.prototype, "font", {
 
         this._updateText();
     }
-});
 
-Object.defineProperty(TextElement.prototype, "alignment", {
-    get: function () {
+    get alignment() {
         return this._alignment;
-    },
+    }
 
-    set: function (value) {
+    set alignment(value) {
         if (value instanceof Vec2) {
             this._alignment.set(value.x, value.y);
         } else {
@@ -1501,14 +1481,12 @@ Object.defineProperty(TextElement.prototype, "alignment", {
         if (this._font)
             this._updateText();
     }
-});
 
-Object.defineProperty(TextElement.prototype, "autoWidth", {
-    get: function () {
+    get autoWidth() {
         return this._autoWidth;
-    },
+    }
 
-    set: function (value) {
+    set autoWidth(value) {
         var old = this._autoWidth;
         this._autoWidth = value;
 
@@ -1528,16 +1506,13 @@ Object.defineProperty(TextElement.prototype, "autoWidth", {
                 }
             }
         }
-
     }
-});
 
-Object.defineProperty(TextElement.prototype, "autoHeight", {
-    get: function () {
+    get autoHeight() {
         return this._autoHeight;
-    },
+    }
 
-    set: function (value) {
+    set autoHeight(value) {
         var old = this._autoHeight;
         this._autoHeight = value;
 
@@ -1558,15 +1533,12 @@ Object.defineProperty(TextElement.prototype, "autoHeight", {
             }
         }
     }
-});
 
-
-Object.defineProperty(TextElement.prototype, "rtlReorder", {
-    get: function () {
+    get rtlReorder() {
         return this._rtlReorder;
-    },
+    }
 
-    set: function (value) {
+    set rtlReorder(value) {
         if (this._rtlReorder !== value) {
             this._rtlReorder = value;
             if (this._font) {
@@ -1574,25 +1546,20 @@ Object.defineProperty(TextElement.prototype, "rtlReorder", {
             }
         }
     }
-});
 
-
-Object.defineProperty(TextElement.prototype, "unicodeConverter", {
-    get: function () {
+    get unicodeConverter() {
         return this._unicodeConverter;
-    },
+    }
 
-    set: function (value) {
+    set unicodeConverter(value) {
         if (this._unicodeConverter !== value) {
             this._unicodeConverter = value;
             this._setText(this._text);
         }
     }
-});
 
-// private
-Object.defineProperty(TextElement.prototype, "aabb", {
-    get: function () {
+    // private
+    get aabb() {
         if (this._aabbDirty) {
             var initialized = false;
             for (var i = 0; i < this._meshInfo.length; i++) {
@@ -1610,14 +1577,12 @@ Object.defineProperty(TextElement.prototype, "aabb", {
         }
         return this._aabb;
     }
-});
 
-Object.defineProperty(TextElement.prototype, "outlineColor", {
-    get: function () {
+    get outlineColor() {
         return this._outlineColor;
-    },
+    }
 
-    set: function (value) {
+    set outlineColor(value) {
         var r = (value instanceof Color) ? value.r : value[0];
         var g = (value instanceof Color) ? value.g : value[1];
         var b = (value instanceof Color) ? value.b : value[2];
@@ -1653,14 +1618,12 @@ Object.defineProperty(TextElement.prototype, "outlineColor", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "outlineThickness", {
-    get: function () {
+    get outlineThickness() {
         return this._outlineThickness;
-    },
+    }
 
-    set: function (value) {
+    set outlineThickness(value) {
         var _prev = this._outlineThickness;
         this._outlineThickness = value;
         if (_prev !== value && this._font) {
@@ -1672,14 +1635,12 @@ Object.defineProperty(TextElement.prototype, "outlineThickness", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "shadowColor", {
-    get: function () {
+    get shadowColor() {
         return this._shadowColor;
-    },
+    }
 
-    set: function (value) {
+    set shadowColor(value) {
         var r = (value instanceof Color) ? value.r : value[0];
         var g = (value instanceof Color) ? value.g : value[1];
         var b = (value instanceof Color) ? value.b : value[2];
@@ -1715,14 +1676,12 @@ Object.defineProperty(TextElement.prototype, "shadowColor", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, "shadowOffset", {
-    get: function () {
+    get shadowOffset() {
         return this._shadowOffset;
-    },
+    }
 
-    set: function (value) {
+    set shadowOffset(value) {
         var x = (value instanceof Vec2) ? value.x : value[0],
             y = (value instanceof Vec2) ? value.y : value[1];
         if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
@@ -1740,13 +1699,12 @@ Object.defineProperty(TextElement.prototype, "shadowOffset", {
             }
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'minFontSize', {
-    get: function () {
+    get minFontSize() {
         return this._minFontSize;
-    },
-    set: function (value) {
+    }
+
+    set minFontSize(value) {
         if (this._minFontSize === value) return;
         this._minFontSize = value;
 
@@ -1754,13 +1712,12 @@ Object.defineProperty(TextElement.prototype, 'minFontSize', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'maxFontSize', {
-    get: function () {
+    get maxFontSize() {
         return this._maxFontSize;
-    },
-    set: function (value) {
+    }
+
+    set maxFontSize(value) {
         if (this._maxFontSize === value) return;
         this._maxFontSize = value;
 
@@ -1768,13 +1725,12 @@ Object.defineProperty(TextElement.prototype, 'maxFontSize', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'autoFitWidth', {
-    get: function () {
+    get autoFitWidth() {
         return this._autoFitWidth;
-    },
-    set: function (value) {
+    }
+
+    set autoFitWidth(value) {
         if (this._autoFitWidth === value) return;
         this._autoFitWidth = value;
 
@@ -1783,13 +1739,12 @@ Object.defineProperty(TextElement.prototype, 'autoFitWidth', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'autoFitHeight', {
-    get: function () {
+    get autoFitHeight() {
         return this._autoFitHeight;
-    },
-    set: function (value) {
+    }
+
+    set autoFitHeight(value) {
         if (this._autoFitHeight === value) return;
         this._autoFitHeight = value;
 
@@ -1798,13 +1753,12 @@ Object.defineProperty(TextElement.prototype, 'autoFitHeight', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'maxLines', {
-    get: function () {
+    get maxLines() {
         return this._maxLines;
-    },
-    set: function (value) {
+    }
+
+    set maxLines(value) {
         if (this._maxLines === value) return;
         if (value === null && this._maxLines === -1) return;
 
@@ -1814,13 +1768,12 @@ Object.defineProperty(TextElement.prototype, 'maxLines', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'enableMarkup', {
-    get: function () {
+    get enableMarkup() {
         return this._enableMarkup;
-    },
-    set: function (value) {
+    }
+
+    set enableMarkup(value) {
         value = !!value;
         if (this._enableMarkup === value) return;
 
@@ -1830,16 +1783,12 @@ Object.defineProperty(TextElement.prototype, 'enableMarkup', {
             this._updateText();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'symbols', {
-    get: function () {
+    get symbols() {
         return this._symbols;
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'symbolColors', {
-    get: function () {
+    get symbolColors() {
         if (this._symbolColors === null) {
             return null;
         }
@@ -1847,19 +1796,16 @@ Object.defineProperty(TextElement.prototype, 'symbolColors', {
             return this._colorPalette.slice(c * 3, c * 3 + 3);
         }, this);
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'rtl', {
-    get: function () {
+    get rtl() {
         return this._rtl;
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'rangeStart', {
-    get: function () {
+    get rangeStart() {
         return this._rangeStart;
-    },
-    set: function (rangeStart) {
+    }
+
+    set rangeStart(rangeStart) {
         rangeStart = Math.max(0, Math.min(rangeStart, this._symbols.length));
 
         if (rangeStart !== this._rangeStart) {
@@ -1867,13 +1813,12 @@ Object.defineProperty(TextElement.prototype, 'rangeStart', {
             this._updateRenderRange();
         }
     }
-});
 
-Object.defineProperty(TextElement.prototype, 'rangeEnd', {
-    get: function () {
+    get rangeEnd() {
         return this._rangeEnd;
-    },
-    set: function (rangeEnd) {
+    }
+
+    set rangeEnd(rangeEnd) {
         rangeEnd = Math.max(this._rangeStart, Math.min(rangeEnd, this._symbols.length));
 
         if (rangeEnd !== this._rangeEnd) {
@@ -1881,6 +1826,6 @@ Object.defineProperty(TextElement.prototype, 'rangeEnd', {
             this._updateRenderRange();
         }
     }
-});
+}
 
 export { TextElement };

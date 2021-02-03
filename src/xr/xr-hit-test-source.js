@@ -20,99 +20,99 @@ var poolQuat = [];
  *     target.setPosition(position);
  * });
  */
-function XrHitTestSource(manager, xrHitTestSource, transient) {
-    EventHandler.call(this);
+class XrHitTestSource extends EventHandler {
+    constructor(manager, xrHitTestSource, transient) {
+        super();
 
-    this.manager = manager;
-    this._xrHitTestSource = xrHitTestSource;
-    this._transient = transient;
-}
-XrHitTestSource.prototype = Object.create(EventHandler.prototype);
-XrHitTestSource.prototype.constructor = XrHitTestSource;
+        this.manager = manager;
+        this._xrHitTestSource = xrHitTestSource;
+        this._transient = transient;
+    }
 
-/**
- * @event
- * @name pc.XrHitTestSource#remove
- * @description Fired when {pc.XrHitTestSource} is removed.
- * @example
- * hitTestSource.once('remove', function () {
- *     // hit test source has been removed
- * });
- */
+    /**
+     * @event
+     * @name pc.XrHitTestSource#remove
+     * @description Fired when {pc.XrHitTestSource} is removed.
+     * @example
+     * hitTestSource.once('remove', function () {
+     *     // hit test source has been removed
+     * });
+     */
 
-/**
- * @event
- * @name pc.XrHitTestSource#result
- * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
- * @param {pc.Vec3} position - Position of hit test
- * @param {pc.Quat} rotation - Rotation of hit test
- * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
- * @example
- * hitTestSource.on('result', function (position, rotation, inputSource) {
- *     target.setPosition(position);
- *     target.setRotation(rotation);
- * });
- */
+    /**
+     * @event
+     * @name pc.XrHitTestSource#result
+     * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
+     * @param {pc.Vec3} position - Position of hit test
+     * @param {pc.Quat} rotation - Rotation of hit test
+     * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @example
+     * hitTestSource.on('result', function (position, rotation, inputSource) {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
 
-/**
- * @function
- * @name pc.XrHitTestSource#remove
- * @description Stop and remove hit test source.
- */
-XrHitTestSource.prototype.remove = function () {
-    if (! this._xrHitTestSource)
-        return;
+    /**
+     * @function
+     * @name pc.XrHitTestSource#remove
+     * @description Stop and remove hit test source.
+     */
+    remove() {
+        if (! this._xrHitTestSource)
+            return;
 
-    var sources = this.manager.hitTest.sources;
-    var ind = sources.indexOf(this);
-    if (ind !== -1) sources.splice(ind, 1);
+        var sources = this.manager.hitTest.sources;
+        var ind = sources.indexOf(this);
+        if (ind !== -1) sources.splice(ind, 1);
 
-    this.onStop();
-};
+        this.onStop();
+    }
 
-XrHitTestSource.prototype.onStop = function () {
-    this._xrHitTestSource.cancel();
-    this._xrHitTestSource = null;
+    onStop() {
+        this._xrHitTestSource.cancel();
+        this._xrHitTestSource = null;
 
-    this.fire('remove');
-    this.manager.hitTest.fire('remove', this);
-};
+        this.fire('remove');
+        this.manager.hitTest.fire('remove', this);
+    }
 
-XrHitTestSource.prototype.update = function (frame) {
-    if (this._transient) {
-        var transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
-        for (var i = 0; i < transientResults.length; i++) {
-            var transientResult = transientResults[i];
-            var inputSource;
+    update(frame) {
+        if (this._transient) {
+            var transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
+            for (var i = 0; i < transientResults.length; i++) {
+                var transientResult = transientResults[i];
+                var inputSource;
 
-            if (transientResult.inputSource)
-                inputSource = this.manager.input._getByInputSource(transientResult.inputSource);
+                if (transientResult.inputSource)
+                    inputSource = this.manager.input._getByInputSource(transientResult.inputSource);
 
-            this.updateHitResults(transientResult.results, inputSource);
+                this.updateHitResults(transientResult.results, inputSource);
+            }
+        } else {
+            this.updateHitResults(frame.getHitTestResults(this._xrHitTestSource));
         }
-    } else {
-        this.updateHitResults(frame.getHitTestResults(this._xrHitTestSource));
     }
-};
 
-XrHitTestSource.prototype.updateHitResults = function (results, inputSource) {
-    for (var i = 0; i < results.length; i++) {
-        var pose = results[i].getPose(this.manager._referenceSpace);
+    updateHitResults(results, inputSource) {
+        for (var i = 0; i < results.length; i++) {
+            var pose = results[i].getPose(this.manager._referenceSpace);
 
-        var position = poolVec3.pop();
-        if (! position) position = new Vec3();
-        position.copy(pose.transform.position);
+            var position = poolVec3.pop();
+            if (! position) position = new Vec3();
+            position.copy(pose.transform.position);
 
-        var rotation = poolQuat.pop();
-        if (! rotation) rotation = new Quat();
-        rotation.copy(pose.transform.orientation);
+            var rotation = poolQuat.pop();
+            if (! rotation) rotation = new Quat();
+            rotation.copy(pose.transform.orientation);
 
-        this.fire('result', position, rotation, inputSource);
-        this.manager.hitTest.fire('result', this, position, rotation, inputSource);
+            this.fire('result', position, rotation, inputSource);
+            this.manager.hitTest.fire('result', this, position, rotation, inputSource);
 
-        poolVec3.push(position);
-        poolQuat.push(rotation);
+            poolVec3.push(position);
+            poolQuat.push(rotation);
+        }
     }
-};
+}
 
 export { XrHitTestSource };

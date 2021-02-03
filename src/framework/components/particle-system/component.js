@@ -8,7 +8,7 @@ import { Asset } from '../../../asset/asset.js';
 import { Component } from '../component.js';
 
 // properties that do not need rebuilding the particle system
-var SIMPLE_PROPERTIES = [
+const SIMPLE_PROPERTIES = [
     'emitterExtents',
     'emitterRadius',
     'emitterExtentsInner',
@@ -21,7 +21,7 @@ var SIMPLE_PROPERTIES = [
 ];
 
 // properties that need rebuilding the particle system
-var COMPLEX_PROPERTIES = [
+const COMPLEX_PROPERTIES = [
     'numParticles',
     'lifetime',
     'rate',
@@ -54,7 +54,7 @@ var COMPLEX_PROPERTIES = [
     'orientation'
 ];
 
-var GRAPH_PROPERTIES = [
+const GRAPH_PROPERTIES = [
     'scaleGraph',
     'scaleGraph2',
 
@@ -77,7 +77,7 @@ var GRAPH_PROPERTIES = [
     'radialSpeedGraph2'
 ];
 
-var ASSET_PROPERTIES = [
+const ASSET_PROPERTIES = [
     'colorMapAsset',
     'normalMapAsset',
     'meshAsset'
@@ -186,52 +186,47 @@ var depthLayer;
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */
-var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
-    Component.call(this, system, entity);
+class ParticleSystemComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
-    this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
-    this.on("set_meshAsset", this.onSetMeshAsset, this);
-    this.on("set_mesh", this.onSetMesh, this);
-    this.on("set_loop", this.onSetLoop, this);
-    this.on("set_blendType", this.onSetBlendType, this);
-    this.on("set_depthSoftening", this.onSetDepthSoftening, this);
-    this.on("set_layers", this.onSetLayers, this);
+        this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
+        this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
+        this.on("set_meshAsset", this.onSetMeshAsset, this);
+        this.on("set_mesh", this.onSetMesh, this);
+        this.on("set_loop", this.onSetLoop, this);
+        this.on("set_blendType", this.onSetBlendType, this);
+        this.on("set_depthSoftening", this.onSetDepthSoftening, this);
+        this.on("set_layers", this.onSetLayers, this);
 
-    SIMPLE_PROPERTIES.forEach(function (prop) {
-        this.on('set_' + prop, this.onSetSimpleProperty, this);
-    }.bind(this));
+        SIMPLE_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetSimpleProperty, this);
+        }.bind(this));
 
-    COMPLEX_PROPERTIES.forEach(function (prop) {
-        this.on('set_' + prop, this.onSetComplexProperty, this);
-    }.bind(this));
+        COMPLEX_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetComplexProperty, this);
+        }.bind(this));
 
-    GRAPH_PROPERTIES.forEach(function (prop) {
-        this.on('set_' + prop, this.onSetGraphProperty, this);
-    }.bind(this));
+        GRAPH_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetGraphProperty, this);
+        }.bind(this));
 
-    this._requestedDepth = false;
-    this._drawOrder = 0;
-};
-ParticleSystemComponent.prototype = Object.create(Component.prototype);
-ParticleSystemComponent.prototype.constructor = ParticleSystemComponent;
+        this._requestedDepth = false;
+        this._drawOrder = 0;
+    }
 
-Object.defineProperties(ParticleSystemComponent.prototype, {
-    drawOrder: {
-        get: function () {
-            return this._drawOrder;
-        },
-        set: function (drawOrder) {
-            this._drawOrder = drawOrder;
-            if (this.emitter) {
-                this.emitter.drawOrder = drawOrder;
-            }
+    get drawOrder() {
+        return this._drawOrder;
+    }
+
+    set drawOrder(drawOrder) {
+        this._drawOrder = drawOrder;
+        if (this.emitter) {
+            this.emitter.drawOrder = drawOrder;
         }
     }
-});
 
-Object.assign(ParticleSystemComponent.prototype, {
-    addModelToLayers: function () {
+    addModelToLayers() {
         if (!this.data.model) return;
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
@@ -240,9 +235,9 @@ Object.assign(ParticleSystemComponent.prototype, {
             layer.addMeshInstances(this.data.model.meshInstances);
             this.emitter._layer = layer;
         }
-    },
+    }
 
-    removeModelFromLayers: function (model) {
+    removeModelFromLayers(model) {
         if (!this.data.model) return;
         var layer;
         for (var i = 0; i < this.layers.length; i++) {
@@ -250,9 +245,9 @@ Object.assign(ParticleSystemComponent.prototype, {
             if (!layer) continue;
             layer.removeMeshInstances(this.data.model.meshInstances);
         }
-    },
+    }
 
-    onSetLayers: function (name, oldValue, newValue) {
+    onSetLayers(name, oldValue, newValue) {
         if (!this.data.model) return;
         var i, layer;
         for (i = 0; i < oldValue.length; i++) {
@@ -266,31 +261,31 @@ Object.assign(ParticleSystemComponent.prototype, {
             if (!layer) continue;
             layer.addMeshInstances(this.data.model.meshInstances);
         }
-    },
+    }
 
-    onLayersChanged: function (oldComp, newComp) {
+    onLayersChanged(oldComp, newComp) {
         this.addModelToLayers();
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
         newComp.on("remove", this.onLayerRemoved, this);
-    },
+    }
 
-    onLayerAdded: function (layer) {
+    onLayerAdded(layer) {
         if (!this.data.model) return;
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this.data.model.meshInstances);
-    },
+    }
 
-    onLayerRemoved: function (layer) {
+    onLayerRemoved(layer) {
         if (!this.data.model) return;
         var index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this.data.model.meshInstances);
-    },
+    }
 
-    _bindColorMapAsset: function (asset) {
+    _bindColorMapAsset(asset) {
         asset.on('load', this._onColorMapAssetLoad, this);
         asset.on('unload', this._onColorMapAssetUnload, this);
         asset.on('remove', this._onColorMapAssetRemove, this);
@@ -303,31 +298,31 @@ Object.assign(ParticleSystemComponent.prototype, {
             if (!this.enabled || !this.entity.enabled) return;
             this.system.app.assets.load(asset);
         }
-    },
+    }
 
-    _unbindColorMapAsset: function (asset) {
+    _unbindColorMapAsset(asset) {
         asset.off('load', this._onColorMapAssetLoad, this);
         asset.off('unload', this._onColorMapAssetUnload, this);
         asset.off('remove', this._onColorMapAssetRemove, this);
         asset.off('change', this._onColorMapAssetChange, this);
-    },
+    }
 
-    _onColorMapAssetLoad: function (asset) {
+    _onColorMapAssetLoad(asset) {
         this.colorMap = asset.resource;
-    },
+    }
 
-    _onColorMapAssetUnload: function (asset) {
+    _onColorMapAssetUnload(asset) {
         this.colorMap = null;
-    },
+    }
 
-    _onColorMapAssetRemove: function (asset) {
+    _onColorMapAssetRemove(asset) {
         this._onColorMapAssetUnload(asset);
-    },
+    }
 
-    _onColorMapAssetChange: function (asset) {
-    },
+    _onColorMapAssetChange(asset) {
+    }
 
-    onSetColorMapAsset: function (name, oldValue, newValue) {
+    onSetColorMapAsset(name, oldValue, newValue) {
         var self = this;
         var asset;
         var assets = this.system.app.assets;
@@ -355,9 +350,9 @@ Object.assign(ParticleSystemComponent.prototype, {
         } else {
             this.colorMap = null;
         }
-    },
+    }
 
-    _bindNormalMapAsset: function (asset) {
+    _bindNormalMapAsset(asset) {
         asset.on('load', this._onNormalMapAssetLoad, this);
         asset.on('unload', this._onNormalMapAssetUnload, this);
         asset.on('remove', this._onNormalMapAssetRemove, this);
@@ -370,31 +365,31 @@ Object.assign(ParticleSystemComponent.prototype, {
             if (!this.enabled || !this.entity.enabled) return;
             this.system.app.assets.load(asset);
         }
-    },
+    }
 
-    _unbindNormalMapAsset: function (asset) {
+    _unbindNormalMapAsset(asset) {
         asset.off('load', this._onNormalMapAssetLoad, this);
         asset.off('unload', this._onNormalMapAssetUnload, this);
         asset.off('remove', this._onNormalMapAssetRemove, this);
         asset.off('change', this._onNormalMapAssetChange, this);
-    },
+    }
 
-    _onNormalMapAssetLoad: function (asset) {
+    _onNormalMapAssetLoad(asset) {
         this.normalMap = asset.resource;
-    },
+    }
 
-    _onNormalMapAssetUnload: function (asset) {
+    _onNormalMapAssetUnload(asset) {
         this.normalMap = null;
-    },
+    }
 
-    _onNormalMapAssetRemove: function (asset) {
+    _onNormalMapAssetRemove(asset) {
         this._onNormalMapAssetUnload(asset);
-    },
+    }
 
-    _onNormalMapAssetChange: function (asset) {
-    },
+    _onNormalMapAssetChange(asset) {
+    }
 
-    onSetNormalMapAsset: function (name, oldValue, newValue) {
+    onSetNormalMapAsset(name, oldValue, newValue) {
         var self = this;
         var asset;
         var assets = this.system.app.assets;
@@ -423,9 +418,9 @@ Object.assign(ParticleSystemComponent.prototype, {
         } else {
             this.normalMap = null;
         }
-    },
+    }
 
-    _bindMeshAsset: function (asset) {
+    _bindMeshAsset(asset) {
         asset.on('load', this._onMeshAssetLoad, this);
         asset.on('unload', this._onMeshAssetUnload, this);
         asset.on('remove', this._onMeshAssetRemove, this);
@@ -438,31 +433,31 @@ Object.assign(ParticleSystemComponent.prototype, {
             if (!this.enabled || !this.entity.enabled) return;
             this.system.app.assets.load(asset);
         }
-    },
+    }
 
-    _unbindMeshAsset: function (asset) {
+    _unbindMeshAsset(asset) {
         asset.off('load', this._onMeshAssetLoad, this);
         asset.off('unload', this._onMeshAssetUnload, this);
         asset.off('remove', this._onMeshAssetRemove, this);
         asset.off('change', this._onMeshAssetChange, this);
-    },
+    }
 
-    _onMeshAssetLoad: function (asset) {
+    _onMeshAssetLoad(asset) {
         this._onMeshChanged(asset.resource);
-    },
+    }
 
-    _onMeshAssetUnload: function (asset) {
+    _onMeshAssetUnload(asset) {
         this.mesh = null;
-    },
+    }
 
-    _onMeshAssetRemove: function (asset) {
+    _onMeshAssetRemove(asset) {
         this._onMeshAssetUnload(asset);
-    },
+    }
 
-    _onMeshAssetChange: function (asset) {
-    },
+    _onMeshAssetChange(asset) {
+    }
 
-    onSetMeshAsset: function (name, oldValue, newValue) {
+    onSetMeshAsset(name, oldValue, newValue) {
         var asset;
         var assets = this.system.app.assets;
 
@@ -492,9 +487,9 @@ Object.assign(ParticleSystemComponent.prototype, {
         } else {
             this._onMeshChanged(null);
         }
-    },
+    }
 
-    onSetMesh: function (name, oldValue, newValue) {
+    onSetMesh(name, oldValue, newValue) {
         // hack this for now
         // if the value being set is null, an asset or an asset id, then assume we are
         // setting the mesh asset, which will in turn update the mesh
@@ -503,9 +498,9 @@ Object.assign(ParticleSystemComponent.prototype, {
         } else {
             this._onMeshChanged(newValue);
         }
-    },
+    }
 
-    _onMeshChanged: function (mesh) {
+    _onMeshChanged(mesh) {
         if (mesh && !(mesh instanceof Mesh)) {
             // if mesh is a pc.Model, use the first meshInstance
             if (mesh.meshInstances[0]) {
@@ -522,42 +517,42 @@ Object.assign(ParticleSystemComponent.prototype, {
             this.emitter.resetMaterial();
             this.rebuild();
         }
-    },
+    }
 
-    onSetLoop: function (name, oldValue, newValue) {
+    onSetLoop(name, oldValue, newValue) {
         if (this.emitter) {
             this.emitter[name] = newValue;
             this.emitter.resetTime();
         }
-    },
+    }
 
-    onSetBlendType: function (name, oldValue, newValue) {
+    onSetBlendType(name, oldValue, newValue) {
         if (this.emitter) {
             this.emitter[name] = newValue;
             this.emitter.material.blendType = newValue;
             this.emitter.resetMaterial();
             this.rebuild();
         }
-    },
+    }
 
-    _requestDepth: function () {
+    _requestDepth() {
         if (this._requestedDepth) return;
         if (!depthLayer) depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
         if (depthLayer) {
             depthLayer.incrementCounter();
             this._requestedDepth = true;
         }
-    },
+    }
 
-    _releaseDepth: function () {
+    _releaseDepth() {
         if (!this._requestedDepth) return;
         if (depthLayer) {
             depthLayer.decrementCounter();
             this._requestedDepth = false;
         }
-    },
+    }
 
-    onSetDepthSoftening: function (name, oldValue, newValue) {
+    onSetDepthSoftening(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (newValue) {
                 if (this.enabled && this.entity.enabled) this._requestDepth();
@@ -572,34 +567,33 @@ Object.assign(ParticleSystemComponent.prototype, {
                 this.rebuild();
             }
         }
-    },
+    }
 
-    onSetSimpleProperty: function (name, oldValue, newValue) {
+    onSetSimpleProperty(name, oldValue, newValue) {
         if (this.emitter) {
             this.emitter[name] = newValue;
             this.emitter.resetMaterial();
         }
-    },
+    }
 
-    onSetComplexProperty: function (name, oldValue, newValue) {
+    onSetComplexProperty(name, oldValue, newValue) {
         if (this.emitter) {
             this.emitter[name] = newValue;
             this.emitter.resetMaterial();
             this.rebuild();
             this.reset();
         }
-    },
+    }
 
-    onSetGraphProperty: function (name, oldValue, newValue) {
+    onSetGraphProperty(name, oldValue, newValue) {
         if (this.emitter) {
             this.emitter[name] = newValue;
             this.emitter.rebuildGraphs();
             this.emitter.resetMaterial();
         }
-    },
+    }
 
-
-    onEnable: function () {
+    onEnable() {
         // get data store once
         var data = this.data;
 
@@ -731,9 +725,9 @@ Object.assign(ParticleSystemComponent.prototype, {
         if (this.enabled && this.entity.enabled && data.depthSoftening) {
             this._requestDepth();
         }
-    },
+    }
 
-    onDisable: function () {
+    onDisable() {
         this.system.app.scene.off("set:layers", this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
             this.system.app.scene.layers.off("add", this.onLayerAdded, this);
@@ -750,9 +744,9 @@ Object.assign(ParticleSystemComponent.prototype, {
             // onto old reference
             this.emitter.camera = null;
         }
-    },
+    }
 
-    onBeforeRemove: function () {
+    onBeforeRemove() {
         if (this.enabled) {
             this.enabled = false;
         }
@@ -779,63 +773,63 @@ Object.assign(ParticleSystemComponent.prototype, {
         }
 
         this.off();
-    },
+    }
 
     /**
      * @function
      * @name pc.ParticleSystemComponent#reset
      * @description Resets particle state, doesn't affect playing.
      */
-    reset: function () {
+    reset() {
         if (this.emitter) {
             this.emitter.reset();
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.ParticleSystemComponent#stop
      * @description Disables the emission of new particles, lets existing to finish their simulation.
      */
-    stop: function () {
+    stop() {
         if (this.emitter) {
             this.emitter.loop = false;
             this.emitter.resetTime();
             this.emitter.addTime(0, true);
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.ParticleSystemComponent#pause
      * @description Freezes the simulation.
      */
-    pause: function () {
+    pause() {
         this.data.paused = true;
-    },
+    }
 
     /**
      * @function
      * @name pc.ParticleSystemComponent#unpause
      * @description Unfreezes the simulation.
      */
-    unpause: function () {
+    unpause() {
         this.data.paused = false;
-    },
+    }
 
     /**
      * @function
      * @name pc.ParticleSystemComponent#play
      * @description Enables/unfreezes the simulation.
      */
-    play: function () {
+    play() {
         this.data.paused = false;
         if (this.emitter) {
             this.emitter.meshInstance.visible = true;
             this.emitter.loop = this.data.loop;
             this.emitter.resetTime();
         }
-    },
+    }
 
     /**
      * @function
@@ -843,7 +837,7 @@ Object.assign(ParticleSystemComponent.prototype, {
      * @description Checks if simulation is in progress.
      * @returns {boolean} True if the particle system is currently playing and false otherwise.
      */
-    isPlaying: function () {
+    isPlaying() {
         if (this.data.paused) {
             return false;
         }
@@ -854,7 +848,7 @@ Object.assign(ParticleSystemComponent.prototype, {
         // possible bug here what happens if the non looping emitter
         // was paused in the meantime?
         return Date.now() <= this.emitter.endTime;
-    },
+    }
 
     /**
      * @private
@@ -862,7 +856,7 @@ Object.assign(ParticleSystemComponent.prototype, {
      * @name pc.ParticleSystemComponent#rebuild
      * @description Rebuilds all data used by this particle system.
      */
-    rebuild: function () {
+    rebuild() {
         var enabled = this.enabled;
         this.enabled = false;
         if (this.emitter) {
@@ -872,6 +866,6 @@ Object.assign(ParticleSystemComponent.prototype, {
         }
         this.enabled = enabled;
     }
-});
+}
 
 export { ParticleSystemComponent };

@@ -12,22 +12,22 @@ import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BOD
  * @param {pc.Component} component - The component for which the trigger will be created.
  * @param {pc.ComponentData} data - The data for the component.
  */
-function Trigger(app, component, data) {
-    this.entity = component.entity;
-    this.component = component;
-    this.app = app;
+class Trigger {
+    constructor(app, component, data) {
+        this.entity = component.entity;
+        this.component = component;
+        this.app = app;
 
-    if (typeof Ammo !== 'undefined' && ! ammoVec1) {
-        ammoVec1 = new Ammo.btVector3();
-        ammoQuat = new Ammo.btQuaternion();
-        ammoTransform = new Ammo.btTransform();
+        if (typeof Ammo !== 'undefined' && ! ammoVec1) {
+            ammoVec1 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
+            ammoTransform = new Ammo.btTransform();
+        }
+
+        this.initialize(data);
     }
 
-    this.initialize(data);
-}
-
-Object.assign(Trigger.prototype,  {
-    initialize: function (data) {
+    initialize(data) {
         var entity = this.entity;
         var shape = data.shape;
 
@@ -65,18 +65,18 @@ Object.assign(Trigger.prototype,  {
                 this.enable();
             }
         }
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         var body = this.body;
         if (!body) return;
 
         this.disable();
 
         this.app.systems.rigidbody.destroyBody(body);
-    },
+    }
 
-    _getEntityTransform: function (transform) {
+    _getEntityTransform(transform) {
         var pos = this.entity.getPosition();
         var rot = this.entity.getRotation();
 
@@ -85,17 +85,17 @@ Object.assign(Trigger.prototype,  {
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
-    },
+    }
 
-    updateTransform: function () {
+    updateTransform() {
         this._getEntityTransform(ammoTransform);
 
         var body = this.body;
         body.setWorldTransform(ammoTransform);
         body.activate();
-    },
+    }
 
-    enable: function () {
+    enable() {
         var body = this.body;
         if (!body) return;
 
@@ -108,9 +108,9 @@ Object.assign(Trigger.prototype,  {
         body.forceActivationState(BODYSTATE_ACTIVE_TAG);
 
         this.updateTransform();
-    },
+    }
 
-    disable: function () {
+    disable() {
         var body = this.body;
         if (!body) return;
 
@@ -125,6 +125,6 @@ Object.assign(Trigger.prototype,  {
         // that it properly deactivates after we remove it from the physics world
         body.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
     }
-});
+}
 
 export { Trigger };

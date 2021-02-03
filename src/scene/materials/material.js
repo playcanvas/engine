@@ -5,9 +5,8 @@ import {
     BLENDEQUATION_ADD,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 
-import { getDefaultMaterial } from './default-material.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
@@ -70,63 +69,64 @@ var id = 0;
  * @property {number} depthBias Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
  * @property {number} slopeDepthBias Same as {@link pc.Material#depthBias}, but also depends on the slope of the triangle relative to the camera.
  */
-function Material() {
-    this.name = "Untitled";
-    this.id = id++;
+class Material {
+    static defaultMaterial = null;
 
-    this._shader = null;
-    this.variants = {};
-    this.parameters = {};
+    constructor() {
+        this.name = "Untitled";
+        this.id = id++;
 
-    // Render states
-    this.alphaTest = 0;
-    this.alphaToCoverage = false;
+        this._shader = null;
+        this.variants = {};
+        this.parameters = {};
 
-    this.blend = false;
-    this.blendSrc = BLENDMODE_ONE;
-    this.blendDst = BLENDMODE_ZERO;
-    this.blendEquation = BLENDEQUATION_ADD;
+        // Render states
+        this.alphaTest = 0;
+        this.alphaToCoverage = false;
 
-    this.separateAlphaBlend = false;
-    this.blendSrcAlpha = BLENDMODE_ONE;
-    this.blendDstAlpha = BLENDMODE_ZERO;
-    this.blendAlphaEquation = BLENDEQUATION_ADD;
+        this.blend = false;
+        this.blendSrc = BLENDMODE_ONE;
+        this.blendDst = BLENDMODE_ZERO;
+        this.blendEquation = BLENDEQUATION_ADD;
 
-    this.cull = CULLFACE_BACK;
+        this.separateAlphaBlend = false;
+        this.blendSrcAlpha = BLENDMODE_ONE;
+        this.blendDstAlpha = BLENDMODE_ZERO;
+        this.blendAlphaEquation = BLENDEQUATION_ADD;
 
-    this.depthTest = true;
-    this.depthWrite = true;
-    this.stencilFront = null;
-    this.stencilBack = null;
+        this.cull = CULLFACE_BACK;
 
-    this.depthBias = 0;
-    this.slopeDepthBias = 0;
+        this.depthTest = true;
+        this.depthWrite = true;
+        this.stencilFront = null;
+        this.stencilBack = null;
 
-    this.redWrite = true;
-    this.greenWrite = true;
-    this.blueWrite = true;
-    this.alphaWrite = true;
+        this.depthBias = 0;
+        this.slopeDepthBias = 0;
 
-    this.meshInstances = []; // The mesh instances referencing this material
+        this.redWrite = true;
+        this.greenWrite = true;
+        this.blueWrite = true;
+        this.alphaWrite = true;
 
-    this._shaderVersion = 0;
-    this._scene = null;
-    this._dirtyBlend = false;
+        this.meshInstances = []; // The mesh instances referencing this material
 
-    this.dirty = true;
-}
+        this._shaderVersion = 0;
+        this._scene = null;
+        this._dirtyBlend = false;
 
-Object.defineProperty(Material.prototype, 'shader', {
-    get: function () {
+        this.dirty = true;
+    }
+
+    get shader() {
         return this._shader;
-    },
-    set: function (shader) {
+    }
+
+    set shader(shader) {
         this._shader = shader;
     }
-});
 
-Object.defineProperty(Material.prototype, 'blendType', {
-    get: function () {
+    get blendType() {
         if ((!this.blend) &&
             (this.blendSrc === BLENDMODE_ONE) &&
             (this.blendDst === BLENDMODE_ZERO) &&
@@ -179,8 +179,9 @@ Object.defineProperty(Material.prototype, 'blendType', {
             return BLEND_PREMULTIPLIED;
         }
         return BLEND_NORMAL;
-    },
-    set: function (type) {
+    }
+
+    set blendType(type) {
         var prevBlend = this.blend;
         switch (type) {
             case BLEND_NONE:
@@ -253,190 +254,190 @@ Object.defineProperty(Material.prototype, 'blendType', {
         }
         this._updateMeshInstanceKeys();
     }
-});
 
-Material.prototype._cloneInternal = function (clone) {
-    clone.name = this.name;
-    clone.shader = this.shader;
+    _cloneInternal(clone) {
+        clone.name = this.name;
+        clone.shader = this.shader;
 
-    // Render states
-    clone.alphaTest = this.alphaTest;
-    clone.alphaToCoverage = this.alphaToCoverage;
+        // Render states
+        clone.alphaTest = this.alphaTest;
+        clone.alphaToCoverage = this.alphaToCoverage;
 
-    clone.blend = this.blend;
-    clone.blendSrc = this.blendSrc;
-    clone.blendDst = this.blendDst;
-    clone.blendEquation = this.blendEquation;
+        clone.blend = this.blend;
+        clone.blendSrc = this.blendSrc;
+        clone.blendDst = this.blendDst;
+        clone.blendEquation = this.blendEquation;
 
-    clone.separateAlphaBlend = this.separateAlphaBlend;
-    clone.blendSrcAlpha = this.blendSrcAlpha;
-    clone.blendDstAlpha = this.blendDstAlpha;
-    clone.blendAlphaEquation = this.blendAlphaEquation;
+        clone.separateAlphaBlend = this.separateAlphaBlend;
+        clone.blendSrcAlpha = this.blendSrcAlpha;
+        clone.blendDstAlpha = this.blendDstAlpha;
+        clone.blendAlphaEquation = this.blendAlphaEquation;
 
-    clone.cull = this.cull;
+        clone.cull = this.cull;
 
-    clone.depthTest = this.depthTest;
-    clone.depthWrite = this.depthWrite;
-    clone.depthBias = this.depthBias;
-    clone.slopeDepthBias = this.slopeDepthBias;
-    if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
-    if (this.stencilBack) {
-        if (this.stencilFront === this.stencilBack) {
-            clone.stencilBack = clone.stencilFront;
+        clone.depthTest = this.depthTest;
+        clone.depthWrite = this.depthWrite;
+        clone.depthBias = this.depthBias;
+        clone.slopeDepthBias = this.slopeDepthBias;
+        if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
+        if (this.stencilBack) {
+            if (this.stencilFront === this.stencilBack) {
+                clone.stencilBack = clone.stencilFront;
+            } else {
+                clone.stencilBack = this.stencilBack.clone();
+            }
+        }
+
+        clone.redWrite = this.redWrite;
+        clone.greenWrite = this.greenWrite;
+        clone.blueWrite = this.blueWrite;
+        clone.alphaWrite = this.alphaWrite;
+    }
+
+    clone() {
+        var clone = new Material();
+        this._cloneInternal(clone);
+        return clone;
+    }
+
+    _updateMeshInstanceKeys() {
+        var i, meshInstances = this.meshInstances;
+        for (i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].updateKey();
+        }
+    }
+
+    updateUniforms() {
+    }
+
+    updateShader(device, scene, objDefs) {
+        // For vanilla materials, the shader can only be set by the user
+    }
+
+    /**
+     * @function
+     * @name pc.Material#update
+     * @description Applies any changes made to the material's properties.
+     */
+    update() {
+        this.dirty = true;
+        if (this._shader) this._shader.failed = false;
+    }
+
+    // Parameter management
+    clearParameters() {
+        this.parameters = {};
+    }
+
+    getParameters() {
+        return this.parameters;
+    }
+
+    clearVariants() {
+        var meshInstance;
+        this.variants = {};
+        var j;
+        for (var i = 0; i < this.meshInstances.length; i++) {
+            meshInstance = this.meshInstances[i];
+            for (j = 0; j < meshInstance._shader.length; j++) {
+                meshInstance._shader[j] = null;
+            }
+        }
+    }
+
+    /**
+     * @function
+     * @name pc.Material#getParameter
+     * @description Retrieves the specified shader parameter from a material.
+     * @param {string} name - The name of the parameter to query.
+     * @returns {object} The named parameter.
+     */
+    getParameter(name) {
+        return this.parameters[name];
+    }
+
+    /**
+     * @function
+     * @name pc.Material#setParameter
+     * @description Sets a shader parameter on a material.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     */
+    setParameter(name, data) {
+
+        if (data === undefined && typeof name === 'object') {
+            var uniformObject = name;
+            if (uniformObject.length) {
+                for (var i = 0; i < uniformObject.length; i++) {
+                    this.setParameter(uniformObject[i]);
+                }
+                return;
+            }
+            name = uniformObject.name;
+            data = uniformObject.value;
+        }
+
+        var param = this.parameters[name];
+        if (param) {
+            param.data = data;
         } else {
-            clone.stencilBack = this.stencilBack.clone();
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
+            };
         }
     }
 
-    clone.redWrite = this.redWrite;
-    clone.greenWrite = this.greenWrite;
-    clone.blueWrite = this.blueWrite;
-    clone.alphaWrite = this.alphaWrite;
-};
-
-Material.prototype.clone = function () {
-    var clone = new Material();
-    this._cloneInternal(clone);
-    return clone;
-};
-
-Material.prototype._updateMeshInstanceKeys = function () {
-    var i, meshInstances = this.meshInstances;
-    for (i = 0; i < meshInstances.length; i++) {
-        meshInstances[i].updateKey();
-    }
-};
-
-Material.prototype.updateUniforms = function () {
-};
-
-Material.prototype.updateShader = function (device, scene, objDefs) {
-    // For vanilla materials, the shader can only be set by the user
-};
-
-/**
- * @function
- * @name pc.Material#update
- * @description Applies any changes made to the material's properties.
- */
-Material.prototype.update = function () {
-    this.dirty = true;
-    if (this._shader) this._shader.failed = false;
-};
-
-// Parameter management
-Material.prototype.clearParameters = function () {
-    this.parameters = {};
-};
-
-Material.prototype.getParameters = function () {
-    return this.parameters;
-};
-
-Material.prototype.clearVariants = function () {
-    var meshInstance;
-    this.variants = {};
-    var j;
-    for (var i = 0; i < this.meshInstances.length; i++) {
-        meshInstance = this.meshInstances[i];
-        for (j = 0; j < meshInstance._shader.length; j++) {
-            meshInstance._shader[j] = null;
+    /**
+     * @function
+     * @name pc.Material#deleteParameter
+     * @description Deletes a shader parameter on a material.
+     * @param {string} name - The name of the parameter to delete.
+     */
+    deleteParameter(name) {
+        if (this.parameters[name]) {
+            delete this.parameters[name];
         }
     }
-};
 
-/**
- * @function
- * @name pc.Material#getParameter
- * @description Retrieves the specified shader parameter from a material.
- * @param {string} name - The name of the parameter to query.
- * @returns {object} The named parameter.
- */
-Material.prototype.getParameter = function (name) {
-    return this.parameters[name];
-};
-
-/**
- * @function
- * @name pc.Material#setParameter
- * @description Sets a shader parameter on a material.
- * @param {string} name - The name of the parameter to set.
- * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
- */
-Material.prototype.setParameter = function (name, data) {
-
-    if (data === undefined && typeof name === 'object') {
-        var uniformObject = name;
-        if (uniformObject.length) {
-            for (var i = 0; i < uniformObject.length; i++) {
-                this.setParameter(uniformObject[i]);
+    // used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
+    // optional list of parameter names to be set can be specified, otherwise all parameters are set
+    setParameters(device, names) {
+        var parameter, parameters = this.parameters;
+        if (names === undefined) names = parameters;
+        for (var paramName in names) {
+            parameter = parameters[paramName];
+            if (parameter) {
+                if (!parameter.scopeId) {
+                    parameter.scopeId = device.scope.resolve(paramName);
+                }
+                parameter.scopeId.setValue(parameter.data);
             }
-            return;
         }
-        name = uniformObject.name;
-        data = uniformObject.value;
     }
 
-    var param = this.parameters[name];
-    if (param) {
-        param.data = data;
-    } else {
-        this.parameters[name] = {
-            scopeId: null,
-            data: data
-        };
-    }
-};
+    /**
+     * @function
+     * @name pc.Material#destroy
+     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
+     */
+    destroy() {
+        this.variants = {};
+        this.shader = null;
 
-/**
- * @function
- * @name pc.Material#deleteParameter
- * @description Deletes a shader parameter on a material.
- * @param {string} name - The name of the parameter to delete.
- */
-Material.prototype.deleteParameter = function (name) {
-    if (this.parameters[name]) {
-        delete this.parameters[name];
-    }
-};
-
-// used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
-// optional list of parameter names to be set can be specified, otherwise all parameters are set
-Material.prototype.setParameters = function (device, names) {
-    var parameter, parameters = this.parameters;
-    if (names === undefined) names = parameters;
-    for (var paramName in names) {
-        parameter = parameters[paramName];
-        if (parameter) {
-            if (!parameter.scopeId) {
-                parameter.scopeId = device.scope.resolve(paramName);
+        var meshInstance, j;
+        for (var i = 0; i < this.meshInstances.length; i++) {
+            meshInstance = this.meshInstances[i];
+            for (j = 0; j < meshInstance._shader.length; j++) {
+                meshInstance._shader[j] = null;
             }
-            parameter.scopeId.setValue(parameter.data);
+            meshInstance._material = null;
+            var defaultMaterial = Material.defaultMaterial;
+            if (this !== defaultMaterial) {
+                meshInstance.material = defaultMaterial;
+            }
         }
     }
-};
-
-/**
- * @function
- * @name pc.Material#destroy
- * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
- */
-Material.prototype.destroy = function () {
-    this.variants = {};
-    this.shader = null;
-
-    var meshInstance, j;
-    for (var i = 0; i < this.meshInstances.length; i++) {
-        meshInstance = this.meshInstances[i];
-        for (j = 0; j < meshInstance._shader.length; j++) {
-            meshInstance._shader[j] = null;
-        }
-        meshInstance._material = null;
-        var defaultMaterial = getDefaultMaterial();
-        if (this !== defaultMaterial) {
-            meshInstance.material = defaultMaterial;
-        }
-    }
-};
+}
 
 export { Material };

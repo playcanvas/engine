@@ -37,7 +37,6 @@ function UntarScope(isWorker) {
                 throw new Error('Invalid PAX header data format.');
             }
 
-
             var fieldLength = parseInt(utfDecoder.decode(new Uint8Array(buffer, start + bytesRead, spaceIndex - bytesRead)), 10);
             var fieldText = utfDecoder.decode(new Uint8Array(buffer, start + spaceIndex + 1, fieldLength - (spaceIndex - bytesRead) - 2));
             var field = fieldText.split('=');
@@ -252,7 +251,7 @@ var workerUrl = null;
 
 // Convert the UntarScope function to a string and add
 // the onmessage handler for the worker to untar archives
-var getWorkerUrl = function () {
+function getWorkerUrl() {
     if (!workerUrl) {
         // execute UntarScope function in the worker
         var code = '(' + UntarScope.toString() + ')(true)\n\n';
@@ -263,7 +262,7 @@ var getWorkerUrl = function () {
         workerUrl = URL.createObjectURL(blob);
     }
     return workerUrl;
-};
+}
 
 /**
  * @private
@@ -272,93 +271,95 @@ var getWorkerUrl = function () {
  * @description Creates new instance of a pc.UntarWorker.
  * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
  */
-function UntarWorker(filenamePrefix) {
-    this._requestId = 0;
-    this._pendingRequests = {};
-    this._filenamePrefix = filenamePrefix;
-    this._worker = new Worker(getWorkerUrl());
-    this._worker.addEventListener('message', this._onMessage.bind(this));
-}
+class UntarWorker {
+    constructor(filenamePrefix) {
+        this._requestId = 0;
+        this._pendingRequests = {};
+        this._filenamePrefix = filenamePrefix;
+        this._worker = new Worker(getWorkerUrl());
+        this._worker.addEventListener('message', this._onMessage.bind(this));
+    }
 
-UntarWorker.prototype._onMessage = function (e) {
-    var id = e.data.id;
-    if (! this._pendingRequests[id]) return;
+    _onMessage(e) {
+        var id = e.data.id;
+        if (! this._pendingRequests[id]) return;
 
-    var callback = this._pendingRequests[id];
+        var callback = this._pendingRequests[id];
 
-    delete this._pendingRequests[id];
+        delete this._pendingRequests[id];
 
-    if (e.data.error) {
-        callback(e.data.error);
-    } else {
-        var arrayBuffer = e.data.arrayBuffer;
+        if (e.data.error) {
+            callback(e.data.error);
+        } else {
+            var arrayBuffer = e.data.arrayBuffer;
 
-        // create blob URLs for each file. We are creating the URLs
-        // here - outside of the worker - so that the main thread owns them
-        for (var i = 0, len = e.data.files.length; i < len; i++) {
-            var file = e.data.files[i];
-            var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
-            file.url = URL.createObjectURL(blob);
+            // create blob URLs for each file. We are creating the URLs
+            // here - outside of the worker - so that the main thread owns them
+            for (var i = 0, len = e.data.files.length; i < len; i++) {
+                var file = e.data.files[i];
+                var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
+                file.url = URL.createObjectURL(blob);
+            }
+
+            callback(null, e.data.files);
+        }
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.UntarWorker#untar
+     * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
+     * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
+     * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
+     * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors.
+     */
+    untar(arrayBuffer, callback) {
+        var id = this._requestId++;
+        this._pendingRequests[id] = callback;
+
+        // send data to the worker - notice the last argument
+        // converts the arrayBuffer to a Transferrable object
+        // to avoid copying the array buffer which would cause a stall.
+        // However this causes the worker to assume control of the array
+        // buffer so we cannot access this buffer until the worker is done with it.
+        this._worker.postMessage({
+            id: id,
+            prefix: this._filenamePrefix,
+            arrayBuffer: arrayBuffer
+        }, [arrayBuffer]);
+    }
+
+    /**
+     * @private
+     * @function
+     * @name pc.UntarWorker#hasPendingRequests
+     * @description Returns whether the worker has pending requests to untar array buffers.
+     * @returns {boolean} Returns true of false.
+     */
+    hasPendingRequests() {
+        for (var key in this._pendingRequests) {
+            return true;
         }
 
-        callback(null, e.data.files);
-    }
-};
-
-/**
- * @private
- * @function
- * @name pc.UntarWorker#untar
- * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
- * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
- * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
- * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors.
- */
-UntarWorker.prototype.untar = function (arrayBuffer, callback) {
-    var id = this._requestId++;
-    this._pendingRequests[id] = callback;
-
-    // send data to the worker - notice the last argument
-    // converts the arrayBuffer to a Transferrable object
-    // to avoid copying the array buffer which would cause a stall.
-    // However this causes the worker to assume control of the array
-    // buffer so we cannot access this buffer until the worker is done with it.
-    this._worker.postMessage({
-        id: id,
-        prefix: this._filenamePrefix,
-        arrayBuffer: arrayBuffer
-    }, [arrayBuffer]);
-};
-
-/**
- * @private
- * @function
- * @name pc.UntarWorker#hasPendingRequests
- * @description Returns whether the worker has pending requests to untar array buffers.
- * @returns {boolean} Returns true of false.
- */
-UntarWorker.prototype.hasPendingRequests = function () {
-    for (var key in this._pendingRequests) {
-        return true;
+        return false;
     }
 
-    return false;
-};
+    /**
+     * @private
+     * @function
+     * @name pc.UntarWorker#destroy
+     * @description Destroys the internal Web Worker.
+     */
+    destroy() {
+        if (this._worker) {
+            this._worker.terminate();
+            this._worker = null;
 
-/**
- * @private
- * @function
- * @name pc.UntarWorker#destroy
- * @description Destroys the internal Web Worker.
- */
-UntarWorker.prototype.destroy = function () {
-    if (this._worker) {
-        this._worker.terminate();
-        this._worker = null;
-
-        this._pendingRequests = null;
+            this._pendingRequests = null;
+        }
     }
-};
+}
 
 // execute the UntarScope function in order to declare the Untar constructor
 UntarScope();

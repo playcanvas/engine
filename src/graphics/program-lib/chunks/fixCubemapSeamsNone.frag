@@ -14,6 +14,6 @@ vec3 calcSeam(vec3 vec) {
     return vec3(0);
 }
 
-vec3 applySeam(vec3 vec, vec3 seam, vec3 scale) {
+vec3 applySeam(vec3 vec, vec3 seam, float scale) {
     return vec;
 }

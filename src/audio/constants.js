@@ -4,7 +4,7 @@
  * @name pc.DISTANCE_LINEAR
  * @description Linear distance model.
  */
-export var DISTANCE_LINEAR = 'linear';
+export const DISTANCE_LINEAR = 'linear';
 
 /**
  * @constant
@@ -12,7 +12,7 @@ export var DISTANCE_LINEAR = 'linear';
  * @name pc.DISTANCE_INVERSE
  * @description Inverse distance model.
  */
-export var DISTANCE_INVERSE = 'inverse';
+export const DISTANCE_INVERSE = 'inverse';
 
 /**
  * @constant
@@ -20,4 +20,4 @@ export var DISTANCE_INVERSE = 'inverse';
  * @name pc.DISTANCE_EXPONENTIAL
  * @description Exponential distance model.
  */
-export var DISTANCE_EXPONENTIAL = 'exponential';
+export const DISTANCE_EXPONENTIAL = 'exponential';

@@ -4,14 +4,14 @@
  * @name pc.CURVE_LINEAR
  * @description A linear interpolation scheme.
  */
-export var CURVE_LINEAR = 0;
+export const CURVE_LINEAR = 0;
 /**
  * @constant
  * @type {number}
  * @name pc.CURVE_SMOOTHSTEP
  * @description A smooth step interpolation scheme.
  */
-export var CURVE_SMOOTHSTEP = 1;
+export const CURVE_SMOOTHSTEP = 1;
 /**
  * @deprecated
  * @constant
@@ -19,7 +19,7 @@ export var CURVE_SMOOTHSTEP = 1;
  * @name pc.CURVE_CATMULL
  * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
  */
-export var CURVE_CATMULL = 2;
+export const CURVE_CATMULL = 2;
 /**
  * @deprecated
  * @constant
@@ -27,18 +27,18 @@ export var CURVE_CATMULL = 2;
  * @name pc.CURVE_CARDINAL
  * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
  */
-export var CURVE_CARDINAL = 3;
+export const CURVE_CARDINAL = 3;
 /**
  * @constant
  * @type {number}
  * @name pc.CURVE_SPLINE
  * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
  */
-export var CURVE_SPLINE = 4;
+export const CURVE_SPLINE = 4;
 /**
  * @constant
  * @type {number}
  * @name pc.CURVE_STEP
  * @description A stepped interpolator, free from the shackles of blending.
  */
-export var CURVE_STEP = 5;
+export const CURVE_STEP = 5;

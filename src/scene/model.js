@@ -17,48 +17,47 @@ import { SkinInstance } from './skin-instance.js';
  * @property {pc.SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
  * @property {pc.MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
  */
-function Model() {
-    this.graph = null;
-    this.meshInstances = [];
-    this.skinInstances = [];
-    this.morphInstances = [];
+class Model {
+    constructor() {
+        this.graph = null;
+        this.meshInstances = [];
+        this.skinInstances = [];
+        this.morphInstances = [];
 
-    this.cameras = [];
-    this.lights = [];
+        this.cameras = [];
+        this.lights = [];
 
-    this._shadersVersion = 0;
+        this._shadersVersion = 0;
 
-    // used by the model component to flag that this
-    // model has been assigned
-    this._immutable = false;
-}
+        // used by the model component to flag that this model has been assigned
+        this._immutable = false;
+    }
 
-Object.assign(Model.prototype, {
-    getGraph: function () {
+    getGraph() {
         return this.graph;
-    },
+    }
 
-    setGraph: function (graph) {
+    setGraph(graph) {
         this.graph = graph;
-    },
+    }
 
-    getCameras: function () {
+    getCameras() {
         return this.cameras;
-    },
+    }
 
-    setCameras: function (cameras) {
+    setCameras(cameras) {
         this.cameras = cameras;
-    },
+    }
 
-    getLights: function () {
+    getLights() {
         return this.lights;
-    },
+    }
 
-    setLights: function (lights) {
+    setLights(lights) {
         this.lights = lights;
-    },
+    }
 
-    getMaterials: function () {
+    getMaterials() {
         var i;
         var materials = [];
         for (i = 0; i < this.meshInstances.length; i++) {
@@ -68,7 +67,7 @@ Object.assign(Model.prototype, {
             }
         }
         return materials;
-    },
+    }
 
     /**
      * @function
@@ -80,7 +79,7 @@ Object.assign(Model.prototype, {
      * @example
      * var clonedModel = model.clone();
      */
-    clone: function () {
+    clone() {
         var i, j;
 
         // Duplicate the node hierarchy
@@ -157,7 +156,7 @@ Object.assign(Model.prototype, {
         clone.getGraph().syncHierarchy();
 
         return clone;
-    },
+    }
 
     /**
      * @function
@@ -167,13 +166,13 @@ Object.assign(Model.prototype, {
      * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
      * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
      */
-    destroy: function () {
+    destroy() {
         var meshInstances = this.meshInstances;
         for (var i = 0; i < meshInstances.length; i++) {
             meshInstances[i].destroy();
         }
         this.meshInstances.length = 0;
-    },
+    }
 
     /**
      * @function
@@ -188,26 +187,9 @@ Object.assign(Model.prototype, {
      *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */
-    generateWireframe: function () {
-        var i;
-        var mesh;
-
-        // Build an array of unique meshes in this model
-        var meshes = [];
-        for (i = 0; i < this.meshInstances.length; i++) {
-            mesh = this.meshInstances[i].mesh;
-            if (meshes.indexOf(mesh) === -1) {
-                meshes.push(mesh);
-            }
-        }
-
-        for (i = 0; i < meshes.length; ++i) {
-            mesh = meshes[i];
-            if (!mesh.primitive[RENDERSTYLE_WIREFRAME]) {
-                mesh.generateWireframe();
-            }
-        }
+    generateWireframe() {
+        MeshInstance._prepareRenderStyleForArray(this.meshInstances, RENDERSTYLE_WIREFRAME);
     }
-});
+}
 
 export { Model };
