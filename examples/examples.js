@@ -8,7 +8,7 @@ var categories = [
             "component-properties",
             "blend-trees-1D",
             "blend-trees-2D-cartesian",
-            "blend-trees-2D-directional",
+            "blend-trees-directional",
             "locomotion"
         ]
     }, {

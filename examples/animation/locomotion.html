@@ -52,7 +52,7 @@
                         },
                         {
                             "name": "Jump",
-                            "speed": 1.35
+                            "speed": 1
                         },
                         {
                             "name": "Jog",
@@ -100,7 +100,14 @@
                             "to": "Idle",
                             "time": 0.2,
                             "priority": 0,
-                            "exitTime": 0.6
+                            "exitTime": 0.8
+                        },
+                        {
+                            "from": "Jump",
+                            "to": "Walk",
+                            "time": 0.2,
+                            "priority": 0,
+                            "exitTime": 0.8
                         },
                         {
                             "from": "Walk",
@@ -181,12 +188,13 @@
         var cameraEntity = new pc.Entity(app);
         cameraEntity.name = "Camera";
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(0.1, 0.15, 0.2)
         });
         cameraEntity.translateLocal(0, 5, 15);
         cameraEntity.rotateLocal(-20, 0, 0);
         app.root.addChild(cameraEntity);
 
+        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
         // Create an entity with a light component
         var light = new pc.Entity();
         light.addComponent("light", {
@@ -213,15 +221,15 @@
         var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
         stateGraphAsset.once('load', function (asset) {
             var stateGraph = asset.resource;
-        app.assets.loadFromUrl("../assets/models/xbot.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/models/bitmoji.glb", "container", function (err, asset) {
             model = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-idle.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/idle.glb", "container", function (err, asset) {
             idleAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/walk.glb", "container", function (err, asset) {
             walkAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-jog.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/run.glb", "container", function (err, asset) {
             jogAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-jump.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/jump-flip.glb", "container", function (err, asset) {
             jumpAnim = asset;
 
             app.start();
@@ -348,7 +356,7 @@
             function speedForState(state) {
                 switch (state) {
                     case 'Walk':
-                        return 2.0;
+                        return 1.0;
                     case 'Jog':
                         return 4.0;
                     case 'Jump':

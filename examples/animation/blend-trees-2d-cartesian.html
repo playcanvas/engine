@@ -46,7 +46,7 @@
                                         "point": [0.0, 0.5]
                                     },
                                     {
-                                        "name": "Wave",
+                                        "name": "Walk",
                                         "point": [0.5, -0.5]
                                     },
                                     {
@@ -101,22 +101,18 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(0.1, 0.15, 0.2)
         });
-        cameraEntity.translateLocal(0.0, 1.5, 5.0);
+        cameraEntity.translateLocal(0.0, 0.75, 5.0);
         app.root.addChild(cameraEntity);
+
+        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
 
         // Create an entity with a light component
         var light = new pc.Entity();
         light.addComponent("light", {
             type: "directional",
             color: new pc.Color(1, 1, 1),
-            castShadows: true,
-            intensity: 1,
-            shadowBias: 0.2,
-            shadowDistance: 5,
-            normalOffsetBias: 0.05,
-            shadowResolution: 2048
         });
         light.setLocalEulerAngles(45, 30, 0);
         app.root.addChild(light);
@@ -125,19 +121,19 @@
         var model = null;
         var idleAnim = null;
         var danceAnim = null;
-        var waveAnim = null;
+        var walkAnim = null;
 
         var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
         stateGraphAsset.once('load', function (asset) {
             var stateGraph = asset.resource;
-        app.assets.loadFromUrl("../assets/models/xbot.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/models/bitmoji.glb", "container", function (err, asset) {
             model = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-idle.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/idle.glb", "container", function (err, asset) {
             idleAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-dance.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/dance.glb", "container", function (err, asset) {
             danceAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-wave.glb", "container", function (err, asset) {
-            waveAnim = asset;
+        app.assets.loadFromUrl("../assets/animations/bitmoji/walk.glb", "container", function (err, asset) {
+            walkAnim = asset;
 
             var modelEntity = new pc.Entity();
 
@@ -155,7 +151,7 @@
             modelEntity.anim.loadStateGraph(stateGraph);
             var locomotionLayer = modelEntity.anim.baseLayer;
             locomotionLayer.assignAnimation('Emote.Idle', idleAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Emote.Wave', waveAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Emote.Walk', walkAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Emote.Dance', danceAnim.resource.animations[0].resource);
 
             app.root.addChild(modelEntity);

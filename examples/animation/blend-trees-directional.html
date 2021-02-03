@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Animation Blend Trees - 2D Directional</title>
+    <title>PlayCanvas Animation Blend Trees - Directional</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -59,14 +59,6 @@
                                         "speed": 1,
                                         "name": "Jog",
                                         "point": [0.0, 1.0]
-                                    },
-                                    {
-                                        "name": "StrafeLeft",
-                                        "point": [-0.5, 0.0]
-                                    },
-                                    {
-                                        "name": "StrafeRight",
-                                        "point": [0.5, 0.0]
                                     }
                                 ]
                             },
@@ -116,22 +108,18 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(0.1, 0.15, 0.2)
         });
-        cameraEntity.translateLocal(0.0, 1.5, 5.0);
+        cameraEntity.translateLocal(0.0, 0.75, 5.0);
         app.root.addChild(cameraEntity);
+
+        app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
 
         // Create an entity with a light component
         var light = new pc.Entity();
         light.addComponent("light", {
             type: "directional",
             color: new pc.Color(1, 1, 1),
-            castShadows: true,
-            intensity: 1,
-            shadowBias: 0.2,
-            shadowDistance: 5,
-            normalOffsetBias: 0.05,
-            shadowResolution: 2048
         });
         light.setLocalEulerAngles(45, 30, 0);
         app.root.addChild(light);
@@ -140,24 +128,18 @@
         var model = null;
         var idleAnim = null;
         var walkAnim = null;
-        var strafeLeftAnim = null;
-        var strafeRightAnim = null;
         var jogAnim = null;
 
         var stateGraphAsset = new pc.Asset('stateGraph', 'animstategraph', null, animStateGraph);
         stateGraphAsset.once('load', function (asset) {
             var stateGraph = asset.resource;
-        app.assets.loadFromUrl("../assets/models/xbot.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/models/bitmoji.glb", "container", function (err, asset) {
             model = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-idle.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/idle.glb", "container", function (err, asset) {
             idleAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/walk.glb", "container", function (err, asset) {
             walkAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk-left-strafe.glb", "container", function (err, asset) {
-            strafeLeftAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-walk-right-strafe.glb", "container", function (err, asset) {
-            strafeRightAnim = asset;
-        app.assets.loadFromUrl("../assets/animations/xbot/xbot-jog.glb", "container", function (err, asset) {
+        app.assets.loadFromUrl("../assets/animations/bitmoji/run.glb", "container", function (err, asset) {
             jogAnim = asset;
 
             var modelEntity = new pc.Entity();
@@ -178,8 +160,6 @@
             locomotionLayer.assignAnimation('Travel.Idle', idleAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Travel.Walk', walkAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Travel.WalkBackwards', walkAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Travel.StrafeLeft', strafeLeftAnim.resource.animations[0].resource);
-            locomotionLayer.assignAnimation('Travel.StrafeRight', strafeRightAnim.resource.animations[0].resource);
             locomotionLayer.assignAnimation('Travel.Jog', jogAnim.resource.animations[0].resource);
 
             app.root.addChild(modelEntity);
@@ -243,8 +223,6 @@
             };
             canvas.addEventListener('mousemove', mouseEvent);
             canvas.addEventListener('mousedown', mouseEvent);
-            });
-            });
             });
             });
             });
