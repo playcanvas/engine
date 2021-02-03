@@ -143,7 +143,7 @@ class Lightmapper {
 
     destroy() {
 
-        // release reference to the texture 
+        // release reference to the texture
         MeshInstance.decRefLightmap(this.blackTex);
         this.blackTex = null;
 
