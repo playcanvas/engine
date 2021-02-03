@@ -36,7 +36,7 @@
     "src/polyfill/*"
   ],
   "devDependencies": {
-    "@babel/core": "7.12.10",
+    "@babel/core": "7.12.13",
     "@babel/plugin-proposal-class-properties": "7.12.1",
     "@babel/preset-env": "7.12.11",
     "@playcanvas/eslint-config": "1.0.6",
