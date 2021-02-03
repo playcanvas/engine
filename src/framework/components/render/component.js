@@ -477,9 +477,6 @@ class RenderComponent extends Component {
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
                 this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
-
-                if (this.system._inTools)
-                    this.generateWireframe();
             }
         }
     }
