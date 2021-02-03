@@ -5,10 +5,10 @@ updates:
     directory: "/"
     # Check the npm registry for updates every day (weekdays)
     schedule:
-      interval: "daily"
+      interval: "monthly"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     # Look for `package.json` and `lock` files in the `root` directory
     schedule:
-      interval: "daily"
+      interval: "monthly"
