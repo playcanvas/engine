@@ -38,7 +38,7 @@
   "devDependencies": {
     "@babel/core": "7.12.13",
     "@babel/plugin-proposal-class-properties": "7.12.13",
-    "@babel/preset-env": "7.12.11",
+    "@babel/preset-env": "7.12.13",
     "@playcanvas/eslint-config": "1.0.6",
     "@playcanvas/jsdoc-template": "1.0.16",
     "@rollup/plugin-babel": "5.2.3",
