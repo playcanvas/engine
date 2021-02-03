@@ -128,8 +128,11 @@ class DefaultAnimBinder {
         };
     }
 
-    findNode(graph, path) {
-        var node = graph.findByPath(path.entityPath);
+    findNode(path) {
+        var node;
+        if (this.graph) {
+            node = this.graph.findByPath(path.entityPath);
+        }
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
 
@@ -154,7 +157,7 @@ class DefaultAnimBinder {
         var target = this.targetCache[encodedPath];
         if (target) return target;
 
-        var node = this.findNode(this.graph, path);
+        var node = this.findNode(path);
         if (!node) {
             return null;
         }

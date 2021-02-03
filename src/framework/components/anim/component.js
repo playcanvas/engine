@@ -53,11 +53,8 @@ class AnimComponent extends Component {
         data.layers = [];
 
         var graph;
-        if (this.entity.model) {
-            var m = this.entity.model.model;
-            if (m) {
-                graph = m.getGraph();
-            }
+        if (this.entity.model?.model?.graph) {
+            graph = this.entity.model?.model?.graph;
         } else {
             // animating hierarchy without model
             graph = this.entity;

@@ -86,9 +86,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 propertyComponent = entity;
                 break;
             case 'graph':
-                entity = this.animComponent.entity;
-                var graph = entity.model && entity.model.model && entity.model.model.graph;
-                propertyComponent = this.findNode(graph, path);
+                propertyComponent = this.findNode(path);
                 if (!propertyComponent) return null;
                 targetPath = AnimBinder.encode(
                     propertyComponent.path,
@@ -266,10 +264,11 @@ class AnimComponentBinder extends DefaultAnimBinder {
         // #ifdef DEBUG
         this.visitedFallbackGraphPaths = {};
         // #endif
-        var entity = this.animComponent && this.animComponent.entity;
-        var graph = entity.model && entity.model.model && entity.model.model.graph;
-        if (!graph) return;
-        this.graph = graph;
+
+        if (this.animComponent.entity.model?.model?.graph) {
+            this.graph = this.animComponent.entity.model?.model?.graph;
+        }
+
         var nodes = { };
         // cache node names so we can quickly resolve animation paths
         var flatten = function (node) {

@@ -130,7 +130,9 @@ class AnimController {
         var maxDuration = 0.0;
         for (var i = 0; i < this.activeStateAnimations.length; i++) {
             var activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
-            maxDuration = Math.max(maxDuration, activeClip.track.duration);
+            if (activeClip) {
+                maxDuration = Math.max(maxDuration, activeClip.track.duration);
+            }
         }
         return maxDuration;
     }
@@ -388,10 +390,6 @@ class AnimController {
     }
 
     _transitionToState(newStateName) {
-        if (newStateName === this._activeStateName) {
-            return;
-        }
-
         if (!this._findState(newStateName)) {
             return;
         }

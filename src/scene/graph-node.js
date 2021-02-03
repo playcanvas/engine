@@ -474,7 +474,13 @@ class GraphNode extends EventHandler {
      */
     findByPath(path) {
         // if the path isn't an array, split the path in parts. Each part represents a deeper hierarchy level
-        var parts = Array.isArray(path) ? path : path.split('/');
+        var parts;
+        if (Array.isArray(path)) {
+            if (path.length === 0) return null;
+            parts = path;
+        } else {
+            parts = path.split('/');
+        }
         var currentParent = this;
         var result = null;
 
