@@ -39,7 +39,6 @@ const MAX_LIGHTMAP_SIZE = 2048;
 
 const PASS_COLOR = 0;
 const PASS_DIR = 1;
-const LightmapUniqueName = "Lightmapper_lightmap";
 
 let tempVec = new Vec3();
 let tempSphere = {};
@@ -144,10 +143,9 @@ class Lightmapper {
 
     destroy() {
 
-        if (this.blackTex) {
-            this.blackTex.destroy();
-            this.blackTex = null;
-        }
+        // release reference to the texture 
+        MeshInstance.decRefLightmap(this.blackTex);
+        this.blackTex = null;
 
         this.device = null;
         this.root = null;
@@ -179,6 +177,9 @@ class Lightmapper {
             });
             this.blackTex.name = 'lightmapBlack';
 
+            // incref black texture in the cache to avoid it being destroyed
+            MeshInstance.incRefLightmap(this.blackTex);
+
             // camera used for baking
             let camera = new Camera();
             camera.clearColor = new Color(0, 0, 0, 0);
@@ -197,17 +198,24 @@ class Lightmapper {
 
         this.materials = [];
 
+        function destroyRT(rt) {
+            // this can cause ref count to be 0 and texture destroyed
+            MeshInstance.decRefLightmap(rt.colorBuffer);
+
+            // destroy render target itself
+            rt.destroy();
+        }
+
         // spare render targets including color buffer
         this.renderTargets.forEach( (rt) => {
-            rt.colorBuffer.destroy();
-            rt.destroy();
+            destroyRT(rt);
         });
         this.renderTargets.clear();
 
         // destroy render targets from nodes (but not color buffer)
         bakeNodes.forEach( (node) => {
             node.renderTargets.forEach( (rt) => {
-                rt.destroy();
+                destroyRT(rt);
             });
             node.renderTargets.lenght = 0;
         });
@@ -250,7 +258,7 @@ class Lightmapper {
         }
     }
 
-    createTexture(size, type) {
+    createTexture(size, type, name) {
 
         let tex = new Texture(this.device, {
             // #ifdef PROFILER
@@ -264,7 +272,7 @@ class Lightmapper {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST
         });
-        tex.name = LightmapUniqueName;
+        tex.name = name;
 
         return tex;
     }
@@ -462,58 +470,11 @@ class Lightmapper {
                         let tex = node.renderTargets[pass].colorBuffer;
                         tex.minFilter = FILTER_LINEAR;
                         tex.magFilter = FILTER_LINEAR;
-                        meshInstance.setParameter(MeshInstance.lightmapParamNames[pass], tex);
+                        meshInstance.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tex);
                     }
                 }
             }
         }
-    }
-
-    deleteLightmaps(bakeNodes, allNodes) {
-
-        // helper function to scan meshInstances in nodes array, and based on 'add' parameter,
-        // referenced lightmaps are either added to or removed from the set
-        function scan(nodes, set, add) {
-            const parNames = MeshInstance.lightmapParamNames;
-
-            for (let i = 0; i < nodes.length; i++) {
-                let node = nodes[i];
-                for (let m = 0; m < node.meshInstances.length; m++) {
-                    let mi = node.meshInstances[m];
-
-                    // process all lightmaps for a meshInstance
-                    for (let p = 0; p < parNames.length; p++) {
-                        let lm = mi.getParameter(parNames[p]);
-                        if (lm) {
-                            if (add) {
-                                mi.deleteParameter(parNames[p]);
-                                set.add(lm.data);
-                            } else {
-                                set.delete(lm.data);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // loop over bakeNodes, store LMs they use in a set, and clear them from meshInstances
-        let lightmaps = new Set();
-        scan(bakeNodes, lightmaps, true);
-
-        // loop over all nodes, and any LMs they use, remove from the set
-        scan(allNodes, lightmaps, false);
-
-        // delete textures
-        let count = 0;
-        lightmaps.forEach((tex) => {
-            if (tex.name === LightmapUniqueName) {
-                tex.destroy();
-                count++;
-            }
-        });
-
-        console.log("removed lightmaps: " + count);
     }
 
     /**
@@ -576,9 +537,6 @@ class Lightmapper {
         // bake nodes
         if (bakeNodes.length > 0) {
 
-            // delete no longer needed lightmaps
-            this.deleteLightmaps(bakeNodes, allNodes);
-
             // disable lightmapping
             const passCount = mode === BAKE_COLORDIR ? 2 : 1;
             this.setLightmaping(bakeNodes, false, passCount);
@@ -622,13 +580,15 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT);
+                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
+                MeshInstance.incRefLightmap(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget(device, tex, { depth: false });
             }
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT);
+                let tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
+                MeshInstance.incRefLightmap(tex);
                 this.renderTargets.set(size, new RenderTarget(device, tex, { depth: false }));
             }
         }
@@ -930,8 +890,8 @@ class Lightmapper {
                 m.mask = MASK_LIGHTMAP; // only affected by LM lights
 
                 // patch material
-                m.setParameter(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
-                m.setParameter(MeshInstance.lightmapParamNames[1], this.blackTex);
+                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
             }
         }
 
@@ -1022,7 +982,7 @@ class Lightmapper {
 
                     for (j = 0; j < rcv.length; j++) {
                         m = rcv[j];
-                        m.setParameter(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
+                        m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
                         m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                     }
                 }
