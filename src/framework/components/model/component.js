@@ -639,7 +639,11 @@ class ModelComponent extends Component {
 
             // Update any animation component
             if (this.entity.anim) {
-                this.entity.anim.resetStateGraph();
+                if (this.entity.anim.playing) {
+                    this.entity.anim.rebind();
+                } else {
+                    this.entity.anim.resetStateGraph();
+                }
             }
             // trigger event handler to load mapping
             // for new model
