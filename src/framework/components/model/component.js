@@ -531,7 +531,7 @@ class ModelComponent extends Component {
             var model = new Model();
             model.graph = node;
 
-            model.meshInstances = [new MeshInstance(node, mesh, this._material)];
+            model.meshInstances = [new MeshInstance(mesh, this._material, node)];
 
             this.model = model;
             this._asset = null;

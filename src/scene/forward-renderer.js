@@ -2408,7 +2408,7 @@ class ForwardRenderer {
                         mesh2.primitive[0].indexed = true;
                         mesh2.aabb = chunkAabb;
 
-                        var instance = new MeshInstance(drawCall.node, mesh2, drawCall.material);
+                        var instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
                         instance.isStatic = drawCall.isStatic;
                         instance.visible = drawCall.visible;
                         instance.layer = drawCall.layer;

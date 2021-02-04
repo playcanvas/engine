@@ -50,7 +50,7 @@ class ContainerResource {
                     if (mi.node === node) {
 
                         // clone mesh instance
-                        var cloneMi = new MeshInstance(entity, mi.mesh, mi.material);
+                        var cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
 
                         // clone morph instance
                         if (mi.morphInstance) {

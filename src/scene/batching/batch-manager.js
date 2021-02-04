@@ -819,7 +819,7 @@ class BatchManager {
             }
 
             // Create meshInstance
-            var meshInstance = new MeshInstance(this.rootNode, mesh, material);
+            var meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
             meshInstance.parameters = batch.origMeshInstances[0].parameters;
             meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
@@ -927,7 +927,7 @@ class BatchManager {
             nodes.push(clonedMeshInstances[i].node);
         }
 
-        batch2.meshInstance = new MeshInstance(batch.meshInstance.node, batch.meshInstance.mesh, batch.meshInstance.material);
+        batch2.meshInstance = new MeshInstance(batch.meshInstance.mesh, batch.meshInstance.material, batch.meshInstance.node);
         batch2.meshInstance._updateAabb = false;
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;

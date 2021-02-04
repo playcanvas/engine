@@ -41,7 +41,7 @@ class ImageRenderable {
         this.model.graph = this.node;
 
         this.mesh = mesh;
-        this.meshInstance = new MeshInstance(this.node, this.mesh, material);
+        this.meshInstance = new MeshInstance(this.mesh, material, this.node);
         this.meshInstance.name = 'ImageElement: ' + entity.name;
         this.meshInstance.castShadow = false;
         this.meshInstance.receiveShadow = false;
@@ -86,7 +86,7 @@ class ImageRenderable {
         if (!this.meshInstance) return;
 
         if (mask) {
-            this.unmaskMeshInstance = new MeshInstance(this.node, this.mesh, this.meshInstance.material);
+            this.unmaskMeshInstance = new MeshInstance(this.mesh, this.meshInstance.material, this.node);
             this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
             this.unmaskMeshInstance.castShadow = false;
             this.unmaskMeshInstance.receiveShadow = false;

@@ -61,7 +61,7 @@ RenderPhysics.prototype.initialize = function () {
 
 RenderPhysics.prototype.createModel = function (mesh, material) {
     var node = new pc.GraphNode();
-    var meshInstance = new pc.MeshInstance(node, mesh, material);
+    var meshInstance = new pc.MeshInstance(mesh, material, node);
     var model = new pc.Model();
     model.graph = node;
     model.meshInstances = [meshInstance];

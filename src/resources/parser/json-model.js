@@ -411,7 +411,7 @@ class JsonModelParser {
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
 
-            var meshInstance = new MeshInstance(node, mesh, Material.defaultMaterial);
+            var meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
 
             if (mesh.skin) {
                 var skinIndex = skins.indexOf(mesh.skin);
