@@ -182,7 +182,7 @@ class Lightmapper {
 
             // camera used for baking
             let camera = new Camera();
-            camera.clearColor = new Color(0, 0, 0, 0);
+            camera.clearColor.set(0, 0, 0, 0);
             camera.clearColorBuffer = true;
             camera.clearDepthBuffer = false;
             camera.clearStencilBuffer = false;
