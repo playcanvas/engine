@@ -2122,7 +2122,7 @@ class Application extends EventHandler {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
-        var instance = new MeshInstance(tempGraphNode, mesh, material);
+        var instance = new MeshInstance(mesh, material, tempGraphNode);
         instance.cull = false;
 
         if (options.mask) instance.mask = options.mask;
@@ -2169,7 +2169,7 @@ class Application extends EventHandler {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
-        var quad = new MeshInstance(tempGraphNode, this._immediateData.quadMesh, material);
+        var quad = new MeshInstance(this._immediateData.quadMesh, material, tempGraphNode);
         quad.cull = false;
         this.meshInstanceArray[0] = quad;
 

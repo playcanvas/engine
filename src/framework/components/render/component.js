@@ -367,7 +367,7 @@ class RenderComponent extends Component {
                 // mesh instance
                 var mesh = meshes[i];
                 var material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
-                var meshInst = new MeshInstance(this.entity, mesh, material || this.system.defaultMaterial);
+                var meshInst = new MeshInstance(mesh, material || this.system.defaultMaterial, this.entity);
                 meshInstances.push(meshInst);
 
                 // morph instance
@@ -476,7 +476,7 @@ class RenderComponent extends Component {
 
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
-                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
+                this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
             }
         }
     }
@@ -493,11 +493,18 @@ class RenderComponent extends Component {
 
         if (this._meshInstances) {
 
-            var mi = this._meshInstances;
+            let mi = this._meshInstances;
             for (var i = 0; i < mi.length; i++) {
+
+                // if mesh instance was created without a node, assign it here
+                if (!mi[i].node) {
+                    mi[i].node = this.entity;
+                }
+
                 mi[i].castShadow = this._castShadows;
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].isStatic = this._isStatic;
+                mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setOverrideAabb(this._aabb);
             }

@@ -12,6 +12,8 @@ import {
     SORTKEY_FORWARD
 } from './constants.js';
 
+import { GraphNode } from './graph-node.js';
+
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
 var _tempSphere = new BoundingSphere();
@@ -48,9 +50,9 @@ class Command {
  * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
+ * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
  * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -76,7 +78,7 @@ class Command {
  * var mesh = pc.createBox(graphicsDevice);
  * var material = new pc.StandardMaterial();
  * var node = new pc.GraphNode();
- * var meshInstance = new pc.MeshInstance(node, mesh, material);
+ * var meshInstance = new pc.MeshInstance(mesh, material, node);
  *
  * @example
  * // A script you can attach on an entity to test if it is visible on a Layer
@@ -90,7 +92,16 @@ class Command {
  * };
  */
 class MeshInstance {
-    constructor(node, mesh, material) {
+    constructor(mesh, material, node = null) {
+
+        // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)
+        if (mesh instanceof GraphNode) {
+            const temp = mesh;
+            mesh = material;
+            material = node;
+            node = temp;
+        }
+
         this._key = [0, 0];
         this._shader = [null, null, null];
 
@@ -114,7 +125,7 @@ class MeshInstance {
         // Render options
         this.visible = true;
         this.layer = LAYER_WORLD; // legacy
-        this.renderStyle = RENDERSTYLE_SOLID;
+        this._renderStyle = RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
@@ -186,23 +197,34 @@ class MeshInstance {
         }
     }
 
+    get renderStyle() {
+        return this._renderStyle;
+    }
+
+    set renderStyle(renderStyle) {
+        this._renderStyle = renderStyle;
+        this.mesh.prepareRenderState(renderStyle);
+    }
+
     // generates wireframes for an array of mesh instances
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
 
-        for (let i = 0; i < meshInstances.length; i++) {
+        if (meshInstances) {
+            for (let i = 0; i < meshInstances.length; i++) {
 
-            // switch mesh instance to the requested style
-            meshInstances[i].renderStyle = renderStyle;
+                // switch mesh instance to the requested style
+                meshInstances[i]._renderStyle = renderStyle;
 
-            // process all unique meshes
-            let mesh = meshInstances[i].mesh;
-            if (!_meshSet.has(mesh)) {
-                _meshSet.add(mesh);
-                mesh.prepareRenderState(renderStyle);
+                // process all unique meshes
+                let mesh = meshInstances[i].mesh;
+                if (!_meshSet.has(mesh)) {
+                    _meshSet.add(mesh);
+                    mesh.prepareRenderState(renderStyle);
+                }
             }
-        }
 
-        _meshSet.clear();
+            _meshSet.clear();
+        }
     }
 
     get mesh() {

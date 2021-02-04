@@ -41,8 +41,9 @@ class AnimState {
     }
 
     addAnimation(path, animTrack) {
+        var pathString = path.join('.');
         var indexOfAnimation = this._animationList.findIndex(function (animation) {
-            return animation.path === path;
+            return animation.path === pathString;
         });
         if (indexOfAnimation >= 0) {
             this._animationList[indexOfAnimation].animTrack = animTrack;

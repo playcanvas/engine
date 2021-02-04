@@ -132,25 +132,23 @@ class AnimEvaluator {
             var paths = curve.paths;
             for (var j = 0; j < paths.length; ++j) {
                 var path = paths[j];
-                var target = targets[path];
+                var resolved = this._binder.resolve(path);
+                var target = targets[resolved && resolved.targetPath || null];
 
                 // create new target if it doesn't exist yet
-                if (!target) {
-                    var resolved = this._binder.resolve(path);
-                    if (resolved) {
-                        target = {
-                            target: resolved,           // resolved target instance
-                            value: [],                  // storage for calculated value
-                            curves: 0,                  // number of curves driving this target
-                            blendCounter: 0             // per-frame number of blends (used to identify first blend)
-                        };
+                if (!target && resolved) {
+                    target = {
+                        target: resolved,           // resolved target instance
+                        value: [],                  // storage for calculated value
+                        curves: 0,                  // number of curves driving this target
+                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                    };
 
-                        for (var k = 0; k < target.target.components; ++k) {
-                            target.value.push(0);
-                        }
-
-                        targets[path] = target;
+                    for (var k = 0; k < target.target.components; ++k) {
+                        target.value.push(0);
                     }
+
+                    targets[resolved.targetPath] = target;
                 }
 
                 // binding may have failed
@@ -190,13 +188,13 @@ class AnimEvaluator {
             for (var j = 0; j < paths.length; ++j) {
                 var path = paths[j];
 
-                var target = targets[path];
+                var target = this._binder.resolve(path);
 
                 if (target) {
                     target.curves--;
                     if (target.curves === 0) {
                         this._binder.unresolve(path);
-                        delete targets[path];
+                        delete targets[target.targetPath];
                     }
                 }
             }
@@ -236,6 +234,16 @@ class AnimEvaluator {
             }
         }
         return null;
+    }
+
+    rebind() {
+        this._binder.rebind();
+        this._targets = {};
+        var clips = [...this.clips];
+        this.removeClips();
+        clips.forEach(clip => {
+            this.addClip(clip);
+        });
     }
 
     /**

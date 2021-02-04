@@ -1253,11 +1253,11 @@ var createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bu
         var target = channel.target;
         var curve = curves[channel.sampler];
 
-        curve._paths.push(AnimBinder.encode({
-            entityPath: [nodes[target.node].path],
+        curve._paths.push({
+            entityPath: AnimBinder.splitPath(nodes[target.node].path, '/'),
             component: 'graph',
             propertyPath: [transformSchema[target.path]]
-        }));
+        });
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
@@ -2040,7 +2040,7 @@ class GlbParser {
 
         var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-            var meshInstance = new MeshInstance(node, mesh, material);
+            var meshInstance = new MeshInstance(mesh, material, node);
 
             if (mesh.morph) {
                 var morphInstance = new MorphInstance(mesh.morph);

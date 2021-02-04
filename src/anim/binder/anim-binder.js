@@ -51,41 +51,22 @@ class AnimBinder {
      * @private
      * @static
      * @function
-     * @name pc.AnimPropertyLocator#encode
+     * @name pc.AnimBinder#encode
      * @description Converts a locator array into its string version
-     * @param {Array} locator - The property location in the scene defined as an array
+     * @param {string|Array} entityPath - The entity location in the scene defined as an array or string path
+     * @param {string} component - The component of the entity the property is located under
+     * @param {string|Array} propertyPath - The property location in the entity defined as an array or string path
      * @returns {string} The locator encoded as a string
      * @example
      * // returns 'spotLight/light/color.r'
-     * encode({ entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] });
+     * encode(['spotLight'], 'light', ['color', 'r']);
      */
-    static encode(locator) {
-        return AnimBinder.joinPath([
-            AnimBinder.joinPath(Array.isArray(locator.entityPath) ? locator.entityPath : [locator.entityPath]),
-            locator.component,
-            AnimBinder.joinPath(Array.isArray(locator.propertyPath) ? locator.propertyPath : [locator.propertyPath])
-        ], '/');
-    }
-
-    /**
-     * @private
-     * @static
-     * @function
-     * @name pc.AnimPropertyLocator#decode
-     * @description Converts a locator string into its array version
-     * @param {Array} locator - The property location in the scene defined as a string
-     * @returns {Array} - The locator decoded into an array
-     * @example
-     * // returns { entityPath: ['spotLight'], component: 'light', propertyPath: ['color', 'r'] }
-     * decode('spotLight/light/color.r');
-     */
-    static decode(locator) {
-        var locatorSections = AnimBinder.splitPath(locator, '/');
-        return {
-            entityPath: AnimBinder.splitPath(locatorSections[0]),
-            component: locatorSections[1],
-            propertyPath: AnimBinder.splitPath(locatorSections[2])
-        };
+    static encode(entityPath, component, propertyPath) {
+        return `${
+            Array.isArray(entityPath) ? entityPath.join('/') : entityPath
+        }/${component}/${
+            Array.isArray(propertyPath) ? propertyPath.join('/') : propertyPath
+        }`;
     }
 
     /**

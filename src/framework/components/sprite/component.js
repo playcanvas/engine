@@ -53,7 +53,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @property {number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
  * @property {string} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
  * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
- * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
+ * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer. This is not used unless the layer's sort order is set to {@link pc.SORTMODE_MANUAL}.
  */
 class SpriteComponent extends Component {
     constructor(system, entity) {
@@ -241,7 +241,7 @@ class SpriteComponent extends Component {
 
         // create mesh instance if it doesn't exist yet
         if (!this._meshInstance) {
-            this._meshInstance = new MeshInstance(this._node, mesh, this._material);
+            this._meshInstance = new MeshInstance(mesh, this._material, this._node);
             this._meshInstance.castShadow = false;
             this._meshInstance.receiveShadow = false;
             this._meshInstance.drawOrder = this._drawOrder;
