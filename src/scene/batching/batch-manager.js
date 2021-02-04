@@ -1,7 +1,6 @@
 import { now } from  '../../core/time.js';
 
 import { Vec3 } from '../../math/vec3.js';
-import { Mat4 } from '../../math/mat4.js';
 import { Mat3 } from '../../math/mat3.js';
 
 import { BoundingBox } from '../../shape/bounding-box.js';
