@@ -12,6 +12,7 @@ const _schema = [
 // order matters here
 const _properties = [
     'material',
+    'meshInstances',
     'asset',
     'materialAssets',
     'castShadows',
@@ -75,6 +76,9 @@ class RenderComponentSystem extends ComponentSystem {
         for (i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+
+        // we cannot copy mesh instances, delete them and component recreates them properly
+        delete data.meshInstances;
 
         var component = this.addComponent(clone, data);
 

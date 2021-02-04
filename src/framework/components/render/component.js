@@ -493,8 +493,14 @@ class RenderComponent extends Component {
 
         if (this._meshInstances) {
 
-            var mi = this._meshInstances;
+            let mi = this._meshInstances;
             for (var i = 0; i < mi.length; i++) {
+
+                // if mesh instance was created without a node, assign it here
+                if (!mi[i].node) {
+                    mi[i].node = this.entity;
+                }
+
                 mi[i].castShadow = this._castShadows;
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].isStatic = this._isStatic;

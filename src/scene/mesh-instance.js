@@ -12,6 +12,8 @@ import {
     SORTKEY_FORWARD
 } from './constants.js';
 
+import { Mesh } from './mesh.js';
+
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
 var _tempSphere = new BoundingSphere();
@@ -48,7 +50,7 @@ class Command {
  * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
+ * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
  * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
@@ -91,6 +93,14 @@ class Command {
  */
 class MeshInstance {
     constructor(node, mesh, material) {
+
+        // optional node parameter was skipped, shift parameters by one
+        if (node instanceof Mesh) {
+            material = mesh;
+            mesh = node;
+            node = null;
+        }
+
         this._key = [0, 0];
         this._shader = [null, null, null];
 
