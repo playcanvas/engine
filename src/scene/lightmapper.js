@@ -297,7 +297,7 @@ class Lightmapper {
         }
 
         // mesh instances from render component
-        if (node.render && node.render.enabled) {
+        if (node.render?.enabled) {
             if (allNodes) allNodes.push(new MeshNode(node));
             if (node.render.lightmapped) {
                 if (bakeNodes) {
