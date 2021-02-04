@@ -567,13 +567,12 @@ class ForwardRenderer {
 
     getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
-        var shadowBuffer;
 
         if (shadowCam === null) {
             shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
             createShadowBuffer(device, light);
         } else {
-            shadowBuffer = shadowCam.renderTarget;
+            var shadowBuffer = shadowCam.renderTarget;
             if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
                 createShadowBuffer(device, light);
             }

@@ -107,9 +107,10 @@ class RenderTarget {
      * @description Frees resources associated with this render target.
      */
     destroy() {
-        if (!this._device) return;
 
         var device = this._device;
+        if (!device) return;
+
         var idx = device.targets.indexOf(this);
         if (idx !== -1) {
             device.targets.splice(idx, 1);

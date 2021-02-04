@@ -8,7 +8,7 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM, SHADERDEF_DIRLM,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -162,6 +162,39 @@ class MeshInstance {
         this.stencilBack = null;
         // Negative scale batching support
         this.flipFaces = false;
+    }
+
+    // shader uniform names for lightmaps
+    static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
+
+    // cache of lightmaps internally created by baking using Lightmapper
+    // the key is the lightmap (texture), the value is reference count .. when it reaches 0, the lightmap gets destroyed.
+    // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
+    static _lightmapCache = new Map();
+
+    // add texture reference to lightmap cache
+    static incRefLightmap(texture) {
+        let refCount = MeshInstance._lightmapCache.get(texture) || 0;
+        refCount++;
+        MeshInstance._lightmapCache.set(texture, refCount);
+    }
+
+    // remove texture reference from lightmap cache
+    static decRefLightmap(texture) {
+        if (texture) {
+            let refCount = MeshInstance._lightmapCache.get(texture);
+            if (refCount) {
+                refCount--;
+                if (refCount === 0) {
+                    // destroy texture and remove it from cache
+                    MeshInstance._lightmapCache.delete(texture);
+                    texture.destroy();
+                } else {
+                    // update new ref count in the cache
+                    MeshInstance._lightmapCache.set(texture, refCount);
+                }
+            }
+        }
     }
 
     get renderStyle() {
@@ -451,6 +484,10 @@ class MeshInstance {
             }
         }
 
+        // release ref counted lightmaps
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+
         if (this._skinInstance) {
             this._skinInstance.destroy();
             this._skinInstance = null;
@@ -583,6 +620,29 @@ class MeshInstance {
         }
     }
 
+    // a wrapper over settings parameter specifically for realtime baked lightmaps. This handles reference counting of lightmaps
+    // and releases them when no longer referenced
+    setRealtimeLightmap(name, texture) {
+
+        // no change
+        let old = this.getParameter(name);
+        if (old === texture)
+            return;
+
+        // remove old
+        if (old) {
+            MeshInstance.decRefLightmap(old.data);
+        }
+
+        // assign new
+        if (texture) {
+            MeshInstance.incRefLightmap(texture);
+            this.setParameter(name, texture);
+        } else {
+            this.deleteParameter(name);
+        }
+    }
+
      /**
       * @function
       * @name pc.MeshInstance#deleteParameter
@@ -613,9 +673,9 @@ class MeshInstance {
         if (value) {
             this.mask = (this.mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
         } else {
-            this.deleteParameter("texture_lightMap");
-            this.deleteParameter("texture_dirLightMap");
-            this._shaderDefs &= ~SHADERDEF_LM;
+            this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+            this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }
