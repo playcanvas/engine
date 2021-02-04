@@ -5,6 +5,7 @@ import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingSphere } from '../shape/bounding-sphere.js';
 
 import {
     CULLFACE_NONE,
@@ -41,7 +42,7 @@ const PASS_COLOR = 0;
 const PASS_DIR = 1;
 
 let tempVec = new Vec3();
-let tempSphere = {};
+let tempSphere = new BoundingSphere();
 
 // helper class to wrap node including its meshInstances
 class MeshNode {
@@ -123,6 +124,9 @@ class Lightmapper {
         this._tempSet = new Set();
         this._initCalled = false;
         this.passMaterials = [];
+
+        this.fog = "";
+        this.ambientLight = new Color();
 
         // dictionary of spare render targets with color buffer for each used size
         this.renderTargets = new Map();
@@ -637,7 +641,7 @@ class Lightmapper {
 
         // backup
         this.fog = this.scene.fog;
-        this.ambientLight = this.scene.ambientLight.clone();
+        this.ambientLight.copy(this.scene.ambientLight);
 
         // set up scene
         this.scene.fog = FOG_NONE;
@@ -647,7 +651,7 @@ class Lightmapper {
     restoreScene() {
 
         this.scene.fog = this.fog;
-        this.scene.ambientLight = this.ambientLight;
+        this.scene.ambientLight.copy(this.ambientLight);
 
         // Revert static preprocessing
         if (this.revertStatic) {
