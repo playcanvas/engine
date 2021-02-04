@@ -100,7 +100,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.get("http://example.com/", {"retry": true, "maxRetries": 5}, function (err, response) {
+     * pc.http.get("http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -126,7 +126,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.post("http://example.com/", {"name": "Alix"}, function (err, response) {
+     * pc.http.post("http://example.com/", { "name": "Alix" }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -154,7 +154,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.post("http://example.com/", {"name": "Alix"}, {"retry": true, "maxRetries": 5}, function (err, response) {
+     * pc.http.post("http://example.com/", { "name": "Alix" }, { "retry": true, "maxRetries": 5 }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -181,7 +181,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     *     pc.http.put("http://example.com/", {"name": "Alix"}, function (err, response) {
+     * pc.http.put("http://example.com/", { "name": "Alix" }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -209,7 +209,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.put("http://example.com/", {"name": "Alix"}, {"retry": true, "maxRetries": 5}, function (err, response) {
+     * pc.http.put("http://example.com/", { "name": "Alix" }, { "retry": true, "maxRetries": 5 }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -260,7 +260,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.del("http://example.com/", {"retry": true, "maxRetries": 5}, function (err, response) {
+     * pc.http.del("http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
@@ -312,7 +312,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.request("get", "http://example.com/", {"retry": true, "maxRetries": 5}, function (err, response) {
+     * pc.http.request("get", "http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
