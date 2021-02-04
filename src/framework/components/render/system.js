@@ -20,6 +20,7 @@ const _properties = [
     'castShadowsLightmap',
     'lightmapped',
     'lightmapSizeMultiplier',
+    'renderStyle',
     'type',
     'layers',
     'isStatic',

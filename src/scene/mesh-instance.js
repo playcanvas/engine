@@ -166,20 +166,22 @@ class MeshInstance {
     // generates wireframes for an array of mesh instances
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
 
-        for (let i = 0; i < meshInstances.length; i++) {
+        if (meshInstances) {
+            for (let i = 0; i < meshInstances.length; i++) {
 
-            // switch mesh instance to the requested style
-            meshInstances[i].renderStyle = renderStyle;
+                // switch mesh instance to the requested style
+                meshInstances[i].renderStyle = renderStyle;
 
-            // process all unique meshes
-            let mesh = meshInstances[i].mesh;
-            if (!_meshSet.has(mesh)) {
-                _meshSet.add(mesh);
-                mesh.prepareRenderState(renderStyle);
+                // process all unique meshes
+                let mesh = meshInstances[i].mesh;
+                if (!_meshSet.has(mesh)) {
+                    _meshSet.add(mesh);
+                    mesh.prepareRenderState(renderStyle);
+                }
             }
-        }
 
-        _meshSet.clear();
+            _meshSet.clear();
+        }
     }
 
     get mesh() {

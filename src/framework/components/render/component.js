@@ -504,6 +504,7 @@ class RenderComponent extends Component {
                 mi[i].castShadow = this._castShadows;
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].isStatic = this._isStatic;
+                mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setOverrideAabb(this._aabb);
             }
