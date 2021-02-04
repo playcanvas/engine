@@ -287,7 +287,7 @@ class Lightmapper {
 
         // mesh instances from model component
         let meshInstances;
-        if (node.model && node.model.model && node.model.enabled) {
+        if (node.model?.model && node.model?.enabled) {
             if (allNodes) allNodes.push(new MeshNode(node));
             if (node.model.lightmapped) {
                 if (bakeNodes) {
