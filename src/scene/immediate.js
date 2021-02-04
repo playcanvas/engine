@@ -93,7 +93,7 @@ class LineBatch {
             if (!this.meshInstance) {
                 identityGraphNode.worldTransform = Mat4.IDENTITY;
                 identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
-                this.meshInstance = new MeshInstance(identityGraphNode, this.mesh, this.material);
+                this.meshInstance = new MeshInstance(this.mesh, this.material, identityGraphNode);
                 this.meshInstance.cull = false;
             }
         }

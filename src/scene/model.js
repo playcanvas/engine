@@ -132,7 +132,7 @@ class Model {
         for (i = 0; i < this.meshInstances.length; i++) {
             var meshInstance = this.meshInstances[i];
             var nodeIndex = srcNodes.indexOf(meshInstance.node);
-            var cloneMeshInstance = new MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+            var cloneMeshInstance = new MeshInstance(meshInstance.mesh, meshInstance.material, cloneNodes[nodeIndex]);
 
             if (meshInstance.skinInstance) {
                 var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);

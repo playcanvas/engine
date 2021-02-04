@@ -2040,7 +2040,7 @@ class GlbParser {
 
         var createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-            var meshInstance = new MeshInstance(node, mesh, material);
+            var meshInstance = new MeshInstance(mesh, material, node);
 
             if (mesh.morph) {
                 var morphInstance = new MorphInstance(mesh.morph);

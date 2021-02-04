@@ -367,7 +367,7 @@ class RenderComponent extends Component {
                 // mesh instance
                 var mesh = meshes[i];
                 var material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
-                var meshInst = new MeshInstance(this.entity, mesh, material || this.system.defaultMaterial);
+                var meshInst = new MeshInstance(mesh, material || this.system.defaultMaterial, this.entity);
                 meshInstances.push(meshInst);
 
                 // morph instance
@@ -476,7 +476,7 @@ class RenderComponent extends Component {
 
                 var primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
-                this.meshInstances = [new MeshInstance(this.entity, primData.mesh, material || this.system.defaultMaterial)];
+                this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
             }
         }
     }

@@ -58,7 +58,7 @@ import { VertexBuffer } from './vertex-buffer.js';
  *     var device = this.app.graphicsDevice;
  *     var mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
  *     var node = new pc.GraphNode();
- *     var meshInstance = new pc.MeshInstance(node, mesh, this.material.resource);
+ *     var meshInstance = new pc.MeshInstance(mesh, this.material.resource, node);
  *     var model = new pc.Model();
  *     model.graph = node;
  *     model.meshInstances = [ meshInstance ];

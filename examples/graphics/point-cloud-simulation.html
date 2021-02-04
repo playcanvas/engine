@@ -141,7 +141,7 @@
 
         // Create the mesh instance
         var node = new pc.GraphNode();
-        var meshInstance = new pc.MeshInstance(node, this.mesh, material);
+        var meshInstance = new pc.MeshInstance(this.mesh, material, node);
 
         // Create a model and add the mesh instance to it
         var model = new pc.Model();

@@ -432,7 +432,7 @@ class Scene extends EventHandler {
             if (skyLayer) {
                 var node = new GraphNode();
                 var mesh = createBox(device);
-                var meshInstance = new MeshInstance(node, mesh, material);
+                var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 
