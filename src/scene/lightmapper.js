@@ -315,8 +315,8 @@ class Lightmapper {
                     break;
                 }
             }
-            if (hasUv1) {
 
+            if (hasUv1) {
                 let notInstancedMeshInstances = [];
                 for (let i = 0; i < meshInstances.length; i++) {
                     let mesh = meshInstances[i].mesh;
