@@ -84,10 +84,8 @@ class LightInfo {
 
             // world aabb
             this.lightBounds = new BoundingBox();
-            this.lightBounds.center = tempSphere.center;
-            this.lightBounds.halfExtents.x = tempSphere.radius;
-            this.lightBounds.halfExtents.y = tempSphere.radius;
-            this.lightBounds.halfExtents.z = tempSphere.radius;
+            this.lightBounds.center.copy(tempSphere.center);
+            this.lightBounds.halfExtents.set(tempSphere.radius, tempSphere.radius, tempSphere.radius);
         }
     }
 
