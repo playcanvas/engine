@@ -124,7 +124,7 @@ class MeshInstance {
         // Render options
         this.visible = true;
         this.layer = LAYER_WORLD; // legacy
-        this.renderStyle = RENDERSTYLE_SOLID;
+        this._renderStyle = RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
@@ -163,6 +163,15 @@ class MeshInstance {
         this.flipFaces = false;
     }
 
+    get renderStyle() {
+        return this._renderStyle;
+    }
+
+    set renderStyle(renderStyle) {
+        this._renderStyle = renderStyle;
+        this.mesh.prepareRenderState(renderStyle);
+    }
+
     // generates wireframes for an array of mesh instances
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
 
@@ -170,7 +179,7 @@ class MeshInstance {
             for (let i = 0; i < meshInstances.length; i++) {
 
                 // switch mesh instance to the requested style
-                meshInstances[i].renderStyle = renderStyle;
+                meshInstances[i]._renderStyle = renderStyle;
 
                 // process all unique meshes
                 let mesh = meshInstances[i].mesh;
