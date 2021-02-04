@@ -12,7 +12,7 @@ import {
     SORTKEY_FORWARD
 } from './constants.js';
 
-import { Mesh } from './mesh.js';
+import { GraphNode } from './graph-node.js';
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
@@ -50,9 +50,9 @@ class Command {
  * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
  * @param {pc.Mesh} mesh - The graphics mesh being instanced.
  * @param {pc.Material} material - The material used to render this instance.
+ * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
  * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -78,7 +78,7 @@ class Command {
  * var mesh = pc.createBox(graphicsDevice);
  * var material = new pc.StandardMaterial();
  * var node = new pc.GraphNode();
- * var meshInstance = new pc.MeshInstance(node, mesh, material);
+ * var meshInstance = new pc.MeshInstance(mesh, material, node);
  *
  * @example
  * // A script you can attach on an entity to test if it is visible on a Layer
@@ -92,13 +92,14 @@ class Command {
  * };
  */
 class MeshInstance {
-    constructor(node, mesh, material) {
+    constructor(mesh, material, node = null) {
 
-        // optional node parameter was skipped, shift parameters by one
-        if (node instanceof Mesh) {
-            material = mesh;
-            mesh = node;
-            node = null;
+        // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)
+        if (mesh instanceof GraphNode) {
+            const temp = mesh;
+            mesh = material;
+            material = node;
+            node = temp;
         }
 
         this._key = [0, 0];
