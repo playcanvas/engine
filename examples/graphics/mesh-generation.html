@@ -145,11 +145,12 @@
 
         // Create the mesh instance
         var material = new pc.StandardMaterial();
-        var meshInstance = new pc.MeshInstance(this.entity, this.mesh, material);
+        var meshInstance = new pc.MeshInstance(this.mesh, material);
 
-        this.entity.addComponent("render");
-        this.entity.render.meshInstances = [meshInstance];
-
+        // Create the entity with render component using meshInstances
+        this.entity.addComponent("render", {
+            meshInstances: [ meshInstance ]
+        });
         app.root.addChild(this.entity);
 
         // load a texture, create material and apply it to our MeshInstance
