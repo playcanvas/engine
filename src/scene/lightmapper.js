@@ -164,10 +164,13 @@ class Lightmapper {
 
             // shader related
             this.dilateShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, "lmDilate");
+            this.bilateralDeNoiseShader = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.bilateralDeNoisePS, "lmBilateralDeNoise");
             this.constantTexSource = device.scope.resolve("source");
             this.constantPixelOffset = device.scope.resolve("pixelOffset");
+            this.constantSigmas = device.scope.resolve("sigmas");
             this.constantBakeDir = device.scope.resolve("bakeDir");
             this.pixelOffset = new Float32Array(2);
+            this.sigmas = new Float32Array(2);
             this.materials = [];
 
             // small black texture
@@ -806,14 +809,17 @@ class Lightmapper {
         return true;
     }
 
-    dilateTextures(device, bakeNodes, passCount) {
+    postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 16; // 32 dilates
 
         let pixelOffset = this.pixelOffset;
+        let sigmas = this.sigmas;
         let dilateShader = this.dilateShader;
+        let bilateralDeNoiseShader = this.bilateralDeNoiseShader;
         let constantTexSource = this.constantTexSource;
         let constantPixelOffset = this.constantPixelOffset;
+        let constantSigmas = this.constantSigmas;
 
         for (let node = 0; node < bakeNodes.length; node++) {
             let bakeNode = bakeNodes[node];
@@ -826,14 +832,20 @@ class Lightmapper {
                 let tempRT = this.renderTargets.get(lightmap.width);
                 let tempTex = tempRT.colorBuffer;
 
+                // inverse texture size
                 pixelOffset[0] = 1 / lightmap.width;
                 pixelOffset[1] = 1 / lightmap.height;
                 constantPixelOffset.setValue(pixelOffset);
 
-                // bounce dilate between textures
+                // bilateral filter sigmas
+                sigmas[0] = 10;
+                sigmas[1] = 0.2;
+                constantSigmas.setValue(sigmas);
+
+                // bounce dilate between textures, execute denoise on the first pass
                 for (let i = 0; i < numDilates2x; i++) {
                     constantTexSource.setValue(lightmap);
-                    drawQuadWithShader(device, tempRT, dilateShader);
+                    drawQuadWithShader(device, tempRT, i === 0 ? bilateralDeNoiseShader : dilateShader);
 
                     constantTexSource.setValue(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);
@@ -1003,7 +1015,7 @@ class Lightmapper {
             }
         }
 
-        this.dilateTextures(device, bakeNodes, passCount);
+        this.postprocessTextures(device, bakeNodes, passCount);
 
         // Revert shadow casting
         for (node = 0; node < allNodes.length; node++) {

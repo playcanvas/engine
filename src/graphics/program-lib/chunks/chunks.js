@@ -35,6 +35,7 @@ import detailModesPS from './detailModes.frag';
 import diffusePS from './diffuse.frag';
 import diffuseDetailMapPS from './diffuseDetailMap.frag';
 import dilatePS from './dilate.frag';
+import bilateralDeNoisePS from './bilateralDeNoise.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
@@ -240,6 +241,7 @@ var shaderChunks = {
     diffusePS: diffusePS,
     diffuseDetailMapPS: diffuseDetailMapPS,
     dilatePS: dilatePS,
+    bilateralDeNoisePS: bilateralDeNoisePS,
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
