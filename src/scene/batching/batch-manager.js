@@ -767,7 +767,7 @@ class BatchManager {
 
                                 for (j = 0; j < totalComponents; j += stream.numComponents) {
                                     vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    mat3.transform(vec, vec);
+                                    mat3.transformVector(vec, vec);
                                     subarray[j] = vec.x;
                                     subarray[j + 1] = vec.y;
                                     subarray[j + 2] = vec.z;

@@ -228,13 +228,13 @@ class Mat3 {
 
     /**
      * @function
-     * @name pc.Mat3#transform
+     * @name pc.Mat3#transformVector
      * @description Transforms a 3-dimensional vector by a 3x3 matrix.
      * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.
      * @param {pc.Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
      * @returns {pc.Vec3} The input vector v transformed by the current instance.
      */
-    transform(vec, res = new Vec3()) {
+    transformVector(vec, res = new Vec3()) {
         var x, y, z, m;
 
         m = this.data;
