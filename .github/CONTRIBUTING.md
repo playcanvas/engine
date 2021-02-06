@@ -39,7 +39,7 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 * [`for of` loops](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of)
 * [Arrow function expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 * [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
-* [Default paramters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
+* [Default parameters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
 * [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
 
