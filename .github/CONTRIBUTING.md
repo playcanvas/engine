@@ -34,11 +34,14 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 
 ### Whitelisted ES6+ features:
 
-* `let`, `const` instead of `var`
-* `for of` loop
-* `class` instead of `prototype`
-* `import`/`export` handled by build scripts for bundling
-* function default parameters
+* [`let`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let)
+* [`const`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const)
+* [`for of` loops](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of)
+* [Arrow function expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
+* [Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
+* [Default paramters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
+* [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+* [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
 
 ### Opening braces should be on the same line as the statement
 
