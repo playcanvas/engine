@@ -879,7 +879,6 @@ class Lightmapper {
         let casters = this.prepareShadowCasters(allNodes);
 
         // update skinned and morphed meshes
-        this.renderer.updateMorphing(casters);
         this.renderer.updateCpuSkinMatrices(casters);
         this.renderer.gpuUpdate(casters);
 
