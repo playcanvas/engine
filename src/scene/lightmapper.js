@@ -808,7 +808,7 @@ class Lightmapper {
 
     dilateTextures(device, bakeNodes, passCount) {
 
-        const numDilates2x = 16; // 32 dilates
+        const numDilates2x = 4; // 8 dilates
 
         let pixelOffset = this.pixelOffset;
         let dilateShader = this.dilateShader;
