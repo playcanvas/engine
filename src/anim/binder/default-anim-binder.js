@@ -139,7 +139,7 @@ class DefaultAnimBinder {
             // #ifdef DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath]) {
-                console.warn('Multiple nodes with the path ' + fallbackGraphPath + ' are present in the ' + entity.name + ' entity\'s graph which may result in the incorrect binding of animations');
+                console.warn('Anim Binder: Multiple animation curves with the path ' + fallbackGraphPath + ' are present in the ' + this.graph.path + ' graph which may result in the incorrect binding of animations');
             }
             this.visitedFallbackGraphPaths[fallbackGraphPath] = true;
             // #endif
