@@ -349,6 +349,7 @@ if (hasAudioContext()) {
          * @returns {boolean} Returns true if the sound was paused.
          */
         pause: function () {
+            // no need for this anymore
             this._playWhenLoaded = false;
 
             if (this._state !== STATE_PLAYING || !this.source)
@@ -366,7 +367,6 @@ if (hasAudioContext()) {
             this.source.stop(0);
             this.source = null;
 
-            // no need for this anymore
             // reset user-set start offset
             this._startOffset = null;
 
