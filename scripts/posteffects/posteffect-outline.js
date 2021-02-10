@@ -68,7 +68,7 @@ function OutlineEffect(graphicsDevice, thickness) {
     this.color = new pc.Color(1, 1, 1, 1);
     this.texture = new pc.Texture(graphicsDevice);
     this.texture.name = 'pe-outline';
-    this._colorData = new Float32Array([1, 1, 1, 1]);
+    this._colorData = new Float32Array(4);
 }
 
 OutlineEffect.prototype = Object.create(pc.PostEffect.prototype);
