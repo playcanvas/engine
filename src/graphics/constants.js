@@ -1002,6 +1002,30 @@ export const TEXHINT_LIGHTMAP = 3;
 
 /**
  * @constant
+ * @name pc.TEXTUREPROJECTION_CUBE
+ * @type {number}
+ * @description Texture data is stored in cubemap projection format.
+ */
+export const TEXTUREPROJECTION_CUBE = 0;
+
+/**
+ * @constant
+ * @name pc.TEXTUREPROJECTION_EQUIRECT
+ * @type {number}
+ * @description Texture data is stored in equirectangular projection format.
+ */
+export const TEXTUREPROJECTION_EQUIRECT = 1;
+
+/**
+ * @constant
+ * @name pc.TEXTUREPROJECTION_OCTAHEDRAL
+ * @type {number}
+ * @description Texture data is stored in octahedral projection format.
+ */
+export const TEXTUREPROJECTION_OCTAHEDRAL = 2;
+
+/**
+ * @constant
  * @name pc.TYPE_INT8
  * @type {number}
  * @description Signed byte vertex element type.
