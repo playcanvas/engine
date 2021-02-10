@@ -349,6 +349,8 @@ if (hasAudioContext()) {
          * @returns {boolean} Returns true if the sound was paused.
          */
         pause: function () {
+            this._playWhenLoaded = false;
+
             if (this._state !== STATE_PLAYING || !this.source)
                 return false;
 
@@ -365,7 +367,6 @@ if (hasAudioContext()) {
             this.source = null;
 
             // no need for this anymore
-            this._playWhenLoaded = false;
             // reset user-set start offset
             this._startOffset = null;
 
@@ -435,6 +436,8 @@ if (hasAudioContext()) {
          * @returns {boolean} Returns true if the sound was stopped.
          */
         stop: function () {
+            this._playWhenLoaded = false;
+
             if (this._state === STATE_STOPPED || !this.source)
                 return false;
 
@@ -450,7 +453,6 @@ if (hasAudioContext()) {
             this._currentOffset = 0;
 
             this._startOffset = null;
-            this._playWhenLoaded = false;
 
             this._suspendEndEvent = true;
             if (this._state === STATE_PLAYING) {
