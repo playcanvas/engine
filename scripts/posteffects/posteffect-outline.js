@@ -68,6 +68,7 @@ function OutlineEffect(graphicsDevice, thickness) {
     this.color = new pc.Color(1, 1, 1, 1);
     this.texture = new pc.Texture(graphicsDevice);
     this.texture.name = 'pe-outline';
+    this._colorData = new Float32Array([1, 1, 1, 1]);
 }
 
 OutlineEffect.prototype = Object.create(pc.PostEffect.prototype);
@@ -78,9 +79,14 @@ Object.assign(OutlineEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
+        this._colorData[0] = this.color.r;
+        this._colorData[1] = this.color.g;
+        this._colorData[2] = this.color.b;
+        this._colorData[3] = this.color.a;
+
         scope.resolve("uWidth").setValue(inputTarget.width);
         scope.resolve("uHeight").setValue(inputTarget.height);
-        scope.resolve("uOutlineCol").setValue(this.color.data);
+        scope.resolve("uOutlineCol").setValue(this._colorData);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
         scope.resolve("uOutlineTex").setValue(this.texture);
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
