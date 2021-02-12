@@ -1,4 +1,4 @@
-import { Color } from '../../core/color.js';
+import { Color } from '../../math/color.js';
 
 import { Material } from './material.js';
 
@@ -22,19 +22,17 @@ import { Material } from './material.js';
  * // Notify the material that it has been modified
  * material.update();
  */
-function BasicMaterial() {
-    Material.call(this);
+class BasicMaterial extends Material {
+    constructor() {
+        super();
 
-    this.color = new Color(1, 1, 1, 1);
-    this.colorUniform = new Float32Array(4);
+        this.color = new Color(1, 1, 1, 1);
+        this.colorUniform = new Float32Array(4);
 
-    this.colorMap = null;
-    this.vertexColors = false;
-}
-BasicMaterial.prototype = Object.create(Material.prototype);
-BasicMaterial.prototype.constructor = BasicMaterial;
+        this.colorMap = null;
+        this.vertexColors = false;
+    }
 
-Object.assign(BasicMaterial.prototype, {
     /**
      * @function
      * @name pc.BasicMaterial#clone
@@ -42,7 +40,7 @@ Object.assign(BasicMaterial.prototype, {
      * where only the references are copied.
      * @returns {pc.BasicMaterial} A cloned Basic material.
      */
-    clone: function () {
+    clone() {
         var clone = new BasicMaterial();
 
         Material.prototype._cloneInternal.call(this, clone);
@@ -52,9 +50,9 @@ Object.assign(BasicMaterial.prototype, {
         clone.vertexColors = this.vertexColors;
 
         return clone;
-    },
+    }
 
-    updateUniforms: function () {
+    updateUniforms() {
         this.clearParameters();
 
         this.colorUniform[0] = this.color.r;
@@ -65,9 +63,9 @@ Object.assign(BasicMaterial.prototype, {
         if (this.colorMap) {
             this.setParameter('texture_diffuseMap', this.colorMap);
         }
-    },
+    }
 
-    updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
+    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         var options = {
             skin: !!this.meshInstances[0].skinInstance,
             vertexColors: this.vertexColors,
@@ -77,6 +75,6 @@ Object.assign(BasicMaterial.prototype, {
         var library = device.getProgramLibrary();
         this.shader = library.getProgram('basic', options);
     }
-});
+}
 
 export { BasicMaterial };

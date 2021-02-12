@@ -1,26 +1,33 @@
-function GpuTimer(app) {
-    this._gl = app.graphicsDevice.gl;
-    this._ext = app.graphicsDevice.extDisjointTimerQuery;
+class GpuTimer {
+    constructor(app) {
+        this._gl = app.graphicsDevice.gl;
+        this._ext = app.graphicsDevice.extDisjointTimerQuery;
 
-    this._freeQueries = [];                     // pool of free queries
-    this._frameQueries = [];                    // current frame's queries
-    this._frames = [];                          // list of previous frame queries
+        this._freeQueries = [];                     // pool of free queries
+        this._frameQueries = [];                    // current frame's queries
+        this._frames = [];                          // list of previous frame queries
 
-    this._timings = [];
-    this._prevTimings = [];
+        this._timings = [];
+        this._prevTimings = [];
 
-    this.enabled = true;
-    this.unitsName = "ms";
-    this.decimalPlaces = 1;
+        this.enabled = true;
+        this.unitsName = "ms";
+        this.decimalPlaces = 1;
 
-    app.on('frameupdate', this.begin.bind(this, 'update'));
-    app.on('framerender', this.mark.bind(this, 'render'));
-    app.on('frameend', this.end.bind(this));
-}
+        app.on('frameupdate', this.begin.bind(this, 'update'));
+        app.on('framerender', this.mark.bind(this, 'render'));
+        app.on('frameend', this.end.bind(this));
+    }
 
-Object.assign(GpuTimer.prototype, {
+    // called when context was lost, function releases all context related resources
+    loseContext() {
+        this._freeQueries = [];                     // pool of free queries
+        this._frameQueries = [];                    // current frame's queries
+        this._frames = [];                          // list of previous frame queries
+    }
+
     // mark the beginning of the frame
-    begin: function (name) {
+    begin(name) {
         if (!this.enabled) {
             return;
         }
@@ -47,10 +54,10 @@ Object.assign(GpuTimer.prototype, {
         }
 
         this.mark(name);
-    },
+    }
 
     // mark
-    mark: function (name) {
+    mark(name) {
         if (!this.enabled) {
             return;
         }
@@ -65,10 +72,10 @@ Object.assign(GpuTimer.prototype, {
         query[0] = name;
         this._gl.beginQuery(this._ext.TIME_ELAPSED_EXT, query[1]);
         this._frameQueries.push(query);
-    },
+    }
 
     // end of frame
-    end: function () {
+    end() {
         if (!this.enabled) {
             return;
         }
@@ -76,11 +83,11 @@ Object.assign(GpuTimer.prototype, {
         this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
         this._frames.push(this._frameQueries);
         this._frameQueries = [];
-    },
+    }
 
     // check if the gpu has been interrupted thereby invalidating all
     // in-flight queries
-    _checkDisjoint: function () {
+    _checkDisjoint() {
         var disjoint = this._gl.getParameter(this._ext.GPU_DISJOINT_EXT);
         if (disjoint) {
             // return all queries to the free list
@@ -88,16 +95,16 @@ Object.assign(GpuTimer.prototype, {
             this._frameQueries = [];
             this._frames = [];
         }
-    },
+    }
 
     // either returns a previously free'd query or if there aren't any allocates a new one
-    _allocateQuery: function () {
+    _allocateQuery() {
         return (this._freeQueries.length > 0) ?
             this._freeQueries.splice(-1, 1)[0] : ["", this._gl.createQuery()];
-    },
+    }
 
     // attempt to resolve one frame's worth of timings
-    _resolveFrameTimings: function (frame, timings) {
+    _resolveFrameTimings(frame, timings) {
         // wait for the last query in the frame to be available
         if (!this._gl.getQueryParameter(frame[frame.length - 1][1], this._gl.QUERY_RESULT_AVAILABLE)) {
             return false;
@@ -109,14 +116,12 @@ Object.assign(GpuTimer.prototype, {
 
         return true;
     }
-});
 
-Object.defineProperty(GpuTimer.prototype, 'timings', {
-    get: function () {
+    get timings() {
         return this._timings.map(function (v) {
             return v[1];
         });
     }
-});
+}
 
 export { GpuTimer };

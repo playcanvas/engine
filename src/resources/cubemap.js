@@ -1,7 +1,7 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../graphics/graphics.js';
+} from '../graphics/constants.js';
 
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
@@ -15,24 +15,24 @@ import { Texture } from '../graphics/texture.js';
  * @param {pc.AssetRegistry} assets - The asset registry.
  * @param {pc.ResourceLoader} loader - The resource loader.
  */
-function CubemapHandler(device, assets, loader) {
-    this._device = device;
-    this._registry = assets;
-    this._loader = loader;
-}
+class CubemapHandler {
+    constructor(device, assets, loader) {
+        this._device = device;
+        this._registry = assets;
+        this._loader = loader;
+    }
 
-Object.assign(CubemapHandler.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         this.loadAssets(asset, callback);
-    },
+    }
 
-    open: function (url, data, asset) {
+    open(url, data, asset) {
         // caller will set our return value to asset.resources[0]. We've already set resources[0],
         // but we must return it again here so it doesn't get overwritten.
         return asset ? asset.resource : null;
-    },
+    }
 
-    patch: function (asset, registry) {
+    patch(asset, registry) {
         this.loadAssets(asset, function (err, result) {
             if (err) {
                 // fire error event if patch failed
@@ -43,10 +43,10 @@ Object.assign(CubemapHandler.prototype, {
             // nothing to do since asset:change would have been raised if
             // resources were changed.
         });
-    },
+    }
 
     // get the list of dependent asset ids for the cubemap
-    getAssetIds: function (cubemapAsset) {
+    getAssetIds(cubemapAsset) {
         var result = [];
 
         // prefiltered cubemap is stored at index 0
@@ -62,10 +62,10 @@ Object.assign(CubemapHandler.prototype, {
         }
 
         return result;
-    },
+    }
 
     // test whether two assets ids are the same
-    compareAssetIds: function (assetIdA, assetIdB) {
+    compareAssetIds(assetIdA, assetIdB) {
         if (assetIdA && assetIdB) {
             if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
                 return assetIdA === assetIdB;           // id or url
@@ -75,10 +75,10 @@ Object.assign(CubemapHandler.prototype, {
         }
         // else {
         return (assetIdA !== null) === (assetIdB !== null);
-    },
+    }
 
     // update the cubemap resources given a newly loaded set of assets with their corresponding ids
-    update: function (cubemapAsset, assetIds, assets) {
+    update(cubemapAsset, assetIds, assets) {
         var assetData = cubemapAsset.data || {};
         var oldAssets = cubemapAsset._handlerState.assets;
         var oldResources = cubemapAsset._resources;
@@ -199,9 +199,9 @@ Object.assign(CubemapHandler.prototype, {
                 oldAssets[i].unload();
             }
         }
-    },
+    }
 
-    cmpArrays: function (arr1, arr2) {
+    cmpArrays(arr1, arr2) {
         if (arr1.length !== arr2.length) {
             return false;
         }
@@ -211,15 +211,15 @@ Object.assign(CubemapHandler.prototype, {
             }
         }
         return true;
-    },
+    }
 
     // convert string id to int
-    resolveId: function (value) {
+    resolveId(value) {
         var valueInt = parseInt(value, 10);
         return ((valueInt === value) || (valueInt.toString() === value)) ? valueInt : value;
-    },
+    }
 
-    loadAssets: function (cubemapAsset, callback) {
+    loadAssets(cubemapAsset, callback) {
         // initialize asset structures for tracking load requests
         if (!cubemapAsset.hasOwnProperty('_handlerState')) {
             cubemapAsset._handlerState = {
@@ -336,6 +336,6 @@ Object.assign(CubemapHandler.prototype, {
             }
         }
     }
-});
+}
 
 export { CubemapHandler };

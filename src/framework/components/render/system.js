@@ -4,14 +4,15 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-var _schema = [
+const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'
 ];
 
 // order matters here
-var _properties = [
+const _properties = [
     'material',
+    'meshInstances',
     'asset',
     'materialAssets',
     'castShadows',
@@ -19,6 +20,7 @@ var _properties = [
     'castShadowsLightmap',
     'lightmapped',
     'lightmapSizeMultiplier',
+    'renderStyle',
     'type',
     'layers',
     'isStatic',
@@ -34,27 +36,22 @@ var _properties = [
  * @description Create a new RenderComponentSystem.
  * @param {pc.Application} app - The Application.
  */
-function RenderComponentSystem(app) {
-    ComponentSystem.call(this, app);
+class RenderComponentSystem extends ComponentSystem {
+    constructor(app) {
+        super(app);
 
-    this.id = 'render';
+        this.id = 'render';
 
-    this.ComponentType = RenderComponent;
-    this.DataType = RenderComponentData;
+        this.ComponentType = RenderComponent;
+        this.DataType = RenderComponentData;
 
-    this.schema = _schema;
-    this.defaultMaterial = app.scene.defaultMaterial;
+        this.schema = _schema;
+        this.defaultMaterial = app.scene.defaultMaterial;
 
-    this.on('beforeremove', this.onRemove, this);
-}
+        this.on('beforeremove', this.onRemove, this);
+    }
 
-RenderComponentSystem.prototype = Object.create(ComponentSystem.prototype);
-RenderComponentSystem.prototype.constructor = RenderComponentSystem;
-
-Component._buildAccessors(RenderComponent.prototype, _schema);
-
-Object.assign(RenderComponentSystem.prototype, {
-    initializeComponentData: function (component, _data, properties) {
+    initializeComponentData(component, _data, properties) {
         if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
             _data.batchGroupId = -1;
         }
@@ -70,16 +67,19 @@ Object.assign(RenderComponentSystem.prototype, {
             }
         }
 
-        ComponentSystem.prototype.initializeComponentData.call(this, component, _data, _schema);
-    },
+        super.initializeComponentData(component, _data, _schema);
+    }
 
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         var i;
         var data = {};
 
         for (i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+
+        // we cannot copy mesh instances, delete them and component recreates them properly
+        delete data.meshInstances;
 
         var component = this.addComponent(clone, data);
 
@@ -94,11 +94,13 @@ Object.assign(RenderComponentSystem.prototype, {
                 meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
             }
         }
-    },
+    }
 
-    onRemove: function (entity, component) {
+    onRemove(entity, component) {
         component.onRemove();
     }
-});
+}
+
+Component._buildAccessors(RenderComponent.prototype, _schema);
 
 export { RenderComponentSystem };

@@ -7,31 +7,31 @@ import { VersionedObject } from './versioned-object.js';
  * @param {string} name - The variable name.
  * @property {string} name The variable name.
  */
-function ScopeId(name) {
-    // Set the name
-    this.name = name;
+class ScopeId {
+    constructor(name) {
+        // Set the name
+        this.name = name;
 
-    // Set the default value
-    this.value = null;
+        // Set the default value
+        this.value = null;
 
-    // Create the version object
-    this.versionObject = new VersionedObject();
-}
+        // Create the version object
+        this.versionObject = new VersionedObject();
+    }
 
-Object.assign(ScopeId.prototype, {
     /**
      * @function
      * @name pc.ScopeId#setValue
      * @description Set variable value.
      * @param {*} value - The value.
      */
-    setValue: function (value) {
+    setValue(value) {
         // Set the new value
         this.value = value;
 
         // Increment the revision
         this.versionObject.increment();
-    },
+    }
 
     /**
      * @function
@@ -39,9 +39,9 @@ Object.assign(ScopeId.prototype, {
      * @description Get variable value.
      * @returns {*} The value.
      */
-    getValue: function () {
+    getValue() {
         return this.value;
     }
-});
+}
 
 export { ScopeId };

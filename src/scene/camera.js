@@ -1,5 +1,4 @@
-import { Color } from '../core/color.js';
-
+import { Color } from '../math/color.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
@@ -23,305 +22,277 @@ var _invViewProjMat = new Mat4();
  * @name pc.Camera
  * @classdesc A camera.
  */
-function Camera() {
-    this._aspectRatio = 16 / 9;
-    this._aspectRatioMode = ASPECT_AUTO;
-    this._calculateProjection = null;
-    this._calculateTransform = null;
-    this._clearColor = new Color(0.75, 0.75, 0.75, 1);
-    this._clearColorBuffer = true;
-    this._clearDepth = 1;
-    this._clearDepthBuffer = true;
-    this._clearStencil = 0;
-    this._clearStencilBuffer = true;
-    this._cullingMask = 0xFFFFFFFF;
-    this._cullFaces = true;
-    this._farClip = 1000;
-    this._flipFaces = false;
-    this._fov = 45;
-    this._frustumCulling = true;
-    this._horizontalFov = false;
-    this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
-    this._nearClip = 0.1;
-    this._node = null;
-    this._orthoHeight = 10;
-    this._projection = PROJECTION_PERSPECTIVE;
-    this._rect = new Vec4(0, 0, 1, 1);
-    this._renderTarget = null;
-    this._scissorRect = new Vec4(0, 0, 1, 1);
-    this._vrDisplay = null;
+class Camera {
+    constructor() {
+        this._aspectRatio = 16 / 9;
+        this._aspectRatioMode = ASPECT_AUTO;
+        this._calculateProjection = null;
+        this._calculateTransform = null;
+        this._clearColor = new Color(0.75, 0.75, 0.75, 1);
+        this._clearColorBuffer = true;
+        this._clearDepth = 1;
+        this._clearDepthBuffer = true;
+        this._clearStencil = 0;
+        this._clearStencilBuffer = true;
+        this._cullingMask = 0xFFFFFFFF;
+        this._cullFaces = true;
+        this._farClip = 1000;
+        this._flipFaces = false;
+        this._fov = 45;
+        this._frustumCulling = true;
+        this._horizontalFov = false;
+        this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
+        this._nearClip = 0.1;
+        this._node = null;
+        this._orthoHeight = 10;
+        this._projection = PROJECTION_PERSPECTIVE;
+        this._rect = new Vec4(0, 0, 1, 1);
+        this._renderTarget = null;
+        this._scissorRect = new Vec4(0, 0, 1, 1);
+        this._vrDisplay = null;
 
-    this._projMat = new Mat4();
-    this._projMatDirty = true;
-    this._projMatSkybox = new Mat4(); // projection matrix used by skybox rendering shader is always perspective
-    this._viewMat = new Mat4();
-    this._viewMatDirty = true;
-    this._viewProjMat = new Mat4();
-    this._viewProjMatDirty = true;
+        this._projMat = new Mat4();
+        this._projMatDirty = true;
+        this._projMatSkybox = new Mat4(); // projection matrix used by skybox rendering shader is always perspective
+        this._viewMat = new Mat4();
+        this._viewMatDirty = true;
+        this._viewProjMat = new Mat4();
+        this._viewProjMatDirty = true;
 
-    this.frustum = new Frustum();
-}
+        this.frustum = new Frustum();
+    }
 
-Object.defineProperty(Camera.prototype, 'aspectRatio', {
-    get: function () {
+    get aspectRatio() {
         return this._aspectRatio;
-    },
-    set: function (newValue) {
+    }
+
+    set aspectRatio(newValue) {
         if (this._aspectRatio !== newValue) {
             this._aspectRatio = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'aspectRatioMode', {
-    get: function () {
+    get aspectRatioMode() {
         return this._aspectRatioMode;
-    },
-    set: function (newValue) {
+    }
+
+    set aspectRatioMode(newValue) {
         if (this._aspectRatioMode !== newValue) {
             this._aspectRatioMode = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, "calculateProjection", {
-    get: function () {
+    get calculateProjection() {
         return this._calculateProjection;
-    },
-    set: function (newValue) {
+    }
+
+    set calculateProjection(newValue) {
         this._calculateProjection = newValue;
         this._projMatDirty = true;
     }
-});
 
-Object.defineProperty(Camera.prototype, "calculateTransform", {
-    get: function () {
+    get calculateTransform() {
         return this._calculateTransform;
-    },
-    set: function (newValue) {
+    }
+
+    set calculateTransform(newValue) {
         this._calculateTransform = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearColor', {
-    get: function () {
+    get clearColor() {
         return this._clearColor;
-    },
-    set: function (newValue) {
+    }
+
+    set clearColor(newValue) {
         this._clearColor.copy(newValue);
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearColorBuffer', {
-    get: function () {
+    get clearColorBuffer() {
         return this._clearColorBuffer;
-    },
-    set: function (newValue) {
+    }
+
+    set clearColorBuffer(newValue) {
         this._clearColorBuffer = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearDepth', {
-    get: function () {
+    get clearDepth() {
         return this._clearDepth;
-    },
-    set: function (newValue) {
+    }
+
+    set clearDepth(newValue) {
         this._clearDepth = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearDepthBuffer', {
-    get: function () {
+    get clearDepthBuffer() {
         return this._clearDepthBuffer;
-    },
-    set: function (newValue) {
+    }
+
+    set clearDepthBuffer(newValue) {
         this._clearDepthBuffer = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearStencil', {
-    get: function () {
+    get clearStencil() {
         return this._clearStencil;
-    },
-    set: function (newValue) {
+    }
+
+    set clearStencil(newValue) {
         this._clearStencil = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'clearStencilBuffer', {
-    get: function () {
+    get clearStencilBuffer() {
         return this._clearStencilBuffer;
-    },
-    set: function (newValue) {
+    }
+
+    set clearStencilBuffer(newValue) {
         this._clearStencilBuffer = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'cullingMask', {
-    get: function () {
+    get cullingMask() {
         return this._cullingMask;
-    },
-    set: function (newValue) {
+    }
+
+    set cullingMask(newValue) {
         this._cullingMask = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'cullFaces', {
-    get: function () {
+    get cullFaces() {
         return this._cullFaces;
-    },
-    set: function (newValue) {
+    }
+
+    set cullFaces(newValue) {
         this._cullFaces = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'farClip', {
-    get: function () {
+    get farClip() {
         return this._farClip;
-    },
-    set: function (newValue) {
+    }
+
+    set farClip(newValue) {
         if (this._farClip !== newValue) {
             this._farClip = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'flipFaces', {
-    get: function () {
+    get flipFaces() {
         return this._flipFaces;
-    },
-    set: function (newValue) {
+    }
+
+    set flipFaces(newValue) {
         this._flipFaces = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'fov', {
-    get: function () {
+    get fov() {
         return this._fov;
-    },
-    set: function (newValue) {
+    }
+
+    set fov(newValue) {
         if (this._fov !== newValue) {
             this._fov = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'frustumCulling', {
-    get: function () {
+    get frustumCulling() {
         return this._frustumCulling;
-    },
-    set: function (newValue) {
+    }
+
+    set frustumCulling(newValue) {
         this._frustumCulling = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'horizontalFov', {
-    get: function () {
+    get horizontalFov() {
         return this._horizontalFov;
-    },
-    set: function (newValue) {
+    }
+
+    set horizontalFov(newValue) {
         if (this._horizontalFov !== newValue) {
             this._horizontalFov = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'layers', {
-    get: function () {
+    get layers() {
         return this._layers;
-    },
-    set: function (newValue) {
+    }
+
+    set layers(newValue) {
         this._layers = newValue.slice(0);
     }
-});
 
-
-Object.defineProperty(Camera.prototype, 'nearClip', {
-    get: function () {
+    get nearClip() {
         return this._nearClip;
-    },
-    set: function (newValue) {
+    }
+
+    set nearClip(newValue) {
         if (this._nearClip !== newValue) {
             this._nearClip = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'node', {
-    get: function () {
+    get node() {
         return this._node;
-    },
-    set: function (newValue) {
+    }
+
+    set node(newValue) {
         this._node = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'orthoHeight', {
-    get: function () {
+    get orthoHeight() {
         return this._orthoHeight;
-    },
-    set: function (newValue) {
+    }
+
+    set orthoHeight(newValue) {
         if (this._orthoHeight !== newValue) {
             this._orthoHeight = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'projection', {
-    get: function () {
+    get projection() {
         return this._projection;
-    },
-    set: function (newValue) {
+    }
+
+    set projection(newValue) {
         if (this._projection !== newValue) {
             this._projection = newValue;
             this._projMatDirty = true;
         }
     }
-});
 
-Object.defineProperty(Camera.prototype, 'projectionMatrix', {
-    get: function () {
+    get projectionMatrix() {
         this._evaluateProjectionMatrix();
         return this._projMat;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'rect', {
-    get: function () {
+    get rect() {
         return this._rect;
-    },
-    set: function (newValue) {
+    }
+
+    set rect(newValue) {
         this._rect.copy(newValue);
     }
-});
 
-Object.defineProperty(Camera.prototype, 'renderTarget', {
-    get: function () {
+    get renderTarget() {
         return this._renderTarget;
-    },
-    set: function (newValue) {
+    }
+
+    set renderTarget(newValue) {
         this._renderTarget = newValue;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'scissorRect', {
-    get: function () {
+    get scissorRect() {
         return this._scissorRect;
-    },
-    set: function (newValue) {
+    }
+
+    set scissorRect(newValue) {
         this._scissorRect.copy(newValue);
     }
-});
 
-Object.defineProperty(Camera.prototype, 'viewMatrix', {
-    get: function () {
+    get viewMatrix() {
         if (this._viewMatDirty) {
             var wtm = this._node.getWorldTransform();
             this._viewMat.copy(wtm).invert();
@@ -329,21 +300,18 @@ Object.defineProperty(Camera.prototype, 'viewMatrix', {
         }
         return this._viewMat;
     }
-});
 
-Object.defineProperty(Camera.prototype, 'vrDisplay', {
-    get: function () {
+    get vrDisplay() {
         return this._vrDisplay;
-    },
-    set: function (newValue) {
+    }
+
+    set vrDisplay(newValue) {
         this._vrDisplay = newValue;
         if (newValue) {
             newValue._camera = this;
         }
     }
-});
 
-Object.assign(Camera.prototype, {
     /**
      * @private
      * @function
@@ -351,11 +319,11 @@ Object.assign(Camera.prototype, {
      * @description Creates a duplicate of the camera.
      * @returns {pc.Camera} A cloned Camera.
      */
-    clone: function () {
+    clone() {
         return new this.constructor().copy(this);
-    },
+    }
 
-    copy: function (other) {
+    copy(other) {
         this.aspectRatio = other.aspectRatio;
         this.aspectRatioMode = other.aspectRatioMode;
         this.calculateProjection = other.calculateProjection;
@@ -381,16 +349,16 @@ Object.assign(Camera.prototype, {
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
         this.vrDisplay = other.vrDisplay;
-    },
+    }
 
-    _updateViewProjMat: function () {
+    _updateViewProjMat() {
         if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
             var projMat = this.projectionMatrix;
             var viewMat = this.viewMatrix;
             this._viewProjMat.mul2(projMat, viewMat);
             this._viewProjMatDirty = false;
         }
-    },
+    }
 
     /**
      * @private
@@ -403,11 +371,7 @@ Object.assign(Camera.prototype, {
      * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {pc.Vec3} The screen space coordinate.
      */
-    worldToScreen: function (worldCoord, cw, ch, screenCoord) {
-        if (screenCoord === undefined) {
-            screenCoord = new Vec3();
-        }
-
+    worldToScreen(worldCoord, cw, ch, screenCoord = new Vec3()) {
         this._updateViewProjMat();
         this._viewProjMat.transformPoint(worldCoord, screenCoord);
 
@@ -422,7 +386,7 @@ Object.assign(Camera.prototype, {
         screenCoord.y = (1 - screenCoord.y / w) * 0.5 * ch;
 
         return screenCoord;
-    },
+    }
 
     /**
      * @private
@@ -437,10 +401,7 @@ Object.assign(Camera.prototype, {
      * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @returns {pc.Vec3} The world space coordinate.
      */
-    screenToWorld: function (x, y, z, cw, ch, worldCoord) {
-        if (worldCoord === undefined) {
-            worldCoord = new Vec3();
-        }
+    screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
         var range = this._farClip - this._nearClip;
@@ -479,9 +440,9 @@ Object.assign(Camera.prototype, {
         }
 
         return worldCoord;
-    },
+    }
 
-    _evaluateProjectionMatrix: function () {
+    _evaluateProjectionMatrix() {
         if (this._projMatDirty) {
             if (this._projection === PROJECTION_PERSPECTIVE) {
                 this._projMat.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip, this._horizontalFov);
@@ -495,12 +456,12 @@ Object.assign(Camera.prototype, {
 
             this._projMatDirty = false;
         }
-    },
+    }
 
-    getProjectionMatrixSkybox: function () {
+    getProjectionMatrixSkybox() {
         this._evaluateProjectionMatrix();
         return this._projMatSkybox;
     }
-});
+}
 
 export { Camera };

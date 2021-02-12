@@ -18,27 +18,24 @@ import { SkinInstance } from '../scene/skin-instance.js';
  * @property {pc.Asset[]} textures - Array of assets of textures in the GLB container.
  * @property {pc.Asset[]} materials - Array of assets of materials in the GLB container.
  */
-function ContainerResource(data) {
-    this.data = data;
-    this.model = null;
-    this.renders = [];
-    this.materials = [];
-    this.textures = [];
-    this.animations = [];
-    this.registry = null;
-}
+class ContainerResource {
+    constructor(data) {
+        this.data = data;
+        this.model = null;
+        this.renders = [];
+        this.materials = [];
+        this.textures = [];
+        this.animations = [];
+        this.registry = null;
+    }
 
-Object.assign(ContainerResource.prototype, {
-
-    instantiateModelEntity: function (options) {
-
-        var entity = new pc.Entity();
+    instantiateModelEntity(options) {
+        var entity = new Entity();
         entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
         return entity;
-    },
+    }
 
-    instantiateRenderEntity: function (options) {
-
+    instantiateRenderEntity(options) {
         // helper function to recursively clone a hierarchy while converting ModelComponent to RenderComponents
         var cloneToEntity = function (skinInstances, model, node) {
 
@@ -53,7 +50,7 @@ Object.assign(ContainerResource.prototype, {
                     if (mi.node === node) {
 
                         // clone mesh instance
-                        var cloneMi = new MeshInstance(entity, mi.mesh, mi.material);
+                        var cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
 
                         // clone morph instance
                         if (mi.morphInstance) {
@@ -120,10 +117,9 @@ Object.assign(ContainerResource.prototype, {
         }
 
         return entity;
-    },
+    }
 
-    destroy: function () {
-
+    destroy() {
         var registry = this.registry;
 
         var destroyAsset = function (asset) {
@@ -161,7 +157,7 @@ Object.assign(ContainerResource.prototype, {
         this.data = null;
         this.assets = null;
     }
-});
+}
 
 /**
  * @class
@@ -190,25 +186,25 @@ Object.assign(ContainerResource.prototype, {
  * ```javascript
  * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
- *         preprocess: function (gltfTexture) { console.log("texture preprocess"); }
+ *         preprocess(gltfTexture) { console.log("texture preprocess"); }
  *     },
  * });
  * ```
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
  * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
-function ContainerHandler(device, defaultMaterial) {
-    this._device = device;
-    this._defaultMaterial = defaultMaterial;
-    this.maxRetries = 0;
-}
+class ContainerHandler {
+    constructor(device, defaultMaterial) {
+        this._device = device;
+        this._defaultMaterial = defaultMaterial;
+        this.maxRetries = 0;
+    }
 
-Object.assign(ContainerHandler.prototype, {
-    _getUrlWithoutParams: function (url) {
+    _getUrlWithoutParams(url) {
         return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    },
+    }
 
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -258,14 +254,14 @@ Object.assign(ContainerHandler.prototype, {
                 }
             });
         }
-    },
+    }
 
-    open: function (url, data, asset) {
+    open(url, data, asset) {
         return data;
-    },
+    }
 
     // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         var container = asset.resource;
         var data = container && container.data;
 
@@ -312,6 +308,6 @@ Object.assign(ContainerHandler.prototype, {
             container.registry = assets;
         }
     }
-});
+}
 
 export { ContainerHandler, ContainerResource };

@@ -38,6 +38,7 @@ import dilatePS from './dilate.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
+import endVS from './end.vert';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
 import extensionPS from './extension.frag';
@@ -68,6 +69,7 @@ import lightmapSingleVertPS from './lightmapSingleVert.frag';
 import lightSpecularAnisoGGXPS from './lightSpecularAnisoGGX.frag';
 import lightSpecularBlinnPS from './lightSpecularBlinn.frag';
 import lightSpecularPhongPS from './lightSpecularPhong.frag';
+import ltc from './ltc.frag';
 import metalnessPS from './metalness.frag';
 import msdfPS from './msdf.frag';
 import normalVS from './normal.vert';
@@ -241,6 +243,7 @@ var shaderChunks = {
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
+    endVS: endVS,
     envConstPS: envConstPS,
     envMultiplyPS: envMultiplyPS,
     extensionPS: extensionPS,
@@ -271,6 +274,7 @@ var shaderChunks = {
     lightSpecularAnisoGGXPS: lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS: lightSpecularBlinnPS,
     lightSpecularPhongPS: lightSpecularPhongPS,
+    ltc: ltc,
     metalnessPS: metalnessPS,
     msdfPS: msdfPS,
     normalVS: normalVS,

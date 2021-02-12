@@ -5,7 +5,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { http, Http } from '../net/http.js';
 
-import { Animation, Key, Node } from '../anim/animation.js';
+import { Animation, Key, Node } from '../animation/animation.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
@@ -15,12 +15,12 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.Animation} resources.
  */
-function AnimationHandler() {
-    this.maxRetries = 0;
-}
+class AnimationHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(AnimationHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -34,7 +34,7 @@ Object.assign(AnimationHandler.prototype, {
             maxRetries: this.maxRetries
         };
 
-        if (url.load.startsWith('blob:')) {
+        if (url.load.startsWith('blob:') || url.load.startsWith('data:')) {
             if (path.getExtension(url.original).toLowerCase() === '.glb') {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             } else {
@@ -49,9 +49,9 @@ Object.assign(AnimationHandler.prototype, {
                 callback(null, response);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
             var glb = GlbParser.parse("filename.glb", data, null);
             if (!glb) {
@@ -60,13 +60,13 @@ Object.assign(AnimationHandler.prototype, {
             return glb.animations;
         }
         return this["_parseAnimationV" + data.animation.version](data);
-    },
+    }
 
-    _parseAnimationV3: function (data) {
+    _parseAnimationV3(data) {
         var animData = data.animation;
 
         var anim = new Animation();
-        anim.setName(animData.name);
+        anim.name = animData.name;
         anim.duration = animData.duration;
 
         for (var i = 0; i < animData.nodes.length; i++) {
@@ -95,13 +95,13 @@ Object.assign(AnimationHandler.prototype, {
         }
 
         return anim;
-    },
+    }
 
-    _parseAnimationV4: function (data) {
+    _parseAnimationV4(data) {
         var animData = data.animation;
 
         var anim = new Animation();
-        anim.setName(animData.name);
+        anim.name = animData.name;
         anim.duration = animData.duration;
 
         for (var i = 0; i < animData.nodes.length; i++) {
@@ -135,6 +135,6 @@ Object.assign(AnimationHandler.prototype, {
 
         return anim;
     }
-});
+}
 
 export { AnimationHandler };

@@ -1,23 +1,22 @@
 import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 import { math } from './math.js';
 
-function CurveEvaluator(curve, time) {
-    this._curve = curve;
-    this._left = -Infinity;
-    this._right = Infinity;
-    this._recip = 0;
-    this._p0 = 0;
-    this._p1 = 0;
-    this._m0 = 0;
-    this._m1 = 0;
-    this._reset(time || 0);
-}
-
-Object.assign(CurveEvaluator.prototype, {
+class CurveEvaluator {
+    constructor(curve, time) {
+        this._curve = curve;
+        this._left = -Infinity;
+        this._right = Infinity;
+        this._recip = 0;
+        this._p0 = 0;
+        this._p1 = 0;
+        this._m0 = 0;
+        this._m1 = 0;
+        this._reset(time || 0);
+    }
 
     // Evaluate the curve at the given time. Specify forceReset if the
     // underlying curve keys have changed since the last evaluation.
-    evaluate: function (time, forceReset) {
+    evaluate(time, forceReset) {
         if (forceReset || time < this._left || time >= this._right) {
             this._reset(time);
         }
@@ -44,10 +43,10 @@ Object.assign(CurveEvaluator.prototype, {
             }
         }
         return result;
-    },
+    }
 
     // Calculate weights for the curve interval at the given time
-    _reset: function (time) {
+    _reset(time) {
         var keys = this._curve.keys;
         var len = keys.length;
 
@@ -93,17 +92,17 @@ Object.assign(CurveEvaluator.prototype, {
                 }
             }
         }
-    },
+    }
 
     // returns true if the curve is a hermite and false otherwise
-    _isHermite: function () {
+    _isHermite() {
         return this._curve.type === CURVE_CATMULL ||
                this._curve.type === CURVE_CARDINAL ||
                this._curve.type === CURVE_SPLINE;
-    },
+    }
 
     // calculate tangents for the hermite curve
-    _calcTangents: function (keys, index) {
+    _calcTangents(keys, index) {
         var a;
         var b = keys[index];
         var c = keys[index + 1];
@@ -143,9 +142,9 @@ Object.assign(CurveEvaluator.prototype, {
             this._m0 = tension * (c[1] - a_);
             this._m1 = tension * (d_ - b[1]);
         }
-    },
+    }
 
-    _evaluateHermite: function (p0, p1, m0, m1, t) {
+    _evaluateHermite(p0, p1, m0, m1, t) {
         var t2 = t * t;
         var twot = t + t;
         var omt = 1 - t;
@@ -155,6 +154,6 @@ Object.assign(CurveEvaluator.prototype, {
                p1 * (t2 * (3 - twot)) +
                m1 * (t2 * (t - 1));
     }
-});
+}
 
 export { CurveEvaluator };

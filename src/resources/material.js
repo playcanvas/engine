@@ -1,6 +1,6 @@
 import { http } from '../net/http.js';
 
-import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/graphics.js';
+import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 import { SPECULAR_PHONG } from '../scene/constants.js';
@@ -31,18 +31,18 @@ var PLACEHOLDER_MAP = {
  * @classdesc Resource handler used for loading {@link pc.Material} resources.
  * @param {pc.Application} app - The running {@link pc.Application}.
  */
-function MaterialHandler(app) {
-    this._assets = app.assets;
-    this._device = app.graphicsDevice;
+class MaterialHandler {
+    constructor(app) {
+        this._assets = app.assets;
+        this._device = app.graphicsDevice;
 
-    this._placeholderTextures = null;
+        this._placeholderTextures = null;
 
-    this._parser = new JsonStandardMaterialParser();
-    this.maxRetries = 0;
-}
+        this._parser = new JsonStandardMaterialParser();
+        this.maxRetries = 0;
+    }
 
-Object.assign(MaterialHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -66,9 +66,9 @@ Object.assign(MaterialHandler.prototype, {
                 }
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         var material = this._parser.parse(data);
 
         // temp storage for engine-only as we need this during patching
@@ -78,11 +78,11 @@ Object.assign(MaterialHandler.prototype, {
         }
 
         return material;
-    },
+    }
 
     // creates placeholders for textures
     // that are used while texture is loading
-    _createPlaceholders: function () {
+    _createPlaceholders() {
         this._placeholderTextures = {};
 
         var textures = {
@@ -113,9 +113,9 @@ Object.assign(MaterialHandler.prototype, {
             }
             this._placeholderTextures[key].unlock();
         }
-    },
+    }
 
-    patch: function (asset, assets) {
+    patch(asset, assets) {
         // in an engine-only environment we manually copy the source data into the asset
         if (asset.resource._data) {
             asset._data = asset.resource._data; // use _data to avoid firing events
@@ -130,24 +130,24 @@ Object.assign(MaterialHandler.prototype, {
 
         asset.off('unload', this._onAssetUnload, this);
         asset.on('unload', this._onAssetUnload, this);
-    },
+    }
 
-    _onAssetUnload: function (asset) {
+    _onAssetUnload(asset) {
         // remove the parameter block we created which includes texture references
         delete asset.data.parameters;
         delete asset.data.chunks;
         delete asset.data.name;
-    },
+    }
 
-    _assignTexture: function (parameterName, materialAsset, texture) {
+    _assignTexture(parameterName, materialAsset, texture) {
         materialAsset.data[parameterName] = texture;
         materialAsset.resource[parameterName] = texture;
-    },
+    }
 
     // assign a placeholder texture while waiting for one to load
     // placeholder textures do not replace the data[parameterName] value
     // in the asset.data thus preserving the final asset id until it is loaded
-    _assignPlaceholderTexture: function (parameterName, materialAsset) {
+    _assignPlaceholderTexture(parameterName, materialAsset) {
         // create placeholder textures on-demand
         if (!this._placeholderTextures) {
             this._createPlaceholders();
@@ -157,18 +157,18 @@ Object.assign(MaterialHandler.prototype, {
         var texture = this._placeholderTextures[placeholder];
 
         materialAsset.resource[parameterName] = texture;
-    },
+    }
 
-    _onTextureLoad: function (parameterName, materialAsset, textureAsset) {
+    _onTextureLoad(parameterName, materialAsset, textureAsset) {
         this._assignTexture(parameterName, materialAsset, textureAsset.resource);
         materialAsset.resource.update();
-    },
+    }
 
-    _onTextureAdd: function (parameterName, materialAsset, textureAsset) {
+    _onTextureAdd(parameterName, materialAsset, textureAsset) {
         this._assets.load(textureAsset);
-    },
+    }
 
-    _onTextureRemove: function (parameterName, materialAsset, textureAsset) {
+    _onTextureRemove(parameterName, materialAsset, textureAsset) {
         var material = materialAsset.resource;
         if (material) {
             if (material[parameterName] === textureAsset.resource) {
@@ -176,9 +176,9 @@ Object.assign(MaterialHandler.prototype, {
                 material.update();
             }
         }
-    },
+    }
 
-    _assignCubemap: function (parameterName, materialAsset, textures) {
+    _assignCubemap(parameterName, materialAsset, textures) {
         materialAsset.data[parameterName] = textures[0]; // the primary cubemap texture
         if (textures.length === 7) {
             // the prefiltered textures
@@ -189,32 +189,32 @@ Object.assign(MaterialHandler.prototype, {
             materialAsset.data.prefilteredCubeMap8 = textures[5];
             materialAsset.data.prefilteredCubeMap4 = textures[6];
         }
-    },
+    }
 
-    _onCubemapLoad: function (parameterName, materialAsset, cubemapAsset) {
+    _onCubemapLoad(parameterName, materialAsset, cubemapAsset) {
         this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources);
         this._parser.initialize(materialAsset.resource, materialAsset.data);
-    },
+    }
 
-    _onCubemapAdd: function (parameterName, materialAsset, cubemapAsset) {
+    _onCubemapAdd(parameterName, materialAsset, cubemapAsset) {
         // phong based - so ensure we load individual faces
         if (materialAsset.data.shadingModel === SPECULAR_PHONG) {
             materialAsset.loadFaces = true;
         }
 
         this._assets.load(cubemapAsset);
-    },
+    }
 
-    _onCubemapRemove: function (parameterName, materialAsset, cubemapAsset) {
+    _onCubemapRemove(parameterName, materialAsset, cubemapAsset) {
         var material = materialAsset.resource;
 
         if (material[parameterName] === cubemapAsset.resource) {
             this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
             material.update();
         }
-    },
+    }
 
-    _bindAndAssignAssets: function (materialAsset, assets) {
+    _bindAndAssignAssets(materialAsset, assets) {
         // always migrate before updating material from asset data
         var data = this._parser.migrate(materialAsset.data);
 
@@ -317,6 +317,6 @@ Object.assign(MaterialHandler.prototype, {
         // call to re-initialize material after all textures assigned
         this._parser.initialize(material, data);
     }
-});
+}
 
 export { MaterialHandler };

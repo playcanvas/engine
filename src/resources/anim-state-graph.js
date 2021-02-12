@@ -1,6 +1,5 @@
 import { http, Http } from '../net/http.js';
-
-import { AnimStateGraph } from '../framework/components/anim/state-graph.js';
+import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
 /**
  * @private
@@ -9,12 +8,12 @@ import { AnimStateGraph } from '../framework/components/anim/state-graph.js';
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.AnimStateGraph} resources.
  */
-function AnimStateGraphHandler() {
-    this.maxRetries = 0;
-}
+class AnimStateGraphHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(AnimStateGraphHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -39,11 +38,11 @@ Object.assign(AnimStateGraphHandler.prototype, {
                 callback(null, response);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         return new AnimStateGraph(data);
     }
-});
+}
 
 export { AnimStateGraphHandler };

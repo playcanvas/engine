@@ -1,6 +1,7 @@
+import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
 import { createFilter } from '@rollup/pluginutils';
-import cleanup from 'rollup-plugin-cleanup';
+import { terser } from "rollup-plugin-terser";
 import { version } from './package.json';
 import Preprocessor from 'preprocessor';
 
@@ -26,7 +27,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/    /g, '\t'), // eslint-disable-line no-regex-spaces
+                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
                 map: { mappings: '' }
             };
         }
@@ -87,7 +88,60 @@ function shaderChunks(removeComments) {
     };
 }
 
-export default [{
+const es5Options = {
+    babelHelpers: 'bundled',
+    babelrc: false,
+    comments: false,
+    compact: false,
+    minified: false,
+    presets: [
+        [
+            '@babel/preset-env', {
+                loose: true,
+                modules: false,
+                targets: {
+                    ie: "11"
+                }
+            }
+        ]
+    ],
+    plugins: [
+        [
+            '@babel/plugin-proposal-class-properties', {
+                loose: true
+            }
+        ]
+    ]
+};
+
+const moduleOptions = {
+    babelHelpers: 'bundled',
+    babelrc: false,
+    comments: false,
+    compact: false,
+    minified: false,
+    presets: [
+        [
+            '@babel/preset-env', {
+                bugfixes: true,
+                loose: true,
+                modules: false,
+                targets: {
+                    esmodules: true
+                }
+            }
+        ]
+    ],
+    plugins: [
+        [
+            '@babel/plugin-proposal-class-properties', {
+                loose: true
+            }
+        ]
+    ]
+};
+
+const target_release_es5 = {
     input: 'src/index.js',
     output: {
         banner: getBanner(''),
@@ -107,12 +161,62 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_release_es5min = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.min.js',
+        format: 'umd',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(es5Options),
+        terser()
+    ]
+};
+
+const target_release_es6 = {
+    input: 'src/index.js',
+    output: {
+        banner: getBanner(''),
+        file: 'build/playcanvas.mjs',
+        format: 'es',
+        indent: '\t',
+        name: 'pc'
+    },
+    plugins: [
+        preprocessor({
+            PROFILER: false,
+            DEBUG: false,
+            RELEASE: true
+        }),
+        shaderChunks(true),
+        replace({
+            __REVISION__: revision,
+            __CURRENT_SDK_VERSION__: version
+        }),
+        babel(moduleOptions),
+        spacesToTabs()
+    ]
+};
+
+const target_debug = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (DEBUG PROFILER)'),
@@ -132,12 +236,12 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_profiler = {
     input: 'src/index.js',
     output: {
         banner: getBanner(' (PROFILER)'),
@@ -157,12 +261,12 @@ export default [{
             __REVISION__: revision,
             __CURRENT_SDK_VERSION__: version
         }),
-        cleanup({
-            comments: 'some'
-        }),
+        babel(es5Options),
         spacesToTabs()
     ]
-}, {
+};
+
+const target_extras = {
     input: 'extras/index.js',
     output: {
         banner: getBanner(''),
@@ -172,9 +276,29 @@ export default [{
         name: 'pcx'
     },
     plugins: [
-        cleanup({
-            comments: 'some'
-        }),
+        babel(es5Options),
         spacesToTabs()
     ]
-}];
+};
+
+let targets = [
+    target_release_es5,
+    target_release_es5min,
+    target_release_es6,
+    target_debug,
+    target_profiler,
+    target_extras
+];
+
+// Build all targets by default, unless a specific target is chosen
+if (process.env.target) {
+    switch (process.env.target.toLowerCase()) {
+        case "es5":      targets = [target_release_es5,    target_extras]; break;
+        case "es5min":   targets = [target_release_es5min, target_extras]; break;
+        case "es6":      targets = [target_release_es6,    target_extras]; break;
+        case "debug":    targets = [target_debug,          target_extras]; break;
+        case "profiler": targets = [target_profiler,       target_extras]; break;
+    }
+}
+
+export default targets;

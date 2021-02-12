@@ -4,7 +4,7 @@
  * @name pc.SPRITETYPE_SIMPLE
  * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
  */
-export var SPRITETYPE_SIMPLE = 'simple';
+export const SPRITETYPE_SIMPLE = 'simple';
 
 /**
  * @constant
@@ -12,4 +12,4 @@ export var SPRITETYPE_SIMPLE = 'simple';
  * @name pc.SPRITETYPE_ANIMATED
  * @description A {@link pc.SpriteComponent} that renders sprite animations.
  */
-export var SPRITETYPE_ANIMATED = 'animated';
+export const SPRITETYPE_ANIMATED = 'animated';

@@ -1,7 +1,7 @@
 import { events } from '../../core/events.js';
-import { Color } from '../../core/color.js';
 import { EventHandler } from '../../core/event-handler.js';
 
+import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
@@ -13,65 +13,69 @@ import { Vec4 } from '../../math/vec4.js';
  * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
  * @param {pc.Application} app - The application managing this system.
  */
-function ComponentSystem(app) {
-    EventHandler.call(this);
+class ComponentSystem extends EventHandler {
+    constructor(app) {
+        super();
 
-    this.app = app;
+        this.app = app;
 
-    // The store where all pc.ComponentData objects are kept
-    this.store = {};
-    this.schema = [];
-}
-ComponentSystem.prototype = Object.create(EventHandler.prototype);
-ComponentSystem.prototype.constructor = ComponentSystem;
+        // The store where all pc.ComponentData objects are kept
+        this.store = {};
+        this.schema = [];
+    }
 
-// Class methods
-Object.assign(ComponentSystem, {
-    _helper: function (a, p) {
+    // Static class methods
+    static _helper(a, p) {
         for (var i = 0, l = a.length; i < l; i++) {
             a[i].f.call(a[i].s, p);
         }
-    },
+    }
 
-    initialize: function (root) {
+    static initialize(root) {
         this._helper(this._init, root);
-    },
+    }
 
-    postInitialize: function (root) {
+    static postInitialize(root) {
         this._helper(this._postInit, root);
 
         // temp, this is for internal use on entity-references until a better system is found
         this.fire('postinitialize', root);
-    },
+    }
 
     // Update all ComponentSystems
-    update: function (dt, inTools) {
+    static update(dt, inTools) {
         this._helper(inTools ? this._toolsUpdate : this._update, dt);
-    },
+    }
 
-    animationUpdate: function (dt, inTools) {
+    static animationUpdate(dt, inTools) {
         this._helper(this._animationUpdate, dt);
-    },
+    }
 
     // Update all ComponentSystems
-    fixedUpdate: function (dt, inTools) {
+    static fixedUpdate(dt, inTools) {
         this._helper(this._fixedUpdate, dt);
-    },
+    }
 
     // Update all ComponentSystems
-    postUpdate: function (dt, inTools) {
+    static postUpdate(dt, inTools) {
         this._helper(this._postUpdate, dt);
-    },
+    }
 
-    _init: [],
-    _postInit: [],
-    _toolsUpdate: [],
-    _update: [],
-    _animationUpdate: [],
-    _fixedUpdate: [],
-    _postUpdate: [],
+    static _init = [];
 
-    bind: function (event, func, scope) {
+    static _postInit = [];
+
+    static _toolsUpdate = [];
+
+    static _update = [];
+
+    static _animationUpdate = [];
+
+    static _fixedUpdate =[];
+
+    static _postUpdate = [];
+
+    static bind(event, func, scope) {
         switch (event) {
             case 'initialize':
                 this._init.push({ f: func, s: scope });
@@ -97,17 +101,17 @@ Object.assign(ComponentSystem, {
             default:
                 console.error('Component System does not support event', event);
         }
-    },
+    }
 
-    _erase: function (a, f, s) {
+    static _erase(a, f, s) {
         for (var i = 0; i < a.length; i++) {
             if (a[i].f === f && a[i].s === s) {
                 a.splice(i--, 1);
             }
         }
-    },
+    }
 
-    unbind: function (event, func, scope) {
+    static unbind(event, func, scope) {
         switch (event) {
             case 'initialize':
                 this._erase(this._init, func, scope);
@@ -134,10 +138,8 @@ Object.assign(ComponentSystem, {
                 console.error('Component System does not support event', event);
         }
     }
-});
 
-// Instance methods
-Object.assign(ComponentSystem.prototype, {
+    // Instance methods
     /**
      * @private
      * @function
@@ -151,7 +153,7 @@ Object.assign(ComponentSystem.prototype, {
      * app.systems.model.addComponent(entity, { type: 'box' });
      * // entity.model is now set to a pc.ModelComponent
      */
-    addComponent: function (entity, data) {
+    addComponent(entity, data) {
         var component = new this.ComponentType(this, entity);
         var componentData = new this.DataType();
 
@@ -170,7 +172,7 @@ Object.assign(ComponentSystem.prototype, {
         this.fire('add', entity, component);
 
         return component;
-    },
+    }
 
     /**
      * @private
@@ -182,7 +184,7 @@ Object.assign(ComponentSystem.prototype, {
      * app.systems.model.removeComponent(entity);
      * // entity.model === undefined
      */
-    removeComponent: function (entity) {
+    removeComponent(entity) {
         var record = this.store[entity.getGuid()];
         var component = entity.c[this.id];
         this.fire('beforeremove', entity, component);
@@ -190,7 +192,7 @@ Object.assign(ComponentSystem.prototype, {
         delete entity[this.id];
         delete entity.c[this.id];
         this.fire('remove', entity, record.data);
-    },
+    }
 
     /**
      * @private
@@ -201,11 +203,11 @@ Object.assign(ComponentSystem.prototype, {
      * @param {pc.Entity} clone - The entity to clone the component into.
      * @returns {pc.Component} The newly cloned component.
      */
-    cloneComponent: function (entity, clone) {
+    cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
         var src = this.store[entity.getGuid()];
         return this.addComponent(clone, src.data);
-    },
+    }
 
     /**
      * @private
@@ -217,9 +219,7 @@ Object.assign(ComponentSystem.prototype, {
      * @param {object} data - The data block used to initialize the component.
      * @param {string[]|object[]} properties - The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
      */
-    initializeComponentData: function (component, data, properties) {
-        data = data || {};
-
+    initializeComponentData(component, data = {}, properties) {
         var descriptor;
         var name, type, value;
 
@@ -256,7 +256,7 @@ Object.assign(ComponentSystem.prototype, {
         if (component.enabled && component.entity.enabled) {
             component.onEnable();
         }
-    },
+    }
 
     /**
      * @private
@@ -266,7 +266,7 @@ Object.assign(ComponentSystem.prototype, {
      * @param {string} type - The type to search for.
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.
      */
-    getPropertiesOfType: function (type) {
+    getPropertiesOfType(type) {
         var matchingProperties = [];
         var schema = this.schema || [];
 
@@ -277,12 +277,12 @@ Object.assign(ComponentSystem.prototype, {
         });
 
         return matchingProperties;
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         this.off();
     }
-});
+}
 
 function convertValue(value, type) {
     if (!value) {

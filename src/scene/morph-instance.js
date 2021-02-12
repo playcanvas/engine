@@ -1,4 +1,4 @@
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/graphics.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
@@ -20,97 +20,105 @@ var textureMorphVertexShader =
  * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, manages selection of active morph targets.
  * @param {pc.Morph} morph - The pc.Morph to instance.
  */
-function MorphInstance(morph) {
-    this.morph = morph;
-    this.device = morph.device;
-    this.meshInstance = null;
+class MorphInstance {
+    constructor(morph) {
+        this.morph = morph;
+        morph.incRefCount();
+        this.device = morph.device;
+        this.meshInstance = null;
 
-    // weights
-    this._weights = [];
-    for (var v = 0; v < morph._targets.length; v++) {
-        this.setWeight(v, morph._targets[v].defaultWeight);
+        // weights
+        this._weights = [];
+        for (var v = 0; v < morph._targets.length; v++) {
+            this.setWeight(v, morph._targets[v].defaultWeight);
+        }
+
+        // temporary array of targets with non-zero weight
+        this._activeTargets = [];
+
+        if (morph.useTextureMorph) {
+
+            // shader cache
+            this.shaderCache = {};
+
+            // max number of morph targets rendered at a time (each uses single texture slot)
+            this.maxSubmitCount = this.device.maxTextures;
+
+            // array for max number of weights
+            this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
+
+            // create render targets to morph targets into
+            var createRT = function (name, textureVar) {
+
+                // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
+                var format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+                this[textureVar] = morph._createTexture(name, format);
+                return new RenderTarget({
+                    colorBuffer: this[textureVar],
+                    depth: false
+                });
+            }.bind(this);
+
+            if (morph.morphPositions) {
+                this.rtPositions = createRT("MorphRTPos", "texturePositions");
+            }
+
+            if (morph.morphNormals) {
+                this.rtNormals = createRT("MorphRTNrm", "textureNormals");
+            }
+
+            // texture params
+            this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight,
+                1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
+
+            // resolve possible texture names
+            for (var i = 0; i < this.maxSubmitCount; i++) {
+                this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
+            }
+
+            this.morphFactor = this.device.scope.resolve("morphFactor[0]");
+
+            // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
+            this.zeroTextures = false;
+
+        } else {    // vertex attribute based morphing
+
+            // max number of morph targets rendered at a time
+            this.maxSubmitCount = 8;
+
+            // weights of active vertex buffers in format used by rendering
+            this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);                           // whole array
+            this._shaderMorphWeightsA = new Float32Array(this._shaderMorphWeights.buffer, 0, 4);        // first 4 elements
+            this._shaderMorphWeightsB = new Float32Array(this._shaderMorphWeights.buffer, 4 * 4, 4);    // second 4 elements
+
+            // pre-allocate array of active vertex buffers used by rendering
+            this._activeVertexBuffers = new Array(this.maxSubmitCount);
+        }
     }
-
-    // temporary array of targets with non-zero weight
-    this._activeTargets = [];
-
-    if (morph.useTextureMorph) {
-
-        // shader cache
-        this.shaderCache = {};
-
-        // max number of morph targets rendered at a time (each uses single texture slot)
-        this.maxSubmitCount = this.device.maxTextures;
-
-        // array for max number of weights
-        this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
-
-        // create render targets to morph targets into
-        var createRT = function (name, textureVar) {
-
-            // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-            var format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-            this[textureVar] = morph._createTexture(name, format);
-            return new RenderTarget({
-                colorBuffer: this[textureVar],
-                depth: false
-            });
-        }.bind(this);
-
-        if (morph.morphPositions) {
-            this.rtPositions = createRT("MorphRTPos", "texturePositions");
-        }
-
-        if (morph.morphNormals) {
-            this.rtNormals = createRT("MorphRTNrm", "textureNormals");
-        }
-
-        // texture params
-        this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight,
-            1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
-
-        // resolve possible texture names
-        for (var i = 0; i < this.maxSubmitCount; i++) {
-            this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
-        }
-
-        this.morphFactor = this.device.scope.resolve("morphFactor[0]");
-
-        // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
-        this.zeroTextures = false;
-
-    } else {    // vertex attribute based morphing
-
-        // max number of morph targets rendered at a time
-        this.maxSubmitCount = 8;
-
-        // weights of active vertex buffers in format used by rendering
-        this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);                           // whole array
-        this._shaderMorphWeightsA = new Float32Array(this._shaderMorphWeights.buffer, 0, 4);        // first 4 elements
-        this._shaderMorphWeightsB = new Float32Array(this._shaderMorphWeights.buffer, 4 * 4, 4);    // second 4 elements
-
-        // pre-allocate array of active vertex buffers used by rendering
-        this._activeVertexBuffers = new Array(this.maxSubmitCount);
-    }
-}
-
-Object.assign(MorphInstance.prototype, {
 
     /**
      * @function
      * @name pc.MorphInstance#destroy
      * @description Frees video memory allocated by this object.
      */
-    destroy: function () {
+    destroy() {
 
         this.meshInstance = null;
 
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
-        if (this.morph) {
-            this.morph.destroy();
+        let morph = this.morph;
+        if (morph) {
+
+            // decrease ref count
             this.morph = null;
+            morph.decRefCount();
+
+            // destroy morph
+            if (morph.getRefCount() < 1) {
+                morph.destroy();
+            }
         }
 
         if (this.rtPositions) {
@@ -132,7 +140,7 @@ Object.assign(MorphInstance.prototype, {
             this.textureNormals.destroy();
             this.textureNormals = null;
         }
-    },
+    }
 
     /**
      * @function
@@ -140,10 +148,10 @@ Object.assign(MorphInstance.prototype, {
      * @description Clones a MorphInstance. The returned clone uses the same {@link pc.Morph} and weights are set to defaults.
      * @returns {pc.MorphInstance} A clone of the specified MorphInstance.
      */
-    clone: function () {
+    clone() {
         var clone = new MorphInstance(this.morph);
         return clone;
-    },
+    }
 
     /**
      * @function
@@ -152,9 +160,9 @@ Object.assign(MorphInstance.prototype, {
      * @param {number} index - An index of morph target.
      * @returns {number} Weight.
      */
-    getWeight: function (index) {
+    getWeight(index) {
         return this._weights[index];
-    },
+    }
 
     /**
      * @function
@@ -163,13 +171,13 @@ Object.assign(MorphInstance.prototype, {
      * @param {number} index - An index of morph target.
      * @param {number} weight - Weight.
      */
-    setWeight: function (index, weight) {
+    setWeight(index, weight) {
         this._weights[index] = weight;
         this._dirty = true;
-    },
+    }
 
     // generates fragment shader to blend number of textures using specified weights
-    _getFragmentShader: function (numTextures) {
+    _getFragmentShader(numTextures) {
 
         var i, fragmentShader = '';
 
@@ -193,10 +201,10 @@ Object.assign(MorphInstance.prototype, {
             '}\n';
 
         return fragmentShader;
-    },
+    }
 
     // creates complete shader for texture based morphing
-    _getShader: function (count) {
+    _getShader(count) {
 
         var shader = this.shaderCache[count];
 
@@ -208,9 +216,9 @@ Object.assign(MorphInstance.prototype, {
         }
 
         return shader;
-    },
+    }
 
-    _updateTextureRenderTarget: function (renderTarget, srcTextureName) {
+    _updateTextureRenderTarget(renderTarget, srcTextureName) {
 
         var device = this.device;
 
@@ -263,9 +271,9 @@ Object.assign(MorphInstance.prototype, {
         if (usedCount > 0 || (count === 0 && !this.zeroTextures)) {
             submitBatch(usedCount, blending);
         }
-    },
+    }
 
-    _updateTextureMorph: function () {
+    _updateTextureMorph() {
 
         var device = this.device;
 
@@ -287,9 +295,9 @@ Object.assign(MorphInstance.prototype, {
         // #ifdef DEBUG
         device.popMarker("");
         // #endif
-    },
+    }
 
-    _updateVertexMorph: function () {
+    _updateVertexMorph() {
 
         // prepare 8 slots for rendering. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
         var i, count = this.maxSubmitCount;
@@ -316,14 +324,14 @@ Object.assign(MorphInstance.prototype, {
                 nrmIndex++;
             }
         }
-    },
+    }
 
     /**
      * @function
      * @name pc.MorphInstance#update
      * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
      */
-    update: function () {
+    update() {
 
         this._dirty = false;
         var targets = this.morph._targets;
@@ -368,6 +376,6 @@ Object.assign(MorphInstance.prototype, {
             this._updateVertexMorph();
         }
     }
-});
+}
 
 export { MorphInstance };

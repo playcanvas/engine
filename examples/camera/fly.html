@@ -113,7 +113,7 @@
         });
 
         // add the fly camera script to the camera
-        app.assets.loadFromUrl('../assets/scripts/camera/fly-camera.js', 'script', function (err, asset) {
+        app.assets.loadFromUrl('../../scripts/camera/fly-camera.js', 'script', function (err, asset) {
             camera.addComponent("script");
             camera.script.create("flyCamera");
         });

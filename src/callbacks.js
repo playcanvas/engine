@@ -58,6 +58,13 @@
  */
 
 /**
+ * @callback pc.callbacks.UnloadSceneData
+ * @description Callback used by {@link pc.SceneRegistry.loadSceneData}.
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @param {pc.SceneRegistryItem} [sceneItem] - The scene registry item if no errors were encountered.
+ */
+
+/**
  * @callback pc.callbacks.LoadHierarchy
  * @description Callback used by {@link pc.SceneRegistry#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.

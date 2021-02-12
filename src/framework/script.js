@@ -2,7 +2,7 @@ import { events } from '../core/events.js';
 
 import { ScriptHandler } from '../resources/script.js';
 
-import { Application } from './application.js';
+import { getApplication } from './globals.js';
 
 /**
  * @name pc.script
@@ -137,7 +137,7 @@ var script = {
 
         _createdLoadingScreen = true;
 
-        var app = Application.getApplication();
+        var app = getApplication();
         callback(app);
     }
 };

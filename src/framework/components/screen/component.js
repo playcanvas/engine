@@ -6,6 +6,8 @@ import { Entity } from '../../entity.js';
 import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
 
+var _transform = new Mat4();
+
 /**
  * @component
  * @class
@@ -22,31 +24,29 @@ import { Component } from '../component.js';
  * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
  * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
  */
-function ScreenComponent(system, entity) {
-    Component.call(this, system, entity);
+class ScreenComponent extends Component {
+    constructor(system, entity) {
+        super(system, entity);
 
-    this._resolution = new Vec2(640, 320);
-    this._referenceResolution = new Vec2(640, 320);
-    this._scaleMode = SCALEMODE_NONE;
-    this.scale = 1;
-    this._scaleBlend = 0.5;
+        this._resolution = new Vec2(640, 320);
+        this._referenceResolution = new Vec2(640, 320);
+        this._scaleMode = SCALEMODE_NONE;
+        this.scale = 1;
+        this._scaleBlend = 0.5;
 
-    // priority determines the order in which screens components are rendered
-    // priority is set into the top 8 bits of the drawOrder property in an element
-    this._priority = 0;
+        // priority determines the order in which screens components are rendered
+        // priority is set into the top 8 bits of the drawOrder property in an element
+        this._priority = 0;
 
-    this._screenSpace = false;
-    this.cull = this._screenSpace;
-    this._screenMatrix = new Mat4();
+        this._screenSpace = false;
+        this.cull = this._screenSpace;
+        this._screenMatrix = new Mat4();
 
-    system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
-}
-ScreenComponent.prototype = Object.create(Component.prototype);
-ScreenComponent.prototype.constructor = ScreenComponent;
+        this._elements = new Set();
 
-var _transform = new Mat4();
+        system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+    }
 
-Object.assign(ScreenComponent.prototype, {
     /**
      * @function
      * @name pc.ScreenComponent#syncDrawOrder
@@ -54,11 +54,11 @@ Object.assign(ScreenComponent.prototype, {
      * so that ElementComponents which are last in the hierarchy are rendered on top.
      * Draw Order sync is queued and will be updated by the next update loop.
      */
-    syncDrawOrder: function () {
+    syncDrawOrder() {
         this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);
-    },
+    }
 
-    _recurseDrawOrderSync: function (e, i) {
+    _recurseDrawOrderSync(e, i) {
         if (!(e instanceof Entity)) {
             return i;
         }
@@ -83,18 +83,18 @@ Object.assign(ScreenComponent.prototype, {
         }
 
         return i;
-    },
+    }
 
-    _processDrawOrderSync: function () {
+    _processDrawOrderSync() {
         var i = 1;
 
         this._recurseDrawOrderSync(this.entity, i);
 
         // fire internal event after all screen hierarchy is synced
         this.fire('syncdraworder');
-    },
+    }
 
-    _calcProjectionMatrix: function () {
+    _calcProjectionMatrix() {
         var left;
         var right;
         var bottom;
@@ -116,39 +116,49 @@ Object.assign(ScreenComponent.prototype, {
             _transform.setScale(0.5 * w, 0.5 * h, 1);
             this._screenMatrix.mul2(_transform, this._screenMatrix);
         }
-    },
+    }
 
-    _updateScale: function () {
+    _updateScale() {
         this.scale = this._calcScale(this._resolution, this.referenceResolution);
-    },
+    }
 
-    _calcScale: function (resolution, referenceResolution) {
+    _calcScale(resolution, referenceResolution) {
         // Using log of scale values
         // This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
         // the combined scale is 1 for an even blend
         var lx = Math.log2(resolution.x / referenceResolution.x);
         var ly = Math.log2(resolution.y / referenceResolution.y);
         return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
-    },
+    }
 
-    _onResize: function (width, height) {
+    _onResize(width, height) {
         if (this._screenSpace) {
             this._resolution.set(width, height);
             this.resolution = this._resolution; // force update
         }
-    },
+    }
 
-    onRemove: function () {
+    _bindElement(element) {
+        this._elements.add(element);
+    }
+
+    _unbindElement(element) {
+        this._elements.delete(element);
+    }
+
+    onRemove() {
         this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         this.fire('remove');
 
-        // remove all events used by elements
-        this.off();
-    }
-});
+        this._elements.forEach(element => element._onScreenRemove());
+        this._elements.clear();
 
-Object.defineProperty(ScreenComponent.prototype, "resolution", {
-    set: function (value) {
+        // remove all events
+        this.off();
+
+    }
+
+    set resolution(value) {
         if (!this._screenSpace) {
             this._resolution.set(value.x, value.y);
         } else {
@@ -164,14 +174,14 @@ Object.defineProperty(ScreenComponent.prototype, "resolution", {
             this.entity._dirtifyLocal();
 
         this.fire("set:resolution", this._resolution);
-    },
-    get: function () {
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
+    }
+
+    get resolution() {
         return this._resolution;
     }
-});
 
-Object.defineProperty(ScreenComponent.prototype, "referenceResolution", {
-    set: function (value) {
+    set referenceResolution(value) {
         this._referenceResolution.set(value.x, value.y);
         this._updateScale();
         this._calcProjectionMatrix();
@@ -180,18 +190,18 @@ Object.defineProperty(ScreenComponent.prototype, "referenceResolution", {
             this.entity._dirtifyLocal();
 
         this.fire("set:referenceresolution", this._resolution);
-    },
-    get: function () {
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
+    }
+
+    get referenceResolution() {
         if (this._scaleMode === SCALEMODE_NONE) {
             return this._resolution;
         }
         return this._referenceResolution;
 
     }
-});
 
-Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
-    set: function (value) {
+    set screenSpace(value) {
         this._screenSpace = value;
         if (this._screenSpace) {
             this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
@@ -202,15 +212,15 @@ Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
             this.entity._dirtifyLocal();
 
         this.fire('set:screenspace', this._screenSpace);
-    },
-    get: function () {
+
+        this._elements.forEach(element => element._onScreenSpaceChange());
+    }
+
+    get screenSpace() {
         return this._screenSpace;
     }
-});
 
-
-Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
-    set: function (value) {
+    set scaleMode(value) {
         if (value !== SCALEMODE_NONE && value !== SCALEMODE_BLEND) {
             value = SCALEMODE_NONE;
         }
@@ -223,14 +233,13 @@ Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
         this._scaleMode = value;
         this.resolution = this._resolution; // force update
         this.fire("set:scalemode", this._scaleMode);
-    },
-    get: function () {
+    }
+
+    get scaleMode() {
         return this._scaleMode;
     }
-});
 
-Object.defineProperty(ScreenComponent.prototype, "scaleBlend", {
-    set: function (value) {
+    set scaleBlend(value) {
         this._scaleBlend = value;
         this._updateScale();
         this._calcProjectionMatrix();
@@ -239,18 +248,19 @@ Object.defineProperty(ScreenComponent.prototype, "scaleBlend", {
             this.entity._dirtifyLocal();
 
         this.fire("set:scaleblend", this._scaleBlend);
-    },
-    get: function () {
+
+        this._elements.forEach(element => element._onScreenResize(this._resolution));
+    }
+
+    get scaleBlend() {
         return this._scaleBlend;
     }
-});
 
-Object.defineProperty(ScreenComponent.prototype, "priority", {
-    get: function () {
+    get priority() {
         return this._priority;
-    },
+    }
 
-    set: function (value) {
+    set priority(value) {
         if (value > 0xFF) {
             // #ifdef DEBUG
             console.warn('Clamping screen priority from ' + value + ' to 255');
@@ -260,6 +270,6 @@ Object.defineProperty(ScreenComponent.prototype, "priority", {
 
         this._priority = value;
     }
-});
+}
 
 export { ScreenComponent };

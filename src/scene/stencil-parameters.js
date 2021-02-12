@@ -1,4 +1,4 @@
-import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/graphics.js';
+import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/constants.js';
 
 /**
  * @class
@@ -14,28 +14,29 @@ import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/graphics.js';
  * @property {number} readMask Sets stencil test reading mask. See {@link pc.GraphicsDevice#setStencilFunc}.
  * @property {number} writeMask Sets stencil test writing mask. See {@link pc.GraphicsDevice#setStencilOperation}.
  */
-function StencilParameters(options) {
-    this.func = options.func === undefined ? FUNC_ALWAYS : options.func;
-    this.ref = options.ref || 0;
-    this.readMask = options.readMask === undefined ? 0xFF : options.readMask;
-    this.writeMask = options.writeMask === undefined ? 0xFF : options.writeMask;
+class StencilParameters {
+    constructor(options) {
+        this.func = options.func === undefined ? FUNC_ALWAYS : options.func;
+        this.ref = options.ref || 0;
+        this.readMask = options.readMask === undefined ? 0xFF : options.readMask;
+        this.writeMask = options.writeMask === undefined ? 0xFF : options.writeMask;
 
-    this.fail = options.fail || STENCILOP_KEEP; // keep == 0
-    this.zfail = options.zfail || STENCILOP_KEEP;
-    this.zpass = options.zpass || STENCILOP_KEEP;
+        this.fail = options.fail || STENCILOP_KEEP; // keep == 0
+        this.zfail = options.zfail || STENCILOP_KEEP;
+        this.zpass = options.zpass || STENCILOP_KEEP;
+    }
+
+    clone() {
+        return new StencilParameters({
+            func: this.func,
+            ref: this.ref,
+            readMask: this.readMask,
+            writeMask: this.writeMask,
+            fail: this.fail,
+            zfail: this.zfail,
+            zpass: this.zpass
+        });
+    }
 }
-
-StencilParameters.prototype.clone = function () {
-    var clone = new StencilParameters({
-        func: this.func,
-        ref: this.ref,
-        readMask: this.readMask,
-        writeMask: this.writeMask,
-        fail: this.fail,
-        zfail: this.zfail,
-        zpass: this.zpass
-    });
-    return clone;
-};
 
 export { StencilParameters };

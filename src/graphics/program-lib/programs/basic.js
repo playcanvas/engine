@@ -1,6 +1,6 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
-} from '../../graphics.js';
+} from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {
@@ -133,15 +133,15 @@ var basic = {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        if (options.pass === SHADER_PICK) {
-            // ##### PICK PASS #####
-        } else if (options.pass === SHADER_DEPTH) {
-            // ##### SCREEN DEPTH PASS #####
-            code += "    gl_FragColor = packFloat(vDepth);\n";
-        } else {
-            // ##### FORWARD PASS #####
-            if (options.fog) {
-                code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
+        if (options.pass !== SHADER_PICK) {
+            if (options.pass === SHADER_DEPTH) {
+                // ##### SCREEN DEPTH PASS #####
+                code += "    gl_FragColor = packFloat(vDepth);\n";
+            } else {
+                // ##### FORWARD PASS #####
+                if (options.fog) {
+                    code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
+                }
             }
         }
 

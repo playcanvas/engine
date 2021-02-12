@@ -1,7 +1,7 @@
 import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
-import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/graphics.js';
+import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
@@ -12,16 +12,16 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
  * @implements {pc.TextureParser}
  * @classdesc Parser for browser-supported image formats.
  */
-function ImgParser(registry) {
-    // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
-    this.crossOrigin = registry.prefix ? 'anonymous' : null;
-    this.maxRetries = 0;
-    // disable ImageBitmap
-    this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
-}
+class ImgParser {
+    constructor(registry) {
+        // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
+        this.crossOrigin = registry.prefix ? 'anonymous' : null;
+        this.maxRetries = 0;
+        // disable ImageBitmap
+        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test( navigator.userAgent ) === false;
+    }
 
-Object.assign(ImgParser.prototype, {
-    load: function (url, callback, asset) {
+    load(url, callback, asset) {
         var crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
@@ -33,9 +33,9 @@ Object.assign(ImgParser.prototype, {
         } else {
             this._loadImage(url.load, url.original, crossOrigin, callback);
         }
-    },
+    }
 
-    open: function (url, data, device) {
+    open(url, data, device) {
         var ext = path.getExtension(url).toLowerCase();
         var format = (ext === ".jpg" || ext === ".jpeg") ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
         var texture = new Texture(device, {
@@ -49,9 +49,9 @@ Object.assign(ImgParser.prototype, {
         });
         texture.setSource(data);
         return texture;
-    },
+    }
 
-    _loadImage: function (url, originalUrl, crossOrigin, callback) {
+    _loadImage(url, originalUrl, crossOrigin, callback) {
         var image = new Image();
         if (crossOrigin) {
             image.crossOrigin = crossOrigin;
@@ -90,9 +90,9 @@ Object.assign(ImgParser.prototype, {
         };
 
         image.src = url;
-    },
+    }
 
-    _loadImageBitmap: function (url, originalUrl, crossOrigin, callback) {
+    _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
         var options = {
             cache: true,
             responseType: "blob",
@@ -116,6 +116,6 @@ Object.assign(ImgParser.prototype, {
             }
         });
     }
-});
+}
 
 export { ImgParser };

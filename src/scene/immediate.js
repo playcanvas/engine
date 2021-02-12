@@ -1,6 +1,6 @@
 import { Mat4 } from '../math/mat4.js';
 
-import { BUFFER_DYNAMIC, PRIMITIVE_LINES, SEMANTIC_POSITION, SEMANTIC_COLOR, TYPE_FLOAT32, TYPE_UINT8 } from '../graphics/graphics.js';
+import { BUFFER_DYNAMIC, PRIMITIVE_LINES, SEMANTIC_POSITION, SEMANTIC_COLOR, TYPE_FLOAT32, TYPE_UINT8 } from '../graphics/constants.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 
@@ -12,50 +12,51 @@ import { MeshInstance } from '../scene/mesh-instance.js';
 
 var identityGraphNode = new GraphNode();
 
-function ImmediateData(device) {
-    this.lineVertexFormat = new VertexFormat(device, [
-        { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
-        { semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true }
-    ]);
-    this.lineBatches = [];
-    this.layers = [];
-    this.layerToBatch = {};
-    this.quadMesh = null;
-    this.cubeLocalPos = null;
-    this.cubeWorldPos = null;
-    this.identityGraphNode = new GraphNode();
-}
-
-ImmediateData.prototype.addLayer = function (layer) {
-    if (this.layers.indexOf(layer) < 0) {
-        this.layers.push(layer);
+class ImmediateData {
+    constructor(device) {
+        this.lineVertexFormat = new VertexFormat(device, [
+            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true }
+        ]);
+        this.lineBatches = [];
+        this.layers = [];
+        this.layerToBatch = {};
+        this.quadMesh = null;
+        this.cubeLocalPos = null;
+        this.cubeWorldPos = null;
     }
-};
 
-ImmediateData.prototype.getLayerIdx = function (layer) {
-    return this.layerToBatch[layer.id];
-};
+    addLayer(layer) {
+        if (this.layers.indexOf(layer) < 0) {
+            this.layers.push(layer);
+        }
+    }
 
-ImmediateData.prototype.addLayerIdx = function (idx, layer) {
-    this.layerToBatch[layer.id] = idx;
-};
+    getLayerIdx(layer) {
+        return this.layerToBatch[layer.id];
+    }
 
-function LineBatch() {
-    // Sensible default value; buffers will be doubled and reallocated when it's not enough
-    this.numLinesAllocated = 128;
-
-    this.vb = null;
-    this.vbRam = null;
-    this.mesh = null;
-    this.linesUsed = 0;
-    this.material = null;
-    this.meshInstance = null;
-
-    this.layer = null;
+    addLayerIdx(idx, layer) {
+        this.layerToBatch[layer.id] = idx;
+    }
 }
 
-Object.assign(LineBatch.prototype, {
-    init: function (device, vertexFormat, layer, linesToAdd) {
+class LineBatch {
+    constructor() {
+        // Sensible default value; buffers will be doubled and reallocated when it's not enough
+        this.numLinesAllocated = 128;
+
+        this.vb = null;
+        this.vbRam = null;
+        this.mesh = null;
+        this.linesUsed = 0;
+        this.material = null;
+        this.meshInstance = null;
+
+        this.layer = null;
+    }
+
+    init(device, vertexFormat, layer, linesToAdd) {
         // Allocate basic stuff once per batch
         if (!this.mesh) {
             this.mesh = new Mesh(device);
@@ -92,13 +93,13 @@ Object.assign(LineBatch.prototype, {
             if (!this.meshInstance) {
                 identityGraphNode.worldTransform = Mat4.IDENTITY;
                 identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
-                this.meshInstance = new MeshInstance(identityGraphNode, this.mesh, this.material);
+                this.meshInstance = new MeshInstance(this.mesh, this.material, identityGraphNode);
                 this.meshInstance.cull = false;
             }
         }
-    },
+    }
 
-    addLines: function (position, color) {
+    addLines(position, color) {
         // Append lines to buffer
         var multiColor = !!color.length;
         var offset = this.linesUsed * 2 * this.vertexFormat.size;
@@ -114,9 +115,9 @@ Object.assign(LineBatch.prototype, {
             this.vbRam.setUint8(offset, clr.a * 255); offset += 1;
         }
         this.linesUsed += position.length / 2;
-    },
+    }
 
-    finalize: function (meshInstanceArray) {
+    finalize(meshInstanceArray) {
         // Update batch vertex buffer/issue drawcall if there are any lines
         if (this.linesUsed > 0) {
             this.vb.setData(this.vbRam.buffer);
@@ -126,6 +127,6 @@ Object.assign(LineBatch.prototype, {
             this.linesUsed = 0;
         }
     }
-});
+}
 
 export { ImmediateData, LineBatch };

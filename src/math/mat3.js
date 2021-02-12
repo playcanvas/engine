@@ -5,16 +5,16 @@
  * @description Creates a new identity Mat3 object.
  * @property {Float32Array} data Matrix elements in the form of a flat array.
  */
-function Mat3() {
-    var data;
-    // Create an identity matrix. Note that a new Float32Array has all elements set
-    // to zero by default, so we only need to set the relevant elements to one.
-    data = new Float32Array(9);
-    data[0] = data[4] = data[8] = 1;
-    this.data = data;
-}
+class Mat3 {
+    constructor() {
+        var data;
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data = new Float32Array(9);
+        data[0] = data[4] = data[8] = 1;
+        this.data = data;
+    }
 
-Object.assign(Mat3.prototype, {
     /**
      * @function
      * @name pc.Mat3#clone
@@ -25,9 +25,9 @@ Object.assign(Mat3.prototype, {
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    clone: function () {
+    clone() {
         return new Mat3().copy(this);
-    },
+    }
 
     /**
      * @function
@@ -41,7 +41,7 @@ Object.assign(Mat3.prototype, {
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
-    copy: function (rhs) {
+    copy(rhs) {
         var src = rhs.data;
         var dst = this.data;
 
@@ -56,7 +56,7 @@ Object.assign(Mat3.prototype, {
         dst[8] = src[8];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -68,7 +68,7 @@ Object.assign(Mat3.prototype, {
      * var dst = new pc.Mat3();
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
      */
-    set: function (src) {
+    set(src) {
         var dst = this.data;
 
         dst[0] = src[0];
@@ -82,7 +82,7 @@ Object.assign(Mat3.prototype, {
         dst[8] = src[8];
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -95,7 +95,7 @@ Object.assign(Mat3.prototype, {
      * var b = new pc.Mat3();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals: function (rhs) {
+    equals(rhs) {
         var l = this.data;
         var r = rhs.data;
 
@@ -108,7 +108,7 @@ Object.assign(Mat3.prototype, {
                 (l[6] === r[6]) &&
                 (l[7] === r[7]) &&
                 (l[8] === r[8]));
-    },
+    }
 
     /**
      * @function
@@ -119,7 +119,7 @@ Object.assign(Mat3.prototype, {
      * var m = new pc.Mat3();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    isIdentity: function () {
+    isIdentity() {
         var m = this.data;
         return ((m[0] === 1) &&
                 (m[1] === 0) &&
@@ -130,7 +130,7 @@ Object.assign(Mat3.prototype, {
                 (m[6] === 0) &&
                 (m[7] === 0) &&
                 (m[8] === 1));
-    },
+    }
 
     /**
      * @function
@@ -141,7 +141,7 @@ Object.assign(Mat3.prototype, {
      * m.setIdentity();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
-    setIdentity: function () {
+    setIdentity() {
         var m = this.data;
         m[0] = 1;
         m[1] = 0;
@@ -156,7 +156,7 @@ Object.assign(Mat3.prototype, {
         m[8] = 1;
 
         return this;
-    },
+    }
 
     /**
      * @function
@@ -168,7 +168,7 @@ Object.assign(Mat3.prototype, {
      * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
      * console.log(m.toString());
      */
-    toString: function () {
+    toString() {
         var t = '[';
         for (var i = 0; i < 9; i++) {
             t += this.data[i];
@@ -176,7 +176,7 @@ Object.assign(Mat3.prototype, {
         }
         t += ']';
         return t;
-    },
+    }
 
     /**
      * @function
@@ -189,7 +189,7 @@ Object.assign(Mat3.prototype, {
      * // Transpose in place
      * m.transpose();
      */
-    transpose: function () {
+    transpose() {
         var m = this.data;
 
         var tmp;
@@ -199,32 +199,77 @@ Object.assign(Mat3.prototype, {
 
         return this;
     }
-});
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat3.IDENTITY
- * @type {pc.Mat3}
- * @description A constant matrix set to the identity.
- */
+    /**
+     * @function
+     * @name pc.Mat3#setFromMat4
+     * @description Converts the specified 4x4 matrix to a Mat3.
+     * @param {pc.Mat4} m - The 4x4 matrix to convert.
+     * @returns {pc.Mat3} Self for chaining.
+     */
+    setFromMat4(m) {
+        var src = m.data;
+        var dst = this.data;
 
-/**
- * @field
- * @static
- * @readonly
- * @name pc.Mat3.ZERO
- * @type {pc.Mat3}
- * @description A constant matrix with all elements set to 0.
- */
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
 
-Object.defineProperties(Mat3, {
-    ZERO: { value: new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]) },
-    IDENTITY: { value: new Mat3() }
-});
+        dst[3] = src[4];
+        dst[4] = src[5];
+        dst[5] = src[6];
 
-Object.freeze(Mat3.ZERO);
-Object.freeze(Mat3.IDENTITY);
+        dst[6] = src[8];
+        dst[7] = src[9];
+        dst[8] = src[10];
+
+        return this;
+    }
+
+    /**
+     * @function
+     * @name pc.Mat3#transformVector
+     * @description Transforms a 3-dimensional vector by a 3x3 matrix.
+     * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.
+     * @param {pc.Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
+     * @returns {pc.Vec3} The input vector v transformed by the current instance.
+     */
+    transformVector(vec, res = new Vec3()) {
+        var x, y, z, m;
+
+        m = this.data;
+
+        x = vec.x;
+        y = vec.y;
+        z = vec.z;
+
+        res.x = x * m[0] + y * m[3] + z * m[6];
+        res.y = x * m[1] + y * m[4] + z * m[7];
+        res.z = x * m[2] + y * m[5] + z * m[8];
+
+        return res;
+    }
+
+
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat3.IDENTITY
+     * @type {pc.Mat3}
+     * @description A constant matrix set to the identity.
+     */
+    static IDENTITY = Object.freeze(new Mat3());
+
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Mat3.ZERO
+     * @type {pc.Mat3}
+     * @description A constant matrix with all elements set to 0.
+     */
+    static ZERO = Object.freeze(new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]));
+}
 
 export { Mat3 };

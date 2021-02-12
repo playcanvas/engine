@@ -42,29 +42,38 @@
  *
  * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
  */
-function Shader(graphicsDevice, definition) {
-    this.device = graphicsDevice;
-    this.definition = definition;
+class Shader {
+    constructor(graphicsDevice, definition) {
+        this.device = graphicsDevice;
+        this.definition = definition;
 
-    this.attributes = [];
-    this.uniforms = [];
-    this.samplers = [];
+        this.init();
 
-    this.ready = false;
-    this.failed = false;
+        this.device.createShader(this);
+    }
 
-    this.device.createShader(this);
-}
+    init() {
+        this.attributes = [];
+        this.uniforms = [];
+        this.samplers = [];
 
-Object.assign(Shader.prototype, {
+        this.ready = false;
+        this.failed = false;
+    }
+
     /**
      * @function
      * @name pc.Shader#destroy
      * @description Frees resources associated with this shader.
      */
-    destroy: function () {
+    destroy() {
         this.device.destroyShader(this);
     }
-});
+
+    // called when context was lost, function releases all context related resources
+    loseContext() {
+        this.init();
+    }
+}
 
 export { Shader };

@@ -1,57 +1,58 @@
 // markup scanner
-function Scanner(symbols) {
-    this._symbols = symbols;
-    this._index = 0;
-    this._last = 0;
-    this._cur = (this._symbols.length > 0) ? this._symbols[0] : null;
-    this._buf = [];
-    this._mode = "text";
-    this._error = null;
-}
 
-Object.assign(Scanner.prototype, {
-    // list of scanner tokens
-    EOF_TOKEN: 0,
-    ERROR_TOKEN: 1,
-    TEXT_TOKEN: 2,
-    OPEN_BRACKET_TOKEN: 3,
-    CLOSE_BRACKET_TOKEN: 4,
-    EQUALS_TOKEN: 5,
-    STRING_TOKEN: 6,
-    IDENTIFIER_TOKEN: 7,
-    WHITESPACE_TOKEN: 8,
-    WHITESPACE_CHARS: " \t\n\r\v\f",
-    IDENTIFIER_REGEX: /[A-Z|a-z|0-9|_|-|/]/,
+// list of scanner tokens
+const EOF_TOKEN = 0;
+const ERROR_TOKEN = 1;
+const TEXT_TOKEN = 2;
+const OPEN_BRACKET_TOKEN = 3;
+const CLOSE_BRACKET_TOKEN = 4;
+const EQUALS_TOKEN = 5;
+const STRING_TOKEN = 6;
+const IDENTIFIER_TOKEN = 7;
+const WHITESPACE_TOKEN = 8;
+const WHITESPACE_CHARS = " \t\n\r\v\f";
+const IDENTIFIER_REGEX = /[A-Z|a-z|0-9|_|-|/]/;
+
+class Scanner {
+    constructor(symbols) {
+        this._symbols = symbols;
+        this._index = 0;
+        this._last = 0;
+        this._cur = (this._symbols.length > 0) ? this._symbols[0] : null;
+        this._buf = [];
+        this._mode = "text";
+        this._error = null;
+    }
 
     // read the next token, ignore whitespace
-    read: function () {
+    read() {
         var token = this._read();
-        while (token === this.WHITESPACE_TOKEN) {
+        while (token === WHITESPACE_TOKEN) {
             token = this._read();
         }
-        if (token !== this.EOF_TOKEN && token !== this.ERROR_TOKEN) {
+        if (token !== EOF_TOKEN && token !== ERROR_TOKEN) {
             this._last = this._index;
         }
         return token;
-    },
+    }
 
     // returns the buffer for the last returned token
-    buf: function () {
+    buf() {
         return this._buf;
-    },
+    }
 
     // returns the index of end of the last successful token extraction
-    last: function () {
+    last() {
         return this._last;
-    },
+    }
 
     // return the error message
-    error: function () {
+    error() {
         return this._error;
-    },
+    }
 
     // print the scanner output
-    debugPrint: function () {
+    debugPrint() {
         var tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
         var token = this.read();
         var result = "";
@@ -59,34 +60,34 @@ Object.assign(Scanner.prototype, {
             result += (result.length > 0 ? "\n" : "") +
                         tokenStrings[token] +
                         " '" + this.buf().join("") + "'";
-            if (token === this.EOF_TOKEN || token === this.ERROR_TOKEN) {
+            if (token === EOF_TOKEN || token === ERROR_TOKEN) {
                 break;
             }
             token = this.read();
         }
         return result;
-    },
+    }
 
     // read the next token from the input stream and return the token
-    _read: function () {
+    _read() {
         this._buf = [];
         if (this._eof()) {
-            return this.EOF_TOKEN;
+            return EOF_TOKEN;
         }
         return (this._mode === "text") ? this._text() : this._tag();
-    },
+    }
 
     // read text block until eof or start of tag
-    _text: function () {
+    _text() {
         while (true) {
             switch (this._cur) {
                 case null:
                     // reached end of input
-                    return (this._buf.length > 0) ? this.TEXT_TOKEN : this.EOF_TOKEN;
+                    return (this._buf.length > 0) ? TEXT_TOKEN : EOF_TOKEN;
                 case "[":
                     // start of tag mode
                     this._mode = "tag";
-                    return (this._buf.length > 0) ? this.TEXT_TOKEN : this._tag();
+                    return (this._buf.length > 0) ? TEXT_TOKEN : this._tag();
                 case "\\":
                     // handle escape sequence
                     this._next();           // skip \
@@ -106,25 +107,25 @@ Object.assign(Scanner.prototype, {
                     break;
             }
         }
-    },
+    }
 
     // read tag block
-    _tag: function () {
+    _tag() {
         while (true) {
             switch (this._cur) {
                 case null:
                     this._error = "unexpected end of input reading tag";
-                    return this.ERROR_TOKEN;
+                    return ERROR_TOKEN;
                 case "[":
                     this._store();
-                    return this.OPEN_BRACKET_TOKEN;
+                    return OPEN_BRACKET_TOKEN;
                 case "]":
                     this._store();
                     this._mode = "text";
-                    return this.CLOSE_BRACKET_TOKEN;
+                    return CLOSE_BRACKET_TOKEN;
                 case "=":
                     this._store();
-                    return this.EQUALS_TOKEN;
+                    return EQUALS_TOKEN;
                 case " ":
                 case "\t":
                 case "\n":
@@ -137,80 +138,80 @@ Object.assign(Scanner.prototype, {
                 default:
                     if (!this._isIdentifierSymbol(this._cur)) {
                         this._error = "unrecognized character";
-                        return this.ERROR_TOKEN;
+                        return ERROR_TOKEN;
                     }
                     return this._identifier();
             }
         }
-    },
+    }
 
-    _whitespace: function () {
+    _whitespace() {
         this._store();
-        while (this.WHITESPACE_CHARS.indexOf(this._cur) !== -1) {
+        while (WHITESPACE_CHARS.indexOf(this._cur) !== -1) {
             this._store();
         }
-        return this.WHITESPACE_TOKEN;
-    },
+        return WHITESPACE_TOKEN;
+    }
 
-    _string: function () {
+    _string() {
         this._next();       // skip "
         while (true) {
             switch (this._cur) {
                 case null:
                     this._error = "unexpected end of input reading string";
-                    return this.ERROR_TOKEN;
+                    return ERROR_TOKEN;
                 case "\"":
                     this._next();           // skip "
-                    return this.STRING_TOKEN;
+                    return STRING_TOKEN;
                 default:
                     this._store();
                     break;
             }
         }
-    },
+    }
 
-    _identifier: function () {
+    _identifier() {
         this._store();
         while (this._cur !== null &&
                 this._isIdentifierSymbol(this._cur)) {
             this._store();
         }
-        return this.IDENTIFIER_TOKEN;
-    },
+        return IDENTIFIER_TOKEN;
+    }
 
-    _isIdentifierSymbol: function (s) {
-        return s.length === 1 && (s.match(this.IDENTIFIER_REGEX) !== null);
-    },
+    _isIdentifierSymbol(s) {
+        return s.length === 1 && (s.match(IDENTIFIER_REGEX) !== null);
+    }
 
-    _eof: function () {
+    _eof() {
         return this._cur === null;
-    },
+    }
 
-    _next: function () {
+    _next() {
         if (!this._eof()) {
             this._index++;
             this._cur = (this._index < this._symbols.length) ? this._symbols[this._index] : null;
         }
         return this._cur;
-    },
+    }
 
-    _store: function () {
+    _store() {
         this._buf.push(this._cur);
         return this._next();
-    },
+    }
 
-    _output: function (c) {
+    _output(c) {
         this._buf.push(c);
     }
-});
+}
 
 // markup parser
-var Parser = function (symbols) {
-    this._scanner = new Scanner(symbols);
-    this._error = null;
-};
+class Parser {
+    constructor(symbols) {
+        this._scanner = new Scanner(symbols);
+        this._error = null;
+    }
 
-Object.assign(Parser.prototype, {
     // parse the incoming symbols placing resulting symbols in symbols
     // and tags in tags
     // tags is an array of the following structure:
@@ -223,18 +224,18 @@ Object.assign(Parser.prototype, {
     //     start: int;                      // first symbol to which this tag applies
     //     end: int;                        // last symbol to which this tag applies
     // }
-    parse: function (symbols, tags) {
+    parse(symbols, tags) {
         while (true) {
             var token = this._scanner.read();
             switch (token) {
-                case this._scanner.EOF_TOKEN:
+                case EOF_TOKEN:
                     return true;
-                case this._scanner.ERROR_TOKEN:
+                case ERROR_TOKEN:
                     return false;
-                case this._scanner.TEXT_TOKEN:
+                case TEXT_TOKEN:
                     Array.prototype.push.apply(symbols, this._scanner.buf());
                     break;
-                case this._scanner.OPEN_BRACKET_TOKEN:
+                case OPEN_BRACKET_TOKEN:
                     if (!this._parseTag(symbols, tags)) {
                         return false;
                     }
@@ -244,18 +245,18 @@ Object.assign(Parser.prototype, {
                     return false;
             }
         }
-    },
+    }
 
     // access an error message if the parser failed
-    error: function () {
+    error() {
         return "Error evaluating markup at #" + this._scanner.last().toString() +
                 " (" + (this._scanner.error() || this._error) + ")";
-    },
+    }
 
-    _parseTag: function (symbols, tags) {
+    _parseTag(symbols, tags) {
         // first token after [ must be an identifier
         var token = this._scanner.read();
-        if (token !== this._scanner.IDENTIFIER_TOKEN) {
+        if (token !== IDENTIFIER_TOKEN) {
             this._error = "expected identifier";
             return false;
         }
@@ -268,7 +269,7 @@ Object.assign(Parser.prototype, {
                 if (name === "/" + tags[index].name && tags[index].end === null) {
                     tags[index].end = symbols.length;
                     token = this._scanner.read();
-                    if (token !== this._scanner.CLOSE_BRACKET_TOKEN) {
+                    if (token !== CLOSE_BRACKET_TOKEN) {
                         this._error = "expected close bracket";
                         return false;
                     }
@@ -290,9 +291,9 @@ Object.assign(Parser.prototype, {
 
         // read optional tag value
         token = this._scanner.read();
-        if (token === this._scanner.EQUALS_TOKEN) {
+        if (token === EQUALS_TOKEN) {
             token = this._scanner.read();
-            if (token !== this._scanner.STRING_TOKEN) {
+            if (token !== STRING_TOKEN) {
                 this._error = "expected string";
                 return false;
             }
@@ -303,18 +304,18 @@ Object.assign(Parser.prototype, {
         // read optional tag attributes
         while (true) {
             switch (token) {
-                case this._scanner.CLOSE_BRACKET_TOKEN:
+                case CLOSE_BRACKET_TOKEN:
                     tags.push(tag);
                     return true;
-                case this._scanner.IDENTIFIER_TOKEN:
+                case IDENTIFIER_TOKEN:
                     var identifier = this._scanner.buf().join("");
                     token = this._scanner.read();
-                    if (token !== this._scanner.EQUALS_TOKEN) {
+                    if (token !== EQUALS_TOKEN) {
                         this._error = "expected equals";
                         return false;
                     }
                     token = this._scanner.read();
-                    if (token !== this._scanner.STRING_TOKEN) {
+                    if (token !== STRING_TOKEN) {
                         this._error = "expected string";
                         return false;
                     }
@@ -328,7 +329,7 @@ Object.assign(Parser.prototype, {
             token = this._scanner.read();
         }
     }
-});
+}
 
 // copy the contents of source object into target object (like a deep version
 // of assign)
@@ -502,10 +503,12 @@ function evaluateMarkup(symbols) {
     };
 }
 
-function Markup() {}
+class Markup {
+    constructor() {}
 
-Markup.evaluate = function (symbols) {
-    return evaluateMarkup(symbols);
-};
+    static evaluate(symbols) {
+        return evaluateMarkup(symbols);
+    }
+}
 
 export { Markup };

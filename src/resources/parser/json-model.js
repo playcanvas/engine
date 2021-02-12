@@ -9,13 +9,12 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 import { VertexIterator } from '../../graphics/vertex-iterator.js';
 
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { partitionSkin } from '../../scene/skin-partition.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -26,6 +25,8 @@ import { MorphInstance } from '../../scene/morph-instance.js';
 import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
+
+import { Material } from '../../scene/materials/material.js';
 
 var JSON_PRIMITIVE_TYPE = {
     "points": PRIMITIVE_POINTS,
@@ -48,13 +49,12 @@ var JSON_VERTEX_ELEMENT_TYPE = {
 };
 
 // Take PlayCanvas JSON model data and create pc.Model
-function JsonModelParser(device) {
-    this._device = device;
-    this._defaultMaterial = getDefaultMaterial();
-}
+class JsonModelParser {
+    constructor(device) {
+        this._device = device;
+    }
 
-Object.assign(JsonModelParser.prototype, {
-    parse: function (data) {
+    parse(data) {
         var modelData = data.model;
         if (!modelData) {
             return null;
@@ -96,9 +96,9 @@ Object.assign(JsonModelParser.prototype, {
         model.getGraph().syncHierarchy();
 
         return model;
-    },
+    }
 
-    _parseNodes: function (data) {
+    _parseNodes(data) {
         var modelData = data.model;
         var nodes = [];
         var i;
@@ -120,9 +120,9 @@ Object.assign(JsonModelParser.prototype, {
         }
 
         return nodes;
-    },
+    }
 
-    _parseSkins: function (data, nodes) {
+    _parseSkins(data, nodes) {
         var modelData = data.model;
         var skins = [];
         var skinInstances = [];
@@ -161,10 +161,10 @@ Object.assign(JsonModelParser.prototype, {
             skins: skins,
             instances: skinInstances
         };
-    },
+    }
 
     // find number of vertices used by a mesh that is using morph target with index morphIndex
-    _getMorphVertexCount: function (modelData, morphIndex, vertexBuffers) {
+    _getMorphVertexCount(modelData, morphIndex, vertexBuffers) {
         for (var i = 0; i < modelData.meshes.length; i++) {
             var meshData = modelData.meshes[i];
 
@@ -174,9 +174,9 @@ Object.assign(JsonModelParser.prototype, {
             }
         }
         return undefined;
-    },
+    }
 
-    _parseMorphs: function (data, nodes, vertexBuffers) {
+    _parseMorphs(data, nodes, vertexBuffers) {
         var modelData = data.model;
         var morphs = [];
         var morphInstances = [];
@@ -244,9 +244,9 @@ Object.assign(JsonModelParser.prototype, {
             morphs: morphs,
             instances: morphInstances
         };
-    },
+    }
 
-    _parseVertexBuffers: function (data) {
+    _parseVertexBuffers(data) {
         var modelData = data.model;
         var vertexBuffers = [];
         var attribute, attributeName;
@@ -316,9 +316,9 @@ Object.assign(JsonModelParser.prototype, {
         }
 
         return vertexBuffers;
-    },
+    }
 
-    _parseIndexBuffers: function (data, vertexBuffers) {
+    _parseIndexBuffers(data, vertexBuffers) {
         var modelData = data.model;
         var indexBuffer = null;
         var indexData = null;
@@ -352,9 +352,9 @@ Object.assign(JsonModelParser.prototype, {
             buffer: indexBuffer,
             data: indexData
         };
-    },
+    }
 
-    _parseMeshes: function (data, skins, morphs, vertexBuffers, indexBuffer, indexData) {
+    _parseMeshes(data, skins, morphs, vertexBuffers, indexBuffer, indexData) {
         var modelData = data.model;
 
         var meshes = [];
@@ -398,9 +398,9 @@ Object.assign(JsonModelParser.prototype, {
         }
 
         return meshes;
-    },
+    }
 
-    _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances, morphs, morphInstances) {
+    _parseMeshInstances(data, nodes, meshes, skins, skinInstances, morphs, morphInstances) {
         var modelData = data.model;
         var meshInstances = [];
         var i;
@@ -411,7 +411,7 @@ Object.assign(JsonModelParser.prototype, {
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
 
-            var meshInstance = new MeshInstance(node, mesh, this._defaultMaterial);
+            var meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
 
             if (mesh.skin) {
                 var skinIndex = skins.indexOf(mesh.skin);
@@ -438,6 +438,6 @@ Object.assign(JsonModelParser.prototype, {
 
         return meshInstances;
     }
-});
+}
 
 export { JsonModelParser };
