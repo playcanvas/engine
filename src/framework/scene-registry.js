@@ -160,7 +160,7 @@ class SceneRegistry {
         }
 
         // If we have the data already loaded, no need to do another HTTP request
-        if (sceneItem._loaded) {
+        if (sceneItem.loaded) {
             callback(null, sceneItem);
             return;
         }
@@ -170,9 +170,8 @@ class SceneRegistry {
         if (!sceneItem._loading) {
             handler.load(url, function (err, data) {
                 sceneItem.data = data;
-
                 sceneItem._loading = false;
-                sceneItem._loaded = true;
+
                 for (var i = 0; i < sceneItem._onLoadedCallbacks.length; i++) {
                     sceneItem._onLoadedCallbacks[i](err, sceneItem);
                 }
@@ -204,7 +203,6 @@ class SceneRegistry {
         }
 
         sceneItem.data = null;
-        sceneItem._loaded = false;
     }
 
     /**
@@ -246,6 +244,7 @@ class SceneRegistry {
             var _loaded = function () {
                 self._app.systems.script.preloading = true;
                 var entity = handler.open(url, data);
+
                 self._app.systems.script.preloading = false;
 
                 // clear from cache because this data is modified by entity operations (e.g. destroy)
@@ -305,7 +304,7 @@ class SceneRegistry {
      * @function
      * @name  pc.SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used
-     * by the pc.Application.
+     * by the {pc.Application}.
      * @param {string} url - The URL of the scene file.
      * @param {pc.callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the
@@ -327,6 +326,13 @@ class SceneRegistry {
                     // parse and create scene
                     self._app.systems.script.preloading = true;
                     var scene = handler.open(url, data);
+
+                    // Cache the data as we are loading via URL only
+                    var sceneItem = self.findByUrl(url);
+                    if (sceneItem && !sceneItem.loaded) {
+                        sceneItem.data = data;
+                    }
+
                     self._app.systems.script.preloading = false;
 
                     // clear scene from cache because we'll destroy it when we load another one

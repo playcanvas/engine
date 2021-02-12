@@ -12,14 +12,13 @@ function SceneRegistryItem(name, url) {
     this.name = name;
     this.url = url;
     this.data = null;
-    this._loaded = false;
     this._loading = false;
     this._onLoadedCallbacks = [];
 }
 
 Object.defineProperty(SceneRegistryItem.prototype, "loaded", {
     get: function () {
-        return this._loaded;
+        return !!this.data;
     }
 });
 
