@@ -205,6 +205,7 @@ class ScriptType extends EventHandler {
      * @description Called when a ScriptType that already exists in the registry
      * gets redefined. If the new ScriptType has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
+     * @param {pc.ScriptType} old - Old instance of the scriptType to copy data to the new instance.
      */
 
     /**
