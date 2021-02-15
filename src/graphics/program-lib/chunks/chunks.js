@@ -38,6 +38,7 @@ import dilatePS from './dilate.frag';
 import dpAtlasQuadPS from './dpAtlasQuad.frag';
 import emissivePS from './emissive.frag';
 import endPS from './end.frag';
+import endVS from './end.vert';
 import envConstPS from './envConst.frag';
 import envMultiplyPS from './envMultiply.frag';
 import extensionPS from './extension.frag';
@@ -242,6 +243,7 @@ var shaderChunks = {
     dpAtlasQuadPS: dpAtlasQuadPS,
     emissivePS: emissivePS,
     endPS: endPS,
+    endVS: endVS,
     envConstPS: envConstPS,
     envMultiplyPS: envMultiplyPS,
     extensionPS: extensionPS,

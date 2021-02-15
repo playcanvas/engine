@@ -8,13 +8,17 @@ import {
     RENDERSTYLE_SOLID,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_LM, SHADERDEF_DIRLM,
     SORTKEY_FORWARD
 } from './constants.js';
+
+import { GraphNode } from './graph-node.js';
 
 var _tmpAabb = new BoundingBox();
 var _tempBoneAabb = new BoundingBox();
 var _tempSphere = new BoundingSphere();
+var _meshSet = new Set();
+
 
 // internal data structure used to store data used by hardware instancing
 class InstancingData {
@@ -46,9 +50,9 @@ class Command {
  * @classdesc An instance of a {@link Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {GraphNode} node - The graph node defining the transform for this instance.
  * @param {Mesh} mesh - The graphics mesh being instanced.
  * @param {Material} material - The material used to render this instance.
+ * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
  * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -74,7 +78,7 @@ class Command {
  * var mesh = pc.createBox(graphicsDevice);
  * var material = new pc.StandardMaterial();
  * var node = new pc.GraphNode();
- * var meshInstance = new pc.MeshInstance(node, mesh, material);
+ * var meshInstance = new pc.MeshInstance(mesh, material, node);
  *
  * @example
  * // A script you can attach on an entity to test if it is visible on a Layer
@@ -88,7 +92,16 @@ class Command {
  * };
  */
 class MeshInstance {
-    constructor(node, mesh, material) {
+    constructor(mesh, material, node = null) {
+
+        // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)
+        if (mesh instanceof GraphNode) {
+            const temp = mesh;
+            mesh = material;
+            material = node;
+            node = temp;
+        }
+
         this._key = [0, 0];
         this._shader = [null, null, null];
 
@@ -112,7 +125,7 @@ class MeshInstance {
         // Render options
         this.visible = true;
         this.layer = LAYER_WORLD; // legacy
-        this.renderStyle = RENDERSTYLE_SOLID;
+        this._renderStyle = RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
@@ -149,6 +162,69 @@ class MeshInstance {
         this.stencilBack = null;
         // Negative scale batching support
         this.flipFaces = false;
+    }
+
+    // shader uniform names for lightmaps
+    static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
+
+    // cache of lightmaps internally created by baking using Lightmapper
+    // the key is the lightmap (texture), the value is reference count .. when it reaches 0, the lightmap gets destroyed.
+    // this allows us to automatically release realtime baked lightmaps when mesh instances using them are destroyed
+    static _lightmapCache = new Map();
+
+    // add texture reference to lightmap cache
+    static incRefLightmap(texture) {
+        let refCount = MeshInstance._lightmapCache.get(texture) || 0;
+        refCount++;
+        MeshInstance._lightmapCache.set(texture, refCount);
+    }
+
+    // remove texture reference from lightmap cache
+    static decRefLightmap(texture) {
+        if (texture) {
+            let refCount = MeshInstance._lightmapCache.get(texture);
+            if (refCount) {
+                refCount--;
+                if (refCount === 0) {
+                    // destroy texture and remove it from cache
+                    MeshInstance._lightmapCache.delete(texture);
+                    texture.destroy();
+                } else {
+                    // update new ref count in the cache
+                    MeshInstance._lightmapCache.set(texture, refCount);
+                }
+            }
+        }
+    }
+
+    get renderStyle() {
+        return this._renderStyle;
+    }
+
+    set renderStyle(renderStyle) {
+        this._renderStyle = renderStyle;
+        this.mesh.prepareRenderState(renderStyle);
+    }
+
+    // generates wireframes for an array of mesh instances
+    static _prepareRenderStyleForArray(meshInstances, renderStyle) {
+
+        if (meshInstances) {
+            for (let i = 0; i < meshInstances.length; i++) {
+
+                // switch mesh instance to the requested style
+                meshInstances[i]._renderStyle = renderStyle;
+
+                // process all unique meshes
+                let mesh = meshInstances[i].mesh;
+                if (!_meshSet.has(mesh)) {
+                    _meshSet.add(mesh);
+                    mesh.prepareRenderState(renderStyle);
+                }
+            }
+
+            _meshSet.clear();
+        }
     }
 
     get mesh() {
@@ -408,6 +484,10 @@ class MeshInstance {
             }
         }
 
+        // release ref counted lightmaps
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+        this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+
         if (this._skinInstance) {
             this._skinInstance.destroy();
             this._skinInstance = null;
@@ -540,6 +620,29 @@ class MeshInstance {
         }
     }
 
+    // a wrapper over settings parameter specifically for realtime baked lightmaps. This handles reference counting of lightmaps
+    // and releases them when no longer referenced
+    setRealtimeLightmap(name, texture) {
+
+        // no change
+        let old = this.getParameter(name);
+        if (old === texture)
+            return;
+
+        // remove old
+        if (old) {
+            MeshInstance.decRefLightmap(old.data);
+        }
+
+        // assign new
+        if (texture) {
+            MeshInstance.incRefLightmap(texture);
+            this.setParameter(name, texture);
+        } else {
+            this.deleteParameter(name);
+        }
+    }
+
      /**
       * @function
       * @name MeshInstance#deleteParameter
@@ -570,9 +673,9 @@ class MeshInstance {
         if (value) {
             this.mask = (this.mask | MASK_BAKED) & ~(MASK_DYNAMIC | MASK_LIGHTMAP);
         } else {
-            this.deleteParameter("texture_lightMap");
-            this.deleteParameter("texture_dirLightMap");
-            this._shaderDefs &= ~SHADERDEF_LM;
+            this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
+            this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM);
             this.mask = (this.mask | MASK_DYNAMIC) & ~(MASK_BAKED | MASK_LIGHTMAP);
         }
     }

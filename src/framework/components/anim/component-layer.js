@@ -48,6 +48,16 @@ class AnimComponentLayer {
         this._controller.reset();
     }
 
+    /**
+     * @private
+     * @function
+     * @name AnimComponentLayer#rebind
+     * @description Rebind any animations in the layer to the currently present components and model of the anim components entity.
+     */
+    rebind() {
+        this._controller.rebind();
+    }
+
     update(dt) {
         this._controller.update(dt);
     }

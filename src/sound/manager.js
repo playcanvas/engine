@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
 
-import { hasAudio, hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../audio/capabilities.js';
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
 
@@ -24,51 +24,50 @@ class SoundManager extends EventHandler {
     constructor(options) {
         super();
 
-        if (hasAudioContext() || options.forceWebAudioApi) {
-            if (typeof AudioContext !== 'undefined') {
-                this.context = new AudioContext();
-            } else if (typeof webkitAudioContext !== 'undefined') {
-                this.context = new webkitAudioContext();
-            }
+        this._context = null;
+        this._forceWebAudioApi = options.forceWebAudioApi;
 
-            if (this.context) {
-                var context = this.context;
+        this._resumeContext = null;
+        this._unlock = null;
 
-                // resume AudioContext on user interaction because of new Chrome autoplay policy
-                this.resumeContext = function () {
+        if (hasAudioContext() || this._forceWebAudioApi) {
+            // resume AudioContext on user interaction because of new Chrome autoplay policy
+            this._resumeContext = () => {
+                window.removeEventListener('mousedown', this._resumeContext);
+                window.removeEventListener('touchend', this._resumeContext);
+
+                if (this.context) {
                     this.context.resume();
-                    window.removeEventListener('mousedown', this.resumeContext);
-                    window.removeEventListener('touchend', this.resumeContext);
-                }.bind(this);
+                }
+            };
 
-                window.addEventListener('mousedown', this.resumeContext);
-                window.addEventListener('touchend', this.resumeContext);
+            window.addEventListener('mousedown', this._resumeContext);
+            window.addEventListener('touchend', this._resumeContext);
 
-                // iOS only starts sound as a response to user interaction
-                if (platform.ios) {
-                    // Play an inaudible sound when the user touches the screen
-                    // This only happens once
-                    var unlock = function () {
+            // iOS only starts sound as a response to user interaction
+            if (platform.ios) {
+                // Play an inaudible sound when the user touches the screen
+                // This only happens once
+                this._unlock = () => {
+                    // no further need for this so remove the listener
+                    window.removeEventListener('touchend', this._unlock);
+
+                    const context = this.context;
+                    if (context) {
                         var buffer = context.createBuffer(1, 1, 44100);
                         var source = context.createBufferSource();
                         source.buffer = buffer;
                         source.connect(context.destination);
                         source.start(0);
                         source.disconnect();
+                    }
+                };
 
-                        // no further need for this so remove the listener
-                        window.removeEventListener('touchend', unlock);
-                    };
-
-                    window.addEventListener('touchend', unlock);
-                }
+                window.addEventListener('touchend', this._unlock);
             }
         } else {
             console.warn('No support for 3D audio found');
         }
-
-        if (!hasAudio())
-            console.warn('No support for 2D audio found');
 
         this.listener = new Listener(this);
 
@@ -87,13 +86,20 @@ class SoundManager extends EventHandler {
     }
 
     destroy() {
-        window.removeEventListener('mousedown', this.resumeContext);
-        window.removeEventListener('touchend', this.resumeContext);
+        if (this._resumeContext) {
+            window.removeEventListener('mousedown', this._resumeContext);
+            window.removeEventListener('touchend', this._resumeContext);
+        }
+
+        if (this._unlock) {
+            window.removeEventListener('touchend', this._unlock);
+        }
 
         this.fire('destroy');
-        if (this.context && this.context.close) {
-            this.context.close();
-            this.context = null;
+
+        if (this._context && this._context.close) {
+            this._context.close();
+            this._context = null;
         }
     }
 
@@ -169,6 +175,21 @@ class SoundManager extends EventHandler {
         volume = math.clamp(volume, 0, 1);
         this._volume = volume;
         this.fire('volumechange', volume);
+    }
+
+    get context() {
+        // lazy create the AudioContext if possible
+        if (!this._context) {
+            if (hasAudioContext() || this._forceWebAudioApi) {
+                if (typeof AudioContext !== 'undefined') {
+                    this._context = new AudioContext();
+                } else if (typeof webkitAudioContext !== 'undefined') {
+                    this._context = new webkitAudioContext();
+                }
+            }
+        }
+
+        return this._context;
     }
 }
 

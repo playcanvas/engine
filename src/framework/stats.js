@@ -1,4 +1,4 @@
-import { Application } from './application.js';
+import { getApplication } from './globals.js';
 
 /**
  * @private
@@ -80,15 +80,15 @@ class ApplicationStats {
     }
 
     get scene() {
-        return Application.getApplication().scene._stats;
+        return getApplication().scene._stats;
     }
 
     get lightmapper() {
-        return Application.getApplication().lightmapper._stats;
+        return getApplication().lightmapper._stats;
     }
 
     get batcher() {
-        return Application.getApplication().batcher._stats;
+        return getApplication().batcher._stats;
     }
 }
 

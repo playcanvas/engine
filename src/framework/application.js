@@ -1,10 +1,10 @@
 import { version, revision } from '../core/core.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
+import { Color } from '../math/color.js';
 import { Vec3 } from '../math/vec3.js';
 
 import { http } from '../net/http.js';
@@ -120,6 +120,11 @@ import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
+
+import {
+    getApplication,
+    setApplication
+} from './globals.js';
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -406,7 +411,7 @@ class Application extends EventHandler {
 
         // Store application instance
         Application._applications[canvas.id] = this;
-        Application._currentApplication = this;
+        setApplication(this);
 
         app = this;
 
@@ -657,7 +662,7 @@ class Application extends EventHandler {
             opaqueSortMode: SORTMODE_NONE,
             passThrough: true
         });
-        this.defaultLayerComposition = new LayerComposition();
+        this.defaultLayerComposition = new LayerComposition("default");
 
         this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
@@ -812,8 +817,6 @@ class Application extends EventHandler {
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
-    static _currentApplication = null;
-
     static _applications = {};
 
     /**
@@ -830,7 +833,7 @@ class Application extends EventHandler {
      * var app = pc.Application.getApplication();
      */
     static getApplication(id) {
-        return id ? Application._applications[id] : Application._currentApplication;
+        return id ? Application._applications[id] : getApplication();
     }
 
     /**
@@ -1012,6 +1015,16 @@ class Application extends EventHandler {
         }
     }
 
+    // handle area light property
+    _handleAreaLightDataProperty(prop) {
+        var asset = this.assets.get(prop);
+        if (asset) {
+            this.setAreaLightLuts(asset);
+        } else {
+            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
+        }
+    }
+
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         var i;
@@ -1041,7 +1054,7 @@ class Application extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            var composition = new LayerComposition();
+            var composition = new LayerComposition("application");
 
             var layers = {};
             for (var key in props.layers) {
@@ -1082,6 +1095,10 @@ class Application extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
+        }
+
+        if (props.areaLightData) {
+            this._handleAreaLightDataProperty(props.areaLightData);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1666,6 +1683,27 @@ class Application extends EventHandler {
 
     /**
      * @function
+     * @private
+     * @name Application#setAreaLightLuts
+     * @description Sets the area light LUT asset for this app.
+     * @param {Asset} asset - Asset of type `binary` to be set.
+     */
+    setAreaLightLuts(asset) {
+        if (asset) {
+            var renderer = this.renderer;
+            asset.ready(function (asset) {
+                renderer._uploadAreaLightLuts(asset.resource);
+            });
+            this.assets.load(asset);
+        } else {
+            // #ifdef DEBUG
+            console.warn("setAreaLightLuts: asset is not valid");
+            // #endif
+        }
+    }
+
+    /**
+     * @function
      * @name Application#setSkybox
      * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
      * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
@@ -2084,7 +2122,7 @@ class Application extends EventHandler {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
-        var instance = new MeshInstance(tempGraphNode, mesh, material);
+        var instance = new MeshInstance(mesh, material, tempGraphNode);
         instance.cull = false;
 
         if (options.mask) instance.mask = options.mask;
@@ -2131,7 +2169,7 @@ class Application extends EventHandler {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
-        var quad = new MeshInstance(tempGraphNode, this._immediateData.quadMesh, material);
+        var quad = new MeshInstance(this._immediateData.quadMesh, material, tempGraphNode);
         quad.cull = false;
         this.meshInstanceArray[0] = quad;
 
@@ -2278,8 +2316,8 @@ class Application extends EventHandler {
 
         Application._applications[canvasId] = null;
 
-        if (Application._currentApplication === this) {
-            Application._currentApplication = null;
+        if (getApplication() === this) {
+            setApplication(null);
         }
     }
 
@@ -2308,7 +2346,7 @@ var makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        Application._currentApplication = application;
+        setApplication(application);
 
         if (frameRequest) {
             window.cancelAnimationFrame(frameRequest);

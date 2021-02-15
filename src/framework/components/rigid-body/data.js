@@ -20,6 +20,7 @@ class RigidBodyComponentData {
         this.angularFactor = new Vec3(1, 1, 1);
 
         this.friction = 0.5;
+        this.rollingFriction = 0;
         this.restitution = 0;
 
         this.type = BODYTYPE_STATIC;

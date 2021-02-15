@@ -1,8 +1,8 @@
-import { Color } from '../core/color.js';
 import { EventHandler } from '../core/event-handler.js';
 
-import { Vec3 } from '../math/vec3.js';
+import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
+import { Vec3 } from '../math/vec3.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
@@ -363,7 +363,7 @@ class Scene extends EventHandler {
         this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
         this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
 
-        if (settings.render.skyboxRotation !== undefined) {
+        if (settings.render.skyboxRotation) {
             this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
         }
 
@@ -432,7 +432,7 @@ class Scene extends EventHandler {
             if (skyLayer) {
                 var node = new GraphNode();
                 var mesh = createBox(device);
-                var meshInstance = new MeshInstance(node, mesh, material);
+                var meshInstance = new MeshInstance(mesh, material, node);
                 meshInstance.cull = false;
                 meshInstance._noDepthDrawGl1 = true;
 

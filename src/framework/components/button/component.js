@@ -1,7 +1,7 @@
 import { now } from '../../../core/time.js';
-import { Color } from '../../../core/color.js';
 
 import { math } from '../../../math/math.js';
+import { Color } from '../../../math/color.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 

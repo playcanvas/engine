@@ -132,7 +132,7 @@ class Model {
         for (i = 0; i < this.meshInstances.length; i++) {
             var meshInstance = this.meshInstances[i];
             var nodeIndex = srcNodes.indexOf(meshInstance.node);
-            var cloneMeshInstance = new MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+            var cloneMeshInstance = new MeshInstance(meshInstance.mesh, meshInstance.material, cloneNodes[nodeIndex]);
 
             if (meshInstance.skinInstance) {
                 var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
@@ -188,24 +188,7 @@ class Model {
      * }
      */
     generateWireframe() {
-        var i;
-        var mesh;
-
-        // Build an array of unique meshes in this model
-        var meshes = [];
-        for (i = 0; i < this.meshInstances.length; i++) {
-            mesh = this.meshInstances[i].mesh;
-            if (meshes.indexOf(mesh) === -1) {
-                meshes.push(mesh);
-            }
-        }
-
-        for (i = 0; i < meshes.length; ++i) {
-            mesh = meshes[i];
-            if (!mesh.primitive[RENDERSTYLE_WIREFRAME]) {
-                mesh.generateWireframe();
-            }
-        }
+        MeshInstance._prepareRenderStyleForArray(this.meshInstances, RENDERSTYLE_WIREFRAME);
     }
 }
 

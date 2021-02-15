@@ -1,7 +1,7 @@
 import { now } from  '../../core/time.js';
 
 import { Vec3 } from '../../math/vec3.js';
-import { Mat4 } from '../../math/mat4.js';
+import { Mat3 } from '../../math/mat3.js';
 
 import { BoundingBox } from '../../shape/bounding-box.js';
 
@@ -65,6 +65,8 @@ function equalLightLists(lightList1, lightList2) {
     }
     return  true;
 }
+
+var mat3 = new Mat3();
 
 var worldMatX = new Vec3();
 var worldMatY = new Vec3();
@@ -749,12 +751,23 @@ class BatchManager {
 
                         // transform position, normal and tangent to world space
                         if (!dynamic && stream.numComponents >= 3) {
-                            if (semantic == SEMANTIC_POSITION || semantic == SEMANTIC_NORMAL || semantic == SEMANTIC_TANGENT) {
-                                transform.transformFunction = semantic == SEMANTIC_POSITION ? Mat4.prototype.transformPoint : Mat4.prototype.transformVector;
+                            if (semantic === SEMANTIC_POSITION) {
+                                for (j = 0; j < totalComponents; j += stream.numComponents) {
+                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
+                                    transform.transformPoint(vec, vec);
+                                    subarray[j] = vec.x;
+                                    subarray[j + 1] = vec.y;
+                                    subarray[j + 2] = vec.z;
+                                }
+                            } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
+
+                                // handle non-uniform scale by using transposed inverse matrix to transform vectors
+                                transform.invertTo3x3(mat3);
+                                mat3.transpose();
 
                                 for (j = 0; j < totalComponents; j += stream.numComponents) {
                                     vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    transform.transformFunction(vec, vec);
+                                    mat3.transformVector(vec, vec);
                                     subarray[j] = vec.x;
                                     subarray[j + 1] = vec.y;
                                     subarray[j + 2] = vec.z;
@@ -819,7 +832,7 @@ class BatchManager {
             }
 
             // Create meshInstance
-            var meshInstance = new MeshInstance(this.rootNode, mesh, material);
+            var meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
             meshInstance.parameters = batch.origMeshInstances[0].parameters;
             meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
@@ -927,7 +940,7 @@ class BatchManager {
             nodes.push(clonedMeshInstances[i].node);
         }
 
-        batch2.meshInstance = new MeshInstance(batch.meshInstance.node, batch.meshInstance.mesh, batch.meshInstance.material);
+        batch2.meshInstance = new MeshInstance(batch.meshInstance.mesh, batch.meshInstance.material, batch.meshInstance.node);
         batch2.meshInstance._updateAabb = false;
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;

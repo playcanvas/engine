@@ -1,7 +1,7 @@
 import { now } from  '../core/time.js';
 
-import { Color } from '../core/color.js';
-
+import { math } from '../math/math.js';
+import { Color } from '../math/color.js';
 import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
 import { Quat } from '../math/quat.js';
@@ -20,7 +20,8 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR, SEMANTIC_POSITION,
     STENCILOP_KEEP,
-    TEXHINT_SHADOWMAP
+    TEXHINT_SHADOWMAP,
+    TEXTURETYPE_DEFAULT
 } from '../graphics/constants.js';
 import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
@@ -511,6 +512,9 @@ class ForwardRenderer {
         this.ambientColor = new Float32Array(3);
 
         this.cameraParams = new Float32Array(4);
+
+        // placeholder texture for area light LUTs
+        this._createAreaLightPlaceholderLuts();
     }
 
     sortCompare(drawCallA, drawCallB) {
@@ -563,13 +567,12 @@ class ForwardRenderer {
 
     getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
-        var shadowBuffer;
 
         if (shadowCam === null) {
             shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
             createShadowBuffer(device, light);
         } else {
-            shadowBuffer = shadowCam.renderTarget;
+            var shadowBuffer = shadowCam.renderTarget;
             if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
                 createShadowBuffer(device, light);
             }
@@ -820,6 +823,139 @@ class ForwardRenderer {
                        (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
                 stencil: camera._clearStencil
             }); // clear full RT
+        }
+    }
+
+    // placeholder LUT textures for area light
+    _createAreaLightPlaceholderLuts() {
+        var placeholderLutTex =  new Texture(this.device, {
+            width: 2,
+            height: 2,
+            format: PIXELFORMAT_R8_G8_B8_A8
+        });
+        placeholderLutTex.name = 'placeholder';
+
+        var pixels = placeholderLutTex.lock();
+        for (var i = 0; i < 4; i++) {
+            for (var c = 0; c < 4; c++) {
+                pixels[i * 4 + c] = 0;
+            }
+        }
+        placeholderLutTex.unlock();
+
+        this.device.scope.resolve('areaLightsLutTex1').setValue(placeholderLutTex);
+        this.device.scope.resolve('areaLightsLutTex2').setValue(placeholderLutTex);
+    }
+
+    // creates LUT texture used by area lights
+    _uploadAreaLightLuts(resource) {
+
+        function createTexture(device, data, format) {
+            var tex = new Texture(device, {
+                width: 64,
+                height: 64,
+                format: format,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                type: TEXTURETYPE_DEFAULT,
+                magFilter: FILTER_LINEAR,
+                minFilter: FILTER_NEAREST,
+                anisotropy: 1
+            });
+
+            tex.lock().set(data);
+            tex.unlock();
+            tex.upload();
+
+            return tex;
+        }
+
+        function offsetScale(data, offset, scale) {
+
+            var count = data.length;
+            var ret = new Float32Array(count);
+            for (var i = 0; i < count; i++) {
+                var n = i % 4;
+                ret[i] = (data[i] + offset[n]) * scale[n];
+            }
+            return ret;
+        }
+
+        function convertToHalfFloat(data) {
+
+            var count = data.length;
+            var ret = new Uint16Array(count);
+            var float2Half = math.float2Half;
+            for (var i = 0; i < count; i++) {
+                ret[i] = float2Half(data[i]);
+            }
+
+            return ret;
+        }
+
+        function convertToUint(data){
+
+            var count = data.length;
+            var ret = new Uint8ClampedArray(count);
+            for (var i = 0; i < count; i++) {
+                ret[i] = data[i] * 255;
+            }
+
+            return ret;
+        }
+
+        // create lut textures
+        var versions = new Int16Array(resource, 0, 2);
+
+        var luts = {
+            data1: new Float32Array(resource, 4, 16384),
+            data2: new Float32Array(resource, 4 + 16384 * 4, 16384),
+            majorVersion: versions[0],
+            minorVersion: versions[1]
+        };
+
+        if (luts.majorVersion !== 0 || luts.minorVersion !== 1) {
+            console.warn(`areaLightLuts asset version: ${luts.majorVersion}.${luts.minorVersion} is not supported in current engine version!`);
+        } else {
+            var device = this.device;
+            var data1, data2;
+            var format = device.areaLightLutFormat;
+
+            // pick format for lut texture
+            if (format === PIXELFORMAT_RGBA32F) {
+
+                // float
+                data1 = luts.data1;
+                data2 = luts.data2;
+
+            } else if (format === PIXELFORMAT_RGBA16F) {
+
+                // half float
+                data1 = convertToHalfFloat(luts.data1);
+                data2 = convertToHalfFloat(luts.data2);
+
+            } else {
+
+                // low precision format
+                // offset and scale to avoid clipping and increase precision - this is undone in the shader
+
+                var o1 = [0.0, 0.2976, 0.01381, 0.0];
+                var s1 = [0.999, 3.08737, 1.6546, 0.603249];
+
+                var o2 = [-0.306897, 0.0, 0.0, 0.0];
+                var s2 = [1.442787, 1.0, 1.0, 1.0];
+
+                data1 = convertToUint(offsetScale(luts.data1, o1, s1));
+                data2 = convertToUint(offsetScale(luts.data2, o2, s2));
+
+            }
+
+            var tex1 = createTexture(device, data1, format);
+            var tex2 = createTexture(device, data2, format);
+
+            // assign to scope variables
+            device.scope.resolve('areaLightsLutTex1').setValue(tex1);
+            device.scope.resolve('areaLightsLutTex2').setValue(tex2);
         }
     }
 
@@ -2271,7 +2407,7 @@ class ForwardRenderer {
                         mesh2.primitive[0].indexed = true;
                         mesh2.aabb = chunkAabb;
 
-                        var instance = new MeshInstance(drawCall.node, mesh2, drawCall.material);
+                        var instance = new MeshInstance(mesh2, drawCall.material, drawCall.node);
                         instance.isStatic = drawCall.isStatic;
                         instance.visible = drawCall.visible;
                         instance.layer = drawCall.layer;

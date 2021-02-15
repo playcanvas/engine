@@ -1,7 +1,7 @@
 import { string } from '../../../core/string.js';
-import { Color } from '../../../core/color.js';
 
 import { math } from '../../../math/math.js';
+import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
@@ -456,7 +456,7 @@ class TextElement {
                                           indices: meshInfo.indices
                                       });
 
-                var mi = new MeshInstance(this._node, mesh, this._material);
+                var mi = new MeshInstance(mesh, this._material, this._node);
                 mi.name = "Text Element: " + this._entity.name;
                 mi.castShadow = false;
                 mi.receiveShadow = false;

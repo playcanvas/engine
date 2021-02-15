@@ -531,10 +531,7 @@ class ModelComponent extends Component {
             var model = new Model();
             model.graph = node;
 
-            model.meshInstances = [new MeshInstance(node, mesh, this._material)];
-
-            if (this.system._inTools)
-                model.generateWireframe();
+            model.meshInstances = [new MeshInstance(mesh, this._material, node)];
 
             this.model = model;
             this._asset = null;
@@ -642,7 +639,11 @@ class ModelComponent extends Component {
 
             // Update any animation component
             if (this.entity.anim) {
-                this.entity.anim.resetStateGraph();
+                if (this.entity.anim.playing) {
+                    this.entity.anim.rebind();
+                } else {
+                    this.entity.anim.resetStateGraph();
+                }
             }
             // trigger event handler to load mapping
             // for new model

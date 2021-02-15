@@ -81,7 +81,7 @@ class Http {
      * @function
      * @name Http#get
      * @variation 2
-     * @description Perform an HTTP GET request to the given url.
+     * @description Perform an HTTP GET request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
@@ -99,6 +99,10 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.get("http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     get(url, options, callback) {
@@ -121,13 +125,17 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.post("http://example.com/", { "name": "Alix" }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     /**
      * @function
      * @name Http#post
      * @variation 2
-     * @description Perform an HTTP POST request to the given url.
+     * @description Perform an HTTP POST request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {object} data - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -145,6 +153,10 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.post("http://example.com/", { "name": "Alix" }, { "retry": true, "maxRetries": 5 }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     post(url, data, options, callback) {
@@ -168,13 +180,17 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.put("http://example.com/", { "name": "Alix" }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     /**
      * @function
      * @name Http#put
      * @variation 2
-     * @description Perform an HTTP PUT request to the given url.
+     * @description Perform an HTTP PUT request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
      * @param {Document|object} data - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -192,6 +208,10 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.put("http://example.com/", { "name": "Alix" }, { "retry": true, "maxRetries": 5 }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     put(url, data, options, callback) {
@@ -211,13 +231,17 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.del("http://example.com/", function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     /**
      * @function
      * @name Http#del
      * @variation 2
-     * @description Perform an HTTP DELETE request to the given url.
+     * @description Perform an HTTP DELETE request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {object} url - The URL to make the request to.
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
@@ -235,6 +259,10 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.del("http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     del(url, options, callback) {
@@ -254,13 +282,17 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.request("get", "http://example.com/", function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     /**
      * @function
      * @name Http#request
      * @variation 2
-     * @description Make a general purpose HTTP request.
+     * @description Make a general purpose HTTP request with addtional options such as headers, retries, credentials, etc.
      * @param {string} method - The HTTP method "GET", "POST", "PUT", "DELETE".
      * @param {string} url - The url to make the request to.
      * @param {object} options - Additional options.
@@ -279,6 +311,10 @@ class Http {
      * @param {callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
+     * @example
+     * pc.http.request("get", "http://example.com/", { "retry": true, "maxRetries": 5 }, function (err, response) {
+     *     console.log(response);
+     * });
      * @returns {XMLHttpRequest} The request object.
      */
     request(method, url, options, callback) {

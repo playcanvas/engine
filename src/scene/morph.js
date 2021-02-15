@@ -5,7 +5,7 @@ import { BoundingBox } from '../shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
-import { Application } from '../framework/application.js';
+import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
@@ -21,7 +21,7 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
         super();
 
-        this.device = graphicsDevice || Application.getApplication().graphicsDevice;
+        this.device = graphicsDevice || getApplication().graphicsDevice;
         this._targets = targets;
 
         // default to texture based morphing if available

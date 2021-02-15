@@ -20,7 +20,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](http://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )  
 
 
@@ -122,7 +122,6 @@ Now you can run various build options:
 | Command                | Description                               | Outputs                          |
 |------------------------|-------------------------------------------|----------------------------------|
 | `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run closure`      | Build minified release engine             | `build\playcanvas.min.js`        |
 | `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
 | `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
 
@@ -140,8 +139,8 @@ Latest stable release:
 
 Specific engine versions:
 
-* https://code.playcanvas.com/playcanvas-0.181.11.js
-* https://code.playcanvas.com/playcanvas-0.181.11.min.js
+* https://code.playcanvas.com/playcanvas-1.38.4.js
+* https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
 ### Generate Source Maps
 

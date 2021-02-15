@@ -141,6 +141,7 @@ const _schema = [
     'linearFactor',
     'angularFactor',
     'friction',
+    'rollingFriction',
     'restitution',
     'group',
     'mask',
@@ -224,7 +225,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, _data, properties) {
-        properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
+        properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'rollingFriction', 'restitution', 'type', 'group', 'mask'];
 
         // duplicate the input data because we are modifying it
         var data = {};
@@ -261,6 +262,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             linearFactor: [entity.rigidbody.linearFactor.x, entity.rigidbody.linearFactor.y, entity.rigidbody.linearFactor.z],
             angularFactor: [entity.rigidbody.angularFactor.x, entity.rigidbody.angularFactor.y, entity.rigidbody.angularFactor.z],
             friction: entity.rigidbody.friction,
+            rollingFriction: entity.rigidbody.rollingFriction,
             restitution: entity.rigidbody.restitution,
             type: entity.rigidbody.type,
             group: entity.rigidbody.group,

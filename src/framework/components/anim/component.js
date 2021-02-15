@@ -53,11 +53,8 @@ class AnimComponent extends Component {
         data.layers = [];
 
         var graph;
-        if (this.entity.model) {
-            var m = this.entity.model.model;
-            if (m) {
-                graph = m.getGraph();
-            }
+        if (this.entity.model?.model?.graph) {
+            graph = this.entity.model?.model?.graph;
         } else {
             // animating hierarchy without model
             graph = this.entity;
@@ -175,8 +172,20 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
+     * @name AnimComponent#rebind
+     * @description Rebind all of the components layers
+     */
+    rebind() {
+        for (var i = 0; i < this.data.layers.length; i++) {
+            this.data.layers[i].rebind();
+        }
+    }
+
+    /**
+     * @private
+     * @function
      * @name AnimComponent#findAnimationLayer
-     * @description Finds a pc.AnimComponentLayer in this component.
+     * @description Finds a AnimComponentLayer in this component.
      * @param {string} layerName - The name of the anim component layer to find
      * @returns {AnimComponentLayer} layer
      */
@@ -214,9 +223,9 @@ class AnimComponent extends Component {
     /**
      * @private
      * @function
-     * @name AnimComponent#removeStateAnimations
-     * @description Removes animations from a state in the loaded state graph.
-     * @param {string} nodeName - The name of the state node that should have its animation tracks removed.
+     * @name AnimComponent#removeNodeAnimations
+     * @description Removes animations from a node in the loaded state graph.
+     * @param {string} nodeName - The name of the node that should have its animation tracks removed.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
      */
     removeNodeAnimations(nodeName, layerName) {

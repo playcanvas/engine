@@ -1,7 +1,7 @@
 import { events } from '../../core/events.js';
-import { Color } from '../../core/color.js';
 import { EventHandler } from '../../core/event-handler.js';
 
+import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
