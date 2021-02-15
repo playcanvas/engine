@@ -75,7 +75,7 @@
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/playcanvas.d.ts",
-    "tsd": "jsdoc -c conf-tsd.json",
+    "tsd": "jsdoc -c conf-tsd.json; node tsd.js;",
     "unzipbundle": "gzip -x tests/assets/bundle.gz"
   }
 }
