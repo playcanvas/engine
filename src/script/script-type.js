@@ -75,7 +75,7 @@ function ScriptType(args) {
     // other script instances in the component
     this.__executionOrder = -1;
 }
-ScriptType.prototype = Object.create(EventHandler.prototype);	
+ScriptType.prototype = Object.create(EventHandler.prototype);
 ScriptType.prototype.constructor = ScriptType;
 
 /**
@@ -105,7 +105,7 @@ ScriptType.__getScriptName = function (constructorFn) {
  * @description Name of a Script Type
  */
 Object.defineProperty(ScriptType, 'scriptName', {
-    get: function () {	
+    get: function () {
         return this.__name;
     }
 });
