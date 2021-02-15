@@ -1543,7 +1543,7 @@ class GraphicsDevice extends EventHandler {
         if (target) {
             // If the active render target is auto-mipmapped, generate its mip chain
             var colorBuffer = target._colorBuffer;
-            if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer.pot) {
+            if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 gl.generateMipmap(colorBuffer._glTarget);
@@ -1865,7 +1865,7 @@ class GraphicsDevice extends EventHandler {
 
             mipObject = texture._levels[mipLevel];
 
-            if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
+            if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
                 // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                 // (this implies the call to _completePartialMipLevels above was unsuccessful)
@@ -2042,7 +2042,7 @@ class GraphicsDevice extends EventHandler {
             }
         }
 
-        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture.pot && texture._levels.length === 1) {
+        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || this.webgl2) && texture._levels.length === 1) {
             gl.generateMipmap(texture._glTarget);
             texture._mipmapsUploaded = true;
         }
@@ -2114,7 +2114,7 @@ class GraphicsDevice extends EventHandler {
 
         if (flags & 1) {
             var filter = texture._minFilter;
-            if (!texture.pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+            if ((!texture.pot && !this.webgl2) || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
                     filter = FILTER_NEAREST;
                 } else if (filter === FILTER_LINEAR_MIPMAP_NEAREST || filter === FILTER_LINEAR_MIPMAP_LINEAR) {
