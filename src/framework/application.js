@@ -147,11 +147,11 @@ var tempGraphNode = new GraphNode();
 
 /**
  * @class
- * @name pc.Application
- * @augments pc.EventHandler
- * @classdesc A pc.Application represents and manages your PlayCanvas application.
- * If you are developing using the PlayCanvas Editor, the pc.Application is created
- * for you. You can access your pc.Application instance in your scripts. Below is a
+ * @name Application
+ * @augments EventHandler
+ * @classdesc An Application represents and manages your PlayCanvas application.
+ * If you are developing using the PlayCanvas Editor, the Application is created
+ * for you. You can access your Application instance in your scripts. Below is a
  * skeleton script which shows how you can access the application 'app' property inside
  * the initialize and update functions:
  *
@@ -175,14 +175,14 @@ var tempGraphNode = new GraphNode();
  * @description Create a new Application.
  * @param {Element} canvas - The canvas element.
  * @param {object} options
- * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link pc.ElementComponent}s.
- * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input.
- * @param {pc.Mouse} [options.mouse] - Mouse handler for input.
- * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input.
- * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input.
+ * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
+ * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
+ * @param {Mouse} [options.mouse] - Mouse handler for input.
+ * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
+ * @param {GamePads} [options.gamepads] - Gamepad handler for input.
  * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
  * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
- * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link pc.GraphicsDevice} constructor.
+ * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
  * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
  * @example
  * // Engine-only example: create the application manually
@@ -195,8 +195,8 @@ var tempGraphNode = new GraphNode();
 // PROPERTIES
 
 /**
- * @name pc.Application#scene
- * @type {pc.Scene}
+ * @name Application#scene
+ * @type {Scene}
  * @description The scene managed by the application.
  * @example
  * // Set the tone mapping property of the application's scene
@@ -204,7 +204,7 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#timeScale
+ * @name Application#timeScale
  * @type {number}
  * @description Scales the global time delta. Defaults to 1.
  * @example
@@ -213,7 +213,7 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#maxDeltaTime
+ * @name Application#maxDeltaTime
  * @type {number}
  * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
  * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
@@ -224,8 +224,8 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#scenes
- * @type {pc.SceneRegistry}
+ * @name Application#scenes
+ * @type {SceneRegistry}
  * @description The scene registry managed by the application.
  * @example
  * // Search the scene registry for a item with the name 'racetrack1'
@@ -236,8 +236,8 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#assets
- * @type {pc.AssetRegistry}
+ * @name Application#assets
+ * @type {AssetRegistry}
  * @description The asset registry managed by the application.
  * @example
  * // Search the asset registry for all assets with the tag 'vehicle'
@@ -245,35 +245,35 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#graphicsDevice
- * @type {pc.GraphicsDevice}
+ * @name Application#graphicsDevice
+ * @type {GraphicsDevice}
  * @description The graphics device used by the application.
  */
 
 /**
- * @name pc.Application#systems
- * @type {pc.ComponentSystemRegistry}
- * @description The application's component system registry. The pc.Application
+ * @name Application#systems
+ * @type {ComponentSystemRegistry}
+ * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
- * * animation ({@link pc.AnimationComponentSystem})
- * * audiolistener ({@link pc.AudioListenerComponentSystem})
- * * button ({@link pc.ButtonComponentSystem})
- * * camera ({@link pc.CameraComponentSystem})
- * * collision ({@link pc.CollisionComponentSystem})
- * * element ({@link pc.ElementComponentSystem})
- * * layoutchild ({@link pc.LayoutChildComponentSystem})
- * * layoutgroup ({@link pc.LayoutGroupComponentSystem})
- * * light ({@link pc.LightComponentSystem})
- * * model ({@link pc.ModelComponentSystem})
- * * particlesystem ({@link pc.ParticleSystemComponentSystem})
- * * rigidbody ({@link pc.RigidBodyComponentSystem})
- * * screen ({@link pc.ScreenComponentSystem})
- * * script ({@link pc.ScriptComponentSystem})
- * * scrollbar ({@link pc.ScrollbarComponentSystem})
- * * scrollview ({@link pc.ScrollViewComponentSystem})
- * * sound ({@link pc.SoundComponentSystem})
- * * sprite ({@link pc.SpriteComponentSystem})
+ * * animation ({@link AnimationComponentSystem})
+ * * audiolistener ({@link AudioListenerComponentSystem})
+ * * button ({@link ButtonComponentSystem})
+ * * camera ({@link CameraComponentSystem})
+ * * collision ({@link CollisionComponentSystem})
+ * * element ({@link ElementComponentSystem})
+ * * layoutchild ({@link LayoutChildComponentSystem})
+ * * layoutgroup ({@link LayoutGroupComponentSystem})
+ * * light ({@link LightComponentSystem})
+ * * model ({@link ModelComponentSystem})
+ * * particlesystem ({@link ParticleSystemComponentSystem})
+ * * rigidbody ({@link RigidBodyComponentSystem})
+ * * screen ({@link ScreenComponentSystem})
+ * * script ({@link ScriptComponentSystem})
+ * * scrollbar ({@link ScrollbarComponentSystem})
+ * * scrollview ({@link ScrollViewComponentSystem})
+ * * sound ({@link SoundComponentSystem})
+ * * sprite ({@link SpriteComponentSystem})
  * @example
  * // Set global gravity to zero
  * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -283,8 +283,8 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#xr
- * @type {pc.XrManager}
+ * @name Application#xr
+ * @type {XrManager}
  * @description The XR Manager that provides ability to start VR/AR sessions.
  * @example
  * // check if VR is available
@@ -295,20 +295,20 @@ var tempGraphNode = new GraphNode();
 
 
 /**
- * @name pc.Application#lightmapper
- * @type {pc.Lightmapper}
+ * @name Application#lightmapper
+ * @type {Lightmapper}
  * @description The run-time lightmapper.
  */
 
 /**
- * @name pc.Application#loader
- * @type {pc.ResourceLoader}
+ * @name Application#loader
+ * @type {ResourceLoader}
  * @description The resource loader.
  */
 
 /**
- * @name pc.Application#root
- * @type {pc.Entity}
+ * @name Application#root
+ * @type {Entity}
  * @description The root entity of the application.
  * @example
  * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
@@ -316,51 +316,51 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#keyboard
- * @type {pc.Keyboard}
+ * @name Application#keyboard
+ * @type {Keyboard}
  * @description The keyboard device.
  */
 
 /**
- * @name pc.Application#mouse
- * @type {pc.Mouse}
+ * @name Application#mouse
+ * @type {Mouse}
  * @description The mouse device.
  */
 
 /**
- * @name pc.Application#touch
- * @type {pc.TouchDevice}
+ * @name Application#touch
+ * @type {TouchDevice}
  * @description Used to get touch events input.
  */
 
 /**
- * @name pc.Application#gamepads
- * @type {pc.GamePads}
+ * @name Application#gamepads
+ * @type {GamePads}
  * @description Used to access GamePad input.
  */
 
 /**
- * @name pc.Application#elementInput
- * @type {pc.ElementInput}
- * @description Used to handle input for {@link pc.ElementComponent}s.
+ * @name Application#elementInput
+ * @type {ElementInput}
+ * @description Used to handle input for {@link ElementComponent}s.
  */
 
 /**
- * @name pc.Application#scripts
- * @type {pc.ScriptRegistry}
+ * @name Application#scripts
+ * @type {ScriptRegistry}
  * @description The application's script registry.
  */
 
 /**
- * @name pc.Application#batcher
- * @type {pc.BatchManager}
+ * @name Application#batcher
+ * @type {BatchManager}
  * @description The application's batch manager. The batch manager is used to
  * merge mesh instances in the scene, which reduces the overall number of draw
  * calls, thereby boosting performance.
  */
 
 /**
- * @name pc.Application#autoRender
+ * @name Application#autoRender
  * @type {boolean}
  * @description When true, the application's render function is called every frame.
  * Setting autoRender to false is useful to applications where the rendered image
@@ -375,10 +375,10 @@ var tempGraphNode = new GraphNode();
  */
 
 /**
- * @name pc.Application#renderNextFrame
+ * @name Application#renderNextFrame
  * @type {boolean}
  * @description Set to true to render the scene on the next iteration of the main loop.
- * This only has an effect if {@link pc.Application#autoRender} is set to false. The
+ * This only has an effect if {@link Application#autoRender} is set to false. The
  * value of renderNextFrame is set back to false again as soon as the scene has been
  * rendered.
  * @example
@@ -389,16 +389,16 @@ var tempGraphNode = new GraphNode();
  */
 
  /**
-  * @name pc.Application#i18n
-  * @type {pc.I18n}
+  * @name Application#i18n
+  * @type {I18n}
   * @description Handles localization.
   */
 
 /**
  * @private
  * @static
- * @name pc.app
- * @type {pc.Application|undefined}
+ * @name app
+ * @type {Application|undefined}
  * @description Gets the current application, if any.
  */
 var app = null;
@@ -822,13 +822,13 @@ class Application extends EventHandler {
     /**
      * @static
      * @function
-     * @name pc.Application.getApplication
+     * @name Application.getApplication
      * @description Get the current application. In the case where there are multiple running
      * applications, the function can get an application based on a supplied canvas id. This
-     * function is particularly useful when the current pc.Application is not readily available.
+     * function is particularly useful when the current Application is not readily available.
      * For example, in the JavaScript console of the browser's developer tools.
      * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
-     * @returns {pc.Application|undefined} The running application, if any.
+     * @returns {Application|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
      */
@@ -838,13 +838,13 @@ class Application extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.Application#fillMode
+     * @name Application#fillMode
      * @type {string}
      * @description The current fill mode of the canvas. Can be:
      *
-     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
      */
     get fillMode() {
         return this._fillMode;
@@ -852,12 +852,12 @@ class Application extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.Application#resolutionMode
+     * @name Application#resolutionMode
      * @type {string}
      * @description The current resolution mode of the canvas, Can be:
      *
-     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      */
     get resolutionMode() {
         return this._resolutionMode;
@@ -865,10 +865,10 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#configure
+     * @name Application#configure
      * @description Load the application configuration file and apply application properties and fill the asset registry.
      * @param {string} url - The URL of the configuration file to load.
-     * @param {pc.callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         var self = this;
@@ -896,9 +896,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#preload
+     * @name Application#preload
      * @description Load all assets in the asset registry that are marked as 'preload'.
-     * @param {pc.callbacks.PreloadApp} callback - Function called when all assets are loaded.
+     * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         var self = this;
@@ -1261,7 +1261,7 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#start
+     * @name Application#start
      * @description Start the application. This function does the following:
      * 1. Fires an event on the application named 'start'
      * 2. Calls initialize for all components on entities in the hierarchy
@@ -1297,7 +1297,7 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#update
+     * @name Application#update
      * @description Update the application. This function will call the update
      * functions and then the postUpdate functions of all enabled components. It
      * will then update the current state of all connected input devices.
@@ -1347,9 +1347,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#render
+     * @name Application#render
      * @description Render the application's scene. More specifically, the scene's
-     * {@link pc.LayerComposition} is rendered by the application's {@link pc.ForwardRenderer}.
+     * {@link LayerComposition} is rendered by the application's {@link ForwardRenderer}.
      * This function is called internally in the application's main loop and
      * does not need to be called explicitly.
      */
@@ -1459,15 +1459,15 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#setCanvasFillMode
+     * @name Application#setCanvasFillMode
      * @description Controls how the canvas fills the window and resizes when the window changes.
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
-     * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
-     * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
-     * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * @param {number} [width] - The width of the canvas (only used when mode is pc.FILLMODE_NONE).
-     * @param {number} [height] - The height of the canvas (only used when mode is pc.FILLMODE_NONE).
+     * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
+     * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+     * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
+     * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
     setCanvasFillMode(mode, width, height) {
         this._fillMode = mode;
@@ -1476,12 +1476,12 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#setCanvasResolution
+     * @name Application#setCanvasResolution
      * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
      * @param {string} mode - The mode to use when setting the resolution. Can be:
      *
-     * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
-     * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
+     * * {@link RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+     * * {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
      * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
      */
@@ -1499,7 +1499,7 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#isHidden
+     * @name Application#isHidden
      * @description Queries the visibility of the window or tab in which the application is running.
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
@@ -1510,7 +1510,7 @@ class Application extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Application#onVisibilityChange
+     * @name Application#onVisibilityChange
      * @description Called when the visibility state of the current tab/window changes.
      */
     onVisibilityChange() {
@@ -1523,13 +1523,13 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#resizeCanvas
+     * @name Application#resizeCanvas
      * @description Resize the application's canvas element in line with the current fill mode.
-     * In {@link pc.FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * In {@link pc.FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
-     * In {@link pc.FILLMODE_NONE} mode, the canvas will always match the size provided.
-     * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
-     * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+     * In {@link FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+     * In {@link FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
+     * In {@link FILLMODE_NONE} mode, the canvas will always match the size provided.
+     * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
+     * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @returns {object} A object containing the values calculated to use as width and height.
      */
     resizeCanvas(width, height) {
@@ -1576,7 +1576,7 @@ class Application extends EventHandler {
 
     /**
      * @private
-     * @name pc.Application#onLibrariesLoaded
+     * @name Application#onLibrariesLoaded
      * @description Event handler called when all code libraries have been loaded.
      * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
      * been loaded.
@@ -1588,7 +1588,7 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#applySceneSettings
+     * @name Application#applySceneSettings
      * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
      * @param {object} settings - The scene settings to be applied.
      * @param {object} settings.physics - The physics settings to be applied.
@@ -1597,25 +1597,25 @@ class Application extends EventHandler {
      * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
      * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
      *
-     * * {@link pc.FOG_NONE}
-     * * {@link pc.FOG_LINEAR}
-     * * {@link pc.FOG_EXP}
-     * * {@link pc.FOG_EXP2}
+     * * {@link FOG_NONE}
+     * * {@link FOG_LINEAR}
+     * * {@link FOG_EXP}
+     * * {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
-     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
-     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
+     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
-     * * {@link pc.GAMMA_NONE}
-     * * {@link pc.GAMMA_SRGB}
+     * * {@link GAMMA_NONE}
+     * * {@link GAMMA_SRGB}
      * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      *
-     * * {@link pc.TONEMAP_LINEAR}
-     * * {@link pc.TONEMAP_FILMIC}
-     * * {@link pc.TONEMAP_HEJL}
-     * * {@link pc.TONEMAP_ACES}
+     * * {@link TONEMAP_LINEAR}
+     * * {@link TONEMAP_FILMIC}
+     * * {@link TONEMAP_HEJL}
+     * * {@link TONEMAP_ACES}
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1625,8 +1625,8 @@ class Application extends EventHandler {
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
-     * * {@link pc.BAKE_COLOR}: single color lightmap
-     * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     * * {@link BAKE_COLOR}: single color lightmap
+     * * {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
      * @example
@@ -1684,9 +1684,9 @@ class Application extends EventHandler {
     /**
      * @function
      * @private
-     * @name pc.Application#setAreaLightLuts
+     * @name Application#setAreaLightLuts
      * @description Sets the area light LUT asset for this app.
-     * @param {pc.Asset} asset - Asset of type `binary` to be set.
+     * @param {Asset} asset - Asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
         if (asset) {
@@ -1704,9 +1704,9 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#setSkybox
+     * @name Application#setSkybox
      * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
-     * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
+     * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
         if (asset) {
@@ -1748,8 +1748,8 @@ class Application extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.Application#enableVr
-     * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
+     * @name Application#enableVr
+     * @description Create and assign a {@link VrManager} object to allow this application render in VR.
      */
     enableVr() {
         if (!this.vr) {
@@ -1761,8 +1761,8 @@ class Application extends EventHandler {
      * @private
      * @deprecated
      * @function
-     * @name pc.Application#disableVr
-     * @description Destroy the {@link pc.VrManager}.
+     * @name Application#disableVr
+     * @description Destroy the {@link VrManager}.
      */
     disableVr() {
         if (this.vr) {
@@ -1869,20 +1869,20 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#renderLine
+     * @name Application#renderLine
      * @description Renders a line. Line start and end coordinates are specified in
      * world-space. If a single color is supplied, the line will be flat-shaded with
      * that color. If two colors are supplied, the line will be smooth shaded between
      * those colors. It is also possible to control which scene layer the line is
      * rendered into. By default, lines are rendered into the immediate layer
-     * {@link pc.LAYERID_IMMEDIATE}.
-     * @param {pc.Vec3} start - The start world-space coordinate of the line.
-     * @param {pc.Vec3} end - The end world-space coordinate of the line.
-     * @param {pc.Color} color - The start color of the line.
-     * @param {pc.Color} [endColor] - The end color of the line.
+     * {@link LAYERID_IMMEDIATE}.
+     * @param {Vec3} start - The start world-space coordinate of the line.
+     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Color} color - The start color of the line.
+     * @param {Color} [endColor] - The end color of the line.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
-     * to {@link pc.LAYERID_IMMEDIATE}.
+     * @param {Layer} [options.layer] - The layer to render the line into. Defaults
+     * to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
      * var start = new pc.Vec3(0, 0, 0);
@@ -1978,20 +1978,20 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#renderLines
+     * @name Application#renderLines
      * @description Renders an arbitrary number of discrete line segments. The lines
      * are not connected by each subsequent point in the array. Instead, they are
      * individual segments specified by two points. Therefore, the lengths of the
      * supplied position and color arrays must be the same and also must be a multiple
      * of 2. The colors of the ends of each line segment will be interpolated along
      * the length of each line.
-     * @param {pc.Vec3[]} position - An array of points to draw lines between. The
+     * @param {Vec3[]} position - An array of points to draw lines between. The
      * length of the array must be a multiple of 2.
-     * @param {pc.Color[]} color - An array of colors to color the lines. This
+     * @param {Color[]} color - An array of colors to color the lines. This
      * must be the same length as the position array. The length of the array must
      * also be a multiple of 2.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the lines into.
+     * @param {Layer} [options.layer] - The layer to render the lines into.
      * @example
      * // Render 2 discrete line segments
      * var points = [
@@ -2180,7 +2180,7 @@ class Application extends EventHandler {
 
     /**
      * @function
-     * @name pc.Application#destroy
+     * @name Application#destroy
      * @description Destroys application and removes all event listeners.
      * @example
      * this.app.destroy();
@@ -2324,10 +2324,10 @@ class Application extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.Application#getEntityFromIndex
+     * @name Application#getEntityFromIndex
      * @description Get entity from the index by guid.
      * @param {string} guid - The GUID to search for.
-     * @returns {pc.Entity} The Entity with the GUID or null.
+     * @returns {Entity} The Entity with the GUID or null.
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];

@@ -46,33 +46,33 @@ class Command {
 
 /**
  * @class
- * @name pc.MeshInstance
- * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
+ * @name MeshInstance
+ * @classdesc An instance of a {@link Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
- * @param {pc.Mesh} mesh - The graphics mesh being instanced.
- * @param {pc.Material} material - The material used to render this instance.
- * @param {pc.GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link pc.RenderComponent} and will use the node the component is attached to.
- * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
+ * @param {Mesh} mesh - The graphics mesh being instanced.
+ * @param {Material} material - The material used to render this instance.
+ * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
+ * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
- * @property {pc.GraphNode} node The graph node defining the transform for this instance.
- * @property {pc.Mesh} mesh The graphics mesh being instanced.
- * @property {pc.Material} material The material used by this mesh instance.
+ * @property {GraphNode} node The graph node defining the transform for this instance.
+ * @property {Mesh} mesh The graphics mesh being instanced.
+ * @property {Material} material The material used by this mesh instance.
  * @property {number} renderStyle The render style of the mesh instance. Can be:
  *
- * * {@link pc.RENDERSTYLE_SOLID}
- * * {@link pc.RENDERSTYLE_WIREFRAME}
- * * {@link pc.RENDERSTYLE_POINTS}
+ * * {@link RENDERSTYLE_SOLID}
+ * * {@link RENDERSTYLE_WIREFRAME}
+ * * {@link RENDERSTYLE_POINTS}
  *
- * Defaults to pc.RENDERSTYLE_SOLID.
- * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
+ * Defaults to {@link RENDERSTYLE_SOLID}.
+ * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
- * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
- * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
+ * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
+ * @property {callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
  * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
  * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
- * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
+ * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if the object is actually going to be rendered.
  * @example
  * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
  * var mesh = pc.createBox(graphicsDevice);
@@ -440,9 +440,9 @@ class MeshInstance {
     }
 
     /**
-     * @name pc.MeshInstance#mask
+     * @name MeshInstance#mask
      * @type {number}
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
+     * @description Mask controlling which {@link LightComponent}s light this mesh instance, which {@link CameraComponent} sees it and in which {@link Layer} it is rendered.
      * Defaults to 1.
      */
     get mask() {
@@ -457,7 +457,7 @@ class MeshInstance {
     }
 
     /**
-     * @name pc.MeshInstance#instancingCount
+     * @name MeshInstance#instancingCount
      * @type {number}
      * @description Number of instances when using hardware instancing to render the mesh.
      */
@@ -541,9 +541,9 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#setInstancing
-     * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
-     * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+     * @name MeshInstance#setInstancing
+     * @description Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
+     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
      * Pass null to turn off hardware instancing.
      */
     setInstancing(vertexBuffer) {
@@ -573,7 +573,7 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#getParameter
+     * @name MeshInstance#getParameter
      * @description Retrieves the specified shader parameter from a mesh instance.
      * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
@@ -584,11 +584,11 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#setParameter
+     * @name MeshInstance#setParameter
      * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
      * if set on Material this mesh instance uses for rendering.
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number|number[]|Texture} data - The value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included in.
      */
     setParameter(name, data, passFlags = -524285) {
@@ -645,7 +645,7 @@ class MeshInstance {
 
      /**
       * @function
-      * @name pc.MeshInstance#deleteParameter
+      * @name MeshInstance#deleteParameter
       * @description Deletes a shader parameter on a mesh instance.
       * @param {string} name - The name of the parameter to delete.
       */

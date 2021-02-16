@@ -25,7 +25,7 @@ var chanId = { r: 0, g: 1, b: 2, a: 3 };
 /**
  * @private
  * @class
- * @name pc.Light
+ * @name Light
  * @classdesc A light.
  */
 class Light {
@@ -107,9 +107,9 @@ class Light {
     /**
      * @private
      * @function
-     * @name pc.Light#clone
+     * @name Light#clone
      * @description Duplicates a light node but does not 'deep copy' the hierarchy.
-     * @returns {pc.Light} A cloned Light.
+     * @returns {Light} A cloned Light.
      */
     clone() {
         var clone = new Light();

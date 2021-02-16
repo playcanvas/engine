@@ -160,8 +160,8 @@ function _collectGlobalTempVars(code, list) {
 /**
  * @private
  * @class
- * @name pc.PostEffectPass
- * @param {pc.Application} app - The application.
+ * @name PostEffectPass
+ * @param {Application} app - The application.
  * @param {object} options - Optional options object.
  */
 class PostEffectPass {

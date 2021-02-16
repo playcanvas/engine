@@ -21,16 +21,16 @@ function clamp(num, min, max) {
 /**
  * @private
  * @class
- * @name pc.AnimBlendTree
+ * @name AnimBlendTree
  * @classdesc BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as an argument which defines which function should be used to determine the weights of each of it's children, based on the current parameter value.
  * @description Create a new BlendTree.
- * @param {pc.AnimState} state - The AnimState that this AnimBlendTree belongs to.
- * @param {pc.AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a pc.AnimBlendTree hierarchy.
- * @param {string} name - The name of the BlendTree. Used when assigning a pc.AnimTrack to its children.
- * @param {number|pc.Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a pc.AnimBlendTree.
- * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of pc.ANIM_BLEND_*.
+ * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
+ * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the AnimNode is stored as part of a {@link AnimBlendTree} hierarchy.
+ * @param {string} name - The name of the BlendTree. Used when assigning a {@link AnimTrack} to its children.
+ * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this node when it's part of a {@link AnimBlendTree}.
+ * @param {string} type - Determines which blending algorithm is used to calculate the weights of its child nodes. One of ANIM_BLEND_*.
  * @param {string[]} parameters - The anim component parameters which are used to calculate the current weights of the blend trees children.
- * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type pc.AnimNode or pc.BlendTree.
+ * @param {object[]} children - The child nodes that this blend tree should create. Can either be of type {@link AnimNode} or {@link BlendTree}.
  * @param {Function} findParameter - Used at runtime to get the current parameter values.
  */
 class AnimBlendTree extends AnimNode {

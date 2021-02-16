@@ -3,7 +3,7 @@ import { Material } from './material.js';
 /**
  * @private
  * @class
- * @name pc.DepthMaterial
+ * @name DepthMaterial
  * @classdesc A Depth material is for rendering linear depth values to a render target.
  */
 class DepthMaterial extends Material {
@@ -14,9 +14,9 @@ class DepthMaterial extends Material {
     /**
      * @private
      * @function
-     * @name pc.DepthMaterial#clone
+     * @name DepthMaterial#clone
      * @description Duplicates a Depth material.
-     * @returns {pc.DepthMaterial} A cloned Depth material.
+     * @returns {DepthMaterial} A cloned Depth material.
      */
     clone() {
         var clone = new DepthMaterial();

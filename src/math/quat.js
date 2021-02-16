@@ -3,7 +3,7 @@ import { Vec3 } from './vec3.js';
 
 /**
  * @class
- * @name pc.Quat
+ * @name Quat
  * @classdesc A quaternion.
  * @description Create a new Quat object.
  * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
@@ -13,7 +13,7 @@ import { Vec3 } from './vec3.js';
  */
 /**
  * @field
- * @name pc.Quat#x
+ * @name Quat#x
  * @type {number}
  * @description The x component of the quaternion.
  * @example
@@ -27,7 +27,7 @@ import { Vec3 } from './vec3.js';
  */
 /**
  * @field
- * @name pc.Quat#y
+ * @name Quat#y
  * @type {number}
  * @description The y component of the quaternion.
  * @example
@@ -41,7 +41,7 @@ import { Vec3 } from './vec3.js';
  */
 /**
  * @field
- * @name pc.Quat#z
+ * @name Quat#z
  * @type {number}
  * @description The z component of the quaternion.
  * @example
@@ -55,7 +55,7 @@ import { Vec3 } from './vec3.js';
  */
 /**
  * @field
- * @name pc.Quat#w
+ * @name Quat#w
  * @type {number}
  * @description The w component of the quaternion.
  * @example
@@ -84,9 +84,9 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#clone
+     * @name Quat#clone
      * @description Returns an identical copy of the specified quaternion.
-     * @returns {pc.Quat} A quaternion containing the result of the cloning.
+     * @returns {Quat} A quaternion containing the result of the cloning.
      * @example
      * var q = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
      * var qclone = q.clone();
@@ -107,10 +107,10 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#copy
+     * @name Quat#copy
      * @description Copies the contents of a source quaternion to a destination quaternion.
-     * @param {pc.Quat} rhs - The quaternion to be copied.
-     * @returns {pc.Quat} Self for chaining.
+     * @param {Quat} rhs - The quaternion to be copied.
+     * @returns {Quat} Self for chaining.
      * @example
      * var src = new pc.Quat();
      * var dst = new pc.Quat();
@@ -128,9 +128,9 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#equals
+     * @name Quat#equals
      * @description Reports whether two quaternions are equal.
-     * @param {pc.Quat} rhs - The quaternion to be compared against.
+     * @param {Quat} rhs - The quaternion to be compared against.
      * @returns {boolean} True if the quaternions are equal and false otherwise.
      * @example
      * var a = new pc.Quat();
@@ -143,13 +143,13 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#getAxisAngle
+     * @name Quat#getAxisAngle
      * @description Gets the rotation axis and angle for a given
      *  quaternion. If a quaternion is created with
      *  setFromAxisAngle, this method will return the same
      *  values as provided in the original parameter list
      *  OR functionally equivalent values.
-     * @param {pc.Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
+     * @param {Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
      * @returns {number} Angle, in degrees, of the rotation.
      * @example
      * var q = new pc.Quat();
@@ -186,10 +186,10 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#getEulerAngles
+     * @name Quat#getEulerAngles
      * @description Converts the supplied quaternion to Euler angles.
-     * @param {pc.Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
-     * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
+     * @param {Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
+     * @returns {Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
      */
     getEulerAngles(eulers = new Vec3()) {
@@ -220,9 +220,9 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#invert
+     * @name Quat#invert
      * @description Generates the inverse of the specified quaternion.
-     * @returns {pc.Quat} Self for chaining.
+     * @returns {Quat} Self for chaining.
      * @example
      * // Create a quaternion rotated 180 degrees around the y-axis
      * var rot = new pc.Quat().setFromEulerAngles(0, 180, 0);
@@ -236,7 +236,7 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#length
+     * @name Quat#length
      * @description Returns the magnitude of the specified quaternion.
      * @returns {number} The magnitude of the specified quaternion.
      * @example
@@ -251,7 +251,7 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#lengthSq
+     * @name Quat#lengthSq
      * @description Returns the magnitude squared of the specified quaternion.
      * @returns {number} The magnitude of the specified quaternion.
      * @example
@@ -266,10 +266,10 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#mul
+     * @name Quat#mul
      * @description Returns the result of multiplying the specified quaternions together.
-     * @param {pc.Quat} rhs - The quaternion used as the second multiplicand of the operation.
-     * @returns {pc.Quat} Self for chaining.
+     * @param {Quat} rhs - The quaternion used as the second multiplicand of the operation.
+     * @returns {Quat} Self for chaining.
      * @example
      * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
      * var b = new pc.Quat().setFromEulerAngles(0, 60, 0);
@@ -303,11 +303,11 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#mul2
+     * @name Quat#mul2
      * @description Returns the result of multiplying the specified quaternions together.
-     * @param {pc.Quat} lhs - The quaternion used as the first multiplicand of the operation.
-     * @param {pc.Quat} rhs - The quaternion used as the second multiplicand of the operation.
-     * @returns {pc.Quat} Self for chaining.
+     * @param {Quat} lhs - The quaternion used as the first multiplicand of the operation.
+     * @param {Quat} rhs - The quaternion used as the second multiplicand of the operation.
+     * @returns {Quat} Self for chaining.
      * @example
      * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
      * var b = new pc.Quat().setFromEulerAngles(0, 60, 0);
@@ -342,9 +342,9 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#normalize
+     * @name Quat#normalize
      * @description Returns the specified quaternion converted in place to a unit quaternion.
-     * @returns {pc.Quat} The result of the normalization.
+     * @returns {Quat} The result of the normalization.
      * @example
      * var v = new pc.Quat(0, 0, 0, 5);
      *
@@ -371,13 +371,13 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#set
+     * @name Quat#set
      * @description Sets the specified quaternion to the supplied numerical values.
      * @param {number} x - The x component of the quaternion.
      * @param {number} y - The y component of the quaternion.
      * @param {number} z - The z component of the quaternion.
      * @param {number} w - The w component of the quaternion.
-     * @returns {pc.Quat} Self for chaining.
+     * @returns {Quat} Self for chaining.
      * @example
      * var q = new pc.Quat();
      * q.set(1, 0, 0, 0);
@@ -396,11 +396,11 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#setFromAxisAngle
+     * @name Quat#setFromAxisAngle
      * @description Sets a quaternion from an angular rotation around an axis.
-     * @param {pc.Vec3} axis - World space axis around which to rotate.
+     * @param {Vec3} axis - World space axis around which to rotate.
      * @param {number} angle - Angle to rotate around the given axis in degrees.
-     * @returns {pc.Quat} Self for chaining.
+     * @returns {Quat} Self for chaining.
      * @example
      * var q = new pc.Quat();
      * q.setFromAxisAngle(pc.Vec3.UP, 90);
@@ -423,12 +423,12 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#setFromEulerAngles
+     * @name Quat#setFromEulerAngles
      * @description Sets a quaternion from Euler angles specified in XYZ order.
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
      * @param {number} ez - Angle to rotate around Z axis in degrees.
-     * @returns {pc.Quat} Self for chaining.
+     * @returns {Quat} Self for chaining.
      * @example
      * var q = new pc.Quat();
      * q.setFromEulerAngles(45, 90, 180);
@@ -458,12 +458,12 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#setFromMat4
+     * @name Quat#setFromMat4
      * @description Converts the specified 4x4 matrix to a quaternion. Note that since
      * a quaternion is purely a representation for orientation, only the translational part
      * of the matrix is lost.
-     * @param {pc.Mat4} m - The 4x4 matrix to convert.
-     * @returns {pc.Quat} Self for chaining.
+     * @param {Mat4} m - The 4x4 matrix to convert.
+     * @returns {Quat} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
      * var rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -573,15 +573,15 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#slerp
+     * @name Quat#slerp
      * @description Performs a spherical interpolation between two quaternions. The result of
      * the interpolation is written to the quaternion calling the function.
-     * @param {pc.Quat} lhs - The quaternion to interpolate from.
-     * @param {pc.Quat} rhs - The quaternion to interpolate to.
+     * @param {Quat} lhs - The quaternion to interpolate from.
+     * @param {Quat} rhs - The quaternion to interpolate to.
      * @param {number} alpha - The value controlling the interpolation in relation to the two input
      * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
      * in between generating a spherical interpolation between the two.
-     * @returns {pc.Quat} Self for chaining.
+     * @returns {Quat} Self for chaining.
      * @example
      * var q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
      * var q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
@@ -651,11 +651,11 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#transformVector
+     * @name Quat#transformVector
      * @description Transforms a 3-dimensional vector by the specified quaternion.
-     * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.
-     * @param {pc.Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
-     * @returns {pc.Vec3} The input vector v transformed by the current instance.
+     * @param {Vec3} vec - The 3-dimensional vector to be transformed.
+     * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
+     * @returns {Vec3} The input vector v transformed by the current instance.
      * @example
      * // Create a 3-dimensional vector
      * var v = new pc.Vec3(1, 2, 3);
@@ -685,7 +685,7 @@ class Quat {
 
     /**
      * @function
-     * @name pc.Quat#toString
+     * @name Quat#toString
      * @description Converts the quaternion to string form.
      * @returns {string} The quaternion in string form.
      * @example
@@ -701,8 +701,8 @@ class Quat {
      * @field
      * @static
      * @readonly
-     * @name pc.Quat.IDENTITY
-     * @type {pc.Quat}
+     * @name Quat.IDENTITY
+     * @type {Quat}
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
     static IDENTITY = Object.freeze(new Quat(0, 0, 0, 1));
@@ -711,8 +711,8 @@ class Quat {
      * @field
      * @static
      * @readonly
-     * @name pc.Quat.ZERO
-     * @type {pc.Quat}
+     * @name Quat.ZERO
+     * @type {Quat}
      * @description A constant quaternion set to [0, 0, 0, 0].
      */
     static ZERO = Object.freeze(new Quat(0, 0, 0, 0));

@@ -16,20 +16,20 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 
 /**
  * @class
- * @name pc.XrManager
- * @augments pc.EventHandler
+ * @name XrManager
+ * @augments EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
- * @param {pc.Application} app - The main application.
+ * @param {Application} app - The main application.
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.
  * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
- * any of pc.XRTYPE_*.
+ * any of XRTYPE_*.
  * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
- * is running. Can be any of pc.XRSPACE_*.
- * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
- * @property {pc.XrInput} input provides access to Input Sources.
- * @property {pc.XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
+ * is running. Can be any of XRSPACE_*.
+ * @property {Entity|null} camera Active camera for which XR session is running or null.
+ * @property {XrInput} input provides access to Input Sources.
+ * @property {XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.
  * @property {object|null} session provides access to XRSession of WebXR
  */
 class XrManager extends EventHandler {
@@ -89,7 +89,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#available
+     * @name XrManager#available
      * @description Fired when availability of specific XR type is changed.
      * @param {string} type - The session type that has changed availability.
      * @param {boolean} available - True if specified session type is now available.
@@ -101,7 +101,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#available:[type]
+     * @name XrManager#available:[type]
      * @description Fired when availability of specific XR type is changed.
      * @param {boolean} available - True if specified session type is now available.
      * @example
@@ -112,7 +112,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#start
+     * @name XrManager#start
      * @description Fired when XR session is started
      * @example
      * app.xr.on('start', function () {
@@ -122,7 +122,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Fired when XR session is ended
      * @example
      * app.xr.on('end', function () {
@@ -132,7 +132,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#update
+     * @name XrManager#update
      * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
      * @description Fired when XR session is updated, providing relevant XRFrame object.
      * @example
@@ -143,7 +143,7 @@ class XrManager extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrManager#error
+     * @name XrManager#error
      * @param {Error} error - Error object related to failure of session start or check of session type support.
      * @description Fired when XR session is failed to start or failed to check for session type support.
      * @example
@@ -154,22 +154,22 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#start
-     * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
-     * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
+     * @name XrManager#start
+     * @description Attempts to start XR session for provided {@link CameraComponent} and optionally fires callback when session is created or failed to create.
+     * @param {CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @param {string} spaceType - reference space type. Can be one of the following:
      *
-     * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
-     * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
-     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
+     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
+     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
      *
      * @example
      * button.on('click', function () {
@@ -177,7 +177,7 @@ class XrManager extends EventHandler {
      * });
      * @param {object} [options] - object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
-     * @param {pc.callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {callbacks.XrError} [options.callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     start(camera, type, spaceType, options) {
         var self = this;
@@ -272,7 +272,7 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#end
+     * @name XrManager#end
      * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
      * @example
      * app.keyboard.on('keydown', function (evt) {
@@ -280,7 +280,7 @@ class XrManager extends EventHandler {
      *         app.xr.end();
      *     }
      * });
-     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     * @param {callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
     end(callback) {
         if (! this._session) {
@@ -295,13 +295,13 @@ class XrManager extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrManager#isAvailable
+     * @name XrManager#isAvailable
      * @description Check if specific type of session is available
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
      * if (app.xr.isAvailable(pc.XRTYPE_VR)) {

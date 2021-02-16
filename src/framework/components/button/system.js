@@ -24,11 +24,11 @@ const _schema = [
 
 /**
  * @class
- * @name pc.ButtonComponentSystem
- * @augments pc.ComponentSystem
- * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+ * @name ButtonComponentSystem
+ * @augments ComponentSystem
+ * @classdesc Manages creation of {@link ButtonComponent}s.
  * @description Create a new ButtonComponentSystem.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class ButtonComponentSystem extends ComponentSystem {
     constructor(app) {
