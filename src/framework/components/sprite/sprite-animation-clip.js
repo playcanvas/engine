@@ -11,7 +11,7 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
  * @name SpriteAnimationClip
  * @augments EventHandler
  * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
- * @param {pc.SpriteComponent} component - The sprite component managing this clip.
+ * @param {SpriteComponent} component - The sprite component managing this clip.
  * @param {object} data - Data for the new animation clip.
  * @param {number} [data.fps] - Frames per second for the animation clip.
  * @param {object} [data.loop] - Whether to loop the animation clip.

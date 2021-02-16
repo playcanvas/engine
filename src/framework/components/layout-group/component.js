@@ -23,9 +23,9 @@ function isEnabledAndHasEnabledElement(entity) {
  * @description Create a new LayoutGroupComponent.
  * @classdesc A LayoutGroupComponent enables the Entity to position and scale child
  * {@link ElementComponent}s according to configurable layout rules.
- * @param {pc.LayoutGroupComponentSystem} system - The ComponentSystem that created
+ * @param {LayoutGroupComponentSystem} system - The ComponentSystem that created
  * this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} orientation Whether the layout should run horizontally or
  * vertically. Can be:
  *

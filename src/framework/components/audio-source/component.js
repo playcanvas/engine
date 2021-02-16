@@ -13,9 +13,9 @@ import { Component } from '../component.js';
  * @classdesc The AudioSource Component controls playback of an audio sample. This
  * class will be deprecated in favor of {@link SoundComponent}.
  * @description Create a new AudioSource Component.
- * @param {pc.AudioSourceComponentSystem} system - The ComponentSystem that created
+ * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
  * this component.
- * @param {pc.Entity} entity - The entity that the Component is attached to.
+ * @param {Entity} entity - The entity that the Component is attached to.
  * @property {pc.Asset[]} assets The list of audio assets - can also be an array of
  * asset ids.
  * @property {boolean} activate If true the audio will begin playing as soon as the

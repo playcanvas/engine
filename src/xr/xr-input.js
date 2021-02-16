@@ -8,7 +8,7 @@ import { XrInputSource } from './xr-input-source.js';
  * @augments EventHandler
  * @classdesc Provides access to input sources for WebXR.
  * @description Provides access to input sources for WebXR.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {pc.XrInputSource[]} inputSources List of active {@link XrInputSource}.
  */
 class XrInput extends EventHandler {
@@ -33,7 +33,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#add
      * @description Fired when new {@link XrInputSource} is added to the list.
-     * @param {pc.XrInputSource} inputSource - Input source that has been added
+     * @param {XrInputSource} inputSource - Input source that has been added
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     // new input source is added
@@ -44,7 +44,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#remove
      * @description Fired when {@link XrInputSource} is removed to the list.
-     * @param {pc.XrInputSource} inputSource - Input source that has been removed
+     * @param {XrInputSource} inputSource - Input source that has been removed
      * @example
      * app.xr.input.on('remove', function (inputSource) {
      *     // input source is removed
@@ -55,7 +55,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#select
      * @description Fired when {@link XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered select event
+     * @param {XrInputSource} inputSource - Input source that triggered select event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
      * var ray = new pc.Ray();
@@ -71,7 +71,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#selectstart
      * @description Fired when {pc.XrInputSource} has started to trigger primary action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered selectstart event
+     * @param {XrInputSource} inputSource - Input source that triggered selectstart event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
@@ -79,7 +79,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#selectend
      * @description Fired when {pc.XrInputSource} has ended triggerring primary action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered selectend event
+     * @param {XrInputSource} inputSource - Input source that triggered selectend event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
@@ -87,7 +87,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#squeeze
      * @description Fired when {pc.XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered squeeze event
+     * @param {XrInputSource} inputSource - Input source that triggered squeeze event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
@@ -95,7 +95,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#squeezestart
      * @description Fired when {pc.XrInputSource} has started to trigger sqeeze action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered squeezestart event
+     * @param {XrInputSource} inputSource - Input source that triggered squeezestart event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
      * app.xr.input.on('squeezestart', function (inputSource, evt) {
@@ -109,7 +109,7 @@ class XrInput extends EventHandler {
      * @event
      * @name XrInput#squeezeend
      * @description Fired when {pc.XrInputSource} has ended triggerring sqeeze action.
-     * @param {pc.XrInputSource} inputSource - Input source that triggered squeezeend event
+     * @param {XrInputSource} inputSource - Input source that triggered squeezeend event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 

@@ -175,11 +175,11 @@ var tempGraphNode = new GraphNode();
  * @description Create a new Application.
  * @param {Element} canvas - The canvas element.
  * @param {object} options
- * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
- * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input.
- * @param {pc.Mouse} [options.mouse] - Mouse handler for input.
- * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input.
- * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input.
+ * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
+ * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
+ * @param {Mouse} [options.mouse] - Mouse handler for input.
+ * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
+ * @param {GamePads} [options.gamepads] - Gamepad handler for input.
  * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
  * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
  * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link GraphicsDevice} constructor.
@@ -868,7 +868,7 @@ class Application extends EventHandler {
      * @name Application#configure
      * @description Load the application configuration file and apply application properties and fill the asset registry.
      * @param {string} url - The URL of the configuration file to load.
-     * @param {pc.callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
+     * @param {callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
         var self = this;
@@ -898,7 +898,7 @@ class Application extends EventHandler {
      * @function
      * @name Application#preload
      * @description Load all assets in the asset registry that are marked as 'preload'.
-     * @param {pc.callbacks.PreloadApp} callback - Function called when all assets are loaded.
+     * @param {callbacks.PreloadApp} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         var self = this;
@@ -1686,7 +1686,7 @@ class Application extends EventHandler {
      * @private
      * @name Application#setAreaLightLuts
      * @description Sets the area light LUT asset for this app.
-     * @param {pc.Asset} asset - Asset of type `binary` to be set.
+     * @param {Asset} asset - Asset of type `binary` to be set.
      */
     setAreaLightLuts(asset) {
         if (asset) {
@@ -1706,7 +1706,7 @@ class Application extends EventHandler {
      * @function
      * @name Application#setSkybox
      * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
-     * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
+     * @param {Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
      */
     setSkybox(asset) {
         if (asset) {
@@ -1876,12 +1876,12 @@ class Application extends EventHandler {
      * those colors. It is also possible to control which scene layer the line is
      * rendered into. By default, lines are rendered into the immediate layer
      * {@link LAYERID_IMMEDIATE}.
-     * @param {pc.Vec3} start - The start world-space coordinate of the line.
-     * @param {pc.Vec3} end - The end world-space coordinate of the line.
-     * @param {pc.Color} color - The start color of the line.
-     * @param {pc.Color} [endColor] - The end color of the line.
+     * @param {Vec3} start - The start world-space coordinate of the line.
+     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Color} color - The start color of the line.
+     * @param {Color} [endColor] - The end color of the line.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
+     * @param {Layer} [options.layer] - The layer to render the line into. Defaults
      * to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
@@ -1985,13 +1985,13 @@ class Application extends EventHandler {
      * supplied position and color arrays must be the same and also must be a multiple
      * of 2. The colors of the ends of each line segment will be interpolated along
      * the length of each line.
-     * @param {pc.Vec3[]} position - An array of points to draw lines between. The
+     * @param {Vec3[]} position - An array of points to draw lines between. The
      * length of the array must be a multiple of 2.
-     * @param {pc.Color[]} color - An array of colors to color the lines. This
+     * @param {Color[]} color - An array of colors to color the lines. This
      * must be the same length as the position array. The length of the array must
      * also be a multiple of 2.
      * @param {object} [options] - Options to set rendering properties.
-     * @param {pc.Layer} [options.layer] - The layer to render the lines into.
+     * @param {Layer} [options.layer] - The layer to render the lines into.
      * @example
      * // Render 2 discrete line segments
      * var points = [

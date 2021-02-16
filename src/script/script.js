@@ -29,7 +29,7 @@ const reservedScriptNames = new Set([
  * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
  * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {pc.Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to add a script to.
+ * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to add a script to.
  * By default it will use `pc.Application.getApplication()` to get current {@link Application}.
  * @returns {Class<pc.ScriptType>} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
@@ -98,7 +98,7 @@ createScript.reservedAttributes = reservedAttributes;
  * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
  * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {pc.Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to register the script type to.
+ * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to register the script type to.
  * By default it will use `pc.Application.getApplication()` to get current {@link Application}.
  * @example
  * // define a ES6 script class

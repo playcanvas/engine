@@ -9,7 +9,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * @augments EventHandler
  * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
  * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if AR Hit Test is supported.
  * @property {pc.XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
  */
@@ -34,7 +34,7 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#add
      * @description Fired when new {@link XrHitTestSource} is added to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
      *     // new hit test source is added
@@ -45,7 +45,7 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#remove
      * @description Fired when {@link XrHitTestSource} is removed to the list.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
+     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
      *     // hit test source is removed
@@ -56,10 +56,10 @@ class XrHitTest extends EventHandler {
      * @event
      * @name XrHitTest#result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
-     * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
-     * @param {pc.Vec3} position - Position of hit test
-     * @param {pc.Quat} rotation - Rotation of hit test
-     * @param {pc.XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
+     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result
+     * @param {Vec3} position - Position of hit test
+     * @param {Quat} rotation - Rotation of hit test
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -134,8 +134,8 @@ class XrHitTest extends EventHandler {
      * * {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
      * * {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {pc.Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {pc.callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
+     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,

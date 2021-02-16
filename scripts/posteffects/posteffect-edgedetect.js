@@ -5,7 +5,7 @@
  * @classdesc Edge Detection post effect using Sobel filter.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
 function EdgeDetectEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);

@@ -4,7 +4,7 @@ import { getApplication } from './globals.js';
  * @private
  * @class
  * @name ApplicationStats
- * @param {pc.GraphicsDevice} device - The graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  */
 class ApplicationStats {
     constructor(device) {

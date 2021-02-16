@@ -190,8 +190,8 @@ class ContainerResource {
  *     },
  * });
  * ```
- * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
- * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+ * @param {GraphicsDevice} device - The graphics device that will be rendering.
+ * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ContainerHandler {
     constructor(device, defaultMaterial) {

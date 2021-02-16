@@ -5,7 +5,7 @@
  * @classdesc Applies an outline effect on input render target
  * @description Creates new instance of the post effect.
  * @augments PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @param {number} thickness - The thickness for the outline effect passed here to be used as a constant in shader.
  * @property {pc.Texture} texture The outline texture to use.
  * @property {pc.Color} color The outline color.

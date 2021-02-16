@@ -16,8 +16,8 @@ import { Component } from '../component.js';
  * @augments Component
  * @classdesc The Animation Component allows an Entity to playback animations on models.
  * @description Create a new AnimationComponent.
- * @param {pc.AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.

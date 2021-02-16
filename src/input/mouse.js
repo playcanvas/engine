@@ -9,28 +9,28 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * @event
  * @name Mouse#mousemove
  * @description Fired when the mouse is moved.
- * @param {pc.MouseEvent} event - The MouseEvent object.
+ * @param {MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
  * @name Mouse#mousedown
  * @description Fired when a mouse button is pressed.
- * @param {pc.MouseEvent} event - The MouseEvent object.
+ * @param {MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
  * @name Mouse#mouseup
  * @description Fired when a mouse button is released.
- * @param {pc.MouseEvent} event - The MouseEvent object.
+ * @param {MouseEvent} event - The MouseEvent object.
  */
 
 /**
  * @event
  * @name Mouse#mousewheel
  * @description Fired when a mouse wheel is moved.
- * @param {pc.MouseEvent} event - The MouseEvent object.
+ * @param {MouseEvent} event - The MouseEvent object.
  */
 
 /**
@@ -144,8 +144,8 @@ class Mouse extends EventHandler {
      * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
      * * Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
      *
-     * @param {pc.callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
-     * @param {pc.callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
+     * @param {callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
+     * @param {callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
      */
     enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
@@ -179,7 +179,7 @@ class Mouse extends EventHandler {
      * @function
      * @name Mouse#disablePointerLock
      * @description Return control of the mouse cursor to the user.
-     * @param {pc.callbacks.LockMouse} [success] - Function called when the mouse lock is disabled.
+     * @param {callbacks.LockMouse} [success] - Function called when the mouse lock is disabled.
      */
     disablePointerLock(success) {
         if (!document.exitPointerLock) {

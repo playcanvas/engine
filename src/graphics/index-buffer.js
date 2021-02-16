@@ -21,7 +21,7 @@ import {
  *                                      3,
  *                                      pc.BUFFER_STATIC,
  *                                      indices);
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to
  * manage this index buffer.
  * @param {number} format - The type of each index to be stored in the index
  * buffer. Can be:

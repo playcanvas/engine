@@ -18,7 +18,7 @@ const _schema = [
  * @augments ComponentSystem
  * @classdesc Manages creation of {@link ScrollbarComponent}s.
  * @description Create a new ScrollbarComponentSystem.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class ScrollbarComponentSystem extends ComponentSystem {
     constructor(app) {

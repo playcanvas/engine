@@ -15,8 +15,8 @@ var _transform = new Mat4();
  * @augments Component
  * @classdesc A ScreenComponent enables the Entity to render child {@link ElementComponent}s using anchors and positions in the ScreenComponent's space.
  * @description Create a new ScreenComponent.
- * @param {pc.ScreenComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ScreenComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {boolean} screenSpace If true then the ScreenComponent will render its child {@link ElementComponent}s in screen space instead of world space. Enable this to create 2D user interfaces.
  * @property {boolean} cull If true then elements inside this screen will be not be rendered when outside of the screen (only valid when screenSpace is true).
  * @property {string} scaleMode Can either be {@link SCALEMODE_NONE} or {@link SCALEMODE_BLEND}. See the description of referenceResolution for more information.

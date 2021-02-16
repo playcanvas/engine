@@ -19,8 +19,8 @@ function capTime(time, duration) {
  * @name SoundInstance
  * @augments EventHandler
  * @classdesc A pc.SoundInstance plays a {@link Sound}.
- * @param {pc.SoundManager} manager - The sound manager.
- * @param {pc.Sound} sound - The sound to play.
+ * @param {SoundManager} manager - The sound manager.
+ * @param {Sound} sound - The sound to play.
  * @param {object} options - Options for the instance.
  * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
  * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.

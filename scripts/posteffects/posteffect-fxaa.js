@@ -5,7 +5,7 @@
  * @classdesc Implements the FXAA post effect by NVIDIA.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
 function FxaaEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);

@@ -15,7 +15,7 @@ import { VertexFormat } from '../graphics/vertex-format.js';
  * @param {ArrayBuffer} [options.deltaNormals] - An array of 3-dimensional vertex normal offsets.
  * @param {number} options.deltaNormalsType - A format to store normal offsets inside {@link VertexBuffer}. Defaults to {@link TYPE_FLOAT32} if not provided.
  * @param {string} [options.name] - Name.
- * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
+ * @param {BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
  * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
  */
 class MorphTarget {

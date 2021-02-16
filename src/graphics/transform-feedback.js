@@ -22,7 +22,7 @@ import { VertexBuffer } from './vertex-buffer.js';
  * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and
  * write to the output buffer, then the input/output buffers will be automatically swapped, so
  * you'll immediately see the result.
- * @param {pc.VertexBuffer} inputBuffer - The input vertex buffer.
+ * @param {VertexBuffer} inputBuffer - The input vertex buffer.
  * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
  *
  * * {@link BUFFER_STATIC}
@@ -102,7 +102,7 @@ class TransformFeedback {
      * @function
      * @name TransformFeedback.createShader
      * @description Creates a transform feedback ready vertex shader from code.
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
      * @returns {pc.Shader} A shader to use in the process() function.
@@ -124,7 +124,7 @@ class TransformFeedback {
      * @function
      * @name TransformFeedback#process
      * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
-     * @param {pc.Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
+     * @param {Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
      * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
      */
     process(shader, swap = true) {

@@ -5,7 +5,7 @@ var CompressUtils = {
      * @name CompressUtils#setCompressedPRS
      * @description Set position, rotation and scale of an entity
      *   using compressed scene format
-     * @param {pc.Entity} entity - The entity
+     * @param {Entity} entity - The entity
      * @param {object} data - Json entity data from a compressed scene
      * @param {object} compressed - Compression metadata
      */

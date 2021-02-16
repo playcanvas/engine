@@ -9,7 +9,7 @@ import {
  * @name AnimTransition
  * @classdesc AnimTransitions represent connections in the controllers state graph between AnimStates. During each frame, the controller tests to see if any of the AnimTransitions have the current AnimState as their source (from) state. If so and the AnimTransitions parameter based conditions are met, the controller will transition to the destination state.
  * @description Create a new AnimTransition.
- * @param {pc.AnimController} controller - The controller this AnimTransition is associated with.
+ * @param {AnimController} controller - The controller this AnimTransition is associated with.
  * @param {string} from - The state that this transition will exit from.
  * @param {string} to - The state that this transition will transition to.
  * @param {number} time - The duration of the transition in seconds.

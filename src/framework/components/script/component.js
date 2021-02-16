@@ -12,8 +12,8 @@ import { Entity } from '../../entity.js';
  * @augments Component
  * @classdesc The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
  * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
- * @param {pc.ScriptComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
  */
 class ScriptComponent extends Component {
@@ -108,7 +108,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#create
      * @description Fired when a script instance is created and attached to component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create', function (name, scriptInstance) {
      *     // new script instance added to component
@@ -119,7 +119,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#create:[name]
      * @description Fired when a script instance is created and attached to component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create:playerController', function (scriptInstance) {
      *     // new script instance 'playerController' is added to component
@@ -131,7 +131,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#destroy
      * @description Fired when a script instance is destroyed and removed from component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy', function (name, scriptInstance) {
      *     // script instance has been destroyed and removed from component
@@ -142,7 +142,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#destroy:[name]
      * @description Fired when a script instance is destroyed and removed from component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy:playerController', function (scriptInstance) {
      *     // script instance 'playerController' has been destroyed and removed from component
@@ -154,7 +154,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#move
      * @description Fired when a script instance is moved in component.
      * @param {string} name - The name of the Script Type.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -167,7 +167,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#move:[name]
      * @description Fired when a script instance is moved in component.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -180,7 +180,7 @@ class ScriptComponent extends Component {
      * @event
      * @name ScriptComponent#error
      * @description Fired when a script instance had an exception.
-     * @param {pc.ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
      * @param {Error} err - Native JS Error object with details of an error.
      * @param {string} method - The method of the script instance that the exception originated from.
      * @example
@@ -783,7 +783,7 @@ class ScriptComponent extends Component {
      * to other entities in the same subtree that is cloned, then we want the new script attributes to point
      * at the cloned entities. This method remaps the script attributes for this entity and it assumes that this
      * entity is the result of the clone operation.
-     * @param {pc.ScriptComponent} oldScriptComponent - The source script component that belongs to the entity that was being cloned.
+     * @param {ScriptComponent} oldScriptComponent - The source script component that belongs to the entity that was being cloned.
      * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the entities that were cloned.
      */
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {

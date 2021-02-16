@@ -89,8 +89,8 @@ function intersectLineQuad(p, q, corners) {
  * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
  * @description Create an instance of a pc.ElementInputEvent.
  * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
- * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+ * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
+ * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
  * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
  * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
  * @property {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
@@ -124,8 +124,8 @@ class ElementInputEvent {
  * @classdesc Represents a Mouse event fired on a {@link ElementComponent}.
  * @description Create an instance of a pc.ElementMouseEvent.
  * @param {MouseEvent} event - The MouseEvent that was originally raised.
- * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+ * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
+ * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  * @param {number} lastX - The last x coordinate.
@@ -181,8 +181,8 @@ class ElementMouseEvent extends ElementInputEvent {
  * @classdesc Represents a TouchEvent fired on a {@link ElementComponent}.
  * @description Create an instance of a pc.ElementTouchEvent.
  * @param {TouchEvent} event - The TouchEvent that was originally raised.
- * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+ * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
+ * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
  * @param {number} x - The x coordinate of the touch that triggered the event.
  * @param {number} y - The y coordinate of the touch that triggered the event.
  * @param {Touch} touch - The touch object that triggered the event.
@@ -209,9 +209,9 @@ class ElementTouchEvent extends ElementInputEvent {
  * @classdesc Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  * @description Create an instance of a pc.ElementSelectEvent.
  * @param {object} event - The XRInputSourceEvent that was originally raised.
- * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {pc.XrInputSource} inputSource - The XR input source that this event was originally raised from.
+ * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
+ * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
+ * @param {XrInputSource} inputSource - The XR input source that this event was originally raised from.
  * @property {pc.XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
 class ElementSelectEvent extends ElementInputEvent {
@@ -360,7 +360,7 @@ class ElementInput {
      * @function
      * @name ElementInput#addElement
      * @description Add a {@link ElementComponent} to the internal list of ElementComponents that are being checked for input.
-     * @param {pc.ElementComponent} element - The ElementComponent.
+     * @param {ElementComponent} element - The ElementComponent.
      */
     addElement(element) {
         if (this._elements.indexOf(element) === -1)
@@ -371,7 +371,7 @@ class ElementInput {
      * @function
      * @name ElementInput#removeElement
      * @description Remove a {@link ElementComponent} from the internal list of ElementComponents that are being checked for input.
-     * @param {pc.ElementComponent} element - The ElementComponent.
+     * @param {ElementComponent} element - The ElementComponent.
      */
     removeElement(element) {
         var idx = this._elements.indexOf(element);

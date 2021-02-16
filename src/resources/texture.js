@@ -52,8 +52,8 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource
      * @param {string} url.original - The original URL useful for identifying the resource type
-     * @param {pc.callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
-     * @param {pc.Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     /* eslint-disable jsdoc/require-returns-check */
     load(url, callback, asset) {
@@ -67,8 +67,8 @@ class TextureParser {
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {pc.Asset|null} asset - Optional asset which is passed in by ResourceLoader.
-     * @param {pc.GraphicsDevice} device - The graphics device
+     * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
+     * @param {GraphicsDevice} device - The graphics device
      * @returns {pc.Texture} The parsed resource data.
      */
     /* eslint-disable jsdoc/require-returns-check */
@@ -153,9 +153,9 @@ var _completePartialMipmapChain = function (texture) {
  * @name TextureHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading 2D and 3D {@link Texture} resources.
- * @param {pc.GraphicsDevice} device - The graphics device.
- * @param {pc.AssetRegistry} assets - The asset registry.
- * @param {pc.ResourceLoader} loader - The resource loader.
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {AssetRegistry} assets - The asset registry.
+ * @param {ResourceLoader} loader - The resource loader.
  */
 class TextureHandler {
     constructor(device, assets, loader) {

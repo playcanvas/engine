@@ -29,7 +29,7 @@ var PLACEHOLDER_MAP = {
  * @name MaterialHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link Material} resources.
- * @param {pc.Application} app - The running {@link Application}.
+ * @param {Application} app - The running {@link Application}.
  */
 class MaterialHandler {
     constructor(app) {

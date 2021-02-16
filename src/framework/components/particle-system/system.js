@@ -83,7 +83,7 @@ const _schema = [
  * @augments ComponentSystem
  * @classdesc Allows an Entity to render a particle system.
  * @description Create a new ParticleSystemComponentSystem.
- * @param {pc.Application} app - The Application.
+ * @param {Application} app - The Application.
  */
 class ParticleSystemComponentSystem extends ComponentSystem {
     constructor(app) {

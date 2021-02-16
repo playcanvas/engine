@@ -85,7 +85,7 @@ class Vec4 {
      * @function
      * @name Vec4#add
      * @description Adds a 4-dimensional vector to another in place.
-     * @param {pc.Vec4} rhs - The vector to add to the specified vector.
+     * @param {Vec4} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
@@ -109,8 +109,8 @@ class Vec4 {
      * @function
      * @name Vec4#add2
      * @description Adds two 4-dimensional vectors together and returns the result.
-     * @param {pc.Vec4} lhs - The first vector operand for the addition.
-     * @param {pc.Vec4} rhs - The second vector operand for the addition.
+     * @param {Vec4} lhs - The first vector operand for the addition.
+     * @param {Vec4} rhs - The second vector operand for the addition.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
@@ -149,7 +149,7 @@ class Vec4 {
      * @function
      * @name Vec4#copy
      * @description Copied the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
-     * @param {pc.Vec4} rhs - A vector to copy to the specified vector.
+     * @param {Vec4} rhs - A vector to copy to the specified vector.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var src = new pc.Vec4(10, 20, 30, 40);
@@ -172,7 +172,7 @@ class Vec4 {
      * @function
      * @name Vec4#dot
      * @description Returns the result of a dot product operation performed on the two specified 4-dimensional vectors.
-     * @param {pc.Vec4} rhs - The second 4-dimensional vector operand of the dot product.
+     * @param {Vec4} rhs - The second 4-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
      * @example
      * var v1 = new pc.Vec4(5, 10, 20, 40);
@@ -188,7 +188,7 @@ class Vec4 {
      * @function
      * @name Vec4#equals
      * @description Reports whether two vectors are equal.
-     * @param {pc.Vec4} rhs - The vector to compare to the specified vector.
+     * @param {Vec4} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
      * @example
      * var a = new pc.Vec4(1, 2, 3, 4);
@@ -233,8 +233,8 @@ class Vec4 {
      * @function
      * @name Vec4#lerp
      * @description Returns the result of a linear interpolation between two specified 4-dimensional vectors.
-     * @param {pc.Vec4} lhs - The 4-dimensional to interpolate from.
-     * @param {pc.Vec4} rhs - The 4-dimensional to interpolate to.
+     * @param {Vec4} lhs - The 4-dimensional to interpolate from.
+     * @param {Vec4} rhs - The 4-dimensional to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
@@ -261,7 +261,7 @@ class Vec4 {
      * @function
      * @name Vec4#mul
      * @description Multiplies a 4-dimensional vector to another in place.
-     * @param {pc.Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
+     * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(2, 3, 4, 5);
@@ -285,8 +285,8 @@ class Vec4 {
      * @function
      * @name Vec4#mul2
      * @description Returns the result of multiplying the specified 4-dimensional vectors together.
-     * @param {pc.Vec4} lhs - The 4-dimensional vector used as the first multiplicand of the operation.
-     * @param {pc.Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
+     * @param {Vec4} lhs - The 4-dimensional vector used as the first multiplicand of the operation.
+     * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(2, 3, 4, 5);
@@ -391,7 +391,7 @@ class Vec4 {
      * @function
      * @name Vec4#sub
      * @description Subtracts a 4-dimensional vector from another in place.
-     * @param {pc.Vec4} rhs - The vector to add to the specified vector.
+     * @param {Vec4} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
@@ -415,8 +415,8 @@ class Vec4 {
      * @function
      * @name Vec4#sub2
      * @description Subtracts two 4-dimensional vectors from one another and returns the result.
-     * @param {pc.Vec4} lhs - The first vector operand for the subtraction.
-     * @param {pc.Vec4} rhs - The second vector operand for the subtraction.
+     * @param {Vec4} lhs - The first vector operand for the subtraction.
+     * @param {Vec4} rhs - The second vector operand for the subtraction.
      * @returns {pc.Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);

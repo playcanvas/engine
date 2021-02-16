@@ -41,8 +41,8 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * methods will be called on each tick. initialize and postInitialize methods will run once
  * when the script instance is in `enabled` state during app tick.
  * @param {object} args - The input arguments object
- * @param {pc.Application} args.app - The {@link Application} that is running the script
- * @param {pc.Entity} args.entity - The {@link Entity} that the script is attached to
+ * @param {Application} args.app - The {@link Application} that is running the script
+ * @param {Entity} args.entity - The {@link Entity} that the script is attached to
  *
  */
 class ScriptType extends EventHandler {
@@ -205,7 +205,7 @@ class ScriptType extends EventHandler {
      * @description Called when a ScriptType that already exists in the registry
      * gets redefined. If the new ScriptType has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
-     * @param {pc.ScriptType} old - Old instance of the scriptType to copy data to the new instance.
+     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
      */
 
     /**

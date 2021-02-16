@@ -6,7 +6,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * @name XrImageTracking
  * @classdesc Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
  * @description Image Tracking provides the ability to track real world images by provided image samples and their estimate sizes.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Image Tracking is supported.
  * @property {boolean} available True if Image Tracking is available. This property will be false if no images were provided for the AR session or there was an error processing the provided images.
  * @property {pc.XrTrackedImage[]} images List of {@link XrTrackedImage} that contain tracking information.
@@ -57,7 +57,7 @@ class XrImageTracking extends EventHandler {
      * @function
      * @name XrImageTracking#remove
      * @description Remove an image from image tracking.
-     * @param {pc.XrTrackedImage} trackedImage - Tracked image to be removed. Modifying the tracked images list is only possible before an AR session is started.
+     * @param {XrTrackedImage} trackedImage - Tracked image to be removed. Modifying the tracked images list is only possible before an AR session is started.
      */
     remove(trackedImage) {
         if (this._manager.active) return;

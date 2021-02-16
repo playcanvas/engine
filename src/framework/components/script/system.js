@@ -26,7 +26,7 @@ var executionOrderCounter = 0;
  * @augments ComponentSystem
  * @description Create a new ScriptComponentSystem.
  * @classdesc Allows scripts to be attached to an Entity and executed.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class ScriptComponentSystem extends ComponentSystem {
     constructor(app) {

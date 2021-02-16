@@ -35,9 +35,9 @@ function getCoding(texture) {
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
  * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
  * a gloss maps).
- * @param {pc.GraphicsDevice} device - The graphics device
- * @param {pc.Texture} source - The source texture
- * @param {pc.Texture} target - The target texture
+ * @param {GraphicsDevice} device - The graphics device
+ * @param {Texture} source - The source texture
+ * @param {Texture} target - The target texture
  * @param {number} [specularPower] - optional specular power. When specular power is specified,
  * the source is convolved by a phong-weighted kernel raised to the specified power. Otherwise
  * the function performs a standard resample.

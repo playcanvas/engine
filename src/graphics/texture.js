@@ -24,7 +24,7 @@ var _blockSizeTable = null;
  * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
  * Typically, the texel data represents an image that is mapped over geometry.
  * @description Creates a new texture.
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
  * @param {object} [options] - Object for passing optional arguments.
  * @param {string} [options.name] - The name of the texture.
  * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.

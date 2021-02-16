@@ -5,7 +5,7 @@ import { SceneParser } from '../resources/parser/scene.js';
  * @class
  * @name Template
  * @classdesc Create a Template resource from raw database data.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @param {object} data - Asset data from the database.
  */
 class Template {

@@ -11,9 +11,9 @@ import { SoundSlot } from './slot.js';
  * @augments Component
  * @classdesc The Sound Component controls playback of {@link Sound}s.
  * @description Create a new Sound Component.
- * @param {pc.SoundComponentSystem} system - The ComponentSystem that created this
+ * @param {SoundComponentSystem} system - The ComponentSystem that created this
  * component.
- * @param {pc.Entity} entity - The entity that the Component is attached to.
+ * @param {Entity} entity - The entity that the Component is attached to.
  * @property {number} volume The volume modifier to play the audio with. In range 0-1.
  * Defaults to 1.
  * @property {number} pitch The pitch modifier to play the audio with. Must be larger
@@ -437,40 +437,40 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
  * @event
  * @name SoundComponent#play
  * @description Fired when a sound instance starts playing.
- * @param {pc.SoundSlot} slot - The slot whose instance started playing.
- * @param {pc.SoundInstance} instance - The instance that started playing.
+ * @param {SoundSlot} slot - The slot whose instance started playing.
+ * @param {SoundInstance} instance - The instance that started playing.
  */
 
 /**
  * @event
  * @name SoundComponent#pause
  * @description Fired when a sound instance is paused.
- * @param {pc.SoundSlot} slot - The slot whose instance was paused.
- * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
+ * @param {SoundSlot} slot - The slot whose instance was paused.
+ * @param {SoundInstance} instance - The instance that was paused created to play the sound.
  */
 
 /**
  * @event
  * @name SoundComponent#resume
  * @description Fired when a sound instance is resumed..
- * @param {pc.SoundSlot} slot - The slot whose instance was resumed.
- * @param {pc.SoundInstance} instance - The instance that was resumed.
+ * @param {SoundSlot} slot - The slot whose instance was resumed.
+ * @param {SoundInstance} instance - The instance that was resumed.
  */
 
 /**
  * @event
  * @name SoundComponent#stop
  * @description Fired when a sound instance is stopped.
- * @param {pc.SoundSlot} slot - The slot whose instance was stopped.
- * @param {pc.SoundInstance} instance - The instance that was stopped.
+ * @param {SoundSlot} slot - The slot whose instance was stopped.
+ * @param {SoundInstance} instance - The instance that was stopped.
  */
 
 /**
  * @event
  * @name SoundComponent#end
  * @description Fired when a sound instance stops playing because it reached its ending.
- * @param {pc.SoundSlot} slot - The slot whose instance ended.
- * @param {pc.SoundInstance} instance - The instance that ended.
+ * @param {SoundSlot} slot - The slot whose instance ended.
+ * @param {SoundInstance} instance - The instance that ended.
  */
 
 export { SoundComponent };

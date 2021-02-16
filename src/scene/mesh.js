@@ -150,7 +150,7 @@ class GeometryVertexStream {
  * See {@link VertexBuffer}, {@link IndexBuffer} and {@link VertexFormat} for details.
  * ***
  * @description Create a new mesh.
- * @param {pc.GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
+ * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If it is not provided, a device is obtained
  * from the {@link Application}.
  * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
  * @property {pc.IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can

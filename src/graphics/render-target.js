@@ -13,10 +13,10 @@ var defaultOptions = {
  * @classdesc A render target is a rectangular rendering surface.
  * @description Creates a new render target. A color buffer or a depth buffer must be set.
  * @param {object} options - Object for passing optional arguments.
- * @param {pc.Texture} [options.colorBuffer] - The texture that this render target will treat as a rendering surface.
+ * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a rendering surface.
  * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to true. Ignored if depthBuffer is defined.
  * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil. Defaults to false. Ignored if depthBuffer is defined or depth is false.
- * @param {pc.Texture} [options.depthBuffer] - The texture that this render target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are ignored.
+ * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are ignored.
  * Texture must have pc.PIXELFORMAT_DEPTH or PIXELFORMAT_DEPTHSTENCIL format.
  * @param {number} [options.samples] - Number of hardware anti-aliasing samples (WebGL2 only). Default is 1.
  * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA resolve after rendering to this RT (see pc.RenderTarget#resolve). Defaults to true;
@@ -184,7 +184,7 @@ class RenderTarget {
      * @name RenderTarget#copy
      * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
      * Depth buffer can only be copied on WebGL 2.0.
-     * @param {pc.RenderTarget} source - Source render target to copy from.
+     * @param {RenderTarget} source - Source render target to copy from.
      * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.

@@ -8,8 +8,8 @@ import { Asset } from './asset.js';
  * @name AssetListLoader
  * @augments EventHandler
  * @classdesc Used to load a group of assets and fires a callback when all assets are loaded.
- * @param {pc.Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load.
- * @param {pc.AssetRegistry} assetRegistry - The application's asset registry.
+ * @param {Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load.
+ * @param {AssetRegistry} assetRegistry - The application's asset registry.
  */
 class AssetListLoader extends EventHandler {
     constructor(assetList, assetRegistry) {

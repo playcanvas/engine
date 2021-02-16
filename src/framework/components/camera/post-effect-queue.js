@@ -13,8 +13,8 @@ var depthLayer;
  * @name PostEffectQueue
  * @classdesc Used to manage multiple post effects for a camera.
  * @description Create a new PostEffectQueue.
- * @param {pc.Application} app - The application.
- * @param {pc.CameraComponent} camera - The camera component.
+ * @param {Application} app - The application.
+ * @param {CameraComponent} camera - The camera component.
  */
 class PostEffectQueue {
     constructor(app, camera) {
@@ -129,7 +129,7 @@ class PostEffectQueue {
      * @name PostEffectQueue#addEffect
      * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
-     * @param {pc.PostEffect} effect - The post effect to add to the queue.
+     * @param {PostEffect} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
@@ -225,7 +225,7 @@ class PostEffectQueue {
      * @function
      * @name PostEffectQueue#removeEffect
      * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
-     * @param {pc.PostEffect} effect - The post effect to remove.
+     * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
         // find index of effect

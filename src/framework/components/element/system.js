@@ -24,7 +24,7 @@ const _schema = ['enabled'];
  * @name ElementComponentSystem
  * @augments ComponentSystem
  * @classdesc Manages creation of {@link ElementComponent}s.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  */
 class ElementComponentSystem extends ComponentSystem {
     constructor(app) {

@@ -15,7 +15,7 @@ import { Asset } from './asset.js';
  * @classdesc Container for all assets that are available to this application.
  * @description Create an instance of an AssetRegistry.
  * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
- * @param {pc.ResourceLoader} loader - The ResourceLoader used to load the asset files.
+ * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
  * @property {string} prefix A URL prefix that will be added to all asset loading requests.
  */
 class AssetRegistry extends EventHandler {
@@ -37,7 +37,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#load
      * @description Fired when an asset completes loading.
-     * @param {pc.Asset} asset - The asset that has just loaded.
+     * @param {Asset} asset - The asset that has just loaded.
      * @example
      * app.assets.on("load", function (asset) {
      *     console.log("asset loaded: " + asset.name);
@@ -48,7 +48,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#load:[id]
      * @description Fired when an asset completes loading.
-     * @param {pc.Asset} asset - The asset that has just loaded.
+     * @param {Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -62,7 +62,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#load:url:[url]
      * @description Fired when an asset completes loading.
-     * @param {pc.Asset} asset - The asset that has just loaded.
+     * @param {Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -76,7 +76,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#add
      * @description Fired when an asset is added to the registry.
-     * @param {pc.Asset} asset - The asset that was added.
+     * @param {Asset} asset - The asset that was added.
      * @example
      * app.assets.on("add", function (asset) {
      *     console.log("New asset added: " + asset.name);
@@ -87,7 +87,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#add:[id]
      * @description Fired when an asset is added to the registry.
-     * @param {pc.Asset} asset - The asset that was added.
+     * @param {Asset} asset - The asset that was added.
      * @example
      * var id = 123456;
      * app.assets.on("add:" + id, function (asset) {
@@ -99,14 +99,14 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#add:url:[url]
      * @description Fired when an asset is added to the registry.
-     * @param {pc.Asset} asset - The asset that was added.
+     * @param {Asset} asset - The asset that was added.
      */
 
     /**
      * @event
      * @name AssetRegistry#remove
      * @description Fired when an asset is removed from the registry.
-     * @param {pc.Asset} asset - The asset that was removed.
+     * @param {Asset} asset - The asset that was removed.
      * @example
      * app.assets.on("remove", function (aseet) {
      *     console.log("Asset removed: " + asset.name);
@@ -117,7 +117,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#remove:[id]
      * @description Fired when an asset is removed from the registry.
-     * @param {pc.Asset} asset - The asset that was removed.
+     * @param {Asset} asset - The asset that was removed.
      * @example
      * var id = 123456;
      * app.assets.on("remove:" + id, function (asset) {
@@ -129,7 +129,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#remove:url:[url]
      * @description Fired when an asset is removed from the registry.
-     * @param {pc.Asset} asset - The asset that was removed.
+     * @param {Asset} asset - The asset that was removed.
      */
 
     /**
@@ -137,7 +137,7 @@ class AssetRegistry extends EventHandler {
      * @name AssetRegistry#error
      * @description Fired when an error occurs during asset loading.
      * @param {string} err - The error message.
-     * @param {pc.Asset} asset - The asset that generated the error.
+     * @param {Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -151,7 +151,7 @@ class AssetRegistry extends EventHandler {
      * @event
      * @name AssetRegistry#error:[id]
      * @description Fired when an error occurs during asset loading.
-     * @param {pc.Asset} asset - The asset that generated the error.
+     * @param {Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -183,7 +183,7 @@ class AssetRegistry extends EventHandler {
      * @function
      * @name AssetRegistry#add
      * @description Add an asset to the registry.
-     * @param {pc.Asset} asset - The asset to add.
+     * @param {Asset} asset - The asset to add.
      * @example
      * var asset = new pc.Asset("My Asset", "texture", {
      *     url: "../path/to/image.jpg"
@@ -225,7 +225,7 @@ class AssetRegistry extends EventHandler {
      * @function
      * @name AssetRegistry#remove
      * @description Remove an asset from the registry.
-     * @param {pc.Asset} asset - The asset to remove.
+     * @param {Asset} asset - The asset to remove.
      * @returns {boolean} True if the asset was successfully removed and false otherwise.
      * @example
      * var asset = app.assets.get(100);
@@ -313,7 +313,7 @@ class AssetRegistry extends EventHandler {
      * @function
      * @name AssetRegistry#load
      * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded.
-     * @param {pc.Asset} asset - The asset to load.
+     * @param {Asset} asset - The asset to load.
      * @example
      * // load some assets
      * var assetsToLoad = [
@@ -405,7 +405,7 @@ class AssetRegistry extends EventHandler {
      * if you are not integrated with the PlayCanvas Editor.
      * @param {string} url - The url to load.
      * @param {string} type - The type of asset to load.
-     * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+     * @param {callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
      * @example
      * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
      *     var texture = asset.resource;
@@ -423,7 +423,7 @@ class AssetRegistry extends EventHandler {
      * @param {string} url - The url to load.
      * @param {string} filename - The filename of the asset to load.
      * @param {string} type - The type of asset to load.
-     * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+     * @param {callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
      * @example
      * var file = magicallyAttainAFile();
      * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
@@ -637,7 +637,7 @@ class AssetRegistry extends EventHandler {
      * @function
      * @name AssetRegistry#filter
      * @description Return all Assets that satisfy filter callback.
-     * @param {pc.callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
+     * @param {callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
      * @returns {pc.Asset[]} A list of all Assets found.
      * @example
      * var assets = app.assets.filter(function (asset) {

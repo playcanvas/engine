@@ -5,7 +5,7 @@
  * @classdesc Changes the brightness and contrast of the input render target.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white).
  * @property {number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast).
  */

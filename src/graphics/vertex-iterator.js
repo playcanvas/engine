@@ -109,9 +109,9 @@ function arrayGet4(offset, outputArray, outputIndex) {
  * unchanged. If this property is unspecified, false is assumed.
  * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
  * @param {number} vertexElement.stride - The number of total bytes that are between the start of one vertex, and the start of the next.
- * @param {pc.ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
+ * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the attribute.
  * @param {number} vertexElement.size - The size of the attribute in bytes.
- * @param {pc.VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
+ * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data inside the buffer.
  */
 class VertexIteratorAccessor {
     constructor(buffer, vertexElement, vertexFormat) {
@@ -210,7 +210,7 @@ class VertexIteratorAccessor {
  * @name VertexIterator
  * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
  * @description Returns a new pc.VertexIterator object.
- * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+ * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
  * @property {object<string, pc.VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {

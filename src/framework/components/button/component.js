@@ -41,8 +41,8 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @augments Component
  * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
  * @description Create a new ButtonComponent.
- * @param {pc.ButtonComponentSystem} system - The ComponentSystem that created this Component.
- * @param {pc.Entity} entity - The Entity that this Component is attached to.
+ * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
+ * @param {Entity} entity - The Entity that this Component is attached to.
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
  * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
  * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
@@ -513,91 +513,91 @@ function toColor3(color4) {
  * @event
  * @name ButtonComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#mouseenter
  * @description Fired when the mouse cursor enters the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component.
- * @param {pc.ElementMouseEvent} event - The event.
+ * @param {ElementMouseEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
- * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event - The event.
+ * @param {ElementMouseEvent|pc.ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#touchstart
  * @description Fired when a touch starts on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#touchend
  * @description Fired when a touch ends on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#touchcancel
  * @description Fired when a touch is canceled on the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
- * @param {pc.ElementTouchEvent} event - The event.
+ * @param {ElementTouchEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#selectstart
  * @description Fired when a xr select starts on the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#selectend
  * @description Fired when a xr select ends on the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#selectenter
  * @description Fired when a xr select now hovering over the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**
  * @event
  * @name ButtonComponent#selectleave
  * @description Fired when a xr select not hovering over the component.
- * @param {pc.ElementSelectEvent} event - The event.
+ * @param {ElementSelectEvent} event - The event.
  */
 
 /**

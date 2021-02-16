@@ -14,7 +14,7 @@ const _schema = ['enabled'];
  * @name ZoneComponentSystem
  * @classdesc Defines zone in world.
  * @description Create a new ZoneComponentSystem.
- * @param {pc.Application} app - The application.
+ * @param {Application} app - The application.
  * @augments ComponentSystem
  */
 class ZoneComponentSystem extends ComponentSystem {

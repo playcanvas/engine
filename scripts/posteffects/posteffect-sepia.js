@@ -5,7 +5,7 @@
  * @classdesc Implements the SepiaEffect color filter.
  * @description Creates new instance of the post effect.
  * @augments PostEffect
- * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+ * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} amount Controls the intensity of the effect. Ranges from 0 to 1.
  */
 function SepiaEffect(graphicsDevice) {

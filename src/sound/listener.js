@@ -6,7 +6,7 @@ import { Mat4 } from '../math/mat4.js';
  * @class
  * @name Listener
  * @classdesc Represents an audio listener - used internally.
- * @param {pc.SoundManager} manager - The sound manager.
+ * @param {SoundManager} manager - The sound manager.
  */
 class Listener {
     constructor(manager) {

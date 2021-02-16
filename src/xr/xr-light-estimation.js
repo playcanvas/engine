@@ -21,7 +21,7 @@ var mat4B = new Mat4();
  * A more simplified approximation of light is provided by L2 Spherical Harmonics data.
  * And the most simple level of light estimation is the most prominent directional light, its rotation, intensity and color.
  * @description Creates a new XrLightEstimation. Note that this is created internally by the {@link XrManager}.
- * @param {pc.XrManager} manager - WebXR Manager.
+ * @param {XrManager} manager - WebXR Manager.
  * @property {boolean} supported True if Light Estimation is supported. This information is available only during an active AR session.
  * @property {number|null} intensity Intensity of what is estimated to be the most prominent directional light. Or null if data is not available.
  * @property {pc.Color|null} color Color of what is estimated to be the most prominent directional light. Or null if data is not available.

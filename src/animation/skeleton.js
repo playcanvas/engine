@@ -29,7 +29,7 @@ class InterpolatedKey {
  * @class
  * @name Skeleton
  * @classdesc Represents a skeleton used to play animations.
- * @param {pc.GraphNode} graph - The root pc.GraphNode of the skeleton.
+ * @param {GraphNode} graph - The root pc.GraphNode of the skeleton.
  * @property {boolean} looping Determines whether skeleton is looping its animation.
  */
 class Skeleton {
@@ -206,8 +206,8 @@ class Skeleton {
      * @function
      * @name Skeleton#blend
      * @description Blends two skeletons together.
-     * @param {pc.Skeleton} skel1 - Skeleton holding the first pose to be blended.
-     * @param {pc.Skeleton} skel2 - Skeleton holding the second pose to be blended.
+     * @param {Skeleton} skel1 - Skeleton holding the first pose to be blended.
+     * @param {Skeleton} skel2 - Skeleton holding the second pose to be blended.
      * @param {number} alpha - The value controlling the interpolation in relation to the two input
      * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and anything
      * in between generating a spherical interpolation between the two.
@@ -244,7 +244,7 @@ class Skeleton {
      * @description Links a skeleton to a node hierarchy. The nodes animated skeleton are
      * then subsequently used to drive the local transformation matrices of the node
      * hierarchy.
-     * @param {pc.GraphNode} graph - The root node of the graph that the skeleton is to drive.
+     * @param {GraphNode} graph - The root node of the graph that the skeleton is to drive.
      */
     setGraph(graph) {
         var i;

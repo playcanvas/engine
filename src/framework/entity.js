@@ -18,7 +18,7 @@ import { Application } from './application.js';
  * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
  * ComponentSystems allow access to all Entities and Components and are attached to the {@link Application}.
  * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
- * @param {pc.Application} [app] - The application the entity belongs to, default is the current application.
+ * @param {Application} [app] - The application the entity belongs to, default is the current application.
  * @property {pc.AnimationComponent} [animation] Gets the {@link AnimationComponent} attached to this entity. [read only]
  * @property {pc.AudioListenerComponent} [audiolistener] Gets the {@link AudioSourceComponent} attached to this entity. [read only]
  * @property {pc.ButtonComponent} [button] Gets the {@link ButtonComponent} attached to this entity. [read only]
@@ -495,7 +495,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
  * @event
  * @name Entity#destroy
  * @description Fired after the entity is destroyed.
- * @param {pc.Entity} entity - The entity that was destroyed.
+ * @param {Entity} entity - The entity that was destroyed.
  * @example
  * entity.on("destroy", function (e) {
  *     console.log('entity ' + e.name + ' has been destroyed');

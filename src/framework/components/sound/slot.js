@@ -33,7 +33,7 @@ var instanceOptions = {
  * @augments EventHandler
  * @classdesc The SoundSlot controls playback of an audio asset.
  * @description Create a new SoundSlot.
- * @param {pc.SoundComponent} component - The Component that created this slot.
+ * @param {SoundComponent} component - The Component that created this slot.
  * @param {string} name - The name of the slot.
  * @param {object} options - Settings for the slot.
  * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
@@ -619,35 +619,35 @@ class SoundSlot extends EventHandler {
      * @event
      * @name SoundSlot#play
      * @description Fired when a sound instance starts playing.
-     * @param {pc.SoundInstance} instance - The instance that started playing.
+     * @param {SoundInstance} instance - The instance that started playing.
      */
 
     /**
      * @event
      * @name SoundSlot#pause
      * @description Fired when a sound instance is paused.
-     * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
+     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
      */
 
     /**
      * @event
      * @name SoundSlot#resume
      * @description Fired when a sound instance is resumed..
-     * @param {pc.SoundInstance} instance - The instance that was resumed.
+     * @param {SoundInstance} instance - The instance that was resumed.
      */
 
     /**
      * @event
      * @name SoundSlot#stop
      * @description Fired when a sound instance is stopped.
-     * @param {pc.SoundInstance} instance - The instance that was stopped.
+     * @param {SoundInstance} instance - The instance that was stopped.
      */
 
     /**
      * @event
      * @name SoundSlot#load
      * @description Fired when the asset assigned to the slot is loaded.
-     * @param {pc.Sound} sound - The sound resource that was loaded.
+     * @param {Sound} sound - The sound resource that was loaded.
      */
 }
 
