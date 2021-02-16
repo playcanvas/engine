@@ -162,7 +162,7 @@ class ContainerResource {
 /**
  * @class
  * @name ContainerHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.
  * The asset options object can be used to pass load time callbacks for handling the various resources

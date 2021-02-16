@@ -8,7 +8,7 @@ import { JsonModelParser } from './parser/json-model.js';
 /**
  * @class
  * @name ModelHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler used for loading {@link Model} resources.
  * @param {GraphicsDevice} device - The graphics device that will be rendering.
  * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.

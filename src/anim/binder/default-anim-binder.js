@@ -7,7 +7,7 @@ import { AnimTarget } from '../evaluator/anim-target.js';
  * @private
  * @class
  * @name DefaultAnimBinder
- * @implements {pc.AnimBinder}
+ * @implements {AnimBinder}
  * @classdesc Implementation of {@link AnimBinder} for animating a skeleton in the graph-node
  * hierarchy.
  */

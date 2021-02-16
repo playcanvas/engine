@@ -12,7 +12,7 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
 /**
  * @class
  * @name AnimationHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler used for loading {@link Animation} resources.
  */
 class AnimationHandler {

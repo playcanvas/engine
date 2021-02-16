@@ -5,7 +5,7 @@ import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
  * @private
  * @class
  * @name AnimStateGraphHandler
- * @implements {pc.ResourceHandler}
+ * @implements {ResourceHandler}
  * @classdesc Resource handler used for loading {@link AnimStateGraph} resources.
  */
 class AnimStateGraphHandler {
