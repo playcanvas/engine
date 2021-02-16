@@ -1,7 +1,7 @@
 import { isDefined } from './core.js';
 
 /**
- * @namespace pc.path
+ * @namespace path
  * @description File path API.
  */
 var path = {
