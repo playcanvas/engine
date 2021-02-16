@@ -187,7 +187,7 @@ class AnimComponent extends Component {
      * @name AnimComponent#findAnimationLayer
      * @description Finds a pc.AnimComponentLayer in this component.
      * @param {string} layerName - The name of the anim component layer to find
-     * @returns {pc.AnimComponentLayer} layer
+     * @returns {AnimComponentLayer} layer
      */
     findAnimationLayer(layerName) {
         var layerIndex = this.data.layerIndices[layerName];

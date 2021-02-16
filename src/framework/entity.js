@@ -117,7 +117,7 @@ class Entity extends GraphNode {
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
-     * @returns {pc.Component} The new Component that was attached to the entity or null if there
+     * @returns {Component} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
      * var entity = new pc.Entity();
@@ -181,7 +181,7 @@ class Entity extends GraphNode {
      * @name Entity#findComponent
      * @description Search the entity and all of its descendants for the first component of specified type.
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
+     * @returns {Component} A component of specified type, if the entity or any of its descendants has
      * one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
@@ -199,7 +199,7 @@ class Entity extends GraphNode {
      * @name Entity#findComponents
      * @description Search the entity and all of its descendants for all components of specified type.
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {pc.Component[]} All components of specified type in the entity or any of its descendants.
+     * @returns {Component[]} All components of specified type in the entity or any of its descendants.
      * Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
@@ -317,7 +317,7 @@ class Entity extends GraphNode {
      * @name Entity#findByGuid
      * @description Find a descendant of this Entity with the GUID.
      * @param {string} guid - The GUID to search for.
-     * @returns {pc.Entity} The Entity with the GUID or null.
+     * @returns {Entity} The Entity with the GUID or null.
      */
     findByGuid(guid) {
         if (this._guid === guid) return this;
@@ -391,7 +391,7 @@ class Entity extends GraphNode {
      * @name Entity#clone
      * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
      * Note, this Entity is not in the hierarchy and must be added manually.
-     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
+     * @returns {Entity} A new Entity which is a deep copy of the original.
      * @example
      * var e = this.entity.clone();
      *

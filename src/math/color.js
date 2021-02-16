@@ -34,7 +34,7 @@ class Color {
      * @function
      * @name Color#clone
      * @description Returns a clone of the specified color.
-     * @returns {pc.Color} A duplicate color object.
+     * @returns {Color} A duplicate color object.
      */
     clone() {
         return new Color(this.r, this.g, this.b, this.a);
@@ -45,7 +45,7 @@ class Color {
      * @name Color#copy
      * @description Copies the contents of a source color to a destination color.
      * @param {Color} rhs - A color to copy to the specified color.
-     * @returns {pc.Color} Self for chaining.
+     * @returns {Color} Self for chaining.
      * @example
      * var src = new pc.Color(1, 0, 0, 1);
      * var dst = new pc.Color();
@@ -86,7 +86,7 @@ class Color {
      * @param {number} g - The value for blue (0-1).
      * @param {number} b - The value for green (0-1).
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
-     * @returns {pc.Color} Self for chaining.
+     * @returns {Color} Self for chaining.
      */
     set(r, g, b, a = 1) {
         this.r = r;
@@ -106,7 +106,7 @@ class Color {
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
-     * @returns {pc.Color} Self for chaining.
+     * @returns {Color} Self for chaining.
      * @example
      * var a = new pc.Color(0, 0, 0);
      * var b = new pc.Color(1, 1, 0.5);
@@ -131,7 +131,7 @@ class Color {
      * @description Set the values of the color from a string representation '#11223344' or '#112233'.
      * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
      * This is the same format used in HTML/CSS.
-     * @returns {pc.Color} Self for chaining.
+     * @returns {Color} Self for chaining.
      */
     fromString(hex) {
         var i = parseInt(hex.replace('#', '0x'), 16);

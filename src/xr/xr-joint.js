@@ -94,7 +94,7 @@ class XrJoint {
      * @function
      * @name XrJoint#getPosition
      * @description Get the world space position of a joint
-     * @returns {pc.Vec3} The world space position of a joint
+     * @returns {Vec3} The world space position of a joint
      */
     getPosition() {
         this._updateTransforms();
@@ -106,7 +106,7 @@ class XrJoint {
      * @function
      * @name XrJoint#getRotation
      * @description Get the world space rotation of a joint
-     * @returns {pc.Quat} The world space rotation of a joint
+     * @returns {Quat} The world space rotation of a joint
      */
     getRotation() {
         this._updateTransforms();

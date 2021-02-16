@@ -130,7 +130,7 @@ class Curve {
      * @function
      * @name Curve#clone
      * @description Returns a clone of the specified curve object.
-     * @returns {pc.Curve} A clone of the specified curve.
+     * @returns {Curve} A clone of the specified curve.
      */
     clone() {
         var result = new Curve();

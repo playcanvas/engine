@@ -828,7 +828,7 @@ class Application extends EventHandler {
      * function is particularly useful when the current pc.Application is not readily available.
      * For example, in the JavaScript console of the browser's developer tools.
      * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
-     * @returns {pc.Application|undefined} The running application, if any.
+     * @returns {Application|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
      */
@@ -2327,7 +2327,7 @@ class Application extends EventHandler {
      * @name Application#getEntityFromIndex
      * @description Get entity from the index by guid.
      * @param {string} guid - The GUID to search for.
-     * @returns {pc.Entity} The Entity with the GUID or null.
+     * @returns {Entity} The Entity with the GUID or null.
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];

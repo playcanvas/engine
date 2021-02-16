@@ -526,7 +526,7 @@ class ScriptComponent extends Component {
      * @name ScriptComponent#get
      * @description Get a script instance (if attached).
      * @param {string|Class<pc.ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {pc.ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
+     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null is returned.
      * @example
      * var controller = entity.script.get('playerController');
      */
@@ -556,7 +556,7 @@ class ScriptComponent extends Component {
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
      * @param {boolean} [args.preloading] - If script instance is created during preload. If true, script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to -1, which means append it at the end.
-     * @returns {pc.ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
+     * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
      * or null if it failed because a script with a same name has already been added
      * or if the {@link ScriptType} cannot be found by name in the {@link ScriptRegistry}.
      * @example

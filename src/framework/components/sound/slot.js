@@ -99,7 +99,7 @@ class SoundSlot extends EventHandler {
      * @description Plays a sound. If {@link SoundSlot#overlap} is true the new sound
      * instance will be played independently of any other instances already playing.
      * Otherwise existing sound instances will stop before playing the new sound.
-     * @returns {pc.SoundInstance} The new sound instance.
+     * @returns {SoundInstance} The new sound instance.
      */
     play() {
         // stop if overlap is false
@@ -314,7 +314,7 @@ class SoundSlot extends EventHandler {
      * @private
      * @name SoundSlot#_createInstance
      * @description Creates a new pc.SoundInstance with the properties of the slot.
-     * @returns {pc.SoundInstance} The new instance.
+     * @returns {SoundInstance} The new instance.
      */
     _createInstance() {
         var instance = null;

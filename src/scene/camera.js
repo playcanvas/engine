@@ -317,7 +317,7 @@ class Camera {
      * @function
      * @name Camera#clone
      * @description Creates a duplicate of the camera.
-     * @returns {pc.Camera} A cloned Camera.
+     * @returns {Camera} A cloned Camera.
      */
     clone() {
         return new this.constructor().copy(this);
@@ -369,7 +369,7 @@ class Camera {
      * @param {number} cw - The width of PlayCanvas' canvas element.
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
-     * @returns {pc.Vec3} The screen space coordinate.
+     * @returns {Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, cw, ch, screenCoord = new Vec3()) {
         this._updateViewProjMat();
@@ -399,7 +399,7 @@ class Camera {
      * @param {number} cw - The width of PlayCanvas' canvas element.
      * @param {number} ch - The height of PlayCanvas' canvas element.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
-     * @returns {pc.Vec3} The world space coordinate.
+     * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 

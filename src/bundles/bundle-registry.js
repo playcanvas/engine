@@ -254,7 +254,7 @@ class BundleRegistry {
      * @name BundleRegistry#listBundlesForAsset
      * @description Lists all of the available bundles that reference the specified asset id.
      * @param {Asset} asset - The asset.
-     * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
+     * @returns {Asset[]} An array of bundle assets or null if the asset is not in any bundle.
      */
     listBundlesForAsset(asset) {
         return this._assetsInBundles[asset.id] || null;
@@ -265,7 +265,7 @@ class BundleRegistry {
      * @function
      * @name BundleRegistry#list
      * @description Lists all of the available bundles. This includes bundles that are not loaded.
-     * @returns {pc.Asset[]} An array of bundle assets.
+     * @returns {Asset[]} An array of bundle assets.
      */
     list() {
         var result = [];

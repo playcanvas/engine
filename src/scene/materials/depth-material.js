@@ -16,7 +16,7 @@ class DepthMaterial extends Material {
      * @function
      * @name DepthMaterial#clone
      * @description Duplicates a Depth material.
-     * @returns {pc.DepthMaterial} A cloned Depth material.
+     * @returns {DepthMaterial} A cloned Depth material.
      */
     clone() {
         var clone = new DepthMaterial();

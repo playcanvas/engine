@@ -238,7 +238,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
  * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
- * @returns {pc.Mesh} A new Mesh constructed from the supplied vertex and triangle data.
+ * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
  * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
@@ -361,7 +361,7 @@ function createMesh(device, positions, opts) {
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring (defaults to 30).
- * @returns {pc.Mesh} A new torus-shaped mesh.
+ * @returns {Mesh} A new torus-shaped mesh.
  */
 function createTorus(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -660,7 +660,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cylinder (defaults to 20).
- * @returns {pc.Mesh} A new cylinder-shaped mesh.
+ * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCylinder(device, opts) {
     // #ifdef DEBUG
@@ -705,7 +705,7 @@ function createCylinder(device, opts) {
  * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the capsule (defaults to 1).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule (defaults to 20).
- * @returns {pc.Mesh} A new cylinder-shaped mesh.
+ * @returns {Mesh} A new cylinder-shaped mesh.
  */
 function createCapsule(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -744,7 +744,7 @@ function createCapsule(device, opts) {
  * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
  * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone (defaults to 5).
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone (defaults to 18).
- * @returns {pc.Mesh} A new cone-shaped mesh.
+ * @returns {Mesh} A new cone-shaped mesh.
  */
 function createCone(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -780,7 +780,7 @@ function createCone(device, opts) {
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
  * @param {number} [opts.segments] - The number of divisions along the longitudinal
  * and latitudinal axes of the sphere (defaults to 16).
- * @returns {pc.Mesh} A new sphere-shaped mesh.
+ * @returns {Mesh} A new sphere-shaped mesh.
  */
 function createSphere(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -863,7 +863,7 @@ function createSphere(device, opts) {
  * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane (defaults to 5).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane (defaults to 5).
- * @returns {pc.Mesh} A new plane-shaped mesh.
+ * @returns {Mesh} A new plane-shaped mesh.
  */
 function createPlane(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -943,7 +943,7 @@ function createPlane(device, opts) {
  * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box (defaults to 1).
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box (defaults to 1).
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box (defaults to 1).
- * @returns {pc.Mesh} A new box-shaped mesh.
+ * @returns {Mesh} A new box-shaped mesh.
  */
 function createBox(device, opts) {
     // Check the supplied options and provide defaults for unspecified ones

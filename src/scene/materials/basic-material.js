@@ -38,7 +38,7 @@ class BasicMaterial extends Material {
      * @name BasicMaterial#clone
      * @description Duplicates a Basic material. All properties are duplicated except textures
      * where only the references are copied.
-     * @returns {pc.BasicMaterial} A cloned Basic material.
+     * @returns {BasicMaterial} A cloned Basic material.
      */
     clone() {
         var clone = new BasicMaterial();

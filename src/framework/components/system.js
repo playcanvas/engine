@@ -147,7 +147,7 @@ class ComponentSystem extends EventHandler {
      * @description Create new {@link Component} and {@link ComponentData} instances and attach them to the entity.
      * @param {Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
-     * @returns {pc.Component} Returns a Component of type defined by the component system.
+     * @returns {Component} Returns a Component of type defined by the component system.
      * @example
      * var entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
@@ -201,7 +201,7 @@ class ComponentSystem extends EventHandler {
      * @description Create a clone of component. This creates a copy all ComponentData variables.
      * @param {Entity} entity - The entity to clone the component from.
      * @param {Entity} clone - The entity to clone the component into.
-     * @returns {pc.Component} The newly cloned component.
+     * @returns {Component} The newly cloned component.
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data

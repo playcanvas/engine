@@ -66,7 +66,7 @@ class Vec3 {
      * @name Vec3#add
      * @description Adds a 3-dimensional vector to another in place.
      * @param {Vec3} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
      * var b = new pc.Vec3(20, 20, 20);
@@ -90,7 +90,7 @@ class Vec3 {
      * @description Adds two 3-dimensional vectors together and returns the result.
      * @param {Vec3} lhs - The first vector operand for the addition.
      * @param {Vec3} rhs - The second vector operand for the addition.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
      * var b = new pc.Vec3(20, 20, 20);
@@ -113,7 +113,7 @@ class Vec3 {
      * @function
      * @name Vec3#clone
      * @description Returns an identical copy of the specified 3-dimensional vector.
-     * @returns {pc.Vec3} A 3-dimensional vector containing the result of the cloning.
+     * @returns {Vec3} A 3-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec3(10, 20, 30);
      * var vclone = v.clone();
@@ -128,7 +128,7 @@ class Vec3 {
      * @name Vec3#copy
      * @description Copied the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
      * @param {Vec3} rhs - A vector to copy to the specified vector.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var src = new pc.Vec3(10, 20, 30);
      * var dst = new pc.Vec3();
@@ -151,7 +151,7 @@ class Vec3 {
      * @description Returns the result of a cross product operation performed on the two specified 3-dimensional vectors.
      * @param {Vec3} lhs - The first 3-dimensional vector operand of the cross product.
      * @param {Vec3} rhs - The second 3-dimensional vector operand of the cross product.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var back = new pc.Vec3().cross(pc.Vec3.RIGHT, pc.Vec3.UP);
      *
@@ -263,7 +263,7 @@ class Vec3 {
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(0, 0, 0);
      * var b = new pc.Vec3(10, 10, 10);
@@ -286,7 +286,7 @@ class Vec3 {
      * @name Vec3#mul
      * @description Multiplies a 3-dimensional vector to another in place.
      * @param {Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(2, 3, 4);
      * var b = new pc.Vec3(4, 5, 6);
@@ -310,7 +310,7 @@ class Vec3 {
      * @description Returns the result of multiplying the specified 3-dimensional vectors together.
      * @param {Vec3} lhs - The 3-dimensional vector used as the first multiplicand of the operation.
      * @param {Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(2, 3, 4);
      * var b = new pc.Vec3(4, 5, 6);
@@ -334,7 +334,7 @@ class Vec3 {
      * @name Vec3#normalize
      * @description Returns this 3-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var v = new pc.Vec3(25, 0, 0);
      *
@@ -360,7 +360,7 @@ class Vec3 {
      * @name  pc.Vec3#project
      * @description Projects this 3-dimensional vector onto the specified vector.
      * @param {Vec3} rhs - The vector onto which the original vector will be projected on.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var v = new pc.Vec3(5, 5, 5);
      * var normal = new pc.Vec3(1, 0, 0);
@@ -386,7 +386,7 @@ class Vec3 {
      * @description Scales each dimension of the specified 3-dimensional vector by the supplied
      * scalar value.
      * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var v = new pc.Vec3(2, 4, 8);
      *
@@ -414,7 +414,7 @@ class Vec3 {
      * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
      * @param {number} z - The value to set on the third component of the vector.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var v = new pc.Vec3();
      * v.set(5, 10, 20);
@@ -435,7 +435,7 @@ class Vec3 {
      * @name Vec3#sub
      * @description Subtracts a 3-dimensional vector from another in place.
      * @param {Vec3} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
      * var b = new pc.Vec3(20, 20, 20);
@@ -459,7 +459,7 @@ class Vec3 {
      * @description Subtracts two 3-dimensional vectors from one another and returns the result.
      * @param {Vec3} lhs - The first vector operand for the addition.
      * @param {Vec3} rhs - The second vector operand for the addition.
-     * @returns {pc.Vec3} Self for chaining.
+     * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
      * var b = new pc.Vec3(20, 20, 20);

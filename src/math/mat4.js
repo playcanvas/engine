@@ -44,7 +44,7 @@ class Mat4 {
      * the current instance.
      * @param {Mat4} lhs - The 4x4 matrix used as the first operand of the addition.
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var m = new pc.Mat4();
      *
@@ -82,7 +82,7 @@ class Mat4 {
      * @name Mat4#add
      * @description Adds the specified 4x4 matrix to the current instance.
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var m = new pc.Mat4();
      *
@@ -98,7 +98,7 @@ class Mat4 {
      * @function
      * @name Mat4#clone
      * @description Creates a duplicate of the specified matrix.
-     * @returns {pc.Mat4} A duplicate matrix.
+     * @returns {Mat4} A duplicate matrix.
      * @example
      * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var dst = src.clone();
@@ -113,7 +113,7 @@ class Mat4 {
      * @name Mat4#copy
      * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
      * @param {Mat4} rhs - A 4x4 matrix to be copied.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var dst = new pc.Mat4();
@@ -214,7 +214,7 @@ class Mat4 {
      * the current instance.
      * @param {Mat4} lhs - The 4x4 matrix used as the first multiplicand of the operation.
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -300,7 +300,7 @@ class Mat4 {
      * are not verified to be in the expected format. This function is faster than general {@link Mat4#mul2}.
      * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of the operation.
      * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      */
     mulAffine2(lhs, rhs) {
         var a00, a01, a02,
@@ -365,7 +365,7 @@ class Mat4 {
      * @name Mat4#mul
      * @description Multiplies the current instance by the specified 4x4 matrix.
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -385,7 +385,7 @@ class Mat4 {
      * @description Transforms a 3-dimensional point by a 4x4 matrix.
      * @param {Vec3} vec - The 3-dimensional point to be transformed.
      * @param {Vec3} [res] - An optional 3-dimensional point to receive the result of the transformation.
-     * @returns {pc.Vec3} The input point v transformed by the current instance.
+     * @returns {Vec3} The input point v transformed by the current instance.
      * @example
      * // Create a 3-dimensional point
      * var v = new pc.Vec3(1, 2, 3);
@@ -417,7 +417,7 @@ class Mat4 {
      * @description Transforms a 3-dimensional vector by a 4x4 matrix.
      * @param {Vec3} vec - The 3-dimensional vector to be transformed.
      * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
-     * @returns {pc.Vec3} The input vector v transformed by the current instance.
+     * @returns {Vec3} The input vector v transformed by the current instance.
      * @example
      * // Create a 3-dimensional vector
      * var v = new pc.Vec3(1, 2, 3);
@@ -449,7 +449,7 @@ class Mat4 {
      * @description Transforms a 4-dimensional vector by a 4x4 matrix.
      * @param {Vec4} vec - The 4-dimensional vector to be transformed.
      * @param {Vec4} [res] - An optional 4-dimensional vector to receive the result of the transformation.
-     * @returns {pc.Vec4} The input vector v transformed by the current instance.
+     * @returns {Vec4} The input vector v transformed by the current instance.
      * @example
      * // Create an input 4-dimensional vector
      * var v = new pc.Vec4(1, 2, 3, 4);
@@ -492,7 +492,7 @@ class Mat4 {
      * @param {Vec3} position - 3-d vector holding view position.
      * @param {Vec3} target - 3-d vector holding reference point.
      * @param {Vec3} up - 3-d vector holding the up direction.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var position = new pc.Vec3(10, 10, 10);
      * var target = new pc.Vec3(0, 0, 0);
@@ -539,7 +539,7 @@ class Mat4 {
      * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in eye space.
      * @param {number} znear - The near clip plane in eye coordinates.
      * @param {number} zfar - The far clip plane in eye coordinates.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
      * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
@@ -586,7 +586,7 @@ class Mat4 {
      * @param {number} zfar - The far clip plane in eye coordinates.
      * @param {boolean} [fovIsHorizontal=false] - Set to true to treat the fov as horizontal (x-axis)
      * and false for vertical (y-axis). Defaults to false.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
      * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
@@ -607,7 +607,7 @@ class Mat4 {
      * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in eye space.
      * @param {number} near - The near clip plane in eye coordinates.
      * @param {number} far - The far clip plane in eye coordinates.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 orthographic projection matrix
      * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
@@ -642,7 +642,7 @@ class Mat4 {
      * an axis. The axis must be normalized (unit length) and the angle must be specified in degrees.
      * @param {Vec3} axis - The normalized axis vector around which to rotate.
      * @param {number} angle - The angle of rotation in degrees.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix
      * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
@@ -690,7 +690,7 @@ class Mat4 {
      * @param {number} x - The x-component of the translation.
      * @param {number} y - The y-component of the translation.
      * @param {number} z - The z-component of the translation.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 translation matrix
      * var tm = new pc.Mat4().setTranslate(10, 10, 10);
@@ -726,7 +726,7 @@ class Mat4 {
      * @param {number} x - The x-component of the scale.
      * @param {number} y - The y-component of the scale.
      * @param {number} z - The z-component of the scale.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 scale matrix
      * var sm = new pc.Mat4().setScale(10, 10, 10);
@@ -758,7 +758,7 @@ class Mat4 {
      * @function
      * @name Mat4#invert
      * @description Sets the specified matrix to its inverse.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
      * var rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -840,7 +840,7 @@ class Mat4 {
      * @name Mat4#set
      * @description Sets matrix data from an array.
      * @param {number[]} src - Source array. Must have 16 values.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      */
     set(src) {
         var dst = this.data;
@@ -868,7 +868,7 @@ class Mat4 {
      * @function
      * @name Mat4#setIdentity
      * @description Sets the specified matrix to the identity matrix.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * m.setIdentity();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
@@ -903,7 +903,7 @@ class Mat4 {
      * @param {Vec3} t - A 3-d vector translation.
      * @param {Quat} r - A quaternion rotation.
      * @param {Vec3} s - A 3-d vector scale.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var t = new pc.Vec3(10, 20, 30);
      * var r = new pc.Quat();
@@ -967,7 +967,7 @@ class Mat4 {
      * @function
      * @name Mat4#transpose
      * @description Sets the specified matrix to its transpose.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var m = new pc.Mat4();
      *
@@ -1058,7 +1058,7 @@ class Mat4 {
      * @name Mat4#getTranslation
      * @description Extracts the translational component from the specified 4x4 matrix.
      * @param {Vec3} [t] - The vector to receive the translation of the matrix.
-     * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
+     * @returns {Vec3} The translation of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
@@ -1076,7 +1076,7 @@ class Mat4 {
      * @name Mat4#getX
      * @description Extracts the x-axis from the specified 4x4 matrix.
      * @param {Vec3} [x] - The vector to receive the x axis of the matrix.
-     * @returns {pc.Vec3} The x-axis of the specified 4x4 matrix.
+     * @returns {Vec3} The x-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
@@ -1094,7 +1094,7 @@ class Mat4 {
      * @name Mat4#getY
      * @description Extracts the y-axis from the specified 4x4 matrix.
      * @param {Vec3} [y] - The vector to receive the y axis of the matrix.
-     * @returns {pc.Vec3} The y-axis of the specified 4x4 matrix.
+     * @returns {Vec3} The y-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
@@ -1112,7 +1112,7 @@ class Mat4 {
      * @name Mat4#getZ
      * @description Extracts the z-axis from the specified 4x4 matrix.
      * @param {Vec3} [z] - The vector to receive the z axis of the matrix.
-     * @returns {pc.Vec3} The z-axis of the specified 4x4 matrix.
+     * @returns {Vec3} The z-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
@@ -1130,7 +1130,7 @@ class Mat4 {
      * @name Mat4#getScale
      * @description Extracts the scale component from the specified 4x4 matrix.
      * @param {Vec3} [scale] - Vector to receive the scale.
-     * @returns {pc.Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
+     * @returns {Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 scale matrix
      * var m = new pc.Mat4().scale(2, 3, 4);
@@ -1155,7 +1155,7 @@ class Mat4 {
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
      * @param {number} ez - Angle to rotate around Z axis in degrees.
-     * @returns {pc.Mat4} Self for chaining.
+     * @returns {Mat4} Self for chaining.
      * @example
      * var m = new pc.Mat4();
      * m.setFromEulerAngles(45, 90, 180);
@@ -1210,7 +1210,7 @@ class Mat4 {
      * @description Extracts the Euler angles equivalent to the rotational portion
      * of the specified matrix. The returned Euler angles are in XYZ order an in degrees.
      * @param {Vec3} [eulers] - A 3-d vector to receive the Euler angles.
-     * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
+     * @returns {Vec3} A 3-d vector containing the Euler angles.
      * @example
      * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
      * var m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);

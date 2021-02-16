@@ -54,7 +54,7 @@ class PostEffectQueue {
      * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer.
      * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer.
      * @param {boolean} hdr - Use HDR render target format.
-     * @returns {pc.RenderTarget} The render target.
+     * @returns {RenderTarget} The render target.
      */
 
     _createOffscreenTarget(useDepth, hdr) {

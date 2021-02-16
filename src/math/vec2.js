@@ -52,7 +52,7 @@ class Vec2 {
      * @name Vec2#add
      * @description Adds a 2-dimensional vector to another in place.
      * @param {Vec2} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
      * var b = new pc.Vec2(20, 20);
@@ -75,7 +75,7 @@ class Vec2 {
      * @description Adds two 2-dimensional vectors together and returns the result.
      * @param {Vec2} lhs - The first vector operand for the addition.
      * @param {Vec2} rhs - The second vector operand for the addition.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
      * var b = new pc.Vec2(20, 20);
@@ -97,7 +97,7 @@ class Vec2 {
      * @function
      * @name Vec2#clone
      * @description Returns an identical copy of the specified 2-dimensional vector.
-     * @returns {pc.Vec2} A 2-dimensional vector containing the result of the cloning.
+     * @returns {Vec2} A 2-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec2(10, 20);
      * var vclone = v.clone();
@@ -112,7 +112,7 @@ class Vec2 {
      * @name Vec2#copy
      * @description Copied the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
      * @param {Vec2} rhs - A vector to copy to the specified vector.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var src = new pc.Vec2(10, 20);
      * var dst = new pc.Vec2();
@@ -234,7 +234,7 @@ class Vec2 {
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
      * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
      * a ray extrapolated from this line.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(0, 0);
      * var b = new pc.Vec2(10, 10);
@@ -256,7 +256,7 @@ class Vec2 {
      * @name Vec2#mul
      * @description Multiplies a 2-dimensional vector to another in place.
      * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(2, 3);
      * var b = new pc.Vec2(4, 5);
@@ -279,7 +279,7 @@ class Vec2 {
      * @description Returns the result of multiplying the specified 2-dimensional vectors together.
      * @param {Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
      * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(2, 3);
      * var b = new pc.Vec2(4, 5);
@@ -302,7 +302,7 @@ class Vec2 {
      * @name Vec2#normalize
      * @description Returns this 2-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var v = new pc.Vec2(25, 0);
      *
@@ -328,7 +328,7 @@ class Vec2 {
      * @description Scales each component of the specified 2-dimensional vector by the supplied
      * scalar value.
      * @param {number} scalar - The value by which each vector component is multiplied.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var v = new pc.Vec2(2, 4);
      *
@@ -354,7 +354,7 @@ class Vec2 {
      * @description Sets the specified 2-dimensional vector to the supplied numerical values.
      * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var v = new pc.Vec2();
      * v.set(5, 10);
@@ -374,7 +374,7 @@ class Vec2 {
      * @name Vec2#sub
      * @description Subtracts a 2-dimensional vector from another in place.
      * @param {Vec2} rhs - The vector to add to the specified vector.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
      * var b = new pc.Vec2(20, 20);
@@ -397,7 +397,7 @@ class Vec2 {
      * @description Subtracts two 2-dimensional vectors from one another and returns the result.
      * @param {Vec2} lhs - The first vector operand for the addition.
      * @param {Vec2} rhs - The second vector operand for the addition.
-     * @returns {pc.Vec2} Self for chaining.
+     * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
      * var b = new pc.Vec2(20, 20);

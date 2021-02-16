@@ -366,7 +366,7 @@ class StandardMaterial extends Material {
      * @name StandardMaterial#clone
      * @description Duplicates a Standard material. All properties are duplicated except textures
      * where only the references are copied.
-     * @returns {pc.StandardMaterial} A cloned Standard material.
+     * @returns {StandardMaterial} A cloned Standard material.
      */
     clone() {
         const clone = new StandardMaterial();

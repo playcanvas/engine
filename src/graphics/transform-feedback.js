@@ -105,7 +105,7 @@ class TransformFeedback {
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
-     * @returns {pc.Shader} A shader to use in the process() function.
+     * @returns {Shader} A shader to use in the process() function.
      */
     static createShader(graphicsDevice, vsCode, name) {
         return createShaderFromCode(graphicsDevice, vsCode, null, name, true);

@@ -40,7 +40,7 @@ class XrImageTracking extends EventHandler {
      * @description Add an image for image tracking. A width can also be provided to help the underlying system estimate the appropriate transformation. Modifying the tracked images list is only possible before an AR session is started.
      * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching real world image as close as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in the real world. Providing this value as close to the real value will improve tracking quality.
-     * @returns {pc.XrTrackedImage} Tracked image object that will contain tracking information.
+     * @returns {XrTrackedImage} Tracked image object that will contain tracking information.
      * @example
      * // image with width of 20cm (0.2m)
      * app.xr.imageTracking.add(bookCoverImg, 0.2);

@@ -109,7 +109,7 @@ class Light {
      * @function
      * @name Light#clone
      * @description Duplicates a light node but does not 'deep copy' the hierarchy.
-     * @returns {pc.Light} A cloned Light.
+     * @returns {Light} A cloned Light.
      */
     clone() {
         var clone = new Light();

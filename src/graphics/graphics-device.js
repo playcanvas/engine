@@ -1204,7 +1204,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#getProgramLibrary
      * @description Retrieves the program library assigned to the specified graphics device.
-     * @returns {pc.ProgramLibrary} The program library assigned to the device.
+     * @returns {ProgramLibrary} The program library assigned to the device.
      */
     getProgramLibrary() {
         return this.programLib;
@@ -1477,7 +1477,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#getCopyShader
      * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
-     * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
      */
     getCopyShader() {
         if (!this._copyShader) {
@@ -2592,7 +2592,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#getRenderTarget
      * @description Queries the currently set render target on the device.
-     * @returns {pc.RenderTarget} The current render target.
+     * @returns {RenderTarget} The current render target.
      * @example
      * // Get the current render target
      * var renderTarget = device.getRenderTarget();

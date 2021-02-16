@@ -288,7 +288,7 @@ class GraphNode extends EventHandler {
      * the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
      * the value of the property.
-     * @returns {pc.GraphNode[]} The array of graph nodes that match the search criteria.
+     * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have `door` in their lower-cased name
      * var doors = house.find(function (node) {
@@ -350,7 +350,7 @@ class GraphNode extends EventHandler {
      * the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
      * the value of the property.
-     * @returns {pc.GraphNode} A graph node that match the search criteria.
+     * @returns {GraphNode} A graph node that match the search criteria.
      * @example
      * // Find the first node that is called `head` and has a model component
      * var head = player.findOne(function (node) {
@@ -408,7 +408,7 @@ class GraphNode extends EventHandler {
      * to have inclusive results of assets that match at least one query.
      * A query that consists of an array of tags can be used to match graph nodes that have each tag of array.
      * @param {string|string[]} query - Name of a tag or array of tags.
-     * @returns {pc.GraphNode[]} A list of all graph nodes that match the query.
+     * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
      * var animals = node.findByTag("animal");
@@ -450,7 +450,7 @@ class GraphNode extends EventHandler {
      * @description Get the first node found in the graph with the name. The search
      * is depth first.
      * @param {string} name - The name of the graph.
-     * @returns {pc.GraphNode} The first node to be found matching the supplied name.
+     * @returns {GraphNode} The first node to be found matching the supplied name.
      */
     findByName(name) {
         if (this.name === name) return this;
@@ -468,7 +468,7 @@ class GraphNode extends EventHandler {
      * @description Get the first node found in the graph by its full path in the graph.
      * The full path has this form 'parent/child/sub-child'. The search is depth first.
      * @param {string|Array} path - The full path of the pc.GraphNode as either a string or array of pc.GraphNode names
-     * @returns {pc.GraphNode} The first node to be found matching the supplied path.
+     * @returns {GraphNode} The first node to be found matching the supplied path.
      * @example
      * var path = this.entity.findByPath('child/another_child');
      */
@@ -570,7 +570,7 @@ class GraphNode extends EventHandler {
      * form. The order of the returned Euler angles is XYZ. The value returned by this function
      * should be considered read-only. In order to set the world-space rotation of the graph
      * node, use {@link GraphNode#setEulerAngles}.
-     * @returns {pc.Vec3} The world space rotation of the graph node in Euler angle form.
+     * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
      * var angles = this.entity.getEulerAngles(); // [0,0,0]
      * angles[1] = 180; // rotate the entity around Y by 180 degrees
@@ -588,7 +588,7 @@ class GraphNode extends EventHandler {
      * is returned as euler angles in a 3-dimensional vector where the order is XYZ. The
      * returned vector should be considered read-only. To update the local rotation, use
      * {@link GraphNode#setLocalEulerAngles}.
-     * @returns {pc.Vec3} The local space rotation of the graph node as euler angles in XYZ order.
+     * @returns {Vec3} The local space rotation of the graph node as euler angles in XYZ order.
      * @example
      * var angles = this.entity.getLocalEulerAngles();
      * angles[1] = 180;
@@ -605,7 +605,7 @@ class GraphNode extends EventHandler {
      * @description Get the position in local space for the specified GraphNode. The position
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
      * To update the local position, use {@link GraphNode#setLocalPosition}.
-     * @returns {pc.Vec3} The local space position of the graph node.
+     * @returns {Vec3} The local space position of the graph node.
      * @example
      * var position = this.entity.getLocalPosition();
      * position[0] += 1; // move the entity 1 unit along x.
@@ -621,7 +621,7 @@ class GraphNode extends EventHandler {
      * @description Get the rotation in local space for the specified GraphNode. The rotation
      * is returned as a quaternion. The returned quaternion should be considered read-only.
      * To update the local rotation, use {@link GraphNode#setLocalRotation}.
-     * @returns {pc.Quat} The local space rotation of the graph node as a quaternion.
+     * @returns {Quat} The local space rotation of the graph node as a quaternion.
      * @example
      * var rotation = this.entity.getLocalRotation();
      */
@@ -635,7 +635,7 @@ class GraphNode extends EventHandler {
      * @description Get the scale in local space for the specified GraphNode. The scale
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
      * To update the local scale, use {@link GraphNode#setLocalScale}.
-     * @returns {pc.Vec3} The local space scale of the graph node.
+     * @returns {Vec3} The local space scale of the graph node.
      * @example
      * var scale = this.entity.getLocalScale();
      * scale.x = 100;
@@ -650,7 +650,7 @@ class GraphNode extends EventHandler {
      * @name GraphNode#getLocalTransform
      * @description Get the local transform matrix for this graph node. This matrix
      * is the transform relative to the node's parent's world transformation matrix.
-     * @returns {pc.Mat4} The node's local transformation matrix.
+     * @returns {Mat4} The node's local transformation matrix.
      * @example
      * var transform = this.entity.getLocalTransform();
      */
@@ -668,7 +668,7 @@ class GraphNode extends EventHandler {
      * @description Get the world space position for the specified GraphNode. The
      * value returned by this function should be considered read-only. In order to set
      * the world-space position of the graph node, use {@link GraphNode#setPosition}.
-     * @returns {pc.Vec3} The world space position of the graph node.
+     * @returns {Vec3} The world space position of the graph node.
      * @example
      * var position = this.entity.getPosition();
      * position.x = 10;
@@ -685,7 +685,7 @@ class GraphNode extends EventHandler {
      * @description Get the world space rotation for the specified GraphNode in quaternion
      * form. The value returned by this function should be considered read-only. In order
      * to set the world-space rotation of the graph node, use {@link GraphNode#setRotation}.
-     * @returns {pc.Quat} The world space rotation of the graph node as a quaternion.
+     * @returns {Quat} The world space rotation of the graph node as a quaternion.
      * @example
      * var rotation = this.entity.getRotation();
      */
@@ -703,7 +703,7 @@ class GraphNode extends EventHandler {
      * be introduced by the compounding of rotations and scales higher in the graph node
      * hierarchy). The value returned by this function should be considered read-only. Note
      * that it is not possible to set the world space scale of a graph node directly.
-     * @returns {pc.Vec3} The world space scale of the graph node.
+     * @returns {Vec3} The world space scale of the graph node.
      * @example
      * var scale = this.entity.getScale();
      */
@@ -718,7 +718,7 @@ class GraphNode extends EventHandler {
      * @function
      * @name GraphNode#getWorldTransform
      * @description Get the world transformation matrix for this graph node.
-     * @returns {pc.Mat4} The node's world transformation matrix.
+     * @returns {Mat4} The node's world transformation matrix.
      * @example
      * var transform = this.entity.getWorldTransform();
      */
