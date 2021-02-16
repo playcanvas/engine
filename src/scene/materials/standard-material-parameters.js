@@ -32,6 +32,9 @@ var standardMaterialParameterTypes = {
     diffuseDetailMapOffset: 'vec2',
     diffuseDetailMode: 'string',
 
+    isSrgbSpecularMap: 'boolean',
+    isRoughnessMap: 'boolean',
+
     specular: 'rgb',
     specularTint: 'boolean',
     specularVertexColor: 'boolean',

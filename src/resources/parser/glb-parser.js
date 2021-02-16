@@ -815,94 +815,6 @@ var createMesh = function (device, gltfMesh, accessors, bufferViews, callback, d
 };
 
 var createMaterial = function (gltfMaterial, textures, disableFlipV) {
-    // TODO: integrate these shader chunks into the native engine
-    var glossChunk = [
-        "#ifdef MAPFLOAT",
-        "uniform float material_shininess;",
-        "#endif",
-        "",
-        "#ifdef MAPTEXTURE",
-        "uniform sampler2D texture_glossMap;",
-        "#endif",
-        "",
-        "void getGlossiness() {",
-        "    dGlossiness = 1.0;",
-        "",
-        "#ifdef MAPFLOAT",
-        "    dGlossiness *= material_shininess;",
-        "#endif",
-        "",
-        "#ifdef MAPTEXTURE",
-        "    dGlossiness *= texture2D(texture_glossMap, $UV).$CH;",
-        "#endif",
-        "",
-        "#ifdef MAPVERTEX",
-        "    dGlossiness *= saturate(vVertexColor.$VC);",
-        "#endif",
-        "",
-        "    dGlossiness = 1.0 - dGlossiness;",
-        "",
-        "    dGlossiness += 0.0000001;",
-        "}"
-    ].join('\n');
-
-    var specularChunk = [
-        "#ifdef MAPCOLOR",
-        "uniform vec3 material_specular;",
-        "#endif",
-        "",
-        "#ifdef MAPTEXTURE",
-        "uniform sampler2D texture_specularMap;",
-        "#endif",
-        "",
-        "void getSpecularity() {",
-        "    dSpecularity = vec3(1.0);",
-        "",
-        "    #ifdef MAPCOLOR",
-        "        dSpecularity *= material_specular;",
-        "    #endif",
-        "",
-        "    #ifdef MAPTEXTURE",
-        "        vec3 srgb = texture2D(texture_specularMap, $UV).$CH;",
-        "        dSpecularity *= vec3(pow(srgb.r, 2.2), pow(srgb.g, 2.2), pow(srgb.b, 2.2));",
-        "    #endif",
-        "",
-        "    #ifdef MAPVERTEX",
-        "        dSpecularity *= saturate(vVertexColor.$VC);",
-        "    #endif",
-        "}"
-    ].join('\n');
-
-    var clearCoatGlossChunk = [
-        "#ifdef MAPFLOAT",
-        "uniform float material_clearCoatGlossiness;",
-        "#endif",
-        "",
-        "#ifdef MAPTEXTURE",
-        "uniform sampler2D texture_clearCoatGlossMap;",
-        "#endif",
-        "",
-        "void getClearCoatGlossiness() {",
-        "    ccGlossiness = 1.0;",
-        "",
-        "#ifdef MAPFLOAT",
-        "    ccGlossiness *= material_clearCoatGlossiness;",
-        "#endif",
-        "",
-        "#ifdef MAPTEXTURE",
-        "    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;",
-        "#endif",
-        "",
-        "#ifdef MAPVERTEX",
-        "    ccGlossiness *= saturate(vVertexColor.$VC);",
-        "#endif",
-        "",
-        "    ccGlossiness = 1.0 - ccGlossiness;",
-        "",
-        "    ccGlossiness += 0.0000001;",
-        "}"
-    ].join('\n');
-
     var uvONE = [1, 1];
     var uvZERO = [0, 0];
 
@@ -998,11 +910,10 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
             material.specularMapChannel = 'rgb';
             material.glossMapChannel = 'a';
+            material.isSrgbSpecularMap = true;
 
             extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
         }
-
-        material.chunks.specularPS = specularChunk;
 
     } else if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
         var pbrData = gltfMaterial.pbrMetallicRoughness;
@@ -1034,20 +945,20 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             material.metalness = 1;
         }
         if (pbrData.hasOwnProperty('roughnessFactor')) {
-            material.shininess = 100 * pbrData.roughnessFactor;
+            material.shininess = 100 * (1.0 - pbrData.roughnessFactor);
         } else {
-            material.shininess = 100;
+            material.shininess = 0;
         }
         if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
             var metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
             material.metalnessMapChannel = 'b';
             material.glossMapChannel = 'g';
+            material.isRoughnessMap = true;
 
             extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
         }
 
-        material.chunks.glossPS = glossChunk;
     }
 
     if (gltfMaterial.hasOwnProperty('normalTexture')) {
@@ -1129,14 +1040,15 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
             extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
         }
         if (ccData.hasOwnProperty('clearcoatRoughnessFactor')) {
-            material.clearCoatGlossiness = ccData.clearcoatRoughnessFactor;
+            material.clearCoatGlossiness = 1.0 - ccData.clearcoatRoughnessFactor;
         } else {
-            material.clearCoatGlossiness = 0;
+            material.clearCoatGlossiness = 1.0;
         }
         if (ccData.hasOwnProperty('clearcoatRoughnessTexture')) {
             var clearcoatRoughnessTexture = ccData.clearcoatRoughnessTexture;
             material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
             material.clearCoatGlossMapChannel = 'g';
+            material.isRoughnessMap = true;
 
             extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
         }
@@ -1150,8 +1062,6 @@ var createMaterial = function (gltfMaterial, textures, disableFlipV) {
                 material.clearCoatBumpiness = clearcoatNormalTexture.scale;
             }
         }
-
-        material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
     }
 
     // handle unlit material by disabling lighting and copying diffuse colours

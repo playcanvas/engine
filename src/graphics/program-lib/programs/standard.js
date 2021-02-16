@@ -1169,6 +1169,14 @@ var standard = {
             code += "#define RIGHT_HANDED_CUBEMAP\n";
         }
 
+        if (options.isSrgbSpecularMap) {
+            code += "#define SRGB_SPECULAR_MAP\n";
+        }
+
+        if (options.isRoughnessMap) {
+            code += "#define ROUGHNESS_MAP\n";
+        }
+
         if (needsNormal) {
             code += chunks.cubeMapRotatePS;
 

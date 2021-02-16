@@ -14,7 +14,11 @@ void getClearCoatGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;
+        #ifdef ROUGHNESS_MAP
+        ccGlossiness = 1.0 - ((1.0 - ccGlossiness) * texture2D(texture_clearCoatGlossMap, $UV).$CH);
+        #else  
+        ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV).$CH;
+        #endif
     #endif
 
     #ifdef MAPVERTEX
