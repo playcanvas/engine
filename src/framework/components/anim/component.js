@@ -198,7 +198,7 @@ class AnimComponent extends Component {
      * @private
      * @function
      * @name AnimComponent#assignAnimation
-     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent} activate value was set to true then the component will begin playing.
+     * @description Associates an animation with a state in the loaded state graph. If all states are linked and the {@link AnimComponent#activate} value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the state node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      * @param {string?} layerName - The name of the anim component layer to update. If omitted the default layer is used.
