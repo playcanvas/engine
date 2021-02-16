@@ -53,7 +53,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {string} name The name of the asset
  * @property {number} id The asset id
  * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
- * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link AssetRegistry#findByTag} method.
+ * @property {Tags} tags Interface for tagging. Allows to find assets by tags using {@link AssetRegistry#findByTag} method.
  * @property {object} file The file details or null if no file
  * @property {string} [file.url] The URL of the resource file that contains the asset data
  * @property {string} [file.filename] The filename of the resource file or null if no filename was set (e.g from using {@link AssetRegistry#loadFromUrl})
@@ -68,7 +68,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
  * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
  * @property {boolean} loading True if the resource is currently being loaded
- * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
+ * @property {AssetRegistry} registry The asset registry that this Asset belongs to
  */
 class Asset extends EventHandler {
     constructor(name, type, file, data, options) {

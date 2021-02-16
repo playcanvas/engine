@@ -53,12 +53,12 @@ class Command {
  * @param {Mesh} mesh - The graphics mesh being instanced.
  * @param {Material} material - The material used to render this instance.
  * @param {GraphNode} [node] - The graph node defining the transform for this instance. This parameter is optional when used with {@link RenderComponent} and will use the node the component is attached to.
- * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
+ * @property {BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
  * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
  * But note that the mesh instance is still in the hierarchy and still in the draw call list.
- * @property {pc.GraphNode} node The graph node defining the transform for this instance.
- * @property {pc.Mesh} mesh The graphics mesh being instanced.
- * @property {pc.Material} material The material used by this mesh instance.
+ * @property {GraphNode} node The graph node defining the transform for this instance.
+ * @property {Mesh} mesh The graphics mesh being instanced.
+ * @property {Material} material The material used by this mesh instance.
  * @property {number} renderStyle The render style of the mesh instance. Can be:
  *
  * * {@link RENDERSTYLE_SOLID}
@@ -69,7 +69,7 @@ class Command {
  * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
  * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
- * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
+ * @property {callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
  * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
  * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
  * @property {boolean} visibleThisFrame Read this value in {@link Layer#onPostCull} to determine if the object is actually going to be rendered.

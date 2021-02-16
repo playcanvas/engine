@@ -26,8 +26,8 @@ for (var i = 0; i < tipJointIds.length; i++) {
  * @param {XrHand} hand - Hand that joint relates to
  * @param {XrFinger} [finger] - Finger that joint is related to, can be null in case of wrist joint
  * @property {number} index Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of the finger
- * @property {pc.XrHand} hand Hand that joint relates to
- * @property {pc.XrFinger|null} finger Finger that joint relates to
+ * @property {XrHand} hand Hand that joint relates to
+ * @property {XrFinger|null} finger Finger that joint relates to
  * @property {boolean} wrist True if joint is a wrist
  * @property {boolean} tip True if joint is a tip of a finger
  * @property {number} radius The radius of a joint, which is a distance from joint to the edge of a skin

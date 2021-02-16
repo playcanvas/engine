@@ -92,8 +92,8 @@ function intersectLineQuad(p, q, corners) {
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
  * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
- * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
- * @property {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
+ * @property {ElementComponent} element The ElementComponent that this event was originally raised on.
+ * @property {CameraComponent} camera The CameraComponent that this event was originally raised via.
  */
 class ElementInputEvent {
     constructor(event, element, camera) {
@@ -212,7 +212,7 @@ class ElementTouchEvent extends ElementInputEvent {
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
  * @param {XrInputSource} inputSource - The XR input source that this event was originally raised from.
- * @property {pc.XrInputSource} inputSource The XR input source that this event was originally raised from.
+ * @property {XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
 class ElementSelectEvent extends ElementInputEvent {
     constructor(event, element, camera, inputSource) {

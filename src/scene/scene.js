@@ -23,7 +23,7 @@ import { Mat4 } from '../math/mat4.js';
  * @classdesc A scene is graphical representation of an environment. It manages the
  * scene hierarchy, all graphical objects, lights, and scene-wide properties.
  * @description Creates a new Scene.
- * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults
+ * @property {Color} ambientLight The color of the scene's ambient light. Defaults
  * to black (0, 0, 0).
  * @property {string} fog The type of fog used by the scene. Can be:
  *
@@ -33,7 +33,7 @@ import { Mat4 } from '../math/mat4.js';
  * * {@link FOG_EXP2}
  *
  * Defaults to pc.FOG_NONE.
- * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black
+ * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
  * (0, 0, 0).
  * @property {number} fogDensity The density of the fog (if enabled). This property
  * is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
@@ -60,15 +60,15 @@ import { Mat4 } from '../math/mat4.js';
  * Defaults to pc.TONEMAP_LINEAR.
  * @property {number} exposure The exposure value tweaks the overall brightness of
  * the scene. Defaults to 1.
- * @property {pc.Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
- * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
+ * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
+ * @property {Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
+ * @property {Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
+ * @property {Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
+ * @property {Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
+ * @property {Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
+ * @property {Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
  * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
- * @property {pc.Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
+ * @property {Quat} skyboxRotation The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
  * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
  * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
  * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier.
@@ -83,11 +83,11 @@ import { Mat4 } from '../math/mat4.js';
  * light direction.
  *
  * Defaults to pc.BAKE_COLORDIR.
- * @property {pc.LayerComposition} layers A {@link LayerComposition} that defines
+ * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
- * @property {pc.StandardMaterial} defaultMaterial The default material used in case no
+ * @property {StandardMaterial} defaultMaterial The default material used in case no
  * other material is available.
- * @property {pc.Entity} root The root entity of the scene, which is usually the only
+ * @property {Entity} root The root entity of the scene, which is usually the only
  * child to the Application root entity.
  */
 class Scene extends EventHandler {

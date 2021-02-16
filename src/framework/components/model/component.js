@@ -29,21 +29,21 @@ import { Component } from '../component.js';
  * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
  * * "plane": The component will render a plane (1 unit in each dimension)
  * * "sphere": The component will render a sphere (radius 0.5)
- * @property {pc.Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
+ * @property {Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
  * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
  * @property {boolean} receiveShadows If true, shadows will be cast on this model.
- * @property {pc.Material} material The material {@link Material} that will be used to render the model (not used on models of type 'asset').
- * @property {pc.Asset|number} materialAsset The material {@link Asset} that will be used to render the model (not used on models of type 'asset').
- * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
+ * @property {Material} material The material {@link Material} that will be used to render the model (not used on models of type 'asset').
+ * @property {Asset|number} materialAsset The material {@link Asset} that will be used to render the model (not used on models of type 'asset').
+ * @property {Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
  * @property {object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model
  * components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
  * @property {boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps.
  * @property {boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake().
  * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
  * @property {boolean} isStatic Mark model as non-movable (optimization).
- * @property {pc.BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
+ * @property {BoundingBox} aabb If set, the bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
  * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
- * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
+ * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
  * @property {number} batchGroupId Assign model to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this model should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.

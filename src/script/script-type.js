@@ -32,9 +32,9 @@ var funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\
  * **swap** - This method will be called when a {@link ScriptType} that already exists in
  * the registry gets redefined. If the new {@link ScriptType} has a `swap` method in its
  * prototype, then it will be executed to perform hot-reload at runtime.
- * @property {pc.Application} app The {@link Application} that the instance of this type
+ * @property {Application} app The {@link Application} that the instance of this type
  * belongs to.
- * @property {pc.Entity} entity The {@link Entity} that the instance of this type belongs to.
+ * @property {Entity} entity The {@link Entity} that the instance of this type belongs to.
  * @property {boolean} enabled True if the instance of this type is in running state. False
  * when script is not running, because the Entity or any of its parents are disabled or the
  * Script Component is disabled or the Script Instance is disabled. When disabled no update

@@ -129,16 +129,16 @@ var depthLayer;
  * @property {number} animSpeed Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
  * @property {number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
  * @property {number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
- * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
- * @property {pc.Vec3} emitterExtentsInner (Only for EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
+ * @property {Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
+ * @property {Vec3} emitterExtentsInner (Only for EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
  * @property {number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
  * @property {number} emitterRadiusInner (Only for EMITTERSHAPE_SPHERE) The inner radius within which particles are not spawned.
- * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
- * @property {pc.Asset} colorMapAsset The {@link Asset} used to set the colorMap.
- * @property {pc.Asset} normalMapAsset The {@link Asset} used to set the normalMap.
- * @property {pc.Asset} meshAsset The {@link Asset} used to set the mesh.
- * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
- * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
+ * @property {Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
+ * @property {Asset} colorMapAsset The {@link Asset} used to set the colorMap.
+ * @property {Asset} normalMapAsset The {@link Asset} used to set the normalMap.
+ * @property {Asset} meshAsset The {@link Asset} used to set the mesh.
+ * @property {Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
+ * @property {Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
  * @property {number} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
  *
  * * {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
@@ -151,7 +151,7 @@ var depthLayer;
  * * {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
  * * {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
  *
- * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
+ * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
  * @property {number} blend Controls how particles are blended when being written to the currently active render target.
  * Can be:
  *
@@ -169,20 +169,20 @@ var depthLayer;
  * * {@link PARTICLEORIENTATION_WORLD}: User defines world space normal (particleNormal) to set planes orientation.
  * * {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by emitter(entity) transformation.
  *
- * @property {pc.Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
- * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
- * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
- * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
- * @property {pc.CurveSet} velocityGraph2 If not null, particles pick random values between velocityGraph and velocityGraph2.
- * @property {pc.CurveSet} colorGraph Color over lifetime.
- * @property {pc.Curve} rotationSpeedGraph Rotation speed over lifetime.
- * @property {pc.Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
- * @property {pc.Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
- * @property {pc.Curve} radialSpeedGraph2 If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
- * @property {pc.Curve} scaleGraph Scale over lifetime.
- * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
- * @property {pc.Curve} alphaGraph Alpha over lifetime.
- * @property {pc.Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
+ * @property {Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
+ * @property {CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
+ * @property {CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
+ * @property {CurveSet} velocityGraph World-space velocity over lifetime.
+ * @property {CurveSet} velocityGraph2 If not null, particles pick random values between velocityGraph and velocityGraph2.
+ * @property {CurveSet} colorGraph Color over lifetime.
+ * @property {Curve} rotationSpeedGraph Rotation speed over lifetime.
+ * @property {Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+ * @property {Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
+ * @property {Curve} radialSpeedGraph2 If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
+ * @property {Curve} scaleGraph Scale over lifetime.
+ * @property {Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
+ * @property {Curve} alphaGraph Alpha over lifetime.
+ * @property {Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this particle system should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
  */

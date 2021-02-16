@@ -43,7 +43,7 @@ function capTime(time, duration) {
  * @property {boolean} isStopped Returns true if the instance is currently stopped.
  * @property {boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
  * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>. Source is only available after calling play.
- * @property {pc.Sound} sound The sound resource that the instance will play.
+ * @property {Sound} sound The sound resource that the instance will play.
  */
 class SoundInstance extends EventHandler {
     constructor(manager, sound, options) {

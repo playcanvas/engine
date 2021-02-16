@@ -111,7 +111,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @param {Component} parentComponent - A reference to the parent component that owns this entity reference.
  * @param {string} entityPropertyName - The name of the component property that contains the entity guid.
  * @param {object<string, Function>} [eventConfig] - A map of event listener configurations.
- * @property {pc.Entity} entity A reference to the entity, if present.
+ * @property {Entity} entity A reference to the entity, if present.
  */
 class EntityReference extends EventHandler {
     constructor(parentComponent, entityPropertyName, eventConfig) {

@@ -27,7 +27,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @property {number} handleSize The size of the handle relative to the size of the track, in the range
  * 0 to 1. For a vertical scrollbar, a value of 1 means that the handle will take up the full height of
  * the track.
- * @property {pc.Entity} handleEntity The entity to be used as the scrollbar handle. This entity must
+ * @property {Entity} handleEntity The entity to be used as the scrollbar handle. This entity must
  * have a Scrollbar component.
  */
 class ScrollbarComponent extends Component {

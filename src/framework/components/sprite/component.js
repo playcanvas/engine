@@ -40,15 +40,15 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  *
  * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
  * @property {number} spriteAsset The id of the sprite asset to render. Only works for {@link SPRITETYPE_SIMPLE} types.
- * @property {pc.Sprite} sprite The current sprite.
+ * @property {Sprite} sprite The current sprite.
  * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
  * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
- * @property {pc.Color} color The color tint of the sprite.
+ * @property {Color} color The color tint of the sprite.
  * @property {number} opacity The opacity of the sprite.
  * @property {boolean} flipX Flip the X axis when rendering a sprite.
  * @property {boolean} flipY Flip the Y axis when rendering a sprite.
  * @property {object} clips A dictionary that contains {@link SpriteAnimationClip}s.
- * @property {pc.SpriteAnimationClip} currentClip The current clip being played.
+ * @property {SpriteAnimationClip} currentClip The current clip being played.
  * @property {number} speed A global speed modifier used when playing sprite animation clips.
  * @property {number} batchGroupId Assign sprite to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
  * @property {string} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.

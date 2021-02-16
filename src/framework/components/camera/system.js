@@ -17,7 +17,7 @@ const _schema = ['enabled'];
  * array of all active cameras.
  * @description Create a new CameraComponentSystem.
  * @param {Application} app - The Application.
- * @property {pc.CameraComponent[]} cameras Holds all the active camera components.
+ * @property {CameraComponent[]} cameras Holds all the active camera components.
  */
 class CameraComponentSystem extends ComponentSystem {
     constructor(app) {

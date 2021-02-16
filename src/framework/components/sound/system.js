@@ -19,7 +19,7 @@ const _schema = ['enabled'];
  * @property {number} volume Sets / gets the volume for the entire Sound system. All sounds will have their volume
  * multiplied by this value. Valid between [0, 1].
  * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
- * @property {pc.SoundManager} manager Gets / sets the sound manager.
+ * @property {SoundManager} manager Gets / sets the sound manager.
  */
 class SoundComponentSystem extends ComponentSystem  {
     constructor(app, manager) {

@@ -25,7 +25,7 @@ var _prepareDeprecationWarning = false;
  * @param {number} height - The height of the pick buffer in pixels.
  * @property {number} width Width of the pick buffer in pixels (read-only).
  * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ * @property {RenderTarget} renderTarget The render target used by the picker internally (read-only).
  */
 class Picker {
     constructor(app, width, height) {

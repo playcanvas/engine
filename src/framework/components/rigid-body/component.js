@@ -28,15 +28,15 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @param {Entity} entity - The entity this component is attached to.
  * @property {number} mass The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC}
  * bodies, other types have infinite mass. Defaults to 1.
- * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
- * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
+ * @property {Vec3} linearVelocity Defines the speed of the body in a given direction.
+ * @property {Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
  * @property {number} linearDamping Controls the rate at which a body loses linear velocity over time.
  * Defaults to 0.
  * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
  * Defaults to 0.
- * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
+ * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
  * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
- * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
+ * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
  * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.

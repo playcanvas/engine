@@ -15,12 +15,12 @@ import { RenderAction } from './render-action.js';
  * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
  * @description Create a new layer composition.
  * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
- * @property {pc.Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
+ * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
  * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means only semi-transparent objects are rendered, and false means opaque.
  * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link Layer#layerList}.
  * True means the layer is rendered, false means it's skipped.
- * @property {pc.CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be used during rendering. e.g. Inside
+ * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be used during rendering. e.g. Inside
  * {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  */
 // Composition can hold only 2 sublayers of each layer

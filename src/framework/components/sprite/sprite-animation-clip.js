@@ -18,7 +18,7 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
  * @param {string} [data.name] - The name of the new animation clip.
  * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
  * @property {number} spriteAsset The id of the sprite asset used to play the animation.
- * @property {pc.Sprite} sprite The current sprite used to play the animation.
+ * @property {Sprite} sprite The current sprite used to play the animation.
  * @property {number} frame The index of the frame of the {@link Sprite} currently being rendered.
  * @property {number} time The current time of the animation in seconds.
  * @property {number} duration The total duration of the animation in seconds.

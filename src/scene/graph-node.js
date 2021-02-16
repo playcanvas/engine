@@ -29,7 +29,7 @@ var up = new Vec3();
  * @classdesc A hierarchical scene node.
  * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
  * @property {string} name The non-unique name of a graph node.
- * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
+ * @property {Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
  */
 class GraphNode extends EventHandler {
     constructor(name) {

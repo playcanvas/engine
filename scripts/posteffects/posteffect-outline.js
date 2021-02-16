@@ -7,8 +7,8 @@
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @param {number} thickness - The thickness for the outline effect passed here to be used as a constant in shader.
- * @property {pc.Texture} texture The outline texture to use.
- * @property {pc.Color} color The outline color.
+ * @property {Texture} texture The outline texture to use.
+ * @property {Color} color The outline color.
  */
 function OutlineEffect(graphicsDevice, thickness) {
     pc.PostEffect.call(this, graphicsDevice);

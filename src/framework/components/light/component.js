@@ -52,7 +52,7 @@ var _lightPropsDefault = [];
  * * "point": A light that illuminates in all directions from a point.
  * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
  * Defaults to "directional".
- * @property {pc.Color} color The Color of the light. The alpha component of the color is
+ * @property {Color} color The Color of the light. The alpha component of the color is
  * ignored. Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
@@ -100,13 +100,13 @@ var _lightPropsDefault = [];
  * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
  * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
  * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
- * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
+ * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
  * @property {number} cookieIntensity Projection texture intensity (default is 1).
  * @property {boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
  * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
- * @property {pc.Vec2} cookieScale Spotlight cookie scale.
- * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
+ * @property {Vec2} cookieScale Spotlight cookie scale.
+ * @property {Vec2} cookieOffset Spotlight cookie position offset.
  * @property {boolean} isStatic Mark light as non-movable (optimization)
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should belong.
  * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.

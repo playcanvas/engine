@@ -21,10 +21,10 @@ import { Component } from '../component.js';
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
- * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
+ * @property {Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
  * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
  * @property {number} duration Get the duration in seconds of the current animation. [read only]
- * @property {pc.Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
+ * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, pc.Animation>} animations Get or Set dictionary of animations by name.
  */
 class AnimationComponent extends Component {

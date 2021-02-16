@@ -11,8 +11,8 @@ import { VrDisplay } from './vr-display.js';
  * @classdesc Manage and update {@link VrDisplay}s that are attached to this device.
  * @description Manage and update {@link VrDisplay}s that are attached to this device.
  * @param {Application} app - The main application.
- * @property {pc.VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this device.
- * @property {pc.VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the `displays` list.
+ * @property {VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this device.
+ * @property {VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the `displays` list.
  * @property {boolean} isSupported Reports whether this device supports the WebVR API.
  */
 class VrManager extends EventHandler {

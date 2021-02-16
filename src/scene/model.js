@@ -12,10 +12,10 @@ import { SkinInstance } from './skin-instance.js';
  * @example
  * // Create a new model
  * var model = new pc.Model();
- * @property {pc.GraphNode} graph The root node of the model's graph node hierarchy.
- * @property {pc.MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
- * @property {pc.SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
- * @property {pc.MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
+ * @property {GraphNode} graph The root node of the model's graph node hierarchy.
+ * @property {MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
+ * @property {SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
+ * @property {MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
  */
 class Model {
     constructor() {
