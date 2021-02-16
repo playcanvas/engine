@@ -1,4 +1,5 @@
 import { AssetListLoader } from '../asset/asset-list-loader.js';
+import { Asset } from "../asset/asset";
 
 var TemplateUtils = {
     /**
@@ -13,6 +14,8 @@ var TemplateUtils = {
      * @param {Function} callback - The callback to execute after template assets are loaded.
      */
     waitForTemplatesInScene: function (data, assets, callback) {
+        // REMOVE this comment: Not used?
+        // TODO Remove all instances of this properties
         if (data.collapsedInstances) {
             var entities = TemplateUtils._getAllCollapsedEntities(data);
 

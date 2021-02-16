@@ -21,7 +21,7 @@ class SceneParser {
             data.entities = new Decompress(data.entities, compressed).run();
         }
 
-        if (data.collapsedInstances) {
+        if (data.)collapsedInstances) {
             this._addCollapsedToEntities(this._app, data);
         }
 

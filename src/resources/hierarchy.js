@@ -25,10 +25,8 @@ class HierarchyHandler {
             maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
-                TemplateUtils.waitForTemplatesInScene(
-                    response,
-                    assets,
-                    callback);
+
+                callback(err, response);
             } else {
                 var errMsg = 'Error while loading scene ' + url.original;
                 if (err.message) {
