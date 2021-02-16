@@ -170,7 +170,7 @@ class TransformFeedback {
     /**
      * @readonly
      * @name TransformFeedback#inputBuffer
-     * @type {pc.VertexBuffer}
+     * @type {VertexBuffer}
      * @description The current input buffer.
      */
     get inputBuffer() {
@@ -180,7 +180,7 @@ class TransformFeedback {
     /**
      * @readonly
      * @name TransformFeedback#outputBuffer
-     * @type {pc.VertexBuffer}
+     * @type {VertexBuffer}
      * @description The current output buffer.
      */
     get outputBuffer() {

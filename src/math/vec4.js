@@ -456,7 +456,7 @@ class Vec4 {
      * @static
      * @readonly
      * @name Vec4.ZERO
-     * @type {pc.Vec4}
+     * @type {Vec4}
      * @description A constant vector set to [0, 0, 0, 0].
      */
     static ZERO = Object.freeze(new Vec4(0, 0, 0, 0));
@@ -466,7 +466,7 @@ class Vec4 {
      * @static
      * @readonly
      * @name Vec4.ONE
-     * @type {pc.Vec4}
+     * @type {Vec4}
      * @description A constant vector set to [1, 1, 1, 1].
      */
     static ONE = Object.freeze(new Vec4(1, 1, 1, 1));

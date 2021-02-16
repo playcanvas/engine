@@ -107,7 +107,7 @@ class ScriptType extends EventHandler {
      * @static
      * @readonly
      * @name ScriptType.attributes
-     * @type {pc.ScriptAttributes}
+     * @type {ScriptAttributes}
      * @description The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
      * @example
      * var PlayerController = pc.createScript('playerController');

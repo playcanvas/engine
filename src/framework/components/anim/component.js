@@ -461,7 +461,7 @@ class AnimComponent extends Component {
     /**
      * @private
      * @name AnimComponent#baseLayer
-     * @type {pc.AnimComponentLayer}
+     * @type {AnimComponentLayer}
      * @readonly
      * @description Returns the base layer of the state graph
      */
