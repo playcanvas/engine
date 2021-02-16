@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Frustum
+ * @name Frustum
  * @classdesc A frustum is a shape that defines the viewing space of a camera. It can be
  * used to determine visibility of points and bounding spheres. Typically, you would not
  * create a Frustum shape directly, but instead query {@link pc.CameraComponent#frustum}.
@@ -17,7 +17,7 @@ class Frustum {
 
     /**
      * @function
-     * @name pc.Frustum#setFromMat4
+     * @name Frustum#setFromMat4
      * @description Updates the frustum shape based on the supplied 4x4 matrix.
      * @param {pc.Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
@@ -116,7 +116,7 @@ class Frustum {
 
     /**
      * @function
-     * @name pc.Frustum#containsPoint
+     * @name Frustum#containsPoint
      * @description Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
      * @param {pc.Vec3} point - The point to test.
@@ -135,7 +135,7 @@ class Frustum {
 
     /**
      * @function
-     * @name pc.Frustum#containsSphere
+     * @name Frustum#containsSphere
      * @description Tests whether a bounding sphere intersects the frustum. If the sphere is outside the frustum,
      * zero is returned. If the sphere intersects the frustum, 1 is returned. If the sphere is completely inside
      * the frustum, 2 is returned. Note that a sphere touching a frustum plane from the outside is considered to

@@ -79,7 +79,7 @@ function UntarScope(isWorker) {
 
     /**
      * @private
-     * @name pc.Untar
+     * @name Untar
      * @classdesc Untars a tar archive in the form of an array buffer.
      * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
      * @description Creates a new instance of pc.Untar.
@@ -99,7 +99,7 @@ function UntarScope(isWorker) {
     /**
      * @private
      * @function
-     * @name pc.Untar#_hasNext
+     * @name Untar#_hasNext
      * @description Whether we have more files to untar.
      * @returns {boolean} Returns true or false.
      */
@@ -110,7 +110,7 @@ function UntarScope(isWorker) {
     /**
      * @private
      * @function
-     * @name pc.Untar#_readNextFile
+     * @name Untar#_readNextFile
      * @description Untars the next file in the archive.
      * @returns {object} Returns a file descriptor in the following format:
      * {name, size, start, url}.
@@ -196,7 +196,7 @@ function UntarScope(isWorker) {
     /**
      * @private
      * @function
-     * @name pc.Untar#untar
+     * @name Untar#untar
      * @description Untars the array buffer provided in the constructor.
      * @param {string} [filenamePrefix] - The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
      * @returns {object[]} An array of files in this format {name, start, size, url}.
@@ -266,7 +266,7 @@ function getWorkerUrl() {
 
 /**
  * @private
- * @name pc.UntarWorker
+ * @name UntarWorker
  * @classdesc Wraps untar'ing a tar archive with a Web Worker.
  * @description Creates new instance of a pc.UntarWorker.
  * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
@@ -308,7 +308,7 @@ class UntarWorker {
     /**
      * @private
      * @function
-     * @name pc.UntarWorker#untar
+     * @name UntarWorker#untar
      * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
      * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
      * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
@@ -333,7 +333,7 @@ class UntarWorker {
     /**
      * @private
      * @function
-     * @name pc.UntarWorker#hasPendingRequests
+     * @name UntarWorker#hasPendingRequests
      * @description Returns whether the worker has pending requests to untar array buffers.
      * @returns {boolean} Returns true of false.
      */
@@ -348,7 +348,7 @@ class UntarWorker {
     /**
      * @private
      * @function
-     * @name pc.UntarWorker#destroy
+     * @name UntarWorker#destroy
      * @description Destroys the internal Web Worker.
      */
     destroy() {

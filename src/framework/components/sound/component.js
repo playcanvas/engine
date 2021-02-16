@@ -7,7 +7,7 @@ import { SoundSlot } from './slot.js';
 /**
  * @component
  * @class
- * @name pc.SoundComponent
+ * @name SoundComponent
  * @augments pc.Component
  * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
  * @description Create a new Sound Component.
@@ -174,7 +174,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#addSlot
+     * @name SoundComponent#addSlot
      * @description Creates a new {@link pc.SoundSlot} with the specified name.
      * @param {string} name - The name of the slot.
      * @param {object} [options] - Settings for the slot.
@@ -218,7 +218,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#removeSlot
+     * @name SoundComponent#removeSlot
      * @description Removes the {@link pc.SoundSlot} with the specified name.
      * @param {string} name - The name of the slot.
      * @example
@@ -235,7 +235,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#slot
+     * @name SoundComponent#slot
      * @description Returns the slot with the specified name.
      * @param {string} name - The name of the slot.
      * @returns {pc.SoundSlot} The slot.
@@ -250,7 +250,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#play
+     * @name SoundComponent#play
      * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
      * @param {string} name - The name of the {@link pc.SoundSlot} to play.
      * @example
@@ -281,7 +281,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#pause
+     * @name SoundComponent#pause
      * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link pc.SoundComponent#resume}.
      * @param {string} [name] - The name of the slot to pause. Leave undefined to pause everything.
      * @example
@@ -313,7 +313,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#resume
+     * @name SoundComponent#resume
      * @description Resumes playback of the sound slot with the specified name if it's paused. If no
      * name is specified all slots will be resumed.
      * @param {string} [name] - The name of the slot to resume. Leave undefined to resume everything.
@@ -347,7 +347,7 @@ class SoundComponent extends Component {
 
     /**
      * @function
-     * @name pc.SoundComponent#stop
+     * @name SoundComponent#stop
      * @description Stops playback of the sound slot with the specified name if it's paused. If no
      * name is specified all slots will be stopped.
      * @param {string} [name] - The name of the slot to stop. Leave undefined to stop everything.
@@ -435,7 +435,7 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#play
+ * @name SoundComponent#play
  * @description Fired when a sound instance starts playing.
  * @param {pc.SoundSlot} slot - The slot whose instance started playing.
  * @param {pc.SoundInstance} instance - The instance that started playing.
@@ -443,7 +443,7 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#pause
+ * @name SoundComponent#pause
  * @description Fired when a sound instance is paused.
  * @param {pc.SoundSlot} slot - The slot whose instance was paused.
  * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
@@ -451,7 +451,7 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#resume
+ * @name SoundComponent#resume
  * @description Fired when a sound instance is resumed..
  * @param {pc.SoundSlot} slot - The slot whose instance was resumed.
  * @param {pc.SoundInstance} instance - The instance that was resumed.
@@ -459,7 +459,7 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#stop
+ * @name SoundComponent#stop
  * @description Fired when a sound instance is stopped.
  * @param {pc.SoundSlot} slot - The slot whose instance was stopped.
  * @param {pc.SoundInstance} instance - The instance that was stopped.
@@ -467,7 +467,7 @@ defineSoundPropertyBasic('distanceModel', '_distanceModel');
 
 /**
  * @event
- * @name pc.SoundComponent#end
+ * @name SoundComponent#end
  * @description Fired when a sound instance stops playing because it reached its ending.
  * @param {pc.SoundSlot} slot - The slot whose instance ended.
  * @param {pc.SoundInstance} instance - The instance that ended.

@@ -11,7 +11,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
 /**
  * @component
  * @class
- * @name pc.ScrollbarComponent
+ * @name ScrollbarComponent
  * @augments pc.Component
  * @description Create a new ScrollbarComponent.
  * @classdesc A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
@@ -185,7 +185,7 @@ class ScrollbarComponent extends Component {
 
 /**
  * @event
- * @name pc.ScrollbarComponent#set:value
+ * @name ScrollbarComponent#set:value
  * @description Fired whenever the scroll value changes.
  * @param {number} value - The current scroll value.
  */

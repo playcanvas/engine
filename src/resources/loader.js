@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.ResourceLoader
+ * @name ResourceLoader
  * @param {pc.Application} app - The application.
  * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
  * multiple requests. Add ResourceHandlers to handle different types of resources.
@@ -15,7 +15,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#addHandler
+     * @name ResourceLoader#addHandler
      * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
      * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
      * @param {string} type - The name of the resource type that the handler will be registered with. Can be:
@@ -47,7 +47,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#removeHandler
+     * @name ResourceLoader#removeHandler
      * @description Remove a {@link pc.ResourceHandler} for a resource type.
      * @param {string} type - The name of the type that the handler will be removed.
      */
@@ -57,7 +57,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#getHandler
+     * @name ResourceLoader#getHandler
      * @description Get a {@link pc.ResourceHandler} for a resource type.
      * @param {string} type - The name of the resource type that the handler is registered with.
      * @returns {pc.ResourceHandler} The registered handler.
@@ -68,7 +68,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#load
+     * @name ResourceLoader#load
      * @description Make a request for a resource from a remote URL. Parse the returned data using the
      * handler for the specified type. When loaded and parsed, use the callback to return an instance of
      * the resource.
@@ -194,7 +194,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#open
+     * @name ResourceLoader#open
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
      * @param {string} type - The type of resource.
      * @param {*} data - The raw resource data.
@@ -213,7 +213,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#patch
+     * @name ResourceLoader#patch
      * @description Perform any operations on a resource, that requires a dependency on its asset data
      * or any other asset data.
      * @param {pc.Asset} asset - The asset to patch.
@@ -233,7 +233,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#clearCache
+     * @name ResourceLoader#clearCache
      * @description Remove resource from cache.
      * @param {string} url - The URL of the resource.
      * @param {string} type - The type of resource.
@@ -244,7 +244,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#getFromCache
+     * @name ResourceLoader#getFromCache
      * @description Check cache for resource from a URL. If present, return the cached value.
      * @param {string} url - The URL of the resource to get from the cache.
      * @param {string} type - The type of the resource.
@@ -259,7 +259,7 @@ class ResourceLoader {
     /**
      * @private
      * @function
-     * @name pc.ResourceLoader#enableRetry
+     * @name ResourceLoader#enableRetry
      * @param {number} maxRetries - The maximum number of times to retry loading an asset. Defaults to 5.
      * @description Enables retrying of failed requests when loading assets.
      */
@@ -274,7 +274,7 @@ class ResourceLoader {
     /**
      * @private
      * @function
-     * @name pc.ResourceLoader#disableRetry
+     * @name ResourceLoader#disableRetry
      * @description Disables retrying of failed requests when loading assets.
      */
     disableRetry() {
@@ -285,7 +285,7 @@ class ResourceLoader {
 
     /**
      * @function
-     * @name pc.ResourceLoader#destroy
+     * @name ResourceLoader#destroy
      * @description Destroys the resource loader.
      */
     destroy() {

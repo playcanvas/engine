@@ -8,7 +8,7 @@ import { Vec4 } from '../../math/vec4.js';
 
 /**
  * @class
- * @name pc.ComponentSystem
+ * @name ComponentSystem
  * @augments pc.EventHandler
  * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
  * @param {pc.Application} app - The application managing this system.
@@ -143,7 +143,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#addComponent
+     * @name ComponentSystem#addComponent
      * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity.
      * @param {pc.Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
@@ -177,7 +177,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#removeComponent
+     * @name ComponentSystem#removeComponent
      * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}.
      * @param {pc.Entity} entity - The entity to remove the component from.
      * @example
@@ -197,7 +197,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#cloneComponent
+     * @name ComponentSystem#cloneComponent
      * @description Create a clone of component. This creates a copy all ComponentData variables.
      * @param {pc.Entity} entity - The entity to clone the component from.
      * @param {pc.Entity} clone - The entity to clone the component into.
@@ -212,7 +212,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#initializeComponentData
+     * @name ComponentSystem#initializeComponentData
      * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
      * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely.
      * @param {pc.Component} component - The component being initialized.
@@ -261,7 +261,7 @@ class ComponentSystem extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.ComponentSystem#getPropertiesOfType
+     * @name ComponentSystem#getPropertiesOfType
      * @description Searches the component schema for properties that match the specified type.
      * @param {string} type - The type to search for.
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.

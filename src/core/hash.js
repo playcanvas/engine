@@ -1,7 +1,7 @@
 /**
  * @private
  * @function
- * @name pc.hashCode
+ * @name hashCode
  * @description Calculates simple hash value of a string. Designed for performance, not perfect.
  * @param {string} str - String.
  * @returns {number} Hash value.

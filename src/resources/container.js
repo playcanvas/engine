@@ -11,7 +11,7 @@ import { SkinInstance } from '../scene/skin-instance.js';
 
 /**
  * @class
- * @name pc.ContainerResource
+ * @name ContainerResource
  * @classdesc Container for a list of animations, textures, materials and a model.
  * @param {object} data - The loaded GLB data.
  * @property {pc.Asset[]} animations - Array of assets of animations in the GLB container.
@@ -161,7 +161,7 @@ class ContainerResource {
 
 /**
  * @class
- * @name pc.ContainerHandler
+ * @name ContainerHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Loads files that contain multiple resources. For example glTF files can contain
  * textures, models and animations.

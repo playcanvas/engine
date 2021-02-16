@@ -10,7 +10,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimTarget
+ * @name AnimTarget
  * @classdesc Stores the information required by {@link pc.AnimEvaluator} for updating a target value.
  * @param {pc.AnimSetter} func - this function will be called when a new animation value is output by
  * the {@link pc.AnimEvaluator}.

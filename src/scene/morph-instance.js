@@ -16,7 +16,7 @@ var textureMorphVertexShader =
 
 /**
  * @class
- * @name pc.MorphInstance
+ * @name MorphInstance
  * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, manages selection of active morph targets.
  * @param {pc.Morph} morph - The pc.Morph to instance.
  */
@@ -98,7 +98,7 @@ class MorphInstance {
 
     /**
      * @function
-     * @name pc.MorphInstance#destroy
+     * @name MorphInstance#destroy
      * @description Frees video memory allocated by this object.
      */
     destroy() {
@@ -144,7 +144,7 @@ class MorphInstance {
 
     /**
      * @function
-     * @name pc.MorphInstance#clone
+     * @name MorphInstance#clone
      * @description Clones a MorphInstance. The returned clone uses the same {@link pc.Morph} and weights are set to defaults.
      * @returns {pc.MorphInstance} A clone of the specified MorphInstance.
      */
@@ -155,7 +155,7 @@ class MorphInstance {
 
     /**
      * @function
-     * @name pc.MorphInstance#getWeight
+     * @name MorphInstance#getWeight
      * @description Gets current weight of the specified morph target.
      * @param {number} index - An index of morph target.
      * @returns {number} Weight.
@@ -166,7 +166,7 @@ class MorphInstance {
 
     /**
      * @function
-     * @name pc.MorphInstance#setWeight
+     * @name MorphInstance#setWeight
      * @description Sets weight of the specified morph target.
      * @param {number} index - An index of morph target.
      * @param {number} weight - Weight.
@@ -328,7 +328,7 @@ class MorphInstance {
 
     /**
      * @function
-     * @name pc.MorphInstance#update
+     * @name MorphInstance#update
      * @description Selects active morph targets and prepares morph for rendering. Called automatically by renderer.
      */
     update() {

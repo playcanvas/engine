@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Sound
+ * @name Sound
  * @classdesc Represents the resource of an audio asset.
  * @param {HTMLAudioElement|AudioBuffer} resource - If the Web Audio API is supported, pass an AudioBuffer object, otherwise
  * an Audio object.

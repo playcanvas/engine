@@ -4,7 +4,7 @@ import { Quat } from '../math/quat.js';
 
 /**
  * @class
- * @name pc.XrTrackedImage
+ * @name XrTrackedImage
  * @classdesc The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
  * @description The tracked image interface that is created by the Image Tracking system and is provided as a list from {@link pc.XrImageTracking#images}. It contains information about the tracking state as well as the position and rotation of the tracked image.
  * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching the real world image as closely as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
@@ -34,13 +34,13 @@ class XrTrackedImage extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrTrackedImage#tracked
+     * @name XrTrackedImage#tracked
      * @description Fired when image becomes actively tracked.
      */
 
     /**
      * @event
-     * @name pc.XrTrackedImage#untracked
+     * @name XrTrackedImage#untracked
      * @description Fired when image is no more actively tracked.
      */
 
@@ -76,7 +76,7 @@ class XrTrackedImage extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrTrackedImage#getPosition
+     * @name XrTrackedImage#getPosition
      * @description Get the position of the tracked image. The position is the most recent one based on the tracked image state.
      * @returns {pc.Vec3} Position in world space.
      * @example
@@ -90,7 +90,7 @@ class XrTrackedImage extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrTrackedImage#getRotation
+     * @name XrTrackedImage#getRotation
      * @description Get the rotation of the tracked image. The rotation is the most recent based on the tracked image state.
      * @returns {pc.Quat} Rotation in world space.
      * @example

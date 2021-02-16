@@ -22,7 +22,7 @@ var _lightPropsDefault = [];
 /**
  * @component
  * @class
- * @name pc.LightComponent
+ * @name LightComponent
  * @augments pc.Component
  * @classdesc The Light Component enables the Entity to light the scene. There are three types
  * of light: directional, point and spot. Directional lights are global in that they are

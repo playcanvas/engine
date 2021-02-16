@@ -8,7 +8,7 @@ var tmpVecE = new Vec3();
 
 /**
  * @class
- * @name pc.BoundingBox
+ * @name BoundingBox
  * @description Create a new axis-aligned bounding box.
  * @classdesc Axis-Aligned Bounding Box.
  * @param {pc.Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
@@ -26,7 +26,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#add
+     * @name BoundingBox#add
      * @description Combines two bounding boxes into one, enclosing both.
      * @param {pc.BoundingBox} other - Bounding box to add.
      */
@@ -78,7 +78,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#copy
+     * @name BoundingBox#copy
      * @description Copies the contents of a source AABB.
      * @param {pc.BoundingBox} src - The AABB to copy from.
      */
@@ -89,7 +89,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#clone
+     * @name BoundingBox#clone
      * @description Returns a clone of the AABB
      * @returns {pc.BoundingBox} A duplicate AABB.
      */
@@ -99,7 +99,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#intersects
+     * @name BoundingBox#intersects
      * @description Test whether two axis-aligned bounding boxes intersect.
      * @param {pc.BoundingBox} other - Bounding box to test against.
      * @returns {boolean} True if there is an intersection.
@@ -197,7 +197,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#intersectsRay
+     * @name BoundingBox#intersectsRay
      * @description Test if a ray intersects with the AABB.
      * @param {pc.Ray} ray - Ray to test against (direction must be normalized).
      * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
@@ -213,7 +213,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#setMinMax
+     * @name BoundingBox#setMinMax
      * @description Sets the minimum and maximum corner of the AABB.
      * Using this function is faster than assigning min and max separately.
      * @param {pc.Vec3} min - The minimum corner of the AABB.
@@ -226,7 +226,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#getMin
+     * @name BoundingBox#getMin
      * @description Return the minimum corner of the AABB.
      * @returns {pc.Vec3} Minimum corner.
      */
@@ -236,7 +236,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#getMax
+     * @name BoundingBox#getMax
      * @description Return the maximum corner of the AABB.
      * @returns {pc.Vec3} Maximum corner.
      */
@@ -246,7 +246,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#containsPoint
+     * @name BoundingBox#containsPoint
      * @description Test if a point is inside a AABB.
      * @param {pc.Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
@@ -266,7 +266,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#setFromTransformedAabb
+     * @name BoundingBox#setFromTransformedAabb
      * @description Set an AABB to enclose the specified AABB if it were to be
      * transformed by the specified 4x4 matrix.
      * @param {pc.BoundingBox} aabb - Box to transform and enclose.
@@ -302,7 +302,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#compute
+     * @name BoundingBox#compute
      * @description Compute the size of the AABB to encapsulate all specified vertices.
      * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
      * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
@@ -331,7 +331,7 @@ class BoundingBox {
 
     /**
      * @function
-     * @name pc.BoundingBox#intersectsBoundingSphere
+     * @name BoundingBox#intersectsBoundingSphere
      * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
      * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.

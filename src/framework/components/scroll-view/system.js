@@ -24,7 +24,7 @@ const DEFAULT_DRAG_THRESHOLD = 10;
 
 /**
  * @class
- * @name pc.ScrollViewComponentSystem
+ * @name ScrollViewComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc Manages creation of {@link pc.ScrollViewComponent}s.
  * @description Create a new ScrollViewComponentSystem.

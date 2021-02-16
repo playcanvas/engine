@@ -11,7 +11,7 @@ import { Listener } from './listener.js';
 
 /**
  * @class
- * @name pc.SoundManager
+ * @name SoundManager
  * @augments pc.EventHandler
  * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
  * like global volume, suspend and resume.
@@ -106,7 +106,7 @@ class SoundManager extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundManager#playSound
+     * @name SoundManager#playSound
      * @description Create a new pc.Channel and begin playback of the sound.
      * @param {pc.Sound} sound - The Sound object to play.
      * @param {object} options - Optional options object.
@@ -127,7 +127,7 @@ class SoundManager extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundManager#playSound3d
+     * @name SoundManager#playSound3d
      * @description Create a new pc.Channel3d and begin playback of the sound at the position specified.
      * @param {pc.Sound} sound - The Sound object to play.
      * @param {pc.Vec3} position - The position of the sound in 3D space.

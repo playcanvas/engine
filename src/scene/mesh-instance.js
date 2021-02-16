@@ -46,7 +46,7 @@ class Command {
 
 /**
  * @class
- * @name pc.MeshInstance
+ * @name MeshInstance
  * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
  * mesh instances that can have different transforms and materials.
  * @description Create a new mesh instance.
@@ -440,7 +440,7 @@ class MeshInstance {
     }
 
     /**
-     * @name pc.MeshInstance#mask
+     * @name MeshInstance#mask
      * @type {number}
      * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
      * Defaults to 1.
@@ -457,7 +457,7 @@ class MeshInstance {
     }
 
     /**
-     * @name pc.MeshInstance#instancingCount
+     * @name MeshInstance#instancingCount
      * @type {number}
      * @description Number of instances when using hardware instancing to render the mesh.
      */
@@ -541,7 +541,7 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#setInstancing
+     * @name MeshInstance#setInstancing
      * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
      * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
      * Pass null to turn off hardware instancing.
@@ -573,7 +573,7 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#getParameter
+     * @name MeshInstance#getParameter
      * @description Retrieves the specified shader parameter from a mesh instance.
      * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
@@ -584,7 +584,7 @@ class MeshInstance {
 
     /**
      * @function
-     * @name pc.MeshInstance#setParameter
+     * @name MeshInstance#setParameter
      * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
      * if set on Material this mesh instance uses for rendering.
      * @param {string} name - The name of the parameter to set.
@@ -645,7 +645,7 @@ class MeshInstance {
 
      /**
       * @function
-      * @name pc.MeshInstance#deleteParameter
+      * @name MeshInstance#deleteParameter
       * @description Deletes a shader parameter on a mesh instance.
       * @param {string} name - The name of the parameter to delete.
       */

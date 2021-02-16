@@ -82,7 +82,7 @@ function getScaleSign(mi) {
 
 /**
  * @class
- * @name pc.BatchManager
+ * @name BatchManager
  * @classdesc Glues many mesh instances into a single one for better performance.
  * @param {pc.GraphicsDevice} device - The graphics device used by the batch manager.
  * @param {pc.Entity} root - The entity under which batched models are added.
@@ -120,7 +120,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#addGroup
+     * @name BatchManager#addGroup
      * @description Adds new global batch group.
      * @param {string} name - Custom name.
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale after being batched?
@@ -152,7 +152,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#removeGroup
+     * @name BatchManager#removeGroup
      * @description Remove global batch group by id.
      * Note, this traverses the entire scene graph and clears the batch group id from all components.
      * @param {number} id - Batch Group ID.
@@ -182,7 +182,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#markGroupDirty
+     * @name BatchManager#markGroupDirty
      * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
      * Note, re-batching a group is a potentially expensive operation.
      * @param  {number} id - Batch Group ID to mark as dirty.
@@ -195,7 +195,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#getGroupByName
+     * @name BatchManager#getGroupByName
      * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
      * @param {string} name - Name.
      * @returns {pc.BatchGroup} Group object.
@@ -214,7 +214,7 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#getBatches
+     * @name BatchManager#getBatches
      * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied.
      * @param  {number} batchGroupId - The id of the batch group.
      * @returns {pc.Batch[]} A list of batches that are used to render the batch group.
@@ -415,7 +415,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#generate
+     * @name BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
      * @param {number[]} [groupIds] - Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
@@ -481,7 +481,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#prepare
+     * @name BatchManager#prepare
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
      * The input list will be split, if:
      *
@@ -629,7 +629,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#create
+     * @name BatchManager#create
      * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
      * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
@@ -882,7 +882,7 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#update
+     * @name BatchManager#update
      * @description Updates bounding box for a batch. Called automatically.
      * @param {pc.Batch} batch - A batch object.
      */
@@ -899,7 +899,7 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#updateAll
+     * @name BatchManager#updateAll
      * @description Updates bounding boxes for all dynamic batches. Called automatically.
      */
     updateAll() {
@@ -925,7 +925,7 @@ class BatchManager {
 
     /**
      * @function
-     * @name pc.BatchManager#clone
+     * @name BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
      * @param {pc.Batch} batch - A batch object.
      * @param {pc.MeshInstance[]} clonedMeshInstances - New mesh instances.
@@ -967,7 +967,7 @@ class BatchManager {
     /**
      * @private
      * @function
-     * @name pc.BatchManager#destroy
+     * @name BatchManager#destroy
      * @description Removes the batch model from all layers and destroys it.
      * @param {pc.Batch} batch - A batch object.
      */

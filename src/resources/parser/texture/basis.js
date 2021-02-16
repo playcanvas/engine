@@ -7,7 +7,7 @@ import { basisTargetFormat, basisTranscode } from '../../basis.js';
 
 /**
  * @class
- * @name pc.BasisParser
+ * @name BasisParser
  * @implements {pc.TextureParser}
  * @classdesc Parser for basis files.
  */

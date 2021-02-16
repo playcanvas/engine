@@ -7,7 +7,7 @@ import {
 /**
  * @private
  * @class
- * @name pc.AnimState
+ * @name AnimState
  * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
  * @description Create a new AnimState.
  * @param {pc.AnimController} controller - The controller this AnimState is associated with.

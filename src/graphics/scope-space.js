@@ -2,7 +2,7 @@ import { ScopeId } from './scope-id.js';
 
 /**
  * @class
- * @name pc.ScopeSpace
+ * @name ScopeSpace
  * @classdesc The scope for variables.
  * @param {string} name - The scope name.
  * @property {string} name The scope name.
@@ -19,7 +19,7 @@ class ScopeSpace {
 
     /**
      * @function
-     * @name pc.ScopeSpace#resolve
+     * @name ScopeSpace#resolve
      * @description Get (or create, if it doesn't already exist) a variable in the scope.
      * @param {string} name - The variable name.
      * @returns {pc.ScopeId} The variable instance.

@@ -14,7 +14,7 @@ import { standardMaterialParameterTypes } from '../../../scene/materials/standar
 
 /**
  * @private
- * @name pc.JsonStandardMaterialParser
+ * @name JsonStandardMaterialParser
  * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
  */
 class JsonStandardMaterialParser {
@@ -35,7 +35,7 @@ class JsonStandardMaterialParser {
     /**
      * @private
      * @function
-     * @name pc.JsonStandardMaterialParser#initialize
+     * @name JsonStandardMaterialParser#initialize
      * @description  Initialize material properties from the material data block e.g. Loading from server.
      * @param {pc.StandardMaterial} material - The material to be initialized.
      * @param {object} data - The data block that is used to initialize.

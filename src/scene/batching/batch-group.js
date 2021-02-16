@@ -2,7 +2,7 @@ import { LAYERID_WORLD } from '../constants.js';
 
 /**
  * @class
- * @name pc.BatchGroup
+ * @name BatchGroup
  * @classdesc Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
  * @param {number} id - Unique id. Can be assigned to model and element components.
  * @param {string} name - The name of the group.

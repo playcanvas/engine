@@ -7,7 +7,7 @@ import { math } from '../math/math.js';
 
 /**
  * @class
- * @name pc.Http
+ * @name Http
  * @classdesc Used to send and receive HTTP requests.
  * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
  * object at `pc.http`.
@@ -65,7 +65,7 @@ class Http {
 
     /**
      * @function
-     * @name pc.Http#get
+     * @name Http#get
      * @description Perform an HTTP GET request to the given url.
      * @param {string} url - The URL to make the request to.
      * @param {pc.callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
@@ -79,7 +79,7 @@ class Http {
      */
     /**
      * @function
-     * @name pc.Http#get
+     * @name Http#get
      * @variation 2
      * @description Perform an HTTP GET request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
@@ -115,7 +115,7 @@ class Http {
 
     /**
      * @function
-     * @name pc.Http#post
+     * @name Http#post
      * @description Perform an HTTP POST request to the given url.
      * @param {string} url - The URL to make the request to.
      * @param {object} data - Data to send in the body of the request.
@@ -133,7 +133,7 @@ class Http {
      */
     /**
      * @function
-     * @name pc.Http#post
+     * @name Http#post
      * @variation 2
      * @description Perform an HTTP POST request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
@@ -170,7 +170,7 @@ class Http {
 
     /**
      * @function
-     * @name pc.Http#put
+     * @name Http#put
      * @description Perform an HTTP PUT request to the given url.
      * @param {string} url - The URL to make the request to.
      * @param {Document|object} data - Data to send in the body of the request.
@@ -188,7 +188,7 @@ class Http {
      */
     /**
      * @function
-     * @name pc.Http#put
+     * @name Http#put
      * @variation 2
      * @description Perform an HTTP PUT request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {string} url - The URL to make the request to.
@@ -225,7 +225,7 @@ class Http {
 
     /**
      * @function
-     * @name pc.Http#del
+     * @name Http#del
      * @description Perform an HTTP DELETE request to the given url.
      * @param {object} url - The URL to make the request to.
      * @param {pc.callbacks.HttpResponse} callback - The callback used when the response has returned. Passed (err, data)
@@ -239,7 +239,7 @@ class Http {
      */
     /**
      * @function
-     * @name pc.Http#del
+     * @name Http#del
      * @variation 2
      * @description Perform an HTTP DELETE request to the given url with addtional options such as headers, retries, credentials, etc.
      * @param {object} url - The URL to make the request to.
@@ -275,7 +275,7 @@ class Http {
 
     /**
      * @function
-     * @name pc.Http#request
+     * @name Http#request
      * @description Make a general purpose HTTP request.
      * @param {string} method - The HTTP method "GET", "POST", "PUT", "DELETE".
      * @param {string} url - The url to make the request to.
@@ -290,7 +290,7 @@ class Http {
      */
     /**
      * @function
-     * @name pc.Http#request
+     * @name Http#request
      * @variation 2
      * @description Make a general purpose HTTP request with addtional options such as headers, retries, credentials, etc.
      * @param {string} method - The HTTP method "GET", "POST", "PUT", "DELETE".

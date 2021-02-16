@@ -20,7 +20,7 @@ var _blockSizeTable = null;
 
 /**
  * @class
- * @name pc.Texture
+ * @name Texture
  * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
  * Typically, the texel data represents an image that is mapped over geometry.
  * @description Creates a new texture.
@@ -216,7 +216,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#minFilter
+     * @name Texture#minFilter
      * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
      * * {@link pc.FILTER_NEAREST}
@@ -238,7 +238,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#magFilter
+     * @name Texture#magFilter
      * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
      * * {@link pc.FILTER_NEAREST}
@@ -256,7 +256,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressU
+     * @name Texture#addressU
      * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
      * * {@link pc.ADDRESS_REPEAT}
@@ -275,7 +275,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressV
+     * @name Texture#addressV
      * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
      * * {@link pc.ADDRESS_REPEAT}
@@ -294,7 +294,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#addressW
+     * @name Texture#addressW
      * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
      * * {@link pc.ADDRESS_REPEAT}
@@ -320,7 +320,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#compareOnRead
+     * @name Texture#compareOnRead
      * @type {boolean}
      * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
@@ -337,7 +337,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#compareFunc
+     * @name Texture#compareFunc
      * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
@@ -360,7 +360,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#anisotropy
+     * @name Texture#anisotropy
      * @type {number}
      * @description Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
@@ -379,7 +379,7 @@ class Texture {
     /**
      * @private
      * @deprecated
-     * @name pc.Texture#autoMipmap
+     * @name Texture#autoMipmap
      * @type {boolean}
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
@@ -392,7 +392,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#mipmaps
+     * @name Texture#mipmaps
      * @type {boolean}
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
@@ -411,7 +411,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#width
+     * @name Texture#width
      * @type {number}
      * @description The width of the texture in pixels.
      */
@@ -421,7 +421,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#height
+     * @name Texture#height
      * @type {number}
      * @description The height of the texture in pixels.
      */
@@ -431,7 +431,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#depth
+     * @name Texture#depth
      * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
@@ -441,7 +441,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#format
+     * @name Texture#format
      * @type {number}
      * @description The pixel format of the texture. Can be:
      * * {@link pc.PIXELFORMAT_A8}
@@ -475,7 +475,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#cubemap
+     * @name Texture#cubemap
      * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
      */
@@ -490,7 +490,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#volume
+     * @name Texture#volume
      * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
@@ -499,7 +499,7 @@ class Texture {
     }
 
     /**
-     * @name pc.Texture#flipY
+     * @name Texture#flipY
      * @type {boolean}
      * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
@@ -529,7 +529,7 @@ class Texture {
 
     /**
      * @readonly
-     * @name pc.Texture#pot
+     * @name Texture#pot
      * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
@@ -541,7 +541,7 @@ class Texture {
     /**
      * @private
      * @function
-     * @name pc.Texture.calcGpuSize
+     * @name Texture.calcGpuSize
      * @description Calculate the GPU memory required for a texture.
      * @param {number} [width] - Texture's width.
      * @param {number} [height] - Texture's height.
@@ -627,7 +627,7 @@ class Texture {
     // Public methods
     /**
      * @function
-     * @name pc.Texture#destroy
+     * @name Texture#destroy
      * @description Forcibly free up the underlying WebGL resource owned by the texture.
      */
     destroy() {
@@ -651,7 +651,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#lock
+     * @name Texture#lock
      * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
      * @param {object} [options] - Optional options object. Valid properties are as follows:
      * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
@@ -719,7 +719,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#setSource
+     * @name Texture#setSource
      * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
      * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A canvas, image or video element,
@@ -814,7 +814,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#getSource
+     * @name Texture#getSource
      * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
      * a single image.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
@@ -827,7 +827,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#unlock
+     * @name Texture#unlock
      * @description Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
@@ -844,7 +844,7 @@ class Texture {
 
     /**
      * @function
-     * @name pc.Texture#upload
+     * @name Texture#upload
      * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
      * is called by internally by {@link pc.Texture#setSource} and {@link pc.Texture#unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,

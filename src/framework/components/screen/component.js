@@ -11,7 +11,7 @@ var _transform = new Mat4();
 /**
  * @component
  * @class
- * @name pc.ScreenComponent
+ * @name ScreenComponent
  * @augments pc.Component
  * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
  * @description Create a new ScreenComponent.
@@ -49,7 +49,7 @@ class ScreenComponent extends Component {
 
     /**
      * @function
-     * @name pc.ScreenComponent#syncDrawOrder
+     * @name ScreenComponent#syncDrawOrder
      * @description Set the drawOrder of each child {@link pc.ElementComponent}
      * so that ElementComponents which are last in the hierarchy are rendered on top.
      * Draw Order sync is queued and will be updated by the next update loop.

@@ -13,7 +13,7 @@ import { Texture } from '../../../graphics/texture.js';
 
 /**
  * @class
- * @name pc.LegacyDdsParser
+ * @name LegacyDdsParser
  * @implements {pc.TextureParser}
  * @classdesc Legacy texture parser for dds files.
  */

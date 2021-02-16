@@ -4,7 +4,7 @@ let id = 0;
 
 /**
  * @class
- * @name pc.VertexBuffer
+ * @name VertexBuffer
  * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
  * data to the graphics hardware.
  * @description Creates a new vertex buffer object.
@@ -43,7 +43,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#destroy
+     * @name VertexBuffer#destroy
      * @description Frees resources associated with this vertex buffer.
      */
     destroy() {
@@ -75,7 +75,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#getFormat
+     * @name VertexBuffer#getFormat
      * @description Returns the data format of the specified vertex buffer.
      * @returns {pc.VertexFormat} The data format of the specified vertex buffer.
      */
@@ -85,7 +85,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#getUsage
+     * @name VertexBuffer#getUsage
      * @description Returns the usage type of the specified vertex buffer. This indicates
      * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC),
      * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once
@@ -98,7 +98,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#getNumVertices
+     * @name VertexBuffer#getNumVertices
      * @description Returns the number of vertices stored in the specified vertex buffer.
      * @returns {number} The number of vertices stored in the vertex buffer.
      */
@@ -108,7 +108,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#lock
+     * @name VertexBuffer#lock
      * @description Returns a mapped memory block representing the content of the vertex buffer.
      * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
      */
@@ -118,7 +118,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#unlock
+     * @name VertexBuffer#unlock
      * @description Notifies the graphics engine that the client side copy of the vertex buffer's
      * memory can be returned to the control of the graphics driver.
      */
@@ -156,7 +156,7 @@ class VertexBuffer{
 
     /**
      * @function
-     * @name pc.VertexBuffer#setData
+     * @name VertexBuffer#setData
      * @description Copies data into vertex buffer's memory.
      * @param {ArrayBuffer} [data] - Source data to copy.
      * @returns {boolean} True if function finished successfuly, false otherwise.

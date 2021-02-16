@@ -28,7 +28,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
 /**
  * @component
  * @class
- * @name pc.SpriteComponent
+ * @name SpriteComponent
  * @augments pc.Component
  * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
  * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
@@ -451,7 +451,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#addClip
+     * @name SpriteComponent#addClip
      * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
      * @param {object} data - Data for the new animation clip.
      * @param {string} [data.name] - The name of the new animation clip.
@@ -478,7 +478,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#removeClip
+     * @name SpriteComponent#removeClip
      * @description Removes a clip by name.
      * @param {string} name - The name of the animation clip to remove.
      */
@@ -488,7 +488,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#clip
+     * @name SpriteComponent#clip
      * @description Get an animation clip by name.
      * @param {string} name - The name of the clip.
      * @returns {pc.SpriteAnimationClip} The clip.
@@ -499,7 +499,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#play
+     * @name SpriteComponent#play
      * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
      * @param {string} name - The name of the clip to play.
      * @returns {pc.SpriteAnimationClip} The clip that started playing.
@@ -528,7 +528,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#pause
+     * @name SpriteComponent#pause
      * @description Pauses the current animation clip.
      */
     pause() {
@@ -541,7 +541,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#resume
+     * @name SpriteComponent#resume
      * @description Resumes the current paused animation clip.
      */
     resume() {
@@ -554,7 +554,7 @@ class SpriteComponent extends Component {
 
     /**
      * @function
-     * @name pc.SpriteComponent#stop
+     * @name SpriteComponent#stop
      * @description Stops the current animation clip and resets it to the first frame.
      */
     stop() {
@@ -866,42 +866,42 @@ class SpriteComponent extends Component {
 
     /**
      * @event
-     * @name pc.SpriteComponent#play
+     * @name SpriteComponent#play
      * @description Fired when an animation clip starts playing.
      * @param {pc.SpriteAnimationClip} clip - The clip that started playing.
      */
 
     /**
      * @event
-     * @name pc.SpriteComponent#pause
+     * @name SpriteComponent#pause
      * @description Fired when an animation clip is paused.
      * @param {pc.SpriteAnimationClip} clip - The clip that was paused.
      */
 
     /**
      * @event
-     * @name pc.SpriteComponent#resume
+     * @name SpriteComponent#resume
      * @description Fired when an animation clip is resumed.
      * @param {pc.SpriteAnimationClip} clip - The clip that was resumed.
      */
 
     /**
      * @event
-     * @name pc.SpriteComponent#stop
+     * @name SpriteComponent#stop
      * @description Fired when an animation clip is stopped.
      * @param {pc.SpriteAnimationClip} clip - The clip that was stopped.
      */
 
     /**
      * @event
-     * @name pc.SpriteComponent#end
+     * @name SpriteComponent#end
      * @description Fired when an animation clip stops playing because it reached its ending.
      * @param {pc.SpriteAnimationClip} clip - The clip that ended.
      */
 
     /**
      * @event
-     * @name pc.SpriteComponent#loop
+     * @name SpriteComponent#loop
      * @description Fired when an animation clip reached the end of its current loop.
      * @param {pc.SpriteAnimationClip} clip - The clip.
      */

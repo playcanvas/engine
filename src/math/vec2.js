@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.Vec2
+ * @name Vec2
  * @classdesc A 2-dimensional vector.
  * @description Creates a new Vec2 object.
  * @param {number|number[]} [x] - The x value. If x is an array of length 2, the array will be used to populate all components.
@@ -10,7 +10,7 @@
  */
 /**
  * @field
- * @name pc.Vec2#x
+ * @name Vec2#x
  * @type {number}
  * @description The first element of the vector.
  * @example
@@ -24,7 +24,7 @@
  */
 /**
  * @field
- * @name pc.Vec2#y
+ * @name Vec2#y
  * @type {number}
  * @description The second element of the vector.
  * @example
@@ -49,7 +49,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#add
+     * @name Vec2#add
      * @description Adds a 2-dimensional vector to another in place.
      * @param {pc.Vec2} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
@@ -71,7 +71,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#add2
+     * @name Vec2#add2
      * @description Adds two 2-dimensional vectors together and returns the result.
      * @param {pc.Vec2} lhs - The first vector operand for the addition.
      * @param {pc.Vec2} rhs - The second vector operand for the addition.
@@ -95,7 +95,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#clone
+     * @name Vec2#clone
      * @description Returns an identical copy of the specified 2-dimensional vector.
      * @returns {pc.Vec2} A 2-dimensional vector containing the result of the cloning.
      * @example
@@ -109,7 +109,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#copy
+     * @name Vec2#copy
      * @description Copied the contents of a source 2-dimensional vector to a destination 2-dimensional vector.
      * @param {pc.Vec2} rhs - A vector to copy to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
@@ -130,7 +130,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#cross
+     * @name Vec2#cross
      * @description Returns the result of a cross product operation performed on the two specified 2-dimensional vectors.
      * @param {pc.Vec2} rhs - The second 2-dimensional vector operand of the cross product.
      * @returns {number} The cross product of the two vectors.
@@ -148,7 +148,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#distance
+     * @name Vec2#distance
      * @description Returns the distance between the two specified 2-dimensional vectors.
      * @param {pc.Vec2} rhs - The second 2-dimensional vector to test.
      * @returns {number} The distance between the two vectors.
@@ -166,7 +166,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#dot
+     * @name Vec2#dot
      * @description Returns the result of a dot product operation performed on the two specified 2-dimensional vectors.
      * @param {pc.Vec2} rhs - The second 2-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
@@ -182,7 +182,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#equals
+     * @name Vec2#equals
      * @description Reports whether two vectors are equal.
      * @param {pc.Vec2} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
@@ -197,7 +197,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#length
+     * @name Vec2#length
      * @description Returns the magnitude of the specified 2-dimensional vector.
      * @returns {number} The magnitude of the specified 2-dimensional vector.
      * @example
@@ -212,7 +212,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#lengthSq
+     * @name Vec2#lengthSq
      * @description Returns the magnitude squared of the specified 2-dimensional vector.
      * @returns {number} The magnitude of the specified 2-dimensional vector.
      * @example
@@ -227,7 +227,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#lerp
+     * @name Vec2#lerp
      * @description Returns the result of a linear interpolation between two specified 2-dimensional vectors.
      * @param {pc.Vec2} lhs - The 2-dimensional to interpolate from.
      * @param {pc.Vec2} rhs - The 2-dimensional to interpolate to.
@@ -253,7 +253,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#mul
+     * @name Vec2#mul
      * @description Multiplies a 2-dimensional vector to another in place.
      * @param {pc.Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
      * @returns {pc.Vec2} Self for chaining.
@@ -275,7 +275,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#mul2
+     * @name Vec2#mul2
      * @description Returns the result of multiplying the specified 2-dimensional vectors together.
      * @param {pc.Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
      * @param {pc.Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
@@ -299,7 +299,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#normalize
+     * @name Vec2#normalize
      * @description Returns this 2-dimensional vector converted to a unit vector in place.
      * If the vector has a length of zero, the vector's elements will be set to zero.
      * @returns {pc.Vec2} Self for chaining.
@@ -324,7 +324,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#scale
+     * @name Vec2#scale
      * @description Scales each component of the specified 2-dimensional vector by the supplied
      * scalar value.
      * @param {number} scalar - The value by which each vector component is multiplied.
@@ -350,7 +350,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#set
+     * @name Vec2#set
      * @description Sets the specified 2-dimensional vector to the supplied numerical values.
      * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
@@ -371,7 +371,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#sub
+     * @name Vec2#sub
      * @description Subtracts a 2-dimensional vector from another in place.
      * @param {pc.Vec2} rhs - The vector to add to the specified vector.
      * @returns {pc.Vec2} Self for chaining.
@@ -393,7 +393,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#sub2
+     * @name Vec2#sub2
      * @description Subtracts two 2-dimensional vectors from one another and returns the result.
      * @param {pc.Vec2} lhs - The first vector operand for the addition.
      * @param {pc.Vec2} rhs - The second vector operand for the addition.
@@ -417,7 +417,7 @@ class Vec2 {
 
     /**
      * @function
-     * @name pc.Vec2#toString
+     * @name Vec2#toString
      * @description Converts the vector to string form.
      * @returns {string} The vector in string form.
      * @example
@@ -433,7 +433,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.ZERO
+     * @name Vec2.ZERO
      * @type {pc.Vec2}
      * @description A constant vector set to [0, 0].
      */
@@ -443,7 +443,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.ONE
+     * @name Vec2.ONE
      * @type {pc.Vec2}
      * @description A constant vector set to [1, 1].
      */
@@ -453,7 +453,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.UP
+     * @name Vec2.UP
      * @type {pc.Vec2}
      * @description A constant vector set to [0, 1].
      */
@@ -463,7 +463,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.DOWN
+     * @name Vec2.DOWN
      * @type {pc.Vec2}
      * @description A constant vector set to [0, -1].
      */
@@ -473,7 +473,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.RIGHT
+     * @name Vec2.RIGHT
      * @type {pc.Vec2}
      * @description A constant vector set to [1, 0].
      */
@@ -483,7 +483,7 @@ class Vec2 {
      * @field
      * @static
      * @readonly
-     * @name pc.Vec2.LEFT
+     * @name Vec2.LEFT
      * @type {pc.Vec2}
      * @description A constant vector set to [-1, 0].
      */

@@ -2,7 +2,7 @@ var CompressUtils = {
     /**
      * @private
      * @function
-     * @name pc.CompressUtils#setCompressedPRS
+     * @name CompressUtils#setCompressedPRS
      * @description Set position, rotation and scale of an entity
      *   using compressed scene format
      * @param {pc.Entity} entity - The entity
@@ -38,7 +38,7 @@ var CompressUtils = {
     /**
      * @private
      * @function
-     * @name pc.CompressUtils#oneCharToKey
+     * @name CompressUtils#oneCharToKey
      * @description Retrieve the original field name (key) for a
      *   single character key from a compressed entity
      * @param {string} s - The compressed key string
@@ -54,7 +54,7 @@ var CompressUtils = {
     /**
      * @private
      * @function
-     * @name pc.CompressUtils#multCharToKey
+     * @name CompressUtils#multCharToKey
      * @description Retrieve the original field name (key) for a
      *   multi-character key from a compressed entity
      * @param {string} s - The compressed key string

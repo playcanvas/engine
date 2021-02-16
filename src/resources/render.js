@@ -41,7 +41,7 @@ function onContainerAssetRemoved(containerAsset) {
 
 /**
  * @class
- * @name pc.RenderHandler
+ * @name RenderHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.Render} resources.
  * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.

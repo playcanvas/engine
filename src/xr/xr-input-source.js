@@ -13,7 +13,7 @@ var ids = 0;
 
 /**
  * @class
- * @name pc.XrInputSource
+ * @name XrInputSource
  * @augments pc.EventHandler
  * @classdesc Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
  * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
@@ -79,7 +79,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#remove
+     * @name XrInputSource#remove
      * @description Fired when {@link pc.XrInputSource} is removed.
      * @example
      * inputSource.once('remove', function () {
@@ -89,7 +89,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#select
+     * @name XrInputSource#select
      * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
@@ -104,28 +104,28 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#selectstart
+     * @name XrInputSource#selectstart
      * @description Fired when input source has started to trigger primary action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
-     * @name pc.XrInputSource#selectend
+     * @name XrInputSource#selectend
      * @description Fired when input source has ended triggerring primary action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
-     * @name pc.XrInputSource#squeeze
+     * @name XrInputSource#squeeze
      * @description Fired when input source has triggered squeeze action. This is associated with "grabbing" action on the controllers.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
-     * @name pc.XrInputSource#squeezestart
+     * @name XrInputSource#squeezestart
      * @description Fired when input source has started to trigger sqeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
@@ -138,14 +138,14 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#squeezeend
+     * @name XrInputSource#squeezeend
      * @description Fired when input source has ended triggerring sqeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
-     * @name pc.XrInputSource#hittest:add
+     * @name XrInputSource#hittest:add
      * @description Fired when new {@link pc.XrHitTestSource} is added to the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been added
      * @example
@@ -156,7 +156,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#hittest:remove
+     * @name XrInputSource#hittest:remove
      * @description Fired when {@link pc.XrHitTestSource} is removed to the the input source.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that has been removed
      * @example
@@ -167,7 +167,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrInputSource#hittest:result
+     * @name XrInputSource#hittest:result
      * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
      * @param {pc.XrHitTestSource} hitTestSource - Hit test source that produced the hit result
      * @param {pc.Vec3} position - Position of hit test
@@ -251,7 +251,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getPosition
+     * @name XrInputSource#getPosition
      * @description Get the world space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space position of handheld input source.
      */
@@ -266,7 +266,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getLocalPosition
+     * @name XrInputSource#getLocalPosition
      * @description Get the local space position of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space position of handheld input source.
      */
@@ -276,7 +276,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getRotation
+     * @name XrInputSource#getRotation
      * @description Get the world space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space rotation of handheld input source.
      */
@@ -291,7 +291,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getLocalRotation
+     * @name XrInputSource#getLocalRotation
      * @description Get the local space rotation of input source if it is handheld ({@link pc.XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      * @returns {pc.Vec3|null} The world space rotation of handheld input source.
      */
@@ -301,7 +301,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getOrigin
+     * @name XrInputSource#getOrigin
      * @description Get the world space origin of input source ray.
      * @returns {pc.Vec3} The world space origin of input source ray.
      */
@@ -312,7 +312,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#getDirection
+     * @name XrInputSource#getDirection
      * @description Get the world space direction of input source ray.
      * @returns {pc.Vec3} The world space direction of input source ray.
      */
@@ -323,7 +323,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrInputSource#hitTestStart
+     * @name XrInputSource#hitTestStart
      * @description Attempts to start hit test source based on this input source.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {string[]} [options.entityTypes] - Optional list of underlying entity types

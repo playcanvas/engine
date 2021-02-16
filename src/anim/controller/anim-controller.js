@@ -12,7 +12,7 @@ import {
 /**
  * @private
  * @class
- * @name pc.AnimController
+ * @name AnimController
  * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
  * @description Create a new AnimController.
  * @param {pc.animEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.

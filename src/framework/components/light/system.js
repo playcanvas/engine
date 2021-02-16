@@ -11,7 +11,7 @@ import { LightComponentData } from './data.js';
 
 /**
  * @class
- * @name pc.LightComponentSystem
+ * @name LightComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc A Light Component is used to dynamically light the scene.
  * @description Create a new LightComponentSystem.

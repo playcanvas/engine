@@ -6,7 +6,7 @@ import { Application } from './application.js';
 
 /**
  * @class
- * @name pc.Entity
+ * @name Entity
  * @augments pc.GraphNode
  * @classdesc The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
  * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
@@ -91,7 +91,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#addComponent
+     * @name Entity#addComponent
      * @description Create a new component and add it to the entity.
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
      * @param {string} type - The name of the component to add. Valid strings are:
@@ -150,7 +150,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#removeComponent
+     * @name Entity#removeComponent
      * @description Remove a component from the Entity.
      * @param {string} type - The name of the Component type.
      * @example
@@ -178,7 +178,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#findComponent
+     * @name Entity#findComponent
      * @description Search the entity and all of its descendants for the first component of specified type.
      * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
@@ -196,7 +196,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#findComponents
+     * @name Entity#findComponents
      * @description Search the entity and all of its descendants for all components of specified type.
      * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component[]} All components of specified type in the entity or any of its descendants.
@@ -217,7 +217,7 @@ class Entity extends GraphNode {
     /**
      * @private
      * @function
-     * @name pc.Entity#getGuid
+     * @name Entity#getGuid
      * @description Get the GUID value for this Entity.
      * @returns {string} The GUID of the Entity.
      */
@@ -234,7 +234,7 @@ class Entity extends GraphNode {
     /**
      * @private
      * @function
-     * @name pc.Entity#setGuid
+     * @name Entity#setGuid
      * @description Set the GUID value for this Entity.
      *
      * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
@@ -314,7 +314,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#findByGuid
+     * @name Entity#findByGuid
      * @description Find a descendant of this Entity with the GUID.
      * @param {string} guid - The GUID to search for.
      * @returns {pc.Entity} The Entity with the GUID or null.
@@ -332,7 +332,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#destroy
+     * @name Entity#destroy
      * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
      * @example
      * var firstChild = this.entity.children[0];
@@ -388,7 +388,7 @@ class Entity extends GraphNode {
 
     /**
      * @function
-     * @name pc.Entity#clone
+     * @name Entity#clone
      * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
      * Note, this Entity is not in the hierarchy and must be added manually.
      * @returns {pc.Entity} A new Entity which is a deep copy of the original.
@@ -493,7 +493,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
 
 /**
  * @event
- * @name pc.Entity#destroy
+ * @name Entity#destroy
  * @description Fired after the entity is destroyed.
  * @param {pc.Entity} entity - The entity that was destroyed.
  * @example

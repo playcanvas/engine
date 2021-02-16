@@ -6,7 +6,7 @@ import { TemplateUtils } from '../templates/template-utils.js';
 
 /**
  * @class
- * @name pc.SceneHandler
+ * @name SceneHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.Scene} resources.
  * @param {pc.Application} app - The running {@link pc.Application}.

@@ -79,7 +79,7 @@ class InstanceList {
 
 /**
  * @class
- * @name pc.Layer
+ * @name Layer
  * @classdesc Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras,
  * their render settings and also defines custom callbacks before, after or during rendering.
  * Layers are organized inside {@link pc.LayerComposition} in a desired order.
@@ -346,7 +346,7 @@ class Layer {
     /**
      * @private
      * @function
-     * @name pc.Layer#incrementCounter
+     * @name Layer#incrementCounter
      * @description Increments the usage counter of this layer.
      * By default, layers are created with counter set to 1 (if {@link pc.Layer.enabled} is true) or 0 (if it was false).
      * Incrementing the counter from 0 to 1 will enable the layer and call {@link pc.Layer.onEnable}.
@@ -365,7 +365,7 @@ class Layer {
     /**
      * @private
      * @function
-     * @name pc.Layer#decrementCounter
+     * @name Layer#decrementCounter
      * @description Decrements the usage counter of this layer.
      * Decrementing the counter from 1 to 0 will disable the layer and call {@link pc.Layer.onDisable}.
      * See {@link pc.Layer#incrementCounter} for more details.
@@ -386,7 +386,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#addMeshInstances
+     * @name Layer#addMeshInstances
      * @description Adds an array of mesh instances to this layer.
      * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
@@ -454,7 +454,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#removeMeshInstances
+     * @name Layer#removeMeshInstances
      * @description Removes multiple mesh instances from this layer.
      * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
@@ -488,7 +488,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#clearMeshInstances
+     * @name Layer#clearMeshInstances
      * @description Removes all mesh instances from this layer.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
@@ -504,7 +504,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#addLight
+     * @name Layer#addLight
      * @description Adds a light to this layer.
      * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
      */
@@ -518,7 +518,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#removeLight
+     * @name Layer#removeLight
      * @description Removes a light from this layer.
      * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
      */
@@ -536,7 +536,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#clearLights
+     * @name Layer#clearLights
      * @description Removes all lights from this layer.
      */
     clearLights() {
@@ -547,7 +547,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#addShadowCasters
+     * @name Layer#addShadowCasters
      * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
      * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
      */
@@ -564,7 +564,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#removeShadowCasters
+     * @name Layer#removeShadowCasters
      * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
      * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
      */
@@ -614,7 +614,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#addCamera
+     * @name Layer#addCamera
      * @description Adds a camera to this layer.
      * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
      */
@@ -626,7 +626,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#removeCamera
+     * @name Layer#removeCamera
      * @description Removes a camera from this layer.
      * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
      */
@@ -643,7 +643,7 @@ class Layer {
 
     /**
      * @function
-     * @name pc.Layer#clearCameras
+     * @name Layer#clearCameras
      * @description Removes all cameras from this layer.
      */
     clearCameras() {

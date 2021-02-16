@@ -12,7 +12,7 @@ var scale = new Vec3();
 
 /**
  * @class
- * @name pc.Mat4
+ * @name Mat4
  * @classdesc A 4x4 matrix.
  * @description Creates a new identity Mat4 object.
  * @property {Float32Array} data Matrix elements in the form of a flat array.
@@ -39,7 +39,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#add2
+     * @name Mat4#add2
      * @description Adds the specified 4x4 matrices together and stores the result in
      * the current instance.
      * @param {pc.Mat4} lhs - The 4x4 matrix used as the first operand of the addition.
@@ -79,7 +79,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#add
+     * @name Mat4#add
      * @description Adds the specified 4x4 matrix to the current instance.
      * @param {pc.Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
      * @returns {pc.Mat4} Self for chaining.
@@ -96,7 +96,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#clone
+     * @name Mat4#clone
      * @description Creates a duplicate of the specified matrix.
      * @returns {pc.Mat4} A duplicate matrix.
      * @example
@@ -110,7 +110,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#copy
+     * @name Mat4#copy
      * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
      * @param {pc.Mat4} rhs - A 4x4 matrix to be copied.
      * @returns {pc.Mat4} Self for chaining.
@@ -146,7 +146,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#equals
+     * @name Mat4#equals
      * @description Reports whether two matrices are equal.
      * @param {pc.Mat4} rhs - The other matrix.
      * @returns {boolean} True if the matrices are equal and false otherwise.
@@ -179,7 +179,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#isIdentity
+     * @name Mat4#isIdentity
      * @description Reports whether the specified matrix is the identity matrix.
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
@@ -209,7 +209,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#mul2
+     * @name Mat4#mul2
      * @description Multiplies the specified 4x4 matrices together and stores the result in
      * the current instance.
      * @param {pc.Mat4} lhs - The 4x4 matrix used as the first multiplicand of the operation.
@@ -293,7 +293,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#mulAffine2
+     * @name Mat4#mulAffine2
      * @description Multiplies the specified 4x4 matrices together and stores the result in
      * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
      * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
@@ -362,7 +362,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#mul
+     * @name Mat4#mul
      * @description Multiplies the current instance by the specified 4x4 matrix.
      * @param {pc.Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
      * @returns {pc.Mat4} Self for chaining.
@@ -381,7 +381,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#transformPoint
+     * @name Mat4#transformPoint
      * @description Transforms a 3-dimensional point by a 4x4 matrix.
      * @param {pc.Vec3} vec - The 3-dimensional point to be transformed.
      * @param {pc.Vec3} [res] - An optional 3-dimensional point to receive the result of the transformation.
@@ -413,7 +413,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#transformVector
+     * @name Mat4#transformVector
      * @description Transforms a 3-dimensional vector by a 4x4 matrix.
      * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.
      * @param {pc.Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
@@ -445,7 +445,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#transformVec4
+     * @name Mat4#transformVec4
      * @description Transforms a 4-dimensional vector by a 4x4 matrix.
      * @param {pc.Vec4} vec - The 4-dimensional vector to be transformed.
      * @param {pc.Vec4} [res] - An optional 4-dimensional vector to receive the result of the transformation.
@@ -482,7 +482,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setLookAt
+     * @name Mat4#setLookAt
      * @description Sets the specified matrix to a viewing matrix derived from an eye point, a target point
      * and an up vector. The matrix maps the target point to the negative z-axis and the eye point to the
      * origin, so that when you use a typical projection matrix, the center of the scene maps to the center
@@ -530,7 +530,7 @@ class Mat4 {
     /**
      * @private
      * @function
-     * @name pc.Mat4#setFrustum
+     * @name Mat4#setFrustum
      * @description Sets the specified matrix to a perspective projection matrix. The function's parameters define
      * the shape of a frustum.
      * @param {number} left - The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -575,7 +575,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setPerspective
+     * @name Mat4#setPerspective
      * @description Sets the specified matrix to a perspective projection matrix. The function's
      * parameters define the shape of a frustum.
      * @param {number} fov - The frustum's field of view in degrees. The fovIsHorizontal parameter
@@ -598,7 +598,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setOrtho
+     * @name Mat4#setOrtho
      * @description Sets the specified matrix to an orthographic projection matrix. The function's parameters
      * define the shape of a cuboid-shaped frustum.
      * @param {number} left - The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -637,7 +637,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setFromAxisAngle
+     * @name Mat4#setFromAxisAngle
      * @description Sets the specified matrix to a rotation matrix equivalent to a rotation around
      * an axis. The axis must be normalized (unit length) and the angle must be specified in degrees.
      * @param {pc.Vec3} axis - The normalized axis vector around which to rotate.
@@ -685,7 +685,7 @@ class Mat4 {
     /**
      * @private
      * @function
-     * @name pc.Mat4#setTranslate
+     * @name Mat4#setTranslate
      * @description Sets the specified matrix to a translation matrix.
      * @param {number} x - The x-component of the translation.
      * @param {number} y - The y-component of the translation.
@@ -721,7 +721,7 @@ class Mat4 {
     /**
      * @private
      * @function
-     * @name pc.Mat4#setScale
+     * @name Mat4#setScale
      * @description Sets the specified matrix to a scale matrix.
      * @param {number} x - The x-component of the scale.
      * @param {number} y - The y-component of the scale.
@@ -756,7 +756,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#invert
+     * @name Mat4#invert
      * @description Sets the specified matrix to its inverse.
      * @returns {pc.Mat4} Self for chaining.
      * @example
@@ -837,7 +837,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#set
+     * @name Mat4#set
      * @description Sets matrix data from an array.
      * @param {number[]} src - Source array. Must have 16 values.
      * @returns {pc.Mat4} Self for chaining.
@@ -866,7 +866,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setIdentity
+     * @name Mat4#setIdentity
      * @description Sets the specified matrix to the identity matrix.
      * @returns {pc.Mat4} Self for chaining.
      * @example
@@ -897,7 +897,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setTRS
+     * @name Mat4#setTRS
      * @description Sets the specified matrix to the concatenation of a translation, a
      * quaternion rotation and a scale.
      * @param {pc.Vec3} t - A 3-d vector translation.
@@ -965,7 +965,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#transpose
+     * @name Mat4#transpose
      * @description Sets the specified matrix to its transpose.
      * @returns {pc.Mat4} Self for chaining.
      * @example
@@ -1055,7 +1055,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getTranslation
+     * @name Mat4#getTranslation
      * @description Extracts the translational component from the specified 4x4 matrix.
      * @param {pc.Vec3} [t] - The vector to receive the translation of the matrix.
      * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
@@ -1073,7 +1073,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getX
+     * @name Mat4#getX
      * @description Extracts the x-axis from the specified 4x4 matrix.
      * @param {pc.Vec3} [x] - The vector to receive the x axis of the matrix.
      * @returns {pc.Vec3} The x-axis of the specified 4x4 matrix.
@@ -1091,7 +1091,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getY
+     * @name Mat4#getY
      * @description Extracts the y-axis from the specified 4x4 matrix.
      * @param {pc.Vec3} [y] - The vector to receive the y axis of the matrix.
      * @returns {pc.Vec3} The y-axis of the specified 4x4 matrix.
@@ -1109,7 +1109,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getZ
+     * @name Mat4#getZ
      * @description Extracts the z-axis from the specified 4x4 matrix.
      * @param {pc.Vec3} [z] - The vector to receive the z axis of the matrix.
      * @returns {pc.Vec3} The z-axis of the specified 4x4 matrix.
@@ -1127,7 +1127,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getScale
+     * @name Mat4#getScale
      * @description Extracts the scale component from the specified 4x4 matrix.
      * @param {pc.Vec3} [scale] - Vector to receive the scale.
      * @returns {pc.Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
@@ -1149,7 +1149,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#setFromEulerAngles
+     * @name Mat4#setFromEulerAngles
      * @description Sets the specified matrix to a rotation matrix defined by
      * Euler angles. The Euler angles are specified in XYZ order and in degrees.
      * @param {number} ex - Angle to rotate around X axis in degrees.
@@ -1206,7 +1206,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#getEulerAngles
+     * @name Mat4#getEulerAngles
      * @description Extracts the Euler angles equivalent to the rotational portion
      * of the specified matrix. The returned Euler angles are in XYZ order an in degrees.
      * @param {pc.Vec3} [eulers] - A 3-d vector to receive the Euler angles.
@@ -1250,7 +1250,7 @@ class Mat4 {
 
     /**
      * @function
-     * @name pc.Mat4#toString
+     * @name Mat4#toString
      * @description Converts the specified matrix to string form.
      * @returns {string} The matrix in string form.
      * @example
@@ -1274,7 +1274,7 @@ class Mat4 {
      * @field
      * @static
      * @readonly
-     * @name pc.Mat4.IDENTITY
+     * @name Mat4.IDENTITY
      * @type {pc.Mat4}
      * @description A constant matrix set to the identity.
      */
@@ -1284,7 +1284,7 @@ class Mat4 {
      * @field
      * @static
      * @readonly
-     * @name pc.Mat4.ZERO
+     * @name Mat4.ZERO
      * @type {pc.Mat4}
      * @description A constant matrix with all elements set to 0.
      */

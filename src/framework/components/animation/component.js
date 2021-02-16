@@ -12,7 +12,7 @@ import { Component } from '../component.js';
 /**
  * @component Animation
  * @class
- * @name pc.AnimationComponent
+ * @name AnimationComponent
  * @augments pc.Component
  * @classdesc The Animation Component allows an Entity to playback animations on models.
  * @description Create a new AnimationComponent.
@@ -43,7 +43,7 @@ class AnimationComponent extends Component {
 
     /**
      * @function
-     * @name pc.AnimationComponent#play
+     * @name AnimationComponent#play
      * @description Start playing an animation.
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
@@ -120,7 +120,7 @@ class AnimationComponent extends Component {
 
     /**
      * @function
-     * @name pc.AnimationComponent#getAnimation
+     * @name AnimationComponent#getAnimation
      * @description Return an animation.
      * @param {string} name - The name of the animation asset.
      * @returns {pc.Animation} An Animation.

@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.XrFinger
+ * @name XrFinger
  * @classdesc Represents finger with related joints and index
  * @description Represents finger with related joints and index
  * @param {number} index - Index of a finger

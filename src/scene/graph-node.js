@@ -24,7 +24,7 @@ var up = new Vec3();
 
 /**
  * @class
- * @name pc.GraphNode
+ * @name GraphNode
  * @augments pc.EventHandler
  * @classdesc A hierarchical scene node.
  * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
@@ -83,7 +83,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#right
+     * @name GraphNode#right
      * @type {pc.Vec3}
      * @description The normalized local space X-axis vector of the graph node in world space.
      */
@@ -96,7 +96,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#up
+     * @name GraphNode#up
      * @type {pc.Vec3}
      * @description The normalized local space Y-axis vector of the graph node in world space.
      */
@@ -109,7 +109,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#forward
+     * @name GraphNode#forward
      * @type {pc.Vec3}
      * @description The normalized local space negative Z-axis vector of the graph node in world space.
      */
@@ -121,7 +121,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @name pc.GraphNode#enabled
+     * @name GraphNode#enabled
      * @type {boolean}
      * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
      * there will be no other side effects. If all the parents are enabled then
@@ -145,7 +145,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#parent
+     * @name GraphNode#parent
      * @type {pc.GraphNode}
      * @description A read-only property to get a parent graph node.
      */
@@ -155,7 +155,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#path
+     * @name GraphNode#path
      * @type {string}
      * @description A read-only property to get the path of the graph node relative to
      * the root of the hierarchy.
@@ -177,7 +177,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#root
+     * @name GraphNode#root
      * @type {pc.GraphNode}
      * @description A read-only property to get highest graph node from current node.
      */
@@ -194,7 +194,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#children
+     * @name GraphNode#children
      * @type {pc.GraphNode[]}
      * @description A read-only property to get the children of this graph node.
      */
@@ -204,7 +204,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphNode#graphDepth
+     * @name GraphNode#graphDepth
      * @type {number}
      * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. It is not recalculated when a node is simply removed from the graph.
      */
@@ -225,7 +225,7 @@ class GraphNode extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphNode#_onHierarchyStateChanged
+     * @name GraphNode#_onHierarchyStateChanged
      * @description Called when the enabled flag of the entity or one of its parents changes.
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
      */
@@ -278,7 +278,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#find
+     * @name GraphNode#find
      * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
      * @param {pc.callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
      * for each descendant node to test if node satisfies the search logic. Returning true from the function will
@@ -340,7 +340,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#findOne
+     * @name GraphNode#findOne
      * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
      * @param {pc.callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
      * for each descendant node to test if node satisfies the search logic. Returning true from the function will
@@ -402,7 +402,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#findByTag
+     * @name GraphNode#findByTag
      * @description Return all graph nodes that satisfy the search query.
      * Query can be simply a string, or comma separated strings,
      * to have inclusive results of assets that match at least one query.
@@ -446,7 +446,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#findByName
+     * @name GraphNode#findByName
      * @description Get the first node found in the graph with the name. The search
      * is depth first.
      * @param {string} name - The name of the graph.
@@ -464,7 +464,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#findByPath
+     * @name GraphNode#findByPath
      * @description Get the first node found in the graph by its full path in the graph.
      * The full path has this form 'parent/child/sub-child'. The search is depth first.
      * @param {string|Array} path - The full path of the pc.GraphNode as either a string or array of pc.GraphNode names
@@ -507,7 +507,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#forEach
+     * @name GraphNode#forEach
      * @description Executes a provided function once on this graph node and all of its descendants.
      * @param {pc.callbacks.ForEach} callback - The function to execute on the graph node and each descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
@@ -528,7 +528,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#isDescendantOf
+     * @name GraphNode#isDescendantOf
      * @description Check if node is descendant of another node.
      * @param {pc.GraphNode} node - Potential ancestor of node.
      * @returns {boolean} If node is descendant of another node.
@@ -550,7 +550,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#isAncestorOf
+     * @name GraphNode#isAncestorOf
      * @description Check if node is ancestor for another node.
      * @param {pc.GraphNode} node - Potential descendant of node.
      * @returns {boolean} If node is ancestor for another node.
@@ -565,7 +565,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getEulerAngles
+     * @name GraphNode#getEulerAngles
      * @description Get the world space rotation for the specified GraphNode in Euler angle
      * form. The order of the returned Euler angles is XYZ. The value returned by this function
      * should be considered read-only. In order to set the world-space rotation of the graph
@@ -583,7 +583,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getLocalEulerAngles
+     * @name GraphNode#getLocalEulerAngles
      * @description Get the rotation in local space for the specified GraphNode. The rotation
      * is returned as euler angles in a 3-dimensional vector where the order is XYZ. The
      * returned vector should be considered read-only. To update the local rotation, use
@@ -601,7 +601,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getLocalPosition
+     * @name GraphNode#getLocalPosition
      * @description Get the position in local space for the specified GraphNode. The position
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
      * To update the local position, use {@link pc.GraphNode#setLocalPosition}.
@@ -617,7 +617,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getLocalRotation
+     * @name GraphNode#getLocalRotation
      * @description Get the rotation in local space for the specified GraphNode. The rotation
      * is returned as a quaternion. The returned quaternion should be considered read-only.
      * To update the local rotation, use {@link pc.GraphNode#setLocalRotation}.
@@ -631,7 +631,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getLocalScale
+     * @name GraphNode#getLocalScale
      * @description Get the scale in local space for the specified GraphNode. The scale
      * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
      * To update the local scale, use {@link pc.GraphNode#setLocalScale}.
@@ -647,7 +647,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getLocalTransform
+     * @name GraphNode#getLocalTransform
      * @description Get the local transform matrix for this graph node. This matrix
      * is the transform relative to the node's parent's world transformation matrix.
      * @returns {pc.Mat4} The node's local transformation matrix.
@@ -664,7 +664,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getPosition
+     * @name GraphNode#getPosition
      * @description Get the world space position for the specified GraphNode. The
      * value returned by this function should be considered read-only. In order to set
      * the world-space position of the graph node, use {@link pc.GraphNode#setPosition}.
@@ -681,7 +681,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getRotation
+     * @name GraphNode#getRotation
      * @description Get the world space rotation for the specified GraphNode in quaternion
      * form. The value returned by this function should be considered read-only. In order
      * to set the world-space rotation of the graph node, use {@link pc.GraphNode#setRotation}.
@@ -697,7 +697,7 @@ class GraphNode extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphNode#getScale
+     * @name GraphNode#getScale
      * @description Get the world space scale for the specified GraphNode. The returned value
      * will only be correct for graph nodes that have a non-skewed world transform (a skew can
      * be introduced by the compounding of rotations and scales higher in the graph node
@@ -716,7 +716,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#getWorldTransform
+     * @name GraphNode#getWorldTransform
      * @description Get the world transformation matrix for this graph node.
      * @returns {pc.Mat4} The node's world transformation matrix.
      * @example
@@ -736,7 +736,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#reparent
+     * @name GraphNode#reparent
      * @description Remove graph node from current parent and add as child to new parent.
      * @param {pc.GraphNode} parent - New parent to attach graph node to.
      * @param {number} [index] - The child index where the child node should be placed.
@@ -758,7 +758,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setLocalEulerAngles
+     * @name GraphNode#setLocalEulerAngles
      * @description Sets the local-space rotation of the specified graph node using euler angles.
      * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
      * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
@@ -788,7 +788,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setLocalPosition
+     * @name GraphNode#setLocalPosition
      * @description Sets the local-space position of the specified graph node. This function
      * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
      * local-space position.
@@ -817,7 +817,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setLocalRotation
+     * @name GraphNode#setLocalRotation
      * @description Sets the local-space rotation of the specified graph node. This function
      * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
      * local-space rotation.
@@ -847,7 +847,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setLocalScale
+     * @name GraphNode#setLocalScale
      * @description Sets the local-space scale factor of the specified graph node. This function
      * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
      * local-space scale.
@@ -911,7 +911,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setPosition
+     * @name GraphNode#setPosition
      * @description Sets the world-space position of the specified graph node. This function
      * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
      * world-space position.
@@ -947,7 +947,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setRotation
+     * @name GraphNode#setRotation
      * @description Sets the world-space rotation of the specified graph node. This function
      * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
      * world-space rotation.
@@ -985,7 +985,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#setEulerAngles
+     * @name GraphNode#setEulerAngles
      * @description Sets the world-space rotation of the specified graph node using euler angles.
      * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
      * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
@@ -1021,7 +1021,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#addChild
+     * @name GraphNode#addChild
      * @description Add a new child to the child list and update the parent value of the child node.
      * @param {pc.GraphNode} node - The new child to add.
      * @example
@@ -1061,7 +1061,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#insertChild
+     * @name GraphNode#insertChild
      * @description Insert a new child to the child list at the specified index and update the parent value of the child node.
      * @param {pc.GraphNode} node - The new child to insert.
      * @param {number} index - The index in the child list of the parent where the new node will be inserted.
@@ -1137,7 +1137,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#removeChild
+     * @name GraphNode#removeChild
      * @description Remove the node from the child list and update the parent value of the child.
      * @param {pc.GraphNode} child - The node to remove.
      * @example
@@ -1229,7 +1229,7 @@ class GraphNode extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphNode#syncHierarchy
+     * @name GraphNode#syncHierarchy
      * @description Updates the world transformation matrices at this node and all of its descendants.
      */
     syncHierarchy() {
@@ -1252,7 +1252,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#lookAt
+     * @name GraphNode#lookAt
      * @description Reorients the graph node so that the negative z-axis points towards the target.
      * This function has two valid signatures. Either pass 3D vectors for the look at coordinate and up
      * vector, or pass numbers to represent the vectors.
@@ -1302,7 +1302,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#translate
+     * @name GraphNode#translate
      * @description Translates the graph node in world-space by the specified translation vector.
      * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
      * specify the world-space translation.
@@ -1331,7 +1331,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#translateLocal
+     * @name GraphNode#translateLocal
      * @description Translates the graph node in local-space by the specified translation vector.
      * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
      * specify the local-space translation.
@@ -1363,7 +1363,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#rotate
+     * @name GraphNode#rotate
      * @description Rotates the graph node in world-space by the specified Euler angles.
      * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
      * you can either pass a 3D vector or 3 numbers to specify the world-space rotation.
@@ -1403,7 +1403,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphNode#rotateLocal
+     * @name GraphNode#rotateLocal
      * @description Rotates the graph node in local-space by the specified Euler angles.
      * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
      * you can either pass a 3D vector or 3 numbers to specify the local-space rotation.

@@ -3,7 +3,7 @@ import { Component } from '../component.js';
 /**
  * @component
  * @class
- * @name pc.LayoutChildComponent
+ * @name LayoutChildComponent
  * @augments pc.Component
  * @description Create a new LayoutChildComponent.
  * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.

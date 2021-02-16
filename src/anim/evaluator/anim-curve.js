@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimCurve
+ * @name AnimCurve
  * @classdesc Animation curve links an input data set to an output data set
  * and defines the interpolation method to use.
  * @description Create a new animation curve

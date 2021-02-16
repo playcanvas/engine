@@ -2,7 +2,7 @@ import { math } from '../math/math.js';
 
 /**
  * @class
- * @name pc.Color
+ * @name Color
  * @classdesc Representation of an RGBA color.
  * @description Create a new Color object.
  * @param {number|number[]} [r] - The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
@@ -32,7 +32,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#clone
+     * @name Color#clone
      * @description Returns a clone of the specified color.
      * @returns {pc.Color} A duplicate color object.
      */
@@ -42,7 +42,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#copy
+     * @name Color#copy
      * @description Copies the contents of a source color to a destination color.
      * @param {pc.Color} rhs - A color to copy to the specified color.
      * @returns {pc.Color} Self for chaining.
@@ -65,7 +65,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#equals
+     * @name Color#equals
      * @description Reports whether two colors are equal.
      * @param {pc.Color} rhs - The color to compare to the specified color.
      * @returns {boolean} True if the colors are equal and false otherwise.
@@ -80,7 +80,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#set
+     * @name Color#set
      * @description Assign values to the color components, including alpha.
      * @param {number} r - The value for red (0-1).
      * @param {number} g - The value for blue (0-1).
@@ -99,7 +99,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#lerp
+     * @name Color#lerp
      * @description Returns the result of a linear interpolation between two specified colors.
      * @param {pc.Color} lhs - The color to interpolate from.
      * @param {pc.Color} rhs - The color to interpolate to.
@@ -127,7 +127,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#fromString
+     * @name Color#fromString
      * @description Set the values of the color from a string representation '#11223344' or '#112233'.
      * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
      * This is the same format used in HTML/CSS.
@@ -150,7 +150,7 @@ class Color {
 
     /**
      * @function
-     * @name pc.Color#toString
+     * @name Color#toString
      * @description Converts the color to string form. The format is '#RRGGBBAA', where
      * RR, GG, BB, AA are the red, green, blue and alpha values. When the alpha value is not
      * included (the default), this is the same format as used in HTML/CSS.
@@ -180,7 +180,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.BLACK
+     * @name Color.BLACK
      * @type {pc.Color}
      * @description A constant color set to black [0, 0, 0, 1].
      */
@@ -190,7 +190,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.BLUE
+     * @name Color.BLUE
      * @type {pc.Color}
      * @description A constant color set to blue [0, 0, 1, 1].
      */
@@ -200,7 +200,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.CYAN
+     * @name Color.CYAN
      * @type {pc.Color}
      * @description A constant color set to cyan [0, 1, 1, 1].
      */
@@ -210,7 +210,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.GRAY
+     * @name Color.GRAY
      * @type {pc.Color}
      * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
      */
@@ -220,7 +220,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.GREEN
+     * @name Color.GREEN
      * @type {pc.Color}
      * @description A constant color set to green [0, 1, 0, 1].
      */
@@ -230,7 +230,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.MAGENTA
+     * @name Color.MAGENTA
      * @type {pc.Color}
      * @description A constant color set to magenta [1, 0, 1, 1].
      */
@@ -240,7 +240,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.RED
+     * @name Color.RED
      * @type {pc.Color}
      * @description A constant color set to red [1, 0, 0, 1].
      */
@@ -250,7 +250,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.WHITE
+     * @name Color.WHITE
      * @type {pc.Color}
      * @description A constant color set to white [1, 1, 1, 1].
      */
@@ -260,7 +260,7 @@ class Color {
      * @field
      * @static
      * @readonly
-     * @name pc.Color.YELLOW
+     * @name Color.YELLOW
      * @type {pc.Color}
      * @description A constant color set to yellow [1, 1, 0, 1].
      */

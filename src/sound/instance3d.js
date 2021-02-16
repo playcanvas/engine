@@ -11,7 +11,7 @@ const MAX_DISTANCE = 10000;
 
 /**
  * @class
- * @name pc.SoundInstance3d
+ * @name SoundInstance3d
  * @augments pc.SoundInstance
  * @classdesc A pc.SoundInstance3d plays a {@link pc.Sound} in 3D.
  * @param {pc.SoundManager} manager - The sound manager.

@@ -22,7 +22,7 @@ var executionOrderCounter = 0;
 
 /**
  * @class
- * @name pc.ScriptComponentSystem
+ * @name ScriptComponentSystem
  * @augments pc.ComponentSystem
  * @description Create a new ScriptComponentSystem.
  * @classdesc Allows scripts to be attached to an Entity and executed.

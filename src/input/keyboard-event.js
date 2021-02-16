@@ -1,6 +1,6 @@
 /**
  * @class
- * @name pc.KeyboardEvent
+ * @name KeyboardEvent
  * @classdesc The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
  * @description Create a new KeyboardEvent.
  * @param {pc.Keyboard} keyboard - The keyboard object which is firing the event.

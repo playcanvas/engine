@@ -17,7 +17,7 @@ var frameCollisions = {};
 
 /**
  * @class
- * @name pc.RaycastResult
+ * @name RaycastResult
  * @classdesc Object holding the result of a successful raycast hit.
  * @description Create a new RaycastResult.
  * @param {pc.Entity} entity - The entity that was hit.
@@ -37,7 +37,7 @@ class RaycastResult {
 
 /**
  * @class
- * @name pc.SingleContactResult
+ * @name SingleContactResult
  * @classdesc Object holding the result of a contact between two rigid bodies.
  * @description Create a new SingleContactResult.
  * @param {pc.Entity} a - The first entity involved in the contact.
@@ -75,7 +75,7 @@ class SingleContactResult {
 
 /**
  * @class
- * @name pc.ContactPoint
+ * @name ContactPoint
  * @classdesc Object holding the result of a contact between two Entities.
  * @description Create a new ContactPoint.
  * @param {pc.Vec3} localPoint - The point on the entity where the contact occurred, relative to the entity.
@@ -109,7 +109,7 @@ class ContactPoint {
 
 /**
  * @class
- * @name pc.ContactResult
+ * @name ContactResult
  * @classdesc Object holding the result of a contact between two Entities.
  * @description Create a new ContactResult.
  * @param {pc.Entity} other - The entity that was involved in the contact with this entity.
@@ -127,7 +127,7 @@ class ContactResult {
 // Events Documentation
 /**
  * @event
- * @name pc.RigidBodyComponentSystem#contact
+ * @name RigidBodyComponentSystem#contact
  * @description Fired when a contact occurs between two rigid bodies.
  * @param {pc.SingleContactResult} result - Details of the contact between the two bodies.
  */
@@ -150,7 +150,7 @@ const _schema = [
 
 /**
  * @class
- * @name pc.RigidBodyComponentSystem
+ * @name RigidBodyComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
  * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
@@ -326,7 +326,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * @function
-     * @name pc.RigidBodyComponentSystem#raycastFirst
+     * @name RigidBodyComponentSystem#raycastFirst
      * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
      * if the ray hits an entity with a collision component, it returns a {@link pc.RaycastResult}, otherwise returns null.
      * @param {pc.Vec3} start - The world space point where the ray starts.
@@ -373,7 +373,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * @function
-     * @name pc.RigidBodyComponentSystem#raycastAll
+     * @name RigidBodyComponentSystem#raycastAll
      * @description Raycast the world and return all entities the ray hits. It returns an array
      * of {@link pc.RaycastResult}, one for each hit. If no hits are detected, the returned
      * array will be of length 0.
@@ -424,7 +424,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponentSystem#_storeCollision
+     * @name RigidBodyComponentSystem#_storeCollision
      * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision.
      * @param {pc.Entity} entity - The entity.
      * @param {pc.Entity} other - The entity that collides with the first entity.
@@ -503,7 +503,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponentSystem#_cleanOldCollisions
+     * @name RigidBodyComponentSystem#_cleanOldCollisions
      * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
      * related entities.
      */
@@ -555,7 +555,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponentSystem#_hasContactEvent
+     * @name RigidBodyComponentSystem#_hasContactEvent
      * @description Returns true if the entity has a contact event attached and false otherwise.
      * @param {object} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
@@ -573,7 +573,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * @private
      * @function
-     * @name pc.RigidBodyComponentSystem#_checkForCollisions
+     * @name RigidBodyComponentSystem#_checkForCollisions
      * @description Checks for collisions and fires collision events
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.

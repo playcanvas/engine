@@ -14,7 +14,7 @@ const _schema = [
 
 /**
  * @class
- * @name pc.ScrollbarComponentSystem
+ * @name ScrollbarComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
  * @description Create a new ScrollbarComponentSystem.

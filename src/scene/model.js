@@ -5,7 +5,7 @@ import { SkinInstance } from './skin-instance.js';
 
 /**
  * @class
- * @name pc.Model
+ * @name Model
  * @classdesc A model is a graphical object that can be added to or removed from a scene.
  * It contains a hierarchy and any number of mesh instances.
  * @description Creates a new model.
@@ -71,7 +71,7 @@ class Model {
 
     /**
      * @function
-     * @name pc.Model#clone
+     * @name Model#clone
      * @description Clones a model. The returned model has a newly created hierarchy
      * and mesh instances, but meshes are shared between the clone and the specified
      * model.
@@ -160,7 +160,7 @@ class Model {
 
     /**
      * @function
-     * @name pc.Model#destroy
+     * @name Model#destroy
      * @description Destroys skinning texture and possibly deletes vertex/index buffers of a model.
      * Mesh is reference-counted, so buffers are only deleted if all models with referencing mesh instances were deleted.
      * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
@@ -176,7 +176,7 @@ class Model {
 
     /**
      * @function
-     * @name pc.Model#generateWireframe
+     * @name Model#generateWireframe
      * @description Generates the necessary internal data for a model to be
      * renderable as wireframe. Once this function has been called, any mesh
      * instance in the model can have its renderStyle property set to

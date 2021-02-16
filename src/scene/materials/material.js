@@ -17,7 +17,7 @@ var id = 0;
 
 /**
  * @class
- * @name pc.Material
+ * @name Material
  * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
  * set before the mesh instance is submitted to the graphics device.
  * @description Create a new Material instance.
@@ -316,7 +316,7 @@ class Material {
 
     /**
      * @function
-     * @name pc.Material#update
+     * @name Material#update
      * @description Applies any changes made to the material's properties.
      */
     update() {
@@ -347,7 +347,7 @@ class Material {
 
     /**
      * @function
-     * @name pc.Material#getParameter
+     * @name Material#getParameter
      * @description Retrieves the specified shader parameter from a material.
      * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
@@ -358,7 +358,7 @@ class Material {
 
     /**
      * @function
-     * @name pc.Material#setParameter
+     * @name Material#setParameter
      * @description Sets a shader parameter on a material.
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
@@ -390,7 +390,7 @@ class Material {
 
     /**
      * @function
-     * @name pc.Material#deleteParameter
+     * @name Material#deleteParameter
      * @description Deletes a shader parameter on a material.
      * @param {string} name - The name of the parameter to delete.
      */
@@ -418,7 +418,7 @@ class Material {
 
     /**
      * @function
-     * @name pc.Material#destroy
+     * @name Material#destroy
      * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
      */
     destroy() {

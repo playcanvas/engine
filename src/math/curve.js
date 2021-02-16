@@ -5,7 +5,7 @@ import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
  * @class
- * @name pc.Curve
+ * @name Curve
  * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
  * curve is defined by its type that specifies an interpolation scheme for the keys.
  * @description Creates a new curve.
@@ -50,7 +50,7 @@ class Curve {
 
     /**
      * @function
-     * @name pc.Curve#add
+     * @name Curve#add
      * @description Add a new key to the curve.
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
@@ -74,7 +74,7 @@ class Curve {
 
     /**
      * @function
-     * @name pc.Curve#get
+     * @name Curve#get
      * @description Return a specific key.
      * @param {number} index - The index of the key to return.
      * @returns {number[]} The key at the specified index.
@@ -85,7 +85,7 @@ class Curve {
 
     /**
      * @function
-     * @name pc.Curve#sort
+     * @name Curve#sort
      * @description Sort keys by time.
      */
     sort() {
@@ -96,7 +96,7 @@ class Curve {
 
     /**
      * @function
-     * @name pc.Curve#value
+     * @name Curve#value
      * @description Returns the interpolated value of the curve at specified time.
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
@@ -128,7 +128,7 @@ class Curve {
 
     /**
      * @function
-     * @name pc.Curve#clone
+     * @name Curve#clone
      * @description Returns a clone of the specified curve object.
      * @returns {pc.Curve} A clone of the specified curve.
      */
@@ -143,7 +143,7 @@ class Curve {
     /**
      * @private
      * @function
-     * @name pc.Curve#quantize
+     * @name Curve#quantize
      * @description Sample the curve at regular intervals over the range [0..1].
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
@@ -166,7 +166,7 @@ class Curve {
     /**
      * @private
      * @function
-     * @name pc.Curve#quantizeClamped
+     * @name Curve#quantizeClamped
      * @description Sample the curve at regular intervals over the range [0..1]
      * and clamp the resulting samples to [min..max].
      * @param {number} precision - The number of samples to return.

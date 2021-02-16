@@ -19,7 +19,7 @@ var _invViewProjMat = new Mat4();
 /**
  * @private
  * @class
- * @name pc.Camera
+ * @name Camera
  * @classdesc A camera.
  */
 class Camera {
@@ -315,7 +315,7 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#clone
+     * @name Camera#clone
      * @description Creates a duplicate of the camera.
      * @returns {pc.Camera} A cloned Camera.
      */
@@ -363,7 +363,7 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#worldToScreen
+     * @name Camera#worldToScreen
      * @description Convert a point from 3D world space to 2D canvas pixel space.
      * @param {pc.Vec3} worldCoord - The world space coordinate to transform.
      * @param {number} cw - The width of PlayCanvas' canvas element.
@@ -391,7 +391,7 @@ class Camera {
     /**
      * @private
      * @function
-     * @name pc.Camera#screenToWorld
+     * @name Camera#screenToWorld
      * @description Convert a point from 2D canvas pixel space to 3D world space.
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.

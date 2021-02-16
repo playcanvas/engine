@@ -184,43 +184,43 @@ function testTextureFloatHighPrecision(device) {
 
 /**
  * @readonly
- * @name pc.GraphicsDevice#precision
+ * @name GraphicsDevice#precision
  * @type {string}
  * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxCubeMapSize
+ * @name GraphicsDevice#maxCubeMapSize
  * @type {number}
  * @description The maximum supported dimension of a cube map.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxTextureSize
+ * @name GraphicsDevice#maxTextureSize
  * @type {number}
  * @description The maximum supported dimension of a texture.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxVolumeSize
+ * @name GraphicsDevice#maxVolumeSize
  * @type {number}
  * @description The maximum supported dimension of a 3D texture (any axis).
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#maxAnisotropy
+ * @name GraphicsDevice#maxAnisotropy
  * @type {number}
  * @description The maximum supported texture anisotropy setting.
  */
 /**
  * @readonly
- * @name pc.GraphicsDevice#supportsInstancing
+ * @name GraphicsDevice#supportsInstancing
  * @type {boolean}
  * @description True if hardware instancing is supported.
  */
 /**
  * @event
- * @name pc.GraphicsDevice#resizecanvas
+ * @name GraphicsDevice#resizecanvas
  * @description The 'resizecanvas' event is fired when the canvas is resized.
  * @param {number} width - The new width of the canvas in pixels.
  * @param {number} height - The new height of the canvas in pixels.
@@ -228,7 +228,7 @@ function testTextureFloatHighPrecision(device) {
 
 /**
  * @class
- * @name pc.GraphicsDevice
+ * @name GraphicsDevice
  * @augments pc.EventHandler
  * @classdesc The graphics device manages the underlying graphics context. It is responsible
  * for submitting render state changes and graphics primitives to the hardware. A graphics
@@ -1163,7 +1163,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setViewport
+     * @name GraphicsDevice#setViewport
      * @description Set the active rectangle for rendering on the specified device.
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.
      * @param {number} y - The pixel space y-coordinate of the bottom left corner of the viewport.
@@ -1182,7 +1182,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setScissor
+     * @name GraphicsDevice#setScissor
      * @description Set the active scissor rectangle on the specified device.
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
      * @param {number} y - The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
@@ -1202,7 +1202,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getProgramLibrary
+     * @name GraphicsDevice#getProgramLibrary
      * @description Retrieves the program library assigned to the specified graphics device.
      * @returns {pc.ProgramLibrary} The program library assigned to the device.
      */
@@ -1213,7 +1213,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setProgramLibrary
+     * @name GraphicsDevice#setProgramLibrary
      * @description Assigns a program library to the specified device. By default, a graphics
      * device is created with a program library that manages all of the programs that are
      * used to render any graphical primitives. However, this function allows the user to
@@ -1257,7 +1257,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#copyRenderTarget
+     * @name GraphicsDevice#copyRenderTarget
      * @description Copies source render target into destination render target. Mostly used by post-effects.
      * @param {pc.RenderTarget} source - The source render target.
      * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
@@ -1341,7 +1341,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#initRenderTarget
+     * @name GraphicsDevice#initRenderTarget
      * @description Initialize render target before it can be used.
      * @param {pc.RenderTarget} target - The render target to be initialized.
      */
@@ -1475,7 +1475,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getCopyShader
+     * @name GraphicsDevice#getCopyShader
      * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
      * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
      */
@@ -1491,7 +1491,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#updateBegin
+     * @name GraphicsDevice#updateBegin
      * @description Marks the beginning of a block of rendering. Internally, this function
      * binds the render target currently set on the device. This function should be matched
      * with a call to pc.GraphicsDevice#updateEnd. Calls to pc.GraphicsDevice#updateBegin
@@ -1526,7 +1526,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#updateEnd
+     * @name GraphicsDevice#updateEnd
      * @description Marks the end of a block of rendering. This function should be called
      * after a matching call to pc.GraphicsDevice#updateBegin. Calls to pc.GraphicsDevice#updateBegin
      * and pc.GraphicsDevice#updateEnd must not be nested.
@@ -2324,7 +2324,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#draw
+     * @name GraphicsDevice#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
      * @param {number} primitive.type - The type of primitive to render. Can be:
@@ -2474,7 +2474,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clear
+     * @name GraphicsDevice#clear
      * @description Clears the frame buffer of the currently set render target.
      * @param {object} options - Optional options object that controls the behavior of the clear operation defined as follows:
      * @param {number[]} options.color - The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
@@ -2572,7 +2572,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setRenderTarget
+     * @name GraphicsDevice#setRenderTarget
      * @description Sets the specified render target on the device. If null
      * is passed as a parameter, the back buffer becomes the current target
      * for all rendering operations.
@@ -2590,7 +2590,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getRenderTarget
+     * @name GraphicsDevice#getRenderTarget
      * @description Queries the currently set render target on the device.
      * @returns {pc.RenderTarget} The current render target.
      * @example
@@ -2603,7 +2603,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getDepthTest
+     * @name GraphicsDevice#getDepthTest
      * @description Queries whether depth testing is enabled.
      * @returns {boolean} True if depth testing is enabled and false otherwise.
      * @example
@@ -2616,7 +2616,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthTest
+     * @name GraphicsDevice#setDepthTest
      * @description Enables or disables depth testing of fragments. Once this state
      * is set, it persists until it is changed. By default, depth testing is enabled.
      * @param {boolean} depthTest - True to enable depth testing and false otherwise.
@@ -2637,7 +2637,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthFunc
+     * @name GraphicsDevice#setDepthFunc
      * @description Configures the depth test.
      * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
      * * {@link pc.FUNC_NEVER}: don't draw
@@ -2657,7 +2657,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getDepthWrite
+     * @name GraphicsDevice#getDepthWrite
      * @description Queries whether writes to the depth buffer are enabled.
      * @returns {boolean} True if depth writing is enabled and false otherwise.
      * @example
@@ -2670,7 +2670,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setDepthWrite
+     * @name GraphicsDevice#setDepthWrite
      * @description Enables or disables writes to the depth buffer. Once this state
      * is set, it persists until it is changed. By default, depth writes are enabled.
      * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
@@ -2686,7 +2686,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setColorWrite
+     * @name GraphicsDevice#setColorWrite
      * @description Enables or disables writes to the color buffer. Once this state
      * is set, it persists until it is changed. By default, color writes are enabled
      * for all color channels.
@@ -2714,7 +2714,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setAlphaToCoverage
+     * @name GraphicsDevice#setAlphaToCoverage
      * @description Enables or disables alpha to coverage (WebGL2 only).
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
      */
@@ -2733,7 +2733,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setTransformFeedbackBuffer
+     * @name GraphicsDevice#setTransformFeedbackBuffer
      * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
      * @param {pc.VertexBuffer} tf - The output vertex buffer.
      */
@@ -2759,7 +2759,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setRaster
+     * @name GraphicsDevice#setRaster
      * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
      * @param {boolean} on - True to enable rasterization and false to disable it.
      */
@@ -2795,7 +2795,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#getBlending
+     * @name GraphicsDevice#getBlending
      * @description Queries whether blending is enabled.
      * @returns {boolean} True if blending is enabled and false otherwise.
      */
@@ -2805,7 +2805,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlending
+     * @name GraphicsDevice#setBlending
      * @description Enables or disables blending.
      * @param {boolean} blending - True to enable blending and false to disable it.
      */
@@ -2823,7 +2823,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilTest
+     * @name GraphicsDevice#setStencilTest
      * @description Enables or disables stencil test.
      * @param {boolean} enable - True to enable stencil test and false to disable it.
      */
@@ -2841,7 +2841,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFunc
+     * @name GraphicsDevice#setStencilFunc
      * @description Configures stencil test for both front and back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
      * reference value, and mask value. Can be:
@@ -2869,7 +2869,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFuncFront
+     * @name GraphicsDevice#setStencilFuncFront
      * @description Configures stencil test for front faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
@@ -2896,7 +2896,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilFuncBack
+     * @name GraphicsDevice#setStencilFuncBack
      * @description Configures stencil test for back faces.
      * @param {number} func - A comparison function that decides if the pixel should be written,
      * based on the current stencil buffer value, reference value, and mask value. Can be:
@@ -2923,7 +2923,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperation
+     * @name GraphicsDevice#setStencilOperation
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for both front and back faces.
      * @param {number} fail - Action to take if stencil test is failed.
@@ -2957,7 +2957,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperationFront
+     * @name GraphicsDevice#setStencilOperationFront
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for front faces.
      * @param {number} fail - Action to take if stencil test is failed.
@@ -2989,7 +2989,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setStencilOperationBack
+     * @name GraphicsDevice#setStencilOperationBack
      * @description Configures how stencil buffer values should be modified based on the result
      * of depth/stencil tests. Works for back faces.
      * @param {number} fail - Action to take if stencil test is failed.
@@ -3021,7 +3021,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendFunction
+     * @name GraphicsDevice#setBlendFunction
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
      * * {@link pc.BLENDMODE_ZERO}
@@ -3049,7 +3049,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendFunctionSeparate
+     * @name GraphicsDevice#setBlendFunctionSeparate
      * @description Configures blending operations. Both source and destination
      * blend modes can take the following values:
      * * {@link pc.BLENDMODE_ZERO}
@@ -3082,7 +3082,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendEquation
+     * @name GraphicsDevice#setBlendEquation
      * @description Configures the blending equation. The default blend equation is
      * pc.BLENDEQUATION_ADD.
      * @param {number} blendEquation - The blend equation. Can be:
@@ -3104,7 +3104,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setBlendEquationSeparate
+     * @name GraphicsDevice#setBlendEquationSeparate
      * @description Configures the blending equation. The default blend equation is
      * pc.BLENDEQUATION_ADD.
      * @param {number} blendEquation - The blend equation. Can be:
@@ -3128,7 +3128,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setCullMode
+     * @name GraphicsDevice#setCullMode
      * @description Controls how triangles are culled based on their face direction.
      * The default cull mode is pc.CULLFACE_BACK.
      * @param {number} cullMode - The cull mode to set. Can be:
@@ -3162,7 +3162,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setIndexBuffer
+     * @name GraphicsDevice#setIndexBuffer
      * @description Sets the current index buffer on the graphics device. On subsequent
      * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
      * index data for any indexed primitives.
@@ -3175,7 +3175,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setVertexBuffer
+     * @name GraphicsDevice#setVertexBuffer
      * @description Sets the current vertex buffer on the graphics device. On subsequent calls to
      * {@link pc.GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex data for any primitives.
      * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
@@ -3402,7 +3402,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#setShader
+     * @name GraphicsDevice#setShader
      * @description Sets the active shader to be used during subsequent draw calls.
      * @param {pc.Shader} shader - The shader to set to assign to the device.
      * @returns {boolean} True if the shader was successfully set, false otherwise.
@@ -3443,7 +3443,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#getBoneLimit
+     * @name GraphicsDevice#getBoneLimit
      * @description Queries the maximum number of bones that can be referenced by a shader.
      * The shader generators (pc.programlib) use this number to specify the matrix array
      * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
@@ -3459,7 +3459,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.GraphicsDevice#setBoneLimit
+     * @name GraphicsDevice#setBoneLimit
      * @description Specifies the maximum number of bones that the device can support on
      * the current hardware. This function allows the default calculated value based on
      * available vector uniforms to be overridden.
@@ -3471,7 +3471,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#resizeCanvas
+     * @name GraphicsDevice#resizeCanvas
      * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
      * Note that the specified width and height values will be multiplied by the value of
      * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
@@ -3505,7 +3505,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clearShaderCache
+     * @name GraphicsDevice#clearShaderCache
      * @description Frees memory from all shaders ever allocated with this device.
      */
     clearShaderCache() {
@@ -3525,7 +3525,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @function
-     * @name pc.GraphicsDevice#clearVertexArrayObjectCache
+     * @name GraphicsDevice#clearVertexArrayObjectCache
      * @description Frees memory from all vertex array objects ever allocated with this device.
      */
     clearVertexArrayObjectCache() {
@@ -3566,7 +3566,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#width
+     * @name GraphicsDevice#width
      * @type {number}
      * @description Width of the back buffer in pixels.
      */
@@ -3576,7 +3576,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#height
+     * @name GraphicsDevice#height
      * @type {number}
      * @description Height of the back buffer in pixels.
      */
@@ -3585,7 +3585,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @name pc.GraphicsDevice#fullscreen
+     * @name GraphicsDevice#fullscreen
      * @type {boolean}
      * @description Fullscreen mode.
      */
@@ -3604,7 +3604,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @private
-     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @name GraphicsDevice#enableAutoInstancing
      * @type {boolean}
      * @description Automatic instancing.
      */
@@ -3617,7 +3617,7 @@ class GraphicsDevice extends EventHandler {
     }
 
 /**
- * @name pc.GraphicsDevice#maxPixelRatio
+ * @name GraphicsDevice#maxPixelRatio
  * @type {number}
  * @description Maximum pixel ratio.
  */
@@ -3632,7 +3632,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#textureFloatHighPrecision
+     * @name GraphicsDevice#textureFloatHighPrecision
      * @type {number}
      * @description Check if high precision floating-point textures are supported.
      */
@@ -3645,7 +3645,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#textureHalfFloatUpdatable
+     * @name GraphicsDevice#textureHalfFloatUpdatable
      * @type {number}
      * @description Check if texture with half float format can be updated with data.
      */

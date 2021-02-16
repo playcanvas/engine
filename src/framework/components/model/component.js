@@ -14,7 +14,7 @@ import { Component } from '../component.js';
 /**
  * @component
  * @class
- * @name pc.ModelComponent
+ * @name ModelComponent
  * @augments pc.Component
  * @classdesc Enables an Entity to render a model or a primitive shape. This Component attaches additional model
  * geometry in to the scene graph below the Entity.
@@ -315,7 +315,7 @@ class ModelComponent extends Component {
 
     /**
      * @function
-     * @name pc.ModelComponent#hide
+     * @name ModelComponent#hide
      * @description Stop rendering model without removing it from the scene hierarchy.
      * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
      * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
@@ -349,7 +349,7 @@ class ModelComponent extends Component {
 
     /**
      * @function
-     * @name pc.ModelComponent#show
+     * @name ModelComponent#show
      * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
      * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
      */

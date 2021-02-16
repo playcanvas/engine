@@ -1,6 +1,6 @@
 /**
  * @function
- * @name pc.getTouchTargetCoords
+ * @name getTouchTargetCoords
  * @description Similar to {@link pc.getTargetCoords} for the MouseEvents.
  * This function takes a browser Touch object and returns the co-ordinates of the
  * touch relative to the target element.
@@ -30,7 +30,7 @@ function getTouchTargetCoords(touch) {
 
 /**
  * @class
- * @name pc.Touch
+ * @name Touch
  * @classdesc A instance of a single point touch on a {@link pc.TouchDevice}.
  * @description Create a new Touch object from the browser Touch.
  * @param {Touch} touch - The browser Touch object.
@@ -57,7 +57,7 @@ class Touch {
 
 /**
  * @class
- * @name pc.TouchEvent
+ * @name TouchEvent
  * @classdesc A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
  * browser event and provides lists of {@link pc.Touch} objects.
  * @description Create a new TouchEvent from an existing browser event.
@@ -91,7 +91,7 @@ class TouchEvent {
 
     /**
      * @function
-     * @name pc.TouchEvent#getTouchById
+     * @name TouchEvent#getTouchById
      * @description Get an event from one of the touch lists by the id. It is useful to access
      * touches by their id so that you can be sure you are referencing the same touch.
      * @param {number} id - The identifier of the touch.

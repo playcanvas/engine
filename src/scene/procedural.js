@@ -20,7 +20,7 @@ import { Mesh } from './mesh.js';
 
 /**
  * @function
- * @name pc.calculateNormals
+ * @name calculateNormals
  * @description Generates normal information from the specified positions and
  * triangle indices. See {@link pc.createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
@@ -98,7 +98,7 @@ function calculateNormals(positions, indices) {
 
 /**
  * @function
- * @name pc.calculateTangents
+ * @name calculateTangents
  * @description Generates tangent information from the specified positions,
  * normals, texture coordinates and triangle indices. See {@link pc.createMesh}.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
@@ -222,7 +222,7 @@ function calculateTangents(positions, normals, uvs, indices) {
 
 /**
  * @function
- * @name pc.createMesh
+ * @name createMesh
  * @description Creates a new mesh object from the supplied vertex information and topology.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
@@ -346,7 +346,7 @@ function createMesh(device, positions, opts) {
 
 /**
  * @function
- * @name pc.createTorus
+ * @name createTorus
  * @description Creates a procedural torus-shaped mesh.
  *
  * The size, shape and tesselation properties of the torus can be controlled via function parameters.
@@ -645,7 +645,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
 
 /**
  * @function
- * @name pc.createCylinder
+ * @name createCylinder
  * @description Creates a procedural cylinder-shaped mesh.
  *
  * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
@@ -689,7 +689,7 @@ function createCylinder(device, opts) {
 
 /**
  * @function
- * @name pc.createCapsule
+ * @name createCapsule
  * @description Creates a procedural capsule-shaped mesh.
  *
  * The size, shape and tesselation properties of the capsule can be controlled via function
@@ -727,7 +727,7 @@ function createCapsule(device, opts) {
 
 /**
  * @function
- * @name pc.createCone
+ * @name createCone
  * @description Creates a procedural cone-shaped mesh.
  *
  * The size, shape and tesselation properties of the cone can be controlled via function
@@ -766,7 +766,7 @@ function createCone(device, opts) {
 
 /**
  * @function
- * @name pc.createSphere
+ * @name createSphere
  * @description Creates a procedural sphere-shaped mesh.
  *
  * The size and tesselation properties of the sphere can be controlled via function
@@ -848,7 +848,7 @@ function createSphere(device, opts) {
 
 /**
  * @function
- * @name pc.createPlane
+ * @name createPlane
  * @description Creates a procedural plane-shaped mesh.
  *
  * The size and tesselation properties of the plane can be controlled via function
@@ -928,7 +928,7 @@ function createPlane(device, opts) {
 
 /**
  * @function
- * @name pc.createBox
+ * @name createBox
  * @description Creates a procedural box-shaped mesh.
  *
  * The size, shape and tesselation properties of the box can be controlled via function parameters. By

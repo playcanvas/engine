@@ -5,7 +5,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 /* eslint-disable jsdoc/check-examples */
 /**
  * @class
- * @name pc.TransformFeedback
+ * @name TransformFeedback
  * @classdesc Transform feedback helper object.
  * @description This object allows you to configure and use the transform feedback feature (WebGL2
  * only). How to use:
@@ -100,7 +100,7 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback.createShader
+     * @name TransformFeedback.createShader
      * @description Creates a transform feedback ready vertex shader from code.
      * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
@@ -113,7 +113,7 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback#destroy
+     * @name TransformFeedback#destroy
      * @description Destroys the transform feedback helper object.
      */
     destroy() {
@@ -122,7 +122,7 @@ class TransformFeedback {
 
     /**
      * @function
-     * @name pc.TransformFeedback#process
+     * @name TransformFeedback#process
      * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
      * @param {pc.Shader} shader - A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
      * @param {boolean} [swap] - Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
@@ -169,7 +169,7 @@ class TransformFeedback {
 
     /**
      * @readonly
-     * @name pc.TransformFeedback#inputBuffer
+     * @name TransformFeedback#inputBuffer
      * @type {pc.VertexBuffer}
      * @description The current input buffer.
      */
@@ -179,7 +179,7 @@ class TransformFeedback {
 
     /**
      * @readonly
-     * @name pc.TransformFeedback#outputBuffer
+     * @name TransformFeedback#outputBuffer
      * @type {pc.VertexBuffer}
      * @description The current output buffer.
      */

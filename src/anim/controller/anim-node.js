@@ -1,7 +1,7 @@
 /**
  * @private
  * @class
- * @name pc.AnimNode
+ * @name AnimNode
  * @classdesc AnimNodes are used to represent a single animation track in the current state. Each state can contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will control the weight (contribution to the states final animation) of it's child AnimNodes.
  * @description Create a new AnimNode.
  * @param {pc.AnimState} state - The AnimState that this BlendTree belongs to.

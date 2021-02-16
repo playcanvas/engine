@@ -14,7 +14,7 @@ var mat4B = new Mat4();
 
 /**
  * @class
- * @name pc.XrLightEstimation
+ * @name XrLightEstimation
  * @augments pc.EventHandler
  * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
  * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
@@ -51,13 +51,13 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @event
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @description Fired when light estimation data becomes available.
      */
 
     /**
      * @event
-     * @name pc.XrLightEstimation#error
+     * @name XrLightEstimation#error
      * @param {Error} error - Error object related to failure of light estimation start.
      * @description Fired when light estimation has failed to start.
      * @example
@@ -82,7 +82,7 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrLightEstimation#start
+     * @name XrLightEstimation#start
      * @description Start estimation of illimunation data.
      * Availability of such data will come later and an `available` event will be fired.
      * If it failed to start estimation, an `error` event will be fired.
@@ -136,7 +136,7 @@ class XrLightEstimation extends EventHandler {
 
     /**
      * @function
-     * @name pc.XrLightEstimation#end
+     * @name XrLightEstimation#end
      * @description End estimation of illumination data.
      */
     end() {
@@ -181,7 +181,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @name pc.XrLightEstimation#available
+     * @name XrLightEstimation#available
      * @type {boolean}
      * @description True if estimated light information is available.
      * @example

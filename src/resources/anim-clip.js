@@ -7,7 +7,7 @@ import { AnimTrack } from '../anim/evaluator/anim-track.js';
 /**
  * @private
  * @class
- * @name pc.AnimClipHandler
+ * @name AnimClipHandler
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.AnimClip} resources.
  */

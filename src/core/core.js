@@ -30,7 +30,7 @@ var data = { }; // Storage for exported entity data
 /**
  * @private
  * @function
- * @name pc.type
+ * @name type
  * @description Extended typeof() function, returns the type of the object.
  * @param {object} obj - The object to get the type of.
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
@@ -52,7 +52,7 @@ function type(obj) {
 /**
  * @private
  * @function
- * @name pc.extend
+ * @name extend
  * @description Merge the contents of two objects into a single object.
  * @param {object} target - The target object of the merge.
  * @param {object} ex - The object that is merged with target.
@@ -96,7 +96,7 @@ function extend(target, ex) {
 /**
  * @private
  * @function
- * @name pc.isDefined
+ * @name isDefined
  * @description Return true if the Object is not undefined.
  * @param {object} o - The Object to test.
  * @returns {boolean} True if the Object is not undefined.

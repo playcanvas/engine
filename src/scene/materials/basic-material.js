@@ -4,7 +4,7 @@ import { Material } from './material.js';
 
 /**
  * @class
- * @name pc.BasicMaterial
+ * @name BasicMaterial
  * @augments pc.Material
  * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
  * color map modulated with a color.
@@ -35,7 +35,7 @@ class BasicMaterial extends Material {
 
     /**
      * @function
-     * @name pc.BasicMaterial#clone
+     * @name BasicMaterial#clone
      * @description Duplicates a Basic material. All properties are duplicated except textures
      * where only the references are copied.
      * @returns {pc.BasicMaterial} A cloned Basic material.

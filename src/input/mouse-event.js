@@ -6,7 +6,7 @@ function isMousePointerLocked() {
 
 /**
  * @class
- * @name pc.MouseEvent
+ * @name MouseEvent
  * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
  * @description Create an new MouseEvent.
  * @param {pc.Mouse} mouse - The Mouse device that is firing this event.

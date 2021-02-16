@@ -16,7 +16,7 @@ function capTime(time, duration) {
 
 /**
  * @class
- * @name pc.SoundInstance
+ * @name SoundInstance
  * @augments pc.EventHandler
  * @classdesc A pc.SoundInstance plays a {@link pc.Sound}.
  * @param {pc.SoundManager} manager - The sound manager.
@@ -167,7 +167,7 @@ class SoundInstance extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundInstance#_onManagerVolumeChange
+     * @name SoundInstance#_onManagerVolumeChange
      * @description Handle the manager's 'volumechange' event.
      */
     _onManagerVolumeChange() {
@@ -177,7 +177,7 @@ class SoundInstance extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundInstance#_onManagerSuspend
+     * @name SoundInstance#_onManagerSuspend
      * @description Handle the manager's 'suspend' event.
      */
     _onManagerSuspend() {
@@ -190,7 +190,7 @@ class SoundInstance extends EventHandler {
     /**
      * @private
      * @function
-     * @name pc.SoundInstance#_onManagerResume
+     * @name SoundInstance#_onManagerResume
      * @description Handle the manager's 'resume' event.
      */
     _onManagerResume() {
@@ -269,7 +269,7 @@ if (hasAudioContext()) {
         /**
          * @function
          * @private
-         * @name pc.SoundInstance#_initializeNodes
+         * @name SoundInstance#_initializeNodes
          * @description Creates internal audio nodes and connects them.
          */
         _initializeNodes: function () {
@@ -283,7 +283,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#play
+         * @name SoundInstance#play
          * @description Begins playback of sound. If the sound is not loaded this will return false.
          * If the sound is already playing this will restart the sound.
          * @returns {boolean} True if the sound was started.
@@ -344,7 +344,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#pause
+         * @name SoundInstance#pause
          * @description Pauses playback of sound. Call resume() to resume playback from the same position.
          * @returns {boolean} Returns true if the sound was paused.
          */
@@ -378,7 +378,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#resume
+         * @name SoundInstance#resume
          * @description Resumes playback of the sound. Playback resumes at the point that the audio was paused.
          * @returns {boolean} Returns true if the sound was resumed.
          */
@@ -431,7 +431,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#stop
+         * @name SoundInstance#stop
          * @description Stops playback of sound. Calling play() again will restart playback from the beginning of the sound.
          * @returns {boolean} Returns true if the sound was stopped.
          */
@@ -471,7 +471,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#setExternalNodes
+         * @name SoundInstance#setExternalNodes
          * @description Connects external Web Audio API nodes. You need to pass
          * the first node of the node graph that you created externally and the last node of that graph. The first
          * node will be connected to the audio source and the last node will be connected to the destination of the
@@ -533,7 +533,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#clearExternalNodes
+         * @name SoundInstance#clearExternalNodes
          * @description Clears any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
          */
         clearExternalNodes: function () {
@@ -557,7 +557,7 @@ if (hasAudioContext()) {
 
         /**
          * @function
-         * @name pc.SoundInstance#getExternalNodes
+         * @name SoundInstance#getExternalNodes
          * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
          * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
          */
@@ -601,7 +601,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.SoundInstance#_updateCurrentTime
+         * @name SoundInstance#_updateCurrentTime
          * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
          */
         _updateCurrentTime: function () {
@@ -611,7 +611,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.SoundInstance#_onManagerDestroy
+         * @name SoundInstance#_onManagerDestroy
          * @description Handle the manager's 'destroy' event.
          */
         _onManagerDestroy: function () {
@@ -876,7 +876,7 @@ if (hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name pc.SoundInstance#_onManagerDestroy
+         * @name SoundInstance#_onManagerDestroy
          * @description Handle the manager's 'destroy' event.
          */
         _onManagerDestroy: function () {
@@ -953,31 +953,31 @@ if (hasAudioContext()) {
 
 /**
  * @event
- * @name pc.SoundInstance#play
+ * @name SoundInstance#play
  * @description Fired when the instance starts playing its source.
  */
 
 /**
  * @event
- * @name pc.SoundInstance#pause
+ * @name SoundInstance#pause
  * @description Fired when the instance is paused.
  */
 
 /**
  * @event
- * @name pc.SoundInstance#resume
+ * @name SoundInstance#resume
  * @description Fired when the instance is resumed.
  */
 
 /**
  * @event
- * @name pc.SoundInstance#stop
+ * @name SoundInstance#stop
  * @description Fired when the instance is stopped.
  */
 
 /**
  * @event
- * @name pc.SoundInstance#end
+ * @name SoundInstance#end
  * @description Fired when the sound currently played by the instance ends.
  */
 

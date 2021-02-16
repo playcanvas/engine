@@ -14,7 +14,7 @@ const _schema = [
 /**
  * @private
  * @class
- * @name pc.AnimComponentSystem
+ * @name AnimComponentSystem
  * @augments pc.ComponentSystem
  * @classdesc The AnimComponentSystem manages creating and deleting AnimComponents.
  * @description Create an AnimComponentSystem.

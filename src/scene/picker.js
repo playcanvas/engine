@@ -17,7 +17,7 @@ var _prepareDeprecationWarning = false;
 
 /**
  * @class
- * @name pc.Picker
+ * @name Picker
  * @classdesc Picker object used to select mesh instances from screen coordinates.
  * @description Create a new instance of a Picker object.
  * @param {pc.Application} app - The application managing this picker instance.
@@ -76,7 +76,7 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#getSelection
+     * @name Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.The rectangle using top-left coordinate system.
      * @param {number} x - The left edge of the rectangle.
@@ -156,7 +156,7 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#prepare
+     * @name Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
@@ -357,7 +357,7 @@ class Picker {
 
     /**
      * @function
-     * @name pc.Picker#resize
+     * @name Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection

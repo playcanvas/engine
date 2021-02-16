@@ -84,7 +84,7 @@ function intersectLineQuad(p, q, corners) {
 
 /**
  * @class
- * @name pc.ElementInputEvent
+ * @name ElementInputEvent
  * @classdesc Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised
  * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
  * @description Create an instance of a pc.ElementInputEvent.
@@ -105,7 +105,7 @@ class ElementInputEvent {
 
     /**
      * @function
-     * @name pc.ElementInputEvent#stopPropagation
+     * @name ElementInputEvent#stopPropagation
      * @description Stop propagation of the event to parent {@link pc.ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
      */
     stopPropagation() {
@@ -119,7 +119,7 @@ class ElementInputEvent {
 
 /**
  * @class
- * @name pc.ElementMouseEvent
+ * @name ElementMouseEvent
  * @augments pc.ElementInputEvent
  * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementMouseEvent.
@@ -176,7 +176,7 @@ class ElementMouseEvent extends ElementInputEvent {
 
 /**
  * @class
- * @name pc.ElementTouchEvent
+ * @name ElementTouchEvent
  * @augments pc.ElementInputEvent
  * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementTouchEvent.
@@ -204,7 +204,7 @@ class ElementTouchEvent extends ElementInputEvent {
 
 /**
  * @class
- * @name pc.ElementSelectEvent
+ * @name ElementSelectEvent
  * @augments pc.ElementInputEvent
  * @classdesc Represents a XRInputSourceEvent fired on a {@link pc.ElementComponent}.
  * @description Create an instance of a pc.ElementSelectEvent.
@@ -223,7 +223,7 @@ class ElementSelectEvent extends ElementInputEvent {
 
 /**
  * @class
- * @name pc.ElementInput
+ * @name ElementInput
  * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
  * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
  * @description Create a new pc.ElementInput instance.
@@ -276,7 +276,7 @@ class ElementInput {
 
     /**
      * @function
-     * @name pc.ElementInput#attach
+     * @name ElementInput#attach
      * @description Attach mouse and touch events to a DOM element.
      * @param {Element} domElement - The DOM element.
      */
@@ -321,7 +321,7 @@ class ElementInput {
 
     /**
      * @function
-     * @name pc.ElementInput#detach
+     * @name ElementInput#detach
      * @description Remove mouse and touch events from the DOM element that it is attached to.
      */
     detach() {
@@ -358,7 +358,7 @@ class ElementInput {
 
     /**
      * @function
-     * @name pc.ElementInput#addElement
+     * @name ElementInput#addElement
      * @description Add a {@link pc.ElementComponent} to the internal list of ElementComponents that are being checked for input.
      * @param {pc.ElementComponent} element - The ElementComponent.
      */
@@ -369,7 +369,7 @@ class ElementInput {
 
     /**
      * @function
-     * @name pc.ElementInput#removeElement
+     * @name ElementInput#removeElement
      * @description Remove a {@link pc.ElementComponent} from the internal list of ElementComponents that are being checked for input.
      * @param {pc.ElementComponent} element - The ElementComponent.
      */

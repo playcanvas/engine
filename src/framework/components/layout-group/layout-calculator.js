@@ -651,7 +651,7 @@ CALCULATE_FNS[ORIENTATION_VERTICAL] = createCalculator(ORIENTATION_VERTICAL);
 /**
  * @private
  * @class
- * @name pc.LayoutCalculator
+ * @name LayoutCalculator
  * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s.
  */
 class LayoutCalculator {

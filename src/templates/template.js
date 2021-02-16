@@ -3,7 +3,7 @@ import { SceneParser } from '../resources/parser/scene.js';
 /**
  * @private
  * @class
- * @name pc.Template
+ * @name Template
  * @classdesc Create a Template resource from raw database data.
  * @param {pc.Application} app - The application.
  * @param {object} data - Asset data from the database.
@@ -20,7 +20,7 @@ class Template {
     /**
      * @private
      * @function
-     * @name pc.Template#instantiate
+     * @name Template#instantiate
      * @description Create an instance of this template.
      * @returns {pc.Entity} The root entity of the created instance.
      */

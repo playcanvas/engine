@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * @name pc.callbacks
+ * @name callbacks
  * @namespace
  * @description Namespace for callback definitions.
  */

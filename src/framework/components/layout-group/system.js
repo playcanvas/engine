@@ -13,7 +13,7 @@ var MAX_ITERATIONS = 100;
 
 /**
  * @class
- * @name pc.LayoutGroupComponentSystem
+ * @name LayoutGroupComponentSystem
  * @augments pc.ComponentSystem
  * @description Create a new LayoutGroupComponentSystem.
  * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.

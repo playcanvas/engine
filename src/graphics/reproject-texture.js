@@ -30,7 +30,7 @@ function getCoding(texture) {
 /**
  * @static
  * @function
- * @name pc.reprojectTexture
+ * @name reprojectTexture
  * @description This function reprojects textures between cubemap and equirectangular formats. The
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats. When
  * specularPower is specified it will perform a phong-weighted convolution of the source (for generating
