@@ -70,7 +70,7 @@ function arrayGet4(offset, outputArray, outputIndex) {
  * @class
  * @name VertexIteratorAccessor
  * @classdesc Helps with accessing a specific vertex attribute.
- * @description Returns a new pc.VertexIteratorAccessor object.
+ * @description Returns a new VertexIteratorAccessor object.
  * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
  * @param {object} vertexElement - The vertex attribute to be accessed.
  * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
@@ -92,7 +92,7 @@ function arrayGet4(offset, outputArray, outputIndex) {
  * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+ * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
  * @param {number} vertexElement.numComponents - The number of components of the vertex attribute.
  * Can be 1, 2, 3 or 4.
  * @param {number} vertexElement.dataType - The data type of the attribute. Can be:
@@ -209,9 +209,9 @@ class VertexIteratorAccessor {
  * @class
  * @name VertexIterator
  * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
- * @description Returns a new pc.VertexIterator object.
+ * @description Returns a new VertexIterator object.
  * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
- * @property {object<string, pc.VertexIteratorAccessor>} element The vertex buffer elements.
+ * @property {object<string, VertexIteratorAccessor>} element The vertex buffer elements.
  */
 class VertexIterator {
     constructor(vertexBuffer) {

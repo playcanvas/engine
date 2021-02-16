@@ -65,7 +65,7 @@ class Command {
  * * {@link RENDERSTYLE_WIREFRAME}
  * * {@link RENDERSTYLE_POINTS}
  *
- * Defaults to pc.RENDERSTYLE_SOLID.
+ * Defaults to {@link RENDERSTYLE_SOLID}.
  * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link CameraComponent#frustumCulling}).
  * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
  * Only used when mesh instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode} (depending on the material) set to {@link SORTMODE_MANUAL}.
@@ -588,7 +588,7 @@ class MeshInstance {
      * @description Sets a shader parameter on a mesh instance. Note that this parameter will take precedence over parameter of the same name
      * if set on Material this mesh instance uses for rendering.
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number|number[]|Texture} data - The value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included in.
      */
     setParameter(name, data, passFlags = -524285) {

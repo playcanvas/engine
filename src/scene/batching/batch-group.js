@@ -9,14 +9,14 @@ import { LAYERID_WORLD } from '../constants.js';
  * @param {boolean} dynamic - Whether objects within this batch group should support transforming at runtime.
  * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
  * {@link BatchManager#prepare} will split objects into local groups based on this size.
- * @param {number[]} [layers] - Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
+ * @param {number[]} [layers] - Layer ID array. Default is [{@link LAYERID_WORLD}]. The whole batch group will belong
  * to these layers. Layers of source models will be ignored.
  * @property {boolean} dynamic Whether objects within this batch group should support transforming at runtime.
  * @property {number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
  * {@link BatchManager#prepare} will split objects into local groups based on this size.
  * @property {number} id Unique id. Can be assigned to model and element components.
  * @property {string} name Name of the group.
- * @property {number[]} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
+ * @property {number[]} [layers] Layer ID array. Default is [{@link LAYERID_WORLD}]. The whole batch group will belong
  * to these layers. Layers of source models will be ignored.
  */
 class BatchGroup {

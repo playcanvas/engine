@@ -158,12 +158,12 @@ class Picker {
      * @function
      * @name Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+     * of the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
+     * in any way, {@link Picker#prepare} does not need to be called again.
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
-     * @param {Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
+     * @param {Layer|RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked.
      * If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     prepare(camera, scene, arg) {
@@ -361,7 +361,7 @@ class Picker {
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
+     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.

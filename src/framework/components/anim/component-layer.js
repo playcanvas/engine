@@ -66,7 +66,7 @@ class AnimComponentLayer {
      * @private
      * @function
      * @name AnimComponentLayer#assignAnimation
-     * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
+     * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the {@link AnimComponent} activate value was set to true then the component will begin playing.
      * @param {string} nodeName - The name of the node that this animation should be associated with.
      * @param {object} animTrack - The animation track that will be assigned to this state and played whenever this state is active.
      */

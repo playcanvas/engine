@@ -29,7 +29,7 @@ class InterpolatedKey {
  * @class
  * @name Skeleton
  * @classdesc Represents a skeleton used to play animations.
- * @param {GraphNode} graph - The root pc.GraphNode of the skeleton.
+ * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
  * @property {boolean} looping Determines whether skeleton is looping its animation.
  */
 class Skeleton {

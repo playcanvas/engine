@@ -129,7 +129,7 @@ var path = {
     /**
      * @function
      * @name path.getDirectory
-     * @description Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter.
+     * @description Get the directory name from the path. This is everything up to the final instance of {@link path.delimiter}.
      * @param {string} pathname - The path to get the directory from.
      * @returns {string} The directory part of the path.
      */

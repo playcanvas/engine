@@ -26,7 +26,7 @@ class ResourceHandler {
     /**
      * @function
      * @name ResourceHandler#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
+     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.

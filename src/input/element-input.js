@@ -87,7 +87,7 @@ function intersectLineQuad(p, q, corners) {
  * @name ElementInputEvent
  * @classdesc Represents an input event fired on a {@link ElementComponent}. When an event is raised
  * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
- * @description Create an instance of a pc.ElementInputEvent.
+ * @description Create an instance of an ElementInputEvent.
  * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
@@ -122,7 +122,7 @@ class ElementInputEvent {
  * @name ElementMouseEvent
  * @augments ElementInputEvent
  * @classdesc Represents a Mouse event fired on a {@link ElementComponent}.
- * @description Create an instance of a pc.ElementMouseEvent.
+ * @description Create an instance of an ElementMouseEvent.
  * @param {MouseEvent} event - The MouseEvent that was originally raised.
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
@@ -179,7 +179,7 @@ class ElementMouseEvent extends ElementInputEvent {
  * @name ElementTouchEvent
  * @augments ElementInputEvent
  * @classdesc Represents a TouchEvent fired on a {@link ElementComponent}.
- * @description Create an instance of a pc.ElementTouchEvent.
+ * @description Create an instance of an ElementTouchEvent.
  * @param {TouchEvent} event - The TouchEvent that was originally raised.
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
@@ -207,7 +207,7 @@ class ElementTouchEvent extends ElementInputEvent {
  * @name ElementSelectEvent
  * @augments ElementInputEvent
  * @classdesc Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
- * @description Create an instance of a pc.ElementSelectEvent.
+ * @description Create an instance of a ElementSelectEvent.
  * @param {object} event - The XRInputSourceEvent that was originally raised.
  * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
  * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
@@ -226,7 +226,7 @@ class ElementSelectEvent extends ElementInputEvent {
  * @name ElementInput
  * @classdesc Handles mouse and touch events for {@link ElementComponent}s. When input events
  * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
- * @description Create a new pc.ElementInput instance.
+ * @description Create a new ElementInput instance.
  * @param {Element} domElement - The DOM element.
  * @param {object} [options] - Optional arguments.
  * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.

@@ -19,8 +19,8 @@ export const BLEND_ADDITIVE = 1;
  * @name BLEND_NORMAL
  * @type {number}
  * @description Enable simple translucency for materials such as glass. This is
- * equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination
- * blend mode of pc.BLENDMODE_ONE_MINUS_SRC_ALPHA.
+ * equivalent to enabling a source blend mode of {@link BLENDMODE_SRC_ALPHA} and a destination
+ * blend mode of {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}.
  */
 export const BLEND_NORMAL = 2;
 /**
@@ -34,7 +34,7 @@ export const BLEND_NONE = 3;
  * @constant
  * @name BLEND_PREMULTIPLIED
  * @type {number}
- * @description Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have
+ * @description Similar to {@link BLEND_NORMAL} expect the source fragment is assumed to have
  * already been multiplied by the source alpha value.
  */
 export const BLEND_PREMULTIPLIED = 4;
@@ -50,7 +50,7 @@ export const BLEND_MULTIPLICATIVE = 5;
  * @constant
  * @name BLEND_ADDITIVEALPHA
  * @type {number}
- * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
+ * @description Same as {@link BLEND_ADDITIVE} except the source RGB is multiplied by the source alpha.
  */
 export const BLEND_ADDITIVEALPHA = 6;
 
@@ -274,21 +274,21 @@ export const SHADOW_VSM8 = 1;
  * @constant
  * @name SHADOW_VSM16
  * @type {number}
- * @description Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
+ * @description Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
  */
 export const SHADOW_VSM16 = 2;
 /**
  * @constant
  * @name SHADOW_VSM32
  * @type {number}
- * @description Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
+ * @description Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
  */
 export const SHADOW_VSM32 = 3;
 /**
  * @constant
  * @name SHADOW_PCF5
  * @type {number}
- * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
+ * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
  */
 export const SHADOW_PCF5 = 4;
 
@@ -765,7 +765,7 @@ export const SORTMODE_BACK2FRONT = 3;
  * @constant
  * @name SORTMODE_FRONT2BACK
  * @type {number}
- * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
+ * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than {@link SORTMODE_MATERIALMESH} due to reduced overdraw.
  */
 export const SORTMODE_FRONT2BACK = 4;
 

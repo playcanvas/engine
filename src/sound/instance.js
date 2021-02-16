@@ -18,7 +18,7 @@ function capTime(time, duration) {
  * @class
  * @name SoundInstance
  * @augments EventHandler
- * @classdesc A pc.SoundInstance plays a {@link Sound}.
+ * @classdesc A SoundInstance plays a {@link Sound}.
  * @param {SoundManager} manager - The sound manager.
  * @param {Sound} sound - The sound to play.
  * @param {object} options - Options for the instance.

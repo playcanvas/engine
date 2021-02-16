@@ -327,7 +327,7 @@ class XrInputSource extends EventHandler {
      * @description Attempts to start hit test source based on this input source.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
-     * against which hit tests will be performed. Defaults to [ {pc.XRTRACKABLE_PLANE} ].
+     * against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ].
      * Can be any combination of the following:
      *
      * * {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be

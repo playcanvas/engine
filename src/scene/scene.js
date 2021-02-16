@@ -32,23 +32,23 @@ import { Mat4 } from '../math/mat4.js';
  * * {@link FOG_EXP}
  * * {@link FOG_EXP2}
  *
- * Defaults to pc.FOG_NONE.
+ * Defaults to {@link FOG_NONE}.
  * @property {Color} fogColor The color of the fog (if enabled). Defaults to black
  * (0, 0, 0).
  * @property {number} fogDensity The density of the fog (if enabled). This property
- * is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
+ * is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
  * @property {number} fogEnd The distance from the viewpoint where linear fog reaches
- * its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+ * its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
  * Defaults to 1000.
  * @property {number} fogStart The distance from the viewpoint where linear fog begins.
- * This property is only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1.
+ * This property is only valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1.
  * @property {number} gammaCorrection The gamma correction to apply when rendering the
  * scene. Can be:
  *
  * * {@link GAMMA_NONE}
  * * {@link GAMMA_SRGB}
  *
- * Defaults to pc.GAMMA_NONE.
+ * Defaults to {@link GAMMA_NONE}.
  * @property {number} toneMapping The tonemapping transform to apply when writing
  * fragments to the frame buffer. Can be:
  *
@@ -57,7 +57,7 @@ import { Mat4 } from '../math/mat4.js';
  * * {@link TONEMAP_HEJL}
  * * {@link TONEMAP_ACES}
  *
- * Defaults to pc.TONEMAP_LINEAR.
+ * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} exposure The exposure value tweaks the overall brightness of
  * the scene. Defaults to 1.
  * @property {Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
@@ -82,7 +82,7 @@ import { Mat4 } from '../math/mat4.js';
  * bump/specular). Only lights with bakeDir=true will be used for generating the dominant
  * light direction.
  *
- * Defaults to pc.BAKE_COLORDIR.
+ * Defaults to {@link BAKE_COLORDIR}.
  * @property {LayerComposition} layers A {@link LayerComposition} that defines
  * rendering order of this scene.
  * @property {StandardMaterial} defaultMaterial The default material used in case no

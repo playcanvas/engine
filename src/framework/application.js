@@ -149,9 +149,9 @@ var tempGraphNode = new GraphNode();
  * @class
  * @name Application
  * @augments EventHandler
- * @classdesc A pc.Application represents and manages your PlayCanvas application.
- * If you are developing using the PlayCanvas Editor, the pc.Application is created
- * for you. You can access your pc.Application instance in your scripts. Below is a
+ * @classdesc An Application represents and manages your PlayCanvas application.
+ * If you are developing using the PlayCanvas Editor, the Application is created
+ * for you. You can access your Application instance in your scripts. Below is a
  * skeleton script which shows how you can access the application 'app' property inside
  * the initialize and update functions:
  *
@@ -253,7 +253,7 @@ var tempGraphNode = new GraphNode();
 /**
  * @name Application#systems
  * @type {ComponentSystemRegistry}
- * @description The application's component system registry. The pc.Application
+ * @description The application's component system registry. The Application
  * constructor adds the following component systems to its component system registry:
  *
  * * animation ({@link AnimationComponentSystem})
@@ -825,7 +825,7 @@ class Application extends EventHandler {
      * @name Application.getApplication
      * @description Get the current application. In the case where there are multiple running
      * applications, the function can get an application based on a supplied canvas id. This
-     * function is particularly useful when the current pc.Application is not readily available.
+     * function is particularly useful when the current Application is not readily available.
      * For example, in the JavaScript console of the browser's developer tools.
      * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
      * @returns {Application|undefined} The running application, if any.
@@ -1466,8 +1466,8 @@ class Application extends EventHandler {
      * * {@link FILLMODE_NONE}: the canvas will always match the size provided.
      * * {@link FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
      * * {@link FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
-     * @param {number} [width] - The width of the canvas (only used when mode is pc.FILLMODE_NONE).
-     * @param {number} [height] - The height of the canvas (only used when mode is pc.FILLMODE_NONE).
+     * @param {number} [width] - The width of the canvas (only used when mode is {@link FILLMODE_NONE}).
+     * @param {number} [height] - The height of the canvas (only used when mode is {@link FILLMODE_NONE}).
      */
     setCanvasFillMode(mode, width, height) {
         this._fillMode = mode;
@@ -1602,9 +1602,9 @@ class Application extends EventHandler {
      * * {@link FOG_EXP}
      * * {@link FOG_EXP2}
      * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
-     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
-     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+     * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to {@link FOG_EXP} or {@link FOG_EXP2}.
+     * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
+     * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to {@link FOG_LINEAR}.
      * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
      *
      * * {@link GAMMA_NONE}

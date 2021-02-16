@@ -17,9 +17,9 @@ var defaultOptions = {
  * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to true. Ignored if depthBuffer is defined.
  * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil. Defaults to false. Ignored if depthBuffer is defined or depth is false.
  * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are ignored.
- * Texture must have pc.PIXELFORMAT_DEPTH or PIXELFORMAT_DEPTHSTENCIL format.
+ * Texture must have {@link PIXELFORMAT_DEPTH} or PIXELFORMAT_DEPTHSTENCIL format.
  * @param {number} [options.samples] - Number of hardware anti-aliasing samples (WebGL2 only). Default is 1.
- * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA resolve after rendering to this RT (see pc.RenderTarget#resolve). Defaults to true;
+ * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true;
  * Defaults to true.
  * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option to specify the
  * face of the cubemap to render to. Can be:
@@ -31,7 +31,7 @@ var defaultOptions = {
  * * {@link CUBEFACE_POSZ}
  * * {@link CUBEFACE_NEGZ}
  *
- * Defaults to pc.CUBEFACE_POSX.
+ * Defaults to {@link CUBEFACE_POSX}.
  * @example
  * // Create a 512x512x24-bit render target with a depth buffer
  * var colorBuffer = new pc.Texture(graphicsDevice, {
@@ -161,7 +161,7 @@ class RenderTarget {
      * In order to read the results, you first need to 'resolve' the buffer - to average all samples and create a simple texture with one color per pixel.
      * This function performs this averaging and updates the colorBuffer and the depthBuffer.
      * If autoResolve is set to true, the resolve will happen after every rendering to this render target, otherwise you can do it manually,
-     * during the app update or inside a pc.Command.
+     * during the app update or inside a {@link Command}.
      * @param {boolean} [color] - Resolve color buffer. Defaults to true.
      * @param {boolean} [depth] - Resolve depth buffer. Defaults to true if the render target has a depth buffer.
      */

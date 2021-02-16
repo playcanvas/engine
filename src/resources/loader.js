@@ -195,7 +195,7 @@ class ResourceLoader {
     /**
      * @function
      * @name ResourceLoader#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
+     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} type - The type of resource.
      * @param {*} data - The raw resource data.
      * @returns {*} The parsed resource data.

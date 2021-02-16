@@ -30,8 +30,8 @@ const reservedScriptNames = new Set([
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
  * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to add a script to.
- * By default it will use `pc.Application.getApplication()` to get current {@link Application}.
- * @returns {Class<pc.ScriptType>} A class type (constructor function) that inherits {@link ScriptType},
+ * By default it will use `Application.getApplication()` to get current {@link Application}.
+ * @returns {Class<ScriptType>} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * @example
  * var Turning = pc.createScript('turn');
@@ -90,7 +90,7 @@ createScript.reservedAttributes = reservedAttributes;
  * @name registerScript
  * @description Register a existing class type as a Script Type to {@link ScriptRegistry}.
  * Useful when defining a ES6 script class that extends {@link ScriptType} (see example).
- * @param {Class<pc.ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.
+ * @param {Class<ScriptType>} script - The existing class type (constructor function) to be registered as a Script Type.
  * Class must extend {@link ScriptType} (see example). Please note: A class created using {@link createScript} is auto-registered,
  * and should therefore not be pass into {@link registerScript} (which would result in swapping out all related script instances).
  * @param {string} [name] - Optional unique name of the Script Type. By default it will use the same name as the existing class.
@@ -99,7 +99,7 @@ createScript.reservedAttributes = reservedAttributes;
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
  * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry} to register the script type to.
- * By default it will use `pc.Application.getApplication()` to get current {@link Application}.
+ * By default it will use `Application.getApplication()` to get current {@link Application}.
  * @example
  * // define a ES6 script class
  * class PlayerController extends pc.ScriptType {

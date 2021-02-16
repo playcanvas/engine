@@ -167,8 +167,8 @@ class GamePads {
      * @function
      * @name GamePads#isPressed
      * @description Returns true if the button on the pad requested is pressed.
-     * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
-     * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(index, button) {
@@ -184,8 +184,8 @@ class GamePads {
      * @function
      * @name GamePads#wasPressed
      * @description Returns true if the button was pressed since the last frame.
-     * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
-     * @param {number} button - The button to test, use constants pc.PAD_FACE_1, etc.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button was pressed since the last frame.
      */
     wasPressed(index, button) {
@@ -202,8 +202,8 @@ class GamePads {
      * @function
      * @name GamePads#getAxis
      * @description Get the value of one of the analogue axes of the pad.
-     * @param {number} index - The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc.
-     * @param {number} axes - The axes to get the value of, use constants pc.PAD_L_STICK_X, etc.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} axes - The axes to get the value of, use constants {@link PAD_L_STICK_X}, etc.
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(index, axes) {

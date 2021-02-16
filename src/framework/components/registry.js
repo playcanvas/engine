@@ -15,7 +15,7 @@ class ComponentSystemRegistry {
      * @function
      * @name ComponentSystemRegistry#add
      * @description Add a component system to the registry.
-     * @param {object} system - The {pc.ComponentSystem} instance.
+     * @param {object} system - The {@link ComponentSystem} instance.
      */
     add(system) {
         var id = system.id;
@@ -34,7 +34,7 @@ class ComponentSystemRegistry {
      * @function
      * @name ComponentSystemRegistry#remove
      * @description Remove a component system from the registry.
-     * @param {object} system - The {pc.ComponentSystem} instance.
+     * @param {object} system - The {@link ComponentSystem} instance.
      */
     remove(system) {
         var id = system.id;

@@ -82,7 +82,7 @@ function UntarScope(isWorker) {
      * @name Untar
      * @classdesc Untars a tar archive in the form of an array buffer.
      * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
-     * @description Creates a new instance of pc.Untar.
+     * @description Creates a new instance of Untar.
      */
     function UntarInternal(arrayBuffer) {
         this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
@@ -268,7 +268,7 @@ function getWorkerUrl() {
  * @private
  * @name UntarWorker
  * @classdesc Wraps untar'ing a tar archive with a Web Worker.
- * @description Creates new instance of a pc.UntarWorker.
+ * @description Creates new instance of an UntarWorker.
  * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link AssetRegistry} prefix.
  */
 class UntarWorker {

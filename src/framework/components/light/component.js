@@ -75,7 +75,7 @@ var _lightPropsDefault = [];
  * its position. Can be:
  * * {@link LIGHTFALLOFF_LINEAR}: Linear.
  * * {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
- * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
+ * Affects point and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
  * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are
  * lit by this light. Defaults to 1.
  * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects
@@ -87,14 +87,14 @@ var _lightPropsDefault = [];
  * The error is not always visible though, and highly scene-dependent.
  * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
  * * {@link SHADOWUPDATE_NONE}: Don't render shadows.
- * * {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).
+ * * {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
  * * {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
  * @property {number} shadowType Type of shadows being rendered by this light. Options:
  * * {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
  * * {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
- * * {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
- * * {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
- * * {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
+ * * {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
+ * * {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
+ * * {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
  * * {@link BLUR_BOX}: Box filter.
  * * {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.

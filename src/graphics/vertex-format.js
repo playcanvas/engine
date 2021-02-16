@@ -12,7 +12,7 @@ import {
  * @name VertexFormat
  * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
  * a {@link VertexBuffer}.
- * @description Returns a new pc.VertexFormat object.
+ * @description Returns a new VertexFormat object.
  * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
  * @param {object[]} description - An array of vertex attribute descriptions.
  * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
@@ -34,7 +34,7 @@ import {
  * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+ * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
  * @param {number} description[].components - The number of components of the vertex attribute.
  * Can be 1, 2, 3 or 4.
  * @param {number} description[].type - The data type of the attribute. Can be:
@@ -74,7 +74,7 @@ import {
  * * {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+ * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
  * @property {number} elements[].numComponents The number of components of the vertex attribute.
  * Can be 1, 2, 3 or 4.
  * @property {number} elements[].dataType The data type of the attribute. Can be:

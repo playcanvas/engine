@@ -35,9 +35,9 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
  * Defaults to 0.
  * @property {Vec3} linearFactor Scaling factor for linear movement of the body in each axis. Only
- * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
  * @property {Vec3} angularFactor Scaling factor for angular movement of the body in each axis. Only
- * valid for rigid bodies of type pc.BODYTYPE_DYNAMIC. Defaults to 1 in all axes.
+ * valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes.
  * @property {number} friction The friction value used when contacts occur between two bodies. A higher
  * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
  * @property {number} rollingFriction Sets a torsional friction orthogonal to the contact point. Defaults
@@ -57,7 +57,7 @@ var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * * {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved
  * by setting their velocity or position.
  *
- * Defaults to pc.BODYTYPE_STATIC.
+ * Defaults to {@link BODYTYPE_STATIC}.
  */
 class RigidBodyComponent extends Component {
     constructor(system, entity) {
@@ -242,7 +242,7 @@ class RigidBodyComponent extends Component {
      * @function
      * @name RigidBodyComponent#activate
      * @description Forcibly activate the rigid body simulation. Only affects rigid bodies of
-     * type pc.BODYTYPE_DYNAMIC.
+     * type {@link BODYTYPE_DYNAMIC}.
      */
     activate() {
         var body = this.body;
@@ -696,7 +696,7 @@ class RigidBodyComponent extends Component {
      * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
      * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
      * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-     * @param {Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
+     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
      * position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.

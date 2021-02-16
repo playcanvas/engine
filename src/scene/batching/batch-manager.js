@@ -127,7 +127,7 @@ class BatchManager {
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * {@link BatchManager#prepare} will split objects into local groups based on this size.
      * @param {number} [id] - Optional custom unique id for the group (will be generated automatically otherwise).
-     * @param {number[]} [layers] - Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will
+     * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}]. The whole batch group will
      * belong to these layers. Layers of source models will be ignored.
      * @returns {BatchGroup} Group object.
      */

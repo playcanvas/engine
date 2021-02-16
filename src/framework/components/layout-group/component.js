@@ -32,7 +32,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * * {@link ORIENTATION_HORIZONTAL}
  * * {@link ORIENTATION_VERTICAL}
  *
- * Defaults to pc.ORIENTATION_HORIZONTAL.
+ * Defaults to {@link ORIENTATION_HORIZONTAL}.
  * @property {boolean} reverseX Reverses the order of children along the x axis.
  * Defaults to false.
  * @property {boolean} reverseY Reverses the order of children along the y axis.
@@ -66,13 +66,13 @@ function isEnabledAndHasEnabledElement(entity) {
  *   2. Apply the natural width of each child.
  *   3. If the new total width of all children exceeds the available space of the
  * container, reduce each child's width proportionally based on the normalized {@link
- * pc.LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
- * pc.LayoutChildComponent#minWidth} of each child.
+ * LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link
+ * LayoutChildComponent#minWidth} of each child.
  * * {@link FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.
  *
- * Defaults to pc.FITTING_NONE.
+ * Defaults to {@link FITTING_NONE}.
  * @property {number} heightFitting Identical to {@link LayoutGroupComponent#widthFitting}
- * but for the Y axis. Defaults to pc.FITTING_NONE.
+ * but for the Y axis. Defaults to {@link FITTING_NONE}.
  * @property {boolean} wrap Whether or not to wrap children onto a new row/column when the
  * size of the container is exceeded. Defaults to false, which means that children will be
  * be rendered in a single row (horizontal orientation) or column (vertical orientation).

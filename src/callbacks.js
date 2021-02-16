@@ -74,7 +74,7 @@
  * @callback callbacks.CalculateMatrix
  * @description Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  * @param {Mat4} transformMatrix - Output of the function.
- * @param {number} view - Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
  */
 
 /**

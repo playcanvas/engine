@@ -130,7 +130,7 @@ function destroyPostEffectQuad() {
  * @param {GraphicsDevice} device - The graphics device used to draw the texture.
  * @param {Texture} texture - The source texture to be drawn. Accessible as `uniform sampler2D source` in shader.
  * @param {RenderTarget} [target] - The destination render target. Defaults to the frame buffer.
- * @param {Shader} [shader] - The shader used for rendering the texture. Defaults to `pc.GraphicsDevice#getCopyShader()`.
+ * @param {Shader} [shader] - The shader used for rendering the texture. Defaults to {@link GraphicsDevice#getCopyShader}.
  * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.

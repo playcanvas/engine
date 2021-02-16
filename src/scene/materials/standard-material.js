@@ -160,7 +160,7 @@ class Chunks {
  *
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
  * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
- * set the {@link Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
+ * set the {@link Material#blendType} to {@link BLEND_NORMAL}, {@link BLEND_ADDITIVE} or any other mode.
  * Also note that for most semi-transparent objects you want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
  * @property {Texture|null} opacityMap The opacity map of the material (default is null).
  * @property {number} opacityMapUv Opacity map UV channel.
@@ -202,9 +202,9 @@ class Chunks {
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * * {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * * {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
- * Defaults to pc.CUBEPROJ_NONE.
+ * Defaults to {@link CUBEPROJ_NONE}.
  * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
- * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
+ * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
  * @property {number} reflectivity Environment map intensity.
  *
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.

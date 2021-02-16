@@ -1637,7 +1637,7 @@ _define("rangeEnd");
  * @event
  * @name ElementComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent|pc.ElementTouchEvent} event - The event.
+ * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
  */
 
 /**

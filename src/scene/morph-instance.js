@@ -17,8 +17,8 @@ var textureMorphVertexShader =
 /**
  * @class
  * @name MorphInstance
- * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, manages selection of active morph targets.
- * @param {Morph} morph - The pc.Morph to instance.
+ * @classdesc An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages selection of active morph targets.
+ * @param {Morph} morph - The {@link Morph} to instance.
  */
 class MorphInstance {
     constructor(morph) {

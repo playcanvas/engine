@@ -251,7 +251,7 @@ class Keyboard extends EventHandler {
      * @function
      * @name Keyboard#isPressed
      * @description Return true if the key is currently down.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed, false if not.
      */
     isPressed(key) {
@@ -265,7 +265,7 @@ class Keyboard extends EventHandler {
      * @function
      * @name Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */
     wasPressed(key) {
@@ -279,7 +279,7 @@ class Keyboard extends EventHandler {
      * @function
      * @name Keyboard#wasReleased
      * @description Returns true if the key was released since the last update.
-     * @param {number} key - The keyCode of the key to test. See the pc.KEY_* constants.
+     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
      * @returns {boolean} True if the key was pressed.
      */
     wasReleased(key) {

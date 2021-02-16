@@ -6,8 +6,8 @@ import { hasAudioContext } from './capabilities.js';
  * @private
  * @class
  * @name Channel
- * @classdesc A channel is created when the pc.SoundManager begins playback of a pc.Sound. Usually created internally by
- * pc.SoundManager#playSound or pc.SoundManager#playSound3d. Developers usually won't have to create Channels manually.
+ * @classdesc A channel is created when the {@link SoundManager} begins playback of a {@link Sound}. Usually created internally by
+ * {@link SoundManager#playSound} or {@link SoundManager#playSound3d}. Developers usually won't have to create Channels manually.
  * @param {SoundManager} manager - The SoundManager instance.
  * @param {Sound} sound - The sound to playback.
  * @param {object} [options] - Optional options object.

@@ -7,7 +7,7 @@ import { EventHandler } from './event-handler.js';
  * @classdesc Set of tag names.
  * @description Create an instance of a Tags.
  * @param {object} [parent] - Parent object who tags belong to.
- * Note: Tags are automatically available on `pc.Entity` and `pc.Asset` as `tags` field.
+ * Note: Tags are automatically available on {@link Entity} and {@link Asset} as `tags` field.
  */
 class Tags extends EventHandler {
     constructor(parent) {

@@ -55,7 +55,7 @@ var _blockSizeTable = null;
  * * {@link PIXELFORMAT_ASTC_4x4}>/li>
  * * {@link PIXELFORMAT_ATC_RGB}
  * * {@link PIXELFORMAT_ATC_RGBA}
- * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
+ * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
  * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link FILTER_LINEAR_MIPMAP_LINEAR}
  * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link FILTER_LINEAR}
  * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
@@ -73,10 +73,10 @@ var _blockSizeTable = null;
  * pixel data. Defaults to true.
  * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
  * channels. Defaults to false.
- * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+ * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
  * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
  * Defaults to false.
- * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+ * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to {@link FUNC_LESS}.
  * Possible values:
  * * {@link FUNC_LESS}
  * * {@link FUNC_LESSEQUAL}
@@ -322,7 +322,7 @@ class Texture {
     /**
      * @name Texture#compareOnRead
      * @type {boolean}
-     * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @description When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL},
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
     get compareOnRead() {
@@ -546,7 +546,7 @@ class Texture {
      * @param {number} [width] - Texture's width.
      * @param {number} [height] - Texture's height.
      * @param {number} [depth] - Texture's depth.
-     * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***).
+     * @param {number} [format] - Texture's pixel format PIXELFORMAT_***.
      * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise.
      * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
      * @returns {number} The amount of GPU memory required for the texture, in bytes.

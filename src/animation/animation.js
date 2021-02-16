@@ -40,8 +40,8 @@ class Animation {
      * @function
      * @name Animation#getNode
      * @description Gets a {@link Node} by name.
-     * @param {string} name - The name of the pc.Node.
-     * @returns {Node} The pc.Node with the specified name.
+     * @param {string} name - The name of the {@link Node}.
+     * @returns {Node} The {@link Node} with the specified name.
      */
     getNode(name) {
         return this._nodeDict[name];

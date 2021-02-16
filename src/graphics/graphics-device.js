@@ -1477,7 +1477,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#getCopyShader
      * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
-     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `shaderChunks`).
      */
     getCopyShader() {
         if (!this._copyShader) {
@@ -1494,8 +1494,8 @@ class GraphicsDevice extends EventHandler {
      * @name GraphicsDevice#updateBegin
      * @description Marks the beginning of a block of rendering. Internally, this function
      * binds the render target currently set on the device. This function should be matched
-     * with a call to pc.GraphicsDevice#updateEnd. Calls to pc.GraphicsDevice#updateBegin
-     * and pc.GraphicsDevice#updateEnd must not be nested.
+     * with a call to {@link GraphicsDevice#updateEnd}. Calls to {@link GraphicsDevice#updateBegin}
+     * and {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateBegin() {
         this.boundVao = null;
@@ -1528,8 +1528,8 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#updateEnd
      * @description Marks the end of a block of rendering. This function should be called
-     * after a matching call to pc.GraphicsDevice#updateBegin. Calls to pc.GraphicsDevice#updateBegin
-     * and pc.GraphicsDevice#updateEnd must not be nested.
+     * after a matching call to {@link GraphicsDevice#updateBegin}. Calls to {@link GraphicsDevice#updateBegin}
+     * and {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateEnd() {
         var gl = this.gl;
@@ -2481,9 +2481,9 @@ class GraphicsDevice extends EventHandler {
      * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
      * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
      * combination of:
-     * * pc.CLEARFLAG_COLOR
-     * * pc.CLEARFLAG_DEPTH
-     * * pc.CLEARFLAG_STENCIL
+     * * {@link CLEARFLAG_COLOR}
+     * * {@link CLEARFLAG_DEPTH}
+     * * {@link CLEARFLAG_STENCIL}
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
      * device.clear();
@@ -3084,7 +3084,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setBlendEquation
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
      * * {@link BLENDEQUATION_ADD}
      * * {@link BLENDEQUATION_SUBTRACT}
@@ -3106,7 +3106,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setBlendEquationSeparate
      * @description Configures the blending equation. The default blend equation is
-     * pc.BLENDEQUATION_ADD.
+     * {@link BLENDEQUATION_ADD}.
      * @param {number} blendEquation - The blend equation. Can be:
      * * {@link BLENDEQUATION_ADD}
      * * {@link BLENDEQUATION_SUBTRACT}
@@ -3130,7 +3130,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setCullMode
      * @description Controls how triangles are culled based on their face direction.
-     * The default cull mode is pc.CULLFACE_BACK.
+     * The default cull mode is {@link CULLFACE_BACK}.
      * @param {number} cullMode - The cull mode to set. Can be:
      * * {@link CULLFACE_NONE}
      * * {@link CULLFACE_BACK}
@@ -3164,7 +3164,7 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#setIndexBuffer
      * @description Sets the current index buffer on the graphics device. On subsequent
-     * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
+     * calls to {@link GraphicsDevice#draw}, the specified index buffer will be used to provide
      * index data for any indexed primitives.
      * @param {IndexBuffer} indexBuffer - The index buffer to assign to the device.
      */
@@ -3445,11 +3445,11 @@ class GraphicsDevice extends EventHandler {
      * @function
      * @name GraphicsDevice#getBoneLimit
      * @description Queries the maximum number of bones that can be referenced by a shader.
-     * The shader generators (pc.programlib) use this number to specify the matrix array
+     * The shader generators (programlib) use this number to specify the matrix array
      * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
      * available uniform vectors available after subtracting the number taken by a typical
      * heavyweight shader. If a different number is required, it can be tuned via
-     * pc.GraphicsDevice#setBoneLimit.
+     * {@link GraphicsDevice#setBoneLimit}.
      * @returns {number} The maximum number of bones that can be supported by the host hardware.
      */
     getBoneLimit() {

@@ -19,7 +19,7 @@ import {
  * @param {object[]} states - The list of states used to form the controller state graph.
  * @param {object[]} transitions - The list of transitions used to form the controller state graph.
  * @param {object[]} parameters - The anim components parameters.
- * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
+ * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  */
 class AnimController {
     constructor(animEvaluator, states, transitions, parameters, activate) {

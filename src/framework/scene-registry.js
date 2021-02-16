@@ -222,7 +222,7 @@ class SceneRegistry {
      * @function
      * @name SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used
-     * by the pc.Application.
+     * by the {@link Application}.
      * @param {string} url - The URL of the scene file.
      * @param {callbacks.LoadScene} callback - The function called after the settings are
      * applied. Passed (err, scene) where err is null if no error occurred and scene is the

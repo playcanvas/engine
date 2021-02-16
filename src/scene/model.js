@@ -180,7 +180,7 @@ class Model {
      * @description Generates the necessary internal data for a model to be
      * renderable as wireframe. Once this function has been called, any mesh
      * instance in the model can have its renderStyle property set to
-     * pc.RENDERSTYLE_WIREFRAME.
+     * {@link RENDERSTYLE_WIREFRAME}.
      * @example
      * model.generateWireframe();
      * for (var i = 0; i < model.meshInstances.length; i++) {

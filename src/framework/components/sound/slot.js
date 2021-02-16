@@ -314,7 +314,7 @@ class SoundSlot extends EventHandler {
      * @function
      * @private
      * @name SoundSlot#_createInstance
-     * @description Creates a new pc.SoundInstance with the properties of the slot.
+     * @description Creates a new {@link SoundInstance} with the properties of the slot.
      * @returns {SoundInstance} The new instance.
      */
     _createInstance() {

@@ -10,7 +10,7 @@ import { math } from '../math/math.js';
  * @name Http
  * @classdesc Used to send and receive HTTP requests.
  * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
- * object at `pc.http`.
+ * object at `http`.
  */
 class Http {
     constructor() {}

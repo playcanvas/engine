@@ -243,7 +243,7 @@ var math = {
     /**
      * @function
      * @name math.smootherstep
-     * @description An improved version of the pc.math.smoothstep function which has zero
+     * @description An improved version of the {@link math.smoothstep} function which has zero
      * 1st and 2nd order derivatives at t=0 and t=1.
      * <br/>See http://en.wikipedia.org/wiki/Smoothstep for more details.
      * @param {number} min - The lower bound of the interpolation range.

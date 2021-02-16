@@ -11,7 +11,7 @@ let id = 0;
  * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex buffer.
  * @param {VertexFormat} format - The vertex format of this vertex buffer.
  * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
- * @param {number} [usage] - The usage type of the vertex buffer (see pc.BUFFER_*).
+ * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
  * @param {ArrayBuffer} [initialData] - Initial data.
  */
 class VertexBuffer{
@@ -87,10 +87,10 @@ class VertexBuffer{
      * @function
      * @name VertexBuffer#getUsage
      * @description Returns the usage type of the specified vertex buffer. This indicates
-     * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC),
-     * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once
-     * and used at most a few times (pc.BUFFER_STREAM).
-     * @returns {number} The usage type of the vertex buffer (see pc.BUFFER_*).
+     * whether the buffer can be modified once and used many times {@link BUFFER_STATIC},
+     * modified repeatedly and used many times {@link BUFFER_DYNAMIC} or modified once
+     * and used at most a few times {@link BUFFER_STREAM}.
+     * @returns {number} The usage type of the vertex buffer (see BUFFER_*).
      */
     getUsage() {
         return this.usage;

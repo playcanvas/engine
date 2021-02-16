@@ -13,7 +13,7 @@ const MAX_DISTANCE = 10000;
  * @class
  * @name SoundInstance3d
  * @augments SoundInstance
- * @classdesc A pc.SoundInstance3d plays a {@link Sound} in 3D.
+ * @classdesc A SoundInstance3d plays a {@link Sound} in 3D.
  * @param {SoundManager} manager - The sound manager.
  * @param {Sound} sound - The sound to play.
  * @param {object} options - Options for the instance.
@@ -24,7 +24,7 @@ const MAX_DISTANCE = 10000;
  * @param {number} [options.duration=null] - The total time after the startTime when playback will stop or restart if loop is true.
  * @param {Vec3} [options.position=null] - The position of the sound in 3D space.
  * @param {Vec3} [options.velocity=null] - The velocity of the sound.
- * @param {string} [options.distanceModel=pc.DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
+ * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
  *
  * * {@link DISTANCE_LINEAR}
  * * {@link DISTANCE_INVERSE}

@@ -32,7 +32,7 @@ class XrHitTestSource extends EventHandler {
     /**
      * @event
      * @name XrHitTestSource#remove
-     * @description Fired when {pc.XrHitTestSource} is removed.
+     * @description Fired when {@link XrHitTestSource} is removed.
      * @example
      * hitTestSource.once('remove', function () {
      *     // hit test source has been removed

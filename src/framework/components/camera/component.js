@@ -40,9 +40,9 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * * {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
  * frustum is a cuboid.
  *
- * Defaults to pc.PROJECTION_PERSPECTIVE.
+ * Defaults to {@link PROJECTION_PERSPECTIVE}.
  * @property {number} aspectRatio The aspect ratio (width divided by height) of the
- * camera. If aspectRatioMode is pc.ASPECT_AUTO, then this value will be automatically
+ * camera. If aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically
  * calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set
  * the value.
  * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
@@ -51,7 +51,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * target's width divided by height.
  * * {@link ASPECT_MANUAL}: use the aspectRatio value.
  *
- * Defaults to pc.ASPECT_AUTO.
+ * Defaults to {@link ASPECT_AUTO}.
  * @property {Color} clearColor The color used to clear the canvas to before the
  * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
  * @property {boolean} clearColorBuffer If true the camera will clear the color buffer
@@ -89,15 +89,15 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * provide to calculate the camera transformation matrix manually. Can be used for complex
  * effects like reflections. Function is called using component's scope.
  * Arguments:
- * * {pc.Mat4} transformMatrix: output of the function.
- * * {number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT.
+ * * {@link Mat4} transformMatrix: output of the function.
+ * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  * Left and right are only used in stereo rendering.
  * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
  * provide to calculate the camera projection matrix manually. Can be used for complex
  * effects like doing oblique projection. Function is called using component's scope.
  * Arguments:
- * * {pc.Mat4} transformMatrix: output of the function
- * * {number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT.
+ * * {{@link Mat4}} transformMatrix: output of the function
+ * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  * Left and right are only used in stereo rendering.
  * @property {boolean} cullFaces If true the camera will take material.cull into account.
  * Otherwise both front and back faces will be rendered. Defaults to true.
@@ -333,7 +333,7 @@ class CameraComponent extends Component {
      * @name CameraComponent#frameBegin
      * @description Start rendering the frame for this camera.
      * @param {RenderTarget} rt - Render target to which rendering will be performed.
-     * Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
+     * Will affect camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      */
     frameBegin(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {

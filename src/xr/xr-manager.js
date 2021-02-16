@@ -24,9 +24,9 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
  * @property {boolean} supported True if XR is supported.
  * @property {boolean} active True if XR session is running.
  * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
- * any of pc.XRTYPE_*.
+ * any of XRTYPE_*.
  * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
- * is running. Can be any of pc.XRSPACE_*.
+ * is running. Can be any of XRSPACE_*.
  * @property {Entity|null} camera Active camera for which XR session is running or null.
  * @property {XrInput} input provides access to Input Sources.
  * @property {XrHitTest} hitTest provides ability to hit test representation of real world geometry of underlying AR system.

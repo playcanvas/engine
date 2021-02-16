@@ -200,7 +200,7 @@ class Controller {
      * @name Controller#registerPadButton
      * @description Create or update an action which is enabled when the gamepad button is pressed.
      * @param {string} action - The name of the action.
-     * @param {number} pad - The index of the pad to register (use pc.PAD_1, etc).
+     * @param {number} pad - The index of the pad to register (use {@link PAD_1}, etc).
      * @param {number} button - The pad button.
      */
     registerPadButton(action, pad, button) {
@@ -227,7 +227,7 @@ class Controller {
      * @function
      * @name Controller#registerAxis
      * @param {object} [options] - Optional options object.
-     * @param {object} [options.pad] - The index of the game pad to register for (use pc.PAD_1, etc).
+     * @param {object} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
      */
     registerAxis(options) {
         var name = options.name;

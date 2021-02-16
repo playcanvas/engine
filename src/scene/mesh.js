@@ -155,8 +155,8 @@ class GeometryVertexStream {
  * @property {VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
  * @property {IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
  * be empty. The first index buffer in the array is used by {@link MeshInstance}s with a renderStyle
- * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
- * set to pc.RENDERSTYLE_WIREFRAME.
+ * property set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if renderStyle is
+ * set to {@link RENDERSTYLE_WIREFRAME}.
  * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
  * mesh should be interpreted by the graphics device. For details on the primitive object, see.
  * @property {number} primitive[].type The type of primitive to render. Can be:
@@ -397,12 +397,12 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#setVertexStream
      * @description Sets the vertex data for any supported semantic.
-     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see pc.SEMANTIC_* in {@link VertexFormat}.
+     * @param {string} semantic - The meaning of the vertex element. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex data for the specified semantic.
      * @param {number} componentCount - The number of values that form a single Vertex element. For example when setting a 3D position represented by 3 numbers
      * per vertex, number 3 should be specified.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
-     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see pc.TYPE_* in {@link VertexFormat}. When not specified, pc.TYPE_FLOAT32 is used.
+     * @param {number} [dataType] - The format of data when stored in the {@link VertexBuffer}, see TYPE_* in {@link VertexFormat}. When not specified, {@link TYPE_FLOAT32} is used.
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a 0 to 255 range down to 0 to 1 when fed to a shader.
      * If false, vertex attribute data is left unchanged. If this property is unspecified, false is assumed.
      */
@@ -424,7 +424,7 @@ class Mesh extends RefCountedObject {
      * @function
      * @name Mesh#getVertexStream
      * @description Gets the vertex data corresponding to a semantic.
-     * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see pc.SEMANTIC_* in {@link VertexFormat}.
+     * @param {string} semantic - The semantic of the vertex element to get. For supported semantics, see SEMANTIC_* in {@link VertexFormat}.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An array to populate with the vertex data.
      * When typed array is supplied, enough space needs to be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -466,7 +466,7 @@ class Mesh extends RefCountedObject {
     /**
      * @function
      * @name Mesh#setPositions
-     * @description Sets the vertex positions array. Vertices are stored using pc.TYPE_FLOAT32 format.
+     * @description Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex data containing positions.
      * @param {number} [componentCount] - The number of values that form a single position element. Defaults to 3 if not specified, corresponding to x, y and z coordinates.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
@@ -478,7 +478,7 @@ class Mesh extends RefCountedObject {
     /**
      * @function
      * @name Mesh#setNormals
-     * @description Sets the vertex normals array. Normals are stored using pc.TYPE_FLOAT32 format.
+     * @description Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex data containing normals.
      * @param {number} [componentCount] - The number of values that form a single normal element. Defaults to 3 if not specified, corresponding to x, y and z direction.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
@@ -490,7 +490,7 @@ class Mesh extends RefCountedObject {
     /**
      * @function
      * @name Mesh#setUvs
-     * @description Sets the vertex uv array. Uvs are stored using pc.TYPE_FLOAT32 format.
+     * @description Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
      * @param {number} channel - The uv channel in [0..7] range.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex data containing uv-coordinates.
      * @param {number} [componentCount] - The number of values that form a single uv element. Defaults to 2 if not specified, corresponding to u and v coordinates.
@@ -503,7 +503,7 @@ class Mesh extends RefCountedObject {
     /**
      * @function
      * @name Mesh#setColors
-     * @description Sets the vertex color array. Colors are stored using pc.TYPE_FLOAT32 format, which is useful for HDR colors.
+     * @description Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is useful for HDR colors.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors.
      * @param {number} [componentCount] - The number of values that form a single color element. Defaults to 4 if not specified, corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not provided, the whole data array is used. This allows to use only part of the data array.
@@ -515,7 +515,7 @@ class Mesh extends RefCountedObject {
     /**
      * @function
      * @name Mesh#setColors32
-     * @description Sets the vertex color array. Colors are stored using pc.TYPE_UINT8 format, which is useful for LDR colors. Values in the array are expected in
+     * @description Sets the vertex color array. Colors are stored using {@link TYPE_UINT8} format, which is useful for LDR colors. Values in the array are expected in
      * [0..255] range, and are mapped to [0..1] range in the shader.
      * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex data containing colors. The array is
      * expected to contain 4 components per vertex, corresponding to r, g, b and a.
@@ -628,8 +628,8 @@ class Mesh extends RefCountedObject {
      * @name Mesh#update
      * @description Applies any changes to vertex stream and indices to mesh. This allocates or reallocates {@link vertexBuffer} or {@link IndexBuffer}
      * to fit all provided vertices and indices, and fills them with data.
-     * @param {number} [primitiveType] - The type of primitive to render. Can be one of pc.PRIMITIVE_* - see primitive[].type section above. Defaults
-     * to pc.PRIMITIVE_TRIANGLES if unspecified.
+     * @param {number} [primitiveType] - The type of primitive to render. Can be one of PRIMITIVE_* - see primitive[].type section above. Defaults
+     * to {@link PRIMITIVE_TRIANGLES} if unspecified.
      * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated only if positions were set since last time update
      * was called, and componentCount for position was 3, otherwise bounding box is not updated. See {@link Mesh#setPositions}. Defaults to true if unspecified.
      * Set this to false to avoid update of the bounding box and use aabb property to set it instead.

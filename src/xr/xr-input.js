@@ -70,7 +70,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#selectstart
-     * @description Fired when {pc.XrInputSource} has started to trigger primary action.
+     * @description Fired when {@link XrInputSource} has started to trigger primary action.
      * @param {XrInputSource} inputSource - Input source that triggered selectstart event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
@@ -78,7 +78,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#selectend
-     * @description Fired when {pc.XrInputSource} has ended triggerring primary action.
+     * @description Fired when {@link XrInputSource} has ended triggerring primary action.
      * @param {XrInputSource} inputSource - Input source that triggered selectend event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
@@ -86,7 +86,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#squeeze
-     * @description Fired when {pc.XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
+     * @description Fired when {@link XrInputSource} has triggered squeeze action. This is associated with "grabbing" action on the controllers.
      * @param {XrInputSource} inputSource - Input source that triggered squeeze event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
@@ -94,7 +94,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#squeezestart
-     * @description Fired when {pc.XrInputSource} has started to trigger sqeeze action.
+     * @description Fired when {@link XrInputSource} has started to trigger sqeeze action.
      * @param {XrInputSource} inputSource - Input source that triggered squeezestart event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
@@ -108,7 +108,7 @@ class XrInput extends EventHandler {
     /**
      * @event
      * @name XrInput#squeezeend
-     * @description Fired when {pc.XrInputSource} has ended triggerring sqeeze action.
+     * @description Fired when {@link XrInputSource} has ended triggerring sqeeze action.
      * @param {XrInputSource} inputSource - Input source that triggered squeezeend event
      * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */

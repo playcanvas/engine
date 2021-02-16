@@ -304,7 +304,7 @@ class VrDisplay extends EventHandler {
      * @deprecated
      * @function
      * @name VrDisplay#reset
-     * @description Called to reset the pose of the pc.VrDisplay. Treating its current pose as the origin/zero. This should only be called in 'sitting' experiences.
+     * @description Called to reset the pose of the {@link VrDisplay}. Treating its current pose as the origin/zero. This should only be called in 'sitting' experiences.
      */
     reset() {
         if (this.display) this.display.resetPose();

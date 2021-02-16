@@ -7,7 +7,7 @@ import { getApplication } from './globals.js';
 /**
  * @name script
  * @namespace
- * @description The pc.script namespace holds the createLoadingScreen function that
+ * @description The script namespace holds the createLoadingScreen function that
  * is used to override the default PlayCanvas loading screen.
  */
 var _legacy = false;
@@ -24,10 +24,10 @@ var script = {
      * @private
      * @function
      * @name script.create
-     * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
+     * @description Create a script resource object. A script file should contain a single call to {@link script.create} and the callback should return a script object which will be
      * instantiated when attached to Entities.
      * @param {string} name - The name of the script object.
-     * @param {callbacks.CreateScript} callback - The callback function which is passed an {pc.Application} object,
+     * @param {callbacks.CreateScript} callback - The callback function which is passed an {@link Application} object,
      * which is used to access Entities and Components, and should return the Type of the script resource
      * to be instanced for each Entity.
      * @example

@@ -37,7 +37,7 @@ import {
  * * {@link BUFFER_STATIC}
  * * {@link BUFFER_STREAM}
  *
- * Defaults to pc.BUFFER_STATIC.
+ * Defaults to {@link BUFFER_STATIC}.
  * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
  * index buffer will be initialized to zeros.
  */

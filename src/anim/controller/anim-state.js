@@ -12,9 +12,9 @@ import {
  * @description Create a new AnimState.
  * @param {AnimController} controller - The controller this AnimState is associated with.
  * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
- * @param {number} speed - The speed animations in the state should play at. Individual pc.AnimNodes can override this value.
+ * @param {number} speed - The speed animations in the state should play at. Individual {@link AnimNodes} can override this value.
  * @param {boolean} loop - Determines whether animations in this state should loop.
- * @param {object|null} blendTree - If supplied, the AnimState will recursively build a pc.AnimBlendTree hierarchy, used to store, blend and play multiple animations.
+ * @param {object|null} blendTree - If supplied, the AnimState will recursively build a {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
  */
 class AnimState {
     constructor(controller, name, speed, loop, blendTree) {

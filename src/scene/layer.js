@@ -96,7 +96,7 @@ class InstanceList {
  * * {@link SORTMODE_BACK2FRONT}
  * * {@link SORTMODE_FRONT2BACK}
  *
- * Defaults to pc.SORTMODE_MATERIALMESH.
+ * Defaults to {@link SORTMODE_MATERIALMESH}.
  * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
  * Possible values are:
  *
@@ -106,7 +106,7 @@ class InstanceList {
  * * {@link SORTMODE_BACK2FRONT}
  * * {@link SORTMODE_FRONT2BACK}
  *
- * Defaults to pc.SORTMODE_BACK2FRONT.
+ * Defaults to {@link SORTMODE_BACK2FRONT}.
  * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
  *
  * * {@link SHADER_FORWARD}
@@ -114,7 +114,7 @@ class InstanceList {
  * * {@link SHADER_DEPTH}
  * * Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
  *
- * Defaults to pc.SHADER_FORWARD.
+ * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
  *
  * @property {boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link Layer#clearColor}, {@link Layer#clearColorBuffer},
