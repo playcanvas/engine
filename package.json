@@ -40,7 +40,7 @@
     "@babel/plugin-proposal-class-properties": "7.12.13",
     "@babel/preset-env": "7.12.13",
     "@playcanvas/eslint-config": "1.0.7",
-    "@playcanvas/jsdoc-template": "1.0.16",
+    "@playcanvas/jsdoc-template": "1.0.17",
     "@rollup/plugin-babel": "5.2.3",
     "@rollup/plugin-replace": "2.3.4",
     "@rollup/pluginutils": "4.1.0",
