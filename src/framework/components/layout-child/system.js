@@ -9,7 +9,7 @@ const _schema = ['enabled'];
 /**
  * @class
  * @name LayoutChildComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @description Create a new LayoutChildComponentSystem.
  * @classdesc Manages creation of {@link pc.LayoutChildComponent}s.
  * @param {pc.Application} app - The application.

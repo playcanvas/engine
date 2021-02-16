@@ -22,7 +22,7 @@ const _schema = ['enabled'];
 /**
  * @class
  * @name ElementComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Manages creation of {@link pc.ElementComponent}s.
  * @param {pc.Application} app - The application.
  */

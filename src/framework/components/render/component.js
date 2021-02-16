@@ -18,7 +18,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @component
  * @class
  * @name RenderComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc Enables an Entity to render a {@link pc.Mesh} or a primitive shape. This component attaches {@link pc.MeshInstance} geometry to the Entity.
  * @description Create a new RenderComponent.
  * @param {pc.RenderComponentSystem} system - The ComponentSystem that created this Component.

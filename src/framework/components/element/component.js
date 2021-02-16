@@ -35,7 +35,7 @@ var matD = new Mat4();
  * @component
  * @class
  * @name ElementComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc ElementComponents are used to construct user interfaces. An ElementComponent's [type](#type)
  * property can be configured in 3 main ways: as a text element, as an image element or as a group element.
  * If the ElementComponent has a {@link pc.ScreenComponent} ancestor in the hierarchy, it will be transformed

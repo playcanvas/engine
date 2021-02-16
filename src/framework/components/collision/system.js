@@ -566,7 +566,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 /**
  * @class
  * @name CollisionComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Manages creation of {@link pc.CollisionComponent}s.
  * @description Creates a new CollisionComponentSystem.
  * @param {pc.Application} app - The running {pc.Application}.

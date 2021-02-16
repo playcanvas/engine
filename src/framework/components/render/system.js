@@ -31,7 +31,7 @@ const _properties = [
  * @private
  * @class
  * @name RenderComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder, cone etc.
  * @description Create a new RenderComponentSystem.
  * @param {pc.Application} app - The Application.

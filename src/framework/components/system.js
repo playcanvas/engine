@@ -9,7 +9,7 @@ import { Vec4 } from '../../math/vec4.js';
 /**
  * @class
  * @name ComponentSystem
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
  * @param {pc.Application} app - The application managing this system.
  */

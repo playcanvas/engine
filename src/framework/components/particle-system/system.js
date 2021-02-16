@@ -80,7 +80,7 @@ const _schema = [
 /**
  * @class
  * @name ParticleSystemComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Allows an Entity to render a particle system.
  * @description Create a new ParticleSystemComponentSystem.
  * @param {pc.Application} app - The Application.

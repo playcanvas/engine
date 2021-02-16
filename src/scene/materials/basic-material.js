@@ -5,7 +5,7 @@ import { Material } from './material.js';
 /**
  * @class
  * @name BasicMaterial
- * @augments pc.Material
+ * @augments Material
  * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
  * color map modulated with a color.
  * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).

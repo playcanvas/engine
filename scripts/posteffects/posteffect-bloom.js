@@ -55,7 +55,7 @@ function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
  * @name BloomEffect
  * @classdesc Implements the BloomEffect post processing effect.
  * @description Creates new instance of the post effect.
- * @augments pc.PostEffect
+ * @augments PostEffect
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1.
  * @property {number} blurAmount Controls the amount of blurring.

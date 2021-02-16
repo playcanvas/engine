@@ -15,7 +15,7 @@ const _schema = ['enabled'];
  * @classdesc Defines zone in world.
  * @description Create a new ZoneComponentSystem.
  * @param {pc.Application} app - The application.
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  */
 class ZoneComponentSystem extends ComponentSystem {
     constructor(app) {

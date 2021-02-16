@@ -29,7 +29,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * @component
  * @class
  * @name SpriteComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
  * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
  * @param {pc.Entity} entity - The Entity that this Component is attached to.

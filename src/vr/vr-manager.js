@@ -7,7 +7,7 @@ import { VrDisplay } from './vr-display.js';
  * @deprecated
  * @class
  * @name VrManager
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
  * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
  * @param {pc.Application} app - The main application.

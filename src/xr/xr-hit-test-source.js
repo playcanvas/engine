@@ -9,7 +9,7 @@ var poolQuat = [];
 /**
  * @class
  * @name XrHitTestSource
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
  * @param {pc.XrManager} manager - WebXR Manager.

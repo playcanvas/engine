@@ -7,7 +7,7 @@ import { Component } from '../component.js';
  * @component
  * @class
  * @name ZoneComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The ZoneComponent allows you to define an area in world space of certain size.
  * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
  * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.

@@ -4,7 +4,7 @@
  * @name BokehEffect
  * @classdesc Implements the BokehEffect post processing effect.
  * @description Creates new instance of the post effect.
- * @augments pc.PostEffect
+ * @augments PostEffect
  * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
  * @property {number} maxBlur The maximum amount of blurring. Ranges from 0 to 1.
  * @property {number} aperture Bigger values create a shallower depth of field.

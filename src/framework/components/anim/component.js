@@ -17,7 +17,7 @@ import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
  * @component
  * @class
  * @name AnimComponent
- * @augments pc.Component
+ * @augments Component
  * @classdesc The Anim Component allows an Entity to playback animations on models and entity properties.
  * @description Create a new AnimComponent.
  * @param {pc.AnimComponentSystem} system - The {@link pc.ComponentSystem} that created this Component.

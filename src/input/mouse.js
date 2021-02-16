@@ -36,7 +36,7 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 /**
  * @class
  * @name Mouse
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc A Mouse Device, bound to a DOM Element.
  * @description Create a new Mouse device.
  * @param {Element} [element] - The Element that the mouse events are attached to.

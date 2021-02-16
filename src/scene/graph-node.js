@@ -25,7 +25,7 @@ var up = new Vec3();
 /**
  * @class
  * @name GraphNode
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc A hierarchical scene node.
  * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
  * @property {string} name The non-unique name of a graph node.

@@ -9,7 +9,7 @@ const _schema = ['enabled'];
 /**
  * @class
  * @name AudioListenerComponentSystem
- * @augments pc.ComponentSystem
+ * @augments ComponentSystem
  * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
  * @description Create a new AudioListenerComponentSystem.
  * @param {pc.Application} app - The application managing this system.

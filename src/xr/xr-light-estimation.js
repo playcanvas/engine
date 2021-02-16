@@ -15,7 +15,7 @@ var mat4B = new Mat4();
 /**
  * @class
  * @name XrLightEstimation
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Light Estimation provides illimunation data from the real world, which is estimated by the underlying AR system.
  * It provides a reflection Cube Map, that represents the reflection estimation from the viewer position.
  * A more simplified approximation of light is provided by L2 Spherical Harmonics data.

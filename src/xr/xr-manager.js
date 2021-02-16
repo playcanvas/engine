@@ -17,7 +17,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 /**
  * @class
  * @name XrManager
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Manage and update XR session and its states.
  * @description Manage and update XR session and its states.
  * @param {pc.Application} app - The main application.

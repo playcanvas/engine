@@ -24,7 +24,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 /**
  * @class
  * @name Asset
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc An asset record of a file or data resource that can be loaded by the engine.
  * The asset contains three important fields:
  *

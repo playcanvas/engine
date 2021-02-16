@@ -8,7 +8,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @private
  * @class
  * @name EntityReference
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @description Helper class used for managing component properties that represent entity references.
  * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that
  * refer to entities in the scene graph. Using an EntityReference simplifies the job of dealing with the

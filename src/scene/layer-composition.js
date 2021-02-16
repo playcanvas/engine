@@ -11,7 +11,7 @@ import { RenderAction } from './render-action.js';
 /**
  * @class
  * @name LayerComposition
- * @augments pc.EventHandler
+ * @augments EventHandler
  * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
  * @description Create a new layer composition.
  * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
