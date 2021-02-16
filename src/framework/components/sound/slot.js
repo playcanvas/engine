@@ -95,7 +95,8 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * @function pc.SoundSlot#play
+     * @function
+     * @name SoundSlot#play
      * @description Plays a sound. If {@link SoundSlot#overlap} is true the new sound
      * instance will be played independently of any other instances already playing.
      * Otherwise existing sound instances will stop before playing the new sound.
